@@ -29,7 +29,7 @@ tracing = { workspace = true }
 gloo-timers = { version = "0.3", features = ["futures"], optional = true }
 serde_dynamo = { workspace = true, optional = true }
 base64 = { workspace = true }
-uuid = { workspace = true, optional = true }
+uuid = { workspace = true }
 chrono = { workspace = true }
 regex = { version = "1" }
 ethers = { version = "=2.0.14", optional = true }
@@ -153,7 +153,6 @@ server = [
   "tower",
   "tower-sessions",
   "url",
-  "uuid",
   "validator",
   "rmcp",
 ]
@@ -163,6 +162,13 @@ layout_test = ["web"]
 local-dev = ["beta","bypass"]
 beta = []
 futures = ["dep:futures"]
+
+# Android-only: route tracing events into logcat so they show up in `adb logcat`.
+# Without this, Rust `tracing::info!` / `error!` calls silently vanish on device
+# because the default fmt subscriber writes to stdout, which is not captured by
+# logcat on Android.
+[target.'cfg(target_os = "android")'.dependencies]
+tracing-android = "0.2"
 
 [dev-dependencies]
 axum = { workspace = true }

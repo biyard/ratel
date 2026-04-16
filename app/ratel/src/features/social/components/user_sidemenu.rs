@@ -74,9 +74,13 @@ pub fn UserSidemenu(username: String) -> Element {
     let is_self = user.username == username;
 
     if is_self {
-        rsx! { SelfSidemenu { username } }
+        rsx! {
+            SelfSidemenu { username }
+        }
     } else {
-        rsx! { OtherUserSidemenu { username } }
+        rsx! {
+            OtherUserSidemenu { username }
+        }
     }
 }
 
@@ -113,18 +117,15 @@ fn SelfSidemenu(username: String) -> Element {
                     },
                     on_logout: move |_| {
                         spawn(async move {
-                            let _ = crate::features::auth::controllers::logout_handler().await;
-                            #[cfg(target_arch = "wasm32")]
-                            {
-                                if let Some(window) = web_sys::window() {
-                                    let _ = window.location().reload();
-                                }
-                            }
+                            crate::features::auth::services::sign_out(user_ctx).await;
                         });
-                    }
+                    },
                 }
 
-                ProfileImage { url: user.profile_url.clone(), name: user.display_name.clone() }
+                ProfileImage {
+                    url: user.profile_url.clone(),
+                    name: user.display_name.clone(),
+                }
 
                 div { class: "font-medium text-text-primary", "{user.display_name}" }
 
@@ -237,16 +238,12 @@ fn OtherUserSidemenu(username: String) -> Element {
                             name: status.target_display_name.clone(),
                         }
 
-                        div { class: "font-medium text-text-primary",
-                            "{status.target_display_name}"
-                        }
+                        div { class: "font-medium text-text-primary", "{status.target_display_name}" }
 
                         div { class: "text-xs text-text-secondary", "@{username}" }
 
                         if !status.target_description.is_empty() {
-                            div { class: "text-xs text-text-primary",
-                                "{status.target_description}"
-                            }
+                            div { class: "text-xs text-text-primary", "{status.target_description}" }
                         }
 
                         FollowCounts {

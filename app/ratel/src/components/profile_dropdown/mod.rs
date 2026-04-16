@@ -141,15 +141,8 @@ pub fn ProfileDropdown() -> Element {
                         onclick: move |_| {
                             open.set(false);
                             spawn(async move {
-                                let _ = crate::features::auth::controllers::logout_handler().await;
+                                crate::features::auth::services::sign_out(user_ctx).await;
                                 nav.push("/");
-                                // Force page reload to clear auth state
-                                #[cfg(target_arch = "wasm32")]
-                                {
-                                    if let Some(window) = web_sys::window() {
-                                        let _ = window.location().reload();
-                                    }
-                                }
                             });
                         },
                         "{tr.logout}"

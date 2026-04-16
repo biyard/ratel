@@ -31,19 +31,13 @@ android {
 dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
 
-    // Credential Manager + Google ID (used as the identity picker)
+    // Credential Manager + Google ID token credential.
     implementation("androidx.credentials:credentials:1.3.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
-    // Firebase Auth — the Google ID token is exchanged for a Firebase credential,
-    // then we hand back the Firebase ID token so the backend path matches web.
-    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
-    implementation("com.google.firebase:firebase-auth")
-
-    // Coroutines (+ Play/Firebase task-to-await interop)
+    // Coroutines for the async Credential Manager call.
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 }
 
 tasks.withType<AbstractArchiveTask>().configureEach {

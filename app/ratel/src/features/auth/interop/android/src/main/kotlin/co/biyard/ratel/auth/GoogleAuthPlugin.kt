@@ -8,47 +8,31 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.firebase.FirebaseApp
-import com.google.firebase.FirebaseOptions
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 /**
- * Google sign-in via **Firebase Auth**.
+ * Google sign-in via Credential Manager.
  *
- * Credential Manager fetches a Google ID token, which we exchange for a
- * Firebase credential. The returned ID token is the *Firebase* ID token —
- * the same JWT the web flow posts — so the backend path is unchanged.
+ * Returns the raw Google ID token (JWT signed by `accounts.google.com`).
+ * The backend verifies it through `https://oauth2.googleapis.com/tokeninfo
+ * ?id_token=...`, which also accepts the web flow's Google OAuth access
+ * tokens, so a single backend code path serves both web and mobile.
  *
- * Firebase is initialized with an explicit named app (`"ratel"`) using
- * values forwarded from Rust after parsing `google-services.json`, so the
- * Gradle `google-services` plugin is not required.
+ * We do NOT route through Firebase Auth: Firebase `signInWithCredential`
+ * produces a Firebase-issued ID token (signed by `securetoken.google.com`)
+ * which is not acceptable to Google's tokeninfo/userinfo endpoints.
  */
 class GoogleAuthPlugin(private val activity: Activity) {
     private val credentialManager = CredentialManager.create(activity)
 
     fun load(webView: WebView?) { /* no-op; manganis hook */ }
 
-    fun signInJson(
-        serverClientId: String,
-        firebaseApiKey: String,
-        firebaseAppId: String,
-        firebaseProjectId: String,
-    ): String {
-        val firebaseApp = try {
-            ensureFirebase(firebaseApiKey, firebaseAppId, firebaseProjectId)
-        } catch (e: Exception) {
-            return errorJson("firebase init failed: ${e.message ?: e.javaClass.simpleName}")
-        }
-        val firebaseAuth = FirebaseAuth.getInstance(firebaseApp)
-
+    fun signInJson(serverClientId: String): String {
         val latch = CountDownLatch(1)
         var output: String = errorJson("unknown")
 
@@ -75,29 +59,17 @@ class GoogleAuthPlugin(private val activity: Activity) {
                     errorJson("unexpected credential type: ${credential::class.java.simpleName}")
                 } else {
                     val google = GoogleIdTokenCredential.createFrom(credential.data)
-                    val firebaseCred = GoogleAuthProvider.getCredential(google.idToken, null)
-                    val authResult = firebaseAuth.signInWithCredential(firebaseCred).await()
-                    val user = authResult.user
-                        ?: return@launch run {
-                            output = errorJson("firebase returned null user")
-                            latch.countDown()
-                        }
-                    val firebaseIdToken = user.getIdToken(false).await().token
-                        ?: return@launch run {
-                            output = errorJson("firebase returned null id token")
-                            latch.countDown()
-                        }
                     JSONObject().apply {
-                        put("id_token", firebaseIdToken)
-                        // The web flow posts the Google access token here;
-                        // on mobile we forward the Firebase ID token since
-                        // that's what the backend already validates.
-                        put("access_token", firebaseIdToken)
-                        put("email", user.email ?: JSONObject.NULL)
-                        put("display_name", user.displayName ?: JSONObject.NULL)
+                        put("id_token", google.idToken)
+                        // The backend reads `access_token`; forward the Google ID
+                        // token here. `oauth2.googleapis.com/tokeninfo` accepts
+                        // both shapes so web's access token path keeps working.
+                        put("access_token", google.idToken)
+                        put("email", google.id)
+                        put("display_name", google.displayName ?: JSONObject.NULL)
                         put(
                             "photo_url",
-                            user.photoUrl?.toString() ?: JSONObject.NULL,
+                            google.profilePictureUri?.toString() ?: JSONObject.NULL,
                         )
                     }.toString()
                 }
@@ -111,24 +83,6 @@ class GoogleAuthPlugin(private val activity: Activity) {
 
         latch.await(90, TimeUnit.SECONDS)
         return output
-    }
-
-    private fun ensureFirebase(
-        apiKey: String,
-        applicationId: String,
-        projectId: String,
-    ): FirebaseApp {
-        val name = "ratel"
-        return try {
-            FirebaseApp.getInstance(name)
-        } catch (_: IllegalStateException) {
-            val options = FirebaseOptions.Builder()
-                .setApiKey(apiKey)
-                .setApplicationId(applicationId)
-                .setProjectId(projectId)
-                .build()
-            FirebaseApp.initializeApp(activity, options, name)
-        }
     }
 
     private fun errorJson(message: String): String =

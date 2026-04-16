@@ -172,13 +172,7 @@ pub fn SettingsPanel(open: bool, on_close: EventHandler<()>) -> Element {
                             class: "settings-logout__btn",
                             "data-testid": "btn-logout",
                             onclick: move |_| async move {
-                                let _ = crate::features::auth::controllers::logout_handler().await;
-                                #[cfg(target_arch = "wasm32")]
-                                {
-                                    if let Some(window) = web_sys::window() {
-                                        let _ = window.location().reload();
-                                    }
-                                }
+                                crate::features::auth::services::sign_out(user_ctx).await;
                             },
                             svg {
                                 fill: "none",

@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Compose with Cross-post</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --bg-input:rgba(255,255,255,0.025);--bg-input-focus:rgba(255,255,255,0.04);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-coral:#ef4444;--accent-green:#22c55e;
+      --bsky:#0a85ff;--linkedin:#0a66c2;--threads:#f5f5f5;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+    }
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+    body{overflow-x:hidden}
+
+    .arena{position:relative;min-height:100vh;display:flex;flex-direction:column;isolation:isolate}
+    .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 30%,rgba(252,179,0,0.04) 0%,transparent 60%),radial-gradient(ellipse 120% 100% at 50% 120%,rgba(110,237,216,0.03) 0%,transparent 50%);z-index:-1;pointer-events:none}
+
+    .arena-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:18px 28px;background:rgba(6,6,14,0.80);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-subtle)}
+    .arena-topbar__left{display:flex;align-items:center;gap:14px}
+    .back-btn{width:38px;height:38px;border-radius:10px;background:var(--bg-glass);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0}
+    .back-btn:hover{border-color:rgba(252,179,0,0.25);background:var(--bg-glass-hover)}
+    .back-btn svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+    .back-btn:hover svg{color:var(--accent-gold)}
+
+    .topbar-title{display:flex;flex-direction:column;gap:2px}
+    .topbar-title__eyebrow{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim)}
+    .topbar-title__main{font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-primary)}
+
+    .arena-topbar__right{display:flex;align-items:center;gap:10px}
+    .autosave{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:100px;background:rgba(110,237,216,0.06);border:1px solid rgba(110,237,216,0.14);font-size:11px;font-weight:600;letter-spacing:0.04em;color:var(--accent-teal)}
+    .autosave::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal);animation:pulse-dot 2s ease-in-out infinite}
+    @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+
+    .topbar-btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--bg-glass);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all 0.25s ease}
+    .topbar-btn:hover{border-color:rgba(252,179,0,0.25);color:var(--accent-gold);background:var(--bg-glass-hover)}
+    .topbar-btn svg{width:13px;height:13px}
+    .topbar-btn--primary{background:linear-gradient(135deg,var(--accent-gold),#e5a200);color:#0a0a0a;border-color:transparent;box-shadow:0 2px 14px rgba(252,179,0,0.20)}
+    .topbar-btn--primary:hover{background:linear-gradient(135deg,#ffd24a,var(--accent-gold));color:#0a0a0a;box-shadow:0 4px 22px rgba(252,179,0,0.40);transform:translateY(-1px)}
+
+    .composer-page{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:28px;padding:32px 28px 100px;max-width:1380px;margin:0 auto;width:100%}
+    .composer{display:flex;flex-direction:column;gap:18px;min-width:0}
+
+    .title-input{width:100%;padding:14px 0;background:transparent;border:none;outline:none;font-family:var(--font-body);font-size:30px;font-weight:700;color:var(--text-primary);line-height:1.2;letter-spacing:-0.01em}
+    .title-input::placeholder{color:var(--text-dim);font-weight:600}
+    .title-divider{height:1px;background:linear-gradient(90deg,var(--border-subtle),transparent);margin:0 0 4px}
+
+    .body-editor{min-height:280px;padding:22px;border-radius:14px;background:var(--bg-input);border:1px solid var(--border-subtle);font-size:15.5px;line-height:1.75;color:var(--text-primary);outline:none;transition:all 0.25s ease}
+    .body-editor:focus,.body-editor:hover{background:var(--bg-input-focus);border-color:rgba(252,179,0,0.18)}
+    .body-editor[contenteditable="true"]:empty::before{content:attr(data-placeholder);color:var(--text-dim);font-style:italic}
+
+    .editor-meta{display:flex;align-items:center;justify-content:space-between;padding:0 4px;color:var(--text-dim);font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.10em;text-transform:uppercase}
+    .editor-meta__stats{display:flex;gap:16px}
+    .editor-meta__stat{display:inline-flex;align-items:center;gap:6px}
+    .editor-meta__stat svg{width:11px;height:11px}
+    .editor-meta__stat strong{color:var(--text-muted);font-weight:700}
+
+    .attachments{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 0 4px}
+    .attachment{position:relative;width:84px;height:84px;border-radius:10px;overflow:hidden;border:1px solid var(--border-subtle);background:rgba(255,255,255,0.02)}
+    .attachment img{width:100%;height:100%;object-fit:cover}
+    .attachment__hero-badge{position:absolute;left:6px;bottom:6px;padding:2px 6px;border-radius:4px;background:rgba(252,179,0,0.90);color:#0a0a0a;font-family:var(--font-display);font-size:7px;font-weight:800;letter-spacing:0.10em;text-transform:uppercase}
+    .attachment-add{width:84px;height:84px;border-radius:10px;border:1px dashed var(--border-strong);background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--text-dim);cursor:pointer;transition:all 0.2s ease}
+    .attachment-add:hover{border-color:rgba(252,179,0,0.30);color:var(--accent-gold)}
+    .attachment-add svg{width:18px;height:18px}
+    .attachment-add span{font-family:var(--font-display);font-size:8px;font-weight:600;letter-spacing:0.10em;text-transform:uppercase}
+
+    .crosspost{display:flex;flex-direction:column;gap:14px;align-self:start;position:sticky;top:84px;max-height:calc(100vh - 110px);overflow-y:auto;overscroll-behavior:contain;padding-right:4px}
+    .crosspost::-webkit-scrollbar{width:4px}
+    .crosspost::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+
+    .crosspost-head{padding:4px 2px 6px;display:flex;flex-direction:column;gap:6px}
+    .crosspost-head__eyebrow{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim)}
+    .crosspost-head__title{font-family:var(--font-display);font-size:17px;font-weight:700;letter-spacing:0.04em;color:var(--text-primary);display:flex;align-items:center;gap:10px}
+    .crosspost-head__title-accent{background:linear-gradient(135deg,var(--bsky),var(--accent-teal));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .crosspost-head__sub{font-size:12.5px;color:var(--text-muted);line-height:1.5}
+
+    .reach-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:12px;background:linear-gradient(135deg,rgba(252,179,0,0.06),rgba(110,237,216,0.04));border:1px solid rgba(252,179,0,0.15)}
+    .reach-summary__left{display:flex;flex-direction:column;gap:3px}
+    .reach-summary__label{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
+    .reach-summary__value{font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:0.02em;color:var(--accent-gold)}
+    .reach-summary__value strong{color:var(--text-primary)}
+    .reach-summary__icons{display:flex}
+    .reach-chip{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #0a0a12;margin-left:-8px;transition:all 0.25s}
+    .reach-chip:first-child{margin-left:0}
+    .reach-chip--bsky{background:#0a85ff}
+    .reach-chip--linkedin{background:#0a66c2}
+    .reach-chip--threads{background:#0a0a0a;border-color:rgba(255,255,255,0.2)}
+    .reach-chip[data-off="true"]{opacity:0.25;filter:grayscale(0.8)}
+    .reach-chip svg{width:14px;height:14px;color:#fff}
+
+    .pp-card{position:relative;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);border-radius:16px;overflow:hidden;transition:all 0.3s ease}
+    .pp-card[data-enabled="false"][data-connected="true"]{opacity:0.45;filter:grayscale(0.6)}
+    .pp-card[data-enabled="true"]{border-color:rgba(255,255,255,0.10)}
+    .pp-card[data-connected="false"]{border-style:dashed;border-color:var(--border-strong);background:rgba(6,6,14,0.35)}
+
+    /* Show/hide connected vs disconnected state */
+    .pp-state-connected, .pp-state-disconnected{display:none}
+    .pp-card[data-connected="true"] .pp-state-connected{display:block}
+    .pp-card[data-connected="false"] .pp-state-disconnected{display:block}
+
+    .pp-head{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--border-subtle)}
+    .pp-card[data-connected="false"] .pp-head{border-bottom:none}
+    .pp-head__left{display:flex;align-items:center;gap:10px}
+    .pp-logo{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .pp-logo--bsky{background:linear-gradient(135deg,#0a85ff,#1da1f2)}
+    .pp-logo--linkedin{background:#0a66c2}
+    .pp-logo--threads{background:#0a0a0a;border:1px solid rgba(255,255,255,0.2)}
+    .pp-logo svg{width:15px;height:15px;color:#fff}
+    .pp-name{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-primary)}
+    .pp-name__handle{display:block;font-family:var(--font-body);font-size:11px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--text-dim);margin-top:1px}
+    .pp-name__status{display:none;font-family:var(--font-body);font-size:11px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--accent-coral);margin-top:1px}
+    .pp-card[data-connected="false"] .pp-name__handle{display:none}
+    .pp-card[data-connected="false"] .pp-name__status{display:block}
+    .pp-card[data-connected="false"] .pp-head__switch{display:none}
+
+    .switch{position:relative;width:34px;height:20px;border-radius:100px;background:rgba(255,255,255,0.06);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.25s;flex-shrink:0;padding:0}
+    .switch::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--text-muted);transition:all 0.25s}
+    .switch[aria-checked="true"]{background:rgba(252,179,0,0.30);border-color:rgba(252,179,0,0.40)}
+    .switch[aria-checked="true"]::after{transform:translateX(14px);background:var(--accent-gold)}
+    .pp-card[data-platform="bsky"] .switch[aria-checked="true"]{background:rgba(10,133,255,0.30);border-color:rgba(10,133,255,0.45)}
+    .pp-card[data-platform="bsky"] .switch[aria-checked="true"]::after{background:#0a85ff}
+    .pp-card[data-platform="linkedin"] .switch[aria-checked="true"]{background:rgba(10,102,194,0.30);border-color:rgba(10,102,194,0.45)}
+    .pp-card[data-platform="linkedin"] .switch[aria-checked="true"]::after{background:#0a66c2}
+    .pp-card[data-platform="threads"] .switch[aria-checked="true"]{background:rgba(245,245,245,0.20);border-color:rgba(245,245,245,0.30)}
+    .pp-card[data-platform="threads"] .switch[aria-checked="true"]::after{background:#f5f5f5}
+
+    .connect-cta{padding:16px;display:flex;flex-direction:column;gap:10px;align-items:stretch}
+    .connect-cta__hint{font-size:12.5px;line-height:1.5;color:var(--text-muted);text-align:center;padding:4px 8px}
+    .connect-cta__btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:10px;border:1px solid transparent;font-family:var(--font-display);font-size:10.5px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;cursor:pointer;transition:all 0.25s ease}
+    .connect-cta__btn svg{width:13px;height:13px}
+    .pp-card[data-platform="bsky"] .connect-cta__btn{background:linear-gradient(135deg,#0a85ff,#1da1f2);color:#fff;box-shadow:0 2px 14px rgba(10,133,255,0.25)}
+    .pp-card[data-platform="bsky"] .connect-cta__btn:hover{box-shadow:0 4px 22px rgba(10,133,255,0.40);transform:translateY(-1px)}
+    .pp-card[data-platform="linkedin"] .connect-cta__btn{background:#0a66c2;color:#fff;box-shadow:0 2px 14px rgba(10,102,194,0.25)}
+    .pp-card[data-platform="linkedin"] .connect-cta__btn:hover{box-shadow:0 4px 22px rgba(10,102,194,0.40);transform:translateY(-1px)}
+    .pp-card[data-platform="threads"] .connect-cta__btn{background:#fff;color:#0a0a0a}
+    .pp-card[data-platform="threads"] .connect-cta__btn:hover{background:#f0f0f0;transform:translateY(-1px)}
+
+    .pp-preview{padding:14px 16px}
+    .pp-body__text{font-size:13.5px;line-height:1.55;color:var(--text-primary);word-wrap:break-word;white-space:pre-wrap}
+    .pp-body__backlink{display:inline-block;margin-top:6px;font-size:12.5px;color:var(--accent-teal);text-decoration:none}
+    .pp-card[data-platform="bsky"] .pp-body__backlink{color:#0a85ff}
+    .pp-card[data-platform="linkedin"] .pp-body__backlink{color:#0a66c2}
+    .pp-card[data-platform="threads"] .pp-body__backlink{color:#6eedd8}
+
+    .pp-media{margin-top:10px;border-radius:12px;overflow:hidden;border:1px solid var(--border-subtle);aspect-ratio:16/9;background:#1a1a2a;position:relative}
+    .pp-media img{width:100%;height:100%;object-fit:cover}
+    .pp-media__first-only{position:absolute;top:8px;right:8px;padding:3px 7px;border-radius:5px;background:rgba(6,6,14,0.78);backdrop-filter:blur(6px);font-family:var(--font-display);font-size:8px;font-weight:700;letter-spacing:0.10em;color:var(--text-muted);text-transform:uppercase}
+
+    .pp-foot{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--border-subtle);background:rgba(0,0,0,0.15)}
+    .pp-foot__count{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.06em;color:var(--text-dim);display:flex;align-items:center;gap:6px}
+    .pp-foot__count strong{color:var(--text-muted);font-weight:800}
+    .pp-foot__count[data-state="warn"] strong{color:var(--accent-gold)}
+    .pp-foot__count[data-state="over"] strong{color:var(--accent-coral)}
+    .pp-foot__count-bar{position:relative;width:28px;height:4px;border-radius:2px;background:rgba(255,255,255,0.05);overflow:hidden}
+    .pp-foot__count-bar-fill{position:absolute;inset:0 auto 0 0;border-radius:2px;background:var(--accent-teal);transition:width 0.2s ease,background 0.2s ease}
+    .pp-foot__count[data-state="warn"] .pp-foot__count-bar-fill{background:var(--accent-gold)}
+    .pp-foot__count[data-state="over"] .pp-foot__count-bar-fill{background:var(--accent-coral)}
+    .pp-foot__badges{display:flex;gap:6px}
+    .pp-badge{padding:3px 8px;border-radius:5px;font-family:var(--font-display);font-size:8.5px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px}
+    .pp-badge svg{width:9px;height:9px}
+    .pp-badge--truncated{background:rgba(252,179,0,0.10);color:var(--accent-gold);border:1px solid rgba(252,179,0,0.22)}
+    .pp-badge--ok{background:rgba(34,197,94,0.08);color:var(--accent-green);border:1px solid rgba(34,197,94,0.20)}
+
+    .bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:25;display:flex;align-items:center;justify-content:space-between;padding:12px 28px;background:rgba(6,6,14,0.86);backdrop-filter:blur(20px);border-top:1px solid var(--border-subtle)}
+    .bottom-bar__left{display:flex;align-items:center;gap:16px;font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.08em;color:var(--text-dim)}
+    .bottom-bar__stat{display:inline-flex;align-items:center;gap:6px}
+    .bottom-bar__stat svg{width:13px;height:13px}
+    .bottom-bar__stat strong{color:var(--text-primary);font-weight:700}
+    .bottom-bar__stat--warn strong{color:var(--accent-gold)}
+    .bottom-bar__right{display:flex;align-items:center;gap:8px}
+
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0);pointer-events:none;z-index:60;display:flex;align-items:center;justify-content:center;transition:background 0.25s ease;padding:20px}
+    .modal-backdrop[data-open="true"]{background:rgba(6,6,14,0.72);pointer-events:auto;backdrop-filter:blur(8px)}
+    .modal{width:100%;max-width:480px;background:rgba(12,12,26,0.96);backdrop-filter:blur(24px);border:1px solid var(--border-strong);border-radius:20px;padding:0;overflow:hidden;transform:translateY(20px) scale(0.96);opacity:0;transition:all 0.3s cubic-bezier(0.16,1,0.3,1)}
+    .modal-backdrop[data-open="true"] .modal{transform:translateY(0) scale(1);opacity:1}
+
+    .modal__head{display:flex;align-items:center;gap:14px;padding:22px 24px;border-bottom:1px solid var(--border-subtle)}
+    .modal__logo{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff}
+    .modal__logo--bsky{background:linear-gradient(135deg,#0a85ff,#1da1f2)}
+    .modal__logo--linkedin{background:#0a66c2}
+    .modal__logo--threads{background:#0a0a0a;border:1px solid rgba(255,255,255,0.2)}
+    .modal__logo svg{width:22px;height:22px}
+    .modal__head-body{flex:1}
+    .modal__head-title{font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-primary)}
+    .modal__head-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+    .modal__close{width:32px;height:32px;border-radius:8px;background:transparent;border:1px solid var(--border-subtle);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:all 0.2s}
+    .modal__close:hover{border-color:rgba(239,68,68,0.3);color:var(--accent-coral)}
+    .modal__close svg{width:14px;height:14px}
+
+    .modal__body{padding:22px 24px;display:flex;flex-direction:column;gap:16px}
+    .modal__info{padding:12px 14px;border-radius:10px;background:rgba(10,133,255,0.06);border:1px solid rgba(10,133,255,0.18);font-size:12.5px;line-height:1.55;color:var(--text-muted);display:flex;gap:10px}
+    .modal__info svg{width:16px;height:16px;flex-shrink:0;color:var(--bsky);margin-top:1px}
+    .modal__info a{color:var(--bsky);text-decoration:none}
+    .modal__info a:hover{text-decoration:underline}
+
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field__label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim)}
+    .field__input{width:100%;padding:12px 14px;border-radius:11px;background:var(--bg-input);border:1px solid var(--border-subtle);font-family:var(--font-body);font-size:14px;color:var(--text-primary);outline:none;transition:all 0.2s ease}
+    .field__input:focus{border-color:rgba(10,133,255,0.35);background:var(--bg-input-focus)}
+    .field__input::placeholder{color:var(--text-dim)}
+    .field__hint{font-size:11.5px;color:var(--text-dim);line-height:1.5}
+    .field__hint code{font-family:var(--font-display);color:var(--accent-teal);padding:1px 6px;border-radius:4px;background:rgba(110,237,216,0.06);font-size:10.5px}
+
+    .modal__oauth-preview{padding:18px;border-radius:14px;background:var(--bg-input);border:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center}
+    .modal__oauth-preview-title{font-size:13.5px;font-weight:600;color:var(--text-primary)}
+    .modal__oauth-preview-sub{font-size:12px;color:var(--text-muted);line-height:1.55}
+    .modal__oauth-scopes{display:flex;flex-direction:column;gap:6px;width:100%;margin-top:4px}
+    .modal__oauth-scope{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);font-size:12px;color:var(--text-muted);text-align:left}
+    .modal__oauth-scope svg{width:12px;height:12px;color:var(--accent-green);flex-shrink:0}
+
+    .modal__foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 24px;border-top:1px solid var(--border-subtle);background:rgba(0,0,0,0.20)}
+    .modal__foot-hint{font-size:11px;color:var(--text-dim)}
+    .modal__actions{display:flex;gap:8px}
+    .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:10px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;cursor:pointer;transition:all 0.25s ease;border:1px solid transparent}
+    .btn svg{width:12px;height:12px}
+    .btn--cancel{background:transparent;border-color:var(--border-subtle);color:var(--text-muted)}
+    .btn--cancel:hover{border-color:var(--border-strong);color:var(--text-primary)}
+    .btn--primary-bsky{background:linear-gradient(135deg,#0a85ff,#1da1f2);color:#fff;box-shadow:0 2px 14px rgba(10,133,255,0.30)}
+    .btn--primary-linkedin{background:#0a66c2;color:#fff;box-shadow:0 2px 14px rgba(10,102,194,0.30)}
+    .btn--primary-threads{background:#fff;color:#0a0a0a}
+
+    @media (max-width:1080px){
+      .composer-page{grid-template-columns:1fr;padding:20px 16px 110px;gap:18px}
+      .crosspost{position:static;max-height:none}
+    }
+    @media (max-width:500px){
+      .arena-topbar{padding:12px 14px}
+      .topbar-title__eyebrow{display:none}
+      .topbar-title__main{font-size:13px}
+      .title-input{font-size:22px;padding:10px 0}
+      .body-editor{padding:16px;font-size:14.5px;min-height:200px;line-height:1.65}
+      .autosave{display:none}
+      .topbar-btn:not(.topbar-btn--primary){display:none}
+      .bottom-bar{padding:10px 14px;gap:8px}
+      .bottom-bar__left{font-size:9.5px;gap:10px;overflow:hidden}
+    }
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <div class="arena-topbar">
+      <div class="arena-topbar__left">
+        <button class="back-btn" aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="topbar-title">
+          <span class="topbar-title__eyebrow">Composer</span>
+          <span class="topbar-title__main">New Post</span>
+        </div>
+      </div>
+      <div class="arena-topbar__right">
+        <span class="autosave">Autosaved 2s ago</span>
+        <button class="topbar-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save Draft
+        </button>
+        <button class="topbar-btn topbar-btn--primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span id="publish-label">Publish to 2</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="composer-page">
+      <div class="composer">
+        <input class="title-input" type="text" id="titleInput" placeholder="Title your thought…" value="Why MCP changes everything for knowledge creators" />
+        <div class="title-divider"></div>
+
+        <div contenteditable="true" class="body-editor" id="bodyEditor" data-placeholder="Write your essence — it becomes part of your knowledge asset.">For the last five years, I've watched tools promise &quot;your second brain&quot; and deliver another silo. Notion, Roam, Obsidian — beautiful, but locked inside apps and behind screens.
+
+MCP flips that. Your knowledge becomes a queryable surface. You stop being the reader of your own notes and start being someone whose thinking can be queried, on demand, by agents working for you — or for people who subscribe to your House.
+
+Three implications I keep coming back to:
+
+1. The unit of value shifts from "the document" to "the ability to answer." No one pays for raw notes. They pay for a mind that answered their question.
+
+2. Embeddings + quality scoring let us separate signal from volume. Prolific ≠ valuable. A tightly-reasoned 500-word post can outrank 50 half-finished pages.
+
+3. Subscription access > content sale. You're not selling what you wrote; you're selling the inference layer on top of it.
+
+Ratel is building toward this. Connect Notion, open a House, let your essence compound.</div>
+
+        <div class="editor-meta">
+          <div class="editor-meta__stats">
+            <span class="editor-meta__stat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+              <strong id="wordCount">214</strong> words
+            </span>
+            <span class="editor-meta__stat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <strong id="readTime">~1</strong> min read
+            </span>
+            <span class="editor-meta__stat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l9 6 9-6"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg>
+              <strong id="charCount">1340</strong> chars
+            </span>
+          </div>
+          <span>Essence: ON</span>
+        </div>
+
+        <div class="attachments">
+          <div class="attachment">
+            <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&q=80" alt="" />
+            <span class="attachment__hero-badge">Hero</span>
+          </div>
+          <div class="attachment">
+            <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&q=80" alt="" />
+          </div>
+          <button class="attachment-add" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Add</span>
+          </button>
+        </div>
+      </div>
+
+      <aside class="crosspost">
+        <div class="crosspost-head">
+          <span class="crosspost-head__eyebrow">Syndication</span>
+          <h2 class="crosspost-head__title">
+            <span class="crosspost-head__title-accent">Cross-post</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6eedd8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </h2>
+          <p class="crosspost-head__sub">Publish once. Reach every network your audience lives on.</p>
+        </div>
+
+        <div class="reach-summary">
+          <div class="reach-summary__left">
+            <span class="reach-summary__label">Reaching</span>
+            <span class="reach-summary__value"><strong id="reachCount">2</strong> networks</span>
+          </div>
+          <div class="reach-summary__icons">
+            <span class="reach-chip reach-chip--bsky" data-reach="bsky">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.5c-1.3-2.5-4.9-7.2-8.2-9.5C.7-1.2 0 .5 0 1.5c0 1.1.6 9.1 1 10.3.8 4 5.5 5.1 9.6 4.4-6.5 1.1-12.3 3.5-4.7 11.4 2.5 2.6 3.5-2.6 4-5.2.5 2.6 1.6 7.8 4 5.2 7.7-7.9 1.9-10.4-4.6-11.5 4 .7 8.8-.4 9.6-4.4.4-1.2 1-9.2 1-10.3 0-1-.7-2.7-3.8-.5-3.3 2.3-6.9 7-8.2 9.6z"/></svg>
+            </span>
+            <span class="reach-chip reach-chip--linkedin" data-reach="linkedin">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.063 2.063 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            </span>
+            <span class="reach-chip reach-chip--threads" data-reach="threads" data-off="true">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798z"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <!-- ── Bluesky card ── -->
+        <article class="pp-card" data-platform="bsky" data-enabled="true" data-connected="true">
+          <header class="pp-head">
+            <div class="pp-head__left">
+              <span class="pp-logo pp-logo--bsky">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.5c-1.3-2.5-4.9-7.2-8.2-9.5C.7-1.2 0 .5 0 1.5c0 1.1.6 9.1 1 10.3.8 4 5.5 5.1 9.6 4.4-6.5 1.1-12.3 3.5-4.7 11.4 2.5 2.6 3.5-2.6 4-5.2.5 2.6 1.6 7.8 4 5.2 7.7-7.9 1.9-10.4-4.6-11.5 4 .7 8.8-.4 9.6-4.4.4-1.2 1-9.2 1-10.3 0-1-.7-2.7-3.8-.5-3.3 2.3-6.9 7-8.2 9.6z"/></svg>
+              </span>
+              <div>
+                <span class="pp-name">Bluesky
+                  <span class="pp-name__handle">@you.bsky.social</span>
+                  <span class="pp-name__status">Not connected</span>
+                </span>
+              </div>
+            </div>
+            <button class="switch pp-head__switch" aria-checked="true" data-platform-toggle="bsky" aria-label="Enable Bluesky"></button>
+          </header>
+          <div class="pp-state-disconnected">
+            <div class="connect-cta">
+              <p class="connect-cta__hint">Connect Bluesky to cross-post to the AT Protocol network.</p>
+              <button class="connect-cta__btn" data-connect-platform="bsky">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12 19 12"/><polyline points="12 5 19 12 12 19"/></svg>
+                Connect Bluesky
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <!-- ── LinkedIn card ── -->
+        <article class="pp-card" data-platform="linkedin" data-enabled="true" data-connected="true">
+          <header class="pp-head">
+            <div class="pp-head__left">
+              <span class="pp-logo pp-logo--linkedin">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.063 2.063 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+              </span>
+              <div>
+                <span class="pp-name">LinkedIn
+                  <span class="pp-name__handle">in/yourhandle</span>
+                  <span class="pp-name__status">Not connected</span>
+                </span>
+              </div>
+            </div>
+            <button class="switch pp-head__switch" aria-checked="true" data-platform-toggle="linkedin" aria-label="Enable LinkedIn"></button>
+          </header>
+          <div class="pp-state-disconnected">
+            <div class="connect-cta">
+              <p class="connect-cta__hint">Connect LinkedIn to reach your professional network.</p>
+              <button class="connect-cta__btn" data-connect-platform="linkedin">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12 19 12"/><polyline points="12 5 19 12 12 19"/></svg>
+                Connect LinkedIn
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <!-- ── Threads card (disconnected by default) ── -->
+        <article class="pp-card" data-platform="threads" data-enabled="false" data-connected="false">
+          <header class="pp-head">
+            <div class="pp-head__left">
+              <span class="pp-logo pp-logo--threads">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798z"/></svg>
+              </span>
+              <div>
+                <span class="pp-name">Threads
+                  <span class="pp-name__handle">@you</span>
+                  <span class="pp-name__status">Not connected</span>
+                </span>
+              </div>
+            </div>
+            <button class="switch pp-head__switch" aria-checked="true" data-platform-toggle="threads" aria-label="Enable Threads"></button>
+          </header>
+          <div class="pp-state-disconnected">
+            <div class="connect-cta">
+              <p class="connect-cta__hint">Connect Threads to reach <strong>~275M</strong> Meta users with every post.</p>
+              <button class="connect-cta__btn" data-connect-platform="threads">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12 19 12"/><polyline points="12 5 19 12 12 19"/></svg>
+                Connect Threads
+              </button>
+            </div>
+          </div>
+        </article>
+
+      </aside>
+    </div>
+
+    <div class="bottom-bar">
+      <div class="bottom-bar__left">
+        <span class="bottom-bar__stat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Reaching <strong id="barReach">2</strong> networks
+        </span>
+      </div>
+      <div class="bottom-bar__right">
+        <button class="topbar-btn topbar-btn--primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Publish to <span id="bottomReach">2</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLUESKY MODAL -->
+  <div class="modal-backdrop" id="modal-bsky" data-open="false">
+    <div class="modal" role="dialog">
+      <header class="modal__head">
+        <span class="modal__logo modal__logo--bsky">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.5c-1.3-2.5-4.9-7.2-8.2-9.5C.7-1.2 0 .5 0 1.5c0 1.1.6 9.1 1 10.3.8 4 5.5 5.1 9.6 4.4-6.5 1.1-12.3 3.5-4.7 11.4 2.5 2.6 3.5-2.6 4-5.2.5 2.6 1.6 7.8 4 5.2 7.7-7.9 1.9-10.4-4.6-11.5 4 .7 8.8-.4 9.6-4.4.4-1.2 1-9.2 1-10.3 0-1-.7-2.7-3.8-.5-3.3 2.3-6.9 7-8.2 9.6z"/></svg>
+        </span>
+        <div class="modal__head-body">
+          <div class="modal__head-title">Connect Bluesky</div>
+          <div class="modal__head-sub">Enter your handle + app password</div>
+        </div>
+        <button class="modal__close" data-close-modal aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </header>
+      <div class="modal__body">
+        <div class="modal__info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div>Bluesky uses <strong>app passwords</strong>, not OAuth. Generate one at <a href="#">bsky.app/settings/app-passwords</a> — we store it encrypted (KMS).</div>
+        </div>
+        <div class="field">
+          <label class="field__label">Handle</label>
+          <input class="field__input" type="text" placeholder="you.bsky.social" />
+        </div>
+        <div class="field">
+          <label class="field__label">App password</label>
+          <input class="field__input" type="password" placeholder="xxxx-xxxx-xxxx-xxxx" />
+          <span class="field__hint">Format: <code>xxxx-xxxx-xxxx-xxxx</code>. Revokable anytime.</span>
+        </div>
+      </div>
+      <footer class="modal__foot">
+        <span class="modal__foot-hint">Encrypted at rest · revocable</span>
+        <div class="modal__actions">
+          <button class="btn btn--cancel" data-close-modal>Cancel</button>
+          <button class="btn btn--primary-bsky" data-confirm-platform="bsky">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Connect
+          </button>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- LINKEDIN MODAL -->
+  <div class="modal-backdrop" id="modal-linkedin" data-open="false">
+    <div class="modal" role="dialog">
+      <header class="modal__head">
+        <span class="modal__logo modal__logo--linkedin">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.063 2.063 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        </span>
+        <div class="modal__head-body">
+          <div class="modal__head-title">Connect LinkedIn</div>
+          <div class="modal__head-sub">Authorize via OAuth 2.0</div>
+        </div>
+        <button class="modal__close" data-close-modal aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </header>
+      <div class="modal__body">
+        <div class="modal__oauth-preview">
+          <div class="modal__oauth-preview-title">You'll be redirected to LinkedIn</div>
+          <div class="modal__oauth-preview-sub">Approve these permissions so Ratel can publish to your profile.</div>
+          <div class="modal__oauth-scopes">
+            <div class="modal__oauth-scope">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Read basic profile (<code style="font-family:var(--font-display);color:var(--accent-teal)">r_liteprofile</code>)
+            </div>
+            <div class="modal__oauth-scope">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Publish posts (<code style="font-family:var(--font-display);color:var(--accent-teal)">w_member_social</code>)
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="modal__foot">
+        <span class="modal__foot-hint">Token refreshable · revocable anytime</span>
+        <div class="modal__actions">
+          <button class="btn btn--cancel" data-close-modal>Cancel</button>
+          <button class="btn btn--primary-linkedin" data-confirm-platform="linkedin">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="10 14 21 3"/><path d="M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"/></svg>
+            Continue with LinkedIn
+          </button>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- THREADS MODAL -->
+  <div class="modal-backdrop" id="modal-threads" data-open="false">
+    <div class="modal" role="dialog">
+      <header class="modal__head">
+        <span class="modal__logo modal__logo--threads">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798z"/></svg>
+        </span>
+        <div class="modal__head-body">
+          <div class="modal__head-title">Connect Threads</div>
+          <div class="modal__head-sub">Authorize via Meta OAuth</div>
+        </div>
+        <button class="modal__close" data-close-modal aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </header>
+      <div class="modal__body">
+        <div class="modal__info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div>Threads requires an Instagram business/creator account linked to your Meta profile. We only publish — never read your DMs.</div>
+        </div>
+        <div class="modal__oauth-preview">
+          <div class="modal__oauth-preview-title">Redirecting to Meta Login</div>
+          <div class="modal__oauth-preview-sub">You'll approve these scopes:</div>
+          <div class="modal__oauth-scopes">
+            <div class="modal__oauth-scope">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <code style="font-family:var(--font-display);color:var(--accent-teal)">threads_basic</code> — identify your account
+            </div>
+            <div class="modal__oauth-scope">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <code style="font-family:var(--font-display);color:var(--accent-teal)">threads_content_publish</code> — publish posts
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="modal__foot">
+        <span class="modal__foot-hint">Long-lived token · auto-refresh</span>
+        <div class="modal__actions">
+          <button class="btn btn--cancel" data-close-modal>Cancel</button>
+          <button class="btn btn--primary-threads" data-confirm-platform="threads">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="10 14 21 3"/><path d="M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"/></svg>
+            Continue with Meta
+          </button>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const bodyEditor = document.getElementById('bodyEditor');
+      const titleInput = document.getElementById('titleInput');
+
+      function updateSummary(){
+        const platforms = ['bsky','linkedin','threads'];
+        const activeList = platforms.filter(function(p){
+          const c = document.querySelector('.pp-card[data-platform="' + p + '"]');
+          return c && c.getAttribute('data-connected') === 'true' && c.getAttribute('data-enabled') === 'true';
+        });
+        const count = activeList.length;
+
+        document.getElementById('reachCount').textContent = count;
+        document.getElementById('barReach').textContent = count;
+        document.getElementById('bottomReach').textContent = count;
+        document.getElementById('publish-label').textContent = 'Publish to ' + count;
+
+        platforms.forEach(function(p){
+          const chip = document.querySelector('.reach-chip[data-reach="' + p + '"]');
+          if(chip) chip.setAttribute('data-off', activeList.indexOf(p) === -1 ? 'true' : 'false');
+        });
+
+        const body = bodyEditor.innerText;
+        document.getElementById('wordCount').textContent = body.trim().split(/\s+/).filter(Boolean).length;
+        document.getElementById('charCount').textContent = body.length;
+        document.getElementById('readTime').textContent = '~' + Math.max(1, Math.round(body.split(/\s+/).length / 220));
+      }
+
+      function renderAll(){ updateSummary(); }
+
+      document.querySelectorAll('[data-platform-toggle]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          const card = btn.closest('.pp-card');
+          const next = btn.getAttribute('aria-checked') !== 'true';
+          btn.setAttribute('aria-checked', next);
+          card.setAttribute('data-enabled', next);
+          renderAll();
+        });
+      });
+
+      document.querySelectorAll('[data-connect-platform]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          const p = btn.getAttribute('data-connect-platform');
+          const modal = document.getElementById('modal-' + p);
+          if(modal) modal.setAttribute('data-open', 'true');
+        });
+      });
+
+      document.querySelectorAll('[data-close-modal]').forEach(function(el){
+        el.addEventListener('click', function(){
+          const b = el.closest('.modal-backdrop');
+          if(b) b.setAttribute('data-open', 'false');
+        });
+      });
+      document.querySelectorAll('.modal-backdrop').forEach(function(b){
+        b.addEventListener('click', function(e){
+          if(e.target === b) b.setAttribute('data-open','false');
+        });
+      });
+      document.addEventListener('keydown', function(e){
+        if(e.key !== 'Escape') return;
+        document.querySelectorAll('.modal-backdrop[data-open="true"]').forEach(function(b){
+          b.setAttribute('data-open','false');
+        });
+      });
+
+      document.querySelectorAll('[data-confirm-platform]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          const p = btn.getAttribute('data-confirm-platform');
+          const card = document.querySelector('.pp-card[data-platform="' + p + '"]');
+          const backdrop = btn.closest('.modal-backdrop');
+          if(card){
+            card.setAttribute('data-connected', 'true');
+            card.setAttribute('data-enabled', 'true');
+            const toggle = card.querySelector('[data-platform-toggle]');
+            if(toggle) toggle.setAttribute('aria-checked', 'true');
+          }
+          if(backdrop) backdrop.setAttribute('data-open', 'false');
+          renderAll();
+        });
+      });
+
+      let debounce;
+      const onEdit = function(){ clearTimeout(debounce); debounce = setTimeout(renderAll, 120); };
+      bodyEditor.addEventListener('input', onEdit);
+      titleInput.addEventListener('input', onEdit);
+
+      renderAll();
+    })();
+  </script>
+</body>
+</html>

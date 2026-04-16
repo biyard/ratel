@@ -20,6 +20,11 @@ pub fn App() -> Element {
     ThemeService::init();
     let _ = crate::features::auth::Context::init()?;
     crate::common::contexts::TeamContext::init();
+    // Hydrate language + cached user session from the WebView's
+    // localStorage and keep them in sync on every change. Must run after
+    // `Context::init` so we don't overwrite a server-validated user with
+    // stale cached data.
+    crate::common::services::use_persist_ui_state();
     use_effect(move || {
         document::eval(
             r#"

@@ -1,0 +1,171 @@
+<div class="ratel-editor" data-bound="false">
+  <div class="re-toolbar" role="toolbar" aria-label="Editor toolbar">
+    <div class="re-toolbar__group">
+      <button class="re-tb-btn" data-cmd="undo" data-tip="Undo" type="button" aria-label="Undo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 7v6h6" />
+          <path d="M21 17a9 9 0 0 0-15-6.7L3 13" />
+        </svg>
+      </button>
+      <button class="re-tb-btn" data-cmd="redo" data-tip="Redo" type="button" aria-label="Redo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 7v6h-6" />
+          <path d="M3 17a9 9 0 0 1 15-6.7L21 13" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="re-toolbar__group">
+      <div class="re-block" data-open="false">
+        <button class="re-block__btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="re-block__label">Paragraph</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+        <div class="re-block__menu" role="listbox">
+          <button class="re-block__item" type="button" data-block="P">
+            <span>Paragraph</span><span class="re-block__item-hint">P</span>
+          </button>
+          <button class="re-block__item re-block__item--h1" type="button" data-block="H1">
+            <span>Heading 1</span><span class="re-block__item-hint">H1</span>
+          </button>
+          <button class="re-block__item re-block__item--h2" type="button" data-block="H2">
+            <span>Heading 2</span><span class="re-block__item-hint">H2</span>
+          </button>
+          <button class="re-block__item re-block__item--h3" type="button" data-block="H3">
+            <span>Heading 3</span><span class="re-block__item-hint">H3</span>
+          </button>
+          <button class="re-block__item re-block__item--quote" type="button" data-block="BLOCKQUOTE">
+            <span>Quote</span><span class="re-block__item-hint">"</span>
+          </button>
+          <button class="re-block__item re-block__item--code" type="button" data-block="PRE">
+            <span>Code block</span><span class="re-block__item-hint">{ }</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="re-toolbar__group">
+      <button class="re-tb-btn" data-cmd="bold" data-tip="Bold" type="button" aria-label="Bold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 0 8H6z"/><path d="M6 12h9a4 4 0 0 1 0 8H6z"/></svg></button>
+      <button class="re-tb-btn" data-cmd="italic" data-tip="Italic" type="button" aria-label="Italic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg></button>
+      <button class="re-tb-btn" data-cmd="underline" data-tip="Underline" type="button" aria-label="Underline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" y1="20" x2="20" y2="20"/></svg></button>
+      <button class="re-tb-btn" data-cmd="strikeThrough" data-tip="Strikethrough" type="button" aria-label="Strikethrough"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><path d="M16 6c-1.5-1.3-3.5-2-6-2-3 0-5 1.5-5 4 0 2 1.5 3 5 4"/><path d="M8 18c1.5 1.3 3.5 2 6 2 3 0 5-1.5 5-4 0-1-.4-1.8-1-2.4"/></svg></button>
+      <button class="re-tb-btn" data-cmd="code-inline" data-tip="Inline code" type="button" aria-label="Inline code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></button>
+    </div>
+
+    <div class="re-toolbar__group">
+      <button class="re-tb-btn" data-cmd="justifyLeft" data-tip="Align left" type="button" aria-label="Align left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg></button>
+      <button class="re-tb-btn" data-cmd="justifyCenter" data-tip="Align center" type="button" aria-label="Align center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg></button>
+      <button class="re-tb-btn" data-cmd="justifyRight" data-tip="Align right" type="button" aria-label="Align right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg></button>
+      <button class="re-tb-btn" data-cmd="justifyFull" data-tip="Justify" type="button" aria-label="Justify"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg></button>
+    </div>
+
+    <div class="re-toolbar__group">
+      <button class="re-tb-btn" data-cmd="insertUnorderedList" data-tip="Bullet list" type="button" aria-label="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg></button>
+      <button class="re-tb-btn" data-cmd="insertOrderedList" data-tip="Numbered list" type="button" aria-label="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></button>
+      <button class="re-tb-btn" data-cmd="outdent" data-tip="Outdent" type="button" aria-label="Outdent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="5" x2="3" y2="5"/><line x1="21" y1="19" x2="3" y2="19"/><line x1="21" y1="9" x2="11" y2="9"/><line x1="21" y1="15" x2="11" y2="15"/><polyline points="7 9 3 12 7 15"/></svg></button>
+      <button class="re-tb-btn" data-cmd="indent" data-tip="Indent" type="button" aria-label="Indent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="5" x2="21" y2="5"/><line x1="3" y1="19" x2="21" y2="19"/><line x1="13" y1="9" x2="3" y2="9"/><line x1="13" y1="15" x2="3" y2="15"/><polyline points="17 9 21 12 17 15"/></svg></button>
+    </div>
+
+    <div class="re-toolbar__group">
+      <button class="re-tb-btn" data-cmd="link" data-tip="Insert link" type="button" aria-label="Insert link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+      <button class="re-tb-btn" data-cmd="unlink" data-tip="Remove link" type="button" aria-label="Remove link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.84 12.25l1.72-1.71a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M5.16 11.75L3.44 13.46a5 5 0 0 0 7.07 7.07l1.71-1.71"/><line x1="2" y1="2" x2="22" y2="22"/></svg></button>
+      <button class="re-tb-btn" data-cmd="image" data-tip="Insert image" type="button" aria-label="Insert image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>
+      <button class="re-tb-btn" data-cmd="youtube" data-tip="Embed YouTube" type="button" aria-label="Embed YouTube"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 8.5a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v7a4 4 0 0 0 4 4h12a4 4 0 0 0 4-4z"/><polygon points="10 8 16 12 10 16 10 8"/></svg></button>
+      <button class="re-tb-btn" data-cmd="table" data-tip="Insert table" type="button" aria-label="Insert table"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></button>
+      <button class="re-tb-btn" data-cmd="hr" data-tip="Horizontal rule" type="button" aria-label="Horizontal rule"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/></svg></button>
+    </div>
+
+    <div class="re-toolbar__group">
+      <button class="re-tb-btn" data-cmd="removeFormat" data-tip="Clear formatting" type="button" aria-label="Clear formatting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><line x1="5" y1="20" x2="11" y2="20"/><line x1="13" y1="4" x2="8" y2="20"/><line x1="3" y1="3" x2="21" y2="21"/></svg></button>
+    </div>
+  </div>
+
+  <div
+    class="re-content"
+    contenteditable="true"
+    data-empty="true"
+    spellcheck="true"
+    autocapitalize="sentences"
+  ></div>
+
+  <div class="re-statusbar">
+    <div class="re-statusbar__chips">
+      <span class="re-statusbar__chip">Words <strong class="re-word-count">0</strong></span>
+      <span class="re-statusbar__chip">Chars <strong class="re-char-count">0</strong></span>
+    </div>
+    <div class="re-statusbar__chip re-ime-state">composing…</div>
+  </div>
+
+  <div class="re-modal-mask" data-modal="link">
+    <div class="re-modal" role="dialog" aria-label="Insert link">
+      <div class="re-modal__title">Insert link</div>
+      <div class="re-modal__field">
+        <label>URL</label>
+        <input class="re-link-url" type="url" placeholder="https://example.com" autocomplete="off" />
+      </div>
+      <div class="re-modal__actions">
+        <button class="re-btn" data-close-modal type="button">Cancel</button>
+        <button class="re-btn re-btn--primary re-link-confirm" type="button">Insert</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="re-modal-mask" data-modal="image">
+    <div class="re-modal" role="dialog" aria-label="Insert image">
+      <div class="re-modal__title">Insert image</div>
+      <div class="re-modal__field">
+        <label>Image URL</label>
+        <input class="re-image-url" type="url" placeholder="https://… or upload below" />
+      </div>
+      <div class="re-modal__field">
+        <label>Or upload</label>
+        <input class="re-image-file" type="file" accept="image/*" />
+      </div>
+      <div class="re-modal__actions">
+        <button class="re-btn" data-close-modal type="button">Cancel</button>
+        <button class="re-btn re-btn--primary re-image-confirm" type="button">Insert</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="re-modal-mask" data-modal="youtube">
+    <div class="re-modal" role="dialog" aria-label="Embed YouTube">
+      <div class="re-modal__title">Embed YouTube video</div>
+      <div class="re-modal__field">
+        <label>YouTube URL or ID</label>
+        <input class="re-youtube-url" type="text" placeholder="https://youtu.be/dQw4w9WgXcQ" />
+      </div>
+      <div class="re-modal__actions">
+        <button class="re-btn" data-close-modal type="button">Cancel</button>
+        <button class="re-btn re-btn--primary re-youtube-confirm" type="button">Embed</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="re-modal-mask" data-modal="table">
+    <div class="re-modal" role="dialog" aria-label="Insert table">
+      <div class="re-modal__title">Insert table</div>
+      <div class="re-modal__row">
+        <div class="re-modal__field">
+          <label>Rows</label>
+          <input class="re-table-rows" type="number" min="1" max="20" value="3" />
+        </div>
+        <div class="re-modal__field">
+          <label>Columns</label>
+          <input class="re-table-cols" type="number" min="1" max="10" value="3" />
+        </div>
+      </div>
+      <div class="re-modal__field">
+        <label class="re-modal__checkbox">
+          <input class="re-table-header" type="checkbox" checked /> First row is header
+        </label>
+      </div>
+      <div class="re-modal__actions">
+        <button class="re-btn" data-close-modal type="button">Cancel</button>
+        <button class="re-btn re-btn--primary re-table-confirm" type="button">Insert</button>
+      </div>
+    </div>
+  </div>
+</div>
