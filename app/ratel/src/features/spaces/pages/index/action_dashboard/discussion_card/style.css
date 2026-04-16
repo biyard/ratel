@@ -36,43 +36,6 @@
   --qedit-red: #ef4444;
 }
 
-.quest-card__top-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.quest-card__edit-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: var(--qedit-bg-glass);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--qedit-border-subtle);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--qedit-text-muted);
-  padding: 0;
-  opacity: 0;
-  transform: translateX(4px);
-  pointer-events: none;
-}
-.quest-card.active .quest-card__edit-btn {
-  opacity: 1;
-  transform: translateX(0);
-  pointer-events: auto;
-}
-.quest-card__edit-btn:hover {
-  border-color: rgba(252,179,0,0.3);
-  color: #fcb300;
-  background: var(--qedit-bg-glass-hover);
-}
-.quest-card__edit-btn svg { width: 14px; height: 14px; }
-.quest-card[data-editing="true"] .quest-card__edit-btn { display: none; }
-
 .quest-card[data-editing="true"] {
   border-color: rgba(252,179,0,0.4);
   box-shadow: 0 12px 60px rgba(0,0,0,0.5), 0 0 40px rgba(252,179,0,0.15);
