@@ -4,7 +4,7 @@ use crate::features::membership::models::{TransactionType, UserPurchase, TeamPur
 use crate::features::membership::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct PurchaseHistoryItem {
     pub tx_type: TransactionType,

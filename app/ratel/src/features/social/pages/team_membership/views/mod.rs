@@ -1,273 +1,307 @@
+mod i18n;
+
 use crate::common::*;
 use crate::features::membership::controllers::{
     PurchaseHistoryItem, get_team_membership_handler, get_team_purchase_history_handler,
 };
 use crate::features::membership::models::TeamMembershipResponse;
-use crate::features::social::pages::user_membership::components::{
-    format_date, format_membership_tier_label,
-};
+use crate::features::social::pages::user_membership::components::format_membership_tier_label;
 use dioxus::prelude::*;
+use i18n::TeamMembershipTranslate;
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Tier {
+    Free,
+    Pro,
+    Max,
+    Vip,
+    Enterprise,
+}
+
+fn tier_from_label(label: &str) -> Tier {
+    match label {
+        s if s.eq_ignore_ascii_case("Pro") => Tier::Pro,
+        s if s.eq_ignore_ascii_case("Max") => Tier::Max,
+        s if s.eq_ignore_ascii_case("Vip") => Tier::Vip,
+        s if s.eq_ignore_ascii_case("Free") => Tier::Free,
+        _ => Tier::Enterprise,
+    }
+}
+
+fn tier_modifier(t: Tier) -> &'static str {
+    match t {
+        Tier::Free => " current-card--free",
+        Tier::Pro => " current-card--pro",
+        Tier::Max => " current-card--max",
+        Tier::Vip => " current-card--vip",
+        Tier::Enterprise => " current-card--ent",
+    }
+}
+
+fn tier_desc(t: Tier, tr: &TeamMembershipTranslate) -> &'static str {
+    match t {
+        Tier::Free => tr.tier_free_desc,
+        Tier::Pro => tr.tier_pro_desc,
+        Tier::Max => tr.tier_max_desc,
+        Tier::Vip => tr.tier_vip_desc,
+        Tier::Enterprise => tr.tier_enterprise_desc,
+    }
+}
+
+fn format_expiry(expired_at: i64, unlimited_label: &str) -> String {
+    if expired_at == i64::MAX || expired_at == 0 {
+        unlimited_label.to_string()
+    } else {
+        use chrono::{DateTime, Utc};
+        DateTime::<Utc>::from_timestamp_millis(expired_at)
+            .map(|dt| dt.format("%Y · %m · %d").to_string())
+            .unwrap_or_else(|| unlimited_label.to_string())
+    }
+}
+
+fn format_date(ts_millis: i64) -> String {
+    use chrono::{DateTime, Utc};
+    DateTime::<Utc>::from_timestamp_millis(ts_millis)
+        .map(|dt| dt.format("%Y-%m-%d").to_string())
+        .unwrap_or_default()
+}
 
 #[component]
-pub fn Home(username: String) -> Element {
+pub fn Home(username: ReadSignal<String>) -> Element {
     let tr: TeamMembershipTranslate = use_translate();
 
-    let membership_resource =
-        use_server_future(use_reactive((&username,), |(name,)| async move {
-            get_team_membership_handler(name).await
-        }))?;
+    let membership_resource = use_loader(move || async move {
+        Ok::<_, crate::common::Error>(get_team_membership_handler(username()).await.ok())
+    })?;
+    let history_resource = use_loader(move || async move {
+        Ok::<_, crate::common::Error>(
+            get_team_purchase_history_handler(username(), None)
+                .await
+                .ok()
+                .map(|r| r.items)
+                .unwrap_or_default(),
+        )
+    })?;
 
-    let history_resource = use_server_future(use_reactive((&username,), |(name,)| async move {
-        get_team_purchase_history_handler(name, None).await
-    }))?;
-
-    let membership_state = membership_resource.read();
-    let history_state = history_resource.read();
-
-    let membership = match membership_state.as_ref() {
-        Some(Ok(data)) => data.clone(),
-        Some(Err(_)) => {
-            return rsx! {
-                div { class: "flex flex-col gap-6 p-6 mx-auto w-full max-w-4xl",
-                    h1 { class: "text-2xl font-bold text-text-primary", {tr.title} }
-                    div { class: "p-6 rounded-lg border bg-card-bg border-card-border",
-                        p { class: "text-text-secondary", {tr.no_permission} }
+    let Some(membership): Option<TeamMembershipResponse> = membership_resource() else {
+        return rsx! {
+            document::Link { rel: "stylesheet", href: asset!("./style.css") }
+            div { class: "tm-status-page",
+                div { class: "hero",
+                    h1 { class: "hero__title",
+                        "{tr.hero_title_en}"
+                        span { class: "hero__title-ko", "{tr.hero_title_ko}" }
                     }
+                    p { class: "hero__desc", "{tr.no_permission}" }
                 }
-            };
-        }
-        None => {
-            return rsx! {
-                div { class: "flex justify-center items-center min-h-screen", LoadingIndicator {} }
-            };
-        }
+            }
+        };
     };
+    let history: Vec<PurchaseHistoryItem> = history_resource();
 
-    let tier_name = format_membership_tier_label(&membership.tier.0, tr.enterprise);
-    let tier_color = match tier_name.as_str() {
-        "Pro" => "text-blue-500",
-        "Max" => "text-purple-500",
-        "Vip" => "text-amber-500",
-        _ => "text-text-secondary",
+    let tier_name = format_membership_tier_label(&membership.tier.0, tr.enterprise_label);
+    let tier = tier_from_label(&tier_name);
+    let mod_class = tier_modifier(tier);
+    let desc = tier_desc(tier, &tr);
+
+    let remaining = membership.remaining_credits.max(0);
+    let total = membership.total_credits.max(1);
+    let pct = ((remaining as f64 / total as f64) * 100.0).clamp(0.0, 100.0);
+    let pct_label = format!("{:.0}%", pct);
+    let fill_style = format!("width:{:.0}%", pct);
+
+    let expiry = format_expiry(membership.expired_at, tr.expires_unlimited);
+    let show_auto_renew = membership.expired_at != i64::MAX && membership.expired_at != 0;
+
+    let next_tier_label = membership
+        .next_membership
+        .as_ref()
+        .map(|p| format_membership_tier_label(&p.0, tr.enterprise_label));
+
+    let history_len = history.len();
+    let count_suffix = if history_len == 1 {
+        tr.history_count_suffix_one
+    } else {
+        tr.history_count_suffix_many
     };
 
     rsx! {
-        div { class: "flex flex-col gap-6 p-6 mx-auto w-full max-w-4xl",
-            h1 { class: "text-2xl font-bold text-text-primary", {tr.title} }
+        document::Link { rel: "stylesheet", href: asset!("./style.css") }
 
-            div { class: "p-6 rounded-lg border bg-card-bg border-card-border",
-                h2 { class: "mb-4 text-xl font-semibold text-text-primary", {tr.current_plan} }
+        div { class: "tm-status-page",
+            // Section label
+            div { class: "section-label",
+                span { class: "section-label__dash" }
+                span { class: "section-label__title",
+                    "{tr.section_label_prefix} "
+                    strong { "{tr.section_label_strong}" }
+                }
+                span { class: "section-label__dash" }
+            }
 
-                div { class: "flex flex-col gap-4",
-                    div { class: "flex gap-3 items-center",
-                        lucide_dioxus::Sparkles { class: format!("w-6 h-6 {}", tier_color) }
+            // Hero
+            div { class: "hero",
+                h1 { class: "hero__title",
+                    "{tr.hero_title_en}"
+                    span { class: "hero__title-ko", "{tr.hero_title_ko}" }
+                }
+                p { class: "hero__desc",
+                    "{tr.hero_desc_prefix}"
+                    strong { "{tr.hero_desc_credits}" }
+                    "{tr.hero_desc_suffix}"
+                }
+            }
+
+            div { class: "page",
+
+                // ── Current Plan ──
+                div { class: "current-card{mod_class}",
+                    div { class: "cc-tier",
+                        span { class: "cc-tier__label", "{tr.current_plan_label}" }
+                        div { class: "cc-tier__name", "{tier_name}" }
+                        div { class: "cc-tier__desc", "{desc}" }
+                    }
+
+                    div { class: "cc-stat",
+                        span { class: "cc-stat__label", "{tr.credits_label}" }
+                        div { class: "cc-stat__value-row",
+                            span { class: "cc-stat__value cc-stat__value--tier",
+                                "{remaining}"
+                            }
+                            span { class: "cc-stat__suffix", "/ {total}" }
+                        }
                         div {
-                            div { class: "text-sm text-text-secondary", {tr.tier} }
-                            div { class: format!("text-lg font-bold {}", tier_color),
-                                "{tier_name}"
+                            div { class: "cc-progress",
+                                div { class: "cc-progress__fill", style: "{fill_style}" }
+                            }
+                            div { class: "cc-progress__meta",
+                                span { "{tr.credits_remaining_hint}" }
+                                span { "{pct_label}" }
                             }
                         }
                     }
 
-                    div { class: "grid grid-cols-2 gap-4",
-                        div {
-                            div { class: "text-sm text-text-secondary", {tr.total_credits} }
-                            div { class: "text-lg font-semibold text-text-primary",
-                                "{membership.total_credits}"
-                            }
-                        }
-                        div {
-                            div { class: "text-sm text-text-secondary", {tr.remaining_credits} }
-                            div { class: "text-lg font-semibold text-text-primary",
-                                "{membership.remaining_credits}"
-                            }
+                    div { class: "cc-expire",
+                        span { class: "cc-stat__label", "{tr.expires_label}" }
+                        div { class: "cc-expire__date", "{expiry}" }
+                        if show_auto_renew {
+                            div { class: "cc-expire__hint", "{tr.expires_auto_renew}" }
                         }
                     }
 
-                    div { class: "grid grid-cols-2 gap-4",
-                        div {
-                            div { class: "text-sm text-text-secondary", {tr.expiration} }
-                            div { class: "text-lg font-semibold text-text-primary",
-                                {format_date(membership.expired_at, tr.unlimited)}
+                    if let Some(next) = next_tier_label {
+                        div { class: "cc-footer",
+                            div { class: "cc-footer__icon",
+                                svg {
+                                    view_box: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_width: "2",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    circle { cx: "12", cy: "12", r: "10" }
+                                    line {
+                                        x1: "12",
+                                        y1: "8",
+                                        x2: "12",
+                                        y2: "12",
+                                    }
+                                    line {
+                                        x1: "12",
+                                        y1: "16",
+                                        x2: "12.01",
+                                        y2: "16",
+                                    }
+                                }
                             }
-                        }
-                    }
-
-                    if let Some(next) = membership.next_membership {
-                        div { class: "p-3 rounded border bg-background-secondary border-amber-500/30",
-                            div { class: "text-sm font-semibold text-amber-500",
-                                {tr.scheduled_downgrade}
-                            }
-                            div { class: "text-sm text-text-secondary",
-                                "{tr.next_membership}: {format_membership_tier_label(&next.0, tr.enterprise)}"
+                            div { class: "cc-footer__text",
+                                "{tr.downgrade_prefix}"
+                                strong { "{next}" }
+                                "{tr.downgrade_suffix}"
                             }
                         }
                     }
                 }
-            }
 
-            // Purchase History
-            div { class: "p-6 rounded-lg border bg-card-bg border-card-border",
-                h2 { class: "mb-4 text-xl font-semibold text-text-primary", {tr.purchase_history} }
+                // ── Purchase History ──
+                div { class: "history-card",
+                    div { class: "history-card__header",
+                        span { class: "history-card__title", "{tr.history_title}" }
+                        span { class: "history-card__count",
+                            "{history_len} {count_suffix}"
+                        }
+                    }
 
-                {render_history(&history_state, &tr)}
+                    if history.is_empty() {
+                        div { class: "history-empty",
+                            div { class: "history-empty__icon",
+                                svg {
+                                    view_box: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_width: "1.8",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    rect {
+                                        x: "3",
+                                        y: "5",
+                                        width: "18",
+                                        height: "14",
+                                        rx: "2",
+                                    }
+                                    line {
+                                        x1: "3",
+                                        y1: "10",
+                                        x2: "21",
+                                        y2: "10",
+                                    }
+                                }
+                            }
+                            div { class: "history-empty__title", "{tr.history_empty_title}" }
+                            div { class: "history-empty__desc", "{tr.history_empty_desc}" }
+                        }
+                    } else {
+                        table { class: "history-table",
+                            colgroup {
+                                col { style: "width:22%" }
+                                col { style: "width:18%" }
+                                col { style: "width:34%" }
+                                col { style: "width:26%" }
+                            }
+                            thead {
+                                tr {
+                                    th { "{tr.th_type}" }
+                                    th { class: "num", "{tr.th_amount}" }
+                                    th { "{tr.th_payment_id}" }
+                                    th { class: "date", "{tr.th_date}" }
+                                }
+                            }
+                            tbody {
+                                for (idx , item) in history.iter().enumerate() {
+                                    tr { key: "{idx}",
+                                        td { "data-label": tr.th_type,
+                                            span { class: "history-chip", "{item.tx_type}" }
+                                        }
+                                        td { class: "num", "data-label": tr.th_amount,
+                                            "₩{item.amount}"
+                                        }
+                                        td {
+                                            class: "mono",
+                                            "data-label": tr.th_payment_id,
+                                            "{item.payment_id}"
+                                        }
+                                        td {
+                                            class: "date",
+                                            "data-label": tr.th_date,
+                                            "{format_date(item.created_at)}"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
-}
-
-fn render_history(
-    state: &Option<std::result::Result<ListResponse<PurchaseHistoryItem>, crate::common::Error>>,
-    tr: &TeamMembershipTranslate,
-) -> Element {
-    let Some(state) = state else {
-        return rsx! {
-            div { class: "flex justify-center py-8", LoadingIndicator {} }
-        };
-    };
-
-    let empty = ListResponse {
-        items: vec![],
-        bookmark: None,
-    };
-    let history = match state {
-        Ok(data) => data,
-        Err(_) => &empty,
-    };
-
-    if history.items.is_empty() {
-        return rsx! {
-            div { class: "py-8 text-center text-text-secondary", {tr.no_purchases} }
-        };
-    }
-
-    rsx! {
-        div { class: "overflow-x-auto",
-            table { class: "w-full",
-                thead {
-                    tr { class: "border-b border-card-border",
-                        th { class: "py-3 px-2 text-sm font-semibold text-left text-text-secondary",
-                            {tr.transaction_type}
-                        }
-                        th { class: "py-3 px-2 text-sm font-semibold text-left text-text-secondary",
-                            {tr.amount}
-                        }
-                        th { class: "py-3 px-2 text-sm font-semibold text-left text-text-secondary",
-                            {tr.payment_id}
-                        }
-                        th { class: "py-3 px-2 text-sm font-semibold text-left text-text-secondary",
-                            {tr.date}
-                        }
-                    }
-                }
-                tbody {
-                    for (idx , item) in history.items.iter().enumerate() {
-                        tr {
-                            key: "{idx}",
-                            class: "border-b last:border-0 border-card-border",
-                            td { class: "py-3 px-2 text-sm text-text-primary", "{item.tx_type}" }
-                            td { class: "py-3 px-2 text-sm text-text-primary",
-                                {format!("₩{}", item.amount)}
-                            }
-                            td { class: "py-3 px-2 font-mono text-xs text-text-secondary",
-                                "{item.payment_id}"
-                            }
-                            td { class: "py-3 px-2 text-sm text-text-secondary",
-                                {format_date(item.created_at, tr.unlimited)}
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-translate! {
-    TeamMembershipTranslate;
-
-    title: {
-        en: "Team Membership",
-        ko: "팀 멤버십",
-    },
-
-    current_plan: {
-        en: "Current Plan",
-        ko: "현재 플랜",
-    },
-
-    tier: {
-        en: "Tier",
-        ko: "등급",
-    },
-
-    enterprise: {
-        en: "Enterprise",
-        ko: "엔터프라이즈",
-    },
-
-    total_credits: {
-        en: "Total Credits",
-        ko: "총 크레딧",
-    },
-
-    remaining_credits: {
-        en: "Remaining Credits",
-        ko: "남은 크레딧",
-    },
-
-    expiration: {
-        en: "Expires",
-        ko: "만료일",
-    },
-
-    next_membership: {
-        en: "Next Membership",
-        ko: "다음 멤버십",
-    },
-
-    scheduled_downgrade: {
-        en: "Scheduled Downgrade",
-        ko: "예정된 다운그레이드",
-    },
-
-    unlimited: {
-        en: "Unlimited",
-        ko: "무제한",
-    },
-
-    no_permission: {
-        en: "You don't have permission to view this page.",
-        ko: "이 페이지를 볼 수 있는 권한이 없습니다.",
-    },
-
-    purchase_history: {
-        en: "Purchase History",
-        ko: "구매 내역",
-    },
-
-    transaction_type: {
-        en: "Type",
-        ko: "유형",
-    },
-
-    amount: {
-        en: "Amount",
-        ko: "금액",
-    },
-
-    payment_id: {
-        en: "Payment ID",
-        ko: "결제 ID",
-    },
-
-    date: {
-        en: "Date",
-        ko: "날짜",
-    },
-
-    no_purchases: {
-        en: "No purchase history",
-        ko: "구매 내역이 없습니다",
-    },
 }

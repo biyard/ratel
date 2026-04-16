@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { click, fill, goto, getEditor } from "../utils";
+import { createTeamFromHome, createTeamPostFromHome, goto } from "../utils";
 
 /**
  * Team Draft Timeline — E2E
@@ -33,68 +33,33 @@ test.describe.serial("Team draft timeline on team home page", () => {
   const teamNickname = `Draft Team ${uniqueId}`;
   const teamUsername = `e2e_draft_${uniqueId}`;
   const postTitle = `Draft Post for Timeline Test ${uniqueId}`;
-
-  let teamHomeUrl;
+  const postContents =
+    "This is a draft post created for the TeamDraftTimeline E2E test. " +
+    "It should appear in the team draft timeline section on the team home page.";
 
   // --- 1. Create a team ---
-  // The renewed home arena no longer exposes a profile-dropdown "Create Team"
-  // affordance, so team creation is driven via the REST API (the same endpoint
-  // the UI form submits to). This keeps this scenario focused on the draft
-  // timeline itself rather than the orthogonal team-creation UI.
+  // Drive team creation through the production UI flow:
+  //   home (`/`) → Teams HUD dropdown → "Create Team" footer →
+  //   ArenaTeamCreationPopup → submit. Lands on the new team's home page.
 
   test("Create a team to get TeamAdmin permissions", async ({ page }) => {
-    const res = await page.request.post("/api/teams/create", {
-      data: {
-        body: {
-          username: teamUsername,
-          nickname: teamNickname,
-          profile_url: "",
-          description: "E2E test team for draft timeline",
-        },
-      },
+    await createTeamFromHome(page, {
+      username: teamUsername,
+      nickname: teamNickname,
+      description: "E2E test team for draft timeline",
     });
-    expect(res.ok(), `create team: ${await res.text()}`).toBeTruthy();
-
-    teamHomeUrl = `/${teamUsername}/home`;
-
-    await goto(page, teamHomeUrl);
     await expect(page).toHaveURL(new RegExp(`/${teamUsername}/home`));
   });
 
   // --- 2. Create a draft post from the team home page ---
 
   test("Create a draft post for the team", async ({ page }) => {
-    await goto(page, teamHomeUrl);
+    // Drive draft creation through the production UI flow: home (`/`) →
+    // Teams HUD dropdown → pick team → team home → Create Post. The helper
+    // fills title + body and waits for autosave confirmation.
+    await createTeamPostFromHome(page, teamUsername, postTitle, postContents);
 
-    // Wait for the team arena layout to hydrate and propagate the owner
-    // role into the arena context before clicking the Create Post button.
-    await expect(page.getByTestId("team-home-create-post")).toBeVisible({
-      timeout: 15000,
-    });
-
-    // Click the Create Post button on the team home page
-    await click(page, { testId: "team-home-create-post" });
-
-    // Wait for post edit page to load
-    await page.waitForURL(/\/posts\/.*\/edit/, {
-      waitUntil: "load",
-    });
-
-    // Fill in the title (post is saved as draft automatically)
-    await fill(page, { placeholder: "Title your post…" }, postTitle);
-
-    // Fill in the post body using the rich text editor
-    const editor = await getEditor(page);
-    await editor.fill(
-      "This is a draft post created for the TeamDraftTimeline E2E test. " +
-        "It should appear in the team draft timeline section on the team home page."
-    );
-
-    // Wait for autosave to complete — the editor debounces saves by 3 seconds,
-    // then shows "All changes saved" when the server responds successfully.
-    await expect(page.getByText("All changes saved")).toBeVisible({ timeout: 15000 });
-
-    // Verify we are on the post edit page
+    // Verify we are on the post edit page (draft is saved automatically).
     await expect(page).toHaveURL(/\/posts\/.*\/edit/);
   });
 

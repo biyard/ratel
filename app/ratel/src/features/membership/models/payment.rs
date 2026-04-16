@@ -62,7 +62,7 @@ pub enum PurchaseStatus {
     Canceled,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, DynamoEnum)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default, DynamoEnum)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub enum TransactionType {
     #[default]

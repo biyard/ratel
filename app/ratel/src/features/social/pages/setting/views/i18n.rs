@@ -288,6 +288,11 @@ translate! {
         ko: "플랜 변경",
     },
 
+    view_membership: {
+        en: "View Membership",
+        ko: "멤버십 확인하기",
+    },
+
     enterprise: {
         en: "Enterprise",
         ko: "엔터프라이즈",
