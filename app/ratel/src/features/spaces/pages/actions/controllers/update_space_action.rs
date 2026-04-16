@@ -16,6 +16,7 @@ pub enum UpdateSpaceActionRequest {
     Credits { credits: u64 },
     Time { started_at: i64, ended_at: i64 },
     Prerequisite { prerequisite: bool },
+    Title { title: String },
 }
 
 #[post(
@@ -86,6 +87,18 @@ pub async fn update_space_action(
                 .await
                 .map_err(|e| {
                     crate::error!("Failed to update space action: {e:?}");
+                    SpaceActionError::ActionUpdateFailed
+                })?;
+        }
+        UpdateSpaceActionRequest::Title { title } => {
+            space_action.title = title.clone();
+            SpaceAction::updater(&pk, &EntityType::SpaceAction)
+                .with_title(title)
+                .with_updated_at(now)
+                .execute(cli)
+                .await
+                .map_err(|e| {
+                    crate::error!("Failed to update space action title: {e:?}");
                     SpaceActionError::ActionUpdateFailed
                 })?;
         }
