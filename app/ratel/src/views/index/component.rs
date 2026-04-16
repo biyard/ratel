@@ -1,10 +1,13 @@
 use super::space_card::*;
 use super::*;
 use crate::common::components::{Robots, SeoMeta};
+use crate::common::contexts::TeamItem;
+use crate::common::hooks::use_infinite_query;
 use crate::common::types::ListResponse;
 use crate::common::use_loader;
 use crate::features::auth::LoginModal;
 use crate::features::posts::controllers::create_post::create_post_handler;
+use crate::features::social::pages::team_arena::ArenaTeamCreationPopup;
 use crate::features::spaces::pages::index::SettingsPanel;
 use crate::features::spaces::space_common::controllers::{
     HotSpaceHeat, HotSpaceResponse, list_hot_spaces_handler, list_my_home_spaces_handler,
@@ -30,6 +33,17 @@ pub fn Index() -> Element {
         .unwrap_or_default();
     let has_user = user_ctx().user.is_some();
     let mut settings_open = use_signal(|| false);
+    let mut teams_open = use_signal(|| false);
+
+    let mut teams_query = use_infinite_query(move |bookmark| async move {
+        if has_user {
+            crate::get_user_teams_handler(bookmark).await
+        } else {
+            Ok(ListResponse::<TeamItem>::default())
+        }
+    })?;
+    let teams: Vec<TeamItem> = teams_query.items();
+    let teams_more = teams_query.more_element();
 
     let keywords = vec![
         "ratel".to_string(),
@@ -280,6 +294,131 @@ pub fn Index() -> Element {
                             path { d: "m9 12 2 2 4-4" }
                         }
                         span { class: "hud-btn__label", "{t.credentials}" }
+                    }
+                    if has_user {
+                        div { class: "hud-teams", "aria-expanded": teams_open(),
+                            button {
+                                class: "hud-btn",
+                                aria_label: "{t.teams}",
+                                "data-testid": "home-btn-teams",
+                                onclick: move |e: Event<MouseData>| {
+                                    e.stop_propagation();
+                                    teams_open.toggle();
+                                },
+                                svg {
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    stroke_width: "1.6",
+                                    view_box: "0 0 24 24",
+                                    xmlns: "http://www.w3.org/2000/svg",
+                                    path { d: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" }
+                                    circle { cx: "9", cy: "7", r: "4" }
+                                    path { d: "M23 21v-2a4 4 0 0 0-3-3.87" }
+                                    path { d: "M16 3.13a4 4 0 0 1 0 7.75" }
+                                }
+                                span { class: "hud-btn__label", "{t.teams}" }
+                            }
+                            // Always rendered; CSS uses [aria-expanded="true"]
+                            // on the parent to toggle visibility. Matches the
+                            // team_arena topbar pattern exactly — button owns
+                            // stop_propagation + toggle, dropdown owns its own
+                            // stop_propagation so clicks inside don't bubble
+                            // to the outer backdrop.
+                            div {
+                                class: "team-dd",
+                                role: "menu",
+                                "data-testid": "home-teams-dd",
+                                onclick: move |e: Event<MouseData>| e.stop_propagation(),
+                                div { class: "team-dd__header", "{t.teams_header}" }
+                                div {
+                                    class: "team-dd__list",
+                                    id: "home-teams-dd-list",
+                                    // The shared `use_infinite_query` sentinel uses
+                                    // IntersectionObserver against the viewport, which
+                                    // doesn't fire for internal scrolling inside this
+                                    // bounded dropdown. Detect near-bottom directly via
+                                    // onscroll + JS so pagination triggers reliably.
+                                    onscroll: move |_| {
+                                        let js = r#"
+                                                                            const el = document.getElementById('home-teams-dd-list');
+                                                                            if (!el) { dioxus.send(false); return; }
+                                                                            const nearBottom =
+                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+                                                                            dioxus.send(nearBottom);
+                                                                        "#;
+                                        let mut ctrl = teams_query;
+                                        spawn(async move {
+                                            let mut eval = document::eval(js);
+                                            if let Ok(near_bottom) = eval.recv::<bool>().await {
+                                                if near_bottom
+                                                    && ctrl.has_more()
+                                                    && !ctrl.is_loading()
+                                                {
+                                                    ctrl.next();
+                                                }
+                                            }
+                                        });
+                                    },
+                                    if teams.is_empty() {
+                                        div { class: "team-dd__empty", "{t.teams_empty}" }
+                                    } else {
+                                        for team in teams.iter().cloned() {
+                                            HomeTeamDdItem {
+                                                key: "{team.username}",
+                                                username: team.username.clone(),
+                                                display_name: if team.nickname.is_empty() { team.username.clone() } else { team.nickname.clone() },
+                                                profile_url: team.profile_url.clone(),
+                                                on_pick: move |_| {
+                                                    teams_open.set(false);
+                                                },
+                                            }
+                                        }
+                                    }
+                                    {teams_more}
+                                }
+                                div {
+                                    class: "team-dd__footer",
+                                    role: "button",
+                                    tabindex: "0",
+                                    "data-testid": "home-btn-create-team",
+                                    onclick: move |_| {
+                                        teams_open.set(false);
+                                        popup.open(rsx! {
+                                            ArenaTeamCreationPopup {}
+                                        }).without_close().with_backdrop_close();
+                                    },
+                                    svg {
+                                        view_box: "0 0 24 24",
+                                        fill: "none",
+                                        stroke: "currentColor",
+                                        stroke_width: "2.5",
+                                        stroke_linecap: "round",
+                                        stroke_linejoin: "round",
+                                        line {
+                                            x1: "12",
+                                            y1: "5",
+                                            x2: "12",
+                                            y2: "19",
+                                        }
+                                        line {
+                                            x1: "5",
+                                            y1: "12",
+                                            x2: "19",
+                                            y2: "12",
+                                        }
+                                    }
+                                    "{t.create_team}"
+                                }
+                            }
+                        }
+                        if teams_open() {
+                            div {
+                                style: "position:fixed;inset:0;z-index:25;",
+                                onclick: move |_| teams_open.set(false),
+                            }
+                        }
                     }
                     if !has_user {
                         button {
@@ -600,4 +739,48 @@ fn heat_label(total_actions: i64) -> String {
 
 fn balance_text(has_user: bool) -> String {
     if has_user { "—".to_string() } else { "0".to_string() }
+}
+
+#[component]
+fn HomeTeamDdItem(
+    username: String,
+    display_name: String,
+    profile_url: String,
+    on_pick: EventHandler<()>,
+) -> Element {
+    let nav = use_navigator();
+    let initial = display_name
+        .chars()
+        .next()
+        .map(|c| c.to_uppercase().to_string())
+        .unwrap_or_else(|| "T".to_string());
+    let handle = format!("@{username}");
+
+    rsx! {
+        div {
+            class: "team-dd__item",
+            role: "button",
+            tabindex: "0",
+            "data-testid": "home-team-dd-item-{username}",
+            onclick: move |_| {
+                on_pick.call(());
+                nav.push(Route::TeamHome {
+                    username: username.clone(),
+                });
+            },
+            if !profile_url.is_empty() {
+                img {
+                    class: "team-dd__avatar",
+                    src: "{profile_url}",
+                    alt: "{display_name}",
+                }
+            } else {
+                div { class: "team-dd__avatar", "{initial}" }
+            }
+            div { class: "team-dd__body",
+                span { class: "team-dd__name", "{display_name}" }
+                span { class: "team-dd__handle", "{handle}" }
+            }
+        }
+    }
 }

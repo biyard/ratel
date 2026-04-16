@@ -10,9 +10,9 @@ pub fn AppLayout() -> Element {
     let _teams_loader = use_resource(move || async move {
         let user = user_ctx().user.clone();
         if user.is_some() {
-            match get_user_teams_handler().await {
-                Ok(teams) => {
-                    team_ctx.set_teams(teams);
+            match get_user_teams_handler(None).await {
+                Ok(resp) => {
+                    team_ctx.set_teams(resp.items);
                 }
                 Err(e) => {
                     debug!("Failed to load teams: {:?}", e);

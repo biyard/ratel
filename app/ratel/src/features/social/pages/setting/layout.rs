@@ -9,7 +9,10 @@ pub fn TeamSettingLayout(username: String) -> Element {
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let mut team_ctx = crate::common::contexts::use_team_context();
     let teams_future = use_server_future(move || async move {
-        crate::get_user_teams_handler().await.unwrap_or_default()
+        crate::get_user_teams_handler(None)
+            .await
+            .map(|r| r.items)
+            .unwrap_or_default()
     })?;
     use_effect(move || {
         if let Some(teams) = teams_future.value().read().clone() {

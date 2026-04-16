@@ -187,6 +187,7 @@ pub fn TeamCreationForm(
                     style: ButtonStyle::Primary,
                     class: "w-full",
                     disabled: !can_submit(),
+                    "data-testid": "team-create-submit",
                     onclick: move |_| {
                         if !can_submit() {
                             return;

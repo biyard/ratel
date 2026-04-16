@@ -86,6 +86,21 @@
 }
 .team-arena .home-section-label__title strong { color: var(--accent-gold); font-weight: 700; }
 
+/* ── Feed region ── */
+/* Wraps both the carousel and the empty state so the middle of the
+   home layout always owns the same flex slot. Without this the empty
+   state inherits only intrinsic sizing and can collapse to zero on
+   fast SPA navigations, which is why the "게시글이 없습니다" copy
+   sometimes went missing on the icon-click path. */
+.team-arena .home-feed-region {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+}
+
 /* ── Carousel ── */
 .team-arena .carousel-wrapper {
   position: relative;
@@ -395,6 +410,10 @@ html[data-theme="light"] .team-arena .post-card__chip,
   text-transform: uppercase;
   cursor: pointer;
   transition: all 0.3s;
+  /* Keep the CTA right-aligned in the footer even when the reward
+     block isn't rendered (posts without rewards used to fill the gap
+     with an em-dash; now the CTA anchors itself via auto margin). */
+  margin-left: auto;
 }
 .team-arena .post-card__cta:hover {
   background: linear-gradient(135deg, rgba(252, 179, 0, 0.3), rgba(110, 237, 216, 0.15));
@@ -448,12 +467,23 @@ html[data-theme="light"] .team-arena .carousel-dot:hover,
   flex-direction: column;
   gap: 10px;
   padding: 10px 28px 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .team-arena .home-bottom-bar__row {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  width: 100%;
+}
+.team-arena .home-bottom-bar__row > .hud-stat {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+.team-arena .home-bottom-bar__row > .home-browse-btn {
+  flex-shrink: 0;
+  margin-left: auto;
 }
 .team-arena .home-bottom-bar__row--filters {
   padding: 6px 4px;
@@ -576,6 +606,7 @@ html[data-theme="light"] .team-arena .cat-filter:hover,
 /* ── Empty state ── */
 .team-arena .home-empty-state {
   flex: 1;
+  min-height: 320px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -584,14 +615,20 @@ html[data-theme="light"] .team-arena .cat-filter:hover,
   color: var(--text-muted);
   font-size: 14px;
   padding: 40px 20px;
+  text-align: center;
 }
 .team-arena .home-empty-state__title {
   font-family: 'Orbitron', sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--text-primary);
+}
+.team-arena .home-empty-state__desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  max-width: 420px;
 }
 
 /* ── Responsive ── */

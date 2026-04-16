@@ -9,8 +9,10 @@ pub async fn get_team_member_permission_handler(username: String) -> Result<Team
     let cli = conf.common.dynamodb();
     let user: Option<crate::features::auth::User> = user.into();
     let role = match user {
-        Some(u) => Team::get_user_role(cli, &team.pk, &u.pk).await?,
-        None => TeamRole::Member,
+        Some(u) => Team::get_user_role(cli, &team.pk, &u.pk)
+            .await?
+            .unwrap_or_default(),
+        None => TeamRole::default(),
     };
     Ok(TeamMemberPermission {
         team_pk: team.pk.clone().into(),

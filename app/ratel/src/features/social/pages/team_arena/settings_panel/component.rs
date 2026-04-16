@@ -18,6 +18,7 @@ pub fn ArenaSettingsPanel(
     let user_ctx = use_user_context();
     let is_logged_in = user_ctx.read().user.is_some();
     let mut popup = use_popup();
+    let nav = use_navigator();
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
@@ -199,8 +200,22 @@ pub fn ArenaSettingsPanel(
                         button {
                             class: "ta-settings-action ta-settings-action--logout",
                             r#type: "button",
-                            onclick: move |_| async move {
-                                crate::features::auth::services::sign_out(user_ctx).await;
+                            onclick: {
+                                let username = username.clone();
+                                move |_| {
+                                    let username = username.clone();
+                                    async move {
+                                        // Centralized sign-out: flushes server session,
+                                        // clears UserContext + cached refresh token,
+                                        // reloads on web. Mobile doesn't reload, so we
+                                        // navigate to TeamHome explicitly afterward
+                                        // — staying on an admin-only sub-page would
+                                        // render ViewerPage under the now-logged-out
+                                        // state.
+                                        crate::features::auth::services::sign_out(user_ctx).await;
+                                        nav.replace(Route::TeamHome { username });
+                                    }
+                                }
                             },
                             svg {
                                 view_box: "0 0 24 24",

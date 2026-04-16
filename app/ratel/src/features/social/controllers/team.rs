@@ -95,6 +95,8 @@ pub async fn get_user_teams_handler() -> crate::features::social::Result<Vec<cra
                 cli, &team_pk, &user_pk,
             )
             .await
+            .ok()
+            .flatten()
             .unwrap_or_default();
             let perms: crate::features::posts::types::TeamGroupPermissions =
                 role.to_legacy_permissions().into();
