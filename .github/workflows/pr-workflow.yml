@@ -82,7 +82,7 @@ jobs:
 
       - name: Install Dioxus-cli
         run: |
-          cargo binstall dioxus-cli@0.7.3 --force
+          cargo binstall dioxus-cli
 
       - name: Building test
         id: build
@@ -133,7 +133,7 @@ jobs:
 
       - name: Install Dioxus-cli
         run: |
-          cargo binstall dioxus-cli@0.7.3 --force
+          cargo binstall dioxus-cli
 
       - name: Building test
         id: build
@@ -208,7 +208,7 @@ jobs:
 
       - name: Install Dioxus-cli
         run: |
-          cargo binstall dioxus-cli@0.7.3 --force
+          cargo binstall dioxus-cli
 
       - name: Start infrastructure
         run: |

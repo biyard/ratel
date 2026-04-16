@@ -68,3 +68,4 @@ user.json
 /app/ratel/test-build-target/
 /playwright/admin.json
 /.claude/worktrees/
+google-services.json

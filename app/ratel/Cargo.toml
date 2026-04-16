@@ -93,6 +93,7 @@ lambda_http = { version = "1.0.2", optional = true }
 dioxus-primitives = { git = "https://github.com/DioxusLabs/components", version = "0.0.1", default-features = false, features = [
   "router",
 ] }
+manganis = { workspace = true }
 time = { version = "0.3.47", features = ["formatting"] }
 ic-agent = { version = "0.46", optional = true }
 candid = { version = "0.10", optional = true }

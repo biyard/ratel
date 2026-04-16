@@ -5,8 +5,10 @@ use wasm_bindgen_futures::JsFuture;
 #[cfg(feature = "web")]
 use web_sys::js_sys::Promise;
 
+mod native_signin;
 mod wallet_connect;
 use super::*;
+pub use native_signin::sign_in_native;
 pub use wallet_connect::*;
 // ── Firebase interop ──────────────────────────────────────────────────
 
@@ -28,13 +30,18 @@ pub struct UserInfo {
     pub photo_url: Option<String>,
 }
 
-/// Google / Firebase sign-in.
+/// Google sign-in entry point.
 ///
-/// Only wired for the web feature today. On mobile the embedded Android
-/// WebView cannot run Firebase's `signInWithPopup` (Google blocks OAuth in
-/// WebViews), so we surface a clear error instead of panicking. Native
-/// Google Sign-In via Custom Tabs or the GMS SDK is tracked as follow-up.
-#[cfg(not(feature = "web"))]
+/// - **Web**: Firebase `signInWithPopup` over a wasm-bindgen FFI.
+/// - **Android**: Credential Manager API via the Kotlin `GoogleAuthPlugin`
+///   (manganis FFI). See [`native_signin::sign_in_native`].
+/// - **Other non-web targets**: returns `SignInUnsupportedOnPlatform`.
+#[cfg(all(not(feature = "web"), target_os = "android"))]
+pub async fn sign_in() -> crate::common::Result<UserInfo> {
+    sign_in_native().await
+}
+
+#[cfg(all(not(feature = "web"), not(target_os = "android")))]
 pub async fn sign_in() -> crate::common::Result<UserInfo> {
     Err(AuthError::SignInUnsupportedOnPlatform.into())
 }
