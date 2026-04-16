@@ -551,6 +551,14 @@ fn TsSubscriptionCard(username: String) -> Element {
                     span { class: "{tier_class}", "{tier_label}" }
                     Link {
                         class: "ts-plan-change-link",
+                        "data-testid": "team-settings-view-membership",
+                        to: Route::TeamMemberships {
+                            username: username.clone(),
+                        },
+                        "{tr.view_membership}"
+                    }
+                    Link {
+                        class: "ts-plan-change-link",
                         "data-testid": "team-settings-change-plan",
                         to: Route::TeamSettingSubscription {
                             username: username.clone(),

@@ -293,9 +293,19 @@ html[data-theme="light"] .team-arena .ts-card-form,
   background: none;
   border: none;
   padding: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, color 0.2s;
 }
-.team-arena .ts-plan-change-link:hover { opacity: 0.8; text-decoration: underline; text-underline-offset: 3px; }
+.team-arena .ts-plan-change-link:hover { opacity: 0.85; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Secondary link (View Membership) — teal so it contrasts with the gold
+ * Change Plan CTA when both render side-by-side. */
+.team-arena .ts-plan-change-link[data-testid="team-settings-view-membership"] {
+  color: #6eedd8;
+}
+html[data-theme="light"] .team-arena .ts-plan-change-link[data-testid="team-settings-view-membership"],
+[data-theme="light"] .team-arena .ts-plan-change-link[data-testid="team-settings-view-membership"] {
+  color: #12a58a;
+}
 .team-arena .ts-credit-value {
   font-family: 'Orbitron', sans-serif;
   font-size: 14px;
