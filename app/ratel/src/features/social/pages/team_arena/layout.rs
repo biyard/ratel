@@ -74,41 +74,36 @@ pub fn TeamArenaLayout(username: String) -> Element {
     });
 
     // Fetch the team record so we have display name, logo, and permissions.
-    // Re-runs whenever `username` changes OR `refresh_trigger` is bumped by a
-    // child page (e.g., the settings save handler).
+    // Re-runs whenever `username` changes, `refresh_trigger` is bumped by a
+    // child page (e.g. settings save handler), OR the logged-in user changes
+    // (login / logout). Without the user-pk dependency the resource would
+    // stay stale after a modal login and the layout would report `can_edit
+    // = false` for an owner who just signed in, surfacing as a bogus
+    // "No permission" error.
+    let user_pk_dep = user_ctx()
+        .user
+        .as_ref()
+        .map(|u| u.pk.to_string())
+        .unwrap_or_default();
     let team_resource = use_loader(use_reactive(
-        (&username, &refresh_trigger()),
-        |(name, _)| async move {
+        (&username, &refresh_trigger(), &user_pk_dep),
+        |(name, _, _)| async move {
             Ok::<_, crate::features::social::Error>(
                 find_team_handler(name).await.map_err(|e| e.to_string()),
             )
         },
     ))?;
 
-    // Derive render-time values from the resource + team context fallback.
-    let (display_name, profile_url, permissions_mask) = {
+    // Derive render-time values from the resource directly. The server
+    // returns `Option<TeamRole>` — `Some(role)` means an actual team
+    // membership, `None` means the viewer is not a member (logged out
+    // or just not joined). Everything (can_edit, is_admin, is_member)
+    // flows from this single value; no permissions bitmask on the client.
+    let (display_name, profile_url, role_opt) = {
         let data = team_resource.read();
-        let fallback = {
-            let teams = team_ctx.teams.read();
-            teams
-                .iter()
-                .find(|t| t.username == username)
-                .cloned()
-        };
 
         match data.as_ref() {
             Ok(team) if !team.pk.is_empty() && !team.username.is_empty() => {
-                let perms: Vec<u8> = team
-                    .permissions
-                    .clone()
-                    .unwrap_or_default()
-                    .into_iter()
-                    .map(|p| p as u8)
-                    .collect();
-                let mut mask = 0i64;
-                for v in &perms {
-                    mask |= 1i64 << (*v as i32);
-                }
                 let nickname = if team.nickname.is_empty() {
                     team.username.clone()
                 } else {
@@ -117,34 +112,15 @@ pub fn TeamArenaLayout(username: String) -> Element {
                 (
                     nickname,
                     team.profile_url.clone().unwrap_or_default(),
-                    mask,
+                    team.role,
                 )
             }
-            _ => {
-                if let Some(team) = fallback {
-                    let mut mask = 0i64;
-                    for v in &team.permissions {
-                        mask |= 1i64 << (*v as i32);
-                    }
-                    let nickname = if team.nickname.is_empty() {
-                        team.username.clone()
-                    } else {
-                        team.nickname.clone()
-                    };
-                    (nickname, team.profile_url.clone(), mask)
-                } else {
-                    (username.clone(), String::new(), 0i64)
-                }
-            }
+            _ => (username.clone(), String::new(), None),
         }
     };
 
-    let role = crate::features::social::pages::member::dto::TeamRole::from_legacy_permissions(
-        permissions_mask,
-    );
-    let is_admin = role.is_owner();
-    let can_edit = role.is_admin_or_owner();
-    let is_member = permissions_mask != 0;
+    let can_edit = role_opt.map(|r| r.is_admin_or_owner()).unwrap_or(false);
+    let is_member = role_opt.is_some();
     let logged_in = user_ctx().user.is_some();
 
     // Load follow status for non-members (members never see the follow btn).
@@ -192,19 +168,45 @@ pub fn TeamArenaLayout(username: String) -> Element {
     };
 
     // Push resolved values into the context so child routes can read them.
+    // Recompute derivatives from `team_resource` INSIDE the effect so the
+    // closure reads that signal — this is what registers the effect's
+    // reactive dependency. Without the signal read the effect only runs
+    // once on mount, which leaves `can_edit` et al. stuck at false even
+    // after a post-login refetch, causing child pages like subscription
+    // to render "No permission" until a full page reload.
     let mut ctx = use_team_arena();
-    use_effect({
-        let username = username.clone();
-        let display_name = display_name.clone();
-        let profile_url = profile_url.clone();
-        move || {
-            ctx.username.set(username.clone());
-            ctx.display_name.set(display_name.clone());
-            ctx.profile_url.set(profile_url.clone());
-            ctx.can_edit.set(can_edit);
-            ctx.is_admin.set(is_admin);
-            ctx.is_member.set(is_member);
-        }
+    let username_for_ctx = username.clone();
+    use_effect(move || {
+        // Read the signal so this effect re-runs on every team_resource
+        // resolution (login, logout, refresh trigger). Everything derived
+        // from the team flows off the `Option<TeamRole>` returned by the
+        // server — `None` means non-member.
+        let data = team_resource.read();
+
+        let (display_name_v, profile_url_v, role_v) = match data.as_ref() {
+            Ok(team) if !team.pk.is_empty() && !team.username.is_empty() => {
+                let nickname = if team.nickname.is_empty() {
+                    team.username.clone()
+                } else {
+                    team.nickname.clone()
+                };
+                (
+                    nickname,
+                    team.profile_url.clone().unwrap_or_default(),
+                    team.role,
+                )
+            }
+            _ => (username_for_ctx.clone(), String::new(), None),
+        };
+
+        ctx.username.set(username_for_ctx.clone());
+        ctx.display_name.set(display_name_v);
+        ctx.profile_url.set(profile_url_v);
+        ctx.can_edit
+            .set(role_v.map(|r| r.is_admin_or_owner()).unwrap_or(false));
+        ctx.is_admin
+            .set(role_v.map(|r| r.is_owner()).unwrap_or(false));
+        ctx.is_member.set(role_v.is_some());
     });
 
     rsx! {

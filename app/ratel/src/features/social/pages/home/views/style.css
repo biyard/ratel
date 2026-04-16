@@ -410,6 +410,10 @@ html[data-theme="light"] .team-arena .post-card__chip,
   text-transform: uppercase;
   cursor: pointer;
   transition: all 0.3s;
+  /* Keep the CTA right-aligned in the footer even when the reward
+     block isn't rendered (posts without rewards used to fill the gap
+     with an em-dash; now the CTA anchors itself via auto margin). */
+  margin-left: auto;
 }
 .team-arena .post-card__cta:hover {
   background: linear-gradient(135deg, rgba(252, 179, 0, 0.3), rgba(110, 237, 216, 0.15));

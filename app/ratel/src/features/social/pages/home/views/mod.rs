@@ -379,28 +379,27 @@ fn PostCard(index: usize, post: PostResponse) -> Element {
             }
 
             div { class: "post-card__footer",
-                match post.rewards {
-                    Some(r) if r > 0 => rsx! {
-                        div { class: "post-card__reward",
-                            svg {
-                                view_box: "0 0 24 24",
-                                fill: "none",
-                                stroke: "currentColor",
-                                stroke_width: "2",
-                                circle { cx: "12", cy: "12", r: "10" }
-                                path { d: "M12 6v12" }
-                                path { d: "M16 10H8" }
-                            }
-                            "{r} "
-                            small { "reward" }
+                if let Some(r) = post.rewards.filter(|v| *v > 0) {
+                    div { class: "post-card__reward",
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2",
+                            circle { cx: "12", cy: "12", r: "10" }
+                            path { d: "M12 6v12" }
+                            path { d: "M16 10H8" }
                         }
-                    },
-                    _ => rsx! {
-                        div { class: "post-card__reward post-card__reward--muted", "—" }
-                    },
+                        "{r} "
+                        small { "reward" }
+                    }
                 }
                 span { class: "post-card__cta",
-                    "Read Post"
+                    if post.has_space() {
+                        "Read Space"
+                    } else {
+                        "Read Post"
+                    }
                     svg {
                         view_box: "0 0 24 24",
                         fill: "none",

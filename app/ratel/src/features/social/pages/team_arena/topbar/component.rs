@@ -11,6 +11,7 @@ pub enum TeamArenaTab {
     Drafts,
     Members,
     Rewards,
+    Subscription,
     Settings,
 }
 
@@ -45,6 +46,8 @@ pub fn ArenaTopbar(
     let tr: TeamArenaTranslate = use_translate();
     let nav = use_navigator();
     let mut popup = use_popup();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
+    let has_user = user_ctx().user.is_some();
 
     let mut dd_open = use_signal(|| false);
 
@@ -52,8 +55,16 @@ pub fn ArenaTopbar(
     // past the server's default 20-team limit. The parent `team_arena` layout
     // also populates `team_ctx` for other consumers (sidebar fallback, etc.),
     // but the topbar reads directly from this query to control pagination.
+    //
+    // `get_user_teams_handler` requires a session — guard on `has_user` so a
+    // logged-out visitor to a public team page doesn't bubble NoSessionFound
+    // up to the global ErrorBoundary ("먼저 로그인 해주세요" overlay).
     let mut teams_query = use_infinite_query(move |bookmark| async move {
-        crate::get_user_teams_handler(bookmark).await
+        if has_user {
+            crate::get_user_teams_handler(bookmark).await
+        } else {
+            Ok(crate::common::types::ListResponse::<crate::common::contexts::TeamItem>::default())
+        }
     })?;
     let all_teams = teams_query.items();
 
@@ -195,12 +206,12 @@ pub fn ArenaTopbar(
                             id: "arena-teams-dd-list",
                             onscroll: move |_| {
                                 let js = r#"
-                                                            const el = document.getElementById('arena-teams-dd-list');
-                                                            if (!el) { dioxus.send(false); return; }
-                                                            const nearBottom =
-                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
-                                                            dioxus.send(nearBottom);
-                                                        "#;
+                                                                                                            const el = document.getElementById('arena-teams-dd-list');
+                                                                                                            if (!el) { dioxus.send(false); return; }
+                                                                                                            const nearBottom =
+                                                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+                                                                                                            dioxus.send(nearBottom);
+                                                                                                        "#;
                                 let mut ctrl = teams_query;
                                 spawn(async move {
                                     let mut eval = document::eval(js);
@@ -354,7 +365,7 @@ pub fn ArenaTopbar(
                 if can_edit {
                     HudButton {
                         label: tr.subscription.to_string(),
-                        active: false,
+                        active: active == TeamArenaTab::Subscription,
                         to: Route::TeamSettingSubscription {
                             username: username.clone(),
                         },
