@@ -10,6 +10,17 @@ pub enum Environment {
     Production,
 }
 
+impl Environment {
+    pub fn mobile_endpoint(self) -> &'static str {
+        match self {
+            Environment::Local => "https://dev.ratel.foundation",
+            Environment::Dev => "https://dev.ratel.foundation",
+            Environment::Staging => "https://stg.ratel.foundation",
+            Environment::Production => "https://ratel.foundation",
+        }
+    }
+}
+
 impl Default for Environment {
     fn default() -> Self {
         let default_env = option_env!("ENV").unwrap_or("local");
