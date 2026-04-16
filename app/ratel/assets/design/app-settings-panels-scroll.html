@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>App Settings — Panels (Scroll)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+    html[data-theme="dark"]{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --surface-soft:rgba(255,255,255,0.02);--surface-hover:rgba(255,255,255,0.04);
+      --glow-aura-a:rgba(34,211,238,0.06);--glow-aura-b:rgba(252,179,0,0.03);
+      --panel-bg:rgba(12,12,26,1);--input-bg:rgba(255,255,255,0.02);--input-border:rgba(255,255,255,0.08);
+      --danger-bg:rgba(239,68,68,0.04);--danger-border:rgba(239,68,68,0.18);
+    }
+    html[data-theme="light"]{
+      --bg-void:#f5f5fb;--bg-glass:rgba(255,255,255,0.75);--bg-glass-hover:rgba(255,255,255,0.95);
+      --border-subtle:rgba(10,10,30,0.08);--border-strong:rgba(10,10,30,0.16);
+      --text-primary:#12121a;--text-muted:#5b5b75;--text-dim:#9898ad;
+      --surface-soft:rgba(10,10,30,0.03);--surface-hover:rgba(10,10,30,0.05);
+      --glow-aura-a:rgba(34,211,238,0.12);--glow-aura-b:rgba(252,179,0,0.06);
+      --panel-bg:rgba(255,255,255,1);--input-bg:rgba(10,10,30,0.02);--input-border:rgba(10,10,30,0.1);
+      --danger-bg:rgba(239,68,68,0.06);--danger-border:rgba(239,68,68,0.22);
+    }
+
+    :root{
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-red:#ef4444;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+      --panel-color:#22d3ee;--panel-hl-bg:rgba(34,211,238,0.10);--panel-hl-border:rgba(34,211,238,0.28);--panel-hl-glow:rgba(34,211,238,0.18);
+    }
+
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body);transition:background 0.25s,color 0.25s}
+
+    .arena{position:relative;min-height:100vh;display:flex;flex-direction:column}
+    .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 20%,var(--glow-aura-a),transparent 60%),radial-gradient(ellipse 120% 100% at 50% 120%,var(--glow-aura-b),transparent 50%);z-index:0;pointer-events:none}
+
+    .arena-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:16px 28px;gap:16px;background:var(--bg-glass);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-subtle)}
+    .arena-topbar__left{display:flex;align-items:center;gap:12px;flex:1;min-width:0;flex-wrap:wrap}
+    .back-btn{width:36px;height:36px;border-radius:10px;background:var(--surface-soft);border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
+    .back-btn:hover{border-color:rgba(252,179,0,0.3);color:var(--accent-gold)}
+    .back-btn svg{width:16px;height:16px}
+    .arena-topbar__logo{width:36px;height:36px;border-radius:9px;border:1px solid rgba(252,179,0,0.15)}
+    .breadcrumb{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .breadcrumb__item{font-family:var(--font-display);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted)}
+    .breadcrumb__sep{color:var(--text-dim);font-size:10px}
+    .breadcrumb__current{color:var(--text-primary);font-weight:600}
+    .type-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:var(--panel-hl-bg);color:var(--panel-color);border:1px solid var(--panel-hl-border)}
+    .type-badge svg{width:13px;height:13px}
+
+    .topbar-title{flex:1;min-width:180px;color:var(--text-primary);font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:0.04em;padding:6px 10px}
+
+    .arena-topbar__right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+    .autosave{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted)}
+    .autosave__dot{width:6px;height:6px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal)}
+    .autosave--unsaved .autosave__dot{background:var(--accent-gold);box-shadow:0 0 6px var(--accent-gold);animation:pulse 1.4s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+    .btn{padding:8px 14px;border-radius:10px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;border:1px solid var(--border-subtle);background:transparent;color:var(--text-primary);display:inline-flex;align-items:center;gap:6px}
+    .btn:hover{border-color:rgba(252,179,0,0.3);color:var(--accent-gold);background:var(--surface-hover)}
+    .btn--secondary{background:var(--surface-soft)}
+    .btn--primary{background:linear-gradient(135deg,var(--accent-gold),#e5a200);border:none;color:#0a0a0a;box-shadow:0 2px 12px rgba(252,179,0,0.25)}
+    .btn--primary:hover{color:#0a0a0a;transform:translateY(-1px);box-shadow:0 4px 16px rgba(252,179,0,0.4)}
+    .btn--danger{background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.22);color:var(--accent-red)}
+    .btn--lg{padding:10px 20px;font-size:11px}
+
+    .hud-btn{width:40px;height:40px;border-radius:10px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s;padding:0;position:relative}
+    .hud-btn:hover{background:var(--bg-glass-hover);border-color:rgba(252,179,0,0.2)}
+    .hud-btn svg{width:16px;height:16px;color:var(--text-muted)}
+    .hud-btn:hover svg{color:var(--accent-gold)}
+    .theme-menu{position:absolute;top:48px;right:0;min-width:180px;background:var(--panel-bg);border:1px solid var(--border-subtle);border-radius:12px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,0.4);z-index:40;display:none;flex-direction:column;gap:2px}
+    .theme-menu[data-open="true"]{display:flex}
+    .theme-menu__label{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);padding:8px 10px 4px}
+    .theme-menu__item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:transparent;border:1px solid transparent;cursor:pointer;color:var(--text-primary);font-size:13px;text-align:left}
+    .theme-menu__item:hover{background:var(--surface-hover)}
+    .theme-menu__item[aria-selected="true"]{background:rgba(252,179,0,0.08);border-color:rgba(252,179,0,0.22);color:var(--accent-gold)}
+    .theme-menu__item svg{width:14px;height:14px}
+
+    .arena-body{position:relative;z-index:10;flex:1;padding:32px 28px 120px;max-width:1100px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:22px}
+
+    .section{background:var(--bg-glass);backdrop-filter:blur(18px);border:1px solid var(--border-subtle);border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:16px}
+    .section__head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .section__label{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
+    .section__hint{font-size:12px;color:var(--text-muted)}
+    .section--danger{background:var(--danger-bg);border-color:var(--danger-border)}
+
+    .field{display:flex;flex-direction:column;gap:8px}
+    .field__label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted)}
+    .input{width:100%;padding:11px 14px;border-radius:10px;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary);font-family:var(--font-body);font-size:14px;outline:none;transition:all 0.2s}
+    .input:focus{border-color:rgba(252,179,0,0.4);box-shadow:0 0 0 3px rgba(252,179,0,0.08)}
+    .input--num{width:160px}
+    .input-group{display:flex;align-items:center;gap:8px}
+    .input-suffix{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.1em;color:var(--text-muted)}
+
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media (max-width:768px){.grid-2{grid-template-columns:1fr}}
+
+    .segmented{display:inline-flex;padding:3px;background:var(--surface-soft);border:1px solid var(--border-subtle);border-radius:10px;gap:2px;flex-wrap:wrap}
+    .segmented__btn{padding:8px 14px;border-radius:8px;background:transparent;border:none;color:var(--text-muted);font-family:var(--font-body);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s}
+    .segmented__btn[aria-selected="true"]{background:rgba(252,179,0,0.12);color:var(--accent-gold);box-shadow:0 1px 4px rgba(252,179,0,0.15)}
+
+    .switch{position:relative;display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+    .switch__track{width:38px;height:22px;border-radius:100px;background:var(--surface-hover);border:1px solid var(--border-subtle);position:relative;transition:all 0.2s;flex-shrink:0}
+    .switch__thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--text-muted);transition:all 0.2s}
+    .switch[aria-checked="true"] .switch__track{background:rgba(252,179,0,0.2);border-color:rgba(252,179,0,0.4)}
+    .switch[aria-checked="true"] .switch__thumb{left:18px;background:var(--accent-gold);box-shadow:0 0 8px rgba(252,179,0,0.5)}
+    .switch__label{font-size:13px;color:var(--text-primary)}
+    .switch__sub{font-size:11px;color:var(--text-muted);display:block;margin-top:2px}
+
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;transition:all 0.15s}
+    .chip:hover{border-color:var(--panel-hl-border);color:var(--panel-color)}
+    .chip[aria-pressed="true"]{background:var(--panel-hl-bg);border-color:var(--panel-hl-border);color:var(--panel-color)}
+
+    /* Radio cards */
+    .radio-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    @media (max-width:768px){.radio-cards{grid-template-columns:1fr}}
+    .radio-card{padding:16px;border-radius:12px;background:var(--surface-soft);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;gap:6px;text-align:left;color:var(--text-primary)}
+    .radio-card:hover{border-color:var(--panel-hl-border);background:var(--surface-hover)}
+    .radio-card[aria-selected="true"]{border-color:var(--panel-color);background:var(--panel-hl-bg);box-shadow:0 4px 20px var(--panel-hl-glow)}
+    .radio-card__title{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-primary)}
+    .radio-card[aria-selected="true"] .radio-card__title{color:var(--panel-color)}
+    .radio-card__desc{font-size:12px;color:var(--text-muted);line-height:1.5}
+
+    /* Question row */
+    .q-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--surface-soft);border:1px solid var(--border-subtle);margin-bottom:8px;flex-wrap:wrap}
+    .q-row__handle{color:var(--text-dim);cursor:grab;font-size:16px;user-select:none;flex-shrink:0}
+    .q-row__num{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--panel-color);flex-shrink:0;width:24px}
+    .q-row__label{flex:1;min-width:180px}
+    .q-row .select{padding:8px 12px;border-radius:10px;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary);font-family:var(--font-body);font-size:13px;outline:none;flex-shrink:0}
+    .q-row__req{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);font-family:var(--font-display);letter-spacing:0.06em;text-transform:uppercase}
+    .icon-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--border-subtle);background:transparent;color:var(--text-muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+    .icon-btn:hover{border-color:rgba(239,68,68,0.3);color:var(--accent-red)}
+    .icon-btn svg{width:13px;height:13px}
+    .add-btn{width:100%;padding:12px;border-radius:12px;border:1.5px dashed var(--border-strong);background:transparent;color:var(--text-muted);font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s}
+    .add-btn:hover{border-color:var(--panel-color);color:var(--panel-color);background:var(--panel-hl-bg)}
+    .add-btn svg{width:14px;height:14px}
+
+    /* Criteria block */
+    .criteria-block{padding:16px;border-radius:14px;background:var(--surface-soft);border:1px solid var(--panel-hl-border);display:flex;flex-direction:column;gap:14px}
+
+    .accordion{border:1px solid var(--border-subtle);border-radius:12px;overflow:hidden;background:var(--surface-soft)}
+    .accordion__head{width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:transparent;border:none;color:var(--text-primary);cursor:pointer;font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase}
+    .accordion__head svg{width:14px;height:14px;color:var(--text-muted);transition:transform 0.2s}
+    .accordion[data-open="true"] .accordion__head svg{transform:rotate(180deg)}
+    .accordion__body{display:none;padding:0 18px 18px;flex-direction:column;gap:14px}
+    .accordion[data-open="true"] .accordion__body{display:flex}
+
+    .sticky-footer{position:sticky;bottom:0;z-index:25;background:var(--bg-glass);backdrop-filter:blur(20px);border-top:1px solid var(--border-subtle);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto}
+    .sticky-footer__left{font-size:12px;color:var(--text-muted)}
+    .sticky-footer__actions{display:flex;gap:10px}
+
+    @media (max-width:768px){.arena-topbar{padding:12px 16px;flex-wrap:wrap}.arena-body{padding:20px 16px 100px}.section{padding:18px 16px}}
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <header class="arena-topbar" role="banner">
+      <div class="arena-topbar__left">
+        <button class="back-btn" aria-label="Back" data-testid="topbar-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button>
+        <img class="arena-topbar__logo" alt="Space logo" src="https://api.dicebear.com/7.x/shapes/svg?seed=climate&backgroundColor=22d3ee" />
+        <nav class="breadcrumb">
+          <span class="breadcrumb__item">Climate Action DAO</span>
+          <span class="breadcrumb__sep">›</span>
+          <span class="breadcrumb__item">Apps</span>
+          <span class="breadcrumb__sep">›</span>
+          <span class="breadcrumb__item breadcrumb__current">Panels</span>
+        </nav>
+        <span class="type-badge" data-testid="type-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Panels
+        </span>
+        <span class="topbar-title">Panels Settings</span>
+      </div>
+      <div class="arena-topbar__right">
+        <span class="autosave autosave--unsaved" data-testid="autosave-pill"><span class="autosave__dot"></span><span>Unsaved · 3s</span></span>
+        <button class="btn" data-testid="cancel-btn">Cancel</button>
+        <button class="btn btn--primary btn--lg" data-testid="save-btn">Save Changes</button>
+        <div style="position:relative">
+          <button class="hud-btn" aria-label="Settings" data-theme-toggle data-testid="settings-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+          <div class="theme-menu" data-theme-menu>
+            <div class="theme-menu__label">Theme</div>
+            <button class="theme-menu__item" data-theme-set="dark" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Dark</button>
+            <button class="theme-menu__item" data-theme-set="light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>Light</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="arena-body">
+      <!-- Panel gating -->
+      <section class="section" data-testid="section-gating">
+        <div class="section__head"><span class="section__label">Panel gating</span><span class="section__hint">How new members join this panel</span></div>
+        <div class="radio-cards" data-testid="panels-gating-mode">
+          <button class="radio-card" aria-selected="false" data-testid="panels-gating-open">
+            <span class="radio-card__title">Open</span>
+            <span class="radio-card__desc">Anyone can join instantly, no approval required.</span>
+          </button>
+          <button class="radio-card" aria-selected="true" data-testid="panels-gating-application">
+            <span class="radio-card__title">Application</span>
+            <span class="radio-card__desc">Applicants complete a form and wait for approval.</span>
+          </button>
+          <button class="radio-card" aria-selected="false" data-testid="panels-gating-invite">
+            <span class="radio-card__title">Invitation only</span>
+            <span class="radio-card__desc">Members join only via direct invite links.</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Application form -->
+      <section class="section" data-testid="section-application-form">
+        <div class="section__head"><span class="section__label">Application form</span><span class="section__hint">Fields shown to applicants</span></div>
+        <div data-testid="panels-application-questions">
+          <div class="q-row" data-testid="panels-question-0">
+            <span class="q-row__handle" aria-hidden="true">⋮⋮</span>
+            <span class="q-row__num">01</span>
+            <input class="input q-row__label" value="Full name" />
+            <select class="select">
+              <option selected>Short text</option>
+              <option>Long text</option>
+              <option>URL</option>
+              <option>Select</option>
+              <option>Checkbox</option>
+            </select>
+            <span class="q-row__req">
+              <span class="switch" role="switch" aria-checked="true" tabindex="0"><span class="switch__track"><span class="switch__thumb"></span></span></span>
+              Required
+            </span>
+            <button class="icon-btn" aria-label="Remove question"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+          <div class="q-row" data-testid="panels-question-1">
+            <span class="q-row__handle" aria-hidden="true">⋮⋮</span>
+            <span class="q-row__num">02</span>
+            <input class="input q-row__label" value="Why do you want to join this panel?" />
+            <select class="select">
+              <option>Short text</option>
+              <option selected>Long text</option>
+              <option>URL</option>
+              <option>Select</option>
+              <option>Checkbox</option>
+            </select>
+            <span class="q-row__req">
+              <span class="switch" role="switch" aria-checked="true" tabindex="0"><span class="switch__track"><span class="switch__thumb"></span></span></span>
+              Required
+            </span>
+            <button class="icon-btn" aria-label="Remove question"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+          <div class="q-row" data-testid="panels-question-2">
+            <span class="q-row__handle" aria-hidden="true">⋮⋮</span>
+            <span class="q-row__num">03</span>
+            <input class="input q-row__label" value="Portfolio / relevant work link" />
+            <select class="select">
+              <option>Short text</option>
+              <option>Long text</option>
+              <option selected>URL</option>
+              <option>Select</option>
+              <option>Checkbox</option>
+            </select>
+            <span class="q-row__req">
+              <span class="switch" role="switch" aria-checked="false" tabindex="0"><span class="switch__track"><span class="switch__thumb"></span></span></span>
+              Required
+            </span>
+            <button class="icon-btn" aria-label="Remove question"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+        </div>
+        <button class="add-btn" data-testid="panels-question-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add question</button>
+      </section>
+
+      <!-- Approval workflow -->
+      <section class="section" data-testid="section-approval">
+        <div class="section__head"><span class="section__label">Approval workflow</span></div>
+        <div class="field">
+          <span class="field__label">Mode</span>
+          <div class="segmented" role="tablist" data-testid="panels-approval-mode">
+            <button class="segmented__btn" role="tab" aria-selected="false">Manual</button>
+            <button class="segmented__btn" role="tab" aria-selected="false">Auto if meets criteria</button>
+            <button class="segmented__btn" role="tab" aria-selected="true">Hybrid</button>
+          </div>
+        </div>
+        <div class="criteria-block" data-testid="panels-approval-criteria">
+          <span class="section__label">Auto-approval criteria</span>
+          <div class="grid-2">
+            <div class="field"><label class="field__label">Min reputation</label><div class="input-group"><input class="input input--num" type="number" value="50" data-testid="panels-min-reputation" /><span class="input-suffix">pts</span></div></div>
+            <div class="field"><label class="field__label">Min followers</label><div class="input-group"><input class="input input--num" type="number" value="25" data-testid="panels-min-followers" /><span class="input-suffix">users</span></div></div>
+          </div>
+          <div class="field">
+            <span class="field__label">Required tags on profile</span>
+            <div class="chips" data-testid="panels-required-tags">
+              <button class="chip" aria-pressed="true">#climate</button>
+              <button class="chip" aria-pressed="true">#policy</button>
+              <button class="chip" aria-pressed="false">#research</button>
+              <button class="chip" aria-pressed="false">#governance</button>
+              <button class="chip" aria-pressed="false">#community</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quotas -->
+      <section class="section" data-testid="section-quotas">
+        <div class="section__head"><span class="section__label">Quotas</span></div>
+        <div class="field">
+          <label class="field__label" for="panel-max-size">Max panel size</label>
+          <div class="input-group">
+            <input class="input input--num" id="panel-max-size" type="number" value="250" data-testid="panels-max-size" />
+            <span class="input-suffix">members</span>
+            <span class="switch" role="switch" aria-checked="false" tabindex="0" data-testid="panels-unlimited"><span class="switch__track"><span class="switch__thumb"></span></span><span class="switch__label" style="font-size:11px">Unlimited</span></span>
+          </div>
+        </div>
+        <div class="switch" role="switch" aria-checked="true" tabindex="0" data-testid="panels-priority-verified">
+          <span class="switch__track"><span class="switch__thumb"></span></span>
+          <span><span class="switch__label">Priority for verified users</span><span class="switch__sub">Verified applicants are reviewed first</span></span>
+        </div>
+      </section>
+
+      <!-- Waitlist -->
+      <section class="section" data-testid="section-waitlist">
+        <div class="section__head"><span class="section__label">Waitlist</span></div>
+        <div class="switch" role="switch" aria-checked="true" tabindex="0" data-testid="panels-waitlist-enable">
+          <span class="switch__track"><span class="switch__thumb"></span></span>
+          <span><span class="switch__label">Enable waitlist</span><span class="switch__sub">When full, new applicants join a waitlist instead of being rejected</span></span>
+        </div>
+        <div class="field">
+          <label class="field__label" for="panel-waitlist-capacity">Waitlist capacity</label>
+          <div class="input-group">
+            <input class="input input--num" id="panel-waitlist-capacity" type="number" value="100" data-testid="panels-waitlist-capacity" />
+            <span class="input-suffix">slots</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Notifications -->
+      <section class="section" data-testid="section-notifications">
+        <div class="accordion" data-accordion data-open="true">
+          <button class="accordion__head" data-accordion-head>Notifications<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+          <div class="accordion__body">
+            <div class="switch" role="switch" aria-checked="true" tabindex="0" data-testid="panels-notify-approval">
+              <span class="switch__track"><span class="switch__thumb"></span></span>
+              <span><span class="switch__label">Email applicant on approval</span><span class="switch__sub">Send a confirmation email when an application is approved</span></span>
+            </div>
+            <div class="switch" role="switch" aria-checked="true" tabindex="0" data-testid="panels-notify-admins">
+              <span class="switch__track"><span class="switch__thumb"></span></span>
+              <span><span class="switch__label">Notify space admins on new application</span><span class="switch__sub">Admins get an in-app and email notification</span></span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="panels-slack-webhook">Slack webhook URL</label>
+              <input class="input" id="panels-slack-webhook" placeholder="https://hooks.slack.com/services/…" value="https://hooks.slack.com/services/T028M/B0984/xYz123" data-testid="panels-slack-webhook" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Danger zone -->
+      <section class="section section--danger" data-testid="section-danger">
+        <div class="section__head"><span class="section__label" style="color:var(--accent-red);opacity:0.85">Danger zone</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:220px"><div style="font-size:13px;font-weight:600">Clear all applications</div><div style="font-size:12px;color:var(--text-muted)">Removes 42 pending and 218 archived applications. Existing panel members are not affected.</div></div>
+          <button class="btn btn--danger" data-testid="panels-clear-applications">Clear applications</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="sticky-footer">
+      <span class="sticky-footer__left" data-testid="footer-status">1 unsaved change</span>
+      <div class="sticky-footer__actions">
+        <button class="btn" data-testid="footer-cancel">Cancel</button>
+        <button class="btn btn--primary btn--lg" data-testid="footer-save">Save Changes</button>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    (function(){
+      var saved = localStorage.getItem('ratel-theme');
+      if (saved) document.documentElement.setAttribute('data-theme', saved);
+      var toggleBtn = document.querySelector('[data-theme-toggle]');
+      var menu = document.querySelector('[data-theme-menu]');
+      if (toggleBtn && menu){
+        toggleBtn.addEventListener('click', function(e){ e.stopPropagation(); menu.setAttribute('data-open', menu.getAttribute('data-open') === 'true' ? 'false':'true'); });
+        document.addEventListener('click', function(){ menu.setAttribute('data-open','false'); });
+        menu.addEventListener('click', function(e){ e.stopPropagation(); });
+        menu.querySelectorAll('[data-theme-set]').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            var t = btn.getAttribute('data-theme-set');
+            document.documentElement.setAttribute('data-theme', t);
+            localStorage.setItem('ratel-theme', t);
+            menu.querySelectorAll('[data-theme-set]').forEach(function(b){ b.setAttribute('aria-selected', b === btn ? 'true':'false'); });
+            menu.setAttribute('data-open','false');
+          });
+          btn.setAttribute('aria-selected', btn.getAttribute('data-theme-set') === (saved || 'dark') ? 'true':'false');
+        });
+      }
+      document.querySelectorAll('.switch').forEach(function(s){
+        s.addEventListener('click', function(e){ e.stopPropagation(); s.setAttribute('aria-checked', s.getAttribute('aria-checked') === 'true' ? 'false':'true'); });
+        s.addEventListener('keydown', function(e){ if(e.key===' '||e.key==='Enter'){e.preventDefault();s.click();}});
+      });
+      document.querySelectorAll('.segmented, .radio-cards').forEach(function(grp){
+        grp.querySelectorAll('[aria-selected]').forEach(function(b){
+          b.addEventListener('click', function(){
+            grp.querySelectorAll('[aria-selected]').forEach(function(x){ x.setAttribute('aria-selected','false'); });
+            b.setAttribute('aria-selected','true');
+          });
+        });
+      });
+      document.querySelectorAll('.chip').forEach(function(c){ c.addEventListener('click', function(){ c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false':'true'); }); });
+      document.querySelectorAll('[data-accordion]').forEach(function(acc){
+        acc.querySelector('[data-accordion-head]').addEventListener('click', function(){
+          acc.setAttribute('data-open', acc.getAttribute('data-open') === 'true' ? 'false':'true');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
