@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { click, fill, goto, getLocator, getEditor } from "../utils";
+import { click, fill, goto, getEditor } from "../utils";
 
 test.describe.serial("Space admin arena", () => {
   let spaceUrl;
@@ -11,15 +11,24 @@ test.describe.serial("Space admin arena", () => {
   async function createSpaceFromPost(page) {
     await goto(page, "/");
 
-    await click(page, { label: "Create Post" });
-    await fill(page, { placeholder: "Title" }, postTitle);
-    await click(page, { testId: "skip-space-checkbox" });
+    // Home → Create Post (creates a draft post, navigates to /posts/:id/edit)
+    await click(page, { testId: "home-btn-create" });
+    await page.waitForURL(/\/posts\/[^/]+\/edit/, { waitUntil: "load" });
+    await page.waitForFunction(
+      () => document.querySelector("[data-dioxus-id]") !== null,
+    );
 
+    // Fill post metadata + body
+    await fill(page, { placeholder: "Title your post…" }, postTitle);
     const editor = await getEditor(page);
     await editor.fill(postContents);
 
-    await click(page, { text: "Go to Space" });
-    // Post-edit now navigates to SpaceIndexPage (arena) after space creation.
+    // Enable the Space toggle (switch with aria-label "Enable Space"),
+    // then hit the primary action which is now labeled "Design Space".
+    await click(page, { label: "Enable Space" });
+    await click(page, { testId: "post-edit-publish-btn" });
+
+    // Post-edit navigates to SpaceIndexPage (arena) after space creation.
     await page.waitForURL(/\/spaces\/[a-z0-9-]+\/?$/, { waitUntil: "load" });
     await page.waitForFunction(
       () => document.querySelector("[data-dioxus-id]") !== null,
