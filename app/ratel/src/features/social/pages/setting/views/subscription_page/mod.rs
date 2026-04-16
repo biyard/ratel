@@ -108,6 +108,7 @@ pub fn SubscriptionPage(username: ReadSignal<String>) -> Element {
     let on_tier_click = use_callback(move |tier: MembershipTier| {
         let portone_store_id = portone_store_id.clone();
         let portone_channel_key = portone_channel_key.clone();
+        async move {
         if !user_ctx().is_logged_in() {
             popup
                 .open(rsx! {
@@ -127,130 +128,121 @@ pub fn SubscriptionPage(username: ReadSignal<String>) -> Element {
                     .as_ref()
                     .map(|u| u.pk.to_string())
                     .unwrap_or_default();
-                let mut popup_modal = popup.clone();
-                let popup_receipt = popup.clone();
-                let store_id = portone_store_id.clone();
-                let channel_key = portone_channel_key.clone();
+                let mut popup_modal = popup;
+                let mut popup_receipt = popup;
                 let team_username = username();
-                spawn(async move {
-                    let identity_id = {
-                        #[cfg(feature = "server")]
-                        {
-                            error!("identity verification is not available on server");
-                            return;
-                        }
-                        #[cfg(not(feature = "server"))]
-                        {
-                            let promise = request_identity_verification(
-                                &store_id,
-                                &channel_key,
-                                &prefix,
-                            );
-                            match JsFuture::from(promise).await {
-                                Ok(val) => match val.as_string() {
-                                    Some(id) => id,
-                                    None => {
-                                        error!(
-                                            "Failed to request identity verification: missing id"
-                                        );
-                                        return;
-                                    }
-                                },
-                                Err(err) => {
-                                    error!(
-                                        "Failed to request identity verification: {:?}",
-                                        format_js_error(err)
-                                    );
+                let identity_id = {
+                    #[cfg(feature = "server")]
+                    {
+                        error!("identity verification is not available on server");
+                        return;
+                    }
+                    #[cfg(not(feature = "server"))]
+                    {
+                        let promise = request_identity_verification(
+                            &portone_store_id,
+                            &portone_channel_key,
+                            &prefix,
+                        );
+                        match JsFuture::from(promise).await {
+                            Ok(val) => match val.as_string() {
+                                Some(id) => id,
+                                None => {
+                                    error!("Failed to request identity verification: missing id");
                                     return;
                                 }
+                            },
+                            Err(err) => {
+                                error!(
+                                    "Failed to request identity verification: {:?}",
+                                    format_js_error(err)
+                                );
+                                return;
                             }
                         }
-                    };
-                    let customer = match identify_team_handler(
-                        team_username.clone(),
-                        TeamIdentificationRequest { id: identity_id },
-                    )
-                    .await
-                    {
-                        Ok(resp) => resp,
-                        Err(err) => {
-                            error!("Failed to verify identity: {:?}", err);
-                            return;
-                        }
-                    };
-                    popup_modal
-                        .open(rsx! {
-                            MembershipPurchaseModal {
-                                membership: tier,
-                                display_amount,
-                                customer,
-                                on_confirm: move |info: CustomerInfo| {
-                                    let mut popup_receipt = popup_receipt.clone();
-                                    let mut popup_modal = popup_modal.clone();
-                                    let mut toast = toast;
-                                    let team_username = team_username.clone();
-                                    spawn(async move {
-                                        let req = ChangeTeamMembershipRequest {
-                                            membership: match tier {
-                                                MembershipTier::Pro => ApiMembershipTier::Pro,
-                                                MembershipTier::Max => ApiMembershipTier::Max,
-                                                MembershipTier::Vip => ApiMembershipTier::Vip,
-                                                MembershipTier::Enterprise => {
-                                                    ApiMembershipTier::Enterprise("Enterprise".to_string())
-                                                }
-                                                MembershipTier::Free => ApiMembershipTier::Free,
-                                            },
-                                            currency: Currency::Krw,
-                                            card_info: Some(CardInfo {
-                                                card_number: info.card_number,
-                                                expiry_year: info.expiry_year,
-                                                expiry_month: info.expiry_month,
-                                                birth_or_business_registration_number: info.birth_or_biz,
-                                                password_two_digits: info.card_password,
-                                            }),
-                                        };
-                                        match change_team_membership_handler(team_username, req).await {
-                                            Ok(resp) => {
-                                                let Some(membership_resp) = resp.membership else {
-                                                    toast.error(crate::common::Error::MembershipResponseMissing);
-                                                    popup_modal.close();
-                                                    return;
-                                                };
-                                                // Refresh the current-tier loader so the
-                                                // "Current Plan" badge moves to the new tier.
-                                                current_membership.restart();
-                                                if let Some(receipt_resp) = resp.receipt {
-                                                    let receipt = MembershipReceiptData {
-                                                        tx_id: receipt_resp.tx_id,
-                                                        membership: api_tier_to_ui(&membership_resp.tier),
-                                                        amount: receipt_resp.amount,
-                                                        duration_days: membership_resp.duration_days as i64,
-                                                        credits: membership_resp.credits,
-                                                        paid_at: receipt_resp.paid_at,
-                                                    };
-                                                    popup_receipt
-                                                        .open(rsx! {
-                                                            MembershipReceiptModal { receipt }
-                                                        });
-                                                } else {
-                                                    toast.info("Membership downgrade scheduled");
-                                                    popup_modal.close();
-                                                }
+                    }
+                };
+                let customer = match identify_team_handler(
+                    team_username.clone(),
+                    TeamIdentificationRequest { id: identity_id },
+                )
+                .await
+                {
+                    Ok(resp) => resp,
+                    Err(err) => {
+                        error!("Failed to verify identity: {:?}", err);
+                        return;
+                    }
+                };
+                popup_modal
+                    .open(rsx! {
+                        MembershipPurchaseModal {
+                            membership: tier,
+                            display_amount,
+                            customer,
+                            on_confirm: move |info: CustomerInfo| {
+                                let team_username = team_username.clone();
+                                async move {
+                                    let req = ChangeTeamMembershipRequest {
+                                        membership: match tier {
+                                            MembershipTier::Pro => ApiMembershipTier::Pro,
+                                            MembershipTier::Max => ApiMembershipTier::Max,
+                                            MembershipTier::Vip => ApiMembershipTier::Vip,
+                                            MembershipTier::Enterprise => {
+                                                ApiMembershipTier::Enterprise("Enterprise".to_string())
                                             }
-                                            Err(err) => {
-                                                error!("Failed to change team membership: {:?}", err);
-                                                toast.error(crate::common::Error::MembershipChangeFailed);
+                                            MembershipTier::Free => ApiMembershipTier::Free,
+                                        },
+                                        currency: Currency::Krw,
+                                        card_info: Some(CardInfo {
+                                            card_number: info.card_number,
+                                            expiry_year: info.expiry_year,
+                                            expiry_month: info.expiry_month,
+                                            birth_or_business_registration_number: info.birth_or_biz,
+                                            password_two_digits: info.card_password,
+                                        }),
+                                    };
+                                    match change_team_membership_handler(team_username, req).await {
+                                        Ok(resp) => {
+                                            let Some(membership_resp) = resp.membership else {
+                                                toast.error(crate::common::Error::MembershipResponseMissing);
+                                                popup_modal.close();
+                                                return;
+                                            };
+                                            // Refresh the current-tier loader so the
+                                            // "Current Plan" badge moves to the new tier.
+                                            current_membership.restart();
+                                            if let Some(receipt_resp) = resp.receipt {
+                                                let receipt = MembershipReceiptData {
+                                                    tx_id: receipt_resp.tx_id,
+                                                    membership: api_tier_to_ui(&membership_resp.tier),
+                                                    amount: receipt_resp.amount,
+                                                    duration_days: membership_resp.duration_days as i64,
+                                                    credits: membership_resp.credits,
+                                                    paid_at: receipt_resp.paid_at,
+                                                };
+                                                popup_receipt.open(rsx! {
+                                                    MembershipReceiptModal { receipt }
+                                                });
+                                            } else {
+                                                toast.info("Membership downgrade scheduled");
                                                 popup_modal.close();
                                             }
                                         }
-                                    });
-                                },
-                            }
-                        })
-                        .without_close();
-                });
+                                        Err(err) => {
+                                            error!("Failed to change team membership: {:?}", err);
+                                            toast.error(crate::common::Error::MembershipChangeFailed);
+                                            popup_modal.close();
+                                        }
+                                    }
+                                }
+                            },
+                        }
+                    })
+                    .without_close();
             }
             MembershipTier::Free => {}
+        }
         }
     });
 
