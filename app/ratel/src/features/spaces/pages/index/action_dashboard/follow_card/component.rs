@@ -4,6 +4,7 @@ use crate::features::spaces::pages::actions::actions::follow::controllers::{
 use crate::features::spaces::pages::actions::types::SpaceActionSummary;
 use crate::features::spaces::pages::index::action_pages::quiz::CompletedActionCard;
 use crate::features::spaces::pages::index::*;
+use crate::features::spaces::space_common::providers::use_space_context;
 
 const DEFAULT_PROFILE: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
 
@@ -16,6 +17,7 @@ pub fn FollowActionCard(
     let tr: SpaceViewerTranslate = use_translate();
     let lang = use_language();
     let nav = use_navigator();
+    let mut space_ctx = use_space_context();
     let action_id_edit = action.action_id.clone();
 
     let follow_id: SpaceActionFollowEntityType = action.action_id.clone().into();
@@ -96,6 +98,7 @@ pub fn FollowActionCard(
                         QuestEditButton {
                             action_id: action.action_id.clone(),
                             on_edit: move |_| {
+                                space_ctx.current_role.set(SpaceUserRole::Creator);
                                 let follow_id: SpaceActionFollowEntityType = action_id_edit.clone().into();
                                 nav.push(crate::Route::FollowActionPage {
                                     space_id: space_id(),

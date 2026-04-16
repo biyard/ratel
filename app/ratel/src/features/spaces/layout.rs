@@ -34,8 +34,15 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     let router = use_context::<dioxus::router::RouterContext>();
     let current_route: Route = router.current();
     let is_arena_route = matches!(current_route, Route::SpaceIndexPage { .. });
+    let is_action_edit_route = matches!(
+        current_route,
+        Route::QuizActionPage { .. }
+            | Route::PollActionPage { .. }
+            | Route::FollowActionPage { .. }
+            | Route::DiscussionActionEditorPage { .. }
+    );
 
-    if !role.is_admin() || is_arena_route {
+    if !role.is_admin() || is_arena_route || is_action_edit_route {
         return rsx! {
             Outlet::<Route> {}
         };

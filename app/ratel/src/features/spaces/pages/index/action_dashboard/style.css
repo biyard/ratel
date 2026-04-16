@@ -6,12 +6,45 @@
 /* ── Section label ───────────────────────────────── */
 .quest-label {
   position: relative; z-index: 10;
-  text-align: center; padding: 0 28px; margin-bottom: 8px;
+  display: inline-flex; align-items: center; gap: 6px;
+  justify-content: center;
+  width: 100%;
+  padding: 0 28px; margin-bottom: 8px;
 }
 .quest-label__title {
   font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 600;
   letter-spacing: 0.18em; text-transform: uppercase;
   color: var(--dark, #55556a) var(--light, #9999aa);
+}
+
+/* Info tooltip next to the section label */
+.quest-label__info {
+  position: relative; display: inline-flex; align-items: center;
+  color: var(--dark, #55556a) var(--light, #9999aa);
+  cursor: help;
+}
+.quest-label__info svg { width: 12px; height: 12px; }
+.quest-label__info:hover { color: var(--dark, #8888a8) var(--light, #6b6b80); }
+.quest-label__info-tip {
+  position: absolute; top: 20px; left: 50%; transform: translateX(-50%) translateY(-4px);
+  min-width: 240px; max-width: 320px;
+  padding: 8px 12px;
+  background: var(--dark, #0c0c1a) var(--light, #ffffff);
+  border: 1px solid var(--dark, rgba(255,255,255,0.08)) var(--light, rgba(0,0,0,0.08));
+  border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px; font-weight: 400; line-height: 1.5;
+  letter-spacing: 0;
+  text-transform: none;
+  text-align: left;
+  color: var(--dark, #8888a8) var(--light, #6b6b80);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+  opacity: 0; pointer-events: none;
+  transition: all 0.15s ease;
+  z-index: 50;
+}
+.quest-label__info:hover .quest-label__info-tip {
+  opacity: 1; transform: translateX(-50%) translateY(0);
 }
 
 /* ── Carousel ────────────────────────────────────── */

@@ -3,6 +3,7 @@ use crate::features::spaces::pages::index::action_pages::quiz::{
     ActiveActionOverlay, ActiveActionOverlaySignal,
 };
 use crate::features::spaces::pages::index::*;
+use crate::features::spaces::space_common::providers::use_space_context;
 
 #[component]
 pub fn DiscussionActionCard(
@@ -14,6 +15,7 @@ pub fn DiscussionActionCard(
     let lang = use_language();
     let mut overlay: ActiveActionOverlaySignal = use_context();
     let nav = use_navigator();
+    let mut space_ctx = use_space_context();
 
     let action_id = action.action_id.clone();
     let action_id_overlay = action_id.clone();
@@ -71,6 +73,7 @@ pub fn DiscussionActionCard(
                         QuestEditButton {
                             action_id: action_id.clone(),
                             on_edit: move |_| {
+                                space_ctx.current_role.set(SpaceUserRole::Creator);
                                 let discussion_id: SpacePostEntityType = action_id_edit.clone().into();
                                 nav.push(crate::Route::DiscussionActionEditorPage {
                                     space_id: space_id(),

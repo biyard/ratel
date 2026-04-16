@@ -5,6 +5,7 @@ use crate::features::spaces::pages::index::action_pages::quiz::{
     ActiveActionOverlay, ActiveActionOverlaySignal,
 };
 use crate::features::spaces::pages::index::*;
+use crate::features::spaces::space_common::providers::use_space_context;
 
 #[component]
 pub fn PollActionCard(
@@ -16,6 +17,7 @@ pub fn PollActionCard(
     let lang = use_language();
     let nav = use_navigator();
     let mut overlay: ActiveActionOverlaySignal = use_context();
+    let mut space_ctx = use_space_context();
 
     let poll_id: SpacePollEntityType = action.action_id.clone().into();
     let poll_id = use_signal(move || poll_id);
@@ -90,6 +92,7 @@ pub fn PollActionCard(
                         QuestEditButton {
                             action_id: action.action_id.clone(),
                             on_edit: move |_| {
+                                space_ctx.current_role.set(SpaceUserRole::Creator);
                                 nav.push(crate::Route::PollActionPage {
                                     space_id: space_id(),
                                     poll_id: poll_id(),
