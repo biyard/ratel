@@ -23,9 +23,14 @@ pub const USER_CONTEXT_STORAGE_KEY: &str = "user_context";
 
 /// Root-level hydrator. Wire this into a provider rendered above any
 /// component that reads the persisted state.
+///
+/// Function-name prefix `use_` is required by the Dioxus lint so it can
+/// see this is a hook composition site — without it, the inner
+/// `use_future` / `use_effect` calls fail `dx check` with
+/// "hook called outside component or hook".
 pub fn use_persist_ui_state() {
-    hydrate_language();
-    persist_language_on_change();
+    use_hydrate_language();
+    use_persist_language_on_change();
 }
 
 /// Defensive cleanup. Call from anywhere that observes a session-gone
@@ -37,7 +42,7 @@ pub fn clear_cached_session() {
 
 // ── Language ────────────────────────────────────────────────────────────
 
-fn hydrate_language() {
+fn use_hydrate_language() {
     use_future(move || async move {
         if let Some(raw) = storage::load(LANGUAGE_STORAGE_KEY).await {
             if let Ok(lang) = Language::from_str(&raw) {
@@ -47,7 +52,7 @@ fn hydrate_language() {
     });
 }
 
-fn persist_language_on_change() {
+fn use_persist_language_on_change() {
     let lang = dioxus_translate::use_language();
     use_effect(move || {
         let current = lang();
