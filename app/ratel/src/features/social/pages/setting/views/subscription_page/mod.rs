@@ -65,20 +65,15 @@ fn partition_tier_to_ui(raw: &str) -> MembershipTier {
 
 #[component]
 pub fn SubscriptionPage(username: ReadSignal<String>) -> Element {
-    // Only admins/owners can access subscription page — read from team context.
-    let team_ctx = crate::common::contexts::use_team_context();
-    let is_admin = {
-        let teams = team_ctx.teams.read();
-        teams.iter().find(|t| t.username == username()).map_or(false, |t| {
-            let mut mask = 0i64;
-            for v in &t.permissions {
-                mask |= 1i64 << (*v as i32);
-            }
-            crate::features::social::pages::member::dto::TeamRole::from_legacy_permissions(mask)
-                .is_admin_or_owner()
-        })
-    };
-    if !is_admin {
+    // Only admins/owners can access subscription page. Read from
+    // `TeamArenaContext` rather than `team_ctx.teams` — the arena layout
+    // loads the team record via `find_team_handler` with suspense, so
+    // `can_edit` is authoritative by the time this child renders. Reading
+    // from `team_ctx.teams` raced with the async `use_effect` population
+    // and intermittently showed the "No permission" page for owners who
+    // had just created the team.
+    let arena = crate::features::social::pages::team_arena::use_team_arena();
+    if !arena.can_edit.read().to_owned() {
         return rsx! {
             super::ViewerPage { username: username() }
         };

@@ -2,6 +2,8 @@ import { test, expect } from "@playwright/test";
 import {
   click,
   clickNoNav,
+  createTeamFromHome,
+  createTeamPostFromHome,
   fill,
   goto,
   getLocator,
@@ -71,38 +73,25 @@ test.describe
     const { context, page } = await loginAsAdmin(browser);
 
     try {
-      // The home-ui renewal removed the profile-dropdown team creation UI and
-      // the post-edit "skip-space-checkbox" / "Go to Space" affordances.
-      // Drive team, post, and space setup through the REST endpoints.
-      const teamRes = await page.request.post("/api/teams/create", {
-        data: {
-          body: {
-            username: teamUsername,
-            nickname: teamNickname,
-            profile_url: "",
-            description: "E2E test team for reward panel flow",
-          },
-        },
-      });
-      expect(teamRes.ok(), `create team: ${await teamRes.text()}`).toBeTruthy();
-      const teamPk = (await teamRes.json()).team_pk;
-      const teamId = teamPk.includes("#") ? teamPk.split("#")[1] : teamPk;
-
-      const postRes = await page.request.post("/api/posts", {
-        data: { team_id: teamId },
-      });
-      expect(postRes.ok(), `create post: ${await postRes.text()}`).toBeTruthy();
-      const postPk = (await postRes.json()).post_pk;
-      const postId = postPk.includes("#") ? postPk.split("#")[1] : postPk;
-
-      await goto(page, `/posts/${postId}/edit`);
-      await fill(page, { placeholder: "Title your post…" }, postTitle);
-      const editor = await getEditor(page);
-      await editor.fill(postContents);
-      await expect(page.getByText("All changes saved")).toBeVisible({
-        timeout: 15000,
+      // Drive the full setup through the production UI:
+      //   home (`/`) → Teams HUD → "Create Team" → ArenaTeamCreationPopup → submit
+      // then home → Teams HUD → pick team → team home → Create Post button.
+      await createTeamFromHome(page, {
+        username: teamUsername,
+        nickname: teamNickname,
+        description: "E2E test team for reward panel flow",
       });
 
+      const postId = await createTeamPostFromHome(
+        page,
+        teamUsername,
+        postTitle,
+        postContents,
+      );
+
+      // Space creation stays REST — the post-edit "Go to Space" affordance
+      // was removed, and this suite focuses on reward/panel rather than
+      // space-creation UX.
       const spaceRes = await page.request.post("/api/spaces/create", {
         data: { req: { post_id: postId } },
       });

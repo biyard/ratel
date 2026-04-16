@@ -2,6 +2,7 @@ use super::space_card::*;
 use super::*;
 use crate::common::components::{Robots, SeoMeta};
 use crate::common::contexts::TeamItem;
+use crate::common::hooks::use_infinite_query;
 use crate::common::types::ListResponse;
 use crate::common::use_loader;
 use crate::features::auth::LoginModal;
@@ -34,16 +35,15 @@ pub fn Index() -> Element {
     let mut settings_open = use_signal(|| false);
     let mut teams_open = use_signal(|| false);
 
-    let teams_loader = use_loader(move || async move {
+    let mut teams_query = use_infinite_query(move |bookmark| async move {
         if has_user {
-            Ok::<Vec<TeamItem>, crate::Error>(
-                crate::get_user_teams_handler().await.unwrap_or_default(),
-            )
+            crate::get_user_teams_handler(bookmark).await
         } else {
-            Ok(Vec::<TeamItem>::new())
+            Ok(ListResponse::<TeamItem>::default())
         }
     })?;
-    let teams: Vec<TeamItem> = teams_loader();
+    let teams: Vec<TeamItem> = teams_query.items();
+    let teams_more = teams_query.more_element();
 
     let keywords = vec![
         "ratel".to_string(),
@@ -295,15 +295,15 @@ pub fn Index() -> Element {
                         span { class: "hud-btn__label", "{t.credentials}" }
                     }
                     if has_user {
-                        div {
-                            class: "hud-teams",
-                            onclick: move |e: Event<MouseData>| e.stop_propagation(),
+                        div { class: "hud-teams", "aria-expanded": teams_open(),
                             button {
                                 class: "hud-btn",
                                 aria_label: "{t.teams}",
-                                aria_expanded: teams_open(),
                                 "data-testid": "home-btn-teams",
-                                onclick: move |_| teams_open.toggle(),
+                                onclick: move |e: Event<MouseData>| {
+                                    e.stop_propagation();
+                                    teams_open.toggle();
+                                },
                                 svg {
                                     fill: "none",
                                     stroke: "currentColor",
@@ -319,12 +319,47 @@ pub fn Index() -> Element {
                                 }
                                 span { class: "hud-btn__label", "{t.teams}" }
                             }
-                            if teams_open() {
+                            // Always rendered; CSS uses [aria-expanded="true"]
+                            // on the parent to toggle visibility. Matches the
+                            // team_arena topbar pattern exactly — button owns
+                            // stop_propagation + toggle, dropdown owns its own
+                            // stop_propagation so clicks inside don't bubble
+                            // to the outer backdrop.
+                            div {
+                                class: "team-dd",
+                                role: "menu",
+                                "data-testid": "home-teams-dd",
+                                onclick: move |e: Event<MouseData>| e.stop_propagation(),
+                                div { class: "team-dd__header", "{t.teams_header}" }
                                 div {
-                                    class: "team-dd",
-                                    role: "menu",
-                                    "data-testid": "home-teams-dd",
-                                    div { class: "team-dd__header", "{t.teams_header}" }
+                                    class: "team-dd__list",
+                                    id: "home-teams-dd-list",
+                                    // The shared `use_infinite_query` sentinel uses
+                                    // IntersectionObserver against the viewport, which
+                                    // doesn't fire for internal scrolling inside this
+                                    // bounded dropdown. Detect near-bottom directly via
+                                    // onscroll + JS so pagination triggers reliably.
+                                    onscroll: move |_| {
+                                        let js = r#"
+                                                                            const el = document.getElementById('home-teams-dd-list');
+                                                                            if (!el) { dioxus.send(false); return; }
+                                                                            const nearBottom =
+                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+                                                                            dioxus.send(nearBottom);
+                                                                        "#;
+                                        let mut ctrl = teams_query;
+                                        spawn(async move {
+                                            let mut eval = document::eval(js);
+                                            if let Ok(near_bottom) = eval.recv::<bool>().await {
+                                                if near_bottom
+                                                    && ctrl.has_more()
+                                                    && !ctrl.is_loading()
+                                                {
+                                                    ctrl.next();
+                                                }
+                                            }
+                                        });
+                                    },
                                     if teams.is_empty() {
                                         div { class: "team-dd__empty", "{t.teams_empty}" }
                                     } else {
@@ -340,39 +375,40 @@ pub fn Index() -> Element {
                                             }
                                         }
                                     }
-                                    div {
-                                        class: "team-dd__footer",
-                                        role: "button",
-                                        tabindex: "0",
-                                        "data-testid": "home-btn-create-team",
-                                        onclick: move |_| {
-                                            teams_open.set(false);
-                                            popup.open(rsx! {
-                                                ArenaTeamCreationPopup {}
-                                            }).without_close().with_backdrop_close();
-                                        },
-                                        svg {
-                                            view_box: "0 0 24 24",
-                                            fill: "none",
-                                            stroke: "currentColor",
-                                            stroke_width: "2.5",
-                                            stroke_linecap: "round",
-                                            stroke_linejoin: "round",
-                                            line {
-                                                x1: "12",
-                                                y1: "5",
-                                                x2: "12",
-                                                y2: "19",
-                                            }
-                                            line {
-                                                x1: "5",
-                                                y1: "12",
-                                                x2: "19",
-                                                y2: "12",
-                                            }
+                                    {teams_more}
+                                }
+                                div {
+                                    class: "team-dd__footer",
+                                    role: "button",
+                                    tabindex: "0",
+                                    "data-testid": "home-btn-create-team",
+                                    onclick: move |_| {
+                                        teams_open.set(false);
+                                        popup.open(rsx! {
+                                            ArenaTeamCreationPopup {}
+                                        }).without_close().with_backdrop_close();
+                                    },
+                                    svg {
+                                        view_box: "0 0 24 24",
+                                        fill: "none",
+                                        stroke: "currentColor",
+                                        stroke_width: "2.5",
+                                        stroke_linecap: "round",
+                                        stroke_linejoin: "round",
+                                        line {
+                                            x1: "12",
+                                            y1: "5",
+                                            x2: "12",
+                                            y2: "19",
                                         }
-                                        "{t.create_team}"
+                                        line {
+                                            x1: "5",
+                                            y1: "12",
+                                            x2: "19",
+                                            y2: "12",
+                                        }
                                     }
+                                    "{t.create_team}"
                                 }
                             }
                         }

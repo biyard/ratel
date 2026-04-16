@@ -142,8 +142,8 @@ pub fn Home(username: String) -> Element {
                         team_resource.restart();
                         // Refresh team switcher dropdown so the new name/logo
                         // appear immediately across the topbar/dropdown.
-                        if let Ok(teams) = crate::get_user_teams_handler().await {
-                            team_ctx.set_teams(teams);
+                        if let Ok(resp) = crate::get_user_teams_handler(None).await {
+                            team_ctx.set_teams(resp.items);
                         }
                         // Force the arena layout to refetch the team profile
                         // so the topbar title/logo update without a page reload.

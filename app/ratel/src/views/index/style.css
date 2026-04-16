@@ -185,18 +185,26 @@
   top: calc(100% + 8px);
   right: 0;
   z-index: 40;
-  min-width: 260px;
-  max-width: 320px;
-  max-height: min(60vh, 420px);
-  overflow-y: auto;
+  width: 280px;
+  max-height: 320px;
   background: var(--ha-dd-bg);
   border: 1px solid var(--ha-border-subtle);
   border-radius: 12px;
   box-shadow: 0 12px 28px var(--ha-shadow-card);
-  padding: 6px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s;
+  pointer-events: none;
+}
+.home-arena .hud-teams[aria-expanded="true"] .team-dd {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0s;
+  pointer-events: auto;
 }
 .home-arena .team-dd__header {
   font-family: 'Orbitron', sans-serif;
@@ -205,7 +213,27 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ha-text-dim);
-  padding: 8px 10px 6px;
+  padding: 10px 12px 6px;
+  flex-shrink: 0;
+}
+.home-arena .team-dd__list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.home-arena .team-dd__list::-webkit-scrollbar {
+  width: 6px;
+}
+.home-arena .team-dd__list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.home-arena .team-dd__list::-webkit-scrollbar-thumb {
+  background: var(--ha-border-subtle);
+  border-radius: 3px;
 }
 .home-arena .team-dd__empty {
   padding: 14px 12px;
@@ -269,8 +297,8 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px;
-  margin-top: 4px;
+  padding: 10px 12px;
+  flex-shrink: 0;
   border-top: 1px solid var(--ha-border-subtle);
   font-family: 'Orbitron', sans-serif;
   font-size: 11px;

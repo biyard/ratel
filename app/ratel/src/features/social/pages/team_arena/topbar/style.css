@@ -169,9 +169,8 @@ html[data-theme="light"] .team-arena .arena-topbar__title,
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
-  min-width: 280px;
-  max-width: 360px;
-  padding: 8px;
+  width: 300px;
+  max-height: 360px;
   border-radius: 14px;
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
@@ -182,6 +181,9 @@ html[data-theme="light"] .team-arena .arena-topbar__title,
   transform: translateY(-4px);
   transition: all 0.2s ease;
   z-index: 30;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 html[data-theme="light"] .team-arena .team-dd,
 [data-theme="light"] .team-arena .team-dd {
@@ -193,8 +195,7 @@ html[data-theme="light"] .team-arena .team-dd,
   transform: translateY(0);
 }
 .team-arena .team-dd__header {
-  padding: 6px 10px 8px;
-  margin-bottom: 4px;
+  padding: 10px 14px 8px;
   border-bottom: 1px solid var(--border-subtle);
   font-family: 'Orbitron', sans-serif;
   font-size: 9px;
@@ -202,6 +203,22 @@ html[data-theme="light"] .team-arena .team-dd,
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--text-dim);
+  flex-shrink: 0;
+}
+.team-arena .team-dd__list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.team-arena .team-dd__list::-webkit-scrollbar { width: 6px; }
+.team-arena .team-dd__list::-webkit-scrollbar-track { background: transparent; }
+.team-arena .team-dd__list::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 3px;
 }
 .team-arena .team-dd__item {
   display: flex;
@@ -266,8 +283,7 @@ html[data-theme="light"] .team-arena .team-dd__item:hover,
   flex-shrink: 0;
 }
 .team-arena .team-dd__footer {
-  margin-top: 4px;
-  padding: 8px 10px;
+  padding: 10px 14px;
   border-top: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
@@ -279,9 +295,9 @@ html[data-theme="light"] .team-arena .team-dd__item:hover,
   text-transform: uppercase;
   color: var(--accent-teal);
   cursor: pointer;
-  border-radius: 8px;
   transition: background 0.15s;
   text-decoration: none;
+  flex-shrink: 0;
 }
 .team-arena .team-dd__footer:hover { background: rgba(110, 237, 216, 0.06); }
 .team-arena .team-dd__footer svg { width: 12px; height: 12px; }
