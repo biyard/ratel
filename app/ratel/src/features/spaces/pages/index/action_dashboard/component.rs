@@ -115,6 +115,32 @@ pub fn ActionDashboard(
 
         div { class: "quest-label",
             span { class: "quest-label__title", "{tr.your_quests}" }
+            span {
+                class: "quest-label__info",
+                aria_label: "{tr.your_quests_tooltip}",
+                svg {
+                    view_box: "0 0 24 24",
+                    fill: "none",
+                    stroke: "currentColor",
+                    stroke_linecap: "round",
+                    stroke_linejoin: "round",
+                    stroke_width: "2",
+                    circle { cx: "12", cy: "12", r: "10" }
+                    line {
+                        x1: "12",
+                        y1: "16",
+                        x2: "12",
+                        y2: "12",
+                    }
+                    line {
+                        x1: "12",
+                        y1: "8",
+                        x2: "12.01",
+                        y2: "8",
+                    }
+                }
+                span { class: "quest-label__info-tip", "{tr.your_quests_tooltip}" }
+            }
         }
 
         if active.is_empty() && !is_admin {
@@ -214,6 +240,7 @@ pub fn ActionDashboard(
                     type_picker_open.set(false);
                     match ty.create(space_id()).await {
                         Ok(route) => {
+                            space_ctx.current_role.set(SpaceUserRole::Creator);
                             nav.push(route);
                         }
                         Err(err) => {

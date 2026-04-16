@@ -40,7 +40,7 @@ impl SpaceActionType {
             SpaceActionType::TopicDiscussion => {
                 let response = crate::features::spaces::pages::actions::actions::discussion::controllers::create_discussion(space_id.clone()).await?;
                 let discussion_id: SpacePostEntityType = response.sk.try_into().unwrap_or_default();
-                Ok(Route::DiscussionActionPage {
+                Ok(Route::DiscussionActionEditorPage {
                     space_id: space_id.clone(),
                     discussion_id: discussion_id.clone(),
                 })

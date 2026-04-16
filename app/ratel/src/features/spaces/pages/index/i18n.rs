@@ -180,6 +180,11 @@ translate! {
         ko: "나의 퀘스트",
     },
 
+    your_quests_tooltip: {
+        en: "Complete quests to earn points and unlock rewards. Admins can add, edit, or remove quests here.",
+        ko: "퀘스트를 완료하면 포인트를 얻고 보상을 잠금 해제할 수 있습니다. 관리자는 여기서 퀘스트를 추가, 편집, 삭제할 수 있습니다.",
+    },
+
     quest_progress: {
         en: "Progress",
         ko: "진행도",

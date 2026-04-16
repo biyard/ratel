@@ -1,149 +1,53 @@
 use super::*;
 use dioxus_primitives::{ContentAlign, ContentSide};
-mod question_tab;
 
-use question_tab::*;
+mod i18n;
+pub use i18n::PollCreatorTranslate;
+
+mod content_card;
+mod config_card;
+use content_card::ContentCard;
+use config_card::ConfigCard;
+
+// Keep existing file importable but unused — preserved for backwards compat.
+mod question_tab;
+pub use question_tab::*;
+
+use crate::features::spaces::pages::actions::components::ActionEditTopbar;
 
 #[component]
 pub fn PollCreatorPage(
     space_id: ReadSignal<SpacePartition>,
     poll_id: ReadSignal<SpacePollEntityType>,
 ) -> Element {
-    let tr: CreatorTranslate = use_translate();
-    let mut ctx = Context::init(space_id, poll_id)?;
-    let mut enabled = use_signal(move || ctx.poll().encrypted_upload_enabled);
-    let mut toast = crate::common::use_toast();
-
-    // Creators can keep editing the action even after it has started
-    // (e.g. adding a final survey question). The delete button is the
-    // only thing that stays locked: it's hidden once `is_action_locked`
-    // returns true so that an action with live responses can't be
-    // removed.
+    let tr: PollCreatorTranslate = use_translate();
+    let ctx = Context::init(space_id, poll_id)?;
     let space = crate::features::spaces::space_common::hooks::use_space()();
-    let locked = crate::features::spaces::pages::actions::is_action_locked(
-        space.status,
-        ctx.poll().space_action.started_at,
-    );
+    let nav = use_navigator();
 
-    let on_date_change = move |range: DateTimeRange| async move {
-        let space_id = space_id();
-        let poll_id = poll_id();
-        if let (Some(start_date), Some(end_date)) = (range.start_date, range.end_date) {
-            let started_at = range
-                .timezone
-                .local_to_utc_millis(start_date, range.start_hour, range.start_minute);
-            let ended_at = range
-                .timezone
-                .local_to_utc_millis(end_date, range.end_hour, range.end_minute);
-            let _ = update_poll(
-                space_id,
-                poll_id,
-                UpdatePollRequest::Time {
-                    started_at,
-                    ended_at,
-                },
-            )
-            .await;
-            ctx.poll.restart();
-        }
-    };
-
-    let on_response_editable_toggle = move |_| async move {
-        let enabled = !ctx.poll().response_editable;
-        let _ = update_poll(
-            space_id(),
-            poll_id(),
-            UpdatePollRequest::ResponseEditable {
-                response_editable: enabled,
-            },
-        )
-        .await;
-        ctx.poll.restart();
-    };
-
-    let on_encrypted_upload_toggle = move |_| async move {
-        let new_val = !enabled();
-        match update_poll(
-            space_id(),
-            poll_id(),
-            UpdatePollRequest::CanisterUploadEnabled {
-                canister_upload_enabled: new_val,
-            },
-        )
-        .await
-        {
-            Ok(_) => {
-                enabled.set(new_val);
-                toast.info(tr.encrypted_upload_updated.to_string());
-                ctx.poll.restart();
-            }
-            Err(e) => {
-                toast.error(e);
-            }
-        }
-    };
+    let initial_title = ctx.poll.read().title.clone();
+    let title = use_signal(|| initial_title);
 
     rsx! {
-        div { class: "flex flex-col gap-4 w-full",
-            h3 { {tr.title} }
-            Tabs { default_value: "question-tab",
-                TabList {
-                    TabTrigger { index: 0usize, value: "question-tab", {tr.tab_questions} }
-                    TabTrigger { index: 1usize, value: "setting-tab", {tr.tab_setting} }
-                }
-                TabContent { index: 0usize, value: "question-tab", QuestionTab {} }
-                TabContent { index: 1usize, value: "setting-tab",
-                    div { class: "flex flex-col gap-4 w-full",
-                        ActionCommonSettings {
-                            space_id,
-                            action_id: poll_id().to_string(),
-                            action_setting: ctx.poll().space_action,
-                            on_date_change,
-                        }
-
-                        // Response Editable toggle
-                        Card { class: "mt-4 mb-4",
-                            div { class: "flex justify-between items-center self-stretch",
-                                div { class: "flex gap-1 items-center",
-                                    p { class: "font-semibold font-raleway text-[15px]/[18px] tracking-[-0.16px] text-web-font-primary",
-                                        {tr.response_editable_title}
-                                    }
-                                    Tooltip {
-                                        TooltipTrigger {
-                                            icons::help_support::Info {
-                                                width: "14",
-                                                height: "14",
-                                                class: "cursor-help text-web-font-neutral [&>path]:stroke-current [&>circle]:fill-current [&>path]:fill-none",
-                                            }
-                                        }
-                                        TooltipContent {
-                                            side: ContentSide::Bottom,
-                                            align: ContentAlign::Start,
-                                            p { class: "w-72", {tr.response_editable_desc} }
-                                        }
-                                    }
-                                }
-
-                                Switch {
-                                    active: ctx.poll().response_editable && !ctx.poll().encrypted_upload_enabled,
-                                    disabled: ctx.poll().encrypted_upload_enabled,
-                                    on_toggle: on_response_editable_toggle,
-                                }
-                            }
-                        }
-
-                        // Encrypted Upload toggle
-                        EncryptedUploadSetting { enabled, on_toggle: on_encrypted_upload_toggle }
-
-                        // Delete button is hidden once the action is locked.
-                        if !locked {
-                            ActionDeleteButton {
-                                space_id: space_id(),
-                                action_id: poll_id().to_string(),
-                            }
-                        }
-                    }
-                }
+        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        div { class: "arena",
+            ActionEditTopbar {
+                space_name: space.title.clone(),
+                action_type_label: tr.type_badge_label.to_string(),
+                action_type_key: "poll".to_string(),
+                title,
+                on_title_change: move |_v: String| {},
+                editable_title: false,
+                on_back: move |_| {
+                    nav.go_back();
+                },
+                on_cancel: move |_| {
+                    nav.go_back();
+                },
+            }
+            main { class: "pager",
+                ContentCard {}
+                ConfigCard {}
             }
         }
     }
@@ -179,7 +83,9 @@ fn EncryptedUploadSetting(
                             class: "cursor-help text-web-font-neutral [&>path]:stroke-current [&>circle]:fill-current [&>path]:fill-none",
                         }
                     }
-                    TooltipContent { {tr.encrypted_upload_tooltip} }
+                    TooltipContent { side: ContentSide::Bottom, align: ContentAlign::Start,
+                        p { class: "w-72", {tr.encrypted_upload_tooltip} }
+                    }
                 }
             }
             Switch { active: enabled(), on_toggle }
