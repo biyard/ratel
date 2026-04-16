@@ -6,6 +6,7 @@ pub mod hooks;
 pub mod interop;
 pub mod models;
 pub mod provider;
+pub mod services;
 pub mod types;
 pub mod utils;
 mod views;

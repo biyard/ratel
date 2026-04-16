@@ -200,13 +200,7 @@ pub fn ArenaSettingsPanel(
                             class: "ta-settings-action ta-settings-action--logout",
                             r#type: "button",
                             onclick: move |_| async move {
-                                let _ = crate::features::auth::controllers::logout_handler().await;
-                                #[cfg(target_arch = "wasm32")]
-                                {
-                                    if let Some(window) = web_sys::window() {
-                                        let _ = window.location().reload();
-                                    }
-                                }
+                                crate::features::auth::services::sign_out(user_ctx).await;
                             },
                             svg {
                                 view_box: "0 0 24 24",

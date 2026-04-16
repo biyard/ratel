@@ -35,6 +35,15 @@ RUSTFLAGS ?= "-D warnings"
 PORT ?= 8080
 RUN_FEATURES ?= local-dev
 
+# Auto-detect the host's LAN IP so Android devices / emulators on the same
+# network can reach `dx serve` running on this workstation. Tries Linux
+# (`ip route get`) then macOS (`ipconfig getifaddr en0`); falls back to the
+# Android emulator loopback alias `10.0.2.2`, which works for emulators but
+# not physical phones. Override explicitly when needed:
+#   MOBILE_API_URL=http://10.20.30.40:8080 make android
+HOST_IP ?= $(shell ip route get 1.1.1.1 2>/dev/null | awk '/src/ {for(i=1;i<=NF;i++) if($$i=="src") {print $$(i+1); exit}}' || ipconfig getifaddr en0 2>/dev/null || echo 10.0.2.2)
+MOBILE_API_URL ?= http://$(HOST_IP):$(PORT)
+
 REPOSITORY ?= ratel/app-shell
 ECR ?= $(shell aws ecr describe-repositories --repository-names $(REPOSITORY)  --query "repositories[0].repositoryUri" --output text)
 QDRANT_PREFIX ?= ratel-$(ENV)
@@ -72,6 +81,7 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					QDRANT_URL=$(QDRANT_URL) \
 					QDRANT_API_KEY=$(QDRANT_API_KEY) \
 					QDRANT_PREFIX=$(QDRANT_PREFIX) \
+					MOBILE_API_URL=$(MOBILE_API_URL) \
 
 test:
 	mkdir -p ./test-build-target/debug/deps/public

@@ -33,13 +33,14 @@ pub fn Index() -> Element {
 
     let keywords = vec![
         "ratel".to_string(),
-        "knowledge platform".to_string(),
-        "ai knowledge base".to_string(),
-        "hot spaces".to_string(),
-        "participatory platform".to_string(),
-        "survey rewards".to_string(),
-        "poll rewards".to_string(),
-        "web3 knowledge economy".to_string(),
+        "human essence platform".to_string(),
+        "essence house".to_string(),
+        "personal ai agent".to_string(),
+        "mcp subscription".to_string(),
+        "passive income ai".to_string(),
+        "rag knowledge base".to_string(),
+        "notion to ai".to_string(),
+        "creator monetization".to_string(),
         "collective intelligence".to_string(),
     ];
 
@@ -80,7 +81,7 @@ pub fn Index() -> Element {
                 .open(rsx! {
                     LoginModal {}
                 })
-                .with_title("Join the movement");
+                .with_title("Start building your Essence");
             return;
         }
         spawn(async move {
@@ -104,7 +105,7 @@ pub fn Index() -> Element {
                 .open(rsx! {
                     LoginModal {}
                 })
-                .with_title("Join the movement");
+                .with_title("Start building your Essence");
             return;
         }
         nav.push(Route::UserDrafts {
@@ -119,7 +120,7 @@ pub fn Index() -> Element {
                 .open(rsx! {
                     LoginModal {}
                 })
-                .with_title("Join the movement");
+                .with_title("Start building your Essence");
             return;
         }
         nav.push(Route::UserRewards {
@@ -133,7 +134,7 @@ pub fn Index() -> Element {
                 .open(rsx! {
                     LoginModal {}
                 })
-                .with_title("Join the movement");
+                .with_title("Start building your Essence");
             return;
         }
         nav.push(Route::CredentialsHome {});
@@ -149,8 +150,8 @@ pub fn Index() -> Element {
 
     rsx! {
         SeoMeta {
-            title: "Ratel – Hot Spaces Arena",
-            description: "Enter the arena. Vote in polls, join discussions, complete quests, and earn rewards across the hottest decentralized communities on Ratel.",
+            title: "Ratel – Human Essence Platform",
+            description: "Turn your thoughts into your Essence. Post, discuss, vote — then plug your Essence House into ChatGPT or Claude via a single MCP endpoint, deploy agents, and earn passive income.",
             image: "https://metadata.ratel.foundation/logos/logo-symbol.png",
             url: "https://ratel.foundation",
             robots: Robots::IndexNofollow,
@@ -288,7 +289,7 @@ pub fn Index() -> Element {
                             onclick: move |_| {
                                 popup.open(rsx! {
                                     LoginModal {}
-                                }).with_title("Join the movement");
+                                }).with_title("Start building your Essence");
                             },
                             svg {
                                 fill: "none",

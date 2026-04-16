@@ -329,13 +329,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                             onclick: move |_| {
                                                 show_user_menu.set(false);
                                                 spawn(async move {
-                                                    let _ = crate::features::auth::controllers::logout_handler().await;
-                                                    #[cfg(target_arch = "wasm32")]
-                                                    {
-                                                        if let Some(window) = web_sys::window() {
-                                                            let _ = window.location().reload();
-                                                        }
-                                                    }
+                                                    crate::features::auth::services::sign_out(user_ctx).await;
                                                 });
                                             },
                                             lucide_dioxus::LogOut { class: "w-[15px] h-[15px] [&>path]:stroke-destructive shrink-0" }

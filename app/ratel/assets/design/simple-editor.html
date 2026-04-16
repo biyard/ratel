@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Simple Editor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after { margin:0; padding:0; box-sizing:border-box }
+
+    :root[data-theme="dark"] {
+      --bg-void:#06060e;
+      --bg-glass:rgba(12,12,26,0.65);
+      --bg-glass-hover:rgba(20,20,40,0.80);
+      --bg-input:rgba(255,255,255,0.025);
+      --bg-input-focus:rgba(255,255,255,0.04);
+      --bg-toolbar:rgba(10,10,22,0.95);
+      --bg-tooltip:#1a1a2c;
+      --border-subtle:rgba(255,255,255,0.06);
+      --border-strong:rgba(255,255,255,0.12);
+      --border-active:rgba(252,179,0,0.45);
+      --text-primary:#f0f0f5;
+      --text-muted:#8888a8;
+      --text-dim:#55556a;
+      --text-link:#6eedd8;
+      --accent-gold:#fcb300;
+      --accent-teal:#6eedd8;
+      --accent-coral:#ef4444;
+      --code-bg:rgba(255,255,255,0.05);
+      --quote-border:rgba(252,179,0,0.6);
+    }
+    :root[data-theme="light"] {
+      --bg-void:#f6f7fb;
+      --bg-glass:rgba(255,255,255,0.85);
+      --bg-glass-hover:rgba(255,255,255,1);
+      --bg-input:rgba(0,0,0,0.025);
+      --bg-input-focus:rgba(0,0,0,0.04);
+      --bg-toolbar:rgba(255,255,255,0.95);
+      --bg-tooltip:#1a1a2c;
+      --border-subtle:rgba(0,0,0,0.08);
+      --border-strong:rgba(0,0,0,0.16);
+      --border-active:rgba(252,179,0,0.55);
+      --text-primary:#12121a;
+      --text-muted:#5a5a72;
+      --text-dim:#9a9aae;
+      --text-link:#0e8c79;
+      --accent-gold:#cf8a00;
+      --accent-teal:#1ea98c;
+      --accent-coral:#d92626;
+      --code-bg:rgba(0,0,0,0.05);
+      --quote-border:rgba(207,138,0,0.6);
+    }
+
+    html, body { min-height:100%; background:var(--bg-void); color:var(--text-primary); font-family:'Outfit',sans-serif; }
+    body { overflow-x:hidden; }
+
+    .page { max-width:980px; margin:0 auto; padding:32px 20px 120px; display:flex; flex-direction:column; gap:24px; }
+    .page-header { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .page-title { font-family:'Orbitron',sans-serif; font-size:22px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; }
+    .page-subtitle { font-size:13px; color:var(--text-muted); margin-top:4px; }
+    .theme-toggle { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--bg-glass); color:var(--text-muted); font-size:12px; font-weight:600; cursor:pointer; }
+    .theme-toggle:hover { border-color:var(--border-active); color:var(--accent-gold); }
+
+    .editor {
+      display:flex; flex-direction:column;
+      background:var(--bg-glass); border:1px solid var(--border-subtle);
+      border-radius:16px; overflow:hidden;
+      box-shadow:0 20px 60px rgba(0,0,0,0.30);
+    }
+
+    .toolbar {
+      position:sticky; top:0; z-index:10;
+      display:flex; flex-wrap:wrap; align-items:center; gap:6px;
+      padding:10px 12px;
+      background:var(--bg-toolbar); backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--border-subtle);
+    }
+    .toolbar__group { display:inline-flex; align-items:center; gap:2px; padding:0 4px; }
+    .toolbar__group + .toolbar__group { border-left:1px solid var(--border-subtle); margin-left:2px; padding-left:8px; }
+
+    .tb-btn {
+      position:relative; appearance:none; border:1px solid transparent; background:transparent;
+      width:34px; height:34px; min-width:34px; min-height:34px; border-radius:8px;
+      display:inline-flex; align-items:center; justify-content:center;
+      color:var(--text-muted); cursor:pointer; transition:background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+      font-family:'Outfit',sans-serif; font-size:13px; font-weight:600; padding:0;
+    }
+    .tb-btn:hover { background:var(--bg-input-focus); color:var(--text-primary); }
+    .tb-btn:active { transform:scale(0.96); }
+    .tb-btn[aria-pressed="true"], .tb-btn.active {
+      background:rgba(252,179,0,0.10); color:var(--accent-gold); border-color:var(--border-active);
+    }
+    .tb-btn svg { width:16px; height:16px; }
+    .tb-btn[data-tip]:hover::after {
+      content:attr(data-tip);
+      position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%);
+      background:var(--bg-tooltip); color:#fff; font-size:11px; padding:4px 8px; border-radius:6px; white-space:nowrap;
+      pointer-events:none; z-index:50;
+    }
+
+    /* Custom block-format dropdown — replaces <select> so the menu is themed too. */
+    .tb-block { position:relative; }
+    .tb-block__btn {
+      display:inline-flex; align-items:center; gap:6px;
+      height:34px; padding:0 10px; border-radius:8px;
+      background:transparent; border:1px solid var(--border-subtle); color:var(--text-primary);
+      font-family:'Outfit',sans-serif; font-size:13px; font-weight:500; cursor:pointer;
+    }
+    .tb-block__btn:hover { border-color:var(--border-strong); background:var(--bg-input-focus); }
+    .tb-block__btn svg { width:11px; height:11px; color:var(--text-muted); transition:transform 0.15s ease; }
+    .tb-block[data-open="true"] .tb-block__btn { border-color:var(--border-active); color:var(--accent-gold); }
+    .tb-block[data-open="true"] .tb-block__btn svg { transform:rotate(180deg); color:var(--accent-gold); }
+    .tb-block__menu {
+      position:absolute; top:calc(100% + 6px); left:0; min-width:180px;
+      background:var(--bg-toolbar); border:1px solid var(--border-strong); border-radius:10px;
+      padding:6px; display:none; flex-direction:column; gap:2px; z-index:60;
+      box-shadow:0 16px 40px rgba(0,0,0,0.5);
+    }
+    .tb-block[data-open="true"] .tb-block__menu { display:flex; }
+    .tb-block__item {
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:8px 12px; border-radius:6px; cursor:pointer;
+      color:var(--text-primary); font-size:14px; font-weight:500;
+      background:transparent; border:none; text-align:left; font-family:inherit;
+    }
+    .tb-block__item:hover { background:var(--bg-input-focus); }
+    .tb-block__item--active { color:var(--accent-gold); background:rgba(252,179,0,0.08); }
+    .tb-block__item-hint { font-size:11px; color:var(--text-dim); font-family:'JetBrains Mono',monospace; }
+    .tb-block__item--h1 { font-size:18px; font-weight:700; }
+    .tb-block__item--h2 { font-size:16px; font-weight:700; }
+    .tb-block__item--h3 { font-size:14px; font-weight:600; }
+    .tb-block__item--quote { font-style:italic; color:var(--text-muted); }
+    .tb-block__item--code { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text-muted); }
+
+    .content {
+      min-height:480px; max-height:75vh; overflow-y:auto;
+      padding:28px 32px;
+      background:var(--bg-input);
+      color:var(--text-primary);
+      font-family:'Outfit',sans-serif; font-size:15px; line-height:1.6;
+      outline:none;
+    }
+    .content[data-empty="true"]::before {
+      content:attr(data-placeholder);
+      color:var(--text-dim); pointer-events:none;
+    }
+    .content:focus-within { background:var(--bg-input-focus); }
+
+    .content h1 { font-size:1.7rem; font-weight:800; margin:1.5rem 0 1rem; line-height:1.2; }
+    .content h2 { font-size:1.35rem; font-weight:700; margin:1.25rem 0 0.75rem; line-height:1.25; }
+    .content h3 { font-size:1.15rem; font-weight:600; margin:1rem 0 0.5rem; }
+    .content p { margin:0 0 0.75rem; }
+    .content ul, .content ol { padding-left:1.6rem; margin:0.5rem 0 1rem; }
+    .content ul { list-style:disc; }
+    .content ol { list-style:decimal; }
+    .content li { margin:0.25rem 0; }
+    .content blockquote {
+      border-left:3px solid var(--quote-border); padding:6px 14px; margin:0.75rem 0;
+      color:var(--text-muted); font-style:italic; background:rgba(252,179,0,0.04);
+    }
+    .content a { color:var(--text-link); text-decoration:underline; text-underline-offset:3px; }
+    .content img { max-width:100%; height:auto; border-radius:8px; margin:0.75rem 0; }
+    .content pre {
+      background:var(--code-bg); border:1px solid var(--border-subtle); border-radius:10px;
+      padding:14px 16px; margin:0.75rem 0; overflow-x:auto;
+      font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.55;
+    }
+    .content code { font-family:'JetBrains Mono',monospace; font-size:0.9em; background:var(--code-bg); padding:1px 5px; border-radius:4px; }
+    .content pre code { background:transparent; padding:0; border-radius:0; }
+    .content table { width:100%; border-collapse:collapse; margin:0.75rem 0; }
+    .content table th, .content table td { border:1px solid var(--border-strong); padding:6px 10px; text-align:left; min-width:60px; }
+    .content table th { background:var(--bg-input-focus); font-weight:600; }
+
+    .yt-wrap { position:relative; padding-bottom:56.25%; height:0; margin:0.75rem 0; border-radius:10px; overflow:hidden; background:#000; }
+    .yt-wrap iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+
+    .ta-left { text-align:left }
+    .ta-center { text-align:center }
+    .ta-right { text-align:right }
+    .ta-justify { text-align:justify }
+
+    .statusbar {
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:8px 16px; border-top:1px solid var(--border-subtle);
+      background:var(--bg-toolbar);
+      font-size:11px; color:var(--text-muted); font-weight:500;
+    }
+    .statusbar__chip { display:inline-flex; align-items:center; gap:6px; padding:3px 8px; border-radius:6px; background:var(--bg-input); }
+
+    .output { margin-top:24px; display:flex; flex-direction:column; gap:8px; }
+    .output__head { display:flex; align-items:center; justify-content:space-between; }
+    .output__title { font-family:'Orbitron',sans-serif; font-size:11px; letter-spacing:0.16em; font-weight:700; text-transform:uppercase; color:var(--text-dim); }
+    .output__copy { font-size:11px; color:var(--text-muted); cursor:pointer; padding:4px 10px; border-radius:6px; border:1px solid var(--border-subtle); background:var(--bg-glass); }
+    .output__copy:hover { color:var(--accent-gold); border-color:var(--border-active); }
+    .output pre {
+      font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.5;
+      background:var(--bg-glass); border:1px solid var(--border-subtle); border-radius:10px;
+      padding:14px 16px; max-height:240px; overflow:auto;
+      color:var(--text-muted); white-space:pre-wrap; word-break:break-word;
+    }
+
+    .modal-mask {
+      position:fixed; inset:0; background:rgba(6,6,14,0.65); backdrop-filter:blur(6px);
+      display:none; align-items:center; justify-content:center; z-index:200; padding:20px;
+    }
+    .modal-mask.open { display:flex; }
+    .modal {
+      background:var(--bg-toolbar); border:1px solid var(--border-strong); border-radius:14px;
+      width:100%; max-width:420px; padding:20px;
+      display:flex; flex-direction:column; gap:14px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.5);
+    }
+    .modal__title { font-family:'Orbitron',sans-serif; font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-primary); }
+    .modal__field { display:flex; flex-direction:column; gap:6px; }
+    .modal__field label { font-size:11px; color:var(--text-muted); font-weight:600; letter-spacing:0.04em; text-transform:uppercase; }
+    .modal__field input {
+      height:38px; padding:0 12px; border-radius:8px; border:1px solid var(--border-subtle);
+      background:var(--bg-input); color:var(--text-primary); font-family:inherit; font-size:14px;
+      outline:none;
+    }
+    .modal__field input:focus { border-color:var(--border-active); background:var(--bg-input-focus); }
+    .modal__row { display:flex; gap:10px; }
+    .modal__actions { display:flex; justify-content:flex-end; gap:8px; margin-top:4px; }
+    .btn {
+      padding:8px 16px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-glass);
+      color:var(--text-muted); font-family:inherit; font-size:12px; font-weight:600; cursor:pointer;
+      letter-spacing:0.04em; text-transform:uppercase;
+    }
+    .btn:hover { color:var(--text-primary); border-color:var(--border-strong); }
+    .btn--primary {
+      background:linear-gradient(135deg,var(--accent-gold),#e5a200); color:#0a0a0a; border-color:transparent;
+    }
+    .btn--primary:hover { color:#0a0a0a; }
+
+    @media (max-width:640px) {
+      .page { padding:16px 12px 80px; }
+      .page-header { flex-direction:column; align-items:flex-start; gap:8px; }
+      .toolbar { padding:8px; gap:4px; overflow-x:auto; flex-wrap:nowrap; }
+      .toolbar__group { padding:0 2px; }
+      .toolbar__group + .toolbar__group { padding-left:6px; margin-left:0; }
+      .tb-btn { width:40px; height:40px; min-width:40px; min-height:40px; }
+      .tb-select { height:40px; font-size:14px; }
+      .content { padding:18px 16px; min-height:360px; font-size:16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="page-header">
+      <div>
+        <div class="page-title">Simple Editor</div>
+        <div class="page-subtitle">contenteditable + minimal toolbar — replaces Tiptap</div>
+      </div>
+      <button class="theme-toggle" id="theme-toggle" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <span id="theme-label">Light mode</span>
+      </button>
+    </header>
+
+    <div class="editor">
+      <div class="toolbar" role="toolbar" aria-label="Editor toolbar">
+        <div class="toolbar__group">
+          <button class="tb-btn" data-cmd="undo" data-tip="Undo (Ctrl+Z)" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg>
+          </button>
+          <button class="tb-btn" data-cmd="redo" data-tip="Redo (Ctrl+Shift+Z)" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 15-6.7L21 13"/></svg>
+          </button>
+        </div>
+
+        <div class="toolbar__group">
+          <div class="tb-block" id="block-dropdown" data-open="false">
+            <button class="tb-block__btn" type="button" id="block-btn" aria-haspopup="listbox" aria-expanded="false">
+              <span id="block-btn-label">Paragraph</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="tb-block__menu" role="listbox">
+              <button class="tb-block__item" type="button" data-block="P">
+                <span>Paragraph</span><span class="tb-block__item-hint">P</span>
+              </button>
+              <button class="tb-block__item tb-block__item--h1" type="button" data-block="H1">
+                <span>Heading 1</span><span class="tb-block__item-hint">H1</span>
+              </button>
+              <button class="tb-block__item tb-block__item--h2" type="button" data-block="H2">
+                <span>Heading 2</span><span class="tb-block__item-hint">H2</span>
+              </button>
+              <button class="tb-block__item tb-block__item--h3" type="button" data-block="H3">
+                <span>Heading 3</span><span class="tb-block__item-hint">H3</span>
+              </button>
+              <button class="tb-block__item tb-block__item--quote" type="button" data-block="BLOCKQUOTE">
+                <span>Quote</span><span class="tb-block__item-hint">"</span>
+              </button>
+              <button class="tb-block__item tb-block__item--code" type="button" data-block="PRE">
+                <span>Code block</span><span class="tb-block__item-hint">{ }</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="toolbar__group">
+          <button class="tb-btn" data-cmd="bold" data-tip="Bold (Ctrl+B)" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 0 8H6z"/><path d="M6 12h9a4 4 0 0 1 0 8H6z"/></svg></button>
+          <button class="tb-btn" data-cmd="italic" data-tip="Italic (Ctrl+I)" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg></button>
+          <button class="tb-btn" data-cmd="underline" data-tip="Underline (Ctrl+U)" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" y1="20" x2="20" y2="20"/></svg></button>
+          <button class="tb-btn" data-cmd="strikeThrough" data-tip="Strikethrough" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><path d="M16 6c-1.5-1.3-3.5-2-6-2-3 0-5 1.5-5 4 0 2 1.5 3 5 4"/><path d="M8 18c1.5 1.3 3.5 2 6 2 3 0 5-1.5 5-4 0-1-.4-1.8-1-2.4"/></svg></button>
+          <button class="tb-btn" data-cmd="code-inline" data-tip="Inline code" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></button>
+        </div>
+
+        <div class="toolbar__group">
+          <button class="tb-btn" data-cmd="justifyLeft" data-tip="Align left" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg></button>
+          <button class="tb-btn" data-cmd="justifyCenter" data-tip="Align center" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg></button>
+          <button class="tb-btn" data-cmd="justifyRight" data-tip="Align right" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg></button>
+          <button class="tb-btn" data-cmd="justifyFull" data-tip="Justify" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg></button>
+        </div>
+
+        <div class="toolbar__group">
+          <button class="tb-btn" data-cmd="insertUnorderedList" data-tip="Bullet list" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg></button>
+          <button class="tb-btn" data-cmd="insertOrderedList" data-tip="Numbered list" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></button>
+          <button class="tb-btn" data-cmd="outdent" data-tip="Outdent" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="5" x2="3" y2="5"/><line x1="21" y1="19" x2="3" y2="19"/><line x1="21" y1="9" x2="11" y2="9"/><line x1="21" y1="15" x2="11" y2="15"/><polyline points="7 9 3 12 7 15"/></svg></button>
+          <button class="tb-btn" data-cmd="indent" data-tip="Indent" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="5" x2="21" y2="5"/><line x1="3" y1="19" x2="21" y2="19"/><line x1="13" y1="9" x2="3" y2="9"/><line x1="13" y1="15" x2="3" y2="15"/><polyline points="17 9 21 12 17 15"/></svg></button>
+        </div>
+
+        <div class="toolbar__group">
+          <button class="tb-btn" data-cmd="link" data-tip="Insert link" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+          <button class="tb-btn" data-cmd="unlink" data-tip="Remove link" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.84 12.25l1.72-1.71a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M5.16 11.75L3.44 13.46a5 5 0 0 0 7.07 7.07l1.71-1.71"/><line x1="2" y1="2" x2="22" y2="22"/></svg></button>
+          <button class="tb-btn" data-cmd="image" data-tip="Insert image" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>
+          <button class="tb-btn" data-cmd="youtube" data-tip="Embed YouTube" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 8.5a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v7a4 4 0 0 0 4 4h12a4 4 0 0 0 4-4z"/><polygon points="10 8 16 12 10 16 10 8"/></svg></button>
+          <button class="tb-btn" data-cmd="table" data-tip="Insert table" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></button>
+          <button class="tb-btn" data-cmd="hr" data-tip="Horizontal rule" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/></svg></button>
+        </div>
+
+        <div class="toolbar__group">
+          <button class="tb-btn" data-cmd="removeFormat" data-tip="Clear formatting" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><line x1="5" y1="20" x2="11" y2="20"/><line x1="13" y1="4" x2="8" y2="20"/><line x1="3" y1="3" x2="21" y2="21"/></svg></button>
+        </div>
+      </div>
+
+      <div
+        id="editor"
+        class="content"
+        contenteditable="true"
+        data-placeholder="Start typing your post… try /heading, formatting, or paste an image."
+        data-empty="false"
+        spellcheck="true"
+        autocapitalize="sentences"
+      ><h2>Welcome to Simple Editor</h2><p>This is a self-built rich text editor that replaces Tiptap. It uses native <code>contenteditable</code> + a small JS shim, so it's <strong>tiny, IME-safe</strong>, and works inside Android/iOS WebViews.</p><p>Try the toolbar above — bold, headings, lists, alignment, links, images, YouTube embeds, tables, and code blocks all work.</p><blockquote>Tip: paste rich content from any source — formatting is preserved.</blockquote><pre><code>// Inline code and code blocks are supported
+function hello() {
+  return "world";
+}</code></pre></div>
+
+      <div class="statusbar">
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="statusbar__chip">Words <strong id="word-count" style="color:var(--text-primary);margin-left:4px">0</strong></span>
+          <span class="statusbar__chip">Chars <strong id="char-count" style="color:var(--text-primary);margin-left:4px">0</strong></span>
+        </div>
+        <div id="ime-state" class="statusbar__chip" style="display:none">composing…</div>
+      </div>
+    </div>
+
+    <div class="output">
+      <div class="output__head">
+        <div class="output__title">HTML output (what gets sent to the server)</div>
+        <button class="output__copy" id="copy-html" type="button">Copy</button>
+      </div>
+      <pre id="html-output"></pre>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="link-modal">
+    <div class="modal" role="dialog" aria-label="Insert link">
+      <div class="modal__title">Insert link</div>
+      <div class="modal__field">
+        <label>URL</label>
+        <input id="link-url" type="url" placeholder="https://example.com" autocomplete="off" />
+      </div>
+      <div class="modal__actions">
+        <button class="btn" data-close-modal type="button">Cancel</button>
+        <button class="btn btn--primary" id="link-confirm" type="button">Insert</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="image-modal">
+    <div class="modal" role="dialog" aria-label="Insert image">
+      <div class="modal__title">Insert image</div>
+      <div class="modal__field">
+        <label>Image URL</label>
+        <input id="image-url" type="url" placeholder="https://… or upload below" />
+      </div>
+      <div class="modal__field">
+        <label>Or upload</label>
+        <input id="image-file" type="file" accept="image/*" />
+      </div>
+      <div class="modal__actions">
+        <button class="btn" data-close-modal type="button">Cancel</button>
+        <button class="btn btn--primary" id="image-confirm" type="button">Insert</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="youtube-modal">
+    <div class="modal" role="dialog" aria-label="Embed YouTube">
+      <div class="modal__title">Embed YouTube video</div>
+      <div class="modal__field">
+        <label>YouTube URL or ID</label>
+        <input id="youtube-url" type="text" placeholder="https://youtu.be/dQw4w9WgXcQ" />
+      </div>
+      <div class="modal__actions">
+        <button class="btn" data-close-modal type="button">Cancel</button>
+        <button class="btn btn--primary" id="youtube-confirm" type="button">Embed</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="table-modal">
+    <div class="modal" role="dialog" aria-label="Insert table">
+      <div class="modal__title">Insert table</div>
+      <div class="modal__row">
+        <div class="modal__field" style="flex:1">
+          <label>Rows</label>
+          <input id="table-rows" type="number" min="1" max="20" value="3" />
+        </div>
+        <div class="modal__field" style="flex:1">
+          <label>Columns</label>
+          <input id="table-cols" type="number" min="1" max="10" value="3" />
+        </div>
+      </div>
+      <div class="modal__field">
+        <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:13px;color:var(--text-primary)">
+          <input id="table-header" type="checkbox" checked /> First row is header
+        </label>
+      </div>
+      <div class="modal__actions">
+        <button class="btn" data-close-modal type="button">Cancel</button>
+        <button class="btn btn--primary" id="table-confirm" type="button">Insert</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var editor = document.getElementById("editor");
+      var wordCount = document.getElementById("word-count");
+      var charCount = document.getElementById("char-count");
+      var imeState = document.getElementById("ime-state");
+      var htmlOutput = document.getElementById("html-output");
+
+      var themeToggle = document.getElementById("theme-toggle");
+      var themeLabel = document.getElementById("theme-label");
+      themeToggle.addEventListener("click", function () {
+        var cur = document.documentElement.getAttribute("data-theme");
+        var next = cur === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+        themeLabel.textContent = next === "dark" ? "Light mode" : "Dark mode";
+      });
+
+      // IME-safe input handling
+      var composing = false;
+      editor.addEventListener("compositionstart", function () {
+        composing = true;
+        imeState.style.display = "inline-flex";
+      });
+      editor.addEventListener("compositionend", function () {
+        composing = false;
+        imeState.style.display = "none";
+        scheduleUpdate();
+      });
+
+      var updateTimer = null;
+      function scheduleUpdate() {
+        if (composing) return;
+        clearTimeout(updateTimer);
+        updateTimer = setTimeout(emitChange, 120);
+      }
+
+      function emitChange() {
+        var empty = editor.textContent.trim().length === 0 && editor.children.length <= 1;
+        editor.dataset.empty = empty ? "true" : "false";
+        var html = empty ? "" : editor.innerHTML;
+        htmlOutput.textContent = html;
+        var text = editor.innerText || "";
+        var words = text.trim() ? text.trim().split(/\s+/).length : 0;
+        wordCount.textContent = words;
+        charCount.textContent = text.length;
+        editor.dispatchEvent(new CustomEvent("change", { detail: html, bubbles: true }));
+        syncToolbarState();
+      }
+
+      editor.addEventListener("input", scheduleUpdate);
+      editor.addEventListener("paste", function () { setTimeout(scheduleUpdate, 0); });
+
+      // Toolbar wiring
+      function applyCmd(cmd, value) {
+        editor.focus();
+        document.execCommand(cmd, false, value || null);
+        scheduleUpdate();
+      }
+
+      document.querySelectorAll(".tb-btn").forEach(function (btn) {
+        var cmd = btn.dataset.cmd;
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          handleCommand(cmd);
+        });
+      });
+
+      // Custom block-format dropdown
+      var blockDropdown = document.getElementById("block-dropdown");
+      var blockBtn = document.getElementById("block-btn");
+      var blockBtnLabel = document.getElementById("block-btn-label");
+      var blockLabels = {
+        P: "Paragraph",
+        H1: "Heading 1",
+        H2: "Heading 2",
+        H3: "Heading 3",
+        BLOCKQUOTE: "Quote",
+        PRE: "Code block"
+      };
+      blockBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var open = blockDropdown.dataset.open === "true";
+        blockDropdown.dataset.open = open ? "false" : "true";
+        blockBtn.setAttribute("aria-expanded", open ? "false" : "true");
+      });
+      document.addEventListener("click", function (e) {
+        if (!blockDropdown.contains(e.target)) {
+          blockDropdown.dataset.open = "false";
+          blockBtn.setAttribute("aria-expanded", "false");
+        }
+      });
+      document.querySelectorAll("[data-block]").forEach(function (item) {
+        item.addEventListener("click", function (e) {
+          e.preventDefault();
+          var tag = item.dataset.block;
+          blockDropdown.dataset.open = "false";
+          blockBtn.setAttribute("aria-expanded", "false");
+          restoreSelection();
+          applyCmd("formatBlock", "<" + tag + ">");
+        });
+      });
+      function syncBlockLabel() {
+        if (document.activeElement !== editor) return;
+        var sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        var node = sel.getRangeAt(0).startContainer;
+        if (node.nodeType === 3) node = node.parentNode;
+        while (node && node !== editor) {
+          var tag = node.nodeName;
+          if (blockLabels[tag]) {
+            blockBtnLabel.textContent = blockLabels[tag];
+            document.querySelectorAll("[data-block]").forEach(function (item) {
+              item.classList.toggle("tb-block__item--active", item.dataset.block === tag);
+            });
+            return;
+          }
+          node = node.parentNode;
+        }
+        blockBtnLabel.textContent = "Paragraph";
+      }
+      // Save selection on every selection change so the dropdown can restore
+      // it after click (clicking the menu would otherwise blur the editor).
+      blockDropdown.addEventListener("mousedown", function () {
+        savedRange = saveSelection();
+      });
+
+      function handleCommand(cmd) {
+        switch (cmd) {
+          case "code-inline": return wrapInlineCode();
+          case "link":        return openModal("link-modal");
+          case "unlink":      return applyCmd("unlink");
+          case "image":       return openModal("image-modal");
+          case "youtube":     return openModal("youtube-modal");
+          case "table":       return openModal("table-modal");
+          case "hr":          return applyCmd("insertHorizontalRule");
+          default:            return applyCmd(cmd);
+        }
+      }
+
+      function wrapInlineCode() {
+        var sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        var range = sel.getRangeAt(0);
+        if (range.collapsed) return;
+        var code = document.createElement("code");
+        code.appendChild(range.extractContents());
+        range.insertNode(code);
+        sel.removeAllRanges();
+        var after = document.createRange();
+        after.setStartAfter(code);
+        sel.addRange(after);
+        scheduleUpdate();
+      }
+
+      // Toolbar active-state sync
+      function syncToolbarState() {
+        var map = {
+          bold: "bold",
+          italic: "italic",
+          underline: "underline",
+          strikeThrough: "strikeThrough",
+          insertUnorderedList: "insertUnorderedList",
+          insertOrderedList: "insertOrderedList",
+          justifyLeft: "justifyLeft",
+          justifyCenter: "justifyCenter",
+          justifyRight: "justifyRight",
+          justifyFull: "justifyFull"
+        };
+        document.querySelectorAll(".tb-btn").forEach(function (btn) {
+          var cmd = btn.dataset.cmd;
+          var queryName = map[cmd];
+          if (!queryName) return;
+          try {
+            btn.setAttribute("aria-pressed",
+              document.queryCommandState(queryName) ? "true" : "false");
+          } catch (_e) {}
+        });
+      }
+      document.addEventListener("selectionchange", function () {
+        if (document.activeElement === editor) {
+          syncToolbarState();
+          syncBlockLabel();
+        }
+      });
+
+      // Modals
+      var savedRange = null;
+      function openModal(id) {
+        savedRange = saveSelection();
+        document.getElementById(id).classList.add("open");
+        var firstInput = document.querySelector("#" + id + " input");
+        if (firstInput) setTimeout(function () { firstInput.focus(); }, 30);
+      }
+      function closeModal(el) { el.classList.remove("open"); }
+
+      function saveSelection() {
+        var sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return null;
+        return sel.getRangeAt(0).cloneRange();
+      }
+      function restoreSelection() {
+        if (!savedRange) { editor.focus(); return; }
+        editor.focus();
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(savedRange);
+      }
+
+      document.querySelectorAll("[data-close-modal]").forEach(function (btn) {
+        btn.addEventListener("click", function () { closeModal(btn.closest(".modal-mask")); });
+      });
+      document.querySelectorAll(".modal-mask").forEach(function (mask) {
+        mask.addEventListener("click", function (e) {
+          if (e.target === mask) closeModal(mask);
+        });
+      });
+
+      document.getElementById("link-confirm").addEventListener("click", function () {
+        var url = document.getElementById("link-url").value.trim();
+        closeModal(document.getElementById("link-modal"));
+        if (!url) return;
+        restoreSelection();
+        applyCmd("createLink", url);
+      });
+
+      document.getElementById("image-confirm").addEventListener("click", function () {
+        var url = document.getElementById("image-url").value.trim();
+        var file = document.getElementById("image-file").files[0];
+        var close = function () {
+          closeModal(document.getElementById("image-modal"));
+          document.getElementById("image-url").value = "";
+          document.getElementById("image-file").value = "";
+        };
+        if (file) {
+          var reader = new FileReader();
+          reader.onload = function (ev) {
+            close();
+            restoreSelection();
+            applyCmd("insertImage", ev.target.result);
+          };
+          reader.readAsDataURL(file);
+          return;
+        }
+        close();
+        if (!url) return;
+        restoreSelection();
+        applyCmd("insertImage", url);
+      });
+
+      document.getElementById("youtube-confirm").addEventListener("click", function () {
+        var raw = document.getElementById("youtube-url").value.trim();
+        closeModal(document.getElementById("youtube-modal"));
+        document.getElementById("youtube-url").value = "";
+        if (!raw) return;
+        var id = parseYoutubeId(raw);
+        if (!id) return;
+        var html = '<div class="yt-wrap"><iframe src="https://www.youtube.com/embed/' +
+          id + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><p><br></p>';
+        restoreSelection();
+        document.execCommand("insertHTML", false, html);
+        scheduleUpdate();
+      });
+
+      function parseYoutubeId(input) {
+        var m = input.match(/(?:youtu\.be\/|v=|\/embed\/)([\w-]{11})/);
+        if (m) return m[1];
+        if (/^[\w-]{11}$/.test(input)) return input;
+        return null;
+      }
+
+      document.getElementById("table-confirm").addEventListener("click", function () {
+        var rows = parseInt(document.getElementById("table-rows").value, 10) || 1;
+        var cols = parseInt(document.getElementById("table-cols").value, 10) || 1;
+        var useHeader = document.getElementById("table-header").checked;
+        closeModal(document.getElementById("table-modal"));
+        var html = "<table>";
+        for (var r = 0; r < rows; r++) {
+          html += "<tr>";
+          for (var c = 0; c < cols; c++) {
+            var cell = useHeader && r === 0 ? "th" : "td";
+            html += "<" + cell + ">&nbsp;</" + cell + ">";
+          }
+          html += "</tr>";
+        }
+        html += "</table><p><br></p>";
+        restoreSelection();
+        document.execCommand("insertHTML", false, html);
+        scheduleUpdate();
+      });
+
+      // Keyboard shortcuts
+      editor.addEventListener("keydown", function (e) {
+        var meta = e.metaKey || e.ctrlKey;
+        if (!meta) return;
+        var k = e.key.toLowerCase();
+        if (k === "b") { e.preventDefault(); applyCmd("bold"); }
+        else if (k === "i") { e.preventDefault(); applyCmd("italic"); }
+        else if (k === "u") { e.preventDefault(); applyCmd("underline"); }
+        else if (k === "k") { e.preventDefault(); openModal("link-modal"); }
+      });
+
+      document.getElementById("copy-html").addEventListener("click", async function () {
+        try {
+          await navigator.clipboard.writeText(htmlOutput.textContent);
+          this.textContent = "Copied!";
+          var self = this;
+          setTimeout(function () { self.textContent = "Copy"; }, 1200);
+        } catch (_e) {}
+      });
+
+      emitChange();
+    })();
+  </script>
+</body>
+</html>

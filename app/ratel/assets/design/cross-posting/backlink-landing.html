@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Why MCP changes everything — Sangwoo Kim · Ratel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --bg-input:rgba(255,255,255,0.025);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-violet:#818cf8;
+      --bsky:#0a85ff;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+    }
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body);font-size:15px;line-height:1.6}
+    body{overflow-x:hidden;padding-top:56px}
+    body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 60% at 80% 15%,rgba(252,179,0,0.05) 0%,transparent 55%),radial-gradient(ellipse 60% 60% at 15% 85%,rgba(10,133,255,0.06) 0%,transparent 60%);z-index:-1;pointer-events:none}
+
+    /* ─── Sticky conversion bar ─── */
+    .refer-bar{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;gap:14px;padding:10px 20px;background:linear-gradient(180deg,rgba(10,133,255,0.14),rgba(10,133,255,0.05));backdrop-filter:blur(20px);border-bottom:1px solid rgba(10,133,255,0.25)}
+    .refer-bar__icon{width:26px;height:26px;border-radius:7px;background:var(--bsky);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .refer-bar__icon svg{width:14px;height:14px;color:#fff}
+    .refer-bar__text{flex:1;font-size:12.5px;color:var(--text-muted);min-width:0}
+    .refer-bar__text strong{color:var(--text-primary);font-weight:600}
+    .refer-bar__close{width:28px;height:28px;border-radius:7px;background:transparent;border:1px solid transparent;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:all 0.2s}
+    .refer-bar__close:hover{color:var(--text-muted);background:rgba(255,255,255,0.04)}
+    .refer-bar__close svg{width:14px;height:14px}
+
+    /* ─── Top brand bar ─── */
+    .brand-bar{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border-subtle);background:rgba(6,6,14,0.50);backdrop-filter:blur(16px);position:sticky;top:56px;z-index:30}
+    .brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-primary);text-decoration:none}
+    .brand__dot{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent-gold),var(--accent-teal));display:flex;align-items:center;justify-content:center;color:#0a0a0a;font-size:11px;font-weight:900}
+    .brand-bar__actions{display:flex;gap:8px}
+    .brand-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;cursor:pointer;transition:all 0.25s ease;border:1px solid var(--border-subtle);background:transparent;color:var(--text-muted);text-decoration:none}
+    .brand-btn:hover{border-color:rgba(252,179,0,0.25);color:var(--accent-gold)}
+    .brand-btn--primary{background:linear-gradient(135deg,var(--accent-gold),#e5a200);color:#0a0a0a;border-color:transparent;box-shadow:0 2px 14px rgba(252,179,0,0.20)}
+    .brand-btn--primary:hover{color:#0a0a0a;box-shadow:0 4px 22px rgba(252,179,0,0.35)}
+
+    .layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:32px;max-width:1180px;margin:0 auto;padding:40px 28px 80px}
+
+    /* ─── Article ─── */
+    .post{display:flex;flex-direction:column;gap:20px;min-width:0}
+    .post__author{display:flex;align-items:center;gap:14px;margin-bottom:4px}
+    .post__avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent-gold),var(--accent-teal));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:16px;font-weight:800;color:#0a0a0a}
+    .post__author-meta{display:flex;flex-direction:column;gap:2px}
+    .post__author-name{font-size:15px;font-weight:700;color:var(--text-primary)}
+    .post__author-row{display:flex;gap:10px;align-items:center;font-size:12.5px;color:var(--text-dim)}
+    .post__author-row a{color:var(--accent-teal);text-decoration:none}
+    .post__author-row a:hover{text-decoration:underline}
+    .post__author-follow{margin-left:auto;padding:7px 14px;border-radius:100px;background:var(--accent-gold);color:#0a0a0a;font-family:var(--font-display);font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;border:none;cursor:pointer}
+
+    .post__title{font-size:40px;font-weight:700;line-height:1.15;letter-spacing:-0.02em;color:var(--text-primary)}
+    .post__excerpt{font-size:17px;color:var(--text-muted);line-height:1.55}
+
+    .post__image{border-radius:16px;overflow:hidden;border:1px solid var(--border-subtle);aspect-ratio:16/9}
+    .post__image img{width:100%;height:100%;object-fit:cover}
+
+    .post__body{font-size:16px;line-height:1.85;color:var(--text-primary)}
+    .post__body p{margin-bottom:18px}
+    .post__body strong{color:var(--accent-gold);font-weight:700}
+    .post__body em{font-style:italic;color:var(--text-muted)}
+
+    .post__read-gate{margin-top:4px;padding:24px;border-radius:16px;background:linear-gradient(180deg,rgba(12,12,26,0.2),rgba(12,12,26,0.95));border:1px solid var(--border-subtle);text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;position:relative}
+    .post__read-gate::before{content:'';position:absolute;top:-60px;left:0;right:0;height:60px;background:linear-gradient(180deg,rgba(6,6,14,0) 0%,rgba(6,6,14,0.8) 100%);pointer-events:none}
+    .post__read-gate-title{font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-primary)}
+    .post__read-gate-sub{font-size:13.5px;color:var(--text-muted);max-width:420px;line-height:1.55}
+
+    /* ─── Sidebar: Essence House ─── */
+    .side{display:flex;flex-direction:column;gap:16px;align-self:start;position:sticky;top:128px}
+
+    .house-card{position:relative;overflow:hidden;border-radius:20px;background:linear-gradient(135deg,rgba(12,12,26,0.85),rgba(20,20,40,0.75));backdrop-filter:blur(20px);border:1px solid rgba(252,179,0,0.18);padding:24px;display:flex;flex-direction:column;gap:14px}
+    .house-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 100% 0%,rgba(252,179,0,0.12) 0%,transparent 55%),radial-gradient(ellipse 60% 60% at 0% 100%,rgba(110,237,216,0.08) 0%,transparent 55%);pointer-events:none}
+    .house-card > *{position:relative;z-index:1}
+
+    .house-card__eyebrow{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--accent-gold);display:flex;align-items:center;gap:8px}
+    .house-card__eyebrow svg{width:12px;height:12px}
+
+    .house-card__hero{display:flex;align-items:center;gap:12px}
+    .house-card__hero-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent-gold),var(--accent-teal));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:16px;font-weight:800;color:#0a0a0a}
+    .house-card__hero-body{display:flex;flex-direction:column;gap:2px}
+    .house-card__hero-title{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:0.04em;color:var(--text-primary)}
+    .house-card__hero-sub{font-size:12px;color:var(--text-muted)}
+
+    .house-card__stats{display:flex;gap:12px;padding:10px 0;border-top:1px solid rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06)}
+    .house-card__stat{display:flex;flex-direction:column;gap:2px;flex:1}
+    .house-card__stat-value{font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--text-primary)}
+    .house-card__stat-label{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim)}
+
+    .house-card__pitch{font-size:13px;color:var(--text-muted);line-height:1.6}
+
+    .house-card__price{display:flex;align-items:baseline;gap:6px}
+    .house-card__price-amount{font-family:var(--font-display);font-size:28px;font-weight:800;letter-spacing:0.02em;color:var(--accent-gold)}
+    .house-card__price-unit{font-size:13px;color:var(--text-muted)}
+
+    .house-card__cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 18px;border-radius:12px;background:linear-gradient(135deg,var(--accent-gold),#e5a200);color:#0a0a0a;font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:0.10em;text-transform:uppercase;border:none;cursor:pointer;transition:all 0.25s ease;box-shadow:0 4px 20px rgba(252,179,0,0.30)}
+    .house-card__cta:hover{box-shadow:0 6px 30px rgba(252,179,0,0.45);transform:translateY(-1px)}
+    .house-card__cta svg{width:13px;height:13px}
+
+    .house-card__note{font-size:11.5px;color:var(--text-dim);text-align:center;line-height:1.4}
+
+    /* MCP preview badge */
+    .mcp-card{border-radius:16px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);padding:16px}
+    .mcp-card__head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .mcp-card__icon{width:32px;height:32px;border-radius:9px;background:rgba(129,140,248,0.10);border:1px solid rgba(129,140,248,0.22);display:flex;align-items:center;justify-content:center;color:var(--accent-violet)}
+    .mcp-card__icon svg{width:16px;height:16px}
+    .mcp-card__title{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-primary)}
+    .mcp-card__body{font-size:12.5px;color:var(--text-muted);line-height:1.55}
+    .mcp-card__body code{font-family:var(--font-display);font-size:10.5px;padding:1px 6px;border-radius:4px;background:rgba(110,237,216,0.06);color:var(--accent-teal)}
+
+    /* Signup card (mobile bottom) */
+    .mobile-cta{display:none}
+
+    @media (max-width:1024px){
+      .layout{grid-template-columns:1fr;padding:28px 20px 80px;gap:24px}
+      .side{position:static}
+    }
+    @media (max-width:720px){
+      .refer-bar{padding:8px 14px;gap:10px}
+      .refer-bar__text{font-size:11.5px}
+      .post__title{font-size:30px}
+      .post__excerpt{font-size:15px}
+      .brand-bar{padding:12px 16px}
+      .layout{padding:20px 14px 80px}
+    }
+  </style>
+</head>
+<body>
+  <!-- ─── STICKY REFERRAL BAR ─── -->
+  <div class="refer-bar">
+    <span class="refer-bar__icon">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.5c-1.3-2.5-4.9-7.2-8.2-9.5C.7-1.2 0 .5 0 1.5c0 1.1.6 9.1 1 10.3.8 4 5.5 5.1 9.6 4.4-6.5 1.1-12.3 3.5-4.7 11.4 2.5 2.6 3.5-2.6 4-5.2.5 2.6 1.6 7.8 4 5.2 7.7-7.9 1.9-10.4-4.6-11.5 4 .7 8.8-.4 9.6-4.4.4-1.2 1-9.2 1-10.3 0-1-.7-2.7-3.8-.5-3.3 2.3-6.9 7-8.2 9.6z"/></svg>
+    </span>
+    <span class="refer-bar__text">
+      You arrived from <strong>@sangwoo.bsky.social</strong>'s Bluesky post — see the full thinking and subscribe to their Essence House.
+    </span>
+    <button class="refer-bar__close" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <!-- ─── TOP BRAND BAR ─── -->
+  <div class="brand-bar">
+    <a href="#" class="brand">
+      <span class="brand__dot">R</span>
+      Ratel
+    </a>
+    <div class="brand-bar__actions">
+      <a href="#" class="brand-btn">Sign in</a>
+      <a href="#" class="brand-btn brand-btn--primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12 19 12"/><polyline points="12 5 19 12 12 19"/></svg>
+        Get started
+      </a>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- ─── ARTICLE ─── -->
+    <article class="post">
+
+      <div class="post__author">
+        <span class="post__avatar">S</span>
+        <div class="post__author-meta">
+          <span class="post__author-name">Sangwoo Kim</span>
+          <span class="post__author-row">
+            <span>Essence House owner</span>
+            <span>·</span>
+            <a href="#">@sangwoo.bsky.social</a>
+            <span>·</span>
+            <span>2 hours ago</span>
+          </span>
+        </div>
+        <button class="post__author-follow">Follow</button>
+      </div>
+
+      <h1 class="post__title">Why MCP changes everything for knowledge creators</h1>
+
+      <p class="post__excerpt">A playbook for turning your notes into an asset that earns while you think.</p>
+
+      <figure class="post__image">
+        <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=900&q=80" alt="" />
+      </figure>
+
+      <div class="post__body">
+        <p>For the last five years, I've watched tools promise "your second brain" and deliver another silo. Notion, Roam, Obsidian — beautiful, but locked inside apps and behind screens.</p>
+        <p><strong>MCP flips that.</strong> Your knowledge becomes a queryable surface. You stop being the reader of your own notes and start being someone whose thinking can be queried, on demand, by agents working for you — or for people who subscribe to your House.</p>
+        <p>Three implications I keep coming back to:</p>
+        <p><em>1. The unit of value shifts from "the document" to "the ability to answer."</em> No one pays for raw notes. They pay for a mind that answered their question.</p>
+        <p><em>2. Embeddings + quality scoring let us separate signal from volume.</em> Prolific ≠ valuable. A tightly-reasoned 500-word post can outrank 50 half-finished pages.</p>
+
+        <div class="post__read-gate">
+          <span class="post__read-gate-title">Continue reading</span>
+          <span class="post__read-gate-sub">There are 2 more sections in this post, including the revenue-split model and the case for subscription access. Create a free Ratel account to keep reading.</span>
+          <a href="#" class="house-card__cta">
+            Create free account
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12 19 12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <!-- ─── SIDEBAR ─── -->
+    <aside class="side">
+      <article class="house-card">
+        <span class="house-card__eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Essence House
+        </span>
+
+        <div class="house-card__hero">
+          <span class="house-card__hero-avatar">S</span>
+          <div class="house-card__hero-body">
+            <span class="house-card__hero-title">Sangwoo's House</span>
+            <span class="house-card__hero-sub">Founder · Building Ratel</span>
+          </div>
+        </div>
+
+        <div class="house-card__stats">
+          <div class="house-card__stat">
+            <span class="house-card__stat-value">4.8</span>
+            <span class="house-card__stat-label">Quality</span>
+          </div>
+          <div class="house-card__stat">
+            <span class="house-card__stat-value">124</span>
+            <span class="house-card__stat-label">Subscribers</span>
+          </div>
+          <div class="house-card__stat">
+            <span class="house-card__stat-value">862</span>
+            <span class="house-card__stat-label">Essences</span>
+          </div>
+        </div>
+
+        <p class="house-card__pitch">Get instant access to Sangwoo's thinking on decentralized systems, knowledge economics, and building Ratel — queryable from ChatGPT, Claude Desktop, or any MCP client.</p>
+
+        <div class="house-card__price">
+          <span class="house-card__price-amount">$12</span>
+          <span class="house-card__price-unit">/ month</span>
+        </div>
+
+        <button class="house-card__cta">
+          Subscribe to House
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12 19 12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+
+        <p class="house-card__note">One unified MCP endpoint across every House you subscribe to. Cancel anytime.</p>
+      </article>
+
+      <article class="mcp-card">
+        <div class="mcp-card__head">
+          <span class="mcp-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </span>
+          <span class="mcp-card__title">MCP-ready</span>
+        </div>
+        <p class="mcp-card__body">Register <code>mcp.ratel.foundation</code> in ChatGPT or Claude Desktop. One endpoint, every subscribed House — query across minds like a single corpus.</p>
+      </article>
+    </aside>
+  </div>
+</body>
+</html>
