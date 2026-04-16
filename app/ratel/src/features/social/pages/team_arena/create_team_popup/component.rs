@@ -2,9 +2,8 @@ use crate::common::contexts::TeamItem;
 use crate::common::{use_popup, use_team_context, TeamCreationForm, TeamCreationPayload};
 use crate::features::auth::UserType;
 use crate::features::posts::types::TeamGroupPermissions;
-use crate::features::social::controllers::{
-    create_team_handler, get_user_teams_handler, CreateTeamRequest,
-};
+use crate::features::social::controllers::{create_team_handler, CreateTeamRequest};
+use crate::get_user_teams_handler;
 use crate::route::Route;
 use dioxus::prelude::*;
 
@@ -119,11 +118,12 @@ pub fn ArenaTeamCreationPopup() -> Element {
                                     if let Some(idx) = selected_index {
                                         team_ctx.set_selected_index(idx);
                                     }
-                                    if let Ok(teams) = get_user_teams_handler().await {
-                                        let selected_index = teams
+                                    if let Ok(resp) = get_user_teams_handler(None).await {
+                                        let selected_index = resp
+                                            .items
                                             .iter()
                                             .position(|t| t.username == username);
-                                        team_ctx.set_teams(teams);
+                                        team_ctx.set_teams(resp.items);
                                         if let Some(idx) = selected_index {
                                             team_ctx.set_selected_index(idx);
                                         }

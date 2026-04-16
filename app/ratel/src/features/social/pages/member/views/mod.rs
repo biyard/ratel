@@ -1,4 +1,5 @@
 use crate::common::*;
+use crate::common::hooks::use_infinite_query;
 use crate::features::social::pages::team_arena::{use_team_arena, TeamArenaTab};
 
 mod admin_page;
@@ -59,25 +60,16 @@ pub fn Home(username: ReadSignal<String>) -> Element {
     let can_edit = perm_ctx.role.is_admin_or_owner();
     let team_pk = perm_ctx.team_pk.clone();
 
-    // Fetch members list (refetched on demand via signal).
-    let mut refresh = use_signal(|| 0u32);
-    let members_resource = use_loader({
-        let team_pk = team_pk.clone();
-        move || {
-            let pk = team_pk.clone();
-            async move {
-                let _ = refresh();
-                Ok::<_, super::Error>(
-                    list_members_handler(pk, None, Some(100))
-                        .await
-                        .map(|resp| resp.items)
-                        .map_err(|e| e.to_string()),
-                )
-            }
-        }
+    // Fetch members list — paginated infinite query. After role update /
+    // remove / invite, call `members_query.refresh()` to reload. The
+    // closure must be Copy, so stash `team_pk` in a signal (Signal<T> is
+    // Copy even when T isn't).
+    let team_pk_sig = use_signal(|| team_pk.clone());
+    let mut members_query = use_infinite_query(move |bookmark| async move {
+        list_members_handler(team_pk_sig(), bookmark, None).await
     })?;
-    let members: Vec<TeamMemberResponse> =
-        members_resource.read().clone().unwrap_or_default();
+    let members: Vec<TeamMemberResponse> = members_query.items();
+    let members_more = members_query.more_element();
 
     // ── State: filter + search + invite modal + open menu ──────────
     let mut role_filter = use_signal(|| RoleFilter::All);
@@ -263,10 +255,11 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                                     .set(if cur.as_deref() == Some(id.as_str()) { None } else { Some(id) });
                             },
                             on_changed: move |_: ()| {
-                                refresh.with_mut(|n| *n = n.wrapping_add(1));
+                                members_query.refresh();
                             },
                         }
                     }
+                    {members_more}
                 }
             }
         }
@@ -277,7 +270,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                 on_close: move |_: ()| invite_open.set(false),
                 on_added: move |_: ()| {
                     invite_open.set(false);
-                    refresh.with_mut(|n| *n = n.wrapping_add(1));
+                    members_query.refresh();
                     toast.info(tr.invite_success);
                 },
             }

@@ -19,7 +19,10 @@ pub fn SocialLayout(username: String) -> Element {
     use_context_provider(|| Signal::new(Option::<String>::None));
 
     let teams_future = use_server_future(move || async move {
-        crate::get_user_teams_handler().await.unwrap_or_default()
+        crate::get_user_teams_handler(None)
+            .await
+            .map(|r| r.items)
+            .unwrap_or_default()
     })?;
     use_effect(move || {
         if let Some(teams) = teams_future.value().read().clone() {

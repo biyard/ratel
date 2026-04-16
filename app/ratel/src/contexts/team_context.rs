@@ -16,8 +16,10 @@ pub struct CreateTeamResponse {
     pub team_pk: String,
 }
 
-#[post("/api/teams/list", session: Extension<tower_sessions::Session>)]
-pub async fn get_user_teams_handler() -> crate::Result<Vec<TeamItem>> {
+#[post("/api/teams/list?bookmark", session: Extension<tower_sessions::Session>)]
+pub async fn get_user_teams_handler(
+    bookmark: Option<String>,
+) -> crate::Result<crate::common::types::ListResponse<TeamItem>> {
     let Extension(session) = session;
     let user_pk: String = session
         .get::<String>("user_id")
@@ -28,8 +30,10 @@ pub async fn get_user_teams_handler() -> crate::Result<Vec<TeamItem>> {
     let user_pk: crate::common::types::Partition = user_pk.parse().unwrap_or_default();
 
     let sk_prefix = crate::common::EntityType::UserTeam(String::new()).to_string();
-    let opt = crate::features::auth::UserTeamQueryOption::builder().sk(sk_prefix);
-    let (user_teams, _): (Vec<crate::features::auth::UserTeam>, _) =
+    let opt = crate::features::auth::UserTeam::opt_with_bookmark(bookmark)
+        .sk(sk_prefix)
+        .limit(20);
+    let (user_teams, next_bookmark): (Vec<crate::features::auth::UserTeam>, _) =
         crate::features::auth::UserTeam::query(cli, &user_pk, opt).await?;
 
     let mut items: Vec<TeamItem> = Vec::new();
@@ -67,7 +71,7 @@ pub async fn get_user_teams_handler() -> crate::Result<Vec<TeamItem>> {
         });
     }
 
-    Ok(items)
+    Ok((items, next_bookmark).into())
 }
 
 #[post("/api/teams/create", session: Extension<tower_sessions::Session>)]

@@ -133,20 +133,30 @@ pub fn Home(username: String) -> Element {
                 span { class: "home-section-label__dash" }
             }
 
-            // ── Carousel ─────────────────────────────────
-            if items.is_empty() {
-                div { class: "home-empty-state",
-                    div { class: "home-empty-state__title", "{tr.no_posts}" }
-                    span { "{tr.no_posts_desc}" }
-                }
-            } else {
-                div { class: "carousel-wrapper",
-                    div { class: "carousel-track",
-                        for (idx , post) in items.iter().cloned().enumerate() {
-                            PostCard { key: "{post.pk}", index: idx, post }
-                        }
+            // ── Carousel / Empty state ────────────────────
+            // Render the empty state whenever the loaded feed is empty,
+            // regardless of mount path (SSR hydrate, SPA nav via home
+            // dropdown, refresh). Using the same branch structure every
+            // render path prevents Dioxus from leaving stale carousel
+            // markup in the DOM when SPA nav lands on a team with zero
+            // posts.
+            div { class: "home-feed-region",
+                if items.is_empty() {
+                    div {
+                        class: "home-empty-state",
+                        "data-testid": "team-home-empty",
+                        div { class: "home-empty-state__title", "{tr.no_posts}" }
+                        span { class: "home-empty-state__desc", "{tr.no_posts_desc}" }
                     }
-                    div { class: "carousel-dots" }
+                } else {
+                    div { class: "carousel-wrapper",
+                        div { class: "carousel-track",
+                            for (idx , post) in items.iter().cloned().enumerate() {
+                                PostCard { key: "{post.pk}", index: idx, post }
+                            }
+                        }
+                        div { class: "carousel-dots" }
+                    }
                 }
             }
 
@@ -222,7 +232,6 @@ pub fn Home(username: String) -> Element {
                             }
                         },
                     }
-                    div { style: "flex:1" }
                     if can_edit {
                         button {
                             class: "home-browse-btn",
