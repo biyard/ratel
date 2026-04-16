@@ -1,5 +1,8 @@
+#[cfg(feature = "web")]
 use wasm_bindgen::prelude::*;
+#[cfg(feature = "web")]
 use wasm_bindgen_futures::JsFuture;
+#[cfg(feature = "web")]
 use web_sys::js_sys::Promise;
 
 mod wallet_connect;
@@ -7,8 +10,7 @@ use super::*;
 pub use wallet_connect::*;
 // ── Firebase interop ──────────────────────────────────────────────────
 
-// static INITIALIZED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-
+#[cfg(feature = "web")]
 #[wasm_bindgen(js_namespace = ["window","ratel", "auth", "firebase"])]
 extern "C" {
     pub fn init_firebase(conf: &JsValue);
@@ -25,9 +27,16 @@ pub struct UserInfo {
     pub display_name: Option<String>,
     pub photo_url: Option<String>,
 }
+
+/// Google / Firebase sign-in.
+///
+/// Only wired for the web feature today. On mobile the embedded Android
+/// WebView cannot run Firebase's `signInWithPopup` (Google blocks OAuth in
+/// WebViews), so we surface a clear error instead of panicking. Native
+/// Google Sign-In via Custom Tabs or the GMS SDK is tracked as follow-up.
 #[cfg(not(feature = "web"))]
 pub async fn sign_in() -> crate::common::Result<UserInfo> {
-    unimplemented!("sign_in is only implemented for the web feature")
+    Err(AuthError::SignInUnsupportedOnPlatform.into())
 }
 
 #[cfg(feature = "web")]
