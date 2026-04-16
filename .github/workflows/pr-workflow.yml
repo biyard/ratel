@@ -86,8 +86,12 @@ jobs:
 
       - name: Building test
         id: build
+        env:
+          RUSTFLAGS: "-D warnings"
         run: |
           dx check --web
+          dx check --ios
+          dx check --android
 
   ratel-app:
     runs-on: ubuntu-latest
