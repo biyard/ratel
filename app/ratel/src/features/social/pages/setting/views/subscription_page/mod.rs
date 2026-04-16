@@ -292,7 +292,6 @@ pub fn SubscriptionPage(username: ReadSignal<String>) -> Element {
                             FeatureLine::Plain(tr.free_feat_4.to_string()),
                         ],
                         price: PriceDisplay::Amount(tr.free_price_amount.to_string()),
-                        cta_label: tr.cta_current.to_string(),
                         on_click: move |_| {},
                     }
 
@@ -314,7 +313,7 @@ pub fn SubscriptionPage(username: ReadSignal<String>) -> Element {
                         ],
                         price: PriceDisplay::Monthly {
                             prefix: tr.price_prefix.to_string(),
-                            amount: if is_ko { "30,000".to_string() } else { "20".to_string() },
+                            amount: "30,000".to_string(),
                             suffix: tr.price_suffix_krw.to_string(),
                         },
                         cta_label: tr.cta_apply_pro.to_string(),
@@ -340,7 +339,7 @@ pub fn SubscriptionPage(username: ReadSignal<String>) -> Element {
                         ],
                         price: PriceDisplay::Monthly {
                             prefix: tr.price_prefix.to_string(),
-                            amount: if is_ko { "75,000".to_string() } else { "50".to_string() },
+                            amount: "75,000".to_string(),
                             suffix: tr.price_suffix_krw.to_string(),
                         },
                         cta_label: tr.cta_apply_max.to_string(),
@@ -367,7 +366,7 @@ pub fn SubscriptionPage(username: ReadSignal<String>) -> Element {
                         ],
                         price: PriceDisplay::Monthly {
                             prefix: tr.price_prefix.to_string(),
-                            amount: if is_ko { "150,000".to_string() } else { "100".to_string() },
+                            amount: "150,000".to_string(),
                             suffix: tr.price_suffix_krw.to_string(),
                         },
                         cta_label: tr.cta_apply_vip.to_string(),
@@ -423,7 +422,7 @@ fn TierCard(
     desc: String,
     features: Vec<FeatureLine>,
     price: PriceDisplay,
-    cta_label: String,
+    #[props(default)] cta_label: Option<String>,
     #[props(default)] ribbon: Option<String>,
     on_click: EventHandler<()>,
 ) -> Element {
@@ -494,12 +493,12 @@ fn TierCard(
                     }
                     "{tr.cta_current}"
                 }
-            } else {
+            } else if let Some(label) = cta_label.as_ref() {
                 button {
                     class: "tier-btn",
                     r#type: "button",
                     onclick: move |_| on_click.call(()),
-                    "{cta_label}"
+                    "{label}"
                     svg {
                         view_box: "0 0 24 24",
                         fill: "none",
