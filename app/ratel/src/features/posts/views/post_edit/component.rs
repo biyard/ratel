@@ -389,6 +389,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     }
                     button {
                         class: "topbar-btn topbar-btn--primary",
+                        "data-testid": "post-edit-publish-btn",
                         "data-space": space_enabled() || has_existing_space,
                         disabled: !can_submit(),
                         onclick: move |_| commit_publish.call(()),
@@ -1060,6 +1061,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     }
                     button {
                         class: "bottom-bar__btn bottom-bar__btn--mobile bottom-bar__btn--primary",
+                        "data-testid": "post-edit-publish-btn-mobile",
                         "data-space": space_enabled() || has_existing_space,
                         disabled: !can_submit(),
                         onclick: move |_| commit_publish.call(()),
