@@ -147,25 +147,14 @@ impl Team {
         user_pk: &Partition,
         perm: TeamGroupPermission,
     ) -> Result<bool> {
-        // Check if the user is the team owner first
-        let owner = TeamOwner::get(cli, team_pk, Some(&EntityType::TeamOwner)).await?;
-        if let Some(owner) = owner {
-            if owner.user_pk == *user_pk {
-                return Ok(true);
-            }
-        }
-
-        let opt = UserTeamGroup::opt().sk(user_pk.to_string()).limit(1);
-
-        let (group, _bookmark) = UserTeamGroup::find_by_team_pk(cli, team_pk.clone(), opt).await?;
-
-        let group = group
-            .first()
-            .cloned()
-            .ok_or::<Error>(PostError::TeamNotFound.into())?;
-
-        let permissions: TeamGroupPermissions = group.team_group_permissions.into();
-
+        // Resolve membership via the TeamRole model instead of the legacy
+        // UserTeamGroup table (which is no longer populated on new teams).
+        // Role → legacy permissions mapping keeps `perm` argument honoured
+        // so existing callsites (PostWrite, SpaceEdit, etc.) work unchanged.
+        let Some(role) = Self::get_user_role(cli, team_pk, user_pk).await? else {
+            return Ok(false);
+        };
+        let permissions: TeamGroupPermissions = role.to_legacy_permissions().into();
         Ok(permissions.contains(perm))
     }
 
