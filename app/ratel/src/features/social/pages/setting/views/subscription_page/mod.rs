@@ -72,7 +72,12 @@ pub fn SubscriptionPage(username: ReadSignal<String>) -> Element {
     // from `team_ctx.teams` raced with the async `use_effect` population
     // and intermittently showed the "No permission" page for owners who
     // had just created the team.
-    let arena = crate::features::social::pages::team_arena::use_team_arena();
+    let mut arena = crate::features::social::pages::team_arena::use_team_arena();
+    use_effect(move || {
+        arena
+            .active_tab
+            .set(crate::features::social::pages::team_arena::TeamArenaTab::Subscription);
+    });
     if !arena.can_edit.read().to_owned() {
         return rsx! {
             super::ViewerPage { username: username() }

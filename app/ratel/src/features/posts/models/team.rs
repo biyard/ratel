@@ -172,21 +172,27 @@ impl Team {
     /// Returns the calling user's role on this team. TeamOwner record takes
     /// precedence over UserTeam.role (defensive); falls back to UserTeam.role
     /// if present, else Member. Replaces the legacy permissions extractor.
+    /// Returns `Some(role)` when the user has a membership on the team,
+    /// `None` when the user is not a member at all. Callers that need a
+    /// strict "member vs non-member" distinction should rely on the
+    /// `Option`; treating a non-member as `TeamRole::Member` (the enum
+    /// default) was the old behaviour and incorrectly hid the follow
+    /// button / granted Member-level UI to logged-in strangers.
     pub async fn get_user_role(
         cli: &aws_sdk_dynamodb::Client,
         team_pk: &Partition,
         user_pk: &Partition,
-    ) -> Result<crate::features::social::pages::member::dto::TeamRole> {
+    ) -> Result<Option<crate::features::social::pages::member::dto::TeamRole>> {
         use crate::features::social::pages::member::dto::TeamRole;
         if let Some(owner) = TeamOwner::get(cli, team_pk, Some(&EntityType::TeamOwner)).await? {
             if owner.user_pk == *user_pk {
-                return Ok(TeamRole::Owner);
+                return Ok(Some(TeamRole::Owner));
             }
         }
         let user_team_sk = EntityType::UserTeam(team_pk.to_string());
         let user_team =
             crate::features::auth::UserTeam::get(cli, user_pk, Some(&user_team_sk)).await?;
-        Ok(user_team.map(|ut| ut.role).unwrap_or_default())
+        Ok(user_team.map(|ut| ut.role))
     }
 
     pub async fn get_permissions_by_team_pk(
@@ -194,7 +200,9 @@ impl Team {
         team_pk: &Partition,
         user_pk: &Partition,
     ) -> Result<TeamGroupPermissions> {
-        let role = Self::get_user_role(cli, team_pk, user_pk).await?;
+        let role = Self::get_user_role(cli, team_pk, user_pk)
+            .await?
+            .unwrap_or_default();
         Ok(role.to_legacy_permissions().into())
     }
 }
