@@ -1,4 +1,5 @@
 use crate::common::*;
+use crate::common::hooks::use_infinite_query;
 use crate::features::social::pages::team_arena::create_team_popup::ArenaTeamCreationPopup;
 use crate::features::social::pages::team_arena::i18n::TeamArenaTranslate;
 use crate::route::Route;
@@ -10,6 +11,7 @@ pub enum TeamArenaTab {
     Drafts,
     Members,
     Rewards,
+    Subscription,
     Settings,
 }
 
@@ -43,10 +45,28 @@ pub fn ArenaTopbar(
 ) -> Element {
     let tr: TeamArenaTranslate = use_translate();
     let nav = use_navigator();
-    let team_ctx = crate::common::contexts::use_team_context();
     let mut popup = use_popup();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
+    let has_user = user_ctx().user.is_some();
 
     let mut dd_open = use_signal(|| false);
+
+    // Own the team list locally via infinite query so the switcher can page
+    // past the server's default 20-team limit. The parent `team_arena` layout
+    // also populates `team_ctx` for other consumers (sidebar fallback, etc.),
+    // but the topbar reads directly from this query to control pagination.
+    //
+    // `get_user_teams_handler` requires a session — guard on `has_user` so a
+    // logged-out visitor to a public team page doesn't bubble NoSessionFound
+    // up to the global ErrorBoundary ("먼저 로그인 해주세요" overlay).
+    let mut teams_query = use_infinite_query(move |bookmark| async move {
+        if has_user {
+            crate::get_user_teams_handler(bookmark).await
+        } else {
+            Ok(crate::common::types::ListResponse::<crate::common::contexts::TeamItem>::default())
+        }
+    })?;
+    let all_teams = teams_query.items();
 
     let initial = display_name
         .chars()
@@ -75,8 +95,7 @@ pub fn ArenaTopbar(
     // toggles between empty/populated branches (which breaks Dioxus's element
     // reconciler and causes "cannot reclaim ElementId" errors).
     let dd_entries: Vec<DdEntry> = {
-        let ctx_items = team_ctx.teams.read();
-        let mut entries: Vec<DdEntry> = ctx_items
+        let mut entries: Vec<DdEntry> = all_teams
             .iter()
             .map(|t| DdEntry {
                 username: t.username.clone(),
@@ -182,18 +201,41 @@ pub fn ArenaTopbar(
                         role: "menu",
                         onclick: move |e: Event<MouseData>| e.stop_propagation(),
                         div { class: "team-dd__header", "Switch Team" }
-                        for (idx , entry) in dd_entries.iter().cloned().enumerate() {
-                            TeamDdItem {
-                                key: "{entry.username}",
-                                username: entry.username.clone(),
-                                display_name: entry.display_name.clone(),
-                                profile_url: entry.profile_url.clone(),
-                                is_current: entry.username == username,
-                                color_variant: (idx % 3) as u8,
-                                on_pick: move |_| {
-                                    dd_open.set(false);
-                                },
+                        div {
+                            class: "team-dd__list",
+                            id: "arena-teams-dd-list",
+                            onscroll: move |_| {
+                                let js = r#"
+                                                                                                            const el = document.getElementById('arena-teams-dd-list');
+                                                                                                            if (!el) { dioxus.send(false); return; }
+                                                                                                            const nearBottom =
+                                                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+                                                                                                            dioxus.send(nearBottom);
+                                                                                                        "#;
+                                let mut ctrl = teams_query;
+                                spawn(async move {
+                                    let mut eval = document::eval(js);
+                                    if let Ok(near_bottom) = eval.recv::<bool>().await {
+                                        if near_bottom && ctrl.has_more() && !ctrl.is_loading() {
+                                            ctrl.next();
+                                        }
+                                    }
+                                });
+                            },
+                            for (idx , entry) in dd_entries.iter().cloned().enumerate() {
+                                TeamDdItem {
+                                    key: "{entry.username}",
+                                    username: entry.username.clone(),
+                                    display_name: entry.display_name.clone(),
+                                    profile_url: entry.profile_url.clone(),
+                                    is_current: entry.username == username,
+                                    color_variant: (idx % 3) as u8,
+                                    on_pick: move |_| {
+                                        dd_open.set(false);
+                                    },
+                                }
                             }
+                            {teams_query.more_element()}
                         }
                         div {
                             class: "team-dd__footer",
@@ -201,12 +243,9 @@ pub fn ArenaTopbar(
                             tabindex: "0",
                             onclick: move |_| {
                                 dd_open.set(false);
-                                popup
-                                    .open(rsx! {
-                                        ArenaTeamCreationPopup {}
-                                    })
-                                    .without_close()
-                                    .with_backdrop_close();
+                                popup.open(rsx! {
+                                    ArenaTeamCreationPopup {}
+                                }).without_close().with_backdrop_close();
                             },
                             svg {
                                 view_box: "0 0 24 24",
@@ -321,6 +360,39 @@ pub fn ArenaTopbar(
                             polyline { points: "8.21 13.89 7 23 12 20 17 23 15.79 13.88" }
                         }
                     },
+                }
+
+                if can_edit {
+                    HudButton {
+                        label: tr.subscription.to_string(),
+                        active: active == TeamArenaTab::Subscription,
+                        to: Route::TeamSettingSubscription {
+                            username: username.clone(),
+                        },
+                        icon: rsx! {
+                            svg {
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_width: "2",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                rect {
+                                    x: "2",
+                                    y: "5",
+                                    width: "20",
+                                    height: "14",
+                                    rx: "2",
+                                }
+                                line {
+                                    x1: "2",
+                                    y1: "10",
+                                    x2: "22",
+                                    y2: "10",
+                                }
+                            }
+                        },
+                    }
                 }
 
                 button {

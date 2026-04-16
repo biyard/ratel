@@ -11,8 +11,10 @@ pub async fn get_team_dao_handler(username: String) -> Result<TeamDao> {
 
     let user: Option<crate::features::auth::User> = user.into();
     let role = match &user {
-        Some(u) => Team::get_user_role(cli, &team.pk, &u.pk).await?,
-        None => crate::features::social::pages::member::dto::TeamRole::Member,
+        Some(u) => Team::get_user_role(cli, &team.pk, &u.pk)
+            .await?
+            .unwrap_or_default(),
+        None => crate::features::social::pages::member::dto::TeamRole::default(),
     };
     let is_admin = role.is_owner();
     #[cfg(feature = "server")]

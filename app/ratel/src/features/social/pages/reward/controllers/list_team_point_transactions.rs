@@ -14,9 +14,9 @@ pub async fn list_team_point_transactions_handler(
     bookmark: Option<String>,
 ) -> Result<ListPointTransactionsResponse> {
     let cfg = crate::common::CommonConfig::default();
-    let team_pk: Partition = team_pk.into();
-    let _ = team;
     let _ = user;
+    let _ = team_pk;
+    let team_pk = team.pk.clone();
 
     let month = month.unwrap_or_else(|| utils::time::current_month());
 

@@ -137,4 +137,24 @@ translate! {
         en: "Browse All",
         ko: "전체 보기",
     },
+
+    teams: {
+        en: "Teams",
+        ko: "팀",
+    },
+
+    teams_header: {
+        en: "Your Teams",
+        ko: "내 팀",
+    },
+
+    teams_empty: {
+        en: "You haven't joined any team yet.",
+        ko: "아직 참여한 팀이 없습니다.",
+    },
+
+    create_team: {
+        en: "Create Team",
+        ko: "팀 생성",
+    },
 }
