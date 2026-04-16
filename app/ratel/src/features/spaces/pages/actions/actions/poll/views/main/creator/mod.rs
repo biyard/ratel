@@ -9,10 +9,6 @@ mod config_card;
 use content_card::ContentCard;
 use config_card::ConfigCard;
 
-// Keep existing file importable but unused — preserved for backwards compat.
-mod question_tab;
-pub use question_tab::*;
-
 use crate::features::spaces::pages::actions::components::ActionEditTopbar;
 
 #[component]
