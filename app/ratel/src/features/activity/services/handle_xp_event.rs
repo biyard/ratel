@@ -100,8 +100,13 @@ pub async fn handle_poll_xp(
     let space_partition = crate::common::types::SpacePartition(space_id_str);
     let author = crate::features::activity::types::AuthorPartition::from(user_pk.clone());
 
-    // answer.sk = SpacePollUserAnswer(space_pk, poll_sk_str) where poll_sk_str =
-    // "SPACE_POLL#<uuid>"; `SpaceReward.action_id` uses the UUID only.
+    // answer.sk = SpacePollUserAnswer(space_pk, poll_sk_str). Due to how the
+    // two-field variant is deserialized from a `#`-joined string, `poll_sk`
+    // may arrive as either:
+    //   - "SPACE_POLL#<uuid>"                              (as originally intended)
+    //   - "<space_id>#SPACE_POLL#<uuid>"                   (observed in prod)
+    // `SpaceReward.action_id` uses just `<uuid>`, so take the segment after
+    // the last `SPACE_POLL#` marker.
     let poll_sk_raw = match &answer.sk {
         crate::common::types::EntityType::SpacePollUserAnswer(_, poll_sk) => poll_sk.clone(),
         other => {
@@ -110,9 +115,9 @@ pub async fn handle_poll_xp(
         }
     };
     let poll_action_id = poll_sk_raw
-        .strip_prefix("SPACE_POLL#")
-        .unwrap_or(&poll_sk_raw)
-        .to_string();
+        .rsplit_once("SPACE_POLL#")
+        .map(|(_, id)| id.to_string())
+        .unwrap_or_else(|| poll_sk_raw.clone());
 
     let user_name = answer.display_name.unwrap_or_default();
     let user_avatar = answer.profile_url.unwrap_or_default();
