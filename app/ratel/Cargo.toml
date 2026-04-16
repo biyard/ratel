@@ -29,7 +29,8 @@ tracing = { workspace = true }
 gloo-timers = { version = "0.3", features = ["futures"], optional = true }
 serde_dynamo = { workspace = true, optional = true }
 base64 = { workspace = true }
-uuid = { workspace = true }
+# `js` feature: source of randomness on `wasm32-unknown-unknown` for `Uuid::now_v7()`.
+uuid = { workspace = true, features = ["js"] }
 chrono = { workspace = true }
 regex = { version = "1" }
 ethers = { version = "=2.0.14", optional = true }

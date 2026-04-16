@@ -22,6 +22,7 @@
     if (!editor) return;
     var wordCountEl = root.querySelector(".re-word-count");
     var charCountEl = root.querySelector(".re-char-count");
+    var bridge = root.querySelector(".re-bridge");
 
     // Placeholder + editable state are owned by the Dioxus prop layer
     // and forwarded via data attributes on the root.
@@ -63,9 +64,13 @@
       var words = text.trim() ? text.trim().split(/\s+/).length : 0;
       if (wordCountEl) wordCountEl.textContent = words;
       if (charCountEl) charCountEl.textContent = text.length;
-      root.dispatchEvent(
-        new CustomEvent("change", { detail: html, bubbles: true })
-      );
+      // Bridge to Dioxus via a real <input>: dispatching `input` on a
+      // text input is the only event Dioxus serializes consistently
+      // across web, mobile, and desktop targets.
+      if (bridge) {
+        bridge.value = html;
+        bridge.dispatchEvent(new Event("input", { bubbles: true }));
+      }
       syncToolbarState();
     }
 
@@ -256,25 +261,65 @@
     var imageMask = root.querySelector("[data-modal='image']");
     var imageUrl = imageMask.querySelector(".re-image-url");
     var imageFile = imageMask.querySelector(".re-image-file");
-    imageMask.querySelector(".re-image-confirm").addEventListener("click", function () {
-      var url = imageUrl.value.trim();
-      var file = imageFile.files[0];
-      var done = function () {
+    var imageCamera = imageMask.querySelector(".re-image-camera");
+    var dropzone = imageMask.querySelector(".re-dropzone");
+
+    function insertFile(file) {
+      if (!file || !file.type || file.type.indexOf("image/") !== 0) return;
+      var reader = new FileReader();
+      reader.onload = function (ev) {
         closeModal(imageMask);
         imageUrl.value = "";
-        imageFile.value = "";
+        if (imageFile) imageFile.value = "";
+        if (imageCamera) imageCamera.value = "";
+        restoreSelection();
+        applyCmd("insertImage", ev.target.result);
       };
-      if (file) {
-        var reader = new FileReader();
-        reader.onload = function (ev) {
-          done();
-          restoreSelection();
-          applyCmd("insertImage", ev.target.result);
-        };
-        reader.readAsDataURL(file);
-        return;
-      }
-      done();
+      reader.readAsDataURL(file);
+    }
+
+    // Click-to-upload + camera-shortcut both flow through `change`.
+    imageFile.addEventListener("change", function () {
+      if (imageFile.files && imageFile.files[0]) insertFile(imageFile.files[0]);
+    });
+    if (imageCamera) {
+      imageCamera.addEventListener("change", function () {
+        if (imageCamera.files && imageCamera.files[0]) insertFile(imageCamera.files[0]);
+      });
+    }
+
+    // Drag & drop. We have to swallow `dragover` (preventDefault) for the
+    // browser to let us listen to `drop` at all.
+    if (dropzone) {
+      ["dragenter", "dragover"].forEach(function (evt) {
+        dropzone.addEventListener(evt, function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.dataset.dragging = "true";
+        });
+      });
+      ["dragleave", "dragend"].forEach(function (evt) {
+        dropzone.addEventListener(evt, function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.dataset.dragging = "false";
+        });
+      });
+      dropzone.addEventListener("drop", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.dataset.dragging = "false";
+        var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (file) insertFile(file);
+      });
+    }
+
+    // The "Insert URL" button only handles the URL path now; file
+    // selection inserts immediately via the change handler above.
+    imageMask.querySelector(".re-image-confirm").addEventListener("click", function () {
+      var url = imageUrl.value.trim();
+      closeModal(imageMask);
+      imageUrl.value = "";
       if (!url) return;
       restoreSelection();
       applyCmd("insertImage", url);
