@@ -1,5 +1,6 @@
 mod interop_theme;
 mod moon;
+mod native_system_theme;
 mod sun;
 mod sun_moon;
 mod theme;
@@ -7,6 +8,7 @@ mod theme_service;
 
 pub use interop_theme::*;
 pub use moon::*;
+pub use native_system_theme::system_is_dark;
 pub use sun::*;
 pub use sun_moon::*;
 pub use theme::*;
