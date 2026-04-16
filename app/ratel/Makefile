@@ -87,7 +87,13 @@ ANDROID_API_LEVEL ?= 24
 ANDROID_TARGET ?= aarch64-linux-android
 ANDROID_CC ?= $(ANDROID_NDK_TOOLCHAIN)/bin/$(ANDROID_TARGET)$(ANDROID_API_LEVEL)-clang
 
+# Gradle + Android Gradle Plugin 8.x don't parse class-file major 70 (OpenJDK 26+).
+# Force a JDK that Gradle supports; override ANDROID_JAVA_HOME if yours lives elsewhere.
+ANDROID_JAVA_HOME ?= /usr/lib/jvm/java-17-openjdk
+
 ANDROID_ENV = \
+	JAVA_HOME=$(ANDROID_JAVA_HOME) \
+	PATH=$(ANDROID_JAVA_HOME)/bin:$(PATH) \
 	CC_aarch64_linux_android=$(ANDROID_CC) \
 	CXX_aarch64_linux_android=$(ANDROID_CC)++ \
 	AR_aarch64_linux_android=$(ANDROID_NDK_TOOLCHAIN)/bin/llvm-ar \
@@ -97,7 +103,12 @@ ANDROID_ENV = \
 	AR_armv7_linux_androideabi=$(ANDROID_NDK_TOOLCHAIN)/bin/llvm-ar \
 	CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER=$(ANDROID_NDK_TOOLCHAIN)/bin/armv7a-linux-androideabi$(ANDROID_API_LEVEL)-clang
 
-android:
+$(HOME)/.android/debug.keystore:
+	keytool -genkey -v -keystore $@ -storepass android -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Korea,O=Biyard,C=KR"
+
+	keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android | grep SHA1
+
+android: $(HOME)/.android/debug.keystore
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --android --target $(ANDROID_TARGET) --features $(RUN_FEATURES)
 
 ios:
