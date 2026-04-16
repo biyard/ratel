@@ -10,6 +10,7 @@ translate! {
     members: { en: "Members", ko: "멤버" },
     rewards: { en: "Rewards", ko: "리워드" },
     settings: { en: "Settings", ko: "설정" },
+    subscription: { en: "Subscription", ko: "구독" },
     follow: { en: "Follow", ko: "팔로우" },
     unfollow: { en: "Unfollow", ko: "언팔로우" },
 

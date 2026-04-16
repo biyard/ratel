@@ -1,4 +1,5 @@
 use crate::common::*;
+use crate::common::hooks::use_infinite_query;
 use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::posts::controllers::delete_post::delete_post_handler;
 use crate::features::posts::controllers::dto::PostResponse;
@@ -55,19 +56,14 @@ pub fn Home(username: ReadSignal<String>) -> Element {
 
     let team_pk_str = perm_ctx.team_pk.0.clone();
 
-    // Drafts list.
-    let mut refresh = use_signal(|| 0u32);
-    let drafts_resource = use_loader(move || async move {
-        let _ = refresh();
-        Ok::<_, super::Error>(
-            list_team_drafts_handler(username(), None)
-                .await
-                .map(|resp| resp.items)
-                .map_err(|e| e.to_string()),
-        )
+    // Drafts list — paginated infinite query. After delete, call
+    // `drafts_query.refresh()` to reload from the first page.
+    let mut drafts_query = use_infinite_query(move |bookmark| async move {
+        list_team_drafts_handler(username(), bookmark).await
     })?;
-    let drafts: Vec<PostResponse> = drafts_resource.read().clone().unwrap_or_default();
+    let drafts: Vec<PostResponse> = drafts_query.items();
     let count = drafts.len();
+    let drafts_more = drafts_query.more_element();
 
     let mut delete_target = use_signal(|| Option::<FeedPartition>::None);
 
@@ -98,7 +94,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                 Ok(_) => {
                     toast.info(tr.delete_success);
                     delete_target.set(None);
-                    refresh.with_mut(|n| *n = n.wrapping_add(1));
+                    drafts_query.refresh();
                 }
                 Err(e) => {
                     toast.error(e);
@@ -183,6 +179,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                             on_delete: move |pk: FeedPartition| delete_target.set(Some(pk)),
                         }
                     }
+                    {drafts_more}
                 }
             }
         }

@@ -2,6 +2,8 @@ import { test, expect } from "@playwright/test";
 import {
   click,
   clickNoNav,
+  createTeamFromHome,
+  createTeamPostFromHome,
   fill,
   goto,
   getLocator,
@@ -209,6 +211,11 @@ test.describe.serial("Space with actions created by a team", () => {
   test.setTimeout(120000);
 
   let spaceUrl;
+  // `discussionUrl` is assigned inside the "Create a discussion action"
+  // test and kept for later inspection by future step additions. The
+  // read-side is intentionally absent for now; the declaration is required
+  // so the assignment doesn't throw a ReferenceError in strict mode.
+  // eslint-disable-next-line no-unused-vars
   let discussionUrl;
 
   // We'll save newUser and user2 storage states for reuse across tests
@@ -229,38 +236,25 @@ test.describe.serial("Space with actions created by a team", () => {
   test("Create a team and post with space, then verify dashboard", async ({
     page,
   }) => {
-    // Setup — drive team, post, and space creation through REST endpoints
-    // since the home-ui renewal removed the profile-dropdown "Create Team"
-    // path and the post-edit "skip-space-checkbox" / "Go to Space" affordances.
-    const teamRes = await page.request.post("/api/teams/create", {
-      data: {
-        body: {
-          username: teamUsername,
-          nickname: teamNickname,
-          profile_url: "",
-          description: "E2E test team for space actions",
-        },
-      },
-    });
-    expect(teamRes.ok(), `create team: ${await teamRes.text()}`).toBeTruthy();
-    const teamPk = (await teamRes.json()).team_pk;
-    const teamId = teamPk.includes("#") ? teamPk.split("#")[1] : teamPk;
-
-    const postRes = await page.request.post("/api/posts", {
-      data: { team_id: teamId },
-    });
-    expect(postRes.ok(), `create post: ${await postRes.text()}`).toBeTruthy();
-    const postPk = (await postRes.json()).post_pk;
-    const postId = postPk.includes("#") ? postPk.split("#")[1] : postPk;
-
-    await goto(page, `/posts/${postId}/edit`);
-    await fill(page, { placeholder: "Title your post…" }, postTitle);
-    const editor = await getEditor(page);
-    await editor.fill(postContents);
-    await expect(page.getByText("All changes saved")).toBeVisible({
-      timeout: 15000,
+    // Drive the full setup through the production UI:
+    //   home (`/`) → Teams HUD → "Create Team" → ArenaTeamCreationPopup → submit
+    // then home → Teams HUD → pick team → team home → "Create Post".
+    await createTeamFromHome(page, {
+      username: teamUsername,
+      nickname: teamNickname,
+      description: "E2E test team for space actions",
     });
 
+    const postId = await createTeamPostFromHome(
+      page,
+      teamUsername,
+      postTitle,
+      postContents,
+    );
+
+    // Space creation remains REST — the post-edit "Go to Space" affordance was
+    // removed by the post-edit renewal, so this suite keeps its focus on the
+    // governance/actions flow rather than the orthogonal space-creation UI.
     const spaceRes = await page.request.post("/api/spaces/create", {
       data: { req: { post_id: postId } },
     });

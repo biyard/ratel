@@ -84,11 +84,12 @@ pub fn TeamCreationPopup() -> Element {
                             if let Some(idx) = selected_index {
                                 team_ctx.set_selected_index(idx);
                             }
-                            if let Ok(teams) = get_user_teams_handler().await {
-                                let selected_index = teams
+                            if let Ok(resp) = get_user_teams_handler(None).await {
+                                let selected_index = resp
+                                    .items
                                     .iter()
                                     .position(|team| team.username == username);
-                                team_ctx.set_teams(teams);
+                                team_ctx.set_teams(resp.items);
                                 if let Some(idx) = selected_index {
                                     team_ctx.set_selected_index(idx);
                                 }
