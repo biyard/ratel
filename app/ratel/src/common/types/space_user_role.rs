@@ -328,23 +328,23 @@ where
         let conf = config::ServerConfig::default();
         let cli = conf.dynamodb();
 
-        // Team admin check: if the space is owned by a team, check if the user
-        // has TeamAdmin permission within that team.
+        // Team admin check: if the space is owned by a team, check if the
+        // user is an Owner or Admin on that team. Both roles should be
+        // treated as Space Creator. Previously this used the legacy
+        // `TeamGroupPermission::TeamAdmin` bit which only Owner role maps
+        // to — team Admins therefore hit UnauthorizedAccess when editing.
         if matches!(&space.user_pk, Partition::Team(_)) {
             use crate::features::posts::models::Team;
-            use crate::features::posts::types::TeamGroupPermission;
 
-            if Team::has_permission(
-                cli,
-                &space.user_pk,
-                &user.pk,
-                TeamGroupPermission::TeamAdmin,
-            )
-            .await
-            .unwrap_or(false)
-            {
-                parts.extensions.insert(SpaceUserRole::Creator);
-                return Ok(SpaceUserRole::Creator);
+            let team_role = Team::get_user_role(cli, &space.user_pk, &user.pk)
+                .await
+                .ok()
+                .flatten();
+            if let Some(role) = team_role {
+                if role.is_admin_or_owner() {
+                    parts.extensions.insert(SpaceUserRole::Creator);
+                    return Ok(SpaceUserRole::Creator);
+                }
             }
         }
 
