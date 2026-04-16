@@ -53,11 +53,11 @@ translate! {
         ko: "포스트 게재",
     },
     free_feat_2: {
-        en: "Create spaces",
+        en: "Publish spaces",
         ko: "스페이스 생성",
     },
     free_feat_3: {
-        en: "Manage network",
+        en: "Network relationship",
         ko: "인맥 관리",
     },
     free_feat_4: {
@@ -78,27 +78,27 @@ translate! {
         ko: "소규모 커뮤니티를 위한 보상 스페이스 구축",
     },
     pro_feat_1: {
-        en: "Everything in Free",
+        en: "Includes all Free",
         ko: "모든 무료 플랜 포함",
     },
     pro_feat_2_strong: {
-        en: "40 credits",
-        ko: "40 크레딧",
+        en: "40 monthly credits",
+        ko: "월별 40 크레딧 제공",
     },
     pro_feat_2_prefix: {
-        en: "Monthly ",
-        ko: "월별 ",
+        en: "",
+        ko: "",
     },
     pro_feat_2_suffix: {
-        en: " included",
-        ko: " 제공",
+        en: "",
+        ko: "",
     },
     pro_feat_3: {
-        en: "Up to 2 credits per reward space or reward feature",
+        en: "Up to 2 credits per a reward space",
         ko: "보상 스페이스 또는 보상 기능별 최대 2 크레딧 사용 가능",
     },
     pro_feat_4: {
-        en: "Earn 10% of participants' total rewards as creator bonus",
+        en: "Earn 10% of the total rewards distributed to participants.",
         ko: "참여자 전체 보상의 10% 생성 보상 획득",
     },
 
@@ -107,35 +107,35 @@ translate! {
         ko: "Max",
     },
     max_desc: {
-        en: "Reward spaces for large communities",
+        en: "Advanced Reward Spaces for large communities",
         ko: "대규모 커뮤니티를 위한 보상 스페이스 기능 제공",
     },
     max_feat_1: {
-        en: "Everything in Free",
+        en: "Includes all Free",
         ko: "모든 무료 플랜 포함",
     },
     max_feat_2_strong: {
-        en: "190 credits",
-        ko: "190 크레딧",
+        en: "190 monthly credits",
+        ko: "월별 190 크레딧 제공",
     },
     max_feat_2_prefix: {
-        en: "Monthly ",
-        ko: "월별 ",
+        en: "",
+        ko: "",
     },
     max_feat_2_suffix: {
-        en: " included",
-        ko: " 제공",
+        en: "",
+        ko: "",
     },
     max_feat_3: {
-        en: "Up to 10 credits per reward space or reward feature",
+        en: "Up to 10 credits per a reward space",
         ko: "보상 스페이스 또는 보상 기능별 최대 10 크레딧 사용 가능",
     },
     max_feat_4: {
-        en: "Earn 10% of participants' total rewards as creator bonus",
+        en: "Earn 10% of the total rewards distributed to participants.",
         ko: "참여자 전체 보상의 10% 생성 보상 획득",
     },
     max_feat_5: {
-        en: "Trusted Creator badge",
+        en: "Get a trusted creator badge",
         ko: "신뢰 크리에이터 배지 획득",
     },
 
@@ -144,39 +144,39 @@ translate! {
         ko: "VIP",
     },
     vip_desc: {
-        en: "Reward spaces for influencers and marketing partners",
+        en: "Reward Spaces for influencers and promotion",
         ko: "인플루언서 및 마케팅 전문 기업을 위한 보상 스페이스 기능 제공",
     },
     vip_feat_1: {
-        en: "Everything in Free",
+        en: "Includes all Free",
         ko: "모든 무료 플랜 포함",
     },
     vip_feat_2_strong: {
-        en: "1,360 credits",
-        ko: "1,360 크레딧",
+        en: "1,360 monthly credits",
+        ko: "월별 1,360 크레딧 제공",
     },
     vip_feat_2_prefix: {
-        en: "Monthly ",
-        ko: "월별 ",
+        en: "",
+        ko: "",
     },
     vip_feat_2_suffix: {
-        en: " included",
-        ko: " 제공",
+        en: "",
+        ko: "",
     },
     vip_feat_3: {
-        en: "Up to 100 credits per reward space or reward feature",
+        en: "Up to 100 credits per a reward space",
         ko: "보상 스페이스 또는 보상 기능별 최대 100 크레딧 사용 가능",
     },
     vip_feat_4: {
-        en: "Earn 10% of participants' total rewards as creator bonus",
+        en: "Earn 10% of the total rewards distributed to participants.",
         ko: "참여자 전체 보상의 10% 생성 보상 획득",
     },
     vip_feat_5: {
-        en: "Trusted Creator badge",
+        en: "Get a trusted creator badge",
         ko: "신뢰 크리에이터 배지 획득",
     },
     vip_feat_6: {
-        en: "Access to participants' raw data",
+        en: "Access raw participant data",
         ko: "참여자 원본 데이터 열람",
     },
     vip_ribbon: {
@@ -185,11 +185,11 @@ translate! {
     },
 
     price_prefix: {
-        en: "Month",
-        ko: "월",
+        en: "₩",
+        ko: "월 ",
     },
     price_suffix_krw: {
-        en: "KRW",
+        en: " / month",
         ko: "원",
     },
 
@@ -215,19 +215,19 @@ translate! {
         ko: "엔터프라이즈",
     },
     enterprise_desc: {
-        en: "Custom partner plan for enterprises and organizations",
+        en: "Customized partner plan for enterprises & organizations",
         ko: "기업 및 기관 맞춤형 파트너 멤버십",
     },
     enterprise_feat_1: {
-        en: "Everything in Free",
+        en: "Includes all Free",
         ko: "모든 무료 플랜 포함",
     },
     enterprise_feat_2: {
-        en: "Fully customized service",
+        en: "Fully customizable",
         ko: "완전 맞춤형 서비스 제공",
     },
     enterprise_price: {
-        en: "From ",
+        en: "Starting at ",
         ko: "월 ",
     },
     enterprise_price_amount: {
