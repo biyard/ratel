@@ -174,6 +174,124 @@
   box-shadow: 0 0 8px rgba(252, 179, 0, 0.4);
 }
 
+/* ── Teams dropdown ──────────────────────────────── */
+.home-arena .hud-teams {
+  position: relative;
+  display: inline-flex;
+}
+.home-arena .team-dd {
+  --ha-dd-bg: var(--dark, #0f0f1f) var(--light, #ffffff);
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 40;
+  min-width: 260px;
+  max-width: 320px;
+  max-height: min(60vh, 420px);
+  overflow-y: auto;
+  background: var(--ha-dd-bg);
+  border: 1px solid var(--ha-border-subtle);
+  border-radius: 12px;
+  box-shadow: 0 12px 28px var(--ha-shadow-card);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.home-arena .team-dd__header {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ha-text-dim);
+  padding: 8px 10px 6px;
+}
+.home-arena .team-dd__empty {
+  padding: 14px 12px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ha-text-dim);
+  font-style: italic;
+}
+.home-arena .team-dd__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.18s ease;
+  outline: none;
+}
+.home-arena .team-dd__item:hover,
+.home-arena .team-dd__item:focus-visible {
+  background: var(--ha-bg-glass-hover);
+}
+.home-arena .team-dd__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: rgba(252, 179, 0, 0.12);
+  color: #fcb300;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid rgba(252, 179, 0, 0.18);
+  flex-shrink: 0;
+}
+.home-arena .team-dd__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.home-arena .team-dd__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ha-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.home-arena .team-dd__handle {
+  font-size: 11px;
+  color: var(--ha-text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.home-arena .team-dd__footer {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  margin-top: 4px;
+  border-top: 1px solid var(--ha-border-subtle);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: #fcb300;
+  cursor: pointer;
+  transition: background 0.18s ease;
+  outline: none;
+  border-radius: 0 0 8px 8px;
+}
+.home-arena .team-dd__footer:hover,
+.home-arena .team-dd__footer:focus-visible {
+  background: rgba(252, 179, 0, 0.08);
+}
+.home-arena .team-dd__footer svg {
+  width: 14px;
+  height: 14px;
+}
+
 /* ── Section label ───────────────────────────────── */
 .home-arena .section-label {
   position: relative;
