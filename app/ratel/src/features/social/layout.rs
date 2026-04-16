@@ -61,11 +61,13 @@ pub fn UserLayout(username: String) -> Element {
     rsx! {
         div { class: "antialiased bg-bg",
             crate::AppMenu {}
-            div { class: "flex overflow-x-hidden gap-5 justify-between py-3 mx-auto min-h-screen text-white bg-bg max-w-desktop max-tablet:px-2.5",
+            div { class: "flex overflow-x-hidden gap-5 justify-between py-3 mx-auto min-h-screen text-white bg-bg max-w-desktop max-tablet:px-2.5 max-mobile:px-0 max-mobile:py-0 max-mobile:gap-0",
                 if logged_in {
                     UserSidemenu { username: username.clone() }
                 }
-                div { class: "flex flex-col px-5 grow", Outlet::<Route> {} }
+                div { class: "flex flex-col px-5 grow max-mobile:px-0",
+                    Outlet::<Route> {}
+                }
             }
         }
     }
