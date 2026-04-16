@@ -11,14 +11,6 @@ use content_card::ContentCard;
 use questions_card::QuestionsCard;
 use config_card::ConfigCard;
 
-// Keep existing files importable but unused — preserved for backwards compat.
-mod overview_tab;
-mod quiz_tab;
-mod upload_tab;
-pub use overview_tab::*;
-pub use quiz_tab::*;
-pub use upload_tab::*;
-
 #[component]
 pub fn QuizCreatorPage(
     space_id: ReadSignal<SpacePartition>,
