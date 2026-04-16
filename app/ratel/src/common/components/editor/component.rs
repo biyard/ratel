@@ -1,6 +1,5 @@
 use crate::common::*;
 use dioxus::prelude::*;
-use web_sys::wasm_bindgen::JsCast;
 
 #[derive(Props, Clone, PartialEq)]
 pub struct EditorProps {
@@ -18,7 +17,14 @@ pub struct EditorProps {
 
 #[component]
 pub fn Editor(props: EditorProps) -> Element {
-    let content = props.content.clone();
+    // Snapshot the initial HTML once at mount and never re-apply it on
+    // subsequent renders. Re-applying `dangerous_inner_html` on every
+    // render destroys the user's caret position — most visibly during
+    // Korean (or any IME) composition where every keystroke triggers
+    // `on_content_change` → `content.set` → re-render → innerHTML
+    // overwrite → cursor jumps to start. Use `key=` on the parent to
+    // force a remount when the editor needs to be reset.
+    let content = use_hook(|| props.content.clone());
     let placeholder = props.placeholder.clone();
     let editable = if props.editable { "true" } else { "false" };
     let extra_class = props.class.clone();
@@ -32,17 +38,24 @@ pub fn Editor(props: EditorProps) -> Element {
             "data-bound": "false",
             "data-placeholder": "{placeholder}",
             "data-editable": "{editable}",
-            onchange: move |evt| {
-                if let Some(raw_event) = evt.data().downcast::<web_sys::Event>() {
-                    if let Some(custom_event) = raw_event.dyn_ref::<web_sys::CustomEvent>() {
-                        if let Some(val) = custom_event.detail().as_string() {
-                            if let Some(handler) = &props.on_content_change {
-                                handler.call(val);
-                            }
-                        }
+            // Hidden input bridge — JS writes the latest editor HTML into
+            // its `value` and dispatches a synthetic `input` event. Going
+            // through a real <input> instead of a div CustomEvent is the
+            // only reliable way to get the payload across Dioxus's mobile
+            // IPC bridge (the WebView serializes form values, not custom
+            // event detail fields).
+            input {
+                class: "re-bridge",
+                r#type: "text",
+                hidden: true,
+                "aria-hidden": "true",
+                tabindex: "-1",
+                oninput: move |evt| {
+                    if let Some(handler) = &props.on_content_change {
+                        handler.call(evt.value());
                     }
-                }
-            },
+                },
+            }
             div {
                 aria_label: "Editor toolbar",
                 class: "re-toolbar",
@@ -817,22 +830,71 @@ pub fn Editor(props: EditorProps) -> Element {
                     class: "re-modal",
                     role: "dialog",
                     div { class: "re-modal__title", "Insert image" }
+
+                    label { class: "re-dropzone", "data-dragging": "false",
+                        input {
+                            class: "re-image-file",
+                            accept: "image/*",
+                            hidden: true,
+                            r#type: "file",
+                        }
+                        svg {
+                            class: "re-dropzone__icon",
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "1.5",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            rect {
+                                x: "3",
+                                y: "3",
+                                width: "18",
+                                height: "18",
+                                rx: "2",
+                            }
+                            circle { cx: "8.5", cy: "8.5", r: "1.5" }
+                            polyline { points: "21 15 16 10 5 21" }
+                        }
+                        div { class: "re-dropzone__title", "Drag & drop an image" }
+                        div { class: "re-dropzone__hint",
+                            "or tap to browse — PNG, JPG, GIF, WebP"
+                        }
+                    }
+
+                    label { class: "re-camera-btn",
+                        input {
+                            class: "re-image-camera",
+                            accept: "image/*",
+                            capture: "environment",
+                            hidden: true,
+                            r#type: "file",
+                        }
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "1.8",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            path { d: "M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" }
+                            circle { cx: "12", cy: "13", r: "4" }
+                        }
+                        span { "Take a photo" }
+                    }
+
+                    div { class: "re-modal__divider",
+                        span { "OR PASTE A URL" }
+                    }
+
                     div { class: "re-modal__field",
-                        label { "Image URL" }
                         input {
                             class: "re-image-url",
-                            placeholder: "https://… or upload below",
+                            placeholder: "https://example.com/image.png",
                             r#type: "url",
                         }
                     }
-                    div { class: "re-modal__field",
-                        label { "Or upload" }
-                        input {
-                            accept: "image/*",
-                            class: "re-image-file",
-                            r#type: "file",
-                        }
-                    }
+
                     div { class: "re-modal__actions",
                         button {
                             class: "re-btn",
@@ -843,7 +905,7 @@ pub fn Editor(props: EditorProps) -> Element {
                         button {
                             class: "re-btn re-btn--primary re-image-confirm",
                             r#type: "button",
-                            "Insert"
+                            "Insert URL"
                         }
                     }
                 }
