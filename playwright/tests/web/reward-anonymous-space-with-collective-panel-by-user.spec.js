@@ -119,9 +119,13 @@ test.describe
       await goto(page, spaceUrl + "/actions");
 
       await click(page, { text: "Select Action Type" });
+      await expect(page.getByTestId("action-type-quiz")).toBeVisible({ timeout: 10000 });
       await click(page, { testId: "action-type-follow" });
       await hideFab(page);
-      await click(page, { text: "Create" });
+      const confirmBtn = page.getByTestId("create-action-confirm");
+      await confirmBtn.scrollIntoViewIfNeeded();
+      await confirmBtn.click();
+      await page.waitForLoadState("load");
 
       await page.waitForURL(/\/actions\/follows\//, {
         waitUntil: "load",
@@ -166,9 +170,13 @@ test.describe
       await goto(page, spaceUrl + "/actions");
 
       await click(page, { text: "Select Action Type" });
+      await expect(page.getByTestId("action-type-quiz")).toBeVisible({ timeout: 10000 });
       // Quiz is selected by default
       await hideFab(page);
-      await click(page, { text: "Create" });
+      const confirmBtn2 = page.getByTestId("create-action-confirm");
+      await confirmBtn2.scrollIntoViewIfNeeded();
+      await confirmBtn2.click();
+      await page.waitForLoadState("load");
 
       await page.waitForURL(/\/actions\/quizzes\//, {
         waitUntil: "load",
@@ -240,9 +248,13 @@ test.describe
       await goto(page, spaceUrl + "/actions");
 
       await click(page, { text: "Select Action Type" });
+      await expect(page.getByTestId("action-type-quiz")).toBeVisible({ timeout: 10000 });
       await click(page, { testId: "action-type-poll" });
       await hideFab(page);
-      await click(page, { text: "Create" });
+      const confirmBtn3 = page.getByTestId("create-action-confirm");
+      await confirmBtn3.scrollIntoViewIfNeeded();
+      await confirmBtn3.click();
+      await page.waitForLoadState("load");
 
       await page.waitForURL(/\/actions\/polls\//, {
         waitUntil: "load",
@@ -300,9 +312,13 @@ test.describe
       await goto(page, spaceUrl + "/actions");
 
       await click(page, { text: "Select Action Type" });
+      await expect(page.getByTestId("action-type-quiz")).toBeVisible({ timeout: 10000 });
       await click(page, { testId: "action-type-poll" });
       await hideFab(page);
-      await click(page, { text: "Create" });
+      const confirmBtn4 = page.getByTestId("create-action-confirm");
+      await confirmBtn4.scrollIntoViewIfNeeded();
+      await confirmBtn4.click();
+      await page.waitForLoadState("load");
 
       await page.waitForURL(/\/actions\/polls\//, {
         waitUntil: "load",
