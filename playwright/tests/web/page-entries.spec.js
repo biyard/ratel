@@ -292,13 +292,15 @@ test.describe.serial("Page entries accessibility", () => {
       `/spaces/${data.spaceId}/actions/quizzes/${data.quizId}`,
       { testId: "page-card-content" },
     ));
+  // Discussion at /discussions/:id still renders legacy CreatorMain (tab UI)
+  // for admins, not the arena editor. Use tablist role as the marker.
   test("GET /spaces/:space_id/actions/discussions/:discussion_id", async ({
     page,
   }) =>
     checkPage(
       page,
       `/spaces/${data.spaceId}/actions/discussions/${data.discussionId}`,
-      { testId: "page-card-content" },
+      { css: "[role='tablist']" },
     ));
   // NOTE: discussion editor page loads discussion context via server function,
   // which can cause SSR crash (ERR_EMPTY_RESPONSE) in some environments.
@@ -308,13 +310,14 @@ test.describe.serial("Page entries accessibility", () => {
     checkPage(
       page,
       `/spaces/${data.spaceId}/actions/discussions/${data.discussionId}/edit`,
-      { testId: "space-layout-container" },
+      { testId: "page-card-content" },
     ));
+  // Follow creator renders page-card-targets (not page-card-content).
   test("GET /spaces/:space_id/actions/follows/:follow_id", async ({ page }) =>
     checkPage(
       page,
       `/spaces/${data.spaceId}/actions/follows/${data.followId}`,
-      { testId: "space-layout-container" },
+      { testId: "page-card-targets" },
     ));
 
   // ── Space app pages (SpaceLayout) ─────────────────────────────────────────
