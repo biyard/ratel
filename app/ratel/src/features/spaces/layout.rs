@@ -22,7 +22,6 @@ pub fn use_space_layout_ui() -> SpaceLayoutUiContext {
 pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     let mut ctx = SpaceContextProvider::init(space_id)?;
 
-    use_context_provider(|| PopupService::new());
     use_context_provider(|| LayoverService::new());
     let sidebar_visible = use_signal(|| true);
     use_context_provider(move || SpaceLayoutUiContext { sidebar_visible });
@@ -43,12 +42,8 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     );
 
     if !role.is_admin() || is_arena_route || is_action_edit_route {
-        // The early-return path skips the sidebar shell, but still needs the
-        // popup and layover zones so `popup.open(...)` / layover pushes from
-        // child components (e.g. action Delete dialog) actually render.
         return rsx! {
             Outlet::<Route> {}
-            PopupZone {}
             Layover {}
         };
     }
@@ -207,7 +202,6 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
                 }
             }
         }
-        PopupZone {}
         Layover {}
     }
 }
