@@ -9,6 +9,10 @@ import {
   getLocator,
   getEditor,
   waitPopup,
+  addPollQuestion,
+  fillPollQuestion,
+  togglePrerequisite,
+  commitAutosave,
 } from "../utils";
 
 /**
@@ -352,7 +356,9 @@ test.describe.serial("Space governance scenario", () => {
     await click(page, { text: "Create" });
     await page.waitForURL(/\/actions\/quizzes\//, { waitUntil: "networkidle" });
 
-    // Overview tab: title + description
+    // Arena-style quiz creator page: no tabs — ContentCard + QuestionsCard +
+    // ConfigCard are all inline on the same page with per-field autosave.
+
     await fill(
       page,
       { placeholder: "Enter quiz title..." },
@@ -365,10 +371,7 @@ test.describe.serial("Space governance scenario", () => {
         "This quiz verifies understanding of the governance framework."
     );
 
-    await page.getByRole("tab", { name: "Upload" }).click();
-    await page.waitForLoadState("load");
-
-    // Attach 3 dummy study material files
+    // Attach study material files via the inline Attachments section
     const dummyPdf = {
       name: "study-material-1.pdf",
       mimeType: "application/pdf",
@@ -377,67 +380,37 @@ test.describe.serial("Space governance scenario", () => {
     const fileInputs = page.locator('input[type="file"][accept*=".pdf"]');
     if ((await fileInputs.count()) > 0) {
       const uploader = fileInputs.first();
-
       await uploader.setInputFiles(dummyPdf);
-      // FIXME: check this logic
-      // await expect(
-      //   page.getByText("study-material-1.pdf", { exact: true })
-      // ).toBeVisible();
-
       await uploader.setInputFiles({
         ...dummyPdf,
         name: "study-material-2.pdf",
       });
-      // await expect(
-      //   page.getByText("study-material-2.pdf", { exact: true })
-      // ).toBeVisible();
-
       await uploader.setInputFiles({
         ...dummyPdf,
         name: "study-material-3.pdf",
       });
-      // await expect(
-      //   page.getByText("study-material-3.pdf", { exact: true })
-      // ).toBeVisible();
     }
 
-    // Setting tab: 2x boost reward
-    await page.getByRole("tab", { name: "Setting" }).click();
+    // INFO: available credits is zero when free membership — reward boost
+    // configuration removed with the arena migration of the creator page.
+
+    // QuestionsCard (arena-style): clicking the add button creates a
+    // SingleChoice question with two empty option inputs directly. There is
+    // no question-type picker modal and no "Add Option" button in the new
+    // UI, so we just fill the default options in place.
+    await click(page, { testId: "quiz-question-add" });
     await page.waitForLoadState("load");
 
-    // INFO: available credits is zero when free membership
-    // const rewardCard = page.locator("text=Reward").locator("../../..");
-    // await rewardCard.locator("button[role='switch']").click();
-    // await page.waitForLoadState("load");
-
-    // const creditInput = page.locator('input[type="number"]:visible');
-    // await creditInput.first().fill("2");
-    // await page.keyboard.press("Tab");
-    // await page.waitForLoadState("load");
-
-    // Quiz tab: add a single-choice question
-    await page.getByRole("tab", { name: "Quiz" }).click();
-    await page.waitForLoadState("load");
-
-    await click(page, { testId: "quiz-add-question" });
-    await click(page, { text: "Single Choice" });
-
-    const textInputs = page.locator('input[type="text"]:visible');
-    await textInputs
+    const q0 = page.getByTestId("quiz-question-0");
+    const q0Inputs = q0.locator("input.input");
+    await q0Inputs
       .nth(0)
       .fill("What is the primary goal of decentralized governance?");
-    await textInputs.nth(1).fill("Centralize all decisions in one authority");
-    await textInputs
-      .nth(2)
-      .fill("Enable transparent collective decision-making");
+    await q0Inputs.nth(1).fill("Centralize all decisions in one authority");
+    await q0Inputs.nth(2).fill("Enable transparent collective decision-making");
 
-    await page.getByRole("button", { name: "Add Option" }).first().click();
-    await page.waitForLoadState("load");
-    await textInputs.nth(3).fill("Maximize individual profit");
-
-    // Mark option 2 as the correct answer
-    const checkboxLabels = page.locator('label:has(input[type="checkbox"])');
-    await checkboxLabels.nth(1).click();
+    // Mark option 2 as the correct answer via the radio dot
+    await page.getByTestId("quiz-question-0-opt-1").locator(".q-opt__radio").click();
     await page.waitForLoadState("load");
 
     await page.keyboard.press("Tab");
@@ -467,33 +440,17 @@ test.describe.serial("Space governance scenario", () => {
       { placeholder: "Enter poll title..." },
       "Opinion Survey: Pre-study"
     );
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
+    await commitAutosave(page);
 
-    await click(page, { testId: "poll-add-question" });
-    await click(page, { text: "Single Choice" });
+    // Arena poll editor: two option inputs, no Add Option button.
+    await addPollQuestion(page, "single");
+    await fillPollQuestion(page, 0, {
+      title: "How familiar are you with decentralized governance?",
+      options: ["Very familiar", "Not familiar at all"],
+    });
 
-    const textInputs = page.locator('input[type="text"]:visible');
-    await textInputs
-      .nth(0)
-      .fill("How familiar are you with decentralized governance?");
-    await textInputs.nth(1).fill("Very familiar");
-    await textInputs.nth(2).fill("Somewhat familiar");
-
-    await page.getByRole("button", { name: "Add Option" }).first().click();
-    await page.waitForLoadState("load");
-    await textInputs.nth(3).fill("Not familiar at all");
-
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
-
-    // Settings tab: mark as prerequisite
-    await page.getByRole("tab", { name: "Settings" }).click();
-    await page.waitForLoadState("load");
-
-    const prerequisiteCard = page.locator("text=Prerequisite").locator("../..");
-    await prerequisiteCard.locator("button").click();
-    await page.waitForLoadState("load");
+    // Mark as prerequisite via the ConfigCard tile (no more Settings tab).
+    await togglePrerequisite(page);
   });
 
   // ─── 7. Poll 2 — 최종조사 (10x boost) ────────────────────────────────────
@@ -517,41 +474,18 @@ test.describe.serial("Space governance scenario", () => {
       { placeholder: "Enter poll title..." },
       "Opinion Survey: Post-study"
     );
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
+    await commitAutosave(page);
 
-    await click(page, { testId: "poll-add-question" });
-    await click(page, { text: "Single Choice" });
+    await addPollQuestion(page, "single");
+    await fillPollQuestion(page, 0, {
+      title:
+        "After studying the materials, how would you rate your understanding?",
+      options: ["Significantly improved", "No change"],
+    });
 
-    const textInputs = page.locator('input[type="text"]:visible');
-    await textInputs
-      .nth(0)
-      .fill(
-        "After studying the materials, how would you rate your understanding?"
-      );
-    await textInputs.nth(1).fill("Significantly improved");
-    await textInputs.nth(2).fill("Somewhat improved");
-
-    await page.getByRole("button", { name: "Add Option" }).first().click();
-    await page.waitForLoadState("load");
-    await textInputs.nth(3).fill("No change");
-
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
-
-    // Settings tab: 10x boost reward
-    await page.getByRole("tab", { name: "Settings" }).click();
-    await page.waitForLoadState("load");
-
-    // INFO: available credits is zero when free membership
-    // const rewardCard = page.locator("text=Reward").locator("../../..");
-    // await rewardCard.locator("button[role='switch']").click();
-    // await page.waitForLoadState("load");
-
-    // const creditInput = page.locator('input[type="number"]:visible');
-    // await creditInput.first().fill("10");
-    // await page.keyboard.press("Tab");
-    // await page.waitForLoadState("load");
+    // Reward + boost setup: free-tier credits would be 0, so the boost
+    // steps from the legacy Settings tab are intentionally skipped here.
+    // setReward(page, 10) can be invoked once the user has paid credits.
   });
 
   // ─── 8. Discussion — saved but not published, 5x boost ───────────────────
@@ -570,7 +504,8 @@ test.describe.serial("Space governance scenario", () => {
     });
 
     await click(page, { text: "Create" });
-    await page.waitForURL(/\/actions\/discussions\//, {
+    // Discussion's creator route ends with /edit in the arena editor.
+    await page.waitForURL(/\/actions\/discussions\/[^/]+\/edit/, {
       waitUntil: "networkidle",
     });
 
@@ -579,35 +514,19 @@ test.describe.serial("Space governance scenario", () => {
       { placeholder: "Enter discussion title..." },
       "Governance Framework Discussion"
     );
-    await fill(
-      page,
-      { placeholder: "Enter category (optional)..." },
-      "Governance"
-    );
+    // Arena discussion editor has no category field and no Save button —
+    // fields autosave on blur.
 
     const editor = await getEditor(page);
     await editor.fill(
       "This is the main governance discussion thread. Share your insights after completing " +
         "the study materials and preliminary survey."
     );
+    await commitAutosave(page);
 
-    // Save without publishing
-    await click(page, { text: "Save" });
-    await page.waitForLoadState("load");
-
-    // Settings tab: 5x boost reward
-    await page.getByRole("tab", { name: "Setting" }).click();
-    await page.waitForLoadState("load");
-
-    // INFO: available credits is zero when free membership
-    // const rewardCard = page.locator("text=Reward").locator("../../..");
-    // await rewardCard.locator("button[role='switch']").click();
-    // await page.waitForLoadState("load");
-
-    // const creditInput = page.locator('input[type="number"]:visible');
-    // await creditInput.first().fill("5");
-    // await page.keyboard.press("Tab");
-    // await page.waitForLoadState("load");
+    // Reward + boost setup: free-tier credits would be 0, so the boost
+    // steps from the legacy Settings tab are intentionally skipped here.
+    // setReward(page, 5) can be invoked once the user has paid credits.
   });
 
   // ─── 9. General settings — anonymous ON ───────────────────────────────────

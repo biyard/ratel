@@ -302,3 +302,94 @@ export async function createTeamPostFromHome(
   }
   return match[1];
 }
+
+// ── Arena action-editor helpers ─────────────────────────────────────────────
+// Shared UI primitives for the poll/quiz/discussion/follow creator pages.
+// When the arena UI evolves, update these helpers rather than every spec.
+
+/**
+ * Blur the currently-focused field to commit an autosave (the new arena
+ * editors persist on blur; there is no Save button).
+ */
+export async function commitAutosave(page) {
+  await page.keyboard.press("Tab");
+  await page.waitForLoadState("load");
+}
+
+/**
+ * Add a new question on a poll-creator page and pick its type.
+ * `type` is one of: `"single"`, `"multi"`.
+ */
+export async function addPollQuestion(page, type = "single") {
+  await click(page, { testId: "poll-question-add" });
+  const labels = { single: "Single", multi: "Multi" };
+  const label = labels[type];
+  if (!label) {
+    throw new Error(`Unsupported poll question type: ${type}`);
+  }
+  // Type segment only needs to be (re-)clicked when it is not already selected.
+  const segment = page.getByText(label, { exact: true });
+  if ((await segment.count()) > 0) {
+    const first = segment.first();
+    if ((await first.getAttribute("aria-selected")) !== "true") {
+      await first.click();
+      await page.waitForLoadState("load");
+    }
+  }
+}
+
+/**
+ * Fill the title + options of a poll question identified by its index. The
+ * arena editor exposes two option inputs by default (no "Add Option" UI);
+ * pass at most two option strings. Each field is blurred after fill so
+ * the per-field onblur autosave commits before the next field is touched.
+ */
+export async function fillPollQuestion(page, idx, { title, options = [] }) {
+  const block = page.getByTestId(`poll-question-${idx}`);
+  await expect(block).toBeVisible();
+  const titleInput = block.locator("input.input").first();
+  await titleInput.fill(title);
+  await titleInput.press("Tab");
+  await page.waitForLoadState("load");
+
+  for (let i = 0; i < options.length; i += 1) {
+    const opt = page
+      .getByTestId(`poll-question-${idx}-opt-${i}`)
+      .locator("input");
+    await opt.fill(options[i]);
+    await opt.press("Tab");
+    await page.waitForLoadState("load");
+    // Small settle window so the onblur server round-trip completes before
+    // the next option's focus races it.
+    await page.waitForTimeout(200);
+  }
+}
+
+/**
+ * Toggle the "require prerequisite" tile on an action ConfigCard. The tile
+ * replaces the legacy "Settings" tab + prerequisite card flow.
+ */
+export async function togglePrerequisite(page) {
+  const tile = page.getByTestId("tile-prereq");
+  await expect(tile).toBeVisible();
+  await tile.locator('[role="switch"]').click();
+  await page.waitForLoadState("load");
+}
+
+/**
+ * Turn on the reward-setting toggle and set a credit amount on an action
+ * ConfigCard. No-op if the toggle is not present (e.g. free membership
+ * showing the Unlock button instead).
+ */
+export async function setReward(page, credits) {
+  const toggle = page.getByTestId("reward-setting-toggle");
+  if ((await toggle.count()) === 0) return;
+  if ((await toggle.getAttribute("aria-checked")) !== "true") {
+    await toggle.click();
+    await page.waitForLoadState("load");
+  }
+  const creditInput = page.getByTestId("reward-credit-input");
+  await expect(creditInput).toBeVisible();
+  await creditInput.fill(String(credits));
+  await commitAutosave(page);
+}

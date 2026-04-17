@@ -67,21 +67,18 @@ test.describe.serial("Space with lots actions", () => {
     // confirm creation
     await click(page, { text: "Create" });
 
-    // wait for discussion page (creator sees inline editor directly)
-    await page.waitForURL(/\/actions\/discussions\//, {
+    // wait for discussion editor page (creator sees inline editor directly).
+    // Post-migration the route ends with /edit.
+    await page.waitForURL(/\/actions\/discussions\/[^/]+\/edit/, {
       waitUntil: "networkidle",
     });
 
-    // fill discussion fields on CreatorMain (inline editing)
+    // fill discussion fields on the arena-style editor (per-field autosave,
+    // no category field and no Save button anymore).
     await fill(
       page,
       { placeholder: "Enter discussion title..." },
       "Playwright Discussion Topic"
-    );
-    await fill(
-      page,
-      { placeholder: "Enter category (optional)..." },
-      "Testing"
     );
 
     // fill rich text content via TiptapEditor
@@ -90,7 +87,8 @@ test.describe.serial("Space with lots actions", () => {
       "This is a test discussion created by Playwright to verify the discussion creation flow within a space."
     );
 
-    await click(page, { text: "Save" });
+    // Blur the editor to commit the autosave
+    await page.keyboard.press("Tab");
   });
 
   test("Create a poll action in space", async ({ page }) => {
@@ -157,7 +155,8 @@ test.describe.serial("Space with lots actions", () => {
       "This is a test quiz created by Playwright to verify the quiz creation flow."
     );
 
-    await click(page, { text: "Save" });
+    // Blur to commit the autosave — the new quiz creator has no Save button.
+    await page.keyboard.press("Tab");
   });
 
   test("Create a follow action in space", async ({ page }) => {
@@ -180,8 +179,8 @@ test.describe.serial("Space with lots actions", () => {
       waitUntil: "networkidle",
     });
 
-    // verify creator sees the General tab with follower settings
-    await getLocator(page, { text: "General" });
+    // verify creator sees the follow targets card on the new arena editor.
+    await getLocator(page, { testId: "page-card-config" });
   });
 
   test("Publish space public", async ({ page }) => {
