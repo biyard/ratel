@@ -15,7 +15,7 @@
       --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
       --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
       --surface-soft:rgba(255,255,255,0.02);--surface-hover:rgba(255,255,255,0.04);
-      --glow-aura-a:rgba(34,197,94,0.04);--glow-aura-b:rgba(252,179,0,0.03);
+      --glow-aura-a:rgba(34,197,94,0.05);--glow-aura-b:rgba(252,179,0,0.03);
       --panel-bg:rgba(12,12,26,1);--input-bg:rgba(255,255,255,0.02);--input-border:rgba(255,255,255,0.08);
       --danger-bg:rgba(239,68,68,0.04);--danger-border:rgba(239,68,68,0.18);
     }
@@ -32,7 +32,7 @@
     :root{
       --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-red:#ef4444;
       --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
-      --general-color:#22c55e;--general-bg:rgba(34,197,94,0.08);--general-border:rgba(34,197,94,0.22);--general-glow:rgba(34,197,94,0.12);
+      --general-color:#22c55e;--general-bg:rgba(34,197,94,0.10);--general-border:rgba(34,197,94,0.24);--general-glow:rgba(34,197,94,0.15);
     }
 
     html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body);transition:background 0.25s,color 0.25s}
@@ -58,7 +58,7 @@
     .arena-topbar__right{display:flex;align-items:center;gap:10px;flex-shrink:0}
     .autosave{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted)}
     .autosave__dot{width:6px;height:6px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal)}
-    .autosave--unsaved .autosave__dot{background:var(--accent-gold);box-shadow:0 0 6px var(--accent-gold);animation:pulse 1.4s ease-in-out infinite}
+    .autosave--saving .autosave__dot{background:var(--general-color);box-shadow:0 0 6px var(--general-color);animation:pulse 1.4s ease-in-out infinite}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
     .btn{padding:8px 14px;border-radius:10px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;border:1px solid var(--border-subtle);background:transparent;color:var(--text-primary);display:inline-flex;align-items:center;gap:6px}
@@ -66,24 +66,20 @@
     .btn--secondary{background:var(--surface-soft)}
     .btn--primary{background:linear-gradient(135deg,var(--accent-gold),#e5a200);border:none;color:#0a0a0a;box-shadow:0 2px 12px rgba(252,179,0,0.25)}
     .btn--primary:hover{color:#0a0a0a;transform:translateY(-1px);box-shadow:0 4px 16px rgba(252,179,0,0.4)}
+    .btn--accent{background:linear-gradient(135deg,var(--general-color),#16a34a);border:none;color:#fff;box-shadow:0 2px 12px var(--general-glow)}
+    .btn--accent:hover{transform:translateY(-1px);color:#fff;box-shadow:0 4px 16px var(--general-glow)}
     .btn--danger{background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.22);color:var(--accent-red)}
+    .btn--danger:hover{background:rgba(239,68,68,0.12);border-color:var(--accent-red);color:var(--accent-red)}
     .btn--lg{padding:10px 20px;font-size:11px}
 
     .hud-btn{width:40px;height:40px;border-radius:10px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s;padding:0;position:relative}
     .hud-btn:hover{background:var(--bg-glass-hover);border-color:rgba(252,179,0,0.2)}
     .hud-btn svg{width:16px;height:16px;color:var(--text-muted)}
     .hud-btn:hover svg{color:var(--accent-gold)}
-    .theme-menu{position:absolute;top:48px;right:0;min-width:180px;background:var(--panel-bg);border:1px solid var(--border-subtle);border-radius:12px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,0.4);z-index:40;display:none;flex-direction:column;gap:2px}
-    .theme-menu[data-open="true"]{display:flex}
-    .theme-menu__label{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);padding:8px 10px 4px}
-    .theme-menu__item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:transparent;border:1px solid transparent;cursor:pointer;color:var(--text-primary);font-size:13px;text-align:left}
-    .theme-menu__item:hover{background:var(--surface-hover)}
-    .theme-menu__item[aria-selected="true"]{background:rgba(252,179,0,0.08);border-color:rgba(252,179,0,0.22);color:var(--accent-gold)}
-    .theme-menu__item svg{width:14px;height:14px}
 
-    .arena-body{position:relative;z-index:10;flex:1;padding:32px 28px 120px;max-width:1100px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:22px}
+    .arena-body{position:relative;z-index:10;flex:1;padding:28px 28px 120px;max-width:1100px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:18px}
 
-    .section{background:var(--bg-glass);backdrop-filter:blur(18px);border:1px solid var(--border-subtle);border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:16px}
+    .section{background:var(--bg-glass);backdrop-filter:blur(18px);border:1px solid var(--border-subtle);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px}
     .section__head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
     .section__label{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
     .section__hint{font-size:12px;color:var(--text-muted)}
@@ -92,86 +88,53 @@
     .field{display:flex;flex-direction:column;gap:8px}
     .field__label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted)}
     .input,.textarea{width:100%;padding:11px 14px;border-radius:10px;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary);font-family:var(--font-body);font-size:14px;outline:none;transition:all 0.2s}
-    .input:focus,.textarea:focus{border-color:rgba(252,179,0,0.4);box-shadow:0 0 0 3px rgba(252,179,0,0.08)}
-    .input--readonly{color:var(--text-muted);background:var(--surface-soft)}
-    .textarea{resize:vertical;min-height:72px;line-height:1.5}
-    .input--num{width:160px}
-    .input-group{display:flex;align-items:center;gap:8px}
-    .input-suffix{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.1em;color:var(--text-muted)}
-
-    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    @media (max-width:768px){.grid-2,.grid-3{grid-template-columns:1fr}}
+    .input:focus,.textarea:focus{border-color:var(--general-border);box-shadow:0 0 0 3px var(--general-glow)}
+    .input-group{display:flex;align-items:center;gap:8px;width:100%}
+    .input-group .input{flex:1}
 
     /* Logo uploader */
     .logo-uploader{display:flex;align-items:center;gap:18px}
-    .logo-preview{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#6eedd8);border:1px solid var(--general-border);box-shadow:0 4px 20px var(--general-glow);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:28px;color:#0a0a0a;flex-shrink:0}
+    .logo-preview{width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,var(--general-color),var(--accent-teal));border:1px solid var(--general-border);box-shadow:0 4px 20px var(--general-glow);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:26px;color:#0a0a0a;flex-shrink:0;overflow:hidden}
+    .logo-preview img{width:100%;height:100%;object-fit:cover}
     .logo-uploader__actions{display:flex;flex-direction:column;gap:8px}
 
-    /* Segmented */
-    .segmented{display:inline-flex;padding:3px;background:var(--surface-soft);border:1px solid var(--border-subtle);border-radius:10px;gap:2px;flex-wrap:wrap}
-    .segmented__btn{padding:8px 14px;border-radius:8px;background:transparent;border:none;color:var(--text-muted);font-family:var(--font-body);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s}
-    .segmented__btn[aria-selected="true"]{background:rgba(252,179,0,0.12);color:var(--accent-gold);box-shadow:0 1px 4px rgba(252,179,0,0.15)}
-
     /* Radio cards */
-    .radio-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    @media (max-width:768px){.radio-cards{grid-template-columns:1fr}}
+    .radio-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
     .radio-card{padding:16px;border-radius:12px;background:var(--surface-soft);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;gap:6px;text-align:left;font-family:var(--font-body);color:var(--text-primary)}
-    .radio-card:hover{border-color:rgba(252,179,0,0.25);background:var(--surface-hover)}
-    .radio-card[aria-selected="true"]{border-color:rgba(252,179,0,0.5);background:rgba(252,179,0,0.06)}
-    .radio-card__title{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-primary)}
-    .radio-card[aria-selected="true"] .radio-card__title{color:var(--accent-gold)}
+    .radio-card:hover{border-color:var(--general-border);background:var(--surface-hover)}
+    .radio-card[aria-selected="true"]{border-color:var(--general-border);background:var(--general-bg)}
+    .radio-card__title{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-primary);display:flex;align-items:center;gap:8px}
+    .radio-card[aria-selected="true"] .radio-card__title{color:var(--general-color)}
+    .radio-card__title svg{width:14px;height:14px}
     .radio-card__desc{font-size:12px;color:var(--text-muted);line-height:1.5}
 
     /* Switch */
-    .switch{position:relative;display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
-    .switch__track{width:38px;height:22px;border-radius:100px;background:var(--surface-hover);border:1px solid var(--border-subtle);position:relative;transition:all 0.2s;flex-shrink:0}
+    .switch{position:relative;display:inline-flex;align-items:flex-start;gap:12px;cursor:pointer;user-select:none;padding:4px 0}
+    .switch__track{width:38px;height:22px;border-radius:100px;background:var(--surface-hover);border:1px solid var(--border-subtle);position:relative;transition:all 0.2s;flex-shrink:0;margin-top:1px}
     .switch__thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--text-muted);transition:all 0.2s}
-    .switch[aria-checked="true"] .switch__track{background:rgba(252,179,0,0.2);border-color:rgba(252,179,0,0.4)}
-    .switch[aria-checked="true"] .switch__thumb{left:18px;background:var(--accent-gold);box-shadow:0 0 8px rgba(252,179,0,0.5)}
-    .switch__label{font-size:13px;color:var(--text-primary)}
-    .switch__sub{font-size:11px;color:var(--text-muted);display:block;margin-top:2px}
+    .switch[aria-checked="true"] .switch__track{background:var(--general-bg);border-color:var(--general-border)}
+    .switch[aria-checked="true"] .switch__thumb{left:18px;background:var(--general-color);box-shadow:0 0 8px var(--general-glow)}
+    .switch__body{display:flex;flex-direction:column;gap:2px}
+    .switch__label{font-size:13px;font-weight:500;color:var(--text-primary)}
+    .switch__sub{font-size:11px;color:var(--text-muted)}
     .switch[aria-disabled="true"]{opacity:0.45;cursor:not-allowed}
 
     /* Creator chips */
     .creator-row{display:flex;flex-wrap:wrap;gap:10px}
-    .creator-chip{display:inline-flex;align-items:center;gap:10px;padding:6px 12px 6px 6px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle)}
+    .creator-chip{display:inline-flex;align-items:center;gap:10px;padding:6px 10px 6px 6px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle)}
     .creator-chip__avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#fcb300,#fb923c);flex-shrink:0;font-family:var(--font-display);font-size:10px;font-weight:700;color:#0a0a0a;display:flex;align-items:center;justify-content:center}
     .creator-chip__name{font-size:12px;font-weight:600;color:var(--text-primary)}
-    .creator-chip__role{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent-gold);margin-left:2px;padding:2px 6px;border-radius:6px;background:rgba(252,179,0,0.08);border:1px solid rgba(252,179,0,0.2)}
-    .creator-chip__role--mod{color:var(--accent-teal);background:rgba(110,237,216,0.08);border-color:rgba(110,237,216,0.22)}
-    .invite-btn{padding:6px 12px;border-radius:100px;border:1px dashed var(--border-strong);background:transparent;color:var(--text-muted);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.15s}
-    .invite-btn:hover{border-color:var(--accent-gold);color:var(--accent-gold)}
+    .creator-chip__role{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:2px 6px;border-radius:6px;background:rgba(252,179,0,0.08);border:1px solid rgba(252,179,0,0.2);color:var(--accent-gold)}
+    .creator-chip__role--admin{color:var(--general-color);background:var(--general-bg);border-color:var(--general-border)}
+    .creator-chip__role--pending{color:var(--accent-teal);background:rgba(110,237,216,0.08);border-color:rgba(110,237,216,0.22)}
+    .creator-chip__x{width:20px;height:20px;border-radius:50%;background:transparent;border:none;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:2px}
+    .creator-chip__x:hover{color:var(--accent-red);background:rgba(239,68,68,0.08)}
+    .creator-chip__x svg{width:10px;height:10px}
 
-    /* Language tiles (from reference) */
-    .lang-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:360px}
-    .lang-tile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 10px;border-radius:12px;background:var(--surface-soft);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.2s;color:var(--text-primary)}
-    .lang-tile:hover{border-color:rgba(252,179,0,0.25);background:var(--surface-hover)}
-    .lang-tile[aria-selected="true"]{border-color:rgba(252,179,0,0.5);background:rgba(252,179,0,0.08);color:var(--accent-gold)}
-    .lang-tile__flag{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:0.08em}
-    .lang-tile__sub{font-size:10px;color:var(--text-dim);letter-spacing:0.04em}
-    .lang-tile[aria-selected="true"] .lang-tile__sub{color:var(--accent-gold);opacity:0.8}
-
-    /* Accordion */
-    .accordion{border:1px solid var(--border-subtle);border-radius:12px;overflow:hidden;background:var(--surface-soft)}
-    .accordion__head{width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:transparent;border:none;color:var(--text-primary);cursor:pointer;font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase}
-    .accordion__head svg{width:14px;height:14px;color:var(--text-muted);transition:transform 0.2s}
-    .accordion[data-open="true"] .accordion__head svg{transform:rotate(180deg)}
-    .accordion__body{display:none;padding:0 18px 18px;flex-direction:column;gap:14px}
-    .accordion[data-open="true"] .accordion__body{display:flex}
-
-    /* Sticky footer */
     .sticky-footer{position:sticky;bottom:0;z-index:25;background:var(--bg-glass);backdrop-filter:blur(20px);border-top:1px solid var(--border-subtle);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto}
-    .sticky-footer__left{font-size:12px;color:var(--text-muted)}
+    .sticky-footer__left{font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:10px}
+    .sticky-footer__pill{padding:4px 10px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.08em;color:var(--text-muted);display:inline-flex;align-items:center;gap:6px}
     .sticky-footer__actions{display:flex;gap:10px}
-
-    @media (max-width:500px){
-      .arena-topbar{padding:12px 16px;flex-wrap:wrap}
-      .topbar-title{width:100%;order:3}
-      .arena-body{padding:20px 16px 100px}
-      .section{padding:18px 16px}
-      .logo-uploader{flex-direction:column;align-items:flex-start}
-    }
   </style>
 </head>
 <body>
@@ -190,38 +153,34 @@
           <span class="breadcrumb__item breadcrumb__current">General</span>
         </nav>
         <span class="type-badge" data-testid="type-badge">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           General
         </span>
         <span class="topbar-title">General Settings</span>
       </div>
       <div class="arena-topbar__right">
-        <span class="autosave autosave--unsaved" data-testid="autosave-pill">
-          <span class="autosave__dot"></span><span>Unsaved · 8s</span>
+        <span class="autosave autosave--saving" data-testid="autosave-pill">
+          <span class="autosave__dot"></span><span>Saving</span>
         </span>
         <button class="btn" data-testid="cancel-btn">Cancel</button>
         <button class="btn btn--primary btn--lg" data-testid="save-btn">Save Changes</button>
-        <div style="position:relative">
-          <button class="hud-btn" aria-label="Settings" data-theme-toggle data-testid="settings-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          </button>
-          <div class="theme-menu" data-theme-menu>
-            <div class="theme-menu__label">Theme</div>
-            <button class="theme-menu__item" data-theme-set="dark" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Dark</button>
-            <button class="theme-menu__item" data-theme-set="light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>Light</button>
-          </div>
-        </div>
+        <button class="hud-btn" aria-label="Settings" data-testid="settings-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
       </div>
     </header>
 
     <main class="arena-body">
       <!-- Space Logo -->
       <section class="section" data-testid="section-space-logo">
-        <div class="section__head"><span class="section__label">Space Logo</span><span class="section__hint">Upload a logo that represents this space</span></div>
+        <div class="section__head">
+          <span class="section__label">Space Logo</span>
+          <span class="section__hint">Upload a logo that represents this space</span>
+        </div>
         <div class="logo-uploader">
           <div class="logo-preview" data-testid="space-logo-preview">CA</div>
           <div class="logo-uploader__actions">
-            <button class="btn btn--secondary" data-testid="space-logo-upload">Change logo</button>
+            <button class="btn btn--accent" data-testid="space-logo-upload">Change logo</button>
             <button class="btn" data-testid="space-logo-remove">Remove</button>
           </div>
         </div>
@@ -229,20 +188,35 @@
 
       <!-- Start Time -->
       <section class="section" data-testid="section-start-time">
-        <div class="section__head"><span class="section__label">Start Time</span><span class="section__hint">When this space begins accepting participation</span></div>
-        <div class="field"><label class="field__label">Started at</label><input class="input" type="datetime-local" value="2026-01-15T09:00" data-testid="start-time-input" /></div>
+        <div class="section__head">
+          <span class="section__label">Start Time</span>
+          <span class="section__hint">When this space begins accepting participation</span>
+        </div>
+        <div class="field">
+          <label class="field__label">Started at</label>
+          <input class="input" type="datetime-local" value="2026-04-17T09:00" data-testid="start-time-input" />
+        </div>
       </section>
 
       <!-- Space Visibility -->
       <section class="section" data-testid="section-visibility">
-        <div class="section__head"><span class="section__label">Space Visibility</span><span class="section__hint">Who can discover and join this space</span></div>
-        <div class="radio-cards" data-testid="visibility-radio" style="grid-template-columns:repeat(2,1fr)">
+        <div class="section__head">
+          <span class="section__label">Space Visibility</span>
+          <span class="section__hint">Who can discover and join this space</span>
+        </div>
+        <div class="radio-cards" data-testid="visibility-radio">
           <button class="radio-card" aria-selected="true" data-testid="visibility-public">
-            <span class="radio-card__title">Public</span>
+            <span class="radio-card__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              Public
+            </span>
             <span class="radio-card__desc">Discoverable on Ratel, anyone can join.</span>
           </button>
           <button class="radio-card" aria-selected="false" data-testid="visibility-private">
-            <span class="radio-card__title">Private</span>
+            <span class="radio-card__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Private
+            </span>
             <span class="radio-card__desc">Invited members or team members only.</span>
           </button>
         </div>
@@ -250,75 +224,124 @@
 
       <!-- Invite Participant -->
       <section class="section" data-testid="section-invite">
-        <div class="section__head"><span class="section__label">Invite Participant</span><span class="section__hint">Send email invitations to join this space</span></div>
+        <div class="section__head">
+          <span class="section__label">Invite Participant</span>
+          <span class="section__hint">Send email invitations to join this space</span>
+        </div>
         <div class="field">
           <label class="field__label">Email address</label>
-          <div class="input-group" style="width:100%">
-            <input class="input" type="email" placeholder="name@example.com" data-testid="invite-email-input" style="flex:1" />
-            <button class="btn btn--primary" data-testid="invite-send-btn">Invite</button>
+          <div class="input-group">
+            <input class="input" type="email" placeholder="name@example.com" data-testid="invite-email-input" />
+            <button class="btn btn--accent" data-testid="invite-send-btn">Invite</button>
           </div>
         </div>
         <div class="field">
           <span class="field__label">Pending invitations</span>
           <div class="creator-row" data-testid="invite-list">
-            <div class="creator-chip"><span class="creator-chip__avatar">AL</span><span class="creator-chip__name">alice@example.com</span><span class="creator-chip__role creator-chip__role--mod">Pending</span></div>
-            <div class="creator-chip"><span class="creator-chip__avatar" style="background:linear-gradient(135deg,#22d3ee,#818cf8)">BE</span><span class="creator-chip__name">ben@example.com</span><span class="creator-chip__role creator-chip__role--mod">Pending</span></div>
+            <div class="creator-chip">
+              <span class="creator-chip__avatar">AL</span>
+              <span class="creator-chip__name">alice@example.com</span>
+              <span class="creator-chip__role creator-chip__role--pending">Pending</span>
+              <button class="creator-chip__x" aria-label="Revoke">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div class="creator-chip">
+              <span class="creator-chip__avatar" style="background:linear-gradient(135deg,#22d3ee,#818cf8)">BE</span>
+              <span class="creator-chip__name">ben@example.com</span>
+              <span class="creator-chip__role creator-chip__role--pending">Pending</span>
+              <button class="creator-chip__x" aria-label="Revoke">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
       <!-- Anonymous Participation -->
       <section class="section" data-testid="section-anonymous">
-        <div class="section__head"><span class="section__label">Anonymous Participation</span></div>
+        <div class="section__head">
+          <span class="section__label">Anonymous Participation</span>
+        </div>
         <div class="switch" role="switch" aria-checked="true" tabindex="0" data-testid="anonymous-switch">
           <span class="switch__track"><span class="switch__thumb"></span></span>
-          <span><span class="switch__label">Allow anonymous participation</span><span class="switch__sub">Participants can contribute without revealing their identity</span></span>
+          <span class="switch__body">
+            <span class="switch__label">Allow anonymous participation</span>
+            <span class="switch__sub">Participants can contribute without revealing their identity</span>
+          </span>
         </div>
       </section>
 
       <!-- Join Anytime -->
       <section class="section" data-testid="section-join-anytime">
-        <div class="section__head"><span class="section__label">Join Anytime</span></div>
+        <div class="section__head">
+          <span class="section__label">Join Anytime</span>
+        </div>
         <div class="switch" role="switch" aria-checked="false" tabindex="0" data-testid="join-anytime-switch">
           <span class="switch__track"><span class="switch__thumb"></span></span>
-          <span><span class="switch__label">Allow joining anytime</span><span class="switch__sub">Users can join after the start time has passed</span></span>
+          <span class="switch__body">
+            <span class="switch__label">Allow joining anytime</span>
+            <span class="switch__sub">Users can join after the start time has passed</span>
+          </span>
         </div>
       </section>
 
       <!-- Administrators -->
       <section class="section" data-testid="section-administrators">
-        <div class="section__head"><span class="section__label">Administrators</span><span class="section__hint">Users with admin access to this space</span></div>
+        <div class="section__head">
+          <span class="section__label">Administrators</span>
+          <span class="section__hint">Users with admin access to this space</span>
+        </div>
         <div class="field">
           <label class="field__label">Add admin</label>
-          <div class="input-group" style="width:100%">
-            <input class="input" placeholder="@username or email" data-testid="admin-identifier-input" style="flex:1" />
-            <button class="btn btn--primary" data-testid="admin-add-btn">Add</button>
+          <div class="input-group">
+            <input class="input" placeholder="@username or email" data-testid="admin-identifier-input" />
+            <button class="btn btn--accent" data-testid="admin-add-btn">Add</button>
           </div>
         </div>
         <div class="field">
           <span class="field__label">Current admins</span>
           <div class="creator-row" data-testid="admin-list">
-            <div class="creator-chip"><span class="creator-chip__avatar">DY</span><span class="creator-chip__name">@doyooon</span><span class="creator-chip__role">Owner</span></div>
-            <div class="creator-chip"><span class="creator-chip__avatar" style="background:linear-gradient(135deg,#22d3ee,#818cf8)">MV</span><span class="creator-chip__name">@maya.v</span><span class="creator-chip__role creator-chip__role--mod">Admin</span></div>
+            <div class="creator-chip">
+              <span class="creator-chip__avatar">DY</span>
+              <span class="creator-chip__name">@doyooon</span>
+              <span class="creator-chip__role">Owner</span>
+            </div>
+            <div class="creator-chip">
+              <span class="creator-chip__avatar" style="background:linear-gradient(135deg,#22d3ee,#818cf8)">MV</span>
+              <span class="creator-chip__name">@maya.v</span>
+              <span class="creator-chip__role creator-chip__role--admin">Admin</span>
+              <button class="creator-chip__x" aria-label="Remove">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
       <!-- Danger zone -->
       <section class="section section--danger" data-testid="section-danger">
-        <div class="section__head"><span class="section__label" style="color:var(--accent-red);opacity:0.85">Danger zone</span></div>
+        <div class="section__head">
+          <span class="section__label" style="color:var(--accent-red);opacity:0.85">Danger zone</span>
+        </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
-          <div style="flex:1;min-width:220px"><div style="font-size:13px;font-weight:600">Delete space</div><div style="font-size:12px;color:var(--text-muted)">Permanently removes the space, all actions, and comments. Cannot be undone.</div></div>
+          <div style="flex:1;min-width:220px">
+            <div style="font-size:13px;font-weight:600">Delete space</div>
+            <div style="font-size:12px;color:var(--text-muted)">Permanently removes the space, all actions, and comments. Cannot be undone.</div>
+          </div>
           <button class="btn btn--danger" data-testid="delete-btn">Delete space</button>
         </div>
       </section>
     </main>
 
     <footer class="sticky-footer">
-      <span class="sticky-footer__left" data-testid="footer-status">3 unsaved changes</span>
+      <div class="sticky-footer__left">
+        <span>Last saved 8s ago</span>
+        <span class="sticky-footer__pill"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent-teal);display:inline-block"></span>Changes saved</span>
+      </div>
       <div class="sticky-footer__actions">
         <button class="btn" data-testid="footer-cancel">Cancel</button>
-        <button class="btn btn--primary btn--lg" data-testid="footer-save">Save Changes</button>
+        <button class="btn btn--accent btn--lg" data-testid="footer-save">Save Changes</button>
       </div>
     </footer>
   </div>
@@ -327,41 +350,19 @@
     (function(){
       var saved = localStorage.getItem('ratel-theme');
       if (saved) document.documentElement.setAttribute('data-theme', saved);
-      var toggleBtn = document.querySelector('[data-theme-toggle]');
-      var menu = document.querySelector('[data-theme-menu]');
-      if (toggleBtn && menu){
-        toggleBtn.addEventListener('click', function(e){ e.stopPropagation(); menu.setAttribute('data-open', menu.getAttribute('data-open') === 'true' ? 'false':'true'); });
-        document.addEventListener('click', function(){ menu.setAttribute('data-open','false'); });
-        menu.addEventListener('click', function(e){ e.stopPropagation(); });
-        menu.querySelectorAll('[data-theme-set]').forEach(function(btn){
-          btn.addEventListener('click', function(){
-            var t = btn.getAttribute('data-theme-set');
-            document.documentElement.setAttribute('data-theme', t);
-            localStorage.setItem('ratel-theme', t);
-            menu.querySelectorAll('[data-theme-set]').forEach(function(b){ b.setAttribute('aria-selected', b === btn ? 'true':'false'); });
-            menu.setAttribute('data-open','false');
-          });
-          btn.setAttribute('aria-selected', btn.getAttribute('data-theme-set') === (saved || 'dark') ? 'true':'false');
-        });
-      }
+
       document.querySelectorAll('.switch').forEach(function(s){
         s.addEventListener('click', function(){
           if (s.getAttribute('aria-disabled') === 'true') return;
-          s.setAttribute('aria-checked', s.getAttribute('aria-checked') === 'true' ? 'false':'true');
+          s.setAttribute('aria-checked', s.getAttribute('aria-checked') === 'true' ? 'false' : 'true');
         });
-        s.addEventListener('keydown', function(e){ if(e.key===' '||e.key==='Enter'){e.preventDefault();s.click();}});
       });
-      document.querySelectorAll('.segmented, .radio-cards, .lang-tiles').forEach(function(grp){
+      document.querySelectorAll('.radio-cards').forEach(function(grp){
         grp.querySelectorAll('[aria-selected]').forEach(function(b){
           b.addEventListener('click', function(){
             grp.querySelectorAll('[aria-selected]').forEach(function(x){ x.setAttribute('aria-selected','false'); });
             b.setAttribute('aria-selected','true');
           });
-        });
-      });
-      document.querySelectorAll('[data-accordion]').forEach(function(acc){
-        acc.querySelector('[data-accordion-head]').addEventListener('click', function(){
-          acc.setAttribute('data-open', acc.getAttribute('data-open') === 'true' ? 'false':'true');
         });
       });
     })();

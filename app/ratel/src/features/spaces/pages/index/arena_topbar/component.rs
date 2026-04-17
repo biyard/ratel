@@ -67,13 +67,13 @@ pub fn ArenaTopbar(
                                         on_confirm: move |visibility| async move {
                                             let space_id = ctx.space().id;
                                             update_space(
-                                                space_id,
-                                                controllers::UpdateSpaceRequest::Publish {
-                                                    publish: true,
-                                                    visibility,
-                                                },
-                                            )
-                                            .await;
+                                                    space_id,
+                                                    controllers::UpdateSpaceRequest::Publish {
+                                                        publish: true,
+                                                        visibility,
+                                                    },
+                                                )
+                                                .await;
                                             ctx.space.restart();
                                         },
                                     }
@@ -99,7 +99,12 @@ pub fn ArenaTopbar(
                             onclick: move |_| {
                                 let space_id = space_id.clone();
                                 popup.open(rsx! {
-                                    crate::features::spaces::space_common::components::SpaceStartModal { space_id }
+                                    crate::features::spaces::space_common::components::SpaceStartModal {
+                                        space_id,
+                                        on_success: move |_| {
+                                            ctx.space.restart();
+                                        },
+                                    }
                                 });
                             },
                             svg {
@@ -122,7 +127,12 @@ pub fn ArenaTopbar(
                             onclick: move |_| {
                                 let space_id = space_id.clone();
                                 popup.open(rsx! {
-                                    crate::features::spaces::space_common::components::SpaceEndModal { space_id }
+                                    crate::features::spaces::space_common::components::SpaceEndModal {
+                                        space_id,
+                                        on_success: move |_| {
+                                            ctx.space.restart();
+                                        },
+                                    }
                                 });
                             },
                             svg {
@@ -133,7 +143,13 @@ pub fn ArenaTopbar(
                                 stroke_width: "1.5",
                                 view_box: "0 0 24 24",
                                 xmlns: "http://www.w3.org/2000/svg",
-                                rect { x: "6", y: "6", width: "12", height: "12", rx: "2" }
+                                rect {
+                                    x: "6",
+                                    y: "6",
+                                    width: "12",
+                                    height: "12",
+                                    rx: "2",
+                                }
                             }
                             span { class: "tooltip", "{tr.finish}" }
                         }
