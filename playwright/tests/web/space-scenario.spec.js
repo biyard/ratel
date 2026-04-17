@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import {
   click,
   clickNoNav,
+  createAction,
   createTeamFromHome,
   createTeamPostFromHome,
   fill,
@@ -325,18 +326,7 @@ test.describe.serial("Space governance scenario", () => {
   // ─── 4. Follow Team action ────────────────────────────────────────────────
 
   test("Creator1: Add Follow Team action", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
-
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-follow" });
-
-    await page.evaluate(() => {
-      const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
-      if (fab) fab.style.display = "none";
-    });
-
-    await click(page, { text: "Create" });
-    await page.waitForURL(/\/actions\/follows\//, { waitUntil: "networkidle" });
+    await createAction(page, spaceUrl, "follow", /\/actions\/follows\//);
   });
 
   // ─── 5. Quiz + 3 study attachments + 2x boost ────────────────────────────
@@ -344,17 +334,7 @@ test.describe.serial("Space governance scenario", () => {
   test("Creator1: Add Quiz with study materials and 2x boost", async ({
     page,
   }) => {
-    await goto(page, spaceUrl + "/actions");
-
-    await click(page, { text: "Select Action Type" });
-    // Quiz is the default selection — no extra click needed
-
-    await page.evaluate(() => {
-      const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
-      if (fab) fab.style.display = "none";
-    });
-    await click(page, { text: "Create" });
-    await page.waitForURL(/\/actions\/quizzes\//, { waitUntil: "networkidle" });
+    await createAction(page, spaceUrl, "quiz", /\/actions\/quizzes\//);
 
     // Arena-style quiz creator page: no tabs — ContentCard + QuestionsCard +
     // ConfigCard are all inline on the same page with per-field autosave.
@@ -422,18 +402,7 @@ test.describe.serial("Space governance scenario", () => {
   test("Creator1: Add preliminary Poll (사전조사, prerequisite)", async ({
     page,
   }) => {
-    await goto(page, spaceUrl + "/actions");
-
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-poll" });
-
-    await page.evaluate(() => {
-      const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
-      if (fab) fab.style.display = "none";
-    });
-
-    await click(page, { text: "Create" });
-    await page.waitForURL(/\/actions\/polls\//, { waitUntil: "networkidle" });
+    await createAction(page, spaceUrl, "poll", /\/actions\/polls\//);
 
     await fill(
       page,
@@ -456,18 +425,7 @@ test.describe.serial("Space governance scenario", () => {
   // ─── 7. Poll 2 — 최종조사 (10x boost) ────────────────────────────────────
 
   test("Creator1: Add final Poll (최종조사, 10x boost)", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
-
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-poll" });
-
-    await page.evaluate(() => {
-      const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
-      if (fab) fab.style.display = "none";
-    });
-
-    await click(page, { text: "Create" });
-    await page.waitForURL(/\/actions\/polls\//, { waitUntil: "networkidle" });
+    await createAction(page, spaceUrl, "poll", /\/actions\/polls\//);
 
     await fill(
       page,
@@ -493,21 +451,12 @@ test.describe.serial("Space governance scenario", () => {
   test("Creator1: Add Discussion (not published, 5x boost)", async ({
     page,
   }) => {
-    await goto(page, spaceUrl + "/actions");
-
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-discussion" });
-
-    await page.evaluate(() => {
-      const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
-      if (fab) fab.style.display = "none";
-    });
-
-    await click(page, { text: "Create" });
-    // Discussion's creator route ends with /edit in the arena editor.
-    await page.waitForURL(/\/actions\/discussions\/[^/]+\/edit/, {
-      waitUntil: "networkidle",
-    });
+    await createAction(
+      page,
+      spaceUrl,
+      "discuss",
+      /\/actions\/discussions\/[^/]+\/edit/,
+    );
 
     await fill(
       page,
