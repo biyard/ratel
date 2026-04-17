@@ -1,0 +1,36 @@
+# Scenario 1: Email login flow
+# Precondition: app installed on emulator, server running at MOBILE_API_URL
+appId: co.biyard.ratel
+---
+- launchApp:
+    clearState: true
+
+# Wait for home page to render (Dioxus hydration via WebView)
+- waitForAnimationToEnd
+
+# Tap Sign In button
+- assertVisible: "Sign In"
+- tapOn: "Sign In"
+
+# Login modal should appear
+- assertVisible: "Enter your email address"
+- tapOn: "Enter your email address"
+- inputText: "hi+user1@biyard.co"
+
+- tapOn: "Continue"
+
+# Password step
+- assertVisible: "Enter your password"
+- tapOn: "Enter your password"
+- inputText: "admin!234"
+
+- tapOn: "Continue"
+
+# Should return to home signed-in (Sign In button gone)
+- extendedWaitUntil:
+    visible: "Create"
+    timeout: 15000
+
+- assertNotVisible: "Sign In"
+
+- takeScreenshot: 01-login-success

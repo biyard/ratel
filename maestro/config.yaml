@@ -1,0 +1,11 @@
+# Maestro global config
+# Ref: https://maestro.mobile.dev/cli/test-suites-and-reports#configuring-tests
+#
+# Usage:
+#   cd maestro
+#   maestro test tests/
+#
+# Or run a single scenario:
+#   maestro test tests/01-login.yaml
+
+appId: co.biyard.ratel

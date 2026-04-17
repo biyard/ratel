@@ -50,6 +50,13 @@ QDRANT_PREFIX ?= ratel-$(ENV)
 QDRANT_URL ?= http://localhost:6334
 QDRANT_API_KEY ?= ""
 
+DEVICE_FLAG ?= ""
+ANDROID_EMULATOR_ID ?= $(shell adb devices -l | grep emulator | awk '{print $$1}')
+
+ifneq ("$(ANDROID_EMULATOR_ID)","")
+	DEVICE_FLAG = --device $(ANDROID_EMULATOR_ID)
+endif
+
 BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
 					AWS_REGION=$(AWS_REGION) \
@@ -131,7 +138,7 @@ android-emulator: $(HOME)/.android/debug.keystore $(HOME)/.android/avd/Pixel_6_A
 	$(ANDROID_HOME)/emulator/emulator -avd Pixel_6_API_34 -netdelay none -netspeed full &
 
 android: $(HOME)/.android/debug.keystore
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --android --target $(ANDROID_TARGET) --features $(RUN_FEATURES)
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --android --target $(ANDROID_TARGET) --features $(RUN_FEATURES) $(DEVICE_FLAG)
 
 ios:
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --ios --features $(RUN_FEATURES)
