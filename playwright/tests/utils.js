@@ -66,7 +66,7 @@ export async function fill(page, opt, value) {
 
 export async function getLocator(
   page,
-  { placeholder, text, role, label, testId }
+  { placeholder, text, role, label, testId },
 ) {
   let selected;
 
@@ -112,7 +112,7 @@ export async function goto(page, url) {
         (response) =>
           response.url().includes("app-shell") &&
           response.url().endsWith(".wasm") &&
-          response.status() === 200
+          response.status() === 200,
       ),
       new Promise((resolve) => setTimeout(resolve, 5000)),
     ]),
@@ -123,7 +123,7 @@ export async function goto(page, url) {
   // Wait for Dioxus WASM to hydrate — SSR markup already contains
   // [data-dioxus-id], so also verify the interpreter is initialised.
   await page.waitForFunction(
-    () => document.querySelector("[data-dioxus-id]") !== null
+    () => document.querySelector("[data-dioxus-id]") !== null,
   );
 }
 
@@ -135,13 +135,23 @@ export async function goto(page, url) {
  * "dropdown did not open / state did not toggle" failures.
  */
 export async function waitForHydrated(page, testId, timeout = 15000) {
+  await page.waitForResponse(
+    (response) =>
+      response.url().includes("app-shell") &&
+      response.url().endsWith(".wasm") &&
+      response.status() === 200,
+  );
+
+  await page.waitForLoadState("domcontentloaded");
+  await page.waitForTimeout(200);
+
   await page.waitForFunction(
     (id) => {
       const el = document.querySelector(`[data-testid="${id}"]`);
       return !!el && el.hasAttribute("data-dioxus-id");
     },
     testId,
-    { timeout }
+    { timeout },
   );
 }
 
@@ -161,7 +171,7 @@ export async function getEditor(page) {
  */
 export async function createTeamFromHome(
   page,
-  { username, nickname, description = "" }
+  { username, nickname, description = "" },
 ) {
   await goto(page, "/");
 
@@ -172,7 +182,7 @@ export async function createTeamFromHome(
   // Wait until the button itself is hydrated — otherwise the click fires
   // before Dioxus attaches the `teams_open.toggle()` handler and the event
   // is silently dropped.
-  await waitForHydrated(page, "home-btn-teams");
+  // await waitForHydrated(page, "home-btn-teams");
   await clickNoNav(page, { testId: "home-btn-teams" });
   // Dropdown is always rendered but toggled via aria-expanded + CSS
   // visibility, so bump the timeout past the CSS transition (0.18s) plus
@@ -201,7 +211,7 @@ export async function createTeamFromHome(
     waitUntil: "load",
   });
   await page.waitForFunction(
-    () => document.querySelector("[data-dioxus-id]") !== null
+    () => document.querySelector("[data-dioxus-id]") !== null,
   );
 }
 
@@ -222,7 +232,7 @@ export async function openTeamFromHome(page, teamUsername) {
   // Wait until the button itself is hydrated — clicks on SSR-rendered
   // elements that haven't received their Dioxus event handlers yet are
   // silently dropped.
-  await waitForHydrated(page, "home-btn-teams");
+  // await waitForHydrated(page, "home-btn-teams");
 
   // Open the dropdown — non-navigation toggle, so clickNoNav.
   await clickNoNav(page, { testId: "home-btn-teams" });
@@ -244,7 +254,7 @@ export async function openTeamFromHome(page, teamUsername) {
     waitUntil: "load",
   });
   await page.waitForFunction(
-    () => document.querySelector("[data-dioxus-id]") !== null
+    () => document.querySelector("[data-dioxus-id]") !== null,
   );
 }
 
@@ -264,7 +274,7 @@ export async function createTeamPostFromHome(
   page,
   teamUsername,
   postTitle,
-  postContents
+  postContents,
 ) {
   const teamHomeRe = new RegExp(`/${teamUsername}/home$`);
   if (!teamHomeRe.test(new URL(page.url()).pathname)) {
