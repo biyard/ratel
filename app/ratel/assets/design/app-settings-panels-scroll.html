@@ -15,24 +15,31 @@
       --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
       --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
       --surface-soft:rgba(255,255,255,0.02);--surface-hover:rgba(255,255,255,0.04);
-      --glow-aura-a:rgba(34,211,238,0.06);--glow-aura-b:rgba(252,179,0,0.03);
+      --glow-aura-a:rgba(14,165,233,0.05);--glow-aura-b:rgba(252,179,0,0.03);
       --panel-bg:rgba(12,12,26,1);--input-bg:rgba(255,255,255,0.02);--input-border:rgba(255,255,255,0.08);
       --danger-bg:rgba(239,68,68,0.04);--danger-border:rgba(239,68,68,0.18);
+      --warn-bg:rgba(252,179,0,0.06);--warn-border:rgba(252,179,0,0.24);
+      --row-hover:rgba(255,255,255,0.03);
     }
     html[data-theme="light"]{
       --bg-void:#f5f5fb;--bg-glass:rgba(255,255,255,0.75);--bg-glass-hover:rgba(255,255,255,0.95);
       --border-subtle:rgba(10,10,30,0.08);--border-strong:rgba(10,10,30,0.16);
       --text-primary:#12121a;--text-muted:#5b5b75;--text-dim:#9898ad;
       --surface-soft:rgba(10,10,30,0.03);--surface-hover:rgba(10,10,30,0.05);
-      --glow-aura-a:rgba(34,211,238,0.12);--glow-aura-b:rgba(252,179,0,0.06);
+      --glow-aura-a:rgba(14,165,233,0.10);--glow-aura-b:rgba(252,179,0,0.06);
       --panel-bg:rgba(255,255,255,1);--input-bg:rgba(10,10,30,0.02);--input-border:rgba(10,10,30,0.1);
       --danger-bg:rgba(239,68,68,0.06);--danger-border:rgba(239,68,68,0.22);
+      --warn-bg:rgba(252,179,0,0.10);--warn-border:rgba(252,179,0,0.3);
+      --row-hover:rgba(10,10,30,0.03);
     }
 
     :root{
       --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-red:#ef4444;
       --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
-      --panel-color:#22d3ee;--panel-hl-bg:rgba(34,211,238,0.10);--panel-hl-border:rgba(34,211,238,0.28);--panel-hl-glow:rgba(34,211,238,0.18);
+      --panels-color:#0ea5e9;--panels-bg:rgba(14,165,233,0.10);--panels-border:rgba(14,165,233,0.24);--panels-glow:rgba(14,165,233,0.16);
+      --uni-color:#60a5fa;--uni-bg:rgba(96,165,250,0.10);--uni-border:rgba(96,165,250,0.24);
+      --age-color:#22c55e;--age-bg:rgba(34,197,94,0.10);--age-border:rgba(34,197,94,0.24);
+      --gen-color:#a855f7;--gen-bg:rgba(168,85,247,0.10);--gen-border:rgba(168,85,247,0.24);
     }
 
     html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body);transition:background 0.25s,color 0.25s}
@@ -41,16 +48,16 @@
     .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 20%,var(--glow-aura-a),transparent 60%),radial-gradient(ellipse 120% 100% at 50% 120%,var(--glow-aura-b),transparent 50%);z-index:0;pointer-events:none}
 
     .arena-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:16px 28px;gap:16px;background:var(--bg-glass);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-subtle)}
-    .arena-topbar__left{display:flex;align-items:center;gap:12px;flex:1;min-width:0;flex-wrap:wrap}
-    .back-btn{width:36px;height:36px;border-radius:10px;background:var(--surface-soft);border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
+    .arena-topbar__left{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+    .back-btn{width:36px;height:36px;border-radius:10px;background:var(--surface-soft);border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s}
     .back-btn:hover{border-color:rgba(252,179,0,0.3);color:var(--accent-gold)}
     .back-btn svg{width:16px;height:16px}
-    .arena-topbar__logo{width:36px;height:36px;border-radius:9px;border:1px solid rgba(252,179,0,0.15)}
+    .arena-topbar__logo{width:36px;height:36px;border-radius:9px;object-fit:cover;border:1px solid rgba(252,179,0,0.15);flex-shrink:0}
     .breadcrumb{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
     .breadcrumb__item{font-family:var(--font-display);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted)}
     .breadcrumb__sep{color:var(--text-dim);font-size:10px}
     .breadcrumb__current{color:var(--text-primary);font-weight:600}
-    .type-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:var(--panel-hl-bg);color:var(--panel-color);border:1px solid var(--panel-hl-border)}
+    .type-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:var(--panels-bg);color:var(--panels-color);border:1px solid var(--panels-border)}
     .type-badge svg{width:13px;height:13px}
 
     .topbar-title{flex:1;min-width:180px;color:var(--text-primary);font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:0.04em;padding:6px 10px}
@@ -58,7 +65,7 @@
     .arena-topbar__right{display:flex;align-items:center;gap:10px;flex-shrink:0}
     .autosave{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted)}
     .autosave__dot{width:6px;height:6px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal)}
-    .autosave--unsaved .autosave__dot{background:var(--accent-gold);box-shadow:0 0 6px var(--accent-gold);animation:pulse 1.4s ease-in-out infinite}
+    .autosave--saving .autosave__dot{background:var(--panels-color);box-shadow:0 0 6px var(--panels-color);animation:pulse 1.4s ease-in-out infinite}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
     .btn{padding:8px 14px;border-radius:10px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;border:1px solid var(--border-subtle);background:transparent;color:var(--text-primary);display:inline-flex;align-items:center;gap:6px}
@@ -66,104 +73,124 @@
     .btn--secondary{background:var(--surface-soft)}
     .btn--primary{background:linear-gradient(135deg,var(--accent-gold),#e5a200);border:none;color:#0a0a0a;box-shadow:0 2px 12px rgba(252,179,0,0.25)}
     .btn--primary:hover{color:#0a0a0a;transform:translateY(-1px);box-shadow:0 4px 16px rgba(252,179,0,0.4)}
-    .btn--danger{background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.22);color:var(--accent-red)}
+    .btn--accent{background:linear-gradient(135deg,var(--panels-color),#0284c7);border:none;color:#fff;box-shadow:0 2px 12px var(--panels-glow)}
+    .btn--accent:hover{transform:translateY(-1px);color:#fff;box-shadow:0 4px 16px var(--panels-glow)}
     .btn--lg{padding:10px 20px;font-size:11px}
+    .btn--icon{width:36px;height:36px;padding:0;justify-content:center}
+    .btn--icon svg{width:14px;height:14px}
 
-    .hud-btn{width:40px;height:40px;border-radius:10px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s;padding:0;position:relative}
+    .hud-btn{width:40px;height:40px;border-radius:10px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s;padding:0}
     .hud-btn:hover{background:var(--bg-glass-hover);border-color:rgba(252,179,0,0.2)}
     .hud-btn svg{width:16px;height:16px;color:var(--text-muted)}
     .hud-btn:hover svg{color:var(--accent-gold)}
-    .theme-menu{position:absolute;top:48px;right:0;min-width:180px;background:var(--panel-bg);border:1px solid var(--border-subtle);border-radius:12px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,0.4);z-index:40;display:none;flex-direction:column;gap:2px}
-    .theme-menu[data-open="true"]{display:flex}
-    .theme-menu__label{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);padding:8px 10px 4px}
-    .theme-menu__item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:transparent;border:1px solid transparent;cursor:pointer;color:var(--text-primary);font-size:13px;text-align:left}
-    .theme-menu__item:hover{background:var(--surface-hover)}
-    .theme-menu__item[aria-selected="true"]{background:rgba(252,179,0,0.08);border-color:rgba(252,179,0,0.22);color:var(--accent-gold)}
-    .theme-menu__item svg{width:14px;height:14px}
 
-    .arena-body{position:relative;z-index:10;flex:1;padding:32px 28px 120px;max-width:1100px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:22px}
+    .arena-body{position:relative;z-index:10;flex:1;padding:28px 28px 120px;max-width:1200px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:18px}
 
-    .section{background:var(--bg-glass);backdrop-filter:blur(18px);border:1px solid var(--border-subtle);border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:16px}
+    .section{background:var(--bg-glass);backdrop-filter:blur(18px);border:1px solid var(--border-subtle);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px}
     .section__head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .section__title{display:flex;align-items:center;gap:8px}
     .section__label{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
     .section__hint{font-size:12px;color:var(--text-muted)}
-    .section--danger{background:var(--danger-bg);border-color:var(--danger-border)}
+    .info-icon{width:16px;height:16px;color:var(--text-dim);cursor:help}
+    .info-icon:hover{color:var(--text-muted)}
 
-    .field{display:flex;flex-direction:column;gap:8px}
-    .field__label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted)}
-    .input{width:100%;padding:11px 14px;border-radius:10px;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary);font-family:var(--font-body);font-size:14px;outline:none;transition:all 0.2s}
-    .input:focus{border-color:rgba(252,179,0,0.4);box-shadow:0 0 0 3px rgba(252,179,0,0.08)}
-    .input--num{width:160px}
-    .input-group{display:flex;align-items:center;gap:8px}
-    .input-suffix{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.1em;color:var(--text-muted)}
+    /* Total quota */
+    .quota-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+    .quota-label{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);display:flex;align-items:center;gap:6px}
+    .quota-input{width:140px;padding:11px 14px;border-radius:10px;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary);font-family:var(--font-display);font-size:15px;font-weight:700;text-align:center;outline:none;transition:all 0.2s}
+    .quota-input:focus{border-color:var(--panels-border);box-shadow:0 0 0 3px var(--panels-glow)}
+    .quota-meter{flex:1;min-width:220px;display:flex;flex-direction:column;gap:6px}
+    .quota-meter__bar{position:relative;height:8px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);overflow:hidden}
+    .quota-meter__fill{position:absolute;top:0;left:0;bottom:0;width:72%;background:linear-gradient(90deg,var(--panels-color),#38bdf8);border-radius:100px;box-shadow:0 0 8px var(--panels-glow)}
+    .quota-meter__labels{display:flex;justify-content:space-between;font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--text-muted);text-transform:uppercase}
+    .quota-meter__labels strong{color:var(--panels-color);font-weight:700}
 
-    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-    @media (max-width:768px){.grid-2{grid-template-columns:1fr}}
+    /* Attribute toggles */
+    .attr-toggles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .attr-toggle{padding:16px;border-radius:14px;background:var(--surface-soft);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;gap:8px;position:relative;text-align:left;color:var(--text-primary);font-family:var(--font-body)}
+    .attr-toggle:hover{border-color:var(--panels-border);background:var(--surface-hover)}
+    .attr-toggle[aria-selected="true"]{border-color:var(--panels-border);background:var(--panels-bg)}
+    .attr-toggle__head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .attr-toggle__name{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-primary);display:flex;align-items:center;gap:8px}
+    .attr-toggle__swatch{width:10px;height:10px;border-radius:3px;display:inline-block}
+    .attr-toggle--uni .attr-toggle__swatch{background:var(--uni-color);box-shadow:0 0 8px var(--uni-color)}
+    .attr-toggle--age .attr-toggle__swatch{background:var(--age-color);box-shadow:0 0 8px var(--age-color)}
+    .attr-toggle--gen .attr-toggle__swatch{background:var(--gen-color);box-shadow:0 0 8px var(--gen-color)}
+    .attr-toggle__desc{font-size:12px;color:var(--text-muted);line-height:1.5}
+    .attr-toggle__check{width:22px;height:22px;border-radius:7px;background:var(--surface-hover);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;color:transparent;transition:all 0.15s}
+    .attr-toggle[aria-selected="true"] .attr-toggle__check{background:var(--panels-color);border-color:var(--panels-color);color:#fff}
+    .attr-toggle__check svg{width:12px;height:12px}
 
-    .segmented{display:inline-flex;padding:3px;background:var(--surface-soft);border:1px solid var(--border-subtle);border-radius:10px;gap:2px;flex-wrap:wrap}
-    .segmented__btn{padding:8px 14px;border-radius:8px;background:transparent;border:none;color:var(--text-muted);font-family:var(--font-body);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s}
-    .segmented__btn[aria-selected="true"]{background:rgba(252,179,0,0.12);color:var(--accent-gold);box-shadow:0 1px 4px rgba(252,179,0,0.15)}
+    /* Collective chips */
+    .collective-row{display:flex;flex-wrap:wrap;gap:10px}
+    .collective-chip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:100px;border:1px solid var(--border-subtle);background:var(--surface-soft);font-size:12px;font-weight:600;color:var(--text-primary)}
+    .collective-chip--uni{background:var(--uni-bg);border-color:var(--uni-border);color:var(--uni-color)}
+    .collective-chip--age{background:var(--age-bg);border-color:var(--age-border);color:var(--age-color)}
+    .collective-chip--gen{background:var(--gen-bg);border-color:var(--gen-border);color:var(--gen-color)}
+    .collective-chip__dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+    .collective-chip__action{width:18px;height:18px;border-radius:4px;background:transparent;border:none;color:currentColor;opacity:0.6;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity 0.15s}
+    .collective-chip__action:hover{opacity:1}
+    .collective-chip__action svg{width:12px;height:12px}
+    .empty-hint{font-size:12px;color:var(--text-dim);font-style:italic;padding:16px 0;text-align:center}
 
-    .switch{position:relative;display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
-    .switch__track{width:38px;height:22px;border-radius:100px;background:var(--surface-hover);border:1px solid var(--border-subtle);position:relative;transition:all 0.2s;flex-shrink:0}
-    .switch__thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--text-muted);transition:all 0.2s}
-    .switch[aria-checked="true"] .switch__track{background:rgba(252,179,0,0.2);border-color:rgba(252,179,0,0.4)}
-    .switch[aria-checked="true"] .switch__thumb{left:18px;background:var(--accent-gold);box-shadow:0 0 8px rgba(252,179,0,0.5)}
-    .switch__label{font-size:13px;color:var(--text-primary)}
-    .switch__sub{font-size:11px;color:var(--text-muted);display:block;margin-top:2px}
+    .section__actions{display:flex;align-items:center;gap:8px}
+    .dropdown{position:relative}
+    .dropdown-menu{position:absolute;right:0;top:42px;min-width:160px;background:var(--panel-bg);border:1px solid var(--border-subtle);border-radius:12px;padding:6px;box-shadow:0 12px 40px rgba(0,0,0,0.4);z-index:40;display:none;flex-direction:column;gap:2px}
+    .dropdown-menu[data-open="true"]{display:flex}
+    .dropdown-menu__item{padding:10px 12px;border-radius:8px;background:transparent;border:none;cursor:pointer;color:var(--text-primary);font-size:13px;text-align:left;transition:all 0.1s}
+    .dropdown-menu__item:hover{background:var(--surface-hover)}
 
-    .chips{display:flex;flex-wrap:wrap;gap:8px}
-    .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;transition:all 0.15s}
-    .chip:hover{border-color:var(--panel-hl-border);color:var(--panel-color)}
-    .chip[aria-pressed="true"]{background:var(--panel-hl-bg);border-color:var(--panel-hl-border);color:var(--panel-color)}
+    /* Warning ribbon */
+    .warn{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:12px;background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--text-primary);font-size:12px;line-height:1.5}
+    .warn__icon{width:22px;height:22px;border-radius:6px;background:rgba(252,179,0,0.18);color:var(--accent-gold);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+    .warn__icon svg{width:13px;height:13px}
+    .warn strong{color:var(--accent-gold)}
 
-    /* Radio cards */
-    .radio-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    @media (max-width:768px){.radio-cards{grid-template-columns:1fr}}
-    .radio-card{padding:16px;border-radius:12px;background:var(--surface-soft);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;gap:6px;text-align:left;color:var(--text-primary)}
-    .radio-card:hover{border-color:var(--panel-hl-border);background:var(--surface-hover)}
-    .radio-card[aria-selected="true"]{border-color:var(--panel-color);background:var(--panel-hl-bg);box-shadow:0 4px 20px var(--panel-hl-glow)}
-    .radio-card__title{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-primary)}
-    .radio-card[aria-selected="true"] .radio-card__title{color:var(--panel-color)}
-    .radio-card__desc{font-size:12px;color:var(--text-muted);line-height:1.5}
+    /* Conditional table */
+    .table-wrap{border-radius:14px;overflow:hidden;border:1px solid var(--border-subtle);background:var(--surface-soft)}
+    .p-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+    .p-table thead{background:var(--surface-soft)}
+    .p-table th{padding:12px 16px;text-align:left;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border-subtle);white-space:nowrap}
+    .p-table th.num{text-align:right;width:140px}
+    .p-table td{padding:12px 16px;border-bottom:1px solid var(--border-subtle);vertical-align:middle;color:var(--text-primary)}
+    .p-table tr:last-child td{border-bottom:none}
+    .p-table tbody tr{transition:background 0.1s}
+    .p-table tbody tr:hover{background:var(--row-hover)}
+    .p-table td.num{text-align:right;font-family:var(--font-display);font-weight:700;letter-spacing:0.04em}
+    .p-table__group{display:inline-flex;align-items:center;gap:8px;font-weight:600}
+    .p-table__swatch{width:8px;height:8px;border-radius:2px;display:inline-block}
+    .p-table__group--uni .p-table__swatch{background:var(--uni-color)}
+    .p-table__group--age .p-table__swatch{background:var(--age-color)}
+    .p-table__group--gen .p-table__swatch{background:var(--gen-color)}
+    .attr-pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:100px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-right:4px;margin-bottom:2px}
+    .attr-pill--uni{background:var(--uni-bg);color:var(--uni-color);border:1px solid var(--uni-border)}
+    .attr-pill--age{background:var(--age-bg);color:var(--age-color);border:1px solid var(--age-border)}
+    .attr-pill--gen{background:var(--gen-bg);color:var(--gen-color);border:1px solid var(--gen-border)}
+    .ratio-bar{position:relative;width:100%;max-width:180px;height:6px;border-radius:100px;background:var(--surface-hover);overflow:hidden;margin-top:4px}
+    .ratio-bar__fill{position:absolute;top:0;left:0;bottom:0;border-radius:100px}
+    .ratio-bar__fill--uni{background:var(--uni-color)}
+    .ratio-bar__fill--age{background:var(--age-color)}
+    .ratio-bar__fill--gen{background:var(--gen-color)}
+    .quota-cell{display:flex;justify-content:flex-end;align-items:center;gap:6px}
+    .num-input{width:80px;padding:6px 10px;border-radius:8px;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary);font-family:var(--font-display);font-size:12px;font-weight:700;text-align:right;outline:none;transition:all 0.15s}
+    .num-input:focus{border-color:var(--panels-border);box-shadow:0 0 0 3px var(--panels-glow)}
+    .table-empty{padding:48px 24px;text-align:center;color:var(--text-dim);font-size:13px}
 
-    /* Question row */
-    .q-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--surface-soft);border:1px solid var(--border-subtle);margin-bottom:8px;flex-wrap:wrap}
-    .q-row__handle{color:var(--text-dim);cursor:grab;font-size:16px;user-select:none;flex-shrink:0}
-    .q-row__num{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--panel-color);flex-shrink:0;width:24px}
-    .q-row__label{flex:1;min-width:180px}
-    .q-row .select{padding:8px 12px;border-radius:10px;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary);font-family:var(--font-body);font-size:13px;outline:none;flex-shrink:0}
-    .q-row__req{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);font-family:var(--font-display);letter-spacing:0.06em;text-transform:uppercase}
-    .icon-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--border-subtle);background:transparent;color:var(--text-muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
-    .icon-btn:hover{border-color:rgba(239,68,68,0.3);color:var(--accent-red)}
-    .icon-btn svg{width:13px;height:13px}
-    .add-btn{width:100%;padding:12px;border-radius:12px;border:1.5px dashed var(--border-strong);background:transparent;color:var(--text-muted);font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s}
-    .add-btn:hover{border-color:var(--panel-color);color:var(--panel-color);background:var(--panel-hl-bg)}
-    .add-btn svg{width:14px;height:14px}
-
-    /* Criteria block */
-    .criteria-block{padding:16px;border-radius:14px;background:var(--surface-soft);border:1px solid var(--panel-hl-border);display:flex;flex-direction:column;gap:14px}
-
-    .accordion{border:1px solid var(--border-subtle);border-radius:12px;overflow:hidden;background:var(--surface-soft)}
-    .accordion__head{width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:transparent;border:none;color:var(--text-primary);cursor:pointer;font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase}
-    .accordion__head svg{width:14px;height:14px;color:var(--text-muted);transition:transform 0.2s}
-    .accordion[data-open="true"] .accordion__head svg{transform:rotate(180deg)}
-    .accordion__body{display:none;padding:0 18px 18px;flex-direction:column;gap:14px}
-    .accordion[data-open="true"] .accordion__body{display:flex}
-
+    /* Sticky footer */
     .sticky-footer{position:sticky;bottom:0;z-index:25;background:var(--bg-glass);backdrop-filter:blur(20px);border-top:1px solid var(--border-subtle);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto}
-    .sticky-footer__left{font-size:12px;color:var(--text-muted)}
+    .sticky-footer__left{font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:10px}
+    .sticky-footer__pill{padding:4px 10px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.08em;color:var(--text-muted);display:inline-flex;align-items:center;gap:6px}
     .sticky-footer__actions{display:flex;gap:10px}
-
-    @media (max-width:768px){.arena-topbar{padding:12px 16px;flex-wrap:wrap}.arena-body{padding:20px 16px 100px}.section{padding:18px 16px}}
   </style>
 </head>
 <body>
   <div class="arena">
     <header class="arena-topbar" role="banner">
       <div class="arena-topbar__left">
-        <button class="back-btn" aria-label="Back" data-testid="topbar-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button>
-        <img class="arena-topbar__logo" alt="Space logo" src="https://api.dicebear.com/7.x/shapes/svg?seed=climate&backgroundColor=22d3ee" />
+        <button class="back-btn" aria-label="Back" data-testid="topbar-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        </button>
+        <img class="arena-topbar__logo" alt="Space logo" src="https://api.dicebear.com/7.x/shapes/svg?seed=climate&backgroundColor=0ea5e9" />
         <nav class="breadcrumb">
           <span class="breadcrumb__item">Climate Action DAO</span>
           <span class="breadcrumb__sep">›</span>
@@ -172,206 +199,224 @@
           <span class="breadcrumb__item breadcrumb__current">Panels</span>
         </nav>
         <span class="type-badge" data-testid="type-badge">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Panels
         </span>
-        <span class="topbar-title">Panels Settings</span>
+        <span class="topbar-title">Panel Settings</span>
       </div>
       <div class="arena-topbar__right">
-        <span class="autosave autosave--unsaved" data-testid="autosave-pill"><span class="autosave__dot"></span><span>Unsaved · 3s</span></span>
+        <span class="autosave autosave--saving" data-testid="autosave-pill">
+          <span class="autosave__dot"></span><span>Saving</span>
+        </span>
         <button class="btn" data-testid="cancel-btn">Cancel</button>
         <button class="btn btn--primary btn--lg" data-testid="save-btn">Save Changes</button>
-        <div style="position:relative">
-          <button class="hud-btn" aria-label="Settings" data-theme-toggle data-testid="settings-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          </button>
-          <div class="theme-menu" data-theme-menu>
-            <div class="theme-menu__label">Theme</div>
-            <button class="theme-menu__item" data-theme-set="dark" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Dark</button>
-            <button class="theme-menu__item" data-theme-set="light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>Light</button>
-          </div>
-        </div>
+        <button class="hud-btn" aria-label="Settings" data-testid="settings-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
       </div>
     </header>
 
     <main class="arena-body">
-      <!-- Panel gating -->
-      <section class="section" data-testid="section-gating">
-        <div class="section__head"><span class="section__label">Panel gating</span><span class="section__hint">How new members join this panel</span></div>
-        <div class="radio-cards" data-testid="panels-gating-mode">
-          <button class="radio-card" aria-selected="false" data-testid="panels-gating-open">
-            <span class="radio-card__title">Open</span>
-            <span class="radio-card__desc">Anyone can join instantly, no approval required.</span>
+      <!-- Total quotas -->
+      <section class="section" data-testid="section-total-quotas">
+        <div class="section__head">
+          <div class="section__title">
+            <span class="section__label">Total quotas</span>
+            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          </div>
+          <span class="section__hint">Setting the quota to 0 allows anyone to participate without a limit.</span>
+        </div>
+        <div class="quota-row">
+          <span class="quota-label">Total</span>
+          <input class="quota-input" type="text" value="250" data-testid="total-quota-input" />
+          <div class="quota-meter">
+            <div class="quota-meter__bar"><div class="quota-meter__fill"></div></div>
+            <div class="quota-meter__labels">
+              <span><strong>180</strong> allocated</span>
+              <span>70 unassigned</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Attribute groups toggle -->
+      <section class="section" data-testid="section-attribute-groups">
+        <div class="section__head">
+          <div class="section__title">
+            <span class="section__label">Attribute groups</span>
+          </div>
+          <span class="section__hint">Select which attributes to use for this space</span>
+        </div>
+        <div class="attr-toggles" data-testid="attr-toggles">
+          <button class="attr-toggle attr-toggle--uni" aria-selected="true" data-testid="attr-university">
+            <div class="attr-toggle__head">
+              <span class="attr-toggle__name"><span class="attr-toggle__swatch"></span>University</span>
+              <span class="attr-toggle__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            </div>
+            <div class="attr-toggle__desc">Participation limited to users with a verified university affiliation.</div>
           </button>
-          <button class="radio-card" aria-selected="true" data-testid="panels-gating-application">
-            <span class="radio-card__title">Application</span>
-            <span class="radio-card__desc">Applicants complete a form and wait for approval.</span>
+          <button class="attr-toggle attr-toggle--age" aria-selected="true" data-testid="attr-age">
+            <div class="attr-toggle__head">
+              <span class="attr-toggle__name"><span class="attr-toggle__swatch"></span>Age</span>
+              <span class="attr-toggle__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            </div>
+            <div class="attr-toggle__desc">Split participation by age brackets (adult / minor / generation).</div>
           </button>
-          <button class="radio-card" aria-selected="false" data-testid="panels-gating-invite">
-            <span class="radio-card__title">Invitation only</span>
-            <span class="radio-card__desc">Members join only via direct invite links.</span>
+          <button class="attr-toggle attr-toggle--gen" aria-selected="false" data-testid="attr-gender">
+            <div class="attr-toggle__head">
+              <span class="attr-toggle__name"><span class="attr-toggle__swatch"></span>Gender</span>
+              <span class="attr-toggle__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            </div>
+            <div class="attr-toggle__desc">Enforce a gender balance across the participant pool.</div>
           </button>
         </div>
       </section>
 
-      <!-- Application form -->
-      <section class="section" data-testid="section-application-form">
-        <div class="section__head"><span class="section__label">Application form</span><span class="section__hint">Fields shown to applicants</span></div>
-        <div data-testid="panels-application-questions">
-          <div class="q-row" data-testid="panels-question-0">
-            <span class="q-row__handle" aria-hidden="true">⋮⋮</span>
-            <span class="q-row__num">01</span>
-            <input class="input q-row__label" value="Full name" />
-            <select class="select">
-              <option selected>Short text</option>
-              <option>Long text</option>
-              <option>URL</option>
-              <option>Select</option>
-              <option>Checkbox</option>
-            </select>
-            <span class="q-row__req">
-              <span class="switch" role="switch" aria-checked="true" tabindex="0"><span class="switch__track"><span class="switch__thumb"></span></span></span>
-              Required
-            </span>
-            <button class="icon-btn" aria-label="Remove question"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <!-- Collective attributes -->
+      <section class="section" data-testid="section-collective">
+        <div class="section__head">
+          <div class="section__title">
+            <span class="section__label">Collective Panel Attributes</span>
+            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
           </div>
-          <div class="q-row" data-testid="panels-question-1">
-            <span class="q-row__handle" aria-hidden="true">⋮⋮</span>
-            <span class="q-row__num">02</span>
-            <input class="input q-row__label" value="Why do you want to join this panel?" />
-            <select class="select">
-              <option>Short text</option>
-              <option selected>Long text</option>
-              <option>URL</option>
-              <option>Select</option>
-              <option>Checkbox</option>
-            </select>
-            <span class="q-row__req">
-              <span class="switch" role="switch" aria-checked="true" tabindex="0"><span class="switch__track"><span class="switch__thumb"></span></span></span>
-              Required
-            </span>
-            <button class="icon-btn" aria-label="Remove question"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-          </div>
-          <div class="q-row" data-testid="panels-question-2">
-            <span class="q-row__handle" aria-hidden="true">⋮⋮</span>
-            <span class="q-row__num">03</span>
-            <input class="input q-row__label" value="Portfolio / relevant work link" />
-            <select class="select">
-              <option>Short text</option>
-              <option>Long text</option>
-              <option selected>URL</option>
-              <option>Select</option>
-              <option>Checkbox</option>
-            </select>
-            <span class="q-row__req">
-              <span class="switch" role="switch" aria-checked="false" tabindex="0"><span class="switch__track"><span class="switch__thumb"></span></span></span>
-              Required
-            </span>
-            <button class="icon-btn" aria-label="Remove question"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-          </div>
-        </div>
-        <button class="add-btn" data-testid="panels-question-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add question</button>
-      </section>
-
-      <!-- Approval workflow -->
-      <section class="section" data-testid="section-approval">
-        <div class="section__head"><span class="section__label">Approval workflow</span></div>
-        <div class="field">
-          <span class="field__label">Mode</span>
-          <div class="segmented" role="tablist" data-testid="panels-approval-mode">
-            <button class="segmented__btn" role="tab" aria-selected="false">Manual</button>
-            <button class="segmented__btn" role="tab" aria-selected="false">Auto if meets criteria</button>
-            <button class="segmented__btn" role="tab" aria-selected="true">Hybrid</button>
-          </div>
-        </div>
-        <div class="criteria-block" data-testid="panels-approval-criteria">
-          <span class="section__label">Auto-approval criteria</span>
-          <div class="grid-2">
-            <div class="field"><label class="field__label">Min reputation</label><div class="input-group"><input class="input input--num" type="number" value="50" data-testid="panels-min-reputation" /><span class="input-suffix">pts</span></div></div>
-            <div class="field"><label class="field__label">Min followers</label><div class="input-group"><input class="input input--num" type="number" value="25" data-testid="panels-min-followers" /><span class="input-suffix">users</span></div></div>
-          </div>
-          <div class="field">
-            <span class="field__label">Required tags on profile</span>
-            <div class="chips" data-testid="panels-required-tags">
-              <button class="chip" aria-pressed="true">#climate</button>
-              <button class="chip" aria-pressed="true">#policy</button>
-              <button class="chip" aria-pressed="false">#research</button>
-              <button class="chip" aria-pressed="false">#governance</button>
-              <button class="chip" aria-pressed="false">#community</button>
+          <div class="section__actions">
+            <div class="dropdown">
+              <button class="btn btn--icon" aria-label="Move to conditional" data-testid="collective-add-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <div class="dropdown-menu" data-testid="collective-menu">
+                <button class="dropdown-menu__item">Move Age to Conditional</button>
+                <button class="dropdown-menu__item">Move Gender to Conditional</button>
+              </div>
             </div>
           </div>
         </div>
+        <span class="section__hint">Users must have these attributes to participate.</span>
+        <div class="collective-row" data-testid="collective-list">
+          <span class="collective-chip collective-chip--uni">
+            <span class="collective-chip__dot"></span>
+            University
+          </span>
+          <span class="collective-chip collective-chip--age">
+            <span class="collective-chip__dot"></span>
+            Age
+            <button class="collective-chip__action" aria-label="Move to conditional" data-testid="collective-move-age">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+          </span>
+        </div>
       </section>
 
-      <!-- Quotas -->
-      <section class="section" data-testid="section-quotas">
-        <div class="section__head"><span class="section__label">Quotas</span></div>
-        <div class="field">
-          <label class="field__label" for="panel-max-size">Max panel size</label>
-          <div class="input-group">
-            <input class="input input--num" id="panel-max-size" type="number" value="250" data-testid="panels-max-size" />
-            <span class="input-suffix">members</span>
-            <span class="switch" role="switch" aria-checked="false" tabindex="0" data-testid="panels-unlimited"><span class="switch__track"><span class="switch__thumb"></span></span><span class="switch__label" style="font-size:11px">Unlimited</span></span>
+      <!-- Conditional attributes table -->
+      <section class="section" data-testid="section-conditional">
+        <div class="section__head">
+          <div class="section__title">
+            <span class="section__label">Conditional Panel Attributes</span>
+            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
           </div>
+          <span class="section__hint">Participation is based on quotas, and participants are distributed by attribute.</span>
         </div>
-        <div class="switch" role="switch" aria-checked="true" tabindex="0" data-testid="panels-priority-verified">
-          <span class="switch__track"><span class="switch__thumb"></span></span>
-          <span><span class="switch__label">Priority for verified users</span><span class="switch__sub">Verified applicants are reviewed first</span></span>
+
+        <div class="warn" data-testid="ratio-warning">
+          <span class="warn__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </span>
+          <span><strong>Over-allocated:</strong> The sum of max quotas exceeds total quotas. Some attributes may not reach their max quota.</span>
+        </div>
+
+        <div class="table-wrap">
+          <table class="p-table" data-testid="conditional-table">
+            <thead>
+              <tr>
+                <th>Attribute group</th>
+                <th>Attributes</th>
+                <th>Ratio</th>
+                <th class="num">Max quotas</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <span class="p-table__group p-table__group--age">
+                    <span class="p-table__swatch"></span>
+                    Age
+                  </span>
+                </td>
+                <td>
+                  <span class="attr-pill attr-pill--age">Adult</span>
+                  <span class="attr-pill attr-pill--age">Minor</span>
+                </td>
+                <td>
+                  <span style="font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--age-color)">60%</span>
+                  <div class="ratio-bar"><span class="ratio-bar__fill ratio-bar__fill--age" style="width:60%"></span></div>
+                </td>
+                <td class="num">
+                  <div class="quota-cell">
+                    <input class="num-input" type="text" value="150" />
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="p-table__group p-table__group--gen">
+                    <span class="p-table__swatch"></span>
+                    Gender
+                  </span>
+                </td>
+                <td>
+                  <span class="attr-pill attr-pill--gen">Male</span>
+                  <span class="attr-pill attr-pill--gen">Female</span>
+                </td>
+                <td>
+                  <span style="font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--gen-color)">50%</span>
+                  <div class="ratio-bar"><span class="ratio-bar__fill ratio-bar__fill--gen" style="width:50%"></span></div>
+                </td>
+                <td class="num">
+                  <div class="quota-cell">
+                    <input class="num-input" type="text" value="125" />
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="p-table__group p-table__group--age">
+                    <span class="p-table__swatch"></span>
+                    Age, Gender
+                  </span>
+                </td>
+                <td>
+                  <span class="attr-pill attr-pill--age">Adult</span>
+                  <span class="attr-pill attr-pill--gen">Female</span>
+                </td>
+                <td>
+                  <span style="font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--panels-color)">30%</span>
+                  <div class="ratio-bar"><span class="ratio-bar__fill" style="width:30%;background:var(--panels-color)"></span></div>
+                </td>
+                <td class="num">
+                  <div class="quota-cell">
+                    <input class="num-input" type="text" value="75" />
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </section>
 
-      <!-- Waitlist -->
-      <section class="section" data-testid="section-waitlist">
-        <div class="section__head"><span class="section__label">Waitlist</span></div>
-        <div class="switch" role="switch" aria-checked="true" tabindex="0" data-testid="panels-waitlist-enable">
-          <span class="switch__track"><span class="switch__thumb"></span></span>
-          <span><span class="switch__label">Enable waitlist</span><span class="switch__sub">When full, new applicants join a waitlist instead of being rejected</span></span>
-        </div>
-        <div class="field">
-          <label class="field__label" for="panel-waitlist-capacity">Waitlist capacity</label>
-          <div class="input-group">
-            <input class="input input--num" id="panel-waitlist-capacity" type="number" value="100" data-testid="panels-waitlist-capacity" />
-            <span class="input-suffix">slots</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Notifications -->
-      <section class="section" data-testid="section-notifications">
-        <div class="accordion" data-accordion data-open="true">
-          <button class="accordion__head" data-accordion-head>Notifications<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-          <div class="accordion__body">
-            <div class="switch" role="switch" aria-checked="true" tabindex="0" data-testid="panels-notify-approval">
-              <span class="switch__track"><span class="switch__thumb"></span></span>
-              <span><span class="switch__label">Email applicant on approval</span><span class="switch__sub">Send a confirmation email when an application is approved</span></span>
-            </div>
-            <div class="switch" role="switch" aria-checked="true" tabindex="0" data-testid="panels-notify-admins">
-              <span class="switch__track"><span class="switch__thumb"></span></span>
-              <span><span class="switch__label">Notify space admins on new application</span><span class="switch__sub">Admins get an in-app and email notification</span></span>
-            </div>
-            <div class="field">
-              <label class="field__label" for="panels-slack-webhook">Slack webhook URL</label>
-              <input class="input" id="panels-slack-webhook" placeholder="https://hooks.slack.com/services/…" value="https://hooks.slack.com/services/T028M/B0984/xYz123" data-testid="panels-slack-webhook" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Danger zone -->
-      <section class="section section--danger" data-testid="section-danger">
-        <div class="section__head"><span class="section__label" style="color:var(--accent-red);opacity:0.85">Danger zone</span></div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
-          <div style="flex:1;min-width:220px"><div style="font-size:13px;font-weight:600">Clear all applications</div><div style="font-size:12px;color:var(--text-muted)">Removes 42 pending and 218 archived applications. Existing panel members are not affected.</div></div>
-          <button class="btn btn--danger" data-testid="panels-clear-applications">Clear applications</button>
-        </div>
+      <!-- Empty conditional state (hidden) -->
+      <section class="section" data-testid="section-conditional-empty" style="display:none">
+        <div class="table-empty">No conditional attributes configured. Move Collective attributes above into Conditional to set quotas.</div>
       </section>
     </main>
 
     <footer class="sticky-footer">
-      <span class="sticky-footer__left" data-testid="footer-status">1 unsaved change</span>
+      <div class="sticky-footer__left">
+        <span>Last saved 8s ago</span>
+        <span class="sticky-footer__pill"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent-teal);display:inline-block"></span>Changes saved</span>
+      </div>
       <div class="sticky-footer__actions">
         <button class="btn" data-testid="footer-cancel">Cancel</button>
-        <button class="btn btn--primary btn--lg" data-testid="footer-save">Save Changes</button>
+        <button class="btn btn--accent btn--lg" data-testid="footer-save">Save Changes</button>
       </div>
     </footer>
   </div>
@@ -380,41 +425,23 @@
     (function(){
       var saved = localStorage.getItem('ratel-theme');
       if (saved) document.documentElement.setAttribute('data-theme', saved);
-      var toggleBtn = document.querySelector('[data-theme-toggle]');
-      var menu = document.querySelector('[data-theme-menu]');
-      if (toggleBtn && menu){
-        toggleBtn.addEventListener('click', function(e){ e.stopPropagation(); menu.setAttribute('data-open', menu.getAttribute('data-open') === 'true' ? 'false':'true'); });
-        document.addEventListener('click', function(){ menu.setAttribute('data-open','false'); });
+
+      document.querySelectorAll('.attr-toggle').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          btn.setAttribute('aria-selected', btn.getAttribute('aria-selected') === 'true' ? 'false' : 'true');
+        });
+      });
+
+      var addBtn = document.querySelector('[data-testid="collective-add-btn"]');
+      var menu = document.querySelector('[data-testid="collective-menu"]');
+      if (addBtn && menu){
+        addBtn.addEventListener('click', function(e){
+          e.stopPropagation();
+          menu.setAttribute('data-open', menu.getAttribute('data-open') === 'true' ? 'false' : 'true');
+        });
+        document.addEventListener('click', function(){ menu.setAttribute('data-open', 'false'); });
         menu.addEventListener('click', function(e){ e.stopPropagation(); });
-        menu.querySelectorAll('[data-theme-set]').forEach(function(btn){
-          btn.addEventListener('click', function(){
-            var t = btn.getAttribute('data-theme-set');
-            document.documentElement.setAttribute('data-theme', t);
-            localStorage.setItem('ratel-theme', t);
-            menu.querySelectorAll('[data-theme-set]').forEach(function(b){ b.setAttribute('aria-selected', b === btn ? 'true':'false'); });
-            menu.setAttribute('data-open','false');
-          });
-          btn.setAttribute('aria-selected', btn.getAttribute('data-theme-set') === (saved || 'dark') ? 'true':'false');
-        });
       }
-      document.querySelectorAll('.switch').forEach(function(s){
-        s.addEventListener('click', function(e){ e.stopPropagation(); s.setAttribute('aria-checked', s.getAttribute('aria-checked') === 'true' ? 'false':'true'); });
-        s.addEventListener('keydown', function(e){ if(e.key===' '||e.key==='Enter'){e.preventDefault();s.click();}});
-      });
-      document.querySelectorAll('.segmented, .radio-cards').forEach(function(grp){
-        grp.querySelectorAll('[aria-selected]').forEach(function(b){
-          b.addEventListener('click', function(){
-            grp.querySelectorAll('[aria-selected]').forEach(function(x){ x.setAttribute('aria-selected','false'); });
-            b.setAttribute('aria-selected','true');
-          });
-        });
-      });
-      document.querySelectorAll('.chip').forEach(function(c){ c.addEventListener('click', function(){ c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false':'true'); }); });
-      document.querySelectorAll('[data-accordion]').forEach(function(acc){
-        acc.querySelector('[data-accordion-head]').addEventListener('click', function(){
-          acc.setAttribute('data-open', acc.getAttribute('data-open') === 'true' ? 'false':'true');
-        });
-      });
     })();
   </script>
 </body>

@@ -15,24 +15,26 @@
       --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
       --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
       --surface-soft:rgba(255,255,255,0.02);--surface-hover:rgba(255,255,255,0.04);
-      --glow-aura-a:rgba(168,85,247,0.06);--glow-aura-b:rgba(252,179,0,0.03);
+      --glow-aura-a:rgba(139,92,246,0.05);--glow-aura-b:rgba(252,179,0,0.03);
       --panel-bg:rgba(12,12,26,1);--input-bg:rgba(255,255,255,0.02);--input-border:rgba(255,255,255,0.08);
       --danger-bg:rgba(239,68,68,0.04);--danger-border:rgba(239,68,68,0.18);
+      --dropzone-bg:rgba(139,92,246,0.04);--dropzone-border:rgba(139,92,246,0.25);--dropzone-hover:rgba(139,92,246,0.08);
     }
     html[data-theme="light"]{
       --bg-void:#f5f5fb;--bg-glass:rgba(255,255,255,0.75);--bg-glass-hover:rgba(255,255,255,0.95);
       --border-subtle:rgba(10,10,30,0.08);--border-strong:rgba(10,10,30,0.16);
       --text-primary:#12121a;--text-muted:#5b5b75;--text-dim:#9898ad;
       --surface-soft:rgba(10,10,30,0.03);--surface-hover:rgba(10,10,30,0.05);
-      --glow-aura-a:rgba(168,85,247,0.12);--glow-aura-b:rgba(252,179,0,0.06);
+      --glow-aura-a:rgba(139,92,246,0.08);--glow-aura-b:rgba(252,179,0,0.06);
       --panel-bg:rgba(255,255,255,1);--input-bg:rgba(10,10,30,0.02);--input-border:rgba(10,10,30,0.1);
       --danger-bg:rgba(239,68,68,0.06);--danger-border:rgba(239,68,68,0.22);
+      --dropzone-bg:rgba(139,92,246,0.06);--dropzone-border:rgba(139,92,246,0.3);--dropzone-hover:rgba(139,92,246,0.1);
     }
 
     :root{
       --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-red:#ef4444;
       --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
-      --file-color:#a855f7;--file-bg:rgba(168,85,247,0.10);--file-border:rgba(168,85,247,0.28);--file-glow:rgba(168,85,247,0.18);
+      --file-color:#8b5cf6;--file-bg:rgba(139,92,246,0.10);--file-border:rgba(139,92,246,0.24);--file-glow:rgba(139,92,246,0.15);
     }
 
     html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body);transition:background 0.25s,color 0.25s}
@@ -41,11 +43,11 @@
     .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 20%,var(--glow-aura-a),transparent 60%),radial-gradient(ellipse 120% 100% at 50% 120%,var(--glow-aura-b),transparent 50%);z-index:0;pointer-events:none}
 
     .arena-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:16px 28px;gap:16px;background:var(--bg-glass);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-subtle)}
-    .arena-topbar__left{display:flex;align-items:center;gap:12px;flex:1;min-width:0;flex-wrap:wrap}
-    .back-btn{width:36px;height:36px;border-radius:10px;background:var(--surface-soft);border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
+    .arena-topbar__left{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+    .back-btn{width:36px;height:36px;border-radius:10px;background:var(--surface-soft);border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s}
     .back-btn:hover{border-color:rgba(252,179,0,0.3);color:var(--accent-gold)}
     .back-btn svg{width:16px;height:16px}
-    .arena-topbar__logo{width:36px;height:36px;border-radius:9px;border:1px solid rgba(252,179,0,0.15)}
+    .arena-topbar__logo{width:36px;height:36px;border-radius:9px;object-fit:cover;border:1px solid rgba(252,179,0,0.15);flex-shrink:0}
     .breadcrumb{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
     .breadcrumb__item{font-family:var(--font-display);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted)}
     .breadcrumb__sep{color:var(--text-dim);font-size:10px}
@@ -58,7 +60,7 @@
     .arena-topbar__right{display:flex;align-items:center;gap:10px;flex-shrink:0}
     .autosave{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted)}
     .autosave__dot{width:6px;height:6px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal)}
-    .autosave--unsaved .autosave__dot{background:var(--accent-gold);box-shadow:0 0 6px var(--accent-gold);animation:pulse 1.4s ease-in-out infinite}
+    .autosave--uploading .autosave__dot{background:var(--file-color);box-shadow:0 0 6px var(--file-color);animation:pulse 1.4s ease-in-out infinite}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
     .btn{padding:8px 14px;border-radius:10px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;border:1px solid var(--border-subtle);background:transparent;color:var(--text-primary);display:inline-flex;align-items:center;gap:6px}
@@ -66,99 +68,92 @@
     .btn--secondary{background:var(--surface-soft)}
     .btn--primary{background:linear-gradient(135deg,var(--accent-gold),#e5a200);border:none;color:#0a0a0a;box-shadow:0 2px 12px rgba(252,179,0,0.25)}
     .btn--primary:hover{color:#0a0a0a;transform:translateY(-1px);box-shadow:0 4px 16px rgba(252,179,0,0.4)}
-    .btn--danger{background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.22);color:var(--accent-red)}
+    .btn--accent{background:linear-gradient(135deg,var(--file-color),#7c3aed);border:none;color:#fff;box-shadow:0 2px 12px var(--file-glow)}
+    .btn--accent:hover{transform:translateY(-1px);color:#fff;box-shadow:0 4px 16px var(--file-glow)}
     .btn--lg{padding:10px 20px;font-size:11px}
-    .btn--link{padding:4px 8px;font-size:10px;color:var(--file-color);border-color:transparent;background:transparent;letter-spacing:0.08em}
-    .btn--link:hover{color:var(--file-color);background:var(--file-bg);border-color:var(--file-border)}
 
     .hud-btn{width:40px;height:40px;border-radius:10px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s;padding:0;position:relative}
     .hud-btn:hover{background:var(--bg-glass-hover);border-color:rgba(252,179,0,0.2)}
     .hud-btn svg{width:16px;height:16px;color:var(--text-muted)}
     .hud-btn:hover svg{color:var(--accent-gold)}
-    .theme-menu{position:absolute;top:48px;right:0;min-width:180px;background:var(--panel-bg);border:1px solid var(--border-subtle);border-radius:12px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,0.4);z-index:40;display:none;flex-direction:column;gap:2px}
-    .theme-menu[data-open="true"]{display:flex}
-    .theme-menu__label{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);padding:8px 10px 4px}
-    .theme-menu__item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:transparent;border:1px solid transparent;cursor:pointer;color:var(--text-primary);font-size:13px;text-align:left}
-    .theme-menu__item:hover{background:var(--surface-hover)}
-    .theme-menu__item[aria-selected="true"]{background:rgba(252,179,0,0.08);border-color:rgba(252,179,0,0.22);color:var(--accent-gold)}
-    .theme-menu__item svg{width:14px;height:14px}
 
-    .arena-body{position:relative;z-index:10;flex:1;padding:32px 28px 120px;max-width:1100px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:22px}
+    .arena-body{position:relative;z-index:10;flex:1;padding:28px 28px 120px;max-width:1100px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:18px}
 
-    .section{background:var(--bg-glass);backdrop-filter:blur(18px);border:1px solid var(--border-subtle);border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:16px}
+    .tabs{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .segmented{display:inline-flex;padding:3px;background:var(--surface-soft);border:1px solid var(--border-subtle);border-radius:10px;gap:2px}
+    .segmented__btn{padding:8px 16px;border-radius:8px;background:transparent;border:none;color:var(--text-muted);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.15s}
+    .segmented__btn:hover{color:var(--text-primary)}
+    .segmented__btn[aria-selected="true"]{background:var(--file-bg);color:var(--file-color);box-shadow:0 1px 4px var(--file-glow)}
+    .tabs__meta{display:flex;align-items:center;gap:10px}
+    .tab-count{padding:4px 10px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--text-muted)}
+    .tab-count strong{color:var(--text-primary);font-weight:700;margin-right:4px}
+
+    .section{background:var(--bg-glass);backdrop-filter:blur(18px);border:1px solid var(--border-subtle);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px}
     .section__head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
     .section__label{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
     .section__hint{font-size:12px;color:var(--text-muted)}
-    .section--danger{background:var(--danger-bg);border-color:var(--danger-border)}
 
-    .field{display:flex;flex-direction:column;gap:8px}
-    .field__label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted)}
-    .input{width:100%;padding:11px 14px;border-radius:10px;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary);font-family:var(--font-body);font-size:14px;outline:none;transition:all 0.2s}
-    .input:focus{border-color:rgba(252,179,0,0.4);box-shadow:0 0 0 3px rgba(252,179,0,0.08)}
-    .input--num{width:160px}
-    .input-group{display:flex;align-items:center;gap:8px}
-    .input-suffix{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.1em;color:var(--text-muted)}
+    .dropzone{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:36px 24px;border-radius:16px;border:1.5px dashed var(--dropzone-border);background:var(--dropzone-bg);cursor:pointer;transition:all 0.2s;text-align:center}
+    .dropzone:hover{background:var(--dropzone-hover);border-color:var(--file-color)}
+    .dropzone__icon{width:52px;height:52px;border-radius:14px;background:var(--file-bg);border:1px solid var(--file-border);display:flex;align-items:center;justify-content:center;color:var(--file-color)}
+    .dropzone__icon svg{width:24px;height:24px}
+    .dropzone__title{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:0.08em;color:var(--text-primary)}
+    .dropzone__sub{font-size:12px;color:var(--text-muted)}
+    .dropzone__types{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:4px}
+    .type-chip{padding:3px 10px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted)}
 
-    .segmented{display:inline-flex;padding:3px;background:var(--surface-soft);border:1px solid var(--border-subtle);border-radius:10px;gap:2px;flex-wrap:wrap}
-    .segmented__btn{padding:8px 14px;border-radius:8px;background:transparent;border:none;color:var(--text-muted);font-family:var(--font-body);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s}
-    .segmented__btn[aria-selected="true"]{background:rgba(252,179,0,0.12);color:var(--accent-gold);box-shadow:0 1px 4px rgba(252,179,0,0.15)}
+    .file-list{display:flex;flex-direction:column;gap:10px}
+    .file-card{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;background:var(--surface-soft);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.15s}
+    .file-card:hover{background:var(--surface-hover);border-color:var(--file-border)}
+    .file-card__icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.06em}
+    .file-card__icon--img{background:rgba(34,197,94,0.10);color:#22c55e;border:1px solid rgba(34,197,94,0.22)}
+    .file-card__icon--vid{background:rgba(239,68,68,0.10);color:#ef4444;border:1px solid rgba(239,68,68,0.22)}
+    .file-card__icon--doc{background:rgba(110,237,216,0.10);color:var(--accent-teal);border:1px solid rgba(110,237,216,0.22)}
+    .file-card__icon--zip{background:rgba(252,179,0,0.10);color:var(--accent-gold);border:1px solid rgba(252,179,0,0.24)}
+    .file-card__body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+    .file-card__name{font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .file-card__meta{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--text-muted)}
+    .file-card__tag{padding:2px 8px;border-radius:100px;font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase}
+    .file-card__tag--overview{background:rgba(110,237,216,0.08);color:var(--accent-teal);border:1px solid rgba(110,237,216,0.22)}
+    .file-card__tag--board{background:rgba(96,165,250,0.08);color:#60a5fa;border:1px solid rgba(96,165,250,0.22)}
+    .file-card__tag--quiz{background:rgba(251,146,60,0.08);color:#fb923c;border:1px solid rgba(251,146,60,0.22)}
+    .file-card__delete{width:32px;height:32px;border-radius:8px;background:transparent;border:1px solid transparent;color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;flex-shrink:0}
+    .file-card__delete:hover{background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.22);color:var(--accent-red)}
+    .file-card__delete svg{width:14px;height:14px}
 
-    .switch{position:relative;display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
-    .switch__track{width:38px;height:22px;border-radius:100px;background:var(--surface-hover);border:1px solid var(--border-subtle);position:relative;transition:all 0.2s;flex-shrink:0}
-    .switch__thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--text-muted);transition:all 0.2s}
-    .switch[aria-checked="true"] .switch__track{background:rgba(252,179,0,0.2);border-color:rgba(252,179,0,0.4)}
-    .switch[aria-checked="true"] .switch__thumb{left:18px;background:var(--accent-gold);box-shadow:0 0 8px rgba(252,179,0,0.5)}
-    .switch__label{font-size:13px;color:var(--text-primary)}
-    .switch__sub{font-size:11px;color:var(--text-muted);display:block;margin-top:2px}
+    .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:48px 24px;border-radius:16px;background:var(--surface-soft);border:1px dashed var(--border-strong);text-align:center}
+    .empty__icon{width:46px;height:46px;border-radius:12px;background:var(--surface-hover);color:var(--text-dim);display:flex;align-items:center;justify-content:center}
+    .empty__icon svg{width:22px;height:22px}
+    .empty__title{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted)}
+    .empty__sub{font-size:12px;color:var(--text-dim)}
 
-    .chips{display:flex;flex-wrap:wrap;gap:8px}
-    .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;transition:all 0.15s}
-    .chip:hover{border-color:var(--file-border);color:var(--file-color)}
-    .chip[aria-pressed="true"]{background:var(--file-bg);border-color:var(--file-border);color:var(--file-color)}
-
-    /* Storage bar */
-    .storage{display:flex;flex-direction:column;gap:12px}
-    .storage__meta{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-    .storage__meta-label{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:0.08em;color:var(--text-primary)}
-    .storage__meta-value{font-family:var(--font-display);font-size:12px;letter-spacing:0.08em;color:var(--text-muted)}
-    .storage__meta-value strong{color:var(--file-color)}
-    .storage__bar{height:10px;border-radius:6px;background:var(--surface-soft);border:1px solid var(--border-subtle);overflow:hidden;position:relative}
-    .storage__fill{height:100%;width:62%;background:linear-gradient(90deg,var(--file-color),var(--accent-teal));box-shadow:0 0 14px var(--file-glow)}
-
-    /* Filters row */
-    .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-    .toolbar .input{max-width:280px}
-
-    /* File list */
-    .file-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:var(--surface-soft);border:1px solid var(--border-subtle);margin-bottom:8px}
-    .file-row__icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.05em}
-    .ft-pdf{background:rgba(239,68,68,0.1);color:var(--accent-red);border:1px solid rgba(239,68,68,0.2)}
-    .ft-img{background:rgba(168,85,247,0.1);color:var(--file-color);border:1px solid var(--file-border)}
-    .ft-vid{background:rgba(34,211,238,0.1);color:#22d3ee;border:1px solid rgba(34,211,238,0.22)}
-    .ft-doc{background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.22)}
-    .ft-zip{background:rgba(252,179,0,0.1);color:var(--accent-gold);border:1px solid rgba(252,179,0,0.22)}
-    .file-row__info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-    .file-row__name{font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .file-row__meta{font-size:11px;color:var(--text-dim);font-family:var(--font-display);letter-spacing:0.05em;text-transform:uppercase}
-    .file-row__target{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:3px 8px;border-radius:6px;background:var(--file-bg);color:var(--file-color);border:1px solid var(--file-border);flex-shrink:0}
-    .file-row__target--general{background:rgba(34,197,94,0.08);color:#22c55e;border-color:rgba(34,197,94,0.22)}
-    .icon-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--border-subtle);background:transparent;color:var(--text-muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
-    .icon-btn:hover{border-color:rgba(239,68,68,0.3);color:var(--accent-red)}
-    .icon-btn svg{width:13px;height:13px}
+    .preview-group__head{display:flex;align-items:center;gap:10px;padding-top:2px}
+    .preview-group__title{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
+    .preview-group__count{padding:2px 8px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:9px;font-weight:700;color:var(--text-muted)}
+    .preview-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .preview-media{position:relative;width:100%;aspect-ratio:16/10;border-radius:12px;overflow:hidden;background:#000;border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center}
+    .preview-media img{width:100%;height:100%;object-fit:cover}
+    .preview-media__play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3)}
+    .preview-media__play svg{width:52px;height:52px;color:#fff;opacity:0.9;filter:drop-shadow(0 4px 14px rgba(0,0,0,0.6))}
+    .preview-media__label{position:absolute;top:10px;left:10px;padding:3px 10px;border-radius:100px;background:rgba(0,0,0,0.55);color:#fff;font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase}
 
     .sticky-footer{position:sticky;bottom:0;z-index:25;background:var(--bg-glass);backdrop-filter:blur(20px);border-top:1px solid var(--border-subtle);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto}
     .sticky-footer__left{font-size:12px;color:var(--text-muted)}
     .sticky-footer__actions{display:flex;gap:10px}
-
-    @media (max-width:768px){.arena-topbar{padding:12px 16px;flex-wrap:wrap}.arena-body{padding:20px 16px 100px}.section{padding:18px 16px}}
+    .sticky-footer__edit-toggle{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;background:var(--surface-soft);border:1px solid var(--border-subtle);cursor:pointer;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);transition:all 0.15s}
+    .sticky-footer__edit-toggle:hover{color:var(--file-color);border-color:var(--file-border)}
+    .sticky-footer__edit-toggle[aria-pressed="true"]{background:var(--file-bg);color:var(--file-color);border-color:var(--file-border)}
+    .sticky-footer__edit-toggle svg{width:13px;height:13px}
   </style>
 </head>
 <body>
   <div class="arena">
     <header class="arena-topbar" role="banner">
       <div class="arena-topbar__left">
-        <button class="back-btn" aria-label="Back" data-testid="topbar-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button>
-        <img class="arena-topbar__logo" alt="Space logo" src="https://api.dicebear.com/7.x/shapes/svg?seed=climate&backgroundColor=a855f7" />
+        <button class="back-btn" aria-label="Back" data-testid="topbar-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        </button>
+        <img class="arena-topbar__logo" alt="Space logo" src="https://api.dicebear.com/7.x/shapes/svg?seed=climate&backgroundColor=8b5cf6" />
         <nav class="breadcrumb">
           <span class="breadcrumb__item">Climate Action DAO</span>
           <span class="breadcrumb__sep">›</span>
@@ -170,183 +165,169 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           File
         </span>
-        <span class="topbar-title">File Settings</span>
+        <span class="topbar-title">File Library</span>
       </div>
       <div class="arena-topbar__right">
-        <span class="autosave autosave--unsaved" data-testid="autosave-pill"><span class="autosave__dot"></span><span>Unsaved · 5s</span></span>
+        <span class="autosave autosave--uploading" data-testid="autosave-pill">
+          <span class="autosave__dot"></span><span>Uploading · 2 files</span>
+        </span>
         <button class="btn" data-testid="cancel-btn">Cancel</button>
         <button class="btn btn--primary btn--lg" data-testid="save-btn">Save Changes</button>
-        <div style="position:relative">
-          <button class="hud-btn" aria-label="Settings" data-theme-toggle data-testid="settings-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          </button>
-          <div class="theme-menu" data-theme-menu>
-            <div class="theme-menu__label">Theme</div>
-            <button class="theme-menu__item" data-theme-set="dark" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Dark</button>
-            <button class="theme-menu__item" data-theme-set="light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>Light</button>
-          </div>
-        </div>
+        <button class="hud-btn" aria-label="Settings" data-testid="settings-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
       </div>
     </header>
 
     <main class="arena-body">
-      <!-- Storage -->
-      <section class="section" data-testid="section-storage">
-        <div class="section__head"><span class="section__label">Storage</span><button class="btn btn--link" data-testid="file-storage-upgrade">Upgrade plan</button></div>
-        <div class="storage">
-          <div class="storage__meta">
-            <span class="storage__meta-label">Pro tier · 10 GB included</span>
-            <span class="storage__meta-value"><strong>6.24 GB</strong> of 10 GB used</span>
-          </div>
-          <div class="storage__bar"><div class="storage__fill"></div></div>
-          <div class="segmented" role="tablist" data-testid="file-storage-tier">
-            <button class="segmented__btn" role="tab" aria-selected="false">Free · 500 MB</button>
-            <button class="segmented__btn" role="tab" aria-selected="true">Pro · 10 GB</button>
-            <button class="segmented__btn" role="tab" aria-selected="false">Max · 100 GB</button>
-            <button class="segmented__btn" role="tab" aria-selected="false">Enterprise · Custom</button>
-          </div>
+      <div class="tabs">
+        <div class="segmented" data-testid="file-tabs">
+          <button class="segmented__btn" aria-selected="true" data-testid="tab-all">All</button>
+          <button class="segmented__btn" aria-selected="false" data-testid="tab-overview">Overview</button>
+          <button class="segmented__btn" aria-selected="false" data-testid="tab-boards">Boards</button>
+          <button class="segmented__btn" aria-selected="false" data-testid="tab-quiz">Quiz</button>
         </div>
+        <div class="tabs__meta">
+          <span class="tab-count" data-testid="file-count"><strong>4</strong>files</span>
+        </div>
+      </div>
+
+      <section class="section" data-testid="section-upload">
+        <div class="section__head">
+          <span class="section__label">Upload</span>
+          <span class="section__hint">Drop files here or click to browse</span>
+        </div>
+        <button class="dropzone" data-testid="file-dropzone">
+          <span class="dropzone__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </span>
+          <div>
+            <div class="dropzone__title">Drop files to upload</div>
+            <div class="dropzone__sub">Max 50MB per file · Up to 20 files at once</div>
+          </div>
+          <div class="dropzone__types">
+            <span class="type-chip">PNG</span>
+            <span class="type-chip">JPG</span>
+            <span class="type-chip">MP4</span>
+            <span class="type-chip">PDF</span>
+            <span class="type-chip">ZIP</span>
+          </div>
+        </button>
       </section>
 
-      <!-- Defaults -->
-      <section class="section" data-testid="section-defaults">
-        <div class="section__head"><span class="section__label">Defaults</span><span class="section__hint">Applied to newly uploaded files</span></div>
-        <div class="field">
-          <span class="field__label">Default visibility</span>
-          <div class="segmented" role="tablist" data-testid="file-default-visibility">
-            <button class="segmented__btn" role="tab" aria-selected="true">Public</button>
-            <button class="segmented__btn" role="tab" aria-selected="false">Space members</button>
-            <button class="segmented__btn" role="tab" aria-selected="false">Private</button>
-          </div>
-        </div>
-        <div class="field">
-          <span class="field__label">Default link target</span>
-          <div class="segmented" role="tablist" data-testid="file-default-target">
-            <button class="segmented__btn" role="tab" aria-selected="false">General</button>
-            <button class="segmented__btn" role="tab" aria-selected="true">Overview</button>
-          </div>
-        </div>
-        <div class="field">
-          <label class="field__label" for="file-max-size">Max file size</label>
-          <div class="input-group">
-            <input class="input input--num" id="file-max-size" type="number" value="50" data-testid="file-max-size" />
-            <span class="input-suffix">MB</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Allowed types -->
-      <section class="section" data-testid="section-allowed-types">
-        <div class="section__head"><span class="section__label">Allowed types</span><span class="section__hint">Categories contributors can upload</span></div>
-        <div class="chips" data-testid="file-allowed-types">
-          <button class="chip" aria-pressed="true">Documents</button>
-          <button class="chip" aria-pressed="true">Images</button>
-          <button class="chip" aria-pressed="true">Videos</button>
-          <button class="chip" aria-pressed="false">Archives</button>
-          <button class="chip" aria-pressed="false">Code</button>
-        </div>
-      </section>
-
-      <!-- Files list -->
       <section class="section" data-testid="section-files">
-        <div class="section__head"><span class="section__label">Files</span><span class="section__hint">6 of 142 shown</span></div>
-        <div class="toolbar">
-          <input class="input" placeholder="Search files…" data-testid="file-search" />
-          <div class="segmented" role="tablist" data-testid="file-filter">
-            <button class="segmented__btn" role="tab" aria-selected="true">All</button>
-            <button class="segmented__btn" role="tab" aria-selected="false">Overview</button>
-            <button class="segmented__btn" role="tab" aria-selected="false">General</button>
-          </div>
+        <div class="section__head">
+          <span class="section__label">Files</span>
+          <span class="section__hint">Click a card to open, use the trash icon to remove</span>
         </div>
-        <div data-testid="file-list">
-          <div class="file-row" data-testid="file-row-0">
-            <div class="file-row__icon ft-pdf">PDF</div>
-            <div class="file-row__info">
-              <span class="file-row__name">Gold-Standard-Verification-2025.pdf</span>
-              <span class="file-row__meta">2.4 MB · uploaded Apr 12</span>
+        <div class="file-list" data-testid="file-list">
+          <div class="file-card" data-testid="file-card">
+            <div class="file-card__icon file-card__icon--img">PNG</div>
+            <div class="file-card__body">
+              <span class="file-card__name">climate-hero-2026.png</span>
+              <span class="file-card__meta">
+                <span>2.4 MB</span>
+                <span class="file-card__tag file-card__tag--overview">Overview</span>
+              </span>
             </div>
-            <span class="file-row__target">Overview</span>
-            <button class="icon-btn" aria-label="Remove file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <button class="file-card__delete" aria-label="Delete" data-testid="file-delete">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
+            </button>
           </div>
-          <div class="file-row" data-testid="file-row-1">
-            <div class="file-row__icon ft-img">PNG</div>
-            <div class="file-row__info">
-              <span class="file-row__name">urban-offset-diagram.png</span>
-              <span class="file-row__meta">812 KB · uploaded Apr 11</span>
+          <div class="file-card">
+            <div class="file-card__icon file-card__icon--vid">MP4</div>
+            <div class="file-card__body">
+              <span class="file-card__name">keynote-intro-cut.mp4</span>
+              <span class="file-card__meta">
+                <span>18.2 MB</span>
+                <span class="file-card__tag file-card__tag--board">Board</span>
+              </span>
             </div>
-            <span class="file-row__target file-row__target--general">General</span>
-            <button class="icon-btn" aria-label="Remove file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <button class="file-card__delete" aria-label="Delete">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
           </div>
-          <div class="file-row" data-testid="file-row-2">
-            <div class="file-row__icon ft-img">JPG</div>
-            <div class="file-row__info">
-              <span class="file-row__name">event-banner-launch.jpg</span>
-              <span class="file-row__meta">1.8 MB · uploaded Apr 10</span>
+          <div class="file-card">
+            <div class="file-card__icon file-card__icon--doc">PDF</div>
+            <div class="file-card__body">
+              <span class="file-card__name">proposal-final-v3.pdf</span>
+              <span class="file-card__meta">
+                <span>820 KB</span>
+                <span class="file-card__tag file-card__tag--quiz">Quiz</span>
+              </span>
             </div>
-            <span class="file-row__target">Overview</span>
-            <button class="icon-btn" aria-label="Remove file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <button class="file-card__delete" aria-label="Delete">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
           </div>
-          <div class="file-row" data-testid="file-row-3">
-            <div class="file-row__icon ft-doc">DOC</div>
-            <div class="file-row__info">
-              <span class="file-row__name">2026-governance-charter.docx</span>
-              <span class="file-row__meta">128 KB · uploaded Apr 08</span>
+          <div class="file-card">
+            <div class="file-card__icon file-card__icon--zip">ZIP</div>
+            <div class="file-card__body">
+              <span class="file-card__name">assets-bundle.zip</span>
+              <span class="file-card__meta">
+                <span>34.1 MB</span>
+              </span>
             </div>
-            <span class="file-row__target file-row__target--general">General</span>
-            <button class="icon-btn" aria-label="Remove file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-          </div>
-          <div class="file-row" data-testid="file-row-4">
-            <div class="file-row__icon ft-vid">MP4</div>
-            <div class="file-row__info">
-              <span class="file-row__name">town-hall-recording.mp4</span>
-              <span class="file-row__meta">248 MB · uploaded Apr 05</span>
-            </div>
-            <span class="file-row__target">Overview</span>
-            <button class="icon-btn" aria-label="Remove file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-          </div>
-          <div class="file-row" data-testid="file-row-5">
-            <div class="file-row__icon ft-zip">ZIP</div>
-            <div class="file-row__info">
-              <span class="file-row__name">research-bundle-q1.zip</span>
-              <span class="file-row__meta">18.4 MB · uploaded Apr 01</span>
-            </div>
-            <span class="file-row__target file-row__target--general">General</span>
-            <button class="icon-btn" aria-label="Remove file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <button class="file-card__delete" aria-label="Delete">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
           </div>
         </div>
       </section>
 
-      <!-- Retention -->
-      <section class="section" data-testid="section-retention">
-        <div class="section__head"><span class="section__label">Retention</span></div>
-        <div class="switch" role="switch" aria-checked="true" tabindex="0" data-testid="file-auto-delete">
-          <span class="switch__track"><span class="switch__thumb"></span></span>
-          <span><span class="switch__label">Auto-delete unused files</span><span class="switch__sub">Files that haven't been accessed for the specified period are removed</span></span>
+      <section class="section" data-testid="section-empty" style="display:none">
+        <div class="empty">
+          <span class="empty__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </span>
+          <span class="empty__title">No files yet</span>
+          <span class="empty__sub">Upload your first file to start sharing with participants</span>
         </div>
-        <div class="field">
-          <label class="field__label" for="file-retention-days">After</label>
-          <div class="input-group">
-            <input class="input input--num" id="file-retention-days" type="number" value="90" data-testid="file-retention-days" />
-            <span class="input-suffix">days</span>
+      </section>
+
+      <section class="section" data-testid="section-image-preview">
+        <div class="preview-group__head">
+          <span class="preview-group__title">Image previews</span>
+          <span class="preview-group__count">2</span>
+        </div>
+        <div class="preview-grid">
+          <div class="preview-media">
+            <img src="https://images.unsplash.com/photo-1569163139394-de4798d9c2c3?w=800" alt="" />
+            <span class="preview-media__label">PNG</span>
+          </div>
+          <div class="preview-media">
+            <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=800" alt="" />
+            <span class="preview-media__label">JPG</span>
           </div>
         </div>
       </section>
 
-      <!-- Danger zone -->
-      <section class="section section--danger" data-testid="section-danger">
-        <div class="section__head"><span class="section__label" style="color:var(--accent-red);opacity:0.85">Danger zone</span></div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
-          <div style="flex:1;min-width:220px"><div style="font-size:13px;font-weight:600">Remove all files in Overview</div><div style="font-size:12px;color:var(--text-muted)">Permanently deletes 87 files currently linked to the Overview page. Cannot be undone.</div></div>
-          <button class="btn btn--danger" data-testid="file-remove-overview">Remove Overview files</button>
+      <section class="section" data-testid="section-video-preview">
+        <div class="preview-group__head">
+          <span class="preview-group__title">Video previews</span>
+          <span class="preview-group__count">1</span>
+        </div>
+        <div class="preview-grid" style="grid-template-columns:1fr">
+          <div class="preview-media" style="aspect-ratio:16/7">
+            <img src="https://images.unsplash.com/photo-1611605698335-8b1569810432?w=1200" alt="" />
+            <span class="preview-media__label">MP4</span>
+            <span class="preview-media__play">
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+            </span>
+          </div>
         </div>
       </section>
     </main>
 
     <footer class="sticky-footer">
-      <span class="sticky-footer__left" data-testid="footer-status">4 unsaved changes</span>
+      <span class="sticky-footer__left" data-testid="footer-status">4 files · 55.4 MB</span>
       <div class="sticky-footer__actions">
+        <button class="sticky-footer__edit-toggle" aria-pressed="true" data-testid="edit-toggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+          Edit mode
+        </button>
         <button class="btn" data-testid="footer-cancel">Cancel</button>
-        <button class="btn btn--primary btn--lg" data-testid="footer-save">Save Changes</button>
+        <button class="btn btn--accent btn--lg" data-testid="footer-save">Save Changes</button>
       </div>
     </footer>
   </div>
@@ -355,27 +336,6 @@
     (function(){
       var saved = localStorage.getItem('ratel-theme');
       if (saved) document.documentElement.setAttribute('data-theme', saved);
-      var toggleBtn = document.querySelector('[data-theme-toggle]');
-      var menu = document.querySelector('[data-theme-menu]');
-      if (toggleBtn && menu){
-        toggleBtn.addEventListener('click', function(e){ e.stopPropagation(); menu.setAttribute('data-open', menu.getAttribute('data-open') === 'true' ? 'false':'true'); });
-        document.addEventListener('click', function(){ menu.setAttribute('data-open','false'); });
-        menu.addEventListener('click', function(e){ e.stopPropagation(); });
-        menu.querySelectorAll('[data-theme-set]').forEach(function(btn){
-          btn.addEventListener('click', function(){
-            var t = btn.getAttribute('data-theme-set');
-            document.documentElement.setAttribute('data-theme', t);
-            localStorage.setItem('ratel-theme', t);
-            menu.querySelectorAll('[data-theme-set]').forEach(function(b){ b.setAttribute('aria-selected', b === btn ? 'true':'false'); });
-            menu.setAttribute('data-open','false');
-          });
-          btn.setAttribute('aria-selected', btn.getAttribute('data-theme-set') === (saved || 'dark') ? 'true':'false');
-        });
-      }
-      document.querySelectorAll('.switch').forEach(function(s){
-        s.addEventListener('click', function(){ s.setAttribute('aria-checked', s.getAttribute('aria-checked') === 'true' ? 'false':'true'); });
-        s.addEventListener('keydown', function(e){ if(e.key===' '||e.key==='Enter'){e.preventDefault();s.click();}});
-      });
       document.querySelectorAll('.segmented').forEach(function(grp){
         grp.querySelectorAll('[aria-selected]').forEach(function(b){
           b.addEventListener('click', function(){
@@ -384,7 +344,11 @@
           });
         });
       });
-      document.querySelectorAll('.chip').forEach(function(c){ c.addEventListener('click', function(){ c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false':'true'); }); });
+      var editToggle = document.querySelector('[data-testid="edit-toggle"]');
+      if (editToggle) editToggle.addEventListener('click', function(){
+        var on = editToggle.getAttribute('aria-pressed') !== 'true';
+        editToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
     })();
   </script>
 </body>
