@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { click, fill, goto, getLocator, getEditor } from "../utils";
 
 test.describe.serial("Space with lots actions", () => {
@@ -57,6 +57,7 @@ test.describe.serial("Space with lots actions", () => {
 
     // open create action modal
     await click(page, { text: "Select Action Type" });
+    await expect(page.getByTestId("action-type-quiz")).toBeVisible({ timeout: 10000 });
     // select Discussion
     await click(page, { testId: "action-type-discussion" });
     // hide FAB that overlaps modal buttons
@@ -65,11 +66,14 @@ test.describe.serial("Space with lots actions", () => {
       if (fab) fab.style.display = "none";
     });
     // confirm creation
-    await click(page, { text: "Create" });
+    const confirmBtn = page.getByTestId("create-action-confirm");
+    await confirmBtn.scrollIntoViewIfNeeded();
+    await confirmBtn.click();
+    await page.waitForLoadState("load");
 
     // wait for discussion page (creator sees inline editor directly)
     await page.waitForURL(/\/actions\/discussions\//, {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     // fill discussion fields on CreatorMain (inline editing)
@@ -98,6 +102,7 @@ test.describe.serial("Space with lots actions", () => {
 
     // open create action modal
     await click(page, { text: "Select Action Type" });
+    await expect(page.getByTestId("action-type-quiz")).toBeVisible({ timeout: 10000 });
     // select Poll (Quiz is default, so click Poll)
     await click(page, { testId: "action-type-poll" });
     // hide FAB that overlaps modal buttons
@@ -106,11 +111,14 @@ test.describe.serial("Space with lots actions", () => {
       if (fab) fab.style.display = "none";
     });
     // confirm creation
-    await click(page, { text: "Create" });
+    const confirmBtn2 = page.getByTestId("create-action-confirm");
+    await confirmBtn2.scrollIntoViewIfNeeded();
+    await confirmBtn2.click();
+    await page.waitForLoadState("load");
 
     // wait for poll creator page
     await page.waitForURL(/\/actions\/polls\//, {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     // fill poll title (saves on blur)
@@ -122,7 +130,7 @@ test.describe.serial("Space with lots actions", () => {
 
     // trigger blur to save title
     await page.keyboard.press("Tab");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("Create a quiz action in space", async ({ page }) => {
@@ -130,6 +138,7 @@ test.describe.serial("Space with lots actions", () => {
 
     // open create action modal
     await click(page, { text: "Select Action Type" });
+    await expect(page.getByTestId("action-type-quiz")).toBeVisible({ timeout: 10000 });
     // Quiz is selected by default, no need to click
     // hide FAB that overlaps modal buttons
     await page.evaluate(() => {
@@ -137,11 +146,14 @@ test.describe.serial("Space with lots actions", () => {
       if (fab) fab.style.display = "none";
     });
     // confirm creation
-    await click(page, { text: "Create" });
+    const confirmBtn3 = page.getByTestId("create-action-confirm");
+    await confirmBtn3.scrollIntoViewIfNeeded();
+    await confirmBtn3.click();
+    await page.waitForLoadState("load");
 
     // wait for quiz creator page
     await page.waitForURL(/\/actions\/quizzes\//, {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     // fill quiz title on Overview tab (default tab)
@@ -165,6 +177,7 @@ test.describe.serial("Space with lots actions", () => {
 
     // open create action modal
     await click(page, { text: "Select Action Type" });
+    await expect(page.getByTestId("action-type-quiz")).toBeVisible({ timeout: 10000 });
     // select Follow (Quiz is default, so click Follow)
     await click(page, { testId: "action-type-follow" });
     // hide FAB that overlaps modal buttons
@@ -173,11 +186,14 @@ test.describe.serial("Space with lots actions", () => {
       if (fab) fab.style.display = "none";
     });
     // confirm creation
-    await click(page, { text: "Create" });
+    const confirmBtn4 = page.getByTestId("create-action-confirm");
+    await confirmBtn4.scrollIntoViewIfNeeded();
+    await confirmBtn4.click();
+    await page.waitForLoadState("load");
 
     // wait for follow creator page
     await page.waitForURL(/\/actions\/follows\//, {
-      waitUntil: "networkidle",
+      waitUntil: "load",
     });
 
     // verify creator sees the General tab with follower settings
