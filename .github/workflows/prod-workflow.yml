@@ -97,7 +97,7 @@ jobs:
 
       - name: Install Dioxus-cli
         run: |
-          cargo binstall dioxus-cli
+          cargo binstall dioxus-cli --force
 
       - name: Building APIs
         env:
@@ -251,7 +251,7 @@ jobs:
 
       - name: Install Dioxus-cli
         run: |
-          cargo binstall dioxus-cli
+          cargo binstall dioxus-cli --force
 
       - name: Building APIs
         env:
