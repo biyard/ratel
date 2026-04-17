@@ -103,7 +103,7 @@ ANDROID_JAVA_HOME ?= /usr/lib/jvm/java-17-openjdk
 
 ANDROID_ENV = \
 	JAVA_HOME=$(ANDROID_JAVA_HOME) \
-	PATH=$(ANDROID_JAVA_HOME)/bin:$(PATH) \
+	PATH="$(ANDROID_JAVA_HOME)/bin:$(PATH)" \
 	CC_aarch64_linux_android=$(ANDROID_CC) \
 	CXX_aarch64_linux_android=$(ANDROID_CC)++ \
 	AR_aarch64_linux_android=$(ANDROID_NDK_TOOLCHAIN)/bin/llvm-ar \
