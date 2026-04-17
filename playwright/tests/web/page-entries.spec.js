@@ -196,7 +196,7 @@ test.describe.serial("Page entries accessibility", () => {
       testId: "social-layout",
     }));
   test("GET /:username/drafts", async ({ page }) =>
-    checkPage(page, `/${data.username}/drafts`, { testId: "social-layout" }));
+    checkPage(page, `/${data.username}/drafts`, { text: "Drafts" }));
   test("GET /:username/credentials", async ({ page }) =>
     checkPage(page, `/${data.username}/credentials`, {
       testId: "social-layout",
