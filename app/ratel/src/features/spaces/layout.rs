@@ -43,8 +43,13 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     );
 
     if !role.is_admin() || is_arena_route || is_action_edit_route {
+        // The early-return path skips the sidebar shell, but still needs the
+        // popup and layover zones so `popup.open(...)` / layover pushes from
+        // child components (e.g. action Delete dialog) actually render.
         return rsx! {
             Outlet::<Route> {}
+            PopupZone {}
+            Layover {}
         };
     }
 
