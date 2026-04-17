@@ -27,6 +27,18 @@ fn calculate_xp(data: &SpaceActivityData) -> i64 {
 }
 
 #[cfg(feature = "server")]
+fn dedup_key(action_id: &str, data: &SpaceActivityData) -> String {
+    match data {
+        // Discussion: each comment earns separate XP, so include comment_id
+        SpaceActivityData::Discussion { comment_id, .. } => {
+            format!("{}#comment#{}", action_id, comment_id)
+        }
+        // Poll, Quiz, Follow: one XP per user per action
+        _ => action_id.to_string(),
+    }
+}
+
+#[cfg(feature = "server")]
 pub async fn record_activity(
     cli: &aws_sdk_dynamodb::Client,
     space_id: SpacePartition,
@@ -38,8 +50,26 @@ pub async fn record_activity(
     user_avatar: String,
 ) -> crate::common::Result<()> {
     let xp = calculate_xp(&data);
+    let dedup = dedup_key(&action_id, &data);
 
-    let activity = SpaceActivity::new(
+    // Check for duplicate: query existing activities with the same
+    // (space_id, author) pk and SPACE_ACTIVITY#<dedup_key> sk prefix.
+    // This prevents double-counting when both stream_handler and
+    // EventBridge Lambda process the same DynamoDB Stream event.
+    let pk = crate::common::types::CompositePartition(space_id.clone(), author.clone());
+    let sk_prefix = format!("SPACE_ACTIVITY#{}#", dedup);
+    let opt = SpaceActivity::opt().sk(sk_prefix).limit(1);
+    let (existing, _) = SpaceActivity::query(cli, pk, opt).await?;
+    if !existing.is_empty() {
+        tracing::info!(
+            action_id = %action_id,
+            action_type = ?action_type,
+            "activity already recorded — skipping duplicate"
+        );
+        return Ok(());
+    }
+
+    let activity = SpaceActivity::new_with_dedup(
         space_id,
         author,
         action_id,
@@ -49,6 +79,7 @@ pub async fn record_activity(
         0,
         user_name,
         user_avatar,
+        dedup.clone(),
     );
     activity.create(cli).await?;
     Ok(())

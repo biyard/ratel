@@ -1,12 +1,7 @@
-FROM ubuntu:latest
+FROM ubuntu:24.04
 
-RUN apt-get update && apt-get install -y \
-    # libssl-dev \
-    ca-certificates \
-    # g++ \
-    # pkg-config \
-    # libfreetype6-dev \
-    # libfontconfig1-dev \
+RUN for i in 1 2 3; do apt-get update && break || sleep 5; done \
+    && apt-get install -y ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app

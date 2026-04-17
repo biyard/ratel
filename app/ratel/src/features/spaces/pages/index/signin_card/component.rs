@@ -1,6 +1,5 @@
 use crate::features::auth::LoginModal;
 use crate::features::spaces::pages::index::*;
-use crate::features::spaces::space_common::controllers::get_user_role;
 use crate::features::spaces::space_common::providers::use_space_context;
 
 #[component]
@@ -38,17 +37,9 @@ pub fn SigninCard(
                 class: "cta-signin",
                 "data-testid": "btn-signin",
                 onclick: move |_| {
-                    let mut space_loader = ctx.space;
-                    let mut role_loader = ctx.role;
-                    let mut current_role = ctx.current_role;
+                    let mut ctx = ctx;
                     let cb = Callback::new(move |_| {
-                        space_loader.restart();
-                        role_loader.restart();
-                        spawn(async move {
-                            if let Ok(new_role) = get_user_role(space_id()).await {
-                                current_role.set(new_role);
-                            }
-                        });
+                        ctx.restart();
                     });
                     popup.open(rsx! {
                         LoginModal { on_success: cb }
