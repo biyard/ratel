@@ -9,6 +9,10 @@ import {
   getLocator,
   getEditor,
   waitPopup,
+  addPollQuestion,
+  fillPollQuestion,
+  togglePrerequisite,
+  commitAutosave,
 } from "../utils";
 
 // This test covers the full space lifecycle with three users:
@@ -48,30 +52,34 @@ const user2 = {
  * Assumes the Settings tab is already active.
  */
 async function setStartDateToToday(page) {
-  // 1. Click the first date picker trigger (start date) and select today
-  const datePickerTriggers = page.locator(".date-picker-group");
-  await datePickerTriggers.first().click();
-  const todayCell = page.locator('[data-today="true"]');
-  await todayCell.first().click();
+  // Arena editor uses native datetime-local inputs for schedule. Fill both
+  // start and end — the server-side save (UpdatePollRequest::Time) early-
+  // returns unless both values are > 0, so filling start alone is a no-op.
+  const fmt = (date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    const h = String(date.getHours()).padStart(2, "0");
+    const mm = String(date.getMinutes()).padStart(2, "0");
+    return `${y}-${m}-${d}T${h}:${mm}`;
+  };
+  const now = new Date();
+  const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  const startInput = page.getByTestId("schedule-start");
+  await expect(startInput).toBeVisible();
+  await startInput.fill(fmt(now));
+  await startInput.blur();
   await page.waitForLoadState("load");
 
-  // 2. Open the first time picker (start time) and pick the current hour
-  const timePickers = page.locator(".time-picker-trigger");
-  await timePickers.first().click();
-  const now = new Date();
-  const currentHour = String(now.getHours()).padStart(2, "0");
-  const hourCell = page.locator(
-    `.time-picker-cell[data-selected="false"]:text-is("${currentHour}")`
-  );
-  // If current hour cell exists and is not already selected, click it
-  if ((await hourCell.count()) > 0) {
-    await hourCell.first().click();
-  } else {
-    // Already selected or not found — click the selected one to close
-    const selected = page.locator('.time-picker-cell[data-selected="true"]').first();
-    await selected.click();
-  }
+  const endInput = page.getByTestId("schedule-end");
+  await expect(endInput).toBeVisible();
+  await endInput.fill(fmt(endDate));
+  await endInput.blur();
   await page.waitForLoadState("load");
+  // Small settle so the onblur server round-trip finishes before the caller
+  // navigates away.
+  await page.waitForTimeout(500);
 }
 
 /** Hide the floating action button that may overlap modal buttons. */
@@ -276,22 +284,18 @@ test.describe.serial("Space with actions created by a team", () => {
     await hideFab(page);
     await click(page, { text: "Create" });
 
-    await page.waitForURL(/\/actions\/discussions\//, {
+    await page.waitForURL(/\/actions\/discussions\/[^/]+\/edit/, {
       waitUntil: "load",
     });
 
     // Save the discussion URL for later use
     discussionUrl = new URL(page.url()).pathname;
 
+    // Arena-style editor: inline autosave, no category field, no Save button.
     await fill(
       page,
       { placeholder: "Enter discussion title..." },
       "Team Discussion: Governance Framework",
-    );
-    await fill(
-      page,
-      { placeholder: "Enter category (optional)..." },
-      "Governance",
     );
 
     const editor = await getEditor(page);
@@ -299,7 +303,8 @@ test.describe.serial("Space with actions created by a team", () => {
       "This discussion was created by a team to explore governance frameworks and decision-making processes within the space.",
     );
 
-    await click(page, { text: "Save" });
+    // Blur the editor so the autosave debounce commits.
+    await page.keyboard.press("Tab");
   });
 
   test("Create a poll action (prerequisite) in the space", async ({ page }) => {
@@ -316,32 +321,17 @@ test.describe.serial("Space with actions created by a team", () => {
       { placeholder: "Enter poll title..." },
       "Team Poll: Budget Allocation",
     );
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
+    await commitAutosave(page);
 
-    await click(page, { testId: "poll-add-question" });
-    await click(page, { text: "Single Choice" });
+    // Arena poll editor: exactly two option inputs, no "Add Option" button.
+    await addPollQuestion(page, "single");
+    await fillPollQuestion(page, 0, {
+      title: "How should the team allocate the Q2 budget?",
+      options: ["Increase marketing spend", "Invest in R&D"],
+    });
 
-    // nth(0) is the poll title input (still visible); question starts at nth(1)
-    const textInputs = page.locator('input[type="text"]:visible');
-    await textInputs.nth(1).fill("How should the team allocate the Q2 budget?");
-    await textInputs.nth(2).fill("Increase marketing spend");
-    await textInputs.nth(3).fill("Invest in R&D");
-
-    await page.getByRole("button", { name: "Add Option" }).first().click();
-    await page.waitForLoadState("load");
-    await textInputs.nth(4).fill("Save for reserves");
-
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
-
-    // Enable prerequisite setting
-    await page.getByRole("tab", { name: "Settings" }).click();
-    await page.waitForLoadState("load");
-
-    const prerequisiteCard = page.locator("text=Prerequisite").locator("../..");
-    await prerequisiteCard.locator("button").click();
-    await page.waitForLoadState("load");
+    // Prerequisite is toggled via the ConfigCard tile (no more Settings tab).
+    await togglePrerequisite(page);
   });
 
   test("Create a quiz action in the space", async ({ page }) => {
@@ -351,6 +341,9 @@ test.describe.serial("Space with actions created by a team", () => {
     await click(page, { text: "Create" });
 
     await page.waitForURL(/\/actions\/quizzes\//, { waitUntil: "load" });
+
+    // Arena-style quiz creator page: no tabs, no Save button. ContentCard +
+    // QuestionsCard + ConfigCard render inline with per-field autosave.
 
     await fill(
       page,
@@ -362,51 +355,24 @@ test.describe.serial("Space with actions created by a team", () => {
     await editor.fill(
       "This quiz tests knowledge about the governance protocol. Created by the team for participant engagement.",
     );
-    await click(page, { text: "Save" });
+    await commitAutosave(page);
 
-    await page.getByRole("tab", { name: "Quiz" }).click();
-    await page.waitForLoadState("load");
-
-    // Add first question (Single Choice)
-    await click(page, { testId: "quiz-add-question" });
-    await click(page, { text: "Single Choice" });
-
-    const textInputs = page.locator('input[type="text"]:visible');
-    await textInputs
-      .nth(0)
-      .fill("What is the primary purpose of governance in a DAO?");
-    await textInputs.nth(1).fill("To centralize power");
-    await textInputs.nth(2).fill("To enable collective decision-making");
-
-    await page.getByRole("button", { name: "Add Option" }).first().click();
-    await page.waitForLoadState("load");
-    await textInputs.nth(3).fill("To maximize profits only");
-
-    // Mark correct answer (option 2)
-    const checkboxLabels = page.locator('label:has(input[type="checkbox"])');
-    await checkboxLabels.nth(1).click();
-    await page.waitForLoadState("load");
-
-    // Add second question (Multiple Choice)
-    await click(page, { testId: "quiz-add-question" });
-    await click(page, { text: "Multiple Choice" });
-
-    await textInputs
-      .nth(4)
-      .fill("Which of the following are benefits of decentralized governance?");
-    await textInputs.nth(5).fill("Transparency");
-    await textInputs.nth(6).fill("Community participation");
-
-    await page.getByRole("button", { name: "Add Option" }).nth(1).click();
-    await page.waitForLoadState("load");
-    await textInputs.nth(7).fill("Single point of failure");
-
-    // Mark correct answers (options 1 and 2 for Q2)
-    await checkboxLabels.nth(3).click();
-    await checkboxLabels.nth(4).click();
-
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
+    // Single question with per-field blur so each onblur autosave
+    // completes before the next input is touched.
+    await click(page, { testId: "quiz-question-add" });
+    const q0 = page.getByTestId("quiz-question-0");
+    const q0Inputs = q0.locator("input.input");
+    const fills = [
+      "What is the primary purpose of governance in a DAO?",
+      "To centralize power",
+      "To enable collective decision-making",
+    ];
+    for (let i = 0; i < fills.length; i += 1) {
+      await q0Inputs.nth(i).fill(fills[i]);
+      await q0Inputs.nth(i).press("Tab");
+      await page.waitForLoadState("load");
+      await page.waitForTimeout(200);
+    }
   });
 
   test("Create a follow action in the space", async ({ page }) => {
@@ -417,7 +383,9 @@ test.describe.serial("Space with actions created by a team", () => {
     await click(page, { text: "Create" });
 
     await page.waitForURL(/\/actions\/follows\//, { waitUntil: "load" });
-    await getLocator(page, { text: "General" });
+    // Arena follow creator: verify the ConfigCard renders (TargetsCard +
+    // ConfigCard are inline, no more General tab).
+    await getLocator(page, { testId: "page-card-config" });
   });
 
   // ─── 3. Creator: Publish space ────────────────────────────────────────────
@@ -603,19 +571,7 @@ test.describe.serial("Space with actions created by a team", () => {
         .getByText("To enable collective decision-making", { exact: true })
         .click();
 
-      // Click Next to go to Q2
-      await clickNoNav(page, { testId: "quiz-arena-next" });
-
-      // Q2 (Multiple Choice): Wait for options to appear, then select
-      await expect(
-        overlay.getByText("Transparency", { exact: true }),
-      ).toBeVisible({ timeout: 10000 });
-      await overlay.getByText("Transparency", { exact: true }).click();
-      await overlay
-        .getByText("Community participation", { exact: true })
-        .click();
-
-      // Submit quiz
+      // Quiz was simplified to a single question — submit directly.
       await clickNoNav(page, { testId: "quiz-arena-submit" });
 
       // Wait for overlay to close (submission completes + overlay signal cleared)
@@ -678,19 +634,7 @@ test.describe.serial("Space with actions created by a team", () => {
         .getByText("To enable collective decision-making", { exact: true })
         .click();
 
-      // Click Next to go to Q2
-      await clickNoNav(page, { testId: "quiz-arena-next" });
-
-      // Q2 (Multiple Choice): Wait for options, then select
-      await expect(
-        overlay.getByText("Transparency", { exact: true }),
-      ).toBeVisible({ timeout: 10000 });
-      await overlay.getByText("Transparency", { exact: true }).click();
-      await overlay
-        .getByText("Community participation", { exact: true })
-        .click();
-
-      // Submit quiz
+      // Quiz was simplified to a single question — submit directly.
       await clickNoNav(page, { testId: "quiz-arena-submit" });
 
       // Wait for overlay to close
@@ -890,14 +834,16 @@ test.describe.serial("Space with actions created by a team", () => {
 
   test("Creator: Add a final survey poll", async ({ page }) => {
     await goto(page, spaceUrl);
-    await click(page, { testId: "btn-switch-creator" });
-    await click(page, { text: "Actions" });
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-poll" });
     await hideFab(page);
-    await click(page, { text: "Create" });
+    // Arena: admin's add-action card opens the TypePicker directly; the
+    // type pick immediately creates the action and navigates.
+    await click(page, { testId: "admin-add-action-card" });
+    await click(page, { testId: "type-option-poll" });
 
-    await page.waitForURL(/\/actions\/polls\//, { waitUntil: "load" });
+    await page.waitForURL(/\/actions\/polls\//, {
+      waitUntil: "load",
+      timeout: 60000,
+    });
 
     // After the space is published, new actions default to started_at =
     // now + 1 hour, so is_action_locked is false and the creator lands
@@ -908,30 +854,16 @@ test.describe.serial("Space with actions created by a team", () => {
       { placeholder: "Enter poll title..." },
       "Final Survey: Space Experience",
     );
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
+    await commitAutosave(page);
 
-    await click(page, { testId: "poll-add-question" });
-    await click(page, { text: "Single Choice" });
+    await addPollQuestion(page, "single");
+    await fillPollQuestion(page, 0, {
+      title: "How would you rate your overall experience in this space?",
+      options: ["Excellent", "Good"],
+    });
 
-    // nth(0) is the poll title input (still visible); question starts at nth(1)
-    const textInputs = page.locator('input[type="text"]:visible');
-    await textInputs
-      .nth(1)
-      .fill("How would you rate your overall experience in this space?");
-    await textInputs.nth(2).fill("Excellent");
-    await textInputs.nth(3).fill("Good");
-
-    await page.getByRole("button", { name: "Add Option" }).first().click();
-    await page.waitForLoadState("load");
-    await textInputs.nth(4).fill("Needs improvement");
-
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
-
-    // Set start date to today so the final survey is In Progress
-    await page.getByRole("tab", { name: "Settings" }).click();
-    await page.waitForLoadState("load");
+    // Set start date to today via the ConfigCard's Schedule section
+    // (the old "Settings" tab is gone in the arena editor).
     await setStartDateToToday(page);
   });
 

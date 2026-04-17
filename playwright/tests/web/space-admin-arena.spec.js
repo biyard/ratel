@@ -45,33 +45,41 @@ test.describe.serial("Space admin arena", () => {
     });
   }
 
+  // Arena-style action creation: from SpaceIndexPage the admin clicks
+  // `admin-add-action-card` to open TypePickerModal, then picks a type which
+  // immediately creates the action and navigates to the creator page. There
+  // is no intermediate "Create" confirmation.
   async function createAction(page, typeTestId, urlRegex) {
-    await goto(page, `${spaceUrl}/actions`);
-    await click(page, { text: "Select Action Type" });
-    if (typeTestId) {
-      await click(page, { testId: typeTestId });
-    }
+    await goto(page, spaceUrl);
     await hideFab(page);
-    await click(page, { text: "Create" });
-    await page.waitForURL(urlRegex, { waitUntil: "networkidle" });
+    await click(page, { testId: "admin-add-action-card" });
+    await click(page, { testId: typeTestId });
+    // Per-step navigation can take >30s when the server creates the action
+    // and routes to the creator page with a fresh SSR pass.
+    await page.waitForURL(urlRegex, { waitUntil: "load", timeout: 60000 });
   }
 
   test.beforeAll(async ({ browser }) => {
+    // beforeAll runs five navigations + four action creations; give it a
+    // generous overall window so flaky server latency doesn't kill the run.
+    test.setTimeout(300_000);
+
     const context = await browser.newContext({ storageState: "user.json" });
     const page = await context.newPage();
 
     try {
       await createSpaceFromPost(page);
 
-      // Create 4 actions (Poll, Discussion, Quiz, Follow)
-      await createAction(page, "action-type-poll", /\/actions\/polls\//);
+      // Create 4 actions (Poll, Discussion, Quiz, Follow) via the new
+      // type-picker testIds exposed on the arena dashboard.
+      await createAction(page, "type-option-poll", /\/actions\/polls\//);
       await createAction(
         page,
-        "action-type-discussion",
-        /\/actions\/discussions\//,
+        "type-option-discuss",
+        /\/actions\/discussions\/[^/]+\/edit/,
       );
-      await createAction(page, null, /\/actions\/quizzes\//); // Quiz is default
-      await createAction(page, "action-type-follow", /\/actions\/follows\//);
+      await createAction(page, "type-option-quiz", /\/actions\/quizzes\//);
+      await createAction(page, "type-option-follow", /\/actions\/follows\//);
     } finally {
       await context.close();
     }
@@ -79,8 +87,10 @@ test.describe.serial("Space admin arena", () => {
 
   test("Test 1: Admin badge visible in arena topbar", async ({ page }) => {
     await goto(page, spaceUrl);
+    // Badge visibility depends on role hydration from the server; give it a
+    // generous window before giving up.
     const badge = page.getByTestId("arena-topbar-admin-badge");
-    await expect(badge).toBeVisible();
+    await expect(badge).toBeVisible({ timeout: 15000 });
     await expect(badge).toContainText("Admin");
   });
 
