@@ -235,7 +235,7 @@ pub fn ConfigCard() -> Element {
                         span { class: "switch__track",
                             span { class: "switch__thumb" }
                         }
-                        span {
+                        span { class: "switch__body",
                             span { class: "switch__label", "{tr.voting_response_editable_label}" }
                             span { class: "switch__sub", "{tr.voting_response_editable_sub}" }
                         }
@@ -251,7 +251,7 @@ pub fn ConfigCard() -> Element {
                             span { class: "switch__track",
                                 span { class: "switch__thumb" }
                             }
-                            span {
+                            span { class: "switch__body",
                                 span { class: "switch__label", "{tr.voting_encrypted_label}" }
                                 span { class: "switch__sub", "{tr.voting_encrypted_sub}" }
                             }

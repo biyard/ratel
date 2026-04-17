@@ -1,13 +1,19 @@
 import { test, expect } from "@playwright/test";
 import {
+  addPollQuestion,
   click,
   clickNoNav,
+  commitAutosave,
+  createAction,
   createTeamFromHome,
   createTeamPostFromHome,
   fill,
-  goto,
-  getLocator,
+  fillPollQuestion,
   getEditor,
+  getLocator,
+  goto,
+  setReward,
+  togglePrerequisite,
   waitPopup,
 } from "../utils";
 
@@ -47,42 +53,6 @@ async function pauseAnimations(page) {
     content:
       "*, *::before, *::after { animation-play-state: paused !important; }",
   });
-}
-
-async function enableReward(page, credits) {
-  await page.getByRole("tab", { name: "Settings" }).click();
-  await page.waitForLoadState("load");
-
-  const rewardToggle = page.locator(
-    '[data-testid="reward-setting-toggle"] button'
-  );
-  if ((await rewardToggle.count()) > 0) {
-    await rewardToggle.click();
-    await page.waitForLoadState("load");
-
-    const creditInput = page.locator('[data-testid="reward-credit-input"]');
-    await creditInput.fill(String(credits));
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
-  }
-}
-
-async function enableRewardOnSettingTab(page, credits) {
-  await page.getByRole("tab", { name: "Setting" }).click();
-  await page.waitForLoadState("load");
-
-  const rewardToggle = page.locator(
-    '[data-testid="reward-setting-toggle"] button'
-  );
-  if ((await rewardToggle.count()) > 0) {
-    await rewardToggle.click();
-    await page.waitForLoadState("load");
-
-    const creditInput = page.locator('[data-testid="reward-credit-input"]');
-    await creditInput.fill(String(credits));
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
-  }
 }
 
 async function signUpFromSpace(browser, spaceUrl) {
@@ -245,140 +215,80 @@ test.describe.serial("Full space lifecycle with rewards", () => {
   // ─── 2. Create poll (prerequisite) + reward ──────────────────────────────
 
   test("Create prerequisite poll with reward", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-poll" });
-    await hideFab(page);
-    await click(page, { text: "Create" });
-
-    await page.waitForURL(/\/actions\/polls\//, { waitUntil: "load" });
+    // Arena TypePicker: creates the poll and navigates to PollCreatorPage.
+    await createAction(page, spaceUrl, "poll", /\/actions\/polls\//);
 
     await fill(
       page,
       { placeholder: "Enter poll title..." },
       "Prerequisite Poll: Interest Check"
     );
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
+    await commitAutosave(page);
 
-    await click(page, { testId: "poll-add-question" });
-    await click(page, { text: "Single Choice" });
+    // Arena poll editor exposes two option inputs by default (no "Add Option").
+    await addPollQuestion(page, "single");
+    await fillPollQuestion(page, 0, {
+      title: "What topic interests you most?",
+      options: ["Technology", "Science"],
+    });
 
-    const textInputs = page.locator('input[type="text"]:visible');
-    await textInputs.nth(1).fill("What topic interests you most?");
-    await textInputs.nth(2).fill("Technology");
-    await textInputs.nth(3).fill("Science");
-
-    await page.getByRole("button", { name: "Add Option" }).first().click();
-    await page.waitForLoadState("load");
-    await textInputs.nth(4).fill("Arts");
-
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
-
-    // Enable prerequisite + reward
-    await page.getByRole("tab", { name: "Settings" }).click();
-    await page.waitForLoadState("load");
-
-    const prerequisiteSwitch = page.locator(
-      '[data-testid="prerequisite-setting"] button'
-    );
-    await prerequisiteSwitch.click();
-    await page.waitForLoadState("load");
-
-    // Set reward
-    const rewardToggle = page.locator(
-      '[data-testid="reward-setting-toggle"] button'
-    );
-    if ((await rewardToggle.count()) > 0) {
-      await rewardToggle.click();
-      await page.waitForLoadState("load");
-
-      const creditInput = page.locator('[data-testid="reward-credit-input"]');
-      await creditInput.fill("1");
-      await page.keyboard.press("Tab");
-      await page.waitForLoadState("load");
-    }
+    // Prerequisite + reward live inline on the ConfigCard — no more Settings tab.
+    await togglePrerequisite(page);
+    await setReward(page, 1);
   });
 
   // ─── 3. Create poll (normal) + reward ────────────────────────────────────
 
   test("Create normal poll with reward", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-poll" });
-    await hideFab(page);
-    await click(page, { text: "Create" });
-
-    await page.waitForURL(/\/actions\/polls\//, { waitUntil: "load" });
+    await createAction(page, spaceUrl, "poll", /\/actions\/polls\//);
 
     await fill(
       page,
       { placeholder: "Enter poll title..." },
       "Survey: Feature Priority"
     );
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
+    await commitAutosave(page);
 
-    await click(page, { testId: "poll-add-question" });
-    await click(page, { text: "Single Choice" });
+    await addPollQuestion(page, "single");
+    await fillPollQuestion(page, 0, {
+      title: "Which feature should we build next?",
+      options: ["Mobile app", "API improvements"],
+    });
 
-    const textInputs = page.locator('input[type="text"]:visible');
-    await textInputs.nth(1).fill("Which feature should we build next?");
-    await textInputs.nth(2).fill("Mobile app");
-    await textInputs.nth(3).fill("API improvements");
-
-    await page.getByRole("button", { name: "Add Option" }).first().click();
-    await page.waitForLoadState("load");
-    await textInputs.nth(4).fill("Documentation");
-
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
-
-    await enableReward(page, 2);
+    await setReward(page, 2);
   });
 
   // ─── 4. Create discussion + reward ───────────────────────────────────────
 
   test("Create discussion with reward", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-discussion" });
-    await hideFab(page);
-    await click(page, { text: "Create" });
-
-    await page.waitForURL(/\/actions\/discussions\//, { waitUntil: "load" });
+    // Arena discussion editor lives under `/edit` (list view has no suffix).
+    await createAction(
+      page,
+      spaceUrl,
+      "discuss",
+      /\/actions\/discussions\/[^/]+\/edit/
+    );
 
     await fill(
       page,
       { placeholder: "Enter discussion title..." },
       "Discussion: Roadmap Planning"
     );
-    await fill(
-      page,
-      { placeholder: "Enter category (optional)..." },
-      "Planning"
-    );
 
     const editor = await getEditor(page);
     await editor.fill(
       "Let's discuss the upcoming roadmap priorities and share ideas for the next quarter."
     );
+    // Arena editor: no Save button, blur commits autosave.
+    await commitAutosave(page);
 
-    await click(page, { text: "Save" });
-
-    await enableReward(page, 2);
+    await setReward(page, 2);
   });
 
   // ─── 5. Create quiz + reward ─────────────────────────────────────────────
 
   test("Create quiz with reward", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
-    await click(page, { text: "Select Action Type" });
-    await hideFab(page);
-    await click(page, { text: "Create" });
-
-    await page.waitForURL(/\/actions\/quizzes\//, { waitUntil: "load" });
+    await createAction(page, spaceUrl, "quiz", /\/actions\/quizzes\//);
 
     await fill(
       page,
@@ -388,48 +298,44 @@ test.describe.serial("Full space lifecycle with rewards", () => {
 
     const editor = await getEditor(page);
     await editor.fill("Test your knowledge about our platform fundamentals.");
-    await click(page, { text: "Save" });
+    await commitAutosave(page);
 
-    // Add quiz question
-    await page.getByRole("tab", { name: "Quiz" }).click();
+    // Arena QuestionsCard: inline add button + 2 option inputs fixed. Fill
+    // title + both options on quiz-question-0 with a blur after each so the
+    // per-field onblur autosave commits.
+    await click(page, { testId: "quiz-question-add" });
+    const q0 = page.getByTestId("quiz-question-0");
+    const q0Inputs = q0.locator("input.input");
+    const fills = [
+      "What is the main purpose of spaces?",
+      "Collective decision-making",
+      "Social media posting",
+    ];
+    for (let i = 0; i < fills.length; i += 1) {
+      await q0Inputs.nth(i).fill(fills[i]);
+      await q0Inputs.nth(i).press("Tab");
+      await page.waitForLoadState("load");
+      await page.waitForTimeout(200);
+    }
+
+    // Mark the first option correct by clicking its radio span.
+    await page
+      .getByTestId("quiz-question-0-opt-0")
+      .locator(".q-opt__radio")
+      .click();
     await page.waitForLoadState("load");
 
-    await click(page, { testId: "quiz-add-question" });
-    await click(page, { text: "Single Choice" });
-
-    const textInputs = page.locator('input[type="text"]:visible');
-    await textInputs.nth(0).fill("What is the main purpose of spaces?");
-    await textInputs.nth(1).fill("Collective decision-making");
-    await textInputs.nth(2).fill("Social media posting");
-
-    await page.getByRole("button", { name: "Add Option" }).first().click();
-    await page.waitForLoadState("load");
-    await textInputs.nth(3).fill("File storage");
-
-    // Mark correct answer (option 1)
-    const checkboxLabels = page.locator('label:has(input[type="checkbox"])');
-    await checkboxLabels.nth(0).click();
-    await page.waitForLoadState("load");
-
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
-
-    await enableRewardOnSettingTab(page, 2);
+    await setReward(page, 2);
   });
 
   // ─── 6. Create follow + reward ───────────────────────────────────────────
 
   test("Create follow with reward", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-follow" });
-    await hideFab(page);
-    await click(page, { text: "Create" });
+    await createAction(page, spaceUrl, "follow", /\/actions\/follows\//);
+    // Arena follow creator exposes TargetsCard + ConfigCard inline.
+    await getLocator(page, { testId: "page-card-config" });
 
-    await page.waitForURL(/\/actions\/follows\//, { waitUntil: "load" });
-    await getLocator(page, { text: "General" });
-
-    await enableReward(page, 2);
+    await setReward(page, 2);
   });
 
   // ─── 7. Enable anonymous + join anytime via UI ───────────────────────────
@@ -455,8 +361,11 @@ test.describe.serial("Full space lifecycle with rewards", () => {
   // ─── 8. Publish space ────────────────────────────────────────────────────
 
   test("Publish the space publicly", async ({ page }) => {
-    await goto(page, spaceUrl + "/dashboard");
-    await click(page, { text: "Publish" });
+    // Arena HUD exposes Publish as btn-publish; SpaceVisibilityModal opens
+    // in-place. The legacy /dashboard Publish button no longer drives this.
+    await goto(page, spaceUrl);
+    await hideFab(page);
+    await click(page, { testId: "btn-publish" });
     await click(page, { testId: "public-option" });
     await click(page, { label: "Confirm visibility selection" });
   });
@@ -485,10 +394,12 @@ test.describe.serial("Full space lifecycle with rewards", () => {
   // ─── 10. Creator: Start space ────────────────────────────────────────────
 
   test("Start the space", async ({ page }) => {
-    await goto(page, spaceUrl + "/dashboard");
-    await click(page, { text: "Start" });
+    // After publish, ArenaTopbar swaps btn-publish for btn-start; clicking
+    // it opens SpaceStartModal where start-space-button fires the transition.
+    await goto(page, spaceUrl);
+    await hideFab(page);
+    await click(page, { testId: "btn-start" });
     await click(page, { testId: "start-space-button" });
-    await page.waitForLoadState("load");
   });
 
   // ─── 11. User1: Complete each action (after start) ──────────────────────
@@ -808,12 +719,13 @@ test.describe.serial("Full space lifecycle with rewards", () => {
   // ─── 14. Creator: Finish space ─────────────────────────────────────────
 
   test("Creator: Finish the space", async ({ page }) => {
+    // After space is Ongoing, ArenaTopbar shows btn-finish. Its "Finish"
+    // label lives only in the :hover tooltip (opacity:0) so we cannot click
+    // by text — use the stable testid instead. Clicking opens SpaceEndModal.
     await goto(page, spaceUrl);
-    await click(page, { testId: "btn-switch-creator" });
-
-    await click(page, { text: "Finish" });
+    await hideFab(page);
+    await click(page, { testId: "btn-finish" });
     await click(page, { testId: "end-space-button" });
-    await page.waitForLoadState("load");
   });
 
   // ─── 15. Post-finish: discussion comment blocked ─────────────────────────

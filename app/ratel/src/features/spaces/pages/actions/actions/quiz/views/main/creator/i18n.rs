@@ -269,10 +269,6 @@ translate! {
         en: "Add question",
         ko: "질문 추가",
     },
-    correct_tag: {
-        en: "Correct",
-        ko: "정답",
-    },
     schedule_starts_at: {
         en: "Starts at",
         ko: "시작",
