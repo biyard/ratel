@@ -60,9 +60,13 @@ pub async fn update_discussion(
     }
     if let Some(started_at) = req.started_at {
         updater = updater.with_started_at(started_at);
+        action_updater = action_updater.with_started_at(started_at);
+        update_action = true;
     }
     if let Some(ended_at) = req.ended_at {
         updater = updater.with_ended_at(ended_at);
+        action_updater = action_updater.with_ended_at(ended_at);
+        update_action = true;
     }
     if let Some(mut files) = req.files {
         for file in &mut files {
