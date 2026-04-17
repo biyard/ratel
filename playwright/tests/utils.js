@@ -66,7 +66,7 @@ export async function fill(page, opt, value) {
 
 export async function getLocator(
   page,
-  { placeholder, text, role, label, testId },
+  { placeholder, text, role, label, testId }
 ) {
   let selected;
 
@@ -112,7 +112,7 @@ export async function goto(page, url) {
         (response) =>
           response.url().includes("app-shell") &&
           response.url().endsWith(".wasm") &&
-          response.status() === 200,
+          response.status() === 200
       ),
       new Promise((resolve) => setTimeout(resolve, 5000)),
     ]),
@@ -123,7 +123,7 @@ export async function goto(page, url) {
   // Wait for Dioxus WASM to hydrate — SSR markup already contains
   // [data-dioxus-id], so also verify the interpreter is initialised.
   await page.waitForFunction(
-    () => document.querySelector("[data-dioxus-id]") !== null,
+    () => document.querySelector("[data-dioxus-id]") !== null
   );
 }
 
@@ -141,7 +141,7 @@ export async function waitForHydrated(page, testId, timeout = 15000) {
       return !!el && el.hasAttribute("data-dioxus-id");
     },
     testId,
-    { timeout },
+    { timeout }
   );
 }
 
@@ -161,7 +161,7 @@ export async function getEditor(page) {
  */
 export async function createTeamFromHome(
   page,
-  { username, nickname, description = "" },
+  { username, nickname, description = "" }
 ) {
   await goto(page, "/");
 
@@ -201,7 +201,7 @@ export async function createTeamFromHome(
     waitUntil: "load",
   });
   await page.waitForFunction(
-    () => document.querySelector("[data-dioxus-id]") !== null,
+    () => document.querySelector("[data-dioxus-id]") !== null
   );
 }
 
@@ -244,7 +244,7 @@ export async function openTeamFromHome(page, teamUsername) {
     waitUntil: "load",
   });
   await page.waitForFunction(
-    () => document.querySelector("[data-dioxus-id]") !== null,
+    () => document.querySelector("[data-dioxus-id]") !== null
   );
 }
 
@@ -264,7 +264,7 @@ export async function createTeamPostFromHome(
   page,
   teamUsername,
   postTitle,
-  postContents,
+  postContents
 ) {
   const teamHomeRe = new RegExp(`/${teamUsername}/home$`);
   if (!teamHomeRe.test(new URL(page.url()).pathname)) {

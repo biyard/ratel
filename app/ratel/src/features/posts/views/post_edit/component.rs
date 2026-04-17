@@ -748,6 +748,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                             }
                             input {
                                 class: "tag-input__field",
+                                "data-testid": "tag-input-field",
                                 r#type: "text",
                                 placeholder: tr.tag_placeholder,
                                 value: "{tag_input}",
