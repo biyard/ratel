@@ -49,12 +49,12 @@ ECR ?= $(shell aws ecr describe-repositories --repository-names $(REPOSITORY)  -
 QDRANT_PREFIX ?= ratel-$(ENV)
 QDRANT_URL ?= http://localhost:6334
 QDRANT_API_KEY ?= ""
+ARCH ?= $(shell uname -m)
+AVD_NAME ?= Pixel_6_API_34
+ANDROID_EMULATOR_ID ?= $(shell adb devices | grep emulator | cut -f1)
 
-DEVICE_FLAG ?= ""
-ANDROID_EMULATOR_ID ?= $(shell adb devices -l | grep emulator | awk '{print $$1}')
-
-ifneq ("$(ANDROID_EMULATOR_ID)","")
-	DEVICE_FLAG = --device $(ANDROID_EMULATOR_ID)
+ifneq ($(ANDROID_EMULATOR_ID),)
+	DEVICE_FLAG ?= --device $(AVD_NAME)
 endif
 
 BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
@@ -125,17 +125,17 @@ $(HOME)/.android/debug.keystore:
 
 	keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android | grep SHA1
 
-$(HOME)/.android/avd/Pixel_6_API_34.avd: $(ANDROID_HOME)/system-images/android-34/google_apis/x86_64
-	avdmanager create avd  -n Pixel_6_API_34 -k "system-images;android-34;google_apis;x86_64" -d "pixel_6"
+$(HOME)/.android/avd/$(AVD_NAME).avd: $(ANDROID_HOME)/system-images/android-34/google_apis/$(ARCH)
+	avdmanager create avd  -n $(AVD_NAME) -k "system-images;android-34;google_apis;$(ARCH)" -d "pixel_6"
 
 $(ANDROID_HOME)/emulator/emulator:
 	sdkmanager --install emulator
 
-$(ANDROID_HOME)/system-images/android-34/google_apis/x86_64:
-	sdkmanager --install "system-images;android-34;google_apis;x86_64"
+$(ANDROID_HOME)/system-images/android-34/google_apis/$(ARCH):
+	sdkmanager --install "system-images;android-34;google_apis;$(ARCH)"
 
-android-emulator: $(HOME)/.android/debug.keystore $(HOME)/.android/avd/Pixel_6_API_34.avd $(ANDROID_HOME)/emulator/emulator
-	$(ANDROID_HOME)/emulator/emulator -avd Pixel_6_API_34 -netdelay none -netspeed full &
+android-emulator: $(HOME)/.android/debug.keystore $(HOME)/.android/avd/$(AVD_NAME).avd $(ANDROID_HOME)/emulator/emulator
+	$(ANDROID_HOME)/emulator/emulator -avd $(AVD_NAME) -netdelay none -netspeed full &
 
 android: $(HOME)/.android/debug.keystore
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --android --target $(ANDROID_TARGET) --features $(RUN_FEATURES) $(DEVICE_FLAG)
