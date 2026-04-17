@@ -194,9 +194,21 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
 fn CandidateView(space_id: ReadSignal<SpacePartition>) -> Element {
     let actions_loader = crate::features::spaces::space_common::hooks::use_actions();
     let actions = actions_loader();
+    let space = use_space()();
+    let mut ctx = crate::features::spaces::space_common::providers::use_space_context();
 
     let prereqs: Vec<_> = actions.iter().filter(|a| a.prerequisite).cloned().collect();
     let all_done = prereqs.is_empty() || prereqs.iter().all(|a| a.user_participated);
+
+    // When all prerequisites are done and space is Ongoing (join_anytime),
+    // restart the full context so `role` reloads from the server. The
+    // server will return Participant instead of Candidate, causing the
+    // parent to render ActionDashboard instead of CandidateView.
+    let mut already_restarted = use_signal(|| false);
+    if all_done && matches!(space.status, Some(SpaceStatus::Ongoing)) && !already_restarted() {
+        already_restarted.set(true);
+        ctx.restart();
+    }
 
     if all_done {
         rsx! {

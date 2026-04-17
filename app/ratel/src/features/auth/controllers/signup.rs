@@ -135,6 +135,7 @@ pub async fn signup_handler(req: SignupRequest) -> Result<SignupResponse> {
 
 #[cfg(feature = "server")]
 async fn ensure_username_available(cli: &aws_sdk_dynamodb::Client, username: &str) -> Result<()> {
+    // Check user username
     let (users, _) = User::find_by_username(
         cli,
         username,
@@ -143,6 +144,15 @@ async fn ensure_username_available(cli: &aws_sdk_dynamodb::Client, username: &st
     .await?;
 
     if !users.is_empty() {
+        return Err(Error::UsernameAlreadyExists);
+    }
+
+    // Check team username
+    use crate::features::posts::models::Team;
+    let opt = Team::opt().limit(1);
+    let (teams, _): (Vec<Team>, _) =
+        Team::find_by_username_prefix(cli, username, opt).await?;
+    if teams.iter().any(|t| t.username == username) {
         return Err(Error::UsernameAlreadyExists);
     }
 
