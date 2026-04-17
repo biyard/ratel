@@ -271,6 +271,13 @@
   cursor: pointer;
   user-select: none;
 }
+/* Voting-rules switches (direct children of .section, with label+sub inside)
+   need to fill the section row so .switch__body gets real width. Tile switches
+   and inline switches (reward toggle, prereq tile) stay content-sized. */
+.section > .switch {
+  display: flex;
+  width: 100%;
+}
 .switch__track {
   width: 38px;
   height: 22px;
@@ -299,6 +306,12 @@
   left: 18px;
   background: var(--accent-gold);
   box-shadow: 0 0 8px rgba(252,179,0,0.5);
+}
+.switch__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
 }
 .switch__label {
   font-size: 13px;

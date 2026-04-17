@@ -502,15 +502,6 @@
   padding: 4px 0;
 }
 .q-opt .input:focus { box-shadow: none; }
-.q-opt__tag {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--quiz-color);
-  text-transform: uppercase;
-  opacity: 0.8;
-  flex-shrink: 0;
-}
 
 .q-body {
   display: flex;

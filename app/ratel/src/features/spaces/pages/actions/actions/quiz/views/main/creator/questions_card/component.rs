@@ -390,7 +390,6 @@ fn ChoiceOptions(
                                 oninput: move |e| on_option_change.call((idx, i, e.value())),
                                 onblur: move |_| on_blur_save.call(()),
                             }
-                            span { class: "q-opt__tag", "{tr.correct_tag}" }
                         }
                     }
                 }
