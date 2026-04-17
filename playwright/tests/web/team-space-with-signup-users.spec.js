@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import {
   click,
   clickNoNav,
+  createAction,
   createTeamFromHome,
   createTeamPostFromHome,
   fill,
@@ -278,15 +279,12 @@ test.describe.serial("Space with actions created by a team", () => {
   // ─── 2. Creator: Add actions ──────────────────────────────────────────────
 
   test("Create a discussion action in the space", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-discussion" });
-    await hideFab(page);
-    await click(page, { text: "Create" });
-
-    await page.waitForURL(/\/actions\/discussions\/[^/]+\/edit/, {
-      waitUntil: "load",
-    });
+    await createAction(
+      page,
+      spaceUrl,
+      "discuss",
+      /\/actions\/discussions\/[^/]+\/edit/,
+    );
 
     // Save the discussion URL for later use
     discussionUrl = new URL(page.url()).pathname;
@@ -308,13 +306,7 @@ test.describe.serial("Space with actions created by a team", () => {
   });
 
   test("Create a poll action (prerequisite) in the space", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-poll" });
-    await hideFab(page);
-    await click(page, { text: "Create" });
-
-    await page.waitForURL(/\/actions\/polls\//, { waitUntil: "load" });
+    await createAction(page, spaceUrl, "poll", /\/actions\/polls\//);
 
     await fill(
       page,
@@ -335,12 +327,7 @@ test.describe.serial("Space with actions created by a team", () => {
   });
 
   test("Create a quiz action in the space", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
-    await click(page, { text: "Select Action Type" });
-    await hideFab(page);
-    await click(page, { text: "Create" });
-
-    await page.waitForURL(/\/actions\/quizzes\//, { waitUntil: "load" });
+    await createAction(page, spaceUrl, "quiz", /\/actions\/quizzes\//);
 
     // Arena-style quiz creator page: no tabs, no Save button. ContentCard +
     // QuestionsCard + ConfigCard render inline with per-field autosave.
@@ -376,13 +363,7 @@ test.describe.serial("Space with actions created by a team", () => {
   });
 
   test("Create a follow action in the space", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-follow" });
-    await hideFab(page);
-    await click(page, { text: "Create" });
-
-    await page.waitForURL(/\/actions\/follows\//, { waitUntil: "load" });
+    await createAction(page, spaceUrl, "follow", /\/actions\/follows\//);
     // Arena follow creator: verify the ConfigCard renders (TargetsCard +
     // ConfigCard are inline, no more General tab).
     await getLocator(page, { testId: "page-card-config" });

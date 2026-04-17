@@ -308,6 +308,27 @@ export async function createTeamPostFromHome(
 // When the arena UI evolves, update these helpers rather than every spec.
 
 /**
+ * Create a new action from the arena dashboard. Clicks the admin "add
+ * action" card, picks a type from the TypePickerModal, and waits for the
+ * creator page to load. `typeKey` is one of `"poll"`, `"quiz"`,
+ * `"discuss"`, `"follow"`.
+ *
+ * Requires: the caller has already navigated to the space root URL and
+ * the FAB has been hidden if it overlaps modal buttons.
+ */
+export async function createAction(page, spaceUrl, typeKey, urlRegex) {
+  await goto(page, spaceUrl);
+  // Hide FAB that may overlap the TypePicker buttons.
+  await page.evaluate(() => {
+    const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
+    if (fab) fab.style.display = "none";
+  });
+  await click(page, { testId: "admin-add-action-card" });
+  await click(page, { testId: `type-option-${typeKey}` });
+  await page.waitForURL(urlRegex, { waitUntil: "load", timeout: 60000 });
+}
+
+/**
  * Blur the currently-focused field to commit an autosave (the new arena
  * editors persist on blur; there is no Save button).
  */
