@@ -56,12 +56,20 @@ async function setStartDateToToday(page) {
   // Arena editor uses native datetime-local inputs for schedule. Fill both
   // start and end — the server-side save (UpdatePollRequest::Time) early-
   // returns unless both values are > 0, so filling start alone is a no-op.
+  //
+  // NOTE: the backend's `datetime_local_to_epoch_ms` parses the string with
+  // `and_utc()`, i.e. treats the datetime-local value as UTC. JS local
+  // getters (getFullYear/…/getHours) would produce a local-time string that
+  // the backend would then re-interpret as UTC — on a non-UTC machine
+  // (e.g. KST) this stores `started_at` hours in the future and the poll
+  // becomes invisible to non-Creator roles. Use UTC getters so the string
+  // matches the backend's UTC interpretation on any host timezone.
   const fmt = (date) => {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    const h = String(date.getHours()).padStart(2, "0");
-    const mm = String(date.getMinutes()).padStart(2, "0");
+    const y = date.getUTCFullYear();
+    const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(date.getUTCDate()).padStart(2, "0");
+    const h = String(date.getUTCHours()).padStart(2, "0");
+    const mm = String(date.getUTCMinutes()).padStart(2, "0");
     return `${y}-${m}-${d}T${h}:${mm}`;
   };
   const now = new Date();
@@ -372,8 +380,12 @@ test.describe.serial("Space with actions created by a team", () => {
   // ─── 3. Creator: Publish space ────────────────────────────────────────────
 
   test("Publish the space publicly", async ({ page }) => {
-    await goto(page, spaceUrl + "/dashboard");
-    await click(page, { text: "Publish" });
+    // Arena flow: ArenaTopbar exposes the Publish action as an admin-only
+    // HUD button (btn-publish). The legacy "/dashboard" Publish button has
+    // been superseded — Publish now opens SpaceVisibilityModal in-place.
+    await goto(page, spaceUrl);
+    await hideFab(page);
+    await click(page, { testId: "btn-publish" });
     await click(page, { testId: "public-option" });
     await click(page, { label: "Confirm visibility selection" });
   });
@@ -440,10 +452,13 @@ test.describe.serial("Space with actions created by a team", () => {
   // ─── 6. Creator: Start the space ──────────────────────────────────────────
 
   test("Creator: Start the space", async ({ page }) => {
-    await goto(page, spaceUrl + "/dashboard");
-    await click(page, { text: "Start" });
+    // Arena flow: after publish, ArenaTopbar swaps btn-publish for btn-start
+    // (admin-only). Clicking it opens SpaceStartModal; start-space-button
+    // inside the modal fires the actual state transition.
+    await goto(page, spaceUrl);
+    await hideFab(page);
+    await click(page, { testId: "btn-start" });
     await click(page, { testId: "start-space-button" });
-    await page.waitForLoadState("load");
   });
 
   // ─── 7. Both participants: Follow action ──────────────────────────────────
@@ -634,6 +649,10 @@ test.describe.serial("Space with actions created by a team", () => {
     page,
     browser,
   }) => {
+    // 20 comments across 3 browser contexts — full page navigation +
+    // WASM hydration per comment easily blows through the 120s suite
+    // default, so give this test its own budget.
+    test.setTimeout(240000);
     // Discussion now opens as an overlay from the ActionDashboard carousel.
     // Each user navigates to spaceUrl, clicks the discussion card, types
     // in the comment textarea ("Share your thoughts..."), and clicks "Post".
@@ -730,79 +749,80 @@ test.describe.serial("Space with actions created by a team", () => {
       });
     }
 
-    // Helper: post a comment in the discussion overlay textarea
+    // Helper: post a comment in the discussion overlay textarea. The
+    // submit handler clears the textarea and calls comments_loader.restart
+    // on success, so the overlay stays open and shows the latest server
+    // state on every submit — good enough for cross-user interleaving.
     async function postComment(pg, text) {
-      const textarea = pg.locator(".comment-input__textarea");
+      const textarea = pg.locator(".comment-input__textarea").first();
       await expect(textarea).toBeVisible({ timeout: 10000 });
       await textarea.fill(text);
-      await pg.locator(".comment-input__submit").click();
-      // Wait for the comment to appear
+      await pg.locator(".comment-input__submit").first().click();
+      // Wait for the comment to render in the list (text is unique per entry)
       await expect(
-        pg.locator(".comment-item__text", { hasText: text }),
+        pg.locator(".comment-item__text", { hasText: text }).first(),
       ).toBeVisible({
         timeout: 10000,
       });
     }
 
-    // ── Creator comments ──
-    const creatorComments = comments.filter((c) => c.user === "creator");
-    for (const c of creatorComments) {
-      await openDiscussionOverlay(page);
-      await postComment(page, c.text);
+    // Open 3 concurrent browser contexts — one per user — and leave the
+    // discussion overlay open in each so we can interleave comments in
+    // the order declared by `comments` (simulating a real-time thread)
+    // without paying SSR/WASM-hydration costs per message.
+    const newUserContext = await browser.newContext({
+      storageState: newUserStoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const user2Context = await browser.newContext({
+      storageState: user2StoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const newUserPage = await newUserContext.newPage();
+    const user2Page = await user2Context.newPage();
+
+    try {
+      // Open the discussion overlay in all three tabs up front.
+      await Promise.all([
+        openDiscussionOverlay(page),
+        openDiscussionOverlay(newUserPage),
+        openDiscussionOverlay(user2Page),
+      ]);
+
+      const pageByUser = {
+        creator: page,
+        newUser: newUserPage,
+        user2: user2Page,
+      };
+
+      // Walk the comment script in order. After each submit, that user's
+      // overlay refetches comments (add_comment → comments_loader.restart),
+      // so the next time they post they see everyone else's prior messages.
+      for (const c of comments) {
+        const pg = pageByUser[c.user];
+        await postComment(pg, c.text);
+      }
+
+      // Close each participant's overlay.
+      await clickNoNav(newUserPage, { testId: "discussion-arena-back" });
+      await expect(
+        newUserPage.getByTestId("discussion-arena-overlay"),
+      ).toBeHidden({ timeout: 10000 });
+
+      await clickNoNav(user2Page, { testId: "discussion-arena-back" });
+      await expect(
+        user2Page.getByTestId("discussion-arena-overlay"),
+      ).toBeHidden({ timeout: 10000 });
+
       await clickNoNav(page, { testId: "discussion-arena-back" });
       await expect(page.getByTestId("discussion-arena-overlay")).toBeHidden({
         timeout: 10000,
       });
-    }
-
-    // ── NewUser comments ──
-    {
-      const context = await browser.newContext({
-        storageState: newUserStoragePath,
-        viewport: { width: 1440, height: 950 },
-        locale: "en-US",
-      });
-      const userPage = await context.newPage();
-      try {
-        const userComments = comments.filter((c) => c.user === "newUser");
-        for (const c of userComments) {
-          await openDiscussionOverlay(userPage);
-          await postComment(userPage, c.text);
-          await clickNoNav(userPage, { testId: "discussion-arena-back" });
-          await expect(
-            userPage.getByTestId("discussion-arena-overlay"),
-          ).toBeHidden({
-            timeout: 10000,
-          });
-        }
-      } finally {
-        await context.close();
-      }
-    }
-
-    // ── User2 comments ──
-    {
-      const context = await browser.newContext({
-        storageState: user2StoragePath,
-        viewport: { width: 1440, height: 950 },
-        locale: "en-US",
-      });
-      const userPage = await context.newPage();
-      try {
-        const userComments = comments.filter((c) => c.user === "user2");
-        for (const c of userComments) {
-          await openDiscussionOverlay(userPage);
-          await postComment(userPage, c.text);
-          await clickNoNav(userPage, { testId: "discussion-arena-back" });
-          await expect(
-            userPage.getByTestId("discussion-arena-overlay"),
-          ).toBeHidden({
-            timeout: 10000,
-          });
-        }
-      } finally {
-        await context.close();
-      }
+    } finally {
+      await newUserContext.close();
+      await user2Context.close();
     }
 
     // Verify comment count from creator's perspective
@@ -927,11 +947,14 @@ test.describe.serial("Space with actions created by a team", () => {
   // ─── 12. Creator: Finish the space ────────────────────────────────────────
 
   test("Creator: Finish the space", async ({ page }) => {
+    // Arena flow: after space is Ongoing, ArenaTopbar swaps btn-start for
+    // btn-finish (admin-only). The "Finish" label lives only in the
+    // hover tooltip (opacity:0 until :hover) so we cannot click by text —
+    // use the stable testid instead. Clicking opens SpaceEndModal;
+    // end-space-button inside the modal fires the actual transition.
     await goto(page, spaceUrl);
-    await click(page, { testId: "btn-switch-creator" });
-
-    await click(page, { text: "Finish" });
+    await hideFab(page);
+    await click(page, { testId: "btn-finish" });
     await click(page, { testId: "end-space-button" });
-    await page.waitForLoadState("load");
   });
 });

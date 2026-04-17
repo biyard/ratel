@@ -53,6 +53,10 @@ pub async fn update_poll(
             poll_updater = poll_updater
                 .with_started_at(started_at)
                 .with_ended_at(ended_at);
+            action_updater = action_updater
+                .with_started_at(started_at)
+                .with_ended_at(ended_at);
+            update_action = true;
         }
         UpdatePollRequest::Question { questions } => {
             if questions.is_empty() {
