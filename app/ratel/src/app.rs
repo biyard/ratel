@@ -48,7 +48,13 @@ pub fn App() -> Element {
             rel: "stylesheet",
             href: asset!("/assets/dx-components-theme.css"),
         }
-        document::Script { src: MAIN_JS }
+        // Loaded as a module: Dioxus's `asset!()` post-processes JS into
+        // an ES module wrapper (the bundle ends with `export default …`),
+        // so a classic `<script>` tag throws `Unexpected token 'export'`
+        // and breaks `window.ratel` namespace setup. The bundle's only
+        // side effect is populating `window.ratel`, which still happens
+        // when loaded as a module.
+        document::Script { r#type: "module", src: MAIN_JS }
         document::Script { src: "https://cdn.portone.io/v2/browser-sdk.js" }
         document::Link { rel: "stylesheet", href: asset!("/assets/tailwind.css") }
 
