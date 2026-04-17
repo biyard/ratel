@@ -35,8 +35,13 @@ pub fn Index() -> Element {
     let mut settings_open = use_signal(|| false);
     let mut teams_open = use_signal(|| false);
 
+    // Read user_ctx inside the async so the fetch reflects the current
+    // login state at invocation time. Login from the home page triggers
+    // `teams_query.restart()` via the LoginModal's `on_success` callback
+    // (wired into each HUD button below) instead of a use_effect.
     let mut teams_query = use_infinite_query(move |bookmark| async move {
-        if has_user {
+        let logged_in = user_ctx().user.is_some();
+        if logged_in {
             crate::get_user_teams_handler(bookmark).await
         } else {
             Ok(ListResponse::<TeamItem>::default())
@@ -44,6 +49,13 @@ pub fn Index() -> Element {
     })?;
     let teams: Vec<TeamItem> = teams_query.items();
     let teams_more = teams_query.more_element();
+
+    // Shared restart callback passed into every LoginModal we open from
+    // this page — fires right after a successful login so the Teams
+    // dropdown reloads without a full page reload.
+    let on_login_success: Callback<()> = use_callback(move |_| {
+        teams_query.restart();
+    });
 
     let keywords = vec![
         "ratel".to_string(),
@@ -92,7 +104,7 @@ pub fn Index() -> Element {
         if !has_user {
             popup
                 .open(rsx! {
-                    LoginModal {}
+                    LoginModal { on_success: on_login_success }
                 })
                 .with_title("Join the movement");
             return;
@@ -116,7 +128,7 @@ pub fn Index() -> Element {
         if !has_user {
             popup
                 .open(rsx! {
-                    LoginModal {}
+                    LoginModal { on_success: on_login_success }
                 })
                 .with_title("Join the movement");
             return;
@@ -131,7 +143,7 @@ pub fn Index() -> Element {
         if !has_user {
             popup
                 .open(rsx! {
-                    LoginModal {}
+                    LoginModal { on_success: on_login_success }
                 })
                 .with_title("Join the movement");
             return;
@@ -145,7 +157,7 @@ pub fn Index() -> Element {
         if !has_user {
             popup
                 .open(rsx! {
-                    LoginModal {}
+                    LoginModal { on_success: on_login_success }
                 })
                 .with_title("Join the movement");
             return;
@@ -341,20 +353,17 @@ pub fn Index() -> Element {
                                     // onscroll + JS so pagination triggers reliably.
                                     onscroll: move |_| {
                                         let js = r#"
-                                                                            const el = document.getElementById('home-teams-dd-list');
-                                                                            if (!el) { dioxus.send(false); return; }
-                                                                            const nearBottom =
-                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
-                                                                            dioxus.send(nearBottom);
-                                                                        "#;
+                                                                                                            const el = document.getElementById('home-teams-dd-list');
+                                                                                                            if (!el) { dioxus.send(false); return; }
+                                                                                                            const nearBottom =
+                                                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+                                                                                                            dioxus.send(nearBottom);
+                                                                                                        "#;
                                         let mut ctrl = teams_query;
                                         spawn(async move {
                                             let mut eval = document::eval(js);
                                             if let Ok(near_bottom) = eval.recv::<bool>().await {
-                                                if near_bottom
-                                                    && ctrl.has_more()
-                                                    && !ctrl.is_loading()
-                                                {
+                                                if near_bottom && ctrl.has_more() && !ctrl.is_loading() {
                                                     ctrl.next();
                                                 }
                                             }
@@ -426,7 +435,7 @@ pub fn Index() -> Element {
                             "data-testid": "home-btn-signin",
                             onclick: move |_| {
                                 popup.open(rsx! {
-                                    LoginModal {}
+                                    LoginModal { on_success: on_login_success }
                                 }).with_title("Join the movement");
                             },
                             svg {
