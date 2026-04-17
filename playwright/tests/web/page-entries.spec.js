@@ -277,17 +277,20 @@ test.describe.serial("Page entries accessibility", () => {
     checkPage(page, `/spaces/${data.spaceId}/actions/`, {
       testId: "space-layout-container",
     }));
+  // Admin users hit SpaceLayout's early-return (arena/action-edit route)
+  // which skips the sidebar shell and its space-layout-container testid.
+  // Verify each creator page renders its own card instead.
   test("GET /spaces/:space_id/actions/polls/:poll_id", async ({ page }) =>
     checkPage(
       page,
       `/spaces/${data.spaceId}/actions/polls/${data.pollId}`,
-      { testId: "space-layout-container" },
+      { testId: "page-card-content" },
     ));
   test("GET /spaces/:space_id/actions/quizzes/:quiz_id", async ({ page }) =>
     checkPage(
       page,
       `/spaces/${data.spaceId}/actions/quizzes/${data.quizId}`,
-      { testId: "space-layout-container" },
+      { testId: "page-card-content" },
     ));
   test("GET /spaces/:space_id/actions/discussions/:discussion_id", async ({
     page,
@@ -295,7 +298,7 @@ test.describe.serial("Page entries accessibility", () => {
     checkPage(
       page,
       `/spaces/${data.spaceId}/actions/discussions/${data.discussionId}`,
-      { testId: "space-layout-container" },
+      { testId: "page-card-content" },
     ));
   // NOTE: discussion editor page loads discussion context via server function,
   // which can cause SSR crash (ERR_EMPTY_RESPONSE) in some environments.
