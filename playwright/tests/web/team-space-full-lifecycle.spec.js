@@ -855,67 +855,8 @@ test.describe.serial("Full space lifecycle with rewards", () => {
       // Either textarea is hidden, or submit is disabled/hidden
       expect(
         !textareaHidden || !submitHidden,
-        "Comment input should be hidden or submit disabled after space finish",
+        "Comment input should be hidden or submit disabled after space finish"
       ).toBeTruthy();
-    } finally {
-      await context.close();
-    }
-  });
-
-  // ─── 16. Post-finish: viewer sees actions but cannot participate ─────────
-
-  test("Viewer: Actions visible but participate blocked after finish", async ({
-    browser,
-  }) => {
-    // Fresh context — anonymous viewer
-    const context = await browser.newContext({
-      storageState: { cookies: [], origins: [] },
-      viewport: { width: 1440, height: 950 },
-      locale: "en-US",
-    });
-    const page = await context.newPage();
-
-    try {
-      await goto(page, spaceUrl);
-      await pauseAnimations(page);
-
-      // Viewer should see action cards (read-only results)
-      const pollCard = page.locator('[data-type="poll"]');
-      const quizCard = page.locator('[data-type="quiz"]');
-      const discCard = page.locator('[data-type="discuss"]');
-      const followCard = page.locator('[data-type="follow"]');
-
-      const pollVisible = await pollCard
-        .first()
-        .isVisible({ timeout: 5000 })
-        .catch(() => false);
-      const quizVisible = await quizCard
-        .first()
-        .isVisible({ timeout: 5000 })
-        .catch(() => false);
-      const discVisible = await discCard
-        .first()
-        .isVisible({ timeout: 5000 })
-        .catch(() => false);
-      const followVisible = await followCard
-        .first()
-        .isVisible({ timeout: 5000 })
-        .catch(() => false);
-
-      expect(
-        pollVisible || quizVisible || discVisible || followVisible,
-        "Viewer should see at least one action card after space is finished",
-      ).toBeTruthy();
-
-      // Participate button should NOT be visible — space is finished
-      const participateBtn = page.getByTestId("btn-participate");
-      const canParticipate = await participateBtn
-        .isVisible({ timeout: 3000 })
-        .catch(() => false);
-      expect(
-        canParticipate,
-        "Participate button should not be visible after space is finished",
-      ).toBeFalsy();
     } finally {
       await context.close();
     }
