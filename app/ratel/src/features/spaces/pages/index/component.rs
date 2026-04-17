@@ -187,7 +187,6 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
             },
             None => rsx! {},
         }
-        PopupZone {}
     }
 }
 

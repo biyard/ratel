@@ -448,4 +448,7 @@ translate! {
 
     // Topbar
     admin_badge: { en: "Admin", ko: "관리자" },
+    publish: { en: "Publish", ko: "게시" },
+    start: { en: "Start", ko: "시작" },
+    finish: { en: "Finish", ko: "종료" },
 }
