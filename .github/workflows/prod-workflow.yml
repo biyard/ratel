@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ratel-app, ratel-app-lambda]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
@@ -201,7 +201,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}

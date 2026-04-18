@@ -52,7 +52,7 @@ jobs:
   #     run:
   #       working-directory: packages/ratel-canister
   #   steps:
-  #     - uses: actions/checkout@v4
+  #     - uses: actions/checkout@v6
   #       with:
   #         submodules: recursive
   #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
@@ -100,7 +100,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
@@ -270,7 +270,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
@@ -446,7 +446,7 @@ jobs:
   #     run:
   #       working-directory: flutter-packages/mobile
   #   steps:
-  #     - uses: actions/checkout@v4
+  #     - uses: actions/checkout@v6
   #       with:
   #         submodules: recursive
   #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
@@ -542,7 +542,7 @@ jobs:
   #     APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
   #   steps:
-  #     - uses: actions/checkout@v4
+  #     - uses: actions/checkout@v6
   #       with:
   #         submodules: recursive
   #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
