@@ -115,9 +115,7 @@ test.describe.serial("Post tag input (post-edit renewal)", () => {
     const tags = page.locator(".tag-input .tag");
     await expect(tags).toHaveCount(1);
 
-    const firstRemoveBtn = tags
-      .first()
-      .getByLabel("Remove tag", { exact: true });
+    const firstRemoveBtn = tags.first().getByLabel("Remove tag", { exact: true });
     await firstRemoveBtn.click();
 
     await expect(tags).toHaveCount(0);

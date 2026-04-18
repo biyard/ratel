@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { click, fill, goto, gotoFresh, getEditor } from "../utils";
+import { click, fill, goto, getEditor } from "../utils";
 
 test.describe.serial("Space admin arena", () => {
   let spaceUrl;
@@ -50,10 +50,7 @@ test.describe.serial("Space admin arena", () => {
   // immediately creates the action and navigates to the creator page. There
   // is no intermediate "Create" confirmation.
   async function createAction(page, typeTestId, urlRegex) {
-    // gotoFresh purges the corrupted Dioxus arena left over from the
-    // post-edit + Enable Space toggle flow in createSpaceFromPost; without
-    // it, admin-add-action-card click no longer opens TypePickerModal.
-    await gotoFresh(page, spaceUrl);
+    await goto(page, spaceUrl);
     await hideFab(page);
     await click(page, { testId: "admin-add-action-card" });
     await click(page, { testId: typeTestId });

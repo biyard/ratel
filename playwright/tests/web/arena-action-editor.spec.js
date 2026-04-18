@@ -7,7 +7,6 @@ import {
   fillPollQuestion,
   getEditor,
   goto,
-  gotoFresh,
   setReward,
   togglePrerequisite,
   waitPopup,
@@ -47,11 +46,7 @@ test.describe.serial("Arena action editor", () => {
    * confirmation.
    */
   async function createAction(page, typeKey, urlRegex) {
-    // gotoFresh purges Dioxus arena (corrupted by prior popup/toggle
-    // flows in createSpaceFromPost). Without it, admin-add-action-card
-    // click no-ops type_picker_open.set(true) and the modal doesn't
-    // open.
-    await gotoFresh(page, spaceUrl);
+    await goto(page, spaceUrl);
     await hideFab(page);
     await click(page, { testId: "admin-add-action-card" });
     await click(page, { testId: `type-option-${typeKey}` });

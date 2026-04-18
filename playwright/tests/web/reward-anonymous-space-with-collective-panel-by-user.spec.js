@@ -6,7 +6,6 @@ import {
   createTeamPostFromHome,
   fill,
   goto,
-  gotoFresh,
   getLocator,
   getEditor,
   waitPopup,
@@ -125,7 +124,7 @@ test.describe
       // Arena: admin's add-action card opens the TypePicker directly and
       // picking a type creates + navigates to the creator page. There is no
       // intermediate "Create" confirmation and no /actions list page.
-      await gotoFresh(page, spaceUrl);
+      await goto(page, spaceUrl);
       await hideFab(page);
       await click(page, { testId: "admin-add-action-card" });
       await click(page, { testId: "type-option-follow" });
@@ -155,7 +154,7 @@ test.describe
     const page = await context.newPage();
 
     try {
-      await gotoFresh(page, spaceUrl);
+      await goto(page, spaceUrl);
       await hideFab(page);
       await click(page, { testId: "admin-add-action-card" });
       // Quiz is the default pick in the TypePicker.
@@ -212,7 +211,7 @@ test.describe
     const page = await context.newPage();
 
     try {
-      await gotoFresh(page, spaceUrl);
+      await goto(page, spaceUrl);
       await hideFab(page);
       await click(page, { testId: "admin-add-action-card" });
       await click(page, { testId: "type-option-poll" });
@@ -253,7 +252,7 @@ test.describe
     const page = await context.newPage();
 
     try {
-      await gotoFresh(page, spaceUrl);
+      await goto(page, spaceUrl);
       await hideFab(page);
       await click(page, { testId: "admin-add-action-card" });
       await click(page, { testId: "type-option-poll" });

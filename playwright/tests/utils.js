@@ -35,7 +35,6 @@ export function wrap(page, project, baseDir) {
 
 export async function click(page, opt) {
   const selected = await getLocator(page, opt);
-  await waitForClickHandlerHydrated(page, opt);
 
   await selected.click();
   await page.waitForLoadState("load");
@@ -51,50 +50,10 @@ export async function click(page, opt) {
  */
 export async function clickNoNav(page, opt) {
   const selected = await getLocator(page, opt);
-  await waitForClickHandlerHydrated(page, opt);
 
   await selected.click();
 
   return selected;
-}
-
-/**
- * Wait until the target element carries Dioxus's `data-node-hydration`
- * attribute, which is added once the WASM runtime has walked through
- * the SSR tree and bound event handlers for that node. Visibility
- * (`getLocator`) only proves the SSR markup is present; a click against
- * a non-hydrated node is silently dropped, surfacing later as "dropdown
- * didn't open" / "popup didn't appear" / "page didn't navigate".
- *
- * The marker format is `<id>[,<event>:<count>]*` — we don't assert on
- * the event token because some interactive elements (e.g. labels
- * forwarding clicks via for=) get hydrated without a literal "click"
- * token even though the click works once hydration completes. Just
- * waiting for the attribute to appear is enough to close the race.
- *
- * Falls through after 5s if the marker never appears, so locators
- * pointing at non-Dioxus DOM (e.g. Tiptap rich-text editor internals)
- * don't hard-fail.
- *
- * No-op for selectors that aren't testid-based.
- */
-async function waitForClickHandlerHydrated(page, opt) {
-  if (!opt || !opt.testId) return;
-  await page
-    .waitForFunction(
-      (id) => {
-        const el = document.querySelector(`[data-testid="${id}"]`);
-        if (!el) return false;
-        return el.hasAttribute("data-node-hydration");
-      },
-      opt.testId,
-      { timeout: 5000 },
-    )
-    .catch(() => {
-      // Fall through — some elements may never carry the marker
-      // (forwarded clicks, third-party widgets). Let the click try
-      // anyway so we don't regress passing tests.
-    });
 }
 
 export async function fill(page, opt, value) {
@@ -160,58 +119,36 @@ export async function goto(page, url) {
     page.goto(url),
   ]);
   await page.waitForLoadState("domcontentloaded");
-  // Wait for Dioxus WASM to hydrate. SSR markup contains [data-dioxus-id]
-  // already, so the existence check confirms the runtime has booted and
-  // begun walking the tree. Without this gate, subsequent clicks on
-  // SSR-rendered buttons fire before Dioxus binds their onclick handlers
-  // and the click is silently dropped (visible as "dropdown didn't open"
-  // / "page didn't navigate" failures, e.g. home-btn-teams →
-  // home-teams-dd not toggling visible in CI).
+  await page.waitForTimeout(200);
+  // Wait for Dioxus WASM to hydrate — SSR markup already contains
+  // [data-dioxus-id], so also verify the interpreter is initialised.
   await page.waitForFunction(
     () => document.querySelector("[data-dioxus-id]") !== null,
   );
-  // Stabilization buffer: the [data-dioxus-id] check above doesn't
-  // guarantee event handlers are attached on every node. 1500ms is a
-  // conservative heuristic — replace if Dioxus exposes a real
+  // Stabilization wait: [data-dioxus-id] is in SSR markup, so the check above
+  // doesn't guarantee WASM has bound onclick handlers. Without this wait,
+  // automated clicks fire on hydrated DOM but no Rust handler is listening.
+  // 1500ms is a conservative heuristic — replace if Dioxus exposes a real
   // hydration-complete signal.
   await page.waitForTimeout(1500);
 }
 
 /**
- * Like `goto()` but additionally forces a hard browser reload after
- * the initial navigation. Use this in helpers that run AFTER a
- * popup-driven flow (LoginModal, ArenaTeamCreationPopup,
- * TypePickerModal) to purge Dioxus 0.7's signal arena, which gets
- * corrupted after popups (browser console: "cannot reclaim
- * ElementId(N)" from dioxus-core arena.rs:65). After corruption,
- * subsequent signal-mutating clicks (`home-btn-teams` toggling the
- * Teams dropdown, `admin-add-action-card` opening the type picker)
- * fire with their click handlers hydrated, but the signal mutation
- * no longer triggers a re-render. Reload purges the arena and
- * restores click-to-render behaviour.
- *
- * Cost: ~1s extra per call. Reserve for navigations that are known
- * to follow popup-using flows; do NOT use in plain `goto()` since
- * adding ~1s to every navigation in the suite pushes the CI
- * playwright job over its 30 min timeout.
+ * Wait until a specific element (by testId) has been hydrated by Dioxus —
+ * i.e. it carries a `data-dioxus-id` attribute so its event listeners are
+ * attached. Use this before clicking SSR-rendered interactive elements;
+ * clicks on non-hydrated nodes are silently dropped, manifesting later as
+ * "dropdown did not open / state did not toggle" failures.
  */
-export async function gotoFresh(page, url) {
-  // Two-step navigation: page.goto sets the URL (Dioxus router may
-  // intercept and do client-side nav, which would carry the corrupted
-  // arena), then page.reload forces a hard browser reload that always
-  // bypasses any SPA router. Net effect: arena is fully reset.
-  //
-  // Skip the inner waitForLoadState after page.goto since we're going
-  // to reload immediately — the goto's promise resolution already
-  // implies the navigation has commit-progressed enough that reload
-  // will pick up the right URL.
-  await page.goto(url);
-  await page.reload();
-  await page.waitForLoadState("domcontentloaded");
+export async function waitForHydrated(page, testId, timeout = 15000) {
   await page.waitForFunction(
-    () => document.querySelector("[data-dioxus-id]") !== null,
+    (id) => {
+      const el = document.querySelector(`[data-testid="${id}"]`);
+      return !!el && el.hasAttribute("data-dioxus-id");
+    },
+    testId,
+    { timeout },
   );
-  await page.waitForTimeout(1500);
 }
 
 export async function getEditor(page) {
@@ -226,17 +163,13 @@ export async function getEditor(page) {
  * footer → ArenaTeamCreationPopup UI flow. After submit, Dioxus navigates
  * to `/{teamUsername}/home`, which the helper waits for.
  *
- * Uses `gotoFresh` to purge the Dioxus arena — callers commonly run this
- * right after a sign-in popup (LoginModal) which corrupts the arena and
- * makes the subsequent `home-btn-teams` click no-op the dropdown.
- *
  * Requires: logged-in user.
  */
 export async function createTeamFromHome(
   page,
   { username, nickname, description = "" },
 ) {
-  await gotoFresh(page, "/");
+  await goto(page, "/");
 
   // Open the Teams dropdown (same trigger as openTeamFromHome).
   await expect(page.getByTestId("home-btn-teams")).toBeVisible({
@@ -245,6 +178,7 @@ export async function createTeamFromHome(
   // Wait until the button itself is hydrated — otherwise the click fires
   // before Dioxus attaches the `teams_open.toggle()` handler and the event
   // is silently dropped.
+  await waitForHydrated(page, "home-btn-teams");
   await clickNoNav(page, { testId: "home-btn-teams" });
   // Dropdown is always rendered but toggled via aria-expanded + CSS
   // visibility, so bump the timeout past the CSS transition (0.18s) plus
@@ -282,20 +216,19 @@ export async function createTeamFromHome(
  * and picking the team from the dropdown. Mirrors the production flow a
  * logged-in user sees on the main arena (`/`).
  *
- * Uses `gotoFresh` to purge Dioxus's signal arena before clicking the
- * dropdown — this helper typically runs after a popup-driven flow
- * (`createTeamFromHome` opens ArenaTeamCreationPopup) which corrupts
- * the arena and makes `home-btn-teams` clicks no-op the dropdown.
- *
  * Requires: logged-in user who owns / belongs to the team at `teamUsername`.
  */
 export async function openTeamFromHome(page, teamUsername) {
-  await gotoFresh(page, "/");
+  await goto(page, "/");
 
   // Wait for the Teams HUD button (only renders when logged in + hydrated).
   await expect(page.getByTestId("home-btn-teams")).toBeVisible({
     timeout: 15000,
   });
+  // Wait until the button itself is hydrated — clicks on SSR-rendered
+  // elements that haven't received their Dioxus event handlers yet are
+  // silently dropped.
+  await waitForHydrated(page, "home-btn-teams");
 
   // Open the dropdown — non-navigation toggle, so clickNoNav.
   await clickNoNav(page, { testId: "home-btn-teams" });
@@ -308,27 +241,8 @@ export async function openTeamFromHome(page, teamUsername) {
 
   // CI PR runs start from a clean DB, so the freshly-created team is
   // guaranteed to be on the first page of the infinite-scroll dropdown.
-  // Locally the dropdown can hold many older teams — scroll the inner
-  // list (`#home-teams-dd-list`, the actual scrollable container that
-  // triggers pagination via its onscroll handler) until the requested
-  // team item appears. Bounded to 30 attempts to avoid infinite loops.
+  // Resolve the locator once and click — avoid the scroll polling loop.
   const teamItem = page.getByTestId(`home-team-dd-item-${teamUsername}`);
-  let visible = await teamItem.isVisible().catch(() => false);
-  if (!visible) {
-    for (let i = 0; i < 30; i++) {
-      const reachedBottom = await page.evaluate(() => {
-        const el = document.getElementById("home-teams-dd-list");
-        if (!el) return true;
-        const before = el.scrollTop;
-        el.scrollTop = el.scrollHeight;
-        return el.scrollTop === before;
-      });
-      await page.waitForTimeout(400);
-      visible = await teamItem.isVisible().catch(() => false);
-      if (visible) break;
-      if (reachedBottom) break;
-    }
-  }
   await expect(teamItem).toBeVisible({ timeout: 15000 });
   await teamItem.click();
 
@@ -403,11 +317,7 @@ export async function createTeamPostFromHome(
  * the FAB has been hidden if it overlaps modal buttons.
  */
 export async function createAction(page, spaceUrl, typeKey, urlRegex) {
-  // Use gotoFresh — `admin-add-action-card` toggles `type_picker_open`, a
-  // signal mutation that no longer triggers re-render once the Dioxus
-  // arena is corrupted. This helper typically runs after space-creation
-  // flows that involve toggles/popups, so reload defensively.
-  await gotoFresh(page, spaceUrl);
+  await goto(page, spaceUrl);
   // Hide FAB that may overlap the TypePicker buttons.
   await page.evaluate(() => {
     const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
