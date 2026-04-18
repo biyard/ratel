@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Action Edit — Discussion (Cards)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+    html[data-theme="dark"]{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --surface-soft:rgba(255,255,255,0.02);--surface-hover:rgba(255,255,255,0.04);
+      --glow-aura-a:rgba(34,211,238,0.05);--glow-aura-b:rgba(252,179,0,0.03);
+      --panel-bg:rgba(12,12,26,1);--panel-card-bg:rgba(255,255,255,0.03);
+      --input-bg:rgba(255,255,255,0.02);--input-border:rgba(255,255,255,0.08);
+      --dropzone-bg:rgba(252,179,0,0.02);--file-bg:rgba(255,255,255,0.03);
+      --danger-bg:rgba(239,68,68,0.04);--danger-border:rgba(239,68,68,0.18);
+    }
+    html[data-theme="light"]{
+      --bg-void:#f5f5fb;--bg-glass:rgba(255,255,255,0.75);--bg-glass-hover:rgba(255,255,255,0.95);
+      --border-subtle:rgba(10,10,30,0.08);--border-strong:rgba(10,10,30,0.16);
+      --text-primary:#12121a;--text-muted:#5b5b75;--text-dim:#9898ad;
+      --surface-soft:rgba(10,10,30,0.03);--surface-hover:rgba(10,10,30,0.05);
+      --glow-aura-a:rgba(34,211,238,0.09);--glow-aura-b:rgba(252,179,0,0.06);
+      --panel-bg:rgba(255,255,255,1);--panel-card-bg:rgba(10,10,30,0.03);
+      --input-bg:rgba(10,10,30,0.02);--input-border:rgba(10,10,30,0.1);
+      --dropzone-bg:rgba(252,179,0,0.05);--file-bg:rgba(10,10,30,0.03);
+      --danger-bg:rgba(239,68,68,0.06);--danger-border:rgba(239,68,68,0.22);
+    }
+
+    :root{
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-red:#ef4444;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+      --discussion-color:#22d3ee;--discussion-bg:rgba(34,211,238,0.08);--discussion-border:rgba(34,211,238,0.22);--discussion-glow:rgba(34,211,238,0.14);
+      --general-color:#22c55e;--general-bg:rgba(34,197,94,0.08);--general-border:rgba(34,197,94,0.22);
+    }
+
+    html,body{height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body);transition:background 0.25s,color 0.25s}
+    body{overflow:hidden}
+
+    .arena{position:relative;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+    .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 20%,var(--glow-aura-a),transparent 60%),radial-gradient(ellipse 120% 100% at 50% 120%,var(--glow-aura-b),transparent 50%);z-index:0;pointer-events:none}
+
+    /* ===== Topbar (shared) ===== */
+    .arena-topbar{position:relative;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:16px 28px;gap:16px;background:var(--bg-glass);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-subtle);flex-shrink:0}
+    .arena-topbar__left{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+    .back-btn{width:36px;height:36px;border-radius:10px;background:var(--surface-soft);border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s}
+    .back-btn:hover{border-color:rgba(252,179,0,0.3);color:var(--accent-gold)}
+    .back-btn svg{width:16px;height:16px}
+    .arena-topbar__logo{width:36px;height:36px;border-radius:9px;object-fit:cover;border:1px solid rgba(252,179,0,0.15);flex-shrink:0}
+    .breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);flex-wrap:wrap}
+    .breadcrumb__item{font-family:var(--font-display);font-size:11px;letter-spacing:0.08em;text-transform:uppercase}
+    .breadcrumb__sep{color:var(--text-dim);font-size:10px}
+    .breadcrumb__current{color:var(--text-primary);font-weight:600}
+    .type-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase}
+    .type-badge svg{width:13px;height:13px}
+    .type-badge--discussion{background:var(--discussion-bg);color:var(--discussion-color);border:1px solid var(--discussion-border)}
+
+    .topbar-title-input{flex:1;min-width:180px;background:transparent;border:none;outline:none;color:var(--text-primary);font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:0.04em;padding:6px 10px;border-radius:8px;transition:background 0.15s}
+    .topbar-title-input:hover,.topbar-title-input:focus{background:var(--surface-hover)}
+
+    .arena-topbar__right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+    .autosave{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted)}
+    .autosave__dot{width:6px;height:6px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal)}
+    .autosave--unsaved .autosave__dot{background:var(--accent-gold);box-shadow:0 0 6px var(--accent-gold);animation:pulse 1.4s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+    .btn{padding:8px 14px;border-radius:10px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;border:1px solid var(--border-subtle);background:transparent;color:var(--text-primary);display:inline-flex;align-items:center;gap:6px}
+    .btn svg{width:12px;height:12px}
+    .btn:hover{border-color:rgba(252,179,0,0.3);color:var(--accent-gold);background:var(--surface-hover)}
+    .btn--ghost{background:transparent}
+    .btn--secondary{background:var(--surface-soft);border-color:var(--border-subtle)}
+    .btn--primary{background:linear-gradient(135deg,var(--accent-gold),#e5a200);border:none;color:#0a0a0a;box-shadow:0 2px 12px rgba(252,179,0,0.25)}
+    .btn--primary:hover{color:#0a0a0a;transform:translateY(-1px);box-shadow:0 4px 16px rgba(252,179,0,0.4)}
+    .btn--danger{background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.22);color:var(--accent-red)}
+    .btn--danger:hover{background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.4);color:var(--accent-red)}
+    .btn--lg{padding:10px 20px;font-size:11px}
+
+    .hud-btn{width:40px;height:40px;border-radius:10px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s;padding:0;position:relative}
+    .hud-btn:hover{background:var(--bg-glass-hover);border-color:rgba(252,179,0,0.2)}
+    .hud-btn svg{width:16px;height:16px;color:var(--text-muted)}
+    .hud-btn:hover svg{color:var(--accent-gold)}
+    .theme-menu{position:absolute;top:48px;right:0;min-width:180px;background:var(--panel-bg);border:1px solid var(--border-subtle);border-radius:12px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,0.4);z-index:40;display:none;flex-direction:column;gap:2px}
+    .theme-menu[data-open="true"]{display:flex}
+    .theme-menu__label{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);padding:8px 10px 4px}
+    .theme-menu__item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:transparent;border:1px solid transparent;cursor:pointer;color:var(--text-primary);font-family:var(--font-body);font-size:13px;text-align:left;transition:all 0.15s}
+    .theme-menu__item:hover{background:var(--surface-hover)}
+    .theme-menu__item[aria-selected="true"]{background:rgba(252,179,0,0.08);border-color:rgba(252,179,0,0.22);color:var(--accent-gold)}
+    .theme-menu__item svg{width:14px;height:14px;flex-shrink:0}
+
+    /* ===== Pager body ===== */
+    .pager{position:relative;z-index:10;flex:1;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none}
+    .pager::-webkit-scrollbar{display:none}
+    .pager__page{flex:0 0 100%;width:100%;height:100%;scroll-snap-align:center;display:flex;flex-direction:column;padding:24px 40px 32px;overflow-y:auto;scrollbar-width:thin}
+    .pager__page::-webkit-scrollbar{width:6px}
+    .pager__page::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
+
+    .page-card{max-width:1040px;width:100%;margin:0 auto;background:var(--bg-glass);backdrop-filter:blur(20px);border:1px solid var(--border-subtle);border-radius:24px;padding:30px 30px 34px;display:flex;flex-direction:column;gap:22px;box-shadow:0 20px 80px rgba(0,0,0,0.35)}
+
+    .page-card__head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-bottom:18px;border-bottom:1px solid var(--border-subtle)}
+    .page-card__title-wrap{display:flex;align-items:center;gap:12px}
+    .page-card__num{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:0.14em;color:var(--discussion-color);opacity:0.85}
+    .page-card__title{font-family:var(--font-display);font-size:20px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-primary)}
+    .page-card__subtitle{font-size:13px;color:var(--text-muted)}
+    .page-card__nextlink{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);background:transparent;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:color 0.2s}
+    .page-card__nextlink:hover{color:var(--discussion-color)}
+    .page-card__nextlink svg{width:14px;height:14px}
+
+    /* ===== Section card (inner, unchanged semantics from scroll) ===== */
+    .section{background:var(--surface-soft);border:1px solid var(--border-subtle);border-radius:16px;padding:22px 22px 20px;display:flex;flex-direction:column;gap:16px}
+    .section__head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .section__label{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
+    .section__hint{font-size:12px;color:var(--text-muted)}
+    .section--danger{background:var(--danger-bg);border-color:var(--danger-border)}
+
+    /* ===== Form atoms (shared) ===== */
+    .field{display:flex;flex-direction:column;gap:8px}
+    .field__label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted)}
+    .input,.textarea,.select{width:100%;padding:11px 14px;border-radius:10px;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary);font-family:var(--font-body);font-size:14px;outline:none;transition:all 0.2s}
+    .input:focus,.textarea:focus,.select:focus{border-color:rgba(252,179,0,0.4);box-shadow:0 0 0 3px rgba(252,179,0,0.08)}
+    .textarea{resize:vertical;min-height:72px;line-height:1.5}
+    .input--num{width:140px}
+    .input-group{display:flex;align-items:center;gap:8px}
+    .input-suffix{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.1em;color:var(--text-muted)}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media (max-width:768px){.grid-2{grid-template-columns:1fr}}
+
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;transition:all 0.15s;font-family:var(--font-body)}
+    .chip:hover{border-color:var(--discussion-border);color:var(--discussion-color)}
+    .chip[aria-pressed="true"]{background:var(--discussion-bg);border-color:var(--discussion-border);color:var(--discussion-color)}
+    .chip__x{opacity:0.7;font-size:14px;line-height:1}
+    .chip-input{min-width:140px;padding:6px 10px;border-radius:100px;background:transparent;border:1px dashed var(--border-strong);color:var(--text-muted);font-size:12px;outline:none;font-family:var(--font-body)}
+    .chip-input:focus{border-color:var(--accent-gold);color:var(--accent-gold)}
+
+    .switch{position:relative;display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+    .switch__track{width:38px;height:22px;border-radius:100px;background:var(--surface-hover);border:1px solid var(--border-subtle);position:relative;transition:all 0.2s;flex-shrink:0}
+    .switch__thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--text-muted);transition:all 0.2s}
+    .switch[aria-checked="true"] .switch__track{background:rgba(252,179,0,0.2);border-color:rgba(252,179,0,0.4)}
+    .switch[aria-checked="true"] .switch__thumb{left:18px;background:var(--accent-gold);box-shadow:0 0 8px rgba(252,179,0,0.5)}
+    .switch__label{font-size:13px;color:var(--text-primary)}
+    .switch__sub{font-size:11px;color:var(--text-muted);display:block;margin-top:2px}
+
+    .segmented{display:inline-flex;padding:3px;background:var(--surface-soft);border:1px solid var(--border-subtle);border-radius:10px;gap:2px}
+    .segmented__btn{padding:8px 14px;border-radius:8px;background:transparent;border:none;color:var(--text-muted);font-family:var(--font-body);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s}
+    .segmented__btn[aria-selected="true"]{background:rgba(252,179,0,0.12);color:var(--accent-gold);box-shadow:0 1px 4px rgba(252,179,0,0.15)}
+
+    .tile{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:12px;background:var(--surface-soft);border:1px solid var(--border-subtle)}
+    .tile__label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim)}
+    .tile__row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+
+    /* Editor */
+    .editor{border:1px solid var(--input-border);border-radius:12px;background:var(--input-bg);overflow:hidden}
+    .editor__toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:2px;padding:8px 10px;border-bottom:1px solid var(--border-subtle);background:var(--surface-soft)}
+    .editor__tool{min-width:30px;height:30px;padding:0 8px;border-radius:7px;background:transparent;border:1px solid transparent;color:var(--text-muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:11px;font-weight:700;transition:all 0.15s}
+    .editor__tool:hover{background:var(--surface-hover);color:var(--accent-gold);border-color:var(--border-subtle)}
+    .editor__tool svg{width:14px;height:14px}
+    .editor__divider{width:1px;height:18px;background:var(--border-subtle);margin:0 4px}
+    .editor__body{padding:20px 22px;min-height:220px;color:var(--text-primary);font-size:15px;line-height:1.7;outline:none}
+    .editor__body h2{font-family:var(--font-display);font-size:18px;font-weight:700;margin:12px 0 8px;letter-spacing:0.03em}
+    .editor__body p{margin:8px 0}
+    .editor__body ul{padding-left:22px;margin:8px 0}
+    .editor__footer{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-top:1px solid var(--border-subtle);background:var(--surface-soft);font-family:var(--font-display);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim)}
+
+    .dropzone{display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:12px;border:1.5px dashed rgba(252,179,0,0.3);background:var(--dropzone-bg);cursor:pointer;color:var(--text-muted);transition:all 0.2s}
+    .dropzone:hover{border-color:var(--accent-gold);background:rgba(252,179,0,0.05);color:var(--accent-gold)}
+    .dropzone svg{width:18px;height:18px}
+    .dropzone__text{display:flex;flex-direction:column;gap:2px}
+    .dropzone__title{font-size:13px;font-weight:600;color:var(--text-primary)}
+    .dropzone__sub{font-size:11px;color:var(--text-dim)}
+
+    .file-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--file-bg);border:1px solid var(--border-subtle);margin-bottom:8px}
+    .file-row__icon{width:32px;height:32px;border-radius:8px;background:var(--surface-hover);display:flex;align-items:center;justify-content:center;color:var(--text-muted);flex-shrink:0}
+    .file-row__icon--pdf{background:rgba(239,68,68,0.1);color:var(--accent-red);border:1px solid rgba(239,68,68,0.2)}
+    .file-row__icon--img{background:rgba(168,85,247,0.1);color:#a855f7;border:1px solid rgba(168,85,247,0.2)}
+    .file-row__icon svg{width:14px;height:14px}
+    .file-row__info{flex:1;min-width:0}
+    .file-row__name{font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .file-row__meta{font-size:11px;color:var(--text-dim);font-family:var(--font-display);letter-spacing:0.06em;text-transform:uppercase}
+    .icon-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--border-subtle);background:transparent;color:var(--text-muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;transition:all 0.15s}
+    .icon-btn:hover{border-color:rgba(239,68,68,0.3);color:var(--accent-red)}
+    .icon-btn svg{width:13px;height:13px}
+
+    /* Accordion (kept for moderation) */
+    .accordion{border:1px solid var(--border-subtle);border-radius:12px;overflow:hidden;background:var(--surface-soft)}
+    .accordion__head{width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:transparent;border:none;color:var(--text-primary);cursor:pointer;font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase}
+    .accordion__head svg{width:14px;height:14px;color:var(--text-muted);transition:transform 0.2s}
+    .accordion[data-open="true"] .accordion__head svg{transform:rotate(180deg)}
+    .accordion__body{display:none;padding:0 18px 18px;flex-direction:column;gap:14px}
+    .accordion[data-open="true"] .accordion__body{display:flex}
+
+    /* Sticky footer */
+    .sticky-footer{position:relative;z-index:20;background:var(--bg-glass);backdrop-filter:blur(20px);border-top:1px solid var(--border-subtle);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0}
+    .sticky-footer__left{font-size:12px;color:var(--text-muted)}
+    .sticky-footer__actions{display:flex;gap:10px}
+
+    /* Responsive */
+    @media (max-width:768px){
+      .arena-topbar{padding:12px 16px;flex-wrap:wrap}
+      .topbar-title-input{width:100%;order:3}
+      .pager__page{padding:0 16px 24px}
+      .page-card{padding:22px 18px 24px;border-radius:18px}
+      .sticky-footer{padding:12px 16px}
+    }
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <!-- ===== Topbar ===== -->
+    <header class="arena-topbar" role="banner">
+      <div class="arena-topbar__left">
+        <button class="back-btn" aria-label="Back" data-testid="topbar-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        </button>
+        <img class="arena-topbar__logo" alt="Space logo" src="https://api.dicebear.com/7.x/shapes/svg?seed=climate&backgroundColor=22d3ee" />
+        <nav class="breadcrumb" aria-label="breadcrumb">
+          <span class="breadcrumb__item">Climate Action DAO</span>
+          <span class="breadcrumb__sep">›</span>
+          <span class="breadcrumb__item breadcrumb__current">Actions</span>
+        </nav>
+        <span class="type-badge type-badge--discussion" data-testid="type-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Discussion
+        </span>
+        <input class="topbar-title-input" data-testid="basics-title" value="Carbon Offset Strategies for 2026" aria-label="Discussion title" />
+      </div>
+      <div class="arena-topbar__right">
+        <span class="autosave autosave--unsaved" data-testid="autosave-pill">
+          <span class="autosave__dot"></span>
+          <span>Unsaved · 3s</span>
+        </span>
+        <button class="btn btn--ghost" data-testid="cancel-btn">Cancel</button>
+        <button class="btn btn--secondary" data-testid="save-draft-btn">Save Draft</button>
+        <button class="btn btn--primary btn--lg" data-testid="publish-btn">Publish</button>
+        <div style="position:relative">
+          <button class="hud-btn" aria-label="Settings" data-testid="settings-btn" data-theme-toggle>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+          <div class="theme-menu" data-theme-menu>
+            <div class="theme-menu__label">Theme</div>
+            <button class="theme-menu__item" data-theme-set="dark" aria-selected="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              Dark
+            </button>
+            <button class="theme-menu__item" data-theme-set="light">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+              Light
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== Pager body ===== -->
+    <main class="pager" id="pager" data-testid="pager">
+      <!-- ========== CARD 1 — Content ========== -->
+      <section class="pager__page" data-page="0" aria-labelledby="card-1-title">
+        <article class="page-card" data-testid="page-card-content">
+          <header class="page-card__head">
+            <div class="page-card__title-wrap">
+              <span class="page-card__num">01 / 02</span>
+              <div>
+                <h1 class="page-card__title" id="card-1-title">Content</h1>
+                <div class="page-card__subtitle">Basics, body, and attachments</div>
+              </div>
+            </div>
+            <button class="page-card__nextlink" data-nav="next" data-testid="page-card-next-1">
+              Next: Configuration
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </button>
+          </header>
+
+          <!-- Content (merged with Basics) -->
+          <section class="section" data-testid="section-content">
+            <div class="section__head">
+              <span class="section__label">Content</span>
+              <span class="section__hint">Markdown supported</span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="basics-desc">Short description</label>
+              <input class="input" id="basics-desc" data-testid="basics-description" placeholder="One-line summary shown below the title" value="Open discussion on practical carbon offset tactics for urban communities." />
+            </div>
+            <div class="field">
+              <span class="field__label">Tags</span>
+              <div class="chips" data-testid="basics-tags">
+                <button class="chip" aria-pressed="true">#offset <span class="chip__x">×</span></button>
+                <button class="chip" aria-pressed="true">#urban <span class="chip__x">×</span></button>
+                <button class="chip" aria-pressed="true">#policy <span class="chip__x">×</span></button>
+                <input class="chip-input" placeholder="Add tag + Enter" />
+              </div>
+            </div>
+            <div class="editor">
+              <div class="editor__toolbar" role="toolbar" aria-label="Editor tools">
+                <button class="editor__tool" title="Heading 1">H1</button>
+                <button class="editor__tool" title="Heading 2">H2</button>
+                <button class="editor__tool" title="Heading 3">H3</button>
+                <span class="editor__divider"></span>
+                <button class="editor__tool" title="Bold"><strong>B</strong></button>
+                <button class="editor__tool" title="Italic"><em>I</em></button>
+                <button class="editor__tool" title="Underline"><u>U</u></button>
+                <span class="editor__divider"></span>
+                <button class="editor__tool" title="List">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                </button>
+                <button class="editor__tool" title="Link">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                </button>
+                <button class="editor__tool" title="Code">&lt;/&gt;</button>
+                <button class="editor__tool" title="Image">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+                </button>
+              </div>
+              <div class="editor__body" contenteditable="true" data-testid="content-editor">
+                <h2>Framing the conversation</h2>
+                <p>Carbon offsets remain one of the most misunderstood mechanisms in climate policy. In this thread we want to collect practical, verifiable strategies that city governments can deploy in the next 18 months.</p>
+                <p>Before diving in, please read the three references linked in the attachments section and bring at least one concrete example from your region.</p>
+                <h2>Discussion questions</h2>
+                <ul>
+                  <li>Which verification standards (Gold Standard, Verra, Puro) have you actually audited in practice?</li>
+                  <li>How do you reconcile offset purchases with direct-reduction targets?</li>
+                  <li>What does a credible community-level offset program look like?</li>
+                </ul>
+                <p>Keep it practical. Anecdotes with numbers over theory.</p>
+              </div>
+              <div class="editor__footer">
+                <span data-testid="content-wordcount">214 words</span>
+                <span>≈ 2 min read</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Attachments -->
+          <section class="section" data-testid="section-attachments">
+            <div class="section__head">
+              <span class="section__label">Attachments</span>
+              <span class="section__hint">PDF, images, up to 25MB each</span>
+            </div>
+            <div data-testid="attachment-list">
+              <div class="file-row">
+                <div class="file-row__icon file-row__icon--pdf">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <div class="file-row__info">
+                  <div class="file-row__name">Gold-Standard-Verification-2025.pdf</div>
+                  <div class="file-row__meta">PDF · 2.4 MB · uploaded 12 min ago</div>
+                </div>
+                <button class="icon-btn" aria-label="Remove">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+              <div class="file-row">
+                <div class="file-row__icon file-row__icon--img">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+                </div>
+                <div class="file-row__info">
+                  <div class="file-row__name">urban-offset-diagram.png</div>
+                  <div class="file-row__meta">PNG · 812 KB · uploaded yesterday</div>
+                </div>
+                <button class="icon-btn" aria-label="Remove">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="dropzone" data-testid="attachment-dropzone" tabindex="0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div class="dropzone__text">
+                <span class="dropzone__title">Drop files or click to browse</span>
+                <span class="dropzone__sub">PDF, PNG, JPG · max 25MB each</span>
+              </div>
+            </div>
+          </section>
+        </article>
+      </section>
+
+      <!-- ========== CARD 2 — Configuration ========== -->
+      <section class="pager__page" data-page="1" aria-labelledby="card-2-title">
+        <article class="page-card" data-testid="page-card-config">
+          <header class="page-card__head">
+            <div class="page-card__title-wrap">
+              <span class="page-card__num">02 / 02</span>
+              <div>
+                <h1 class="page-card__title" id="card-2-title">Configuration</h1>
+                <div class="page-card__subtitle">Schedule, rewards, moderation, and danger zone</div>
+              </div>
+            </div>
+            <button class="page-card__nextlink" data-nav="prev" data-testid="page-card-prev-2" style="transform:scaleX(-1)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+              <span style="transform:scaleX(-1);display:inline-block">Back: Content</span>
+            </button>
+          </header>
+
+          <!-- Schedule -->
+          <section class="section" data-testid="section-schedule">
+            <div class="section__head">
+              <span class="section__label">Schedule</span>
+              <span class="section__hint">Timezone: UTC+09:00 Seoul</span>
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label class="field__label" for="schedule-start">Starts at</label>
+                <input class="input" id="schedule-start" type="datetime-local" value="2026-04-16T09:00" data-testid="schedule-start" />
+              </div>
+              <div class="field">
+                <label class="field__label" for="schedule-end">Ends at</label>
+                <input class="input" id="schedule-end" type="datetime-local" value="2026-04-30T18:00" data-testid="schedule-end" />
+              </div>
+            </div>
+            <div class="switch" role="switch" aria-checked="false" tabindex="0" data-testid="schedule-no-end">
+              <span class="switch__track"><span class="switch__thumb"></span></span>
+              <span>
+                <span class="switch__label">No end date</span>
+                <span class="switch__sub">Discussion stays open indefinitely</span>
+              </span>
+            </div>
+          </section>
+
+          <!-- Participation & Rewards -->
+          <section class="section" data-testid="section-participation">
+            <div class="section__head">
+              <span class="section__label">Participation &amp; Rewards</span>
+            </div>
+            <div class="grid-2">
+              <div class="tile" data-testid="tile-reward">
+                <span class="tile__label">Reward (CR)</span>
+                <div class="input-group">
+                  <input class="input input--num" type="number" value="250" data-testid="reward-amount" />
+                  <span class="input-suffix">CR</span>
+                </div>
+              </div>
+              <div class="tile" data-testid="tile-prereq">
+                <span class="tile__label">Prerequisite</span>
+                <div class="tile__row">
+                  <span style="font-size:13px;color:var(--text-muted)">Require Follow action first</span>
+                  <span class="switch" role="switch" aria-checked="true" tabindex="0">
+                    <span class="switch__track"><span class="switch__thumb"></span></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Moderation -->
+          <section class="section" data-testid="section-moderation">
+            <div class="accordion" data-accordion data-open="false">
+              <button class="accordion__head" data-accordion-head>
+                Moderation
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="accordion__body">
+                <div class="switch" role="switch" aria-checked="true" tabindex="0" data-testid="moderation-ai">
+                  <span class="switch__track"><span class="switch__thumb"></span></span>
+                  <span>
+                    <span class="switch__label">AI moderator</span>
+                    <span class="switch__sub">Flags off-topic and toxic comments automatically</span>
+                  </span>
+                </div>
+                <div class="switch" role="switch" aria-checked="false" tabindex="0" data-testid="moderation-approval">
+                  <span class="switch__track"><span class="switch__thumb"></span></span>
+                  <span>
+                    <span class="switch__label">Comments require approval</span>
+                    <span class="switch__sub">Moderators must approve before comments appear</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Danger zone -->
+          <section class="section section--danger" data-testid="section-danger">
+            <div class="section__head">
+              <span class="section__label" style="color:var(--accent-red);opacity:0.85">Danger zone</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+              <div style="flex:1;min-width:220px">
+                <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px">Delete this discussion</div>
+                <div style="font-size:12px;color:var(--text-muted)">Removes the action and all 24 comments. Rewards already paid are not refunded.</div>
+              </div>
+              <button class="btn btn--danger" data-testid="delete-discussion">Delete discussion</button>
+            </div>
+          </section>
+        </article>
+      </section>
+    </main>
+
+    <!-- ===== Sticky footer ===== -->
+    <footer class="sticky-footer">
+      <span class="sticky-footer__left" data-testid="footer-status">Unsaved changes · last edit 3s ago</span>
+      <div class="sticky-footer__actions">
+        <button class="btn btn--ghost" data-testid="footer-cancel">Cancel</button>
+        <button class="btn btn--secondary" data-testid="footer-save-draft">Save Draft</button>
+        <button class="btn btn--primary btn--lg" data-testid="footer-publish">Publish</button>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    (function(){
+      // Theme menu
+      var saved = localStorage.getItem('ratel-theme');
+      if (saved) document.documentElement.setAttribute('data-theme', saved);
+      var toggleBtn = document.querySelector('[data-theme-toggle]');
+      var menu = document.querySelector('[data-theme-menu]');
+      if (toggleBtn && menu) {
+        toggleBtn.addEventListener('click', function(e){
+          e.stopPropagation();
+          var open = menu.getAttribute('data-open') === 'true';
+          menu.setAttribute('data-open', open ? 'false' : 'true');
+        });
+        document.addEventListener('click', function(){ menu.setAttribute('data-open','false'); });
+        menu.addEventListener('click', function(e){ e.stopPropagation(); });
+        menu.querySelectorAll('[data-theme-set]').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            var t = btn.getAttribute('data-theme-set');
+            document.documentElement.setAttribute('data-theme', t);
+            localStorage.setItem('ratel-theme', t);
+            menu.querySelectorAll('[data-theme-set]').forEach(function(b){ b.setAttribute('aria-selected', b === btn ? 'true':'false'); });
+            menu.setAttribute('data-open','false');
+          });
+          btn.setAttribute('aria-selected', btn.getAttribute('data-theme-set') === (saved || 'dark') ? 'true':'false');
+        });
+      }
+
+      // Chips
+      document.querySelectorAll('.chip').forEach(function(c){
+        c.addEventListener('click', function(){
+          var pressed = c.getAttribute('aria-pressed') === 'true';
+          c.setAttribute('aria-pressed', pressed ? 'false' : 'true');
+        });
+      });
+
+      // Switches
+      document.querySelectorAll('.switch').forEach(function(s){
+        s.addEventListener('click', function(){
+          var v = s.getAttribute('aria-checked') === 'true';
+          s.setAttribute('aria-checked', v ? 'false':'true');
+        });
+        s.addEventListener('keydown', function(e){ if (e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); s.click(); }});
+      });
+
+      // Segmented
+      document.querySelectorAll('.segmented').forEach(function(seg){
+        seg.querySelectorAll('[role="tab"]').forEach(function(b){
+          b.addEventListener('click', function(){
+            seg.querySelectorAll('[role="tab"]').forEach(function(x){ x.setAttribute('aria-selected','false'); });
+            b.setAttribute('aria-selected','true');
+          });
+        });
+      });
+
+      // Accordion
+      document.querySelectorAll('[data-accordion]').forEach(function(acc){
+        var head = acc.querySelector('[data-accordion-head]');
+        head.addEventListener('click', function(){
+          acc.setAttribute('data-open', acc.getAttribute('data-open') === 'true' ? 'false' : 'true');
+        });
+      });
+
+      // Dropzone visual
+      document.querySelectorAll('.dropzone').forEach(function(d){
+        ['dragenter','dragover'].forEach(function(ev){ d.addEventListener(ev, function(e){ e.preventDefault(); d.style.borderColor = 'var(--accent-gold)'; d.style.color = 'var(--accent-gold)'; }); });
+        ['dragleave','drop'].forEach(function(ev){ d.addEventListener(ev, function(e){ e.preventDefault(); d.style.borderColor = ''; d.style.color = ''; }); });
+      });
+    })();
+  </script>
+</body>
+</html>

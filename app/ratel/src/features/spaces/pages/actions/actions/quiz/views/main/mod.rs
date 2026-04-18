@@ -12,10 +12,13 @@ mod viewer;
 use viewer::QuizViewerPage;
 
 use crate::features::spaces::space_common::hooks::use_space_role;
+use crate::features::spaces::space_common::providers::use_space_context;
 
 #[component]
 pub fn QuizActionPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) -> Element {
     let role = use_space_role()();
+    let space_ctx = use_space_context();
+    let is_admin = space_ctx.role().is_admin();
     let space_id_sig: ReadSignal<SpacePartition> = use_signal(|| space_id.clone()).into();
     let quiz_id_sig: ReadSignal<SpaceQuizEntityType> = use_signal(|| quiz_id.clone()).into();
 
@@ -31,12 +34,16 @@ pub fn QuizActionPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) ->
 
     // Edit-mode override: creators can flip this from the settings
     // button inside the participant view to open the configuration UI
-    // even after the action has started.
-    let edit_mode = use_context_provider(|| ActionEditMode(Signal::new(false)));
-    let show_creator_view = !locked || edit_mode.0();
+    // even after the action has started. Admins always start in edit mode.
+    let edit_mode = use_context_provider(|| ActionEditMode(Signal::new(is_admin)));
+    let show_creator_view = is_admin || !locked || edit_mode.0();
 
     let content = match (role, show_creator_view) {
         (SpaceUserRole::Creator, true) => rsx! {
+            QuizCreatorPage { space_id, quiz_id }
+        },
+
+        _ if is_admin => rsx! {
             QuizCreatorPage { space_id, quiz_id }
         },
 
@@ -51,7 +58,7 @@ pub fn QuizActionPage(space_id: SpacePartition, quiz_id: SpaceQuizEntityType) ->
     };
 
     rsx! {
-        div { class: "flex flex-col flex-1 mx-auto w-full min-h-0 max-w-desktop",
+        div { class: if show_creator_view { "flex flex-col flex-1 w-full min-h-0" } else { "flex flex-col flex-1 mx-auto w-full min-h-0 max-w-desktop" },
             if !show_creator_view {
                 SettingsSwitchButton {}
             }

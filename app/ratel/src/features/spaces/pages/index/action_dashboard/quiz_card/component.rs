@@ -1,15 +1,22 @@
 use crate::features::spaces::pages::actions::types::SpaceActionSummary;
-use crate::features::spaces::pages::index::action_pages::quiz::{ActiveActionOverlay, ActiveActionOverlaySignal};
+use crate::features::spaces::pages::index::action_pages::quiz::{
+    ActiveActionOverlay, ActiveActionOverlaySignal,
+};
 use crate::features::spaces::pages::index::*;
+use crate::features::spaces::space_common::providers::use_space_context;
 
 #[component]
 pub fn QuizActionCard(
     action: SpaceActionSummary,
     space_id: ReadSignal<SpacePartition>,
+    #[props(default)] is_admin: bool,
 ) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
     let lang = use_language();
     let mut overlay: ActiveActionOverlaySignal = use_context();
+    let nav = use_navigator();
+    let mut space_ctx = use_space_context();
+    let action_id_edit = action.action_id.clone();
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
@@ -62,7 +69,7 @@ pub fn QuizActionCard(
                     }
                     "{action.action_type.translate(&lang())}"
                 }
-                div { class: "quest-card__badges",
+                div { class: "quest-card__top-actions",
                     if action.prerequisite {
                         span { class: "quest-card__badge quest-card__badge--prerequisite",
                             "{tr.required_label}"
@@ -71,6 +78,19 @@ pub fn QuizActionCard(
                     if action.credits > 0 {
                         span { class: "quest-card__badge quest-card__badge--credits",
                             "+{action.credits} CR"
+                        }
+                    }
+                    if is_admin {
+                        QuestEditButton {
+                            action_id: action.action_id.clone(),
+                            on_edit: move |_| {
+                                space_ctx.current_role.set(SpaceUserRole::Creator);
+                                let quiz_id: SpaceQuizEntityType = action_id_edit.clone().into();
+                                nav.push(crate::Route::QuizActionPage {
+                                    space_id: space_id(),
+                                    quiz_id,
+                                });
+                            },
                         }
                     }
                 }
