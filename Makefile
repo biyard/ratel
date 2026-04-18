@@ -56,3 +56,6 @@ testing: .build/evm-keys
 
 clean-infra:
 	docker compose --profile infra down
+
+pr-testing:
+	scripts/pr-testing-playwright.sh
