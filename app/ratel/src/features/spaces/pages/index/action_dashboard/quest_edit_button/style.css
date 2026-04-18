@@ -1,0 +1,53 @@
+/* ── Quest Edit Button (admin affordance on quest cards) ───────── */
+
+.quest-card__top-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.quest-card__edit-btn {
+  --qedit-btn-bg: var(--dark, rgba(12,12,26,0.65)) var(--light, rgba(255,255,255,0.72));
+  --qedit-btn-bg-hover: var(--dark, rgba(20,20,40,0.8)) var(--light, rgba(255,255,255,0.92));
+  --qedit-btn-border: var(--dark, rgba(255,255,255,0.06)) var(--light, rgba(10,10,30,0.08));
+  --qedit-btn-color: var(--dark, #8888a8) var(--light, #6b6b80);
+
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--qedit-btn-bg);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--qedit-btn-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--qedit-btn-color);
+  padding: 0;
+  opacity: 0;
+  transform: translateX(4px);
+  pointer-events: none;
+}
+
+.quest-card.active .quest-card__edit-btn {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.quest-card__edit-btn:hover {
+  border-color: rgba(252,179,0,0.3);
+  color: #fcb300;
+  background: var(--qedit-btn-bg-hover);
+}
+
+.quest-card__edit-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.quest-card[data-editing="true"] .quest-card__edit-btn {
+  display: none;
+}

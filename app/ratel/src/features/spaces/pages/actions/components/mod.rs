@@ -9,7 +9,11 @@ pub use create_action_modal::CreateActionModal;
 
 mod action_common_settings;
 pub use action_common_settings::ActionCommonSettings;
+pub use action_common_settings::ActionCommonSettingsTranslate;
 pub use action_common_settings::RewardSetting;
+
+mod action_reward_setting;
+pub use action_reward_setting::ActionRewardSetting;
 
 mod full_action_layover;
 pub use full_action_layover::FullActionLayover;
@@ -22,5 +26,8 @@ pub use delete_action_button::ActionDeleteButton;
 
 mod settings_switch_button;
 pub use settings_switch_button::{ActionEditMode, SettingsSwitchButton, use_action_edit_mode};
+
+mod action_edit_topbar;
+pub use action_edit_topbar::*;
 
 use super::*;

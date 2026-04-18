@@ -267,6 +267,10 @@
 
 .comment-list { display: flex; flex-direction: column; gap: 2px; }
 
+/* Single-root wrapper so each CommentItem has one DOM root; `display: contents`
+   keeps the existing flex/gap layout untouched (wrapper is visually transparent). */
+.comment-entry { display: contents; }
+
 /* ── Comment Item ──────────────────────────────── */
 .comment-item { display: flex; gap: 10px; padding: 12px 20px; border-radius: 0; transition: background 0.2s ease; }
 .comment-item:hover { background: var(--surface-raised); }
@@ -316,17 +320,22 @@
 
 /* ── Reply Input ───────────────────────────────── */
 .reply-input {
-  margin-left: 38px; display: flex; gap: 8px;
+  margin-left: 38px; display: flex; gap: 8px; align-items: center;
   padding: 10px 12px; background: var(--surface-raised);
   border: 1px solid var(--border); border-radius: 10px; margin-top: 2px; margin-right: 20px;
 }
 .reply-input:focus-within { border-color: var(--discuss-border); }
+/* MentionAutocomplete wraps its children in <div class="relative">. That
+   wrapper becomes the flex item inside .reply-input — force it to grow so
+   the input fills the row and the send button stays inline on the right. */
+.reply-input > .relative { flex: 1; min-width: 0; }
 .reply-input__avatar {
   width: 22px; height: 22px; border-radius: 50%; object-fit: cover;
   border: 1px solid var(--border); flex-shrink: 0;
 }
 .reply-input__field {
-  flex: 1; border: none; background: transparent; color: var(--text);
+  width: 100%; min-width: 0;
+  border: none; background: transparent; color: var(--text);
   font-family: 'Outfit', sans-serif; font-size: 12px; outline: none;
 }
 .reply-input__field::placeholder { color: var(--text-dim); }
