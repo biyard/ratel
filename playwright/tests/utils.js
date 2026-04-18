@@ -196,25 +196,16 @@ export async function goto(page, url) {
  * playwright job over its 30 min timeout.
  */
 export async function gotoFresh(page, url) {
-  // Initial navigation — same WASM-or-timeout race as plain `goto` so we
-  // don't hang on cached WASM. Skip the post-nav hydration waits in
-  // `goto` because we're going to reload immediately.
-  await Promise.all([
-    Promise.race([
-      page.waitForResponse(
-        (response) =>
-          response.url().includes("app-shell") &&
-          response.url().endsWith(".wasm") &&
-          response.status() === 200,
-      ),
-      new Promise((resolve) => setTimeout(resolve, 5000)),
-    ]),
-    page.goto(url),
-  ]);
-  await page.waitForLoadState("domcontentloaded");
-  // Hard reload immediately — purges the corrupted Dioxus signal arena
-  // from any prior popup/toggle flow before we run the per-page
-  // hydration waits.
+  // Two-step navigation: page.goto sets the URL (Dioxus router may
+  // intercept and do client-side nav, which would carry the corrupted
+  // arena), then page.reload forces a hard browser reload that always
+  // bypasses any SPA router. Net effect: arena is fully reset.
+  //
+  // Skip the inner waitForLoadState after page.goto since we're going
+  // to reload immediately — the goto's promise resolution already
+  // implies the navigation has commit-progressed enough that reload
+  // will pick up the right URL.
+  await page.goto(url);
   await page.reload();
   await page.waitForLoadState("domcontentloaded");
   await page.waitForFunction(
