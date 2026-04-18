@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Action Edit — Follow (Cards)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+    html[data-theme="dark"]{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --surface-soft:rgba(255,255,255,0.02);--surface-hover:rgba(255,255,255,0.04);
+      --glow-aura-a:rgba(251,146,60,0.06);--glow-aura-b:rgba(252,179,0,0.03);
+      --panel-bg:rgba(12,12,26,1);--input-bg:rgba(255,255,255,0.02);--input-border:rgba(255,255,255,0.08);
+      --danger-bg:rgba(239,68,68,0.04);--danger-border:rgba(239,68,68,0.18);
+    }
+    html[data-theme="light"]{
+      --bg-void:#f5f5fb;--bg-glass:rgba(255,255,255,0.75);--bg-glass-hover:rgba(255,255,255,0.95);
+      --border-subtle:rgba(10,10,30,0.08);--border-strong:rgba(10,10,30,0.16);
+      --text-primary:#12121a;--text-muted:#5b5b75;--text-dim:#9898ad;
+      --surface-soft:rgba(10,10,30,0.03);--surface-hover:rgba(10,10,30,0.05);
+      --glow-aura-a:rgba(251,146,60,0.14);--glow-aura-b:rgba(252,179,0,0.06);
+      --panel-bg:rgba(255,255,255,1);--input-bg:rgba(10,10,30,0.02);--input-border:rgba(10,10,30,0.1);
+      --danger-bg:rgba(239,68,68,0.06);--danger-border:rgba(239,68,68,0.22);
+    }
+
+    :root{
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-red:#ef4444;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+      --follow-color:#fb923c;--follow-bg:rgba(251,146,60,0.10);--follow-border:rgba(251,146,60,0.30);--follow-glow:rgba(251,146,60,0.20);
+    }
+
+    html,body{height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body);transition:background 0.25s,color 0.25s}
+    body{overflow:hidden}
+
+    .arena{position:relative;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+    .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 20%,var(--glow-aura-a),transparent 60%),radial-gradient(ellipse 120% 100% at 50% 120%,var(--glow-aura-b),transparent 50%);z-index:0;pointer-events:none}
+
+    .arena-topbar{position:relative;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:16px 28px;gap:16px;background:var(--bg-glass);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-subtle)}
+    .arena-topbar__left{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+    .back-btn{width:36px;height:36px;border-radius:10px;background:var(--surface-soft);border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
+    .back-btn:hover{border-color:rgba(252,179,0,0.3);color:var(--accent-gold)}
+    .back-btn svg{width:16px;height:16px}
+    .arena-topbar__logo{width:36px;height:36px;border-radius:9px;border:1px solid rgba(252,179,0,0.15)}
+    .breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);flex-wrap:wrap}
+    .breadcrumb__item{font-family:var(--font-display);font-size:11px;letter-spacing:0.08em;text-transform:uppercase}
+    .breadcrumb__sep{color:var(--text-dim);font-size:10px}
+    .breadcrumb__current{color:var(--text-primary);font-weight:600}
+    .type-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:var(--follow-bg);color:var(--follow-color);border:1px solid var(--follow-border)}
+    .type-badge svg{width:13px;height:13px}
+
+    .topbar-title-input{flex:1;min-width:180px;background:transparent;border:none;outline:none;color:var(--text-primary);font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:0.04em;padding:6px 10px;border-radius:8px;transition:background 0.15s}
+    .topbar-title-input:hover,.topbar-title-input:focus{background:var(--surface-hover)}
+
+    .arena-topbar__right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+    .autosave{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted)}
+    .autosave__dot{width:6px;height:6px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal)}
+    .autosave--unsaved .autosave__dot{background:var(--accent-gold);box-shadow:0 0 6px var(--accent-gold);animation:pulse 1.4s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+    .btn{padding:8px 14px;border-radius:10px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;border:1px solid var(--border-subtle);background:transparent;color:var(--text-primary);display:inline-flex;align-items:center;gap:6px}
+    .btn svg{width:12px;height:12px}
+    .btn:hover{border-color:rgba(252,179,0,0.3);color:var(--accent-gold);background:var(--surface-hover)}
+    .btn--ghost{background:transparent}
+    .btn--secondary{background:var(--surface-soft)}
+    .btn--primary{background:linear-gradient(135deg,var(--accent-gold),#e5a200);border:none;color:#0a0a0a;box-shadow:0 2px 12px rgba(252,179,0,0.25)}
+    .btn--primary:hover{color:#0a0a0a;transform:translateY(-1px);box-shadow:0 4px 16px rgba(252,179,0,0.4)}
+    .btn--danger{background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.22);color:var(--accent-red)}
+    .btn--lg{padding:10px 20px;font-size:11px}
+    .btn--follow{background:var(--follow-bg);border-color:var(--follow-border);color:var(--follow-color)}
+    .btn--follow:hover{background:rgba(251,146,60,0.18);border-color:var(--follow-color);color:var(--follow-color)}
+
+    .hud-btn{width:40px;height:40px;border-radius:10px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s;padding:0;position:relative}
+    .hud-btn:hover{background:var(--bg-glass-hover);border-color:rgba(252,179,0,0.2)}
+    .hud-btn svg{width:16px;height:16px;color:var(--text-muted)}
+    .hud-btn:hover svg{color:var(--accent-gold)}
+    .theme-menu{position:absolute;top:48px;right:0;min-width:180px;background:var(--panel-bg);border:1px solid var(--border-subtle);border-radius:12px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,0.4);z-index:40;display:none;flex-direction:column;gap:2px}
+    .theme-menu[data-open="true"]{display:flex}
+    .theme-menu__label{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);padding:8px 10px 4px}
+    .theme-menu__item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:transparent;border:1px solid transparent;cursor:pointer;color:var(--text-primary);font-family:var(--font-body);font-size:13px;text-align:left}
+    .theme-menu__item:hover{background:var(--surface-hover)}
+    .theme-menu__item[aria-selected="true"]{background:rgba(252,179,0,0.08);border-color:rgba(252,179,0,0.22);color:var(--accent-gold)}
+    .theme-menu__item svg{width:14px;height:14px}
+
+    .pager{position:relative;z-index:10;flex:1;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none}
+    .pager::-webkit-scrollbar{display:none}
+    .pager__page{flex:0 0 100%;width:100%;height:100%;scroll-snap-align:center;display:flex;flex-direction:column;padding:24px 40px 32px;overflow-y:auto}
+
+    .page-card{max-width:1040px;width:100%;margin:0 auto;background:var(--bg-glass);backdrop-filter:blur(20px);border:1px solid var(--border-subtle);border-radius:24px;padding:30px 30px 34px;display:flex;flex-direction:column;gap:22px;box-shadow:0 20px 80px rgba(0,0,0,0.35)}
+    .page-card__head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-bottom:18px;border-bottom:1px solid var(--border-subtle)}
+    .page-card__title-wrap{display:flex;align-items:center;gap:12px}
+    .page-card__num{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:0.14em;color:var(--follow-color);opacity:0.85}
+    .page-card__title{font-family:var(--font-display);font-size:20px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase}
+    .page-card__subtitle{font-size:13px;color:var(--text-muted)}
+    .page-card__nextlink{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);background:transparent;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+    .page-card__nextlink:hover{color:var(--follow-color)}
+    .page-card__nextlink svg{width:14px;height:14px}
+
+    .section{background:var(--surface-soft);border:1px solid var(--border-subtle);border-radius:16px;padding:22px 22px 20px;display:flex;flex-direction:column;gap:16px}
+    .section__head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .section__label{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
+    .section__hint{font-size:12px;color:var(--text-muted)}
+    .section--danger{background:var(--danger-bg);border-color:var(--danger-border)}
+
+    .field{display:flex;flex-direction:column;gap:8px}
+    .field__label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted)}
+    .input{width:100%;padding:11px 14px;border-radius:10px;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary);font-family:var(--font-body);font-size:14px;outline:none;transition:all 0.2s}
+    .input:focus{border-color:rgba(252,179,0,0.4);box-shadow:0 0 0 3px rgba(252,179,0,0.08)}
+    .input--dashed{border-style:dashed;background:transparent}
+    .input--num{width:140px}
+    .input-group{display:flex;align-items:center;gap:8px}
+    .input-suffix{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.1em;color:var(--text-muted)}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media (max-width:768px){.grid-2{grid-template-columns:1fr}}
+
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;font-family:var(--font-body)}
+    .chip:hover{border-color:var(--follow-border);color:var(--follow-color)}
+    .chip[aria-pressed="true"]{background:var(--follow-bg);border-color:var(--follow-border);color:var(--follow-color)}
+    .chip__x{opacity:0.7;font-size:14px;line-height:1}
+    .chip-input{min-width:140px;padding:6px 10px;border-radius:100px;background:transparent;border:1px dashed var(--border-strong);color:var(--text-muted);font-size:12px;outline:none;font-family:var(--font-body)}
+    .chip-input:focus{border-color:var(--accent-gold);color:var(--accent-gold)}
+
+    .switch{position:relative;display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+    .switch__track{width:38px;height:22px;border-radius:100px;background:var(--surface-hover);border:1px solid var(--border-subtle);position:relative;transition:all 0.2s;flex-shrink:0}
+    .switch__thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--text-muted);transition:all 0.2s}
+    .switch[aria-checked="true"] .switch__track{background:rgba(252,179,0,0.2);border-color:rgba(252,179,0,0.4)}
+    .switch[aria-checked="true"] .switch__thumb{left:18px;background:var(--accent-gold);box-shadow:0 0 8px rgba(252,179,0,0.5)}
+    .switch__label{font-size:13px;color:var(--text-primary)}
+    .switch__sub{font-size:11px;color:var(--text-muted);display:block;margin-top:2px}
+
+    .segmented{display:inline-flex;padding:3px;background:var(--surface-soft);border:1px solid var(--border-subtle);border-radius:10px;gap:2px}
+    .segmented__btn{padding:8px 14px;border-radius:8px;background:transparent;border:none;color:var(--text-muted);font-family:var(--font-body);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s}
+    .segmented__btn[aria-selected="true"]{background:rgba(252,179,0,0.12);color:var(--accent-gold);box-shadow:0 1px 4px rgba(252,179,0,0.15)}
+
+    .tile{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:12px;background:var(--surface-soft);border:1px solid var(--border-subtle)}
+    .tile__label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim)}
+    .tile__row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+
+    .editor{border:1px solid var(--input-border);border-radius:12px;background:var(--input-bg);overflow:hidden}
+    .editor__toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:2px;padding:8px 10px;border-bottom:1px solid var(--border-subtle);background:var(--surface-soft)}
+    .editor__tool{min-width:30px;height:30px;padding:0 8px;border-radius:7px;background:transparent;border:1px solid transparent;color:var(--text-muted);cursor:pointer;font-family:var(--font-display);font-size:11px;font-weight:700}
+    .editor__tool:hover{background:var(--surface-hover);color:var(--accent-gold)}
+    .editor__body{padding:20px 22px;min-height:140px;color:var(--text-primary);font-size:15px;line-height:1.7;outline:none}
+
+    /* Target row */
+    .target-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:var(--surface-soft);border:1px solid var(--border-subtle);margin-bottom:8px}
+    .target-row__avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;border:1px solid var(--border-subtle)}
+    .target-row__info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+    .target-row__name{font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .target-row__handle{font-size:11px;color:var(--text-muted);font-family:var(--font-display);letter-spacing:0.04em}
+    .target-row__badge{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:3px 8px;border-radius:6px;background:var(--follow-bg);color:var(--follow-color);border:1px solid var(--follow-border);flex-shrink:0}
+    .target-row__badge--team{background:rgba(110,237,216,0.08);color:var(--accent-teal);border-color:rgba(110,237,216,0.22)}
+    .icon-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--border-subtle);background:transparent;color:var(--text-muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+    .icon-btn:hover{border-color:rgba(239,68,68,0.3);color:var(--accent-red)}
+    .icon-btn svg{width:13px;height:13px}
+
+    .add-target{display:flex;align-items:center;gap:8px}
+    .add-target .input{flex:1}
+
+    .accordion{border:1px solid var(--border-subtle);border-radius:12px;overflow:hidden;background:var(--surface-soft)}
+    .accordion__head{width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:transparent;border:none;color:var(--text-primary);cursor:pointer;font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase}
+    .accordion__head svg{width:14px;height:14px;color:var(--text-muted);transition:transform 0.2s}
+    .accordion[data-open="true"] .accordion__head svg{transform:rotate(180deg)}
+    .accordion__body{display:none;padding:0 18px 18px;flex-direction:column;gap:14px}
+    .accordion[data-open="true"] .accordion__body{display:flex}
+
+    .sticky-footer{position:relative;z-index:20;background:var(--bg-glass);backdrop-filter:blur(20px);border-top:1px solid var(--border-subtle);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .sticky-footer__left{font-size:12px;color:var(--text-muted)}
+    .sticky-footer__actions{display:flex;gap:10px}
+
+    @media (max-width:768px){.arena-topbar{padding:12px 16px;flex-wrap:wrap}.topbar-title-input{width:100%;order:3}.pager__page{padding:0 16px 24px}.page-card{padding:22px 18px 24px;border-radius:18px}.sticky-footer{padding:12px 16px}}
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <header class="arena-topbar" role="banner">
+      <div class="arena-topbar__left">
+        <button class="back-btn" aria-label="Back" data-testid="topbar-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        </button>
+        <img class="arena-topbar__logo" alt="Space logo" src="https://api.dicebear.com/7.x/shapes/svg?seed=climate&backgroundColor=fb923c" />
+        <nav class="breadcrumb" aria-label="breadcrumb">
+          <span class="breadcrumb__item">Climate Action DAO</span>
+          <span class="breadcrumb__sep">›</span>
+          <span class="breadcrumb__item breadcrumb__current">Actions</span>
+        </nav>
+        <span class="type-badge" data-testid="type-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          Follow
+        </span>
+        <input class="topbar-title-input" data-testid="basics-title" value="Follow our climate-science team" aria-label="Follow title" />
+      </div>
+      <div class="arena-topbar__right">
+        <span class="autosave autosave--unsaved" data-testid="autosave-pill"><span class="autosave__dot"></span><span>Unsaved · 2s</span></span>
+        <button class="btn btn--ghost" data-testid="cancel-btn">Cancel</button>
+        <button class="btn btn--secondary" data-testid="save-draft-btn">Save Draft</button>
+        <button class="btn btn--primary btn--lg" data-testid="publish-btn">Publish</button>
+        <div style="position:relative">
+          <button class="hud-btn" aria-label="Settings" data-testid="settings-btn" data-theme-toggle>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+          <div class="theme-menu" data-theme-menu>
+            <div class="theme-menu__label">Theme</div>
+            <button class="theme-menu__item" data-theme-set="dark" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Dark</button>
+            <button class="theme-menu__item" data-theme-set="light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>Light</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="pager" id="pager" data-testid="pager">
+      <section class="pager__page" data-page="0">
+        <article class="page-card" data-testid="page-card-content">
+          <header class="page-card__head">
+            <div class="page-card__title-wrap">
+              <span class="page-card__num">01 / 02</span>
+              <div><h1 class="page-card__title">Targets</h1><div class="page-card__subtitle">Pick the users to follow</div></div>
+            </div>
+            <button class="page-card__nextlink" data-nav="next" data-testid="page-card-next-1">Next: Configuration<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></button>
+          </header>
+
+          <section class="section" data-testid="section-targets">
+            <div class="section__head"><span class="section__label">Targets</span><span class="section__hint">At least 1 · up to 20</span></div>
+            <div data-testid="target-list">
+              <div class="target-row" data-testid="follow-target-0">
+                <img class="target-row__avatar" alt="" src="https://api.dicebear.com/7.x/avataaars/svg?seed=maya" />
+                <div class="target-row__info">
+                  <span class="target-row__name">Maya Voss</span>
+                  <span class="target-row__handle">@maya.v</span>
+                </div>
+                <span class="target-row__badge">User</span>
+                <button class="btn btn--follow" data-testid="follow-target-0-toggle">Following</button>
+                <button class="icon-btn" aria-label="Remove target"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+              </div>
+              <div class="target-row" data-testid="follow-target-1">
+                <img class="target-row__avatar" alt="" src="https://api.dicebear.com/7.x/avataaars/svg?seed=doyooon" />
+                <div class="target-row__info">
+                  <span class="target-row__name">Doyooon</span>
+                  <span class="target-row__handle">@doyooon</span>
+                </div>
+                <span class="target-row__badge">User</span>
+                <button class="btn btn--follow" data-testid="follow-target-1-toggle">Following</button>
+                <button class="icon-btn" aria-label="Remove target"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+              </div>
+              <div class="target-row" data-testid="follow-target-2">
+                <img class="target-row__avatar" alt="" src="https://api.dicebear.com/7.x/identicon/svg?seed=climate-research" />
+                <div class="target-row__info">
+                  <span class="target-row__name">Climate Research Pod</span>
+                  <span class="target-row__handle">@climate-research</span>
+                </div>
+                <span class="target-row__badge target-row__badge--team">Team</span>
+                <button class="btn btn--follow" data-testid="follow-target-2-toggle">Following</button>
+                <button class="icon-btn" aria-label="Remove target"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+              </div>
+              <div class="target-row" data-testid="follow-target-3">
+                <img class="target-row__avatar" alt="" src="https://api.dicebear.com/7.x/avataaars/svg?seed=ben" />
+                <div class="target-row__info">
+                  <span class="target-row__name">Ben Okafor</span>
+                  <span class="target-row__handle">@ben.o</span>
+                </div>
+                <span class="target-row__badge">User</span>
+                <button class="btn" data-testid="follow-target-3-toggle">Follow</button>
+                <button class="icon-btn" aria-label="Remove target"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+              </div>
+            </div>
+            <div class="add-target">
+              <input class="input input--dashed" placeholder="Paste handle or pick from space members" data-testid="follow-target-add" />
+              <button class="btn btn--secondary">Add</button>
+            </div>
+          </section>
+
+        </article>
+      </section>
+
+      <section class="pager__page" data-page="1">
+        <article class="page-card" data-testid="page-card-config">
+          <header class="page-card__head">
+            <div class="page-card__title-wrap">
+              <span class="page-card__num">02 / 02</span>
+              <div><h1 class="page-card__title">Configuration</h1><div class="page-card__subtitle">Schedule, rewards, moderation, and danger zone</div></div>
+            </div>
+            <button class="page-card__nextlink" data-nav="prev" data-testid="page-card-prev-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Back: Content</button>
+          </header>
+
+          <section class="section" data-testid="section-schedule">
+            <div class="section__head"><span class="section__label">Schedule</span><span class="section__hint">Timezone: UTC+09:00 Seoul</span></div>
+            <div class="grid-2">
+              <div class="field"><label class="field__label">Starts at</label><input class="input" type="datetime-local" value="2026-04-16T09:00" data-testid="schedule-start" /></div>
+              <div class="field"><label class="field__label">Ends at</label><input class="input" type="datetime-local" value="2026-05-30T18:00" data-testid="schedule-end" /></div>
+            </div>
+            <div class="switch" role="switch" aria-checked="true" tabindex="0" data-testid="schedule-no-end">
+              <span class="switch__track"><span class="switch__thumb"></span></span>
+              <span><span class="switch__label">No end date</span><span class="switch__sub">Follow quest stays available indefinitely</span></span>
+            </div>
+          </section>
+
+          <section class="section" data-testid="section-participation">
+            <div class="section__head"><span class="section__label">Participation &amp; Rewards</span></div>
+            <div class="grid-2">
+              <div class="tile" data-testid="tile-reward"><span class="tile__label">Reward (CR)</span><div class="input-group"><input class="input input--num" type="number" value="75" data-testid="reward-amount" /><span class="input-suffix">CR</span></div></div>
+              <div class="tile" data-testid="tile-prereq">
+                <span class="tile__label">Prerequisite</span>
+                <div class="tile__row">
+                  <span style="font-size:13px;color:var(--text-muted)">Require verified email</span>
+                  <span class="switch" role="switch" aria-checked="false" tabindex="0"><span class="switch__track"><span class="switch__thumb"></span></span></span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section" data-testid="section-moderation">
+            <div class="accordion" data-accordion data-open="false">
+              <button class="accordion__head" data-accordion-head>Moderation<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+              <div class="accordion__body">
+                <div class="switch" role="switch" aria-checked="true" tabindex="0" data-testid="moderation-notify-targets">
+                  <span class="switch__track"><span class="switch__thumb"></span></span>
+                  <span><span class="switch__label">Notify targets when followed</span><span class="switch__sub">Send a notification to each target when a participant follows them</span></span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section section--danger" data-testid="section-danger">
+            <div class="section__head"><span class="section__label" style="color:var(--accent-red);opacity:0.85">Danger zone</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+              <div style="flex:1;min-width:220px">
+                <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px">Delete this follow quest</div>
+                <div style="font-size:12px;color:var(--text-muted)">Removes the quest and all 458 completions. Rewards already paid are not refunded.</div>
+              </div>
+              <button class="btn btn--danger" data-testid="delete-follow">Delete follow quest</button>
+            </div>
+          </section>
+        </article>
+      </section>
+    </main>
+
+    <footer class="sticky-footer">
+      <span class="sticky-footer__left" data-testid="footer-status">Unsaved changes · last edit 2s ago</span>
+      <div class="sticky-footer__actions">
+        <button class="btn btn--ghost" data-testid="footer-cancel">Cancel</button>
+        <button class="btn btn--secondary" data-testid="footer-save-draft">Save Draft</button>
+        <button class="btn btn--primary btn--lg" data-testid="footer-publish">Publish</button>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    (function(){
+      var saved = localStorage.getItem('ratel-theme');
+      if (saved) document.documentElement.setAttribute('data-theme', saved);
+      var toggleBtn = document.querySelector('[data-theme-toggle]');
+      var menu = document.querySelector('[data-theme-menu]');
+      if (toggleBtn && menu){
+        toggleBtn.addEventListener('click', function(e){ e.stopPropagation(); menu.setAttribute('data-open', menu.getAttribute('data-open') === 'true' ? 'false':'true'); });
+        document.addEventListener('click', function(){ menu.setAttribute('data-open','false'); });
+        menu.addEventListener('click', function(e){ e.stopPropagation(); });
+        menu.querySelectorAll('[data-theme-set]').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            var t = btn.getAttribute('data-theme-set');
+            document.documentElement.setAttribute('data-theme', t);
+            localStorage.setItem('ratel-theme', t);
+            menu.querySelectorAll('[data-theme-set]').forEach(function(b){ b.setAttribute('aria-selected', b === btn ? 'true':'false'); });
+            menu.setAttribute('data-open','false');
+          });
+          btn.setAttribute('aria-selected', btn.getAttribute('data-theme-set') === (saved || 'dark') ? 'true':'false');
+        });
+      }
+
+      document.querySelectorAll('.chip').forEach(function(c){ c.addEventListener('click', function(){ c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false':'true'); }); });
+      document.querySelectorAll('.switch').forEach(function(s){
+        s.addEventListener('click', function(){ s.setAttribute('aria-checked', s.getAttribute('aria-checked') === 'true' ? 'false':'true'); });
+        s.addEventListener('keydown', function(e){ if(e.key===' '||e.key==='Enter'){e.preventDefault();s.click();}});
+      });
+      document.querySelectorAll('.segmented').forEach(function(seg){
+        seg.querySelectorAll('[role="tab"]').forEach(function(b){
+          b.addEventListener('click', function(){
+            seg.querySelectorAll('[role="tab"]').forEach(function(x){ x.setAttribute('aria-selected','false'); });
+            b.setAttribute('aria-selected','true');
+          });
+        });
+      });
+      document.querySelectorAll('[data-accordion]').forEach(function(acc){
+        acc.querySelector('[data-accordion-head]').addEventListener('click', function(){
+          acc.setAttribute('data-open', acc.getAttribute('data-open') === 'true' ? 'false':'true');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

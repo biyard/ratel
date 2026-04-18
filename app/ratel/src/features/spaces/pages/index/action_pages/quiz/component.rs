@@ -56,7 +56,13 @@ pub fn QuizArenaPage(
     let has_passed = quiz.passed.unwrap_or(false);
     let now = crate::common::utils::time::get_now_timestamp_millis();
     let is_in_progress = now >= quiz.started_at && now <= quiz.ended_at;
-    let can_respond = matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant);
+    // Candidates must be allowed through here so they can take a prerequisite
+    // quiz before the space starts. The actual role+prerequisite+status gate
+    // below (`can_execute`) still blocks non-prerequisite quizzes / Viewers.
+    let can_respond = matches!(
+        role,
+        SpaceUserRole::Creator | SpaceUserRole::Participant | SpaceUserRole::Candidate
+    );
     let can_execute = crate::features::spaces::pages::actions::can_execute_space_action(
         role,
         quiz.space_action.prerequisite,

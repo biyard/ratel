@@ -1,11 +1,17 @@
 mod follower_setting;
-use follower_setting::FollowerSetting;
-
-use crate::features::spaces::pages::actions::actions::follow::controllers::get_follow;
-use crate::features::spaces::pages::actions::actions::follow::*;
+pub use follower_setting::FollowerSetting;
 
 mod i18n;
-use i18n::FollowCreatorTranslate;
+pub use i18n::FollowCreatorTranslate;
+
+mod config_card;
+mod targets_card;
+use config_card::ConfigCard;
+use targets_card::TargetsCard;
+
+use crate::features::spaces::pages::actions::actions::follow::*;
+use crate::features::spaces::pages::actions::actions::follow::controllers::get_follow;
+use crate::features::spaces::pages::actions::components::ActionEditTopbar;
 
 #[component]
 pub fn FollowCreatorPage(
@@ -15,42 +21,42 @@ pub fn FollowCreatorPage(
     let tr: FollowCreatorTranslate = use_translate();
     let action_setting =
         use_loader(move || async move { get_follow(space_id(), follow_id()).await })?;
-
-    // The delete button is the only thing the lifecycle lock still
-    // applies to — creators can keep editing the follower list and
-    // common settings even after the action has started.
     let space = crate::features::spaces::space_common::hooks::use_space()();
-    let locked = crate::features::spaces::pages::actions::is_action_locked(
-        space.status,
-        action_setting().started_at,
-    );
+    let nav = use_navigator();
+
+    let initial_title = action_setting().title.clone();
+    let title = use_signal(|| initial_title);
 
     rsx! {
-        div { class: "flex flex-col gap-4 w-full",
-            h3 { {tr.title} }
-            Tabs { default_value: "follower-tab",
-                TabList {
-                    TabTrigger { index: 0usize, value: "follower-tab", {tr.tab_general} }
-                    TabTrigger { index: 1usize, value: "setting-tab", {tr.tab_common} }
+        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        div { class: "arena",
+            ActionEditTopbar {
+                space_name: space.title.clone(),
+                action_type_label: tr.type_badge_label.to_string(),
+                action_type_key: "follow".to_string(),
+                title,
+                on_title_change: move |_v: String| {},
+                editable_title: false,
+                on_back: move |_| {
+                    nav.go_back();
+                },
+                on_cancel: move |_| {
+                    nav.go_back();
+                },
+            }
+            main { class: "pager",
+                TargetsCard {
+                    space_id,
+                    follow_id,
+                    initial_title: action_setting().title.clone(),
                 }
-                TabContent { index: 0usize, value: "follower-tab",
-                    FollowerSetting { space_id }
-                }
-                TabContent { index: 1usize, value: "setting-tab",
-                    div { class: "flex flex-col gap-4 w-full",
-                        ActionCommonSettings {
-                            space_id,
-                            action_id: follow_id().to_string(),
-                            action_setting: action_setting(),
-                        }
-                        // Delete button is hidden once the action is locked.
-                        if !locked {
-                            ActionDeleteButton {
-                                space_id: space_id(),
-                                action_id: follow_id().to_string(),
-                            }
-                        }
-                    }
+                ConfigCard {
+                    space_id,
+                    follow_id,
+                    started_at: action_setting().started_at,
+                    ended_at: action_setting().ended_at,
+                    credits: action_setting().credits,
+                    prerequisite: action_setting().prerequisite,
                 }
             }
         }

@@ -1,6 +1,7 @@
 use crate::common::components::mention_autocomplete::{
     MentionAutocomplete, MentionCandidate, MentionInsert,
 };
+use crate::common::hooks::use_interval;
 use crate::common::utils::mention::{apply_mention_markup, parse_mention_segments, ContentSegment};
 use crate::features::spaces::pages::actions::actions::discussion::controllers::{
     add_comment, get_discussion_detail, like_comment, list_comments, list_replies, reply_comment,
@@ -46,10 +47,67 @@ pub fn DiscussionArenaPage(
     let can_comment = can_respond && can_execute && is_in_progress;
 
     let mut comments_loader = use_loader(move || {
-        list_comments(space_id(), discussion_id(), None)
+        list_comments(space_id(), discussion_id(), None, None)
     })?;
     let comments_data = comments_loader();
-    let comments = comments_data.items.clone();
+
+    // Short-polling: every 5s fetch comments newer than the most recent one we
+    // have already rendered and keep them in a local signal. Render appends
+    // them AFTER the loader's base page (deduped by `sk`) so existing items'
+    // positions never shift — avoids Dioxus reorder-induced DOM errors, scroll
+    // jumps, and focus loss.
+    let mut polled_new: Signal<Vec<DiscussionCommentResponse>> = use_signal(Vec::new);
+    let mut last_seen_at: Signal<i64> = use_signal(move || {
+        comments_loader()
+            .items
+            .iter()
+            .map(|c| c.created_at)
+            .max()
+            .unwrap_or_else(crate::common::utils::time::get_now_timestamp)
+    });
+    use_interval(5000, move || {
+        let since = last_seen_at();
+        tracing::info!("[arena discussion poll] tick since={}", since);
+        spawn(async move {
+            match list_comments(space_id(), discussion_id(), None, Some(since)).await {
+                Ok(resp) => {
+                    if resp.items.is_empty() {
+                        return;
+                    }
+                    let new_max = resp
+                        .items
+                        .iter()
+                        .map(|c| c.created_at)
+                        .max()
+                        .unwrap_or(since);
+                    polled_new.with_mut(|list| {
+                        // server returns newest-first; reverse so chronological
+                        // order (older → newer) is preserved when appending.
+                        for item in resp.items.into_iter().rev() {
+                            if !list.iter().any(|x| x.sk == item.sk) {
+                                list.push(item);
+                            }
+                        }
+                    });
+                    if new_max > since {
+                        last_seen_at.set(new_max);
+                    }
+                }
+                Err(e) => {
+                    tracing::debug!("arena comment poll failed: {:?}", e);
+                }
+            }
+        });
+    });
+
+    let comments: Vec<DiscussionCommentResponse> = {
+        let polled = polled_new();
+        let base = comments_data.items.clone();
+        base.into_iter()
+            .filter(|bi| !polled.iter().any(|p| p.sk == bi.sk))
+            .chain(polled.iter().cloned())
+            .collect()
+    };
 
     let mut overlay: ActiveActionOverlaySignal = use_context();
 
@@ -283,18 +341,13 @@ pub fn DiscussionArenaPage(
                                         text: comment_text,
                                         on_select: move |insert: MentionInsert| {
                                             let mut val = comment_text();
-                                            if insert.start_offset <= val.len()
-                                                && insert.end_offset <= val.len()
-                                            {
+                                            if insert.start_offset <= val.len() && insert.end_offset <= val.len() {
                                                 val.replace_range(
                                                     insert.start_offset..insert.end_offset,
                                                     &insert.display_text,
                                                 );
                                                 comment_text.set(val);
-                                                tracked_mentions.write().push((
-                                                    insert.display_name,
-                                                    insert.user_pk,
-                                                ));
+                                                tracked_mentions.write().push((insert.display_name, insert.user_pk));
                                             }
                                         },
                                         members,
@@ -429,48 +482,148 @@ fn CommentItem(
     };
 
     rsx! {
-        div { class: "comment-item",
-            img {
-                class: "comment-item__avatar",
-                src: "{comment.author_profile_url}",
-                alt: "{comment.author_display_name}",
-            }
-            div { class: "comment-item__body",
-                div { class: "comment-item__top",
-                    span { class: "comment-item__name", "{comment.author_display_name}" }
-                    span { class: "comment-item__time", "{time_ago}" }
+        div { class: "comment-entry",
+            div { class: "comment-item",
+                img {
+                    class: "comment-item__avatar",
+                    src: "{comment.author_profile_url}",
+                    alt: "{comment.author_display_name}",
                 }
-                div { class: "comment-item__text",
-                    for segment in parse_mention_segments(&comment.content) {
-                        match segment {
-                            ContentSegment::Text(t) => rsx! {
-                                span { "{t}" }
-                            },
-                            ContentSegment::Mention { display_name, .. } => rsx! {
-                                span { class: "font-medium text-primary", "@{display_name}" }
-                            },
+                div { class: "comment-item__body",
+                    div { class: "comment-item__top",
+                        span { class: "comment-item__name", "{comment.author_display_name}" }
+                        span { class: "comment-item__time", "{time_ago}" }
+                    }
+                    div { class: "comment-item__text",
+                        for segment in parse_mention_segments(&comment.content) {
+                            match segment {
+                                ContentSegment::Text(t) => rsx! {
+                                    span { "{t}" }
+                                },
+                                ContentSegment::Mention { display_name, .. } => rsx! {
+                                    span { class: "font-medium text-primary", "@{display_name}" }
+                                },
+                            }
                         }
                     }
-                }
-                div { class: "comment-item__actions",
-                    button {
-                        class: if liked { "comment-action comment-action--liked" } else { "comment-action" },
-                        onclick: on_like,
-                        svg {
-                            view_box: "0 0 24 24",
-                            fill: if liked { "currentColor" } else { "none" },
-                            stroke: "currentColor",
-                            stroke_width: "2",
-                            stroke_linecap: "round",
-                            stroke_linejoin: "round",
-                            path { d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" }
-                        }
-                        span { "{likes}" }
-                    }
-                    if can_comment {
+                    div { class: "comment-item__actions",
                         button {
-                            class: "comment-action comment-action--reply",
-                            onclick: on_toggle_replies,
+                            class: if liked { "comment-action comment-action--liked" } else { "comment-action" },
+                            onclick: on_like,
+                            svg {
+                                view_box: "0 0 24 24",
+                                fill: if liked { "currentColor" } else { "none" },
+                                stroke: "currentColor",
+                                stroke_width: "2",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                path { d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" }
+                            }
+                            span { "{likes}" }
+                        }
+                        if can_comment {
+                            button {
+                                class: "comment-action comment-action--reply",
+                                onclick: on_toggle_replies,
+                                svg {
+                                    view_box: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_width: "2",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    path { d: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" }
+                                }
+                                span { "{tr.reply_label}" }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Replies toggle
+            if reply_count > 0 {
+                button { class: "reply-toggle", onclick: on_toggle_replies,
+                    svg {
+                        view_box: "0 0 24 24",
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_width: "2",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        if show_replies() {
+                            polyline { points: "18 15 12 9 6 15" }
+                        } else {
+                            polyline { points: "6 9 12 15 18 9" }
+                        }
+                    }
+                    "{reply_count} {tr.replies_label}"
+                }
+            }
+
+            // Replies list
+            if show_replies() {
+                div { class: "comment-replies",
+                    for reply in replies().iter() {
+                        div { class: "comment-item", key: "{reply.sk}",
+                            img {
+                                class: "comment-item__avatar",
+                                src: "{reply.author_profile_url}",
+                                alt: "{reply.author_display_name}",
+                            }
+                            div { class: "comment-item__body",
+                                div { class: "comment-item__top",
+                                    span { class: "comment-item__name", "{reply.author_display_name}" }
+                                    span { class: "comment-item__time",
+                                        "{format_time_ago(reply.created_at)}"
+                                    }
+                                }
+                                div { class: "comment-item__text",
+                                    for segment in parse_mention_segments(&reply.content) {
+                                        match segment {
+                                            ContentSegment::Text(t) => rsx! {
+                                                span { "{t}" }
+                                            },
+                                            ContentSegment::Mention { display_name, .. } => rsx! {
+                                                span { class: "font-medium text-primary", "@{display_name}" }
+                                            },
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Reply input
+                if can_comment {
+                    div { class: "reply-input",
+                        MentionAutocomplete {
+                            text: reply_text,
+                            on_select: move |insert: MentionInsert| {
+                                let mut val = reply_text();
+                                if insert.start_offset <= val.len() && insert.end_offset <= val.len() {
+                                    val.replace_range(
+                                        insert.start_offset..insert.end_offset,
+                                        &insert.display_text,
+                                    );
+                                    reply_text.set(val);
+                                    reply_tracked_mentions.write().push((insert.display_name, insert.user_pk));
+                                }
+                            },
+                            members,
+                            input {
+                                class: "reply-input__field",
+                                placeholder: "{tr.reply_placeholder}",
+                                value: "{reply_text}",
+                                oninput: move |e| {
+                                    reply_text.set(e.value());
+                                },
+                            }
+                        }
+                        button {
+                            class: "reply-input__send",
+                            onclick: on_submit_reply,
                             svg {
                                 view_box: "0 0 24 24",
                                 fill: "none",
@@ -478,115 +631,14 @@ fn CommentItem(
                                 stroke_width: "2",
                                 stroke_linecap: "round",
                                 stroke_linejoin: "round",
-                                path { d: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" }
-                            }
-                            span { "{tr.reply_label}" }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Replies toggle
-        if reply_count > 0 {
-            button { class: "reply-toggle", onclick: on_toggle_replies,
-                svg {
-                    view_box: "0 0 24 24",
-                    fill: "none",
-                    stroke: "currentColor",
-                    stroke_width: "2",
-                    stroke_linecap: "round",
-                    stroke_linejoin: "round",
-                    if show_replies() {
-                        polyline { points: "18 15 12 9 6 15" }
-                    } else {
-                        polyline { points: "6 9 12 15 18 9" }
-                    }
-                }
-                "{reply_count} {tr.replies_label}"
-            }
-        }
-
-        // Replies list
-        if show_replies() {
-            div { class: "comment-replies",
-                for reply in replies().iter() {
-                    div { class: "comment-item", key: "{reply.sk}",
-                        img {
-                            class: "comment-item__avatar",
-                            src: "{reply.author_profile_url}",
-                            alt: "{reply.author_display_name}",
-                        }
-                        div { class: "comment-item__body",
-                            div { class: "comment-item__top",
-                                span { class: "comment-item__name", "{reply.author_display_name}" }
-                                span { class: "comment-item__time",
-                                    "{format_time_ago(reply.created_at)}"
+                                line {
+                                    x1: "22",
+                                    y1: "2",
+                                    x2: "11",
+                                    y2: "13",
                                 }
+                                polygon { points: "22 2 15 22 11 13 2 9 22 2" }
                             }
-                            div { class: "comment-item__text",
-                                for segment in parse_mention_segments(&reply.content) {
-                                    match segment {
-                                        ContentSegment::Text(t) => rsx! {
-                                            span { "{t}" }
-                                        },
-                                        ContentSegment::Mention { display_name, .. } => rsx! {
-                                            span { class: "font-medium text-primary", "@{display_name}" }
-                                        },
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Reply input
-            if can_comment {
-                div { class: "reply-input",
-                    MentionAutocomplete {
-                        text: reply_text,
-                        on_select: move |insert: MentionInsert| {
-                            let mut val = reply_text();
-                            if insert.start_offset <= val.len()
-                                && insert.end_offset <= val.len()
-                            {
-                                val.replace_range(
-                                    insert.start_offset..insert.end_offset,
-                                    &insert.display_text,
-                                );
-                                reply_text.set(val);
-                                reply_tracked_mentions.write().push((
-                                    insert.display_name,
-                                    insert.user_pk,
-                                ));
-                            }
-                        },
-                        members,
-                        input {
-                            class: "reply-input__field",
-                            placeholder: "{tr.reply_placeholder}",
-                            value: "{reply_text}",
-                            oninput: move |e| {
-                                reply_text.set(e.value());
-                            },
-                        }
-                    }
-                    button { class: "reply-input__send", onclick: on_submit_reply,
-                        svg {
-                            view_box: "0 0 24 24",
-                            fill: "none",
-                            stroke: "currentColor",
-                            stroke_width: "2",
-                            stroke_linecap: "round",
-                            stroke_linejoin: "round",
-                            line {
-                                x1: "22",
-                                y1: "2",
-                                x2: "11",
-                                y2: "13",
-                            }
-                            polygon { points: "22 2 15 22 11 13 2 9 22 2" }
                         }
                     }
                 }

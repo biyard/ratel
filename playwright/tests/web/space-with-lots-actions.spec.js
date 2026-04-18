@@ -1,5 +1,13 @@
 import { test } from "@playwright/test";
-import { click, fill, goto, getLocator, getEditor } from "../utils";
+import {
+  click,
+  createAction,
+  fill,
+  goto,
+  getLocator,
+  getEditor,
+  commitAutosave,
+} from "../utils";
 
 test.describe.serial("Space with lots actions", () => {
   let spaceUrl;
@@ -53,35 +61,19 @@ test.describe.serial("Space with lots actions", () => {
   });
 
   test("Create a discussion in space", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
+    await createAction(
+      page,
+      spaceUrl,
+      "discuss",
+      /\/actions\/discussions\/[^/]+\/edit/,
+    );
 
-    // open create action modal
-    await click(page, { text: "Select Action Type" });
-    // select Discussion
-    await click(page, { testId: "action-type-discussion" });
-    // hide FAB that overlaps modal buttons
-    await page.evaluate(() => {
-      const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
-      if (fab) fab.style.display = "none";
-    });
-    // confirm creation
-    await click(page, { text: "Create" });
-
-    // wait for discussion page (creator sees inline editor directly)
-    await page.waitForURL(/\/actions\/discussions\//, {
-      waitUntil: "networkidle",
-    });
-
-    // fill discussion fields on CreatorMain (inline editing)
+    // fill discussion fields on the arena-style editor (per-field autosave,
+    // no category field and no Save button anymore).
     await fill(
       page,
       { placeholder: "Enter discussion title..." },
       "Playwright Discussion Topic"
-    );
-    await fill(
-      page,
-      { placeholder: "Enter category (optional)..." },
-      "Testing"
     );
 
     // fill rich text content via TiptapEditor
@@ -90,98 +82,42 @@ test.describe.serial("Space with lots actions", () => {
       "This is a test discussion created by Playwright to verify the discussion creation flow within a space."
     );
 
-    await click(page, { text: "Save" });
+    // Blur the editor to commit the autosave
+    await page.keyboard.press("Tab");
   });
 
   test("Create a poll action in space", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
+    await createAction(page, spaceUrl, "poll", /\/actions\/polls\//);
 
-    // open create action modal
-    await click(page, { text: "Select Action Type" });
-    // select Poll (Quiz is default, so click Poll)
-    await click(page, { testId: "action-type-poll" });
-    // hide FAB that overlaps modal buttons
-    await page.evaluate(() => {
-      const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
-      if (fab) fab.style.display = "none";
-    });
-    // confirm creation
-    await click(page, { text: "Create" });
-
-    // wait for poll creator page
-    await page.waitForURL(/\/actions\/polls\//, {
-      waitUntil: "networkidle",
-    });
-
-    // fill poll title (saves on blur)
     await fill(
       page,
       { placeholder: "Enter poll title..." },
       "Playwright Poll Question"
     );
-
-    // trigger blur to save title
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("networkidle");
+    await commitAutosave(page);
   });
 
   test("Create a quiz action in space", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
+    await createAction(page, spaceUrl, "quiz", /\/actions\/quizzes\//);
 
-    // open create action modal
-    await click(page, { text: "Select Action Type" });
-    // Quiz is selected by default, no need to click
-    // hide FAB that overlaps modal buttons
-    await page.evaluate(() => {
-      const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
-      if (fab) fab.style.display = "none";
-    });
-    // confirm creation
-    await click(page, { text: "Create" });
-
-    // wait for quiz creator page
-    await page.waitForURL(/\/actions\/quizzes\//, {
-      waitUntil: "networkidle",
-    });
-
-    // fill quiz title on Overview tab (default tab)
     await fill(
       page,
       { placeholder: "Enter quiz title..." },
       "Playwright Quiz Challenge"
     );
 
-    // fill rich text description via TiptapEditor
     const editor = await getEditor(page);
     await editor.fill(
       "This is a test quiz created by Playwright to verify the quiz creation flow."
     );
-
-    await click(page, { text: "Save" });
+    await commitAutosave(page);
   });
 
   test("Create a follow action in space", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
+    await createAction(page, spaceUrl, "follow", /\/actions\/follows\//);
 
-    // open create action modal
-    await click(page, { text: "Select Action Type" });
-    // select Follow (Quiz is default, so click Follow)
-    await click(page, { testId: "action-type-follow" });
-    // hide FAB that overlaps modal buttons
-    await page.evaluate(() => {
-      const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
-      if (fab) fab.style.display = "none";
-    });
-    // confirm creation
-    await click(page, { text: "Create" });
-
-    // wait for follow creator page
-    await page.waitForURL(/\/actions\/follows\//, {
-      waitUntil: "networkidle",
-    });
-
-    // verify creator sees the General tab with follower settings
-    await getLocator(page, { text: "General" });
+    // verify creator sees the follow targets card on the new arena editor.
+    await getLocator(page, { testId: "page-card-config" });
   });
 
   test("Publish space public", async ({ page }) => {

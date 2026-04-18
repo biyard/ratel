@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reward Setting — Arena Redesign</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+    html[data-theme="dark"]{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --surface-soft:rgba(255,255,255,0.02);--surface-hover:rgba(255,255,255,0.04);
+      --tile-bg:rgba(255,255,255,0.02);--tile-border:rgba(255,255,255,0.06);
+      --input-bg:rgba(255,255,255,0.02);--input-border:rgba(255,255,255,0.08);
+      --info-bg:rgba(168,85,247,0.04);--info-border:rgba(168,85,247,0.18);
+    }
+    html[data-theme="light"]{
+      --bg-void:#f5f5fb;--bg-glass:rgba(255,255,255,0.75);
+      --border-subtle:rgba(10,10,30,0.08);--border-strong:rgba(10,10,30,0.16);
+      --text-primary:#12121a;--text-muted:#5b5b75;--text-dim:#9898ad;
+      --surface-soft:rgba(10,10,30,0.03);--surface-hover:rgba(10,10,30,0.05);
+      --tile-bg:rgba(10,10,30,0.03);--tile-border:rgba(10,10,30,0.08);
+      --input-bg:rgba(10,10,30,0.02);--input-border:rgba(10,10,30,0.1);
+      --info-bg:rgba(168,85,247,0.06);--info-border:rgba(168,85,247,0.22);
+    }
+
+    :root{
+      --accent-gold:#fcb300;
+      --accent-teal:#6eedd8;
+      --accent-green:#22c55e;
+      --quiz-color:#a855f7;--quiz-bg:rgba(168,85,247,0.10);--quiz-border:rgba(168,85,247,0.28);--quiz-glow:rgba(168,85,247,0.18);
+      --font-display:'Orbitron',sans-serif;
+      --font-body:'Outfit',sans-serif;
+    }
+
+    html,body{height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body);transition:background 0.25s,color 0.25s}
+    body{padding:32px;display:flex;flex-direction:column;gap:28px}
+
+    .theme-switch{position:fixed;top:16px;right:16px;display:flex;gap:4px;background:var(--surface-soft);border:1px solid var(--border-subtle);border-radius:10px;padding:3px}
+    .theme-switch button{padding:6px 12px;font-size:11px;font-family:var(--font-display);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;background:transparent;border:none;color:var(--text-muted);cursor:pointer;border-radius:8px}
+    .theme-switch button[aria-selected="true"]{background:rgba(252,179,0,0.12);color:var(--accent-gold)}
+
+    .wrap{max-width:1080px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+    .demo-title{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
+
+    /* Section matches arena config card .section */
+    .section{background:var(--surface-soft);border:1px solid var(--border-subtle);border-radius:16px;padding:22px 22px 20px;display:flex;flex-direction:column;gap:16px}
+    .section__head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .section__label{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
+    .section__hint{font-size:12px;color:var(--text-muted)}
+
+    /* Toggle switch matches other arena switches */
+    .switch{position:relative;display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+    .switch__track{width:38px;height:22px;border-radius:100px;background:var(--surface-hover);border:1px solid var(--border-subtle);position:relative;transition:all 0.2s;flex-shrink:0}
+    .switch__thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--text-muted);transition:all 0.2s}
+    .switch[aria-checked="true"] .switch__track{background:rgba(252,179,0,0.2);border-color:rgba(252,179,0,0.4)}
+    .switch[aria-checked="true"] .switch__thumb{left:18px;background:var(--accent-gold);box-shadow:0 0 8px rgba(252,179,0,0.5)}
+
+    /* Unlock button (same feel as .btn) */
+    .unlock-btn{padding:6px 12px;border-radius:100px;background:rgba(252,179,0,0.10);color:var(--accent-gold);border:1px solid rgba(252,179,0,0.22);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+    .unlock-btn:hover{background:rgba(252,179,0,0.18)}
+    .unlock-btn svg{width:12px;height:12px}
+
+    /* Two-column grid */
+    .reward-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:16px}
+    @media (max-width:768px){.reward-grid{grid-template-columns:1fr}}
+
+    .column{display:flex;flex-direction:column;gap:10px}
+    .column__label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim)}
+
+    /* ── Default Reward tile ───────────────────────── */
+    .reward-display{
+      display:flex;align-items:center;gap:18px;
+      padding:18px 20px;border-radius:14px;
+      background:var(--tile-bg);border:1px solid var(--tile-border);
+      position:relative;overflow:hidden;
+    }
+    .reward-display::after{content:'';position:absolute;inset:0 0 0 auto;width:50%;background:radial-gradient(circle at 100% 50%,var(--quiz-glow),transparent 70%);opacity:0.25;pointer-events:none}
+    .boost-badge{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+      width:72px;flex-shrink:0;
+    }
+    .boost-badge__icon{
+      width:52px;height:52px;border-radius:14px;
+      background:linear-gradient(135deg,var(--accent-green),#16a34a);
+      display:flex;align-items:center;justify-content:center;color:#fff;
+      box-shadow:0 8px 20px rgba(34,197,94,0.25);
+    }
+    .boost-badge__icon svg{width:26px;height:26px;stroke:currentColor}
+    .boost-badge__mult{
+      font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;
+      color:var(--quiz-color);text-transform:uppercase;
+      display:inline-flex;align-items:center;gap:4px;
+    }
+    .boost-badge__mult svg{width:9px;height:9px}
+
+    .reward-display__body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;text-align:right;position:relative;z-index:1}
+    .reward-display__value{font-family:var(--font-display);font-size:30px;font-weight:700;letter-spacing:0.04em;color:var(--text-primary);line-height:1.1}
+    .reward-display__label{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted)}
+
+    /* ── Boost Multiplier tile ───────────────────────── */
+    .boost-tile{
+      padding:16px 18px;border-radius:14px;
+      background:var(--tile-bg);border:1px solid var(--tile-border);
+      display:flex;flex-direction:column;gap:12px;
+    }
+    .boost-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .boost-row__label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted)}
+    .boost-row__label .info-dot{display:inline-flex;width:13px;height:13px;margin-left:4px;color:var(--text-dim);vertical-align:middle}
+    .boost-row__value{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:0.04em;color:var(--text-primary)}
+    .boost-row__value--green{color:var(--accent-green)}
+    .credit-input{
+      width:120px;padding:8px 12px;border-radius:10px;
+      background:var(--input-bg);border:1px solid var(--input-border);
+      color:var(--text-primary);font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:0.04em;
+      text-align:right;outline:none;transition:all 0.15s;
+    }
+    .credit-input:focus{border-color:rgba(252,179,0,0.4);box-shadow:0 0 0 3px rgba(252,179,0,0.08)}
+
+    /* ── Info notice ───────────────────────── */
+    .info-notice{
+      display:flex;gap:14px;align-items:flex-start;
+      padding:14px 16px;border-radius:12px;
+      background:var(--info-bg);border:1px solid var(--info-border);
+    }
+    .info-notice__icon{width:30px;height:30px;border-radius:8px;background:var(--quiz-bg);border:1px solid var(--quiz-border);display:flex;align-items:center;justify-content:center;color:var(--quiz-color);flex-shrink:0}
+    .info-notice__icon svg{width:14px;height:14px}
+    .info-notice__body{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+    .info-notice__title{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--quiz-color)}
+    .info-notice__list{list-style:none;display:flex;flex-direction:column;gap:3px}
+    .info-notice__list li{display:flex;gap:8px;font-size:12px;line-height:1.5;color:var(--text-muted)}
+    .info-notice__list li::before{content:'';flex-shrink:0;width:3px;height:3px;border-radius:50%;background:var(--quiz-color);margin-top:9px;opacity:0.6}
+
+    /* Enable-reward strip (collapsed state header) */
+    .reward-head{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:14px 16px;border-radius:14px;
+      background:var(--tile-bg);border:1px solid var(--tile-border);
+    }
+    .reward-head__title{display:flex;align-items:center;gap:8px}
+    .reward-head__title-text{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-primary)}
+    .reward-head__info{color:var(--text-dim)}
+    .reward-head__info svg{width:13px;height:13px}
+  </style>
+</head>
+<body>
+  <div class="theme-switch">
+    <button data-theme-set="dark" aria-selected="true">Dark</button>
+    <button data-theme-set="light" aria-selected="false">Light</button>
+  </div>
+
+  <div class="wrap">
+    <div class="demo-title">Reward Setting · Arena Redesign</div>
+
+    <!-- Collapsed header (Reward disabled state) -->
+    <section class="section">
+      <div class="section__head">
+        <span class="section__label">Reward (Collapsed)</span>
+      </div>
+      <div class="reward-head">
+        <div class="reward-head__title">
+          <span class="reward-head__title-text">Reward</span>
+          <span class="reward-head__info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </span>
+        </div>
+        <div class="switch" role="switch" aria-checked="false" tabindex="0">
+          <span class="switch__track"><span class="switch__thumb"></span></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Collapsed header (Unlock state — non-paid user) -->
+    <section class="section">
+      <div class="section__head">
+        <span class="section__label">Reward (Unlock state)</span>
+      </div>
+      <div class="reward-head">
+        <div class="reward-head__title">
+          <span class="reward-head__title-text">Reward</span>
+        </div>
+        <button class="unlock-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Unlock
+        </button>
+      </div>
+    </section>
+
+    <!-- Expanded — full Reward setting -->
+    <section class="section">
+      <div class="section__head">
+        <span class="section__label">Reward</span>
+        <div class="switch" role="switch" aria-checked="true" tabindex="0">
+          <span class="switch__track"><span class="switch__thumb"></span></span>
+        </div>
+      </div>
+
+      <div class="reward-grid">
+        <!-- Default Reward column -->
+        <div class="column">
+          <span class="column__label">Default Reward</span>
+          <div class="reward-display">
+            <div class="boost-badge">
+              <div class="boost-badge__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <span class="boost-badge__mult">
+                x1 Boost
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+              </span>
+            </div>
+            <div class="reward-display__body">
+              <span class="reward-display__value">10,000</span>
+              <span class="reward-display__label">Action Point Reward</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Boost Multiplier column -->
+        <div class="column">
+          <span class="column__label">Boost Multiplier Settings</span>
+          <div class="boost-tile">
+            <div class="boost-row">
+              <span class="boost-row__label">Credit Usage</span>
+              <input class="credit-input" type="number" value="1" min="0" />
+            </div>
+            <div class="boost-row">
+              <span class="boost-row__label">
+                Max Credits
+                <span class="info-dot">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                </span>
+              </span>
+              <span class="boost-row__value">10</span>
+            </div>
+            <div class="boost-row">
+              <span class="boost-row__label">Remaining Credits</span>
+              <span class="boost-row__value boost-row__value--green">9</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info notice -->
+      <div class="info-notice">
+        <div class="info-notice__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        </div>
+        <div class="info-notice__body">
+          <span class="info-notice__title">Point &amp; Boost</span>
+          <ul class="info-notice__list">
+            <li>Points are rewarded to participants when they complete the action.</li>
+            <li>Boost multiplies the base reward points by the set multiplier.</li>
+            <li>Credits are consumed when boost is applied to an action.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    document.querySelectorAll('.theme-switch button').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var t = btn.getAttribute('data-theme-set');
+        document.documentElement.setAttribute('data-theme', t);
+        document.querySelectorAll('.theme-switch button').forEach(function(b){
+          b.setAttribute('aria-selected', b === btn ? 'true':'false');
+        });
+      });
+    });
+    document.querySelectorAll('.switch').forEach(function(s){
+      s.addEventListener('click', function(){
+        s.setAttribute('aria-checked', s.getAttribute('aria-checked') === 'true' ? 'false':'true');
+      });
+    });
+  </script>
+</body>
+</html>
