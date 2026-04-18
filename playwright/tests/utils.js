@@ -119,7 +119,21 @@ export async function goto(page, url) {
     page.goto(url),
   ]);
   await page.waitForLoadState("domcontentloaded");
-  await page.waitForTimeout(500);
+  // Wait for Dioxus WASM to hydrate. SSR markup contains [data-dioxus-id]
+  // already, so the existence check confirms the runtime has booted and
+  // begun walking the tree. Without this gate, subsequent clicks on
+  // SSR-rendered buttons fire before Dioxus binds their onclick handlers
+  // and the click is silently dropped (visible as "dropdown didn't open"
+  // / "page didn't navigate" failures, e.g. home-btn-teams →
+  // home-teams-dd not toggling visible in CI).
+  await page.waitForFunction(
+    () => document.querySelector("[data-dioxus-id]") !== null,
+  );
+  // Stabilization buffer: the [data-dioxus-id] check above doesn't
+  // guarantee event handlers are attached on every node. 1500ms is a
+  // conservative heuristic — replace if Dioxus exposes a real
+  // hydration-complete signal.
+  await page.waitForTimeout(1500);
 }
 
 export async function getEditor(page) {
