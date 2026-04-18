@@ -22,12 +22,7 @@ jobs:
         working-directory: contracts
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      - uses: actions/checkout@v6
 
       - name: Install dependencies
         run: |
@@ -45,7 +40,7 @@ jobs:
         working-directory: app/ratel
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Restore cache
         id: dx-check-cache
@@ -100,7 +95,7 @@ jobs:
       image: ${{ steps.build.outputs.image }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Restore cache
         id: app-shell-build-cache
@@ -176,7 +171,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Restore cache
         id: app-shell-build-cache
@@ -244,7 +239,7 @@ jobs:
     needs: [ratel-app]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
