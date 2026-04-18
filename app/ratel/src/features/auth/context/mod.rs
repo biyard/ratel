@@ -18,6 +18,7 @@ impl Context {
             // a fresh server session before the get_me call below — that's
             // the only way the user actually stays signed in across
             // restarts. Web targets fall through fast (no cached token).
+            #[cfg(feature = "mobile")]
             crate::features::auth::services::try_restore_session().await;
 
             Ok::<_, Error>(match get_me_handler().await {
@@ -30,8 +31,11 @@ impl Context {
                     // Server says no session — wipe any cached user blob
                     // and refresh token so the next restart doesn't try
                     // to restore a dead session in a loop.
-                    crate::common::services::persistent_state::clear_cached_session();
-                    crate::features::auth::services::restore_session::clear_refresh_token();
+                    #[cfg(feature = "mobile")]
+                    {
+                        crate::common::services::persistent_state::clear_cached_session();
+                        crate::features::auth::services::restore_session::clear_refresh_token();
+                    }
                     crate::error!("get_me failed during Context::init: {e}");
                     UserContext::default()
                 }
