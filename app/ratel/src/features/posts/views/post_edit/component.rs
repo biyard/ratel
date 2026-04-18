@@ -200,7 +200,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
         }
         if has_existing_space {
             if let Some(space_id) = existing_space_id_sig.peek().clone() {
-                nav.push(crate::Route::SpaceActionsPage {
+                nav.push(crate::Route::SpaceIndexPage {
                     space_id: SpacePartition(space_id),
                 });
                 return;
@@ -229,7 +229,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                 }
                 match create_space_handler(CreateSpaceRequest { post_id }).await {
                     Ok(resp) => {
-                        nav.push(crate::Route::SpaceActionsPage {
+                        nav.push(crate::Route::SpaceIndexPage {
                             space_id: resp.space_id,
                         });
                     }
@@ -389,6 +389,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     }
                     button {
                         class: "topbar-btn topbar-btn--primary",
+                        "data-testid": "post-edit-publish-btn",
                         "data-space": space_enabled() || has_existing_space,
                         disabled: !can_submit(),
                         onclick: move |_| commit_publish.call(()),
@@ -974,6 +975,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     }
                     button {
                         class: "bottom-bar__btn bottom-bar__btn--mobile bottom-bar__btn--primary",
+                        "data-testid": "post-edit-publish-btn-mobile",
                         "data-space": space_enabled() || has_existing_space,
                         disabled: !can_submit(),
                         onclick: move |_| commit_publish.call(()),

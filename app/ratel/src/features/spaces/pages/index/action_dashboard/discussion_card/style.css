@@ -20,3 +20,154 @@
   border: 1px solid rgba(34,211,238,0.18);
   color: #22d3ee;
 }
+
+/* ── Admin inline edit (discussion card) ───────────── */
+.quest-card--discuss {
+  --qedit-input-bg: var(--dark, rgba(255,255,255,0.02)) var(--light, rgba(10,10,30,0.02));
+  --qedit-input-border: var(--dark, rgba(255,255,255,0.08)) var(--light, rgba(10,10,30,0.10));
+  --qedit-text: var(--dark, #f0f0f5) var(--light, #12121a);
+  --qedit-text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+  --qedit-text-dim: var(--dark, #55556a) var(--light, #9999aa);
+  --qedit-bg-glass: var(--dark, rgba(12,12,26,0.65)) var(--light, rgba(255,255,255,0.72));
+  --qedit-bg-glass-hover: var(--dark, rgba(20,20,40,0.8)) var(--light, rgba(255,255,255,0.92));
+  --qedit-border-subtle: var(--dark, rgba(255,255,255,0.06)) var(--light, rgba(10,10,30,0.08));
+  --qedit-add-bg: var(--dark, rgba(252,179,0,0.08)) var(--light, rgba(252,179,0,0.12));
+  --qedit-add-border: var(--dark, rgba(252,179,0,0.22)) var(--light, rgba(252,179,0,0.32));
+  --qedit-red: #ef4444;
+}
+
+.quest-card[data-editing="true"] {
+  border-color: rgba(252,179,0,0.4);
+  box-shadow: 0 12px 60px rgba(0,0,0,0.5), 0 0 40px rgba(252,179,0,0.15);
+  cursor: default;
+}
+
+.quest-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+.quest-edit__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 100px;
+  background: var(--qedit-add-bg);
+  border: 1px solid var(--qedit-add-border);
+  color: #fcb300;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  align-self: flex-start;
+}
+.quest-edit__badge svg { width: 11px; height: 11px; }
+
+.quest-edit__title-input,
+.quest-edit__desc-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--qedit-input-bg);
+  border: 1px solid var(--qedit-input-border);
+  color: var(--qedit-text);
+  font-family: 'Outfit', sans-serif;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.quest-edit__title-input { font-size: 18px; font-weight: 700; }
+.quest-edit__desc-input { font-size: 13px; line-height: 1.5; resize: vertical; min-height: 72px; }
+.quest-edit__title-input:focus,
+.quest-edit__desc-input:focus,
+.quest-edit__reward-input:focus {
+  border-color: rgba(252,179,0,0.4);
+  box-shadow: 0 0 0 3px rgba(252,179,0,0.08);
+}
+
+.quest-edit__files {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+.quest-edit__files-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--qedit-text-dim);
+}
+
+.quest-edit__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 14px;
+  border-top: 1px solid var(--qedit-border-subtle);
+  margin-top: auto;
+  gap: 10px;
+}
+.quest-edit__reward-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Orbitron', sans-serif;
+  color: #fcb300;
+}
+.quest-edit__reward-group svg { width: 16px; height: 16px; }
+.quest-edit__reward-input {
+  width: 70px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--qedit-input-bg);
+  border: 1px solid var(--qedit-input-border);
+  color: #fcb300;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+  text-align: center;
+}
+.quest-edit__reward-unit {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #fcb300;
+}
+.quest-edit__actions { display: flex; gap: 6px; }
+.quest-edit__btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.quest-edit__btn--cancel {
+  background: transparent;
+  border: 1px solid var(--qedit-border-subtle);
+  color: var(--qedit-text-muted);
+}
+.quest-edit__btn--cancel:hover {
+  border-color: rgba(239,68,68,0.3);
+  color: var(--qedit-red);
+}
+.quest-edit__btn--save {
+  background: linear-gradient(135deg, #fcb300, #e5a200);
+  border: none;
+  color: #0a0a0a;
+  box-shadow: 0 2px 10px rgba(252,179,0,0.25);
+}
+.quest-edit__btn--save:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(252,179,0,0.4);
+}

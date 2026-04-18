@@ -1,5 +1,4 @@
 use crate::features::spaces::space_common::*;
-use crate::features::spaces::space_common::providers::use_space_context;
 
 translate! {
     SpaceStartModalTranslate;
@@ -25,13 +24,13 @@ translate! {
 #[component]
 pub fn SpaceStartModal(
     space_id: SpacePartition,
+    on_success: EventHandler<()>,
     #[props(default)] on_close: Option<EventHandler<()>>,
 ) -> Element {
     let tr: SpaceStartModalTranslate = use_translate();
     let mut popup = use_popup();
     let mut toast = use_toast();
     let mut is_starting = use_signal(|| false);
-    let mut ctx = use_space_context();
 
     let on_cancel = move |_| {
         if let Some(handler) = on_close.as_ref() {
@@ -51,7 +50,6 @@ pub fn SpaceStartModal(
         let mut popup = popup;
         let mut toast = toast;
         let space_id = space_id.clone();
-        let mut ctx = ctx;
 
         spawn(async move {
             let res = update_space(
@@ -62,7 +60,7 @@ pub fn SpaceStartModal(
 
             match res {
                 Ok(_) => {
-                    ctx.space.restart();
+                    on_success.call(());
                     popup.close();
                 }
                 Err(err) => {
@@ -90,11 +88,7 @@ pub fn SpaceStartModal(
                     "data-testid": "start-space-button",
                     onclick: on_start,
                     disabled: is_starting(),
-                    class: if !is_starting() {
-                        "w-full py-[14.5px] font-bold text-base rounded-[10px] bg-primary text-black hover:bg-primary/80 transition-colors"
-                    } else {
-                        "w-full py-[14.5px] font-bold text-base rounded-[10px] bg-neutral-700 light:bg-neutral-300 text-neutral-500 cursor-not-allowed transition-colors"
-                    },
+                    class: if !is_starting() { "w-full py-[14.5px] font-bold text-base rounded-[10px] bg-primary text-black hover:bg-primary/80 transition-colors" } else { "w-full py-[14.5px] font-bold text-base rounded-[10px] bg-neutral-700 light:bg-neutral-300 text-neutral-500 cursor-not-allowed transition-colors" },
                     if is_starting() {
                         "{tr.starting}"
                     } else {
