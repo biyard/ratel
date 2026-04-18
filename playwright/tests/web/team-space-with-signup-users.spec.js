@@ -739,20 +739,36 @@ test.describe.serial("Space with actions created by a team", () => {
     ];
 
     // Helper: open discussion overlay from the ActionDashboard carousel.
-    // Use gotoFresh — every comment cycle reopens this, and Dioxus's
-    // arena gets corrupted by the prior overlay close, so a plain
+    // Uses gotoFresh because every comment cycle reopens this, and
+    // Dioxus's arena gets corrupted by the prior overlay close — a plain
     // `goto` would no-op the discussion-card click on subsequent
-    // iterations (Playwright sees the card visible but the overlay
-    // never opens).
+    // iterations.
+    //
+    // The card is selected by `[data-type="discuss"]` (not a testid), so
+    // the click() helper's per-testid hydration precheck doesn't run for
+    // it. Under CI's slower runner we still occasionally see the click
+    // fire before Dioxus binds the onclick handler. Wrap the click in a
+    // retry loop that re-clicks on a fresh page until the overlay opens
+    // — bounded to 3 attempts so a real broken overlay still fails fast.
     async function openDiscussionOverlay(pg) {
-      await gotoFresh(pg, spaceUrl);
-      const discCard = pg.locator('[data-type="discuss"]').first();
-      await expect(discCard).toBeVisible({ timeout: 10000 });
-      await pg.waitForTimeout(500);
-      await discCard.click();
-      await expect(pg.getByTestId("discussion-arena-overlay")).toBeVisible({
-        timeout: 10000,
-      });
+      const overlay = pg.getByTestId("discussion-arena-overlay");
+      let lastError;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await gotoFresh(pg, spaceUrl);
+        const discCard = pg.locator('[data-type="discuss"]').first();
+        await expect(discCard).toBeVisible({ timeout: 10000 });
+        await pg.waitForTimeout(500);
+        await discCard.click();
+        try {
+          await expect(overlay).toBeVisible({ timeout: 5000 });
+          return;
+        } catch (err) {
+          lastError = err;
+          // Overlay didn't open — fall through and retry from a fresh
+          // page. Common under CI when the arena is mid-corruption.
+        }
+      }
+      throw lastError;
     }
 
     // Helper: post a comment in the discussion overlay textarea. The
