@@ -269,6 +269,14 @@ translate! {
         en: "Add question",
         ko: "질문 추가",
     },
+    add_option: {
+        en: "Add option",
+        ko: "선지 추가",
+    },
+    remove_option: {
+        en: "Remove option",
+        ko: "선지 삭제",
+    },
     schedule_starts_at: {
         en: "Starts at",
         ko: "시작",

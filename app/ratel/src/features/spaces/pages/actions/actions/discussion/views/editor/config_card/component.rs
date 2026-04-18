@@ -5,21 +5,7 @@ use crate::features::spaces::pages::actions::controllers::{
     UpdateSpaceActionRequest, update_space_action,
 };
 
-fn epoch_ms_to_datetime_local(ms: i64) -> String {
-    if ms <= 0 {
-        return String::new();
-    }
-    let secs = ms / 1000;
-    let nanos = ((ms % 1000) * 1_000_000) as u32;
-    let dt = chrono::DateTime::<chrono::Utc>::from_timestamp(secs, nanos).unwrap_or_default();
-    dt.format("%Y-%m-%dT%H:%M").to_string()
-}
-
-fn datetime_local_to_epoch_ms(s: &str) -> Option<i64> {
-    chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M")
-        .ok()
-        .map(|dt| dt.and_utc().timestamp_millis())
-}
+use crate::common::utils::time::{datetime_local_to_epoch_ms, epoch_ms_to_datetime_local};
 
 #[component]
 pub fn ConfigCard() -> Element {
@@ -120,6 +106,12 @@ pub fn ConfigCard() -> Element {
                                 value: "{started_at}",
                                 oninput: move |e| {
                                     if let Some(ms) = datetime_local_to_epoch_ms(&e.value()) {
+                                        let old_start = started_at_signal();
+                                        let old_end = ended_at_signal();
+                                        if old_start > 0 && old_end > old_start {
+                                            let gap = old_end - old_start;
+                                            ended_at_signal.set(ms + gap);
+                                        }
                                         started_at_signal.set(ms);
                                     }
                                 },

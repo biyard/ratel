@@ -515,6 +515,47 @@
   border-radius: 2px;
   inset: 3px;
 }
+.q-opt__remove {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--qc-text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+.q-opt__remove:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+.q-opt__other-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  font-size: 13px;
+  color: var(--qc-text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+.q-opt__other-toggle input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--poll-color);
+  cursor: pointer;
+}
+.add-btn--sm {
+  padding: 8px 12px;
+  font-size: 13px;
+  width: fit-content;
+}
 .q-opt .input {
   flex: 1;
   border: none;
