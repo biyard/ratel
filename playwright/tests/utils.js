@@ -251,8 +251,21 @@ export async function openTeamFromHome(page, teamUsername) {
 
   // CI PR runs start from a clean DB, so the freshly-created team is
   // guaranteed to be on the first page of the infinite-scroll dropdown.
-  // Resolve the locator once and click — avoid the scroll polling loop.
+  // Locally the dropdown can hold many older teams — scroll-search to
+  // find the requested one with a bounded number of attempts.
   const teamItem = page.getByTestId(`home-team-dd-item-${teamUsername}`);
+  let visible = await teamItem.isVisible().catch(() => false);
+  if (!visible) {
+    const dd = page.getByTestId("home-teams-dd");
+    for (let i = 0; i < 20; i++) {
+      visible = await teamItem.isVisible().catch(() => false);
+      if (visible) break;
+      await dd.evaluate((el) => {
+        el.scrollTop = el.scrollTop + el.clientHeight;
+      });
+      await page.waitForTimeout(200);
+    }
+  }
   await expect(teamItem).toBeVisible({ timeout: 15000 });
   await teamItem.click();
 
