@@ -60,15 +60,23 @@ export async function clickNoNav(page, opt) {
 
 /**
  * Wait until the target element carries Dioxus's `data-node-hydration`
- * attribute with a `click:` token, which is added once the WASM runtime
- * has bound the onclick handler. Visibility (`getLocator`) only proves
- * the SSR markup is present; a click against a non-hydrated node is
- * silently dropped, surfacing later as "dropdown didn't open" / "page
- * didn't navigate". 5s ceiling so a missing handler still fails fast.
+ * attribute, which is added once the WASM runtime has walked through
+ * the SSR tree and bound event handlers for that node. Visibility
+ * (`getLocator`) only proves the SSR markup is present; a click against
+ * a non-hydrated node is silently dropped, surfacing later as "dropdown
+ * didn't open" / "popup didn't appear" / "page didn't navigate".
  *
- * No-op for selectors that aren't testid-based — we'd need a per-locator
- * resolver to evaluate the DOM node, and the failures we see in CI are
- * all on testid clicks.
+ * The marker format is `<id>[,<event>:<count>]*` — we don't assert on
+ * the event token because some interactive elements (e.g. labels
+ * forwarding clicks via for=) get hydrated without a literal "click"
+ * token even though the click works once hydration completes. Just
+ * waiting for the attribute to appear is enough to close the race.
+ *
+ * Falls through after 5s if the marker never appears, so locators
+ * pointing at non-Dioxus DOM (e.g. Tiptap rich-text editor internals)
+ * don't hard-fail.
+ *
+ * No-op for selectors that aren't testid-based.
  */
 async function waitForClickHandlerHydrated(page, opt) {
   if (!opt || !opt.testId) return;
@@ -77,16 +85,15 @@ async function waitForClickHandlerHydrated(page, opt) {
       (id) => {
         const el = document.querySelector(`[data-testid="${id}"]`);
         if (!el) return false;
-        const marker = el.getAttribute("data-node-hydration");
-        return !!marker && marker.includes("click");
+        return el.hasAttribute("data-node-hydration");
       },
       opt.testId,
       { timeout: 5000 },
     )
     .catch(() => {
-      // Fall through — let the click attempt anyway. Some hydration
-      // markers may differ across Dioxus versions; we don't want to
-      // hard-fail tests that would otherwise pass.
+      // Fall through — some elements may never carry the marker
+      // (forwarded clicks, third-party widgets). Let the click try
+      // anyway so we don't regress passing tests.
     });
 }
 
