@@ -44,7 +44,7 @@ jobs:
 
       - name: Restore cache
         id: dx-check-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
@@ -99,7 +99,7 @@ jobs:
 
       - name: Restore cache
         id: app-shell-build-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
@@ -161,7 +161,7 @@ jobs:
           echo "image=$ECR:$COMMIT" >> $GITHUB_OUTPUT
 
       - name: Upload Docker image artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: app-shell-image-${{ github.sha }}
           path: /tmp/app-shell-image.tar.gz
@@ -175,7 +175,7 @@ jobs:
 
       - name: Restore cache
         id: app-shell-build-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
@@ -245,7 +245,7 @@ jobs:
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
       - name: Download Docker image artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: app-shell-image-${{ github.sha }}
           path: /tmp
@@ -322,7 +322,7 @@ jobs:
           mv playwright/playwright-report ./
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-test-results

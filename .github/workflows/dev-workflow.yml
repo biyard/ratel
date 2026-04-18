@@ -107,7 +107,7 @@ jobs:
 
       - name: Restore cache
         id: app-shell-build-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
@@ -242,7 +242,7 @@ jobs:
 
       - name: Save cache
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
           path: |
@@ -259,7 +259,7 @@ jobs:
           tar czvf app-shell.tar.gz target/dx/app-shell/release/web
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: app-shell-${{ github.sha }}
           path: ${{ github.workspace }}/app-shell.tar.gz
@@ -277,7 +277,7 @@ jobs:
 
       - name: Restore cache
         id: app-shell-build-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           key: app-shell-lambda-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
@@ -424,7 +424,7 @@ jobs:
           tar czvf app-shell-lambda.tar.gz target/dx/app-shell/release/web
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: app-shell-lambda-${{ github.sha }}
           path: ${{ github.workspace }}/app-shell-lambda.tar.gz
@@ -433,7 +433,7 @@ jobs:
 
       - name: Save cache
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           key: app-shell-lambda-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
           path: |
@@ -722,7 +722,7 @@ jobs:
 
   #     - name: Upload .ipa artifact
   #       if: always()
-  #       uses: actions/upload-artifact@v4
+  #       uses: actions/upload-artifact@v7
   #       with:
   #         name: ios-ipa-${{ github.sha }}
   #         path: |
