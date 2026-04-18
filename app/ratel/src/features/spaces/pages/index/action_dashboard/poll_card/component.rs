@@ -5,12 +5,19 @@ use crate::features::spaces::pages::index::action_pages::quiz::{
     ActiveActionOverlay, ActiveActionOverlaySignal,
 };
 use crate::features::spaces::pages::index::*;
+use crate::features::spaces::space_common::providers::use_space_context;
 
 #[component]
-pub fn PollActionCard(action: SpaceActionSummary, space_id: ReadSignal<SpacePartition>) -> Element {
+pub fn PollActionCard(
+    action: SpaceActionSummary,
+    space_id: ReadSignal<SpacePartition>,
+    #[props(default)] is_admin: bool,
+) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
     let lang = use_language();
+    let nav = use_navigator();
     let mut overlay: ActiveActionOverlaySignal = use_context();
+    let mut space_ctx = use_space_context();
 
     let poll_id: SpacePollEntityType = action.action_id.clone().into();
     let poll_id = use_signal(move || poll_id);
@@ -70,7 +77,7 @@ pub fn PollActionCard(action: SpaceActionSummary, space_id: ReadSignal<SpacePart
                     }
                     "{action.action_type.translate(&lang())}"
                 }
-                div { class: "quest-card__badges",
+                div { class: "quest-card__top-actions",
                     if action.prerequisite {
                         span { class: "quest-card__badge quest-card__badge--prerequisite",
                             "{tr.required_label}"
@@ -79,6 +86,18 @@ pub fn PollActionCard(action: SpaceActionSummary, space_id: ReadSignal<SpacePart
                     if action.credits > 0 {
                         span { class: "quest-card__badge quest-card__badge--credits",
                             "+{action.credits} CR"
+                        }
+                    }
+                    if is_admin {
+                        QuestEditButton {
+                            action_id: action.action_id.clone(),
+                            on_edit: move |_| {
+                                space_ctx.current_role.set(SpaceUserRole::Creator);
+                                nav.push(crate::Route::PollActionPage {
+                                    space_id: space_id(),
+                                    poll_id: poll_id(),
+                                });
+                            },
                         }
                     }
                 }

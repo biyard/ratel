@@ -140,7 +140,12 @@ pub fn SpaceTop(
                             onclick: move |_| {
                                 let space_id = space_id.clone();
                                 popup.open(rsx! {
-                                    SpaceStartModal { space_id }
+                                    SpaceStartModal {
+                                        space_id,
+                                        on_success: move |_| {
+                                            ctx.space.restart();
+                                        },
+                                    }
                                 });
                             },
                             {tr.start}
@@ -152,7 +157,12 @@ pub fn SpaceTop(
                             onclick: move |_| {
                                 let space_id = space_id.clone();
                                 popup.open(rsx! {
-                                    SpaceEndModal { space_id }
+                                    SpaceEndModal {
+                                        space_id,
+                                        on_success: move |_| {
+                                            ctx.space.restart();
+                                        },
+                                    }
                                 });
                             },
                             {tr.finish}

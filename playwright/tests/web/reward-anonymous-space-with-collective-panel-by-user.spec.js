@@ -9,6 +9,11 @@ import {
   getLocator,
   getEditor,
   waitPopup,
+  addPollQuestion,
+  fillPollQuestion,
+  togglePrerequisite,
+  setReward,
+  commitAutosave,
 } from "../utils";
 
 // This test requires the backend to be built with --features bypass
@@ -116,39 +121,25 @@ test.describe
     const page = await context.newPage();
 
     try {
-      await goto(page, spaceUrl + "/actions");
-
-      await click(page, { text: "Select Action Type" });
-      await click(page, { testId: "action-type-follow" });
+      // Arena: admin's add-action card opens the TypePicker directly and
+      // picking a type creates + navigates to the creator page. There is no
+      // intermediate "Create" confirmation and no /actions list page.
+      await goto(page, spaceUrl);
       await hideFab(page);
-      await click(page, { text: "Create" });
+      await click(page, { testId: "admin-add-action-card" });
+      await click(page, { testId: "type-option-follow" });
 
       await page.waitForURL(/\/actions\/follows\//, {
         waitUntil: "load",
+        timeout: 60000,
       });
 
-      await getLocator(page, { text: "General" });
+      // Wait for hydration by looking for a testid on the ConfigCard.
+      await getLocator(page, { testId: "page-card-config" });
 
-      // Switch to Settings tab to configure reward
-      await page.getByRole("tab", { name: "Settings" }).click();
-      await page.waitForLoadState("load");
-
-      // Enable reward toggle via data-testid
-      const rewardToggle = page.locator(
-        '[data-testid="reward-setting-toggle"] button',
-      );
-      if ((await rewardToggle.count()) > 0) {
-        await rewardToggle.click();
-        await page.waitForLoadState("load");
-
-        // Set credit usage to 2
-        const creditInput = page.locator('[data-testid="reward-credit-input"]');
-        await creditInput.fill("2");
-
-        // Trigger blur to save
-        await page.keyboard.press("Tab");
-        await page.waitForLoadState("load");
-      }
+      // Reward toggle is only rendered for paid memberships with credits.
+      // setReward no-ops when it is absent.
+      await setReward(page, 2);
     } finally {
       await context.close();
     }
@@ -163,18 +154,19 @@ test.describe
     const page = await context.newPage();
 
     try {
-      await goto(page, spaceUrl + "/actions");
-
-      await click(page, { text: "Select Action Type" });
-      // Quiz is selected by default
+      await goto(page, spaceUrl);
       await hideFab(page);
-      await click(page, { text: "Create" });
+      await click(page, { testId: "admin-add-action-card" });
+      // Quiz is the default pick in the TypePicker.
+      await click(page, { testId: "type-option-quiz" });
 
       await page.waitForURL(/\/actions\/quizzes\//, {
         waitUntil: "load",
+        timeout: 60000,
       });
 
-      // Fill quiz overview
+      // Arena quiz creator: ContentCard + QuestionsCard + ConfigCard inline
+      // with per-field autosave. No tabs, no Save button.
       await fill(
         page,
         { placeholder: "Enter quiz title..." },
@@ -185,44 +177,26 @@ test.describe
       await editor.fill(
         "This quiz tests participant knowledge and awards reward credits upon completion.",
       );
-      await click(page, { text: "Save" });
+      await commitAutosave(page);
 
-      // Add a quiz question on the Quiz tab
-      await page.getByRole("tab", { name: "Quiz" }).click();
-      await page.waitForLoadState("load");
-
-      await click(page, { testId: "quiz-add-question" });
-      await click(page, { text: "Single Choice" });
-
-      const textInputs = page.locator('input[type="text"]:visible');
-      await textInputs.nth(0).fill("What does DAO stand for?");
-      await textInputs.nth(1).fill("Decentralized Autonomous Organization");
-      await textInputs.nth(2).fill("Digital Asset Operation");
-
-      // Mark correct answer (option 1)
-      const checkboxLabels = page.locator('label:has(input[type="checkbox"])');
-      await checkboxLabels.nth(0).click();
-      await page.waitForLoadState("load");
-
-      // Switch to Setting tab (quiz uses "Setting" singular)
-      await page.getByRole("tab", { name: "Setting" }).click();
-      await page.waitForLoadState("load");
-
-      // Enable reward toggle via data-testid
-      const rewardToggle2 = page.locator(
-        '[data-testid="reward-setting-toggle"] button',
-      );
-      if ((await rewardToggle2.count()) > 0) {
-        await rewardToggle2.click();
+      // Single question with per-field blur so each onblur autosave commits.
+      await click(page, { testId: "quiz-question-add" });
+      const q0 = page.getByTestId("quiz-question-0");
+      const q0Inputs = q0.locator("input.input");
+      const fills = [
+        "What does DAO stand for?",
+        "Decentralized Autonomous Organization",
+        "Digital Asset Operation",
+      ];
+      for (let i = 0; i < fills.length; i += 1) {
+        await q0Inputs.nth(i).fill(fills[i]);
+        await q0Inputs.nth(i).press("Tab");
         await page.waitForLoadState("load");
-
-        // Set credit usage to 2
-        const creditInput = page.locator('[data-testid="reward-credit-input"]');
-        await creditInput.fill("2");
-
-        await page.keyboard.press("Tab");
-        await page.waitForLoadState("load");
+        await page.waitForTimeout(200);
       }
+
+      // Reward toggle + 2 credits — no-op when the workspace is free-tier.
+      await setReward(page, 2);
     } finally {
       await context.close();
     }
@@ -237,56 +211,37 @@ test.describe
     const page = await context.newPage();
 
     try {
-      await goto(page, spaceUrl + "/actions");
-
-      await click(page, { text: "Select Action Type" });
-      await click(page, { testId: "action-type-poll" });
+      await goto(page, spaceUrl);
       await hideFab(page);
-      await click(page, { text: "Create" });
+      await click(page, { testId: "admin-add-action-card" });
+      await click(page, { testId: "type-option-poll" });
 
       await page.waitForURL(/\/actions\/polls\//, {
         waitUntil: "load",
+        timeout: 60000,
       });
 
-      // Fill poll title
       await fill(
         page,
         { placeholder: "Enter poll title..." },
         "Prerequisite Poll: Budget Allocation",
       );
-      await page.keyboard.press("Tab");
-      await page.waitForLoadState("load");
+      await commitAutosave(page);
 
-      // Add a poll question
-      await click(page, { testId: "poll-add-question" });
-      await click(page, { text: "Single Choice" });
+      await addPollQuestion(page, "single");
+      await fillPollQuestion(page, 0, {
+        title: "How should the budget be allocated?",
+        options: ["Marketing", "R&D"],
+      });
 
-      const textInputs = page.locator('input[type="text"]:visible');
-      await textInputs.nth(0).fill("How should the budget be allocated?");
-      await textInputs.nth(1).fill("Marketing");
-      await textInputs.nth(2).fill("R&D");
-
-      await page.keyboard.press("Tab");
-      await page.waitForLoadState("load");
-
-      // Switch to Settings tab and enable Prerequisite
-      await page.getByRole("tab", { name: "Settings" }).click();
-      await page.waitForLoadState("load");
-
-      // Toggle Prerequisite switch via data-testid
-      const prerequisiteSwitch = page.locator(
-        '[data-testid="prerequisite-setting"] button',
-      );
-      await prerequisiteSwitch.click();
-      await page.waitForLoadState("load");
+      // Prerequisite is toggled via the ConfigCard tile (no Settings tab).
+      await togglePrerequisite(page);
     } finally {
       await context.close();
     }
   });
 
   test("Create a final poll scheduled one day later", async ({ browser }) => {
-    // Month-boundary calendar navigation (e.g., March 31 → April 1) adds
-    // extra steps that can push total execution past the default 60s timeout.
     test.setTimeout(120000);
 
     const context = await browser.newContext({
@@ -297,85 +252,54 @@ test.describe
     const page = await context.newPage();
 
     try {
-      await goto(page, spaceUrl + "/actions");
-
-      await click(page, { text: "Select Action Type" });
-      await click(page, { testId: "action-type-poll" });
+      await goto(page, spaceUrl);
       await hideFab(page);
-      await click(page, { text: "Create" });
+      await click(page, { testId: "admin-add-action-card" });
+      await click(page, { testId: "type-option-poll" });
 
       await page.waitForURL(/\/actions\/polls\//, {
         waitUntil: "load",
+        timeout: 60000,
       });
 
-      // Fill poll title
       await fill(
         page,
         { placeholder: "Enter poll title..." },
         "Final Poll: One Day Later",
       );
-      await page.keyboard.press("Tab");
-      await page.waitForLoadState("load");
+      await commitAutosave(page);
 
-      // Add a poll question
-      await click(page, { testId: "poll-add-question" });
-      await click(page, { text: "Single Choice" });
-
-      const textInputs = page.locator('input[type="text"]:visible');
-      await textInputs.nth(0).fill("Should we proceed with the proposal?");
-      await textInputs.nth(1).fill("Yes");
-      await textInputs.nth(2).fill("No");
-
-      await page.keyboard.press("Tab");
-      await page.waitForLoadState("load");
-
-      // Switch to Settings tab and set date to tomorrow
-      await page.getByRole("tab", { name: "Settings" }).click();
-      await page.waitForLoadState("load");
-
-      // Build accessible name for tomorrow (e.g., "Tuesday, March 31, 2026")
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const tomorrowLabel = tomorrow.toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
+      await addPollQuestion(page, "single");
+      await fillPollQuestion(page, 0, {
+        title: "Should we proceed with the proposal?",
+        options: ["Yes", "No"],
       });
 
-      // Open the start date calendar popover (first "Show Calendar" button)
-      const showCalendarButtons = page.getByRole("button", {
-        name: "Show Calendar",
-      });
-      await showCalendarButtons.first().click();
+      // Arena Schedule: native datetime-local inputs (schedule-start /
+      // schedule-end). Set start = tomorrow, end = day after tomorrow.
+      const fmt = (d) => {
+        const y = d.getFullYear();
+        const mo = String(d.getMonth() + 1).padStart(2, "0");
+        const da = String(d.getDate()).padStart(2, "0");
+        const h = String(d.getHours()).padStart(2, "0");
+        const mi = String(d.getMinutes()).padStart(2, "0");
+        return `${y}-${mo}-${da}T${h}:${mi}`;
+      };
+      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const dayAfter = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+
+      const startInput = page.getByTestId("schedule-start");
+      await expect(startInput).toBeVisible();
+      await startInput.fill(fmt(tomorrow));
+      await startInput.blur();
       await page.waitForLoadState("load");
 
-      // Click tomorrow's day in the calendar using its accessible name.
-      // Use .first() to avoid strict mode violation when the date appears
-      // in multiple month sections of the calendar grid (e.g. at month
-      // boundaries where the day shows in both "current" and "next").
-      await page.getByRole("button", { name: tomorrowLabel }).first().click();
+      const endInput = page.getByTestId("schedule-end");
+      await expect(endInput).toBeVisible();
+      await endInput.fill(fmt(dayAfter));
+      await endInput.blur();
       await page.waitForLoadState("load");
-
-      // Build accessible name for day after tomorrow (end date)
-      const dayAfter = new Date();
-      dayAfter.setDate(dayAfter.getDate() + 2);
-      const dayAfterLabel = dayAfter.toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-
-      // Open the end date calendar popover (second "Show Calendar" button)
-      await showCalendarButtons.nth(1).click();
-      await page.waitForLoadState("load");
-
-      // Click the end date in the calendar using its accessible name.
-      // Use .first() to avoid strict mode violation when the date appears
-      // in multiple month sections of the calendar grid.
-      await page.getByRole("button", { name: dayAfterLabel }).first().click();
-      await page.waitForLoadState("load");
+      await page.waitForTimeout(500);
     } finally {
       await context.close();
     }

@@ -53,20 +53,16 @@ pub async fn update_poll(
             poll_updater = poll_updater
                 .with_started_at(started_at)
                 .with_ended_at(ended_at);
+            action_updater = action_updater
+                .with_started_at(started_at)
+                .with_ended_at(ended_at);
+            update_action = true;
         }
         UpdatePollRequest::Question { questions } => {
             if questions.is_empty() {
                 return Err(SpacePollError::QuestionsEmpty.into());
             }
-            let description = questions
-                .first()
-                .map(|q| q.title().to_string())
-                .unwrap_or_default();
-            poll_updater = poll_updater
-                .with_questions(questions)
-                .with_description(description.clone());
-            action_updater = action_updater.with_description(description);
-            update_action = true;
+            poll_updater = poll_updater.with_questions(questions);
         }
         UpdatePollRequest::ResponseEditable { response_editable } => {
             poll_updater = poll_updater.with_response_editable(response_editable);
