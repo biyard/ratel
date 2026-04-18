@@ -35,6 +35,7 @@ export function wrap(page, project, baseDir) {
 
 export async function click(page, opt) {
   const selected = await getLocator(page, opt);
+  await waitForClickHandlerHydrated(page, opt);
 
   await selected.click();
   await page.waitForLoadState("load");
@@ -50,10 +51,43 @@ export async function click(page, opt) {
  */
 export async function clickNoNav(page, opt) {
   const selected = await getLocator(page, opt);
+  await waitForClickHandlerHydrated(page, opt);
 
   await selected.click();
 
   return selected;
+}
+
+/**
+ * Wait until the target element carries Dioxus's `data-node-hydration`
+ * attribute with a `click:` token, which is added once the WASM runtime
+ * has bound the onclick handler. Visibility (`getLocator`) only proves
+ * the SSR markup is present; a click against a non-hydrated node is
+ * silently dropped, surfacing later as "dropdown didn't open" / "page
+ * didn't navigate". 5s ceiling so a missing handler still fails fast.
+ *
+ * No-op for selectors that aren't testid-based — we'd need a per-locator
+ * resolver to evaluate the DOM node, and the failures we see in CI are
+ * all on testid clicks.
+ */
+async function waitForClickHandlerHydrated(page, opt) {
+  if (!opt || !opt.testId) return;
+  await page
+    .waitForFunction(
+      (id) => {
+        const el = document.querySelector(`[data-testid="${id}"]`);
+        if (!el) return false;
+        const marker = el.getAttribute("data-node-hydration");
+        return !!marker && marker.includes("click");
+      },
+      opt.testId,
+      { timeout: 5000 },
+    )
+    .catch(() => {
+      // Fall through — let the click attempt anyway. Some hydration
+      // markers may differ across Dioxus versions; we don't want to
+      // hard-fail tests that would otherwise pass.
+    });
 }
 
 export async function fill(page, opt, value) {
