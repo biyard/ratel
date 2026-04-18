@@ -51,7 +51,7 @@ jobs:
         id: dx-check-cache
         uses: actions/cache/restore@v4
         with:
-          key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock', 'app/ratel/src/**') }}
+          key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             app-shell-build-${{ runner.os }}-rust-
           path: |
@@ -106,7 +106,7 @@ jobs:
         id: app-shell-build-cache
         uses: actions/cache/restore@v4
         with:
-          key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock', 'app/ratel/src/**') }}
+          key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             app-shell-build-${{ runner.os }}-rust-
           path: |
@@ -155,6 +155,7 @@ jobs:
           ECR: ratel/app-shell
         run: |
           npm i
+          rm -rf target/dx
 
           cd app/ratel
           make build-testing
@@ -181,7 +182,7 @@ jobs:
         id: app-shell-build-cache
         uses: actions/cache/restore@v4
         with:
-          key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock', 'app/ratel/src/**') }}
+          key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             app-shell-build-${{ runner.os }}-rust-
           path: |
