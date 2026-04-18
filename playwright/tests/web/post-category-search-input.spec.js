@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { click, fill, goto, getEditor, waitForHydrated } from "../utils";
+import { click, fill, goto, getEditor } from "../utils";
 
 /**
  * Post tag input — E2E
@@ -49,7 +49,6 @@ test.describe.serial("Post tag input (post-edit renewal)", () => {
   test("Add a tag by typing and pressing Enter", async ({ page }) => {
     await goto(page, postEditUrl);
 
-    await waitForHydrated(page, "tag-input-field");
     const tagInput = page.locator(".tag-input__field");
     await expect(tagInput).toBeVisible();
 
@@ -66,7 +65,6 @@ test.describe.serial("Post tag input (post-edit renewal)", () => {
   test("Add a second tag via Enter", async ({ page }) => {
     await goto(page, postEditUrl);
 
-    await waitForHydrated(page, "tag-input-field");
     const tagInput = page.locator(".tag-input__field");
     await expect(tagInput).toBeVisible();
     const tags = page.locator(".tag-input .tag");
@@ -89,7 +87,6 @@ test.describe.serial("Post tag input (post-edit renewal)", () => {
   test("Tag badges render with remove buttons", async ({ page }) => {
     await goto(page, postEditUrl);
 
-    await waitForHydrated(page, "tag-input-field");
     const tagInput = page.locator(".tag-input__field");
     await expect(tagInput).toBeVisible();
     await tagInput.fill(categoryA);
@@ -110,7 +107,6 @@ test.describe.serial("Post tag input (post-edit renewal)", () => {
   test("Remove a tag by clicking its X button", async ({ page }) => {
     await goto(page, postEditUrl);
 
-    await waitForHydrated(page, "tag-input-field");
     const tagInput = page.locator(".tag-input__field");
     await expect(tagInput).toBeVisible();
     await tagInput.fill(categoryA);
