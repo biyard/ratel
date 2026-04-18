@@ -159,6 +159,18 @@ export async function goto(page, url) {
     ]),
     page.goto(url),
   ]);
+  // Force a hard reload after the initial navigation. Dioxus 0.7's
+  // signal arena gets corrupted after popup-driven flows like
+  // `createTeamFromHome` (browser console emits "cannot reclaim
+  // ElementId(N)" from dioxus-core arena.rs:65). When that happens,
+  // subsequent signal-mutating clicks (e.g. `home-btn-teams` toggling
+  // the Teams dropdown, `admin-add-action-card` opening the action
+  // type picker) fire and the click handler is hydrated, but the
+  // signal mutation no longer triggers a re-render — the dropdown /
+  // modal stays hidden. A hard reload purges the corrupted arena and
+  // restores click-to-render flow. Adds ~1s per navigation, which is
+  // an acceptable cost for stability.
+  await page.reload();
   await page.waitForLoadState("domcontentloaded");
   // Wait for Dioxus WASM to hydrate. SSR markup contains [data-dioxus-id]
   // already, so the existence check confirms the runtime has booted and
