@@ -118,7 +118,7 @@ export async function goto(page, url) {
     ]),
     page.goto(url),
   ]);
-  await page.waitForLoadState("domcontentloaded");
+  await page.waitForLoadState("load");
   await page.waitForTimeout(200);
   // Wait for Dioxus WASM to hydrate — SSR markup already contains
   // [data-dioxus-id], so also verify the interpreter is initialised.
