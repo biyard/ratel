@@ -120,52 +120,7 @@ export async function goto(page, url) {
     page.goto(url),
   ]);
   await page.waitForLoadState("domcontentloaded");
-  await page.waitForTimeout(200);
-  // Wait for Dioxus WASM to hydrate — SSR markup already contains
-  // [data-dioxus-id], so also verify the interpreter is initialised.
-  await page.waitForFunction(
-    () => document.querySelector("[data-dioxus-id]") !== null,
-  );
-  // Stabilization wait: [data-dioxus-id] is in SSR markup, so the check above
-  // doesn't guarantee WASM has bound onclick handlers. Without this wait,
-  // automated clicks fire on hydrated DOM but no Rust handler is listening.
-  // 1500ms is a conservative heuristic — replace if Dioxus exposes a real
-  // hydration-complete signal.
-  await page.waitForTimeout(1500);
-  await suppressDevToast(page);
-}
-
-const DEV_TOAST_CSS =
-  "#__dx-toast,#__dx-toast-inner{display:none!important;visibility:hidden!important;pointer-events:none!important;}";
-
-/**
- * Permanently hide the Dioxus dev-server toast overlay (`#__dx-toast`,
- * z-index 2147483647) that intercepts clicks during local `dx serve` runs.
- * Registers an init script (idempotent) so the rule is reapplied on every
- * navigation, then injects a style tag for the current page. The CI docker
- * image strips these dev assets so this is a no-op there.
- */
-export async function suppressDevToast(page) {
-  if (!page.__dxToastInit) {
-    page.__dxToastInit = true;
-    await page
-      .addInitScript((css) => {
-        const apply = () => {
-          if (document.getElementById("__dx-toast-suppress")) return;
-          const style = document.createElement("style");
-          style.id = "__dx-toast-suppress";
-          style.textContent = css;
-          (document.head || document.documentElement).appendChild(style);
-        };
-        if (document.readyState === "loading") {
-          document.addEventListener("DOMContentLoaded", apply);
-        } else {
-          apply();
-        }
-      }, DEV_TOAST_CSS)
-      .catch(() => {});
-  }
-  await page.addStyleTag({ content: DEV_TOAST_CSS }).catch(() => {});
+  await page.waitForTimeout(500);
 }
 
 /**
