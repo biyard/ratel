@@ -141,16 +141,6 @@ export async function goto(page, url) {
  * "dropdown did not open / state did not toggle" failures.
  */
 export async function waitForHydrated(page, testId, timeout = 15000) {
-  await page.waitForResponse(
-    (response) =>
-      response.url().includes("app-shell") &&
-      response.url().endsWith(".wasm") &&
-      response.status() === 200,
-  );
-
-  await page.waitForLoadState("domcontentloaded");
-  await page.waitForTimeout(200);
-
   await page.waitForFunction(
     (id) => {
       const el = document.querySelector(`[data-testid="${id}"]`);
@@ -188,7 +178,7 @@ export async function createTeamFromHome(
   // Wait until the button itself is hydrated — otherwise the click fires
   // before Dioxus attaches the `teams_open.toggle()` handler and the event
   // is silently dropped.
-  // await waitForHydrated(page, "home-btn-teams");
+  await waitForHydrated(page, "home-btn-teams");
   await clickNoNav(page, { testId: "home-btn-teams" });
   // Dropdown is always rendered but toggled via aria-expanded + CSS
   // visibility, so bump the timeout past the CSS transition (0.18s) plus
@@ -238,7 +228,7 @@ export async function openTeamFromHome(page, teamUsername) {
   // Wait until the button itself is hydrated — clicks on SSR-rendered
   // elements that haven't received their Dioxus event handlers yet are
   // silently dropped.
-  // await waitForHydrated(page, "home-btn-teams");
+  await waitForHydrated(page, "home-btn-teams");
 
   // Open the dropdown — non-navigation toggle, so clickNoNav.
   await clickNoNav(page, { testId: "home-btn-teams" });
