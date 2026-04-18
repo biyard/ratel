@@ -97,7 +97,9 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: FeedPartition) -> E
                                     let existing_space_id = existing_space_id();
                                     spawn(async move {
                                         if let Some(space_id) = existing_space_id {
-                                            nav.push(format!("/spaces/{space_id}/dashboard"));
+                                            nav.push(crate::Route::SpaceIndexPage {
+                                                space_id: SpacePartition(space_id),
+                                            });
                                             return;
                                         }
                                         match create_space_handler(CreateSpaceRequest {
@@ -106,7 +108,9 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: FeedPartition) -> E
                                             .await
                                         {
                                             Ok(resp) => {
-                                                nav.push(format!("/spaces/{}/dashboard", resp.space_id));
+                                                nav.push(crate::Route::SpaceIndexPage {
+                                                    space_id: resp.space_id,
+                                                });
                                             }
                                             Err(e) => {
                                                 dioxus::logger::tracing::error!("Failed to create space: {:?}", e);

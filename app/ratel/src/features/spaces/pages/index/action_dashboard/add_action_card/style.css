@@ -1,0 +1,68 @@
+/* ── Admin Add Action Card ────────────────────────── */
+
+.quest-card--add {
+  --add-card-bg-a: var(--dark, rgba(252,179,0,0.03)) var(--light, rgba(252,179,0,0.08));
+  --add-card-bg-b: var(--dark, rgba(12,12,26,0.55)) var(--light, rgba(255,255,255,0.75));
+  --add-card-bg-a-active: var(--dark, rgba(252,179,0,0.06)) var(--light, rgba(252,179,0,0.14));
+  --add-card-bg-b-active: var(--dark, rgba(12,12,26,0.7)) var(--light, rgba(255,255,255,0.92));
+  --add-border: var(--dark, rgba(252,179,0,0.22)) var(--light, rgba(252,179,0,0.32));
+  --add-glow: var(--dark, rgba(252,179,0,0.15)) var(--light, rgba(252,179,0,0.18));
+  --plus-core: var(--dark, rgba(252,179,0,0.25)) var(--light, rgba(252,179,0,0.32));
+  --plus-halo: var(--dark, rgba(252,179,0,0.05)) var(--light, rgba(252,179,0,0.1));
+  --add-text: var(--dark, #f0f0f5) var(--light, #12121a);
+  --add-text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+
+  background: linear-gradient(180deg, var(--add-card-bg-a), var(--add-card-bg-b));
+  border: 2px dashed var(--add-border);
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  text-align: center;
+  color: inherit;
+  font-family: inherit;
+}
+
+.quest-card--add.active {
+  background: linear-gradient(180deg, var(--add-card-bg-a-active), var(--add-card-bg-b-active));
+  border-color: #fcb300;
+  box-shadow: 0 12px 60px rgba(0,0,0,0.5), 0 0 40px var(--add-glow);
+}
+
+.add-card__plus {
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, var(--plus-core), var(--plus-halo) 70%);
+  border: 1px solid var(--add-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 40px var(--add-glow);
+}
+.add-card__plus svg {
+  width: 52px;
+  height: 52px;
+  color: #fcb300;
+}
+
+.add-card__title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--add-text);
+}
+.add-card__desc {
+  font-size: 13px;
+  color: var(--add-text-muted);
+  line-height: 1.6;
+  max-width: 280px;
+}
+
+@media (max-width: 500px) {
+  .add-card__plus { width: 80px; height: 80px; }
+  .add-card__plus svg { width: 40px; height: 40px; }
+  .add-card__title { font-size: 15px; }
+  .add-card__desc { font-size: 12px; max-width: 240px; }
+}

@@ -18,7 +18,7 @@ impl DiscussionCommentContext {
         discussion_id: ReadSignal<SpacePostEntityType>,
     ) -> std::result::Result<Self, RenderError> {
         let comments = use_infinite_query(move |bookmark| {
-            list_comments(space_id(), discussion_id(), bookmark)
+            list_comments(space_id(), discussion_id(), bookmark, None)
         })?;
 
         let srv = Self { comments };

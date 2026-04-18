@@ -196,7 +196,7 @@ test.describe.serial("Page entries accessibility", () => {
       testId: "social-layout",
     }));
   test("GET /:username/drafts", async ({ page }) =>
-    checkPage(page, `/${data.username}/drafts`, { testId: "social-layout" }));
+    checkPage(page, `/${data.username}/drafts`, { text: "Drafts" }));
   test("GET /:username/credentials", async ({ page }) =>
     checkPage(page, `/${data.username}/credentials`, {
       testId: "social-layout",
@@ -277,25 +277,30 @@ test.describe.serial("Page entries accessibility", () => {
     checkPage(page, `/spaces/${data.spaceId}/actions/`, {
       testId: "space-layout-container",
     }));
+  // Admin users hit SpaceLayout's early-return (arena/action-edit route)
+  // which skips the sidebar shell and its space-layout-container testid.
+  // Verify each creator page renders its own card instead.
   test("GET /spaces/:space_id/actions/polls/:poll_id", async ({ page }) =>
     checkPage(
       page,
       `/spaces/${data.spaceId}/actions/polls/${data.pollId}`,
-      { testId: "space-layout-container" },
+      { testId: "page-card-content" },
     ));
   test("GET /spaces/:space_id/actions/quizzes/:quiz_id", async ({ page }) =>
     checkPage(
       page,
       `/spaces/${data.spaceId}/actions/quizzes/${data.quizId}`,
-      { testId: "space-layout-container" },
+      { testId: "page-card-content" },
     ));
+  // Discussion at /discussions/:id still renders legacy CreatorMain (tab UI)
+  // for admins, not the arena editor. Use tablist role as the marker.
   test("GET /spaces/:space_id/actions/discussions/:discussion_id", async ({
     page,
   }) =>
     checkPage(
       page,
       `/spaces/${data.spaceId}/actions/discussions/${data.discussionId}`,
-      { testId: "space-layout-container" },
+      { css: "[role='tablist']" },
     ));
   // NOTE: discussion editor page loads discussion context via server function,
   // which can cause SSR crash (ERR_EMPTY_RESPONSE) in some environments.
@@ -305,13 +310,14 @@ test.describe.serial("Page entries accessibility", () => {
     checkPage(
       page,
       `/spaces/${data.spaceId}/actions/discussions/${data.discussionId}/edit`,
-      { testId: "space-layout-container" },
+      { testId: "page-card-content" },
     ));
+  // Follow creator renders page-card-targets (not page-card-content).
   test("GET /spaces/:space_id/actions/follows/:follow_id", async ({ page }) =>
     checkPage(
       page,
       `/spaces/${data.spaceId}/actions/follows/${data.followId}`,
-      { testId: "space-layout-container" },
+      { testId: "page-card-targets" },
     ));
 
   // ── Space app pages (SpaceLayout) ─────────────────────────────────────────

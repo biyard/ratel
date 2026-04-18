@@ -117,6 +117,8 @@ pub enum Route {
             UserRewards { username: String },
             #[route("/settings")]
             UserSettingPage { username: String },
+            #[route("/drafts")]
+            UserDrafts { username: String },
             #[layout(SocialLayout)]
                 #[route("/")]
                 UserHomeRoot { username: String },
@@ -124,8 +126,6 @@ pub enum Route {
                 UserPosts { username: String },
                 #[route("/memberships")]
                 UserMemberships { username: String },
-                #[route("/drafts")]
-                UserDrafts { username: String },
                 #[route("/credentials")]
                 CredentialPage { username: String },
                 #[route("/spaces")]
