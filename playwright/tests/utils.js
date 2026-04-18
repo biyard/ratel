@@ -159,18 +159,6 @@ export async function goto(page, url) {
     ]),
     page.goto(url),
   ]);
-  // Force a hard reload after the initial navigation. Dioxus 0.7's
-  // signal arena gets corrupted after popup-driven flows like
-  // `createTeamFromHome` (browser console emits "cannot reclaim
-  // ElementId(N)" from dioxus-core arena.rs:65). When that happens,
-  // subsequent signal-mutating clicks (e.g. `home-btn-teams` toggling
-  // the Teams dropdown, `admin-add-action-card` opening the action
-  // type picker) fire and the click handler is hydrated, but the
-  // signal mutation no longer triggers a re-render — the dropdown /
-  // modal stays hidden. A hard reload purges the corrupted arena and
-  // restores click-to-render flow. Adds ~1s per navigation, which is
-  // an acceptable cost for stability.
-  await page.reload();
   await page.waitForLoadState("domcontentloaded");
   // Wait for Dioxus WASM to hydrate. SSR markup contains [data-dioxus-id]
   // already, so the existence check confirms the runtime has booted and
@@ -189,6 +177,52 @@ export async function goto(page, url) {
   await page.waitForTimeout(1500);
 }
 
+/**
+ * Like `goto()` but additionally forces a hard browser reload after
+ * the initial navigation. Use this in helpers that run AFTER a
+ * popup-driven flow (LoginModal, ArenaTeamCreationPopup,
+ * TypePickerModal) to purge Dioxus 0.7's signal arena, which gets
+ * corrupted after popups (browser console: "cannot reclaim
+ * ElementId(N)" from dioxus-core arena.rs:65). After corruption,
+ * subsequent signal-mutating clicks (`home-btn-teams` toggling the
+ * Teams dropdown, `admin-add-action-card` opening the type picker)
+ * fire with their click handlers hydrated, but the signal mutation
+ * no longer triggers a re-render. Reload purges the arena and
+ * restores click-to-render behaviour.
+ *
+ * Cost: ~1s extra per call. Reserve for navigations that are known
+ * to follow popup-using flows; do NOT use in plain `goto()` since
+ * adding ~1s to every navigation in the suite pushes the CI
+ * playwright job over its 30 min timeout.
+ */
+export async function gotoFresh(page, url) {
+  // Initial navigation — same WASM-or-timeout race as plain `goto` so we
+  // don't hang on cached WASM. Skip the post-nav hydration waits in
+  // `goto` because we're going to reload immediately.
+  await Promise.all([
+    Promise.race([
+      page.waitForResponse(
+        (response) =>
+          response.url().includes("app-shell") &&
+          response.url().endsWith(".wasm") &&
+          response.status() === 200,
+      ),
+      new Promise((resolve) => setTimeout(resolve, 5000)),
+    ]),
+    page.goto(url),
+  ]);
+  await page.waitForLoadState("domcontentloaded");
+  // Hard reload immediately — purges the corrupted Dioxus signal arena
+  // from any prior popup/toggle flow before we run the per-page
+  // hydration waits.
+  await page.reload();
+  await page.waitForLoadState("domcontentloaded");
+  await page.waitForFunction(
+    () => document.querySelector("[data-dioxus-id]") !== null,
+  );
+  await page.waitForTimeout(1500);
+}
+
 export async function getEditor(page) {
   const editor = page.locator("[contenteditable]");
   await expect(editor).toBeVisible();
@@ -201,13 +235,17 @@ export async function getEditor(page) {
  * footer → ArenaTeamCreationPopup UI flow. After submit, Dioxus navigates
  * to `/{teamUsername}/home`, which the helper waits for.
  *
+ * Uses `gotoFresh` to purge the Dioxus arena — callers commonly run this
+ * right after a sign-in popup (LoginModal) which corrupts the arena and
+ * makes the subsequent `home-btn-teams` click no-op the dropdown.
+ *
  * Requires: logged-in user.
  */
 export async function createTeamFromHome(
   page,
   { username, nickname, description = "" },
 ) {
-  await goto(page, "/");
+  await gotoFresh(page, "/");
 
   // Open the Teams dropdown (same trigger as openTeamFromHome).
   await expect(page.getByTestId("home-btn-teams")).toBeVisible({
@@ -253,10 +291,15 @@ export async function createTeamFromHome(
  * and picking the team from the dropdown. Mirrors the production flow a
  * logged-in user sees on the main arena (`/`).
  *
+ * Uses `gotoFresh` to purge Dioxus's signal arena before clicking the
+ * dropdown — this helper typically runs after a popup-driven flow
+ * (`createTeamFromHome` opens ArenaTeamCreationPopup) which corrupts
+ * the arena and makes `home-btn-teams` clicks no-op the dropdown.
+ *
  * Requires: logged-in user who owns / belongs to the team at `teamUsername`.
  */
 export async function openTeamFromHome(page, teamUsername) {
-  await goto(page, "/");
+  await gotoFresh(page, "/");
 
   // Wait for the Teams HUD button (only renders when logged in + hydrated).
   await expect(page.getByTestId("home-btn-teams")).toBeVisible({
@@ -274,8 +317,27 @@ export async function openTeamFromHome(page, teamUsername) {
 
   // CI PR runs start from a clean DB, so the freshly-created team is
   // guaranteed to be on the first page of the infinite-scroll dropdown.
-  // Resolve the locator once and click — avoid the scroll polling loop.
+  // Locally the dropdown can hold many older teams — scroll the inner
+  // list (`#home-teams-dd-list`, the actual scrollable container that
+  // triggers pagination via its onscroll handler) until the requested
+  // team item appears. Bounded to 30 attempts to avoid infinite loops.
   const teamItem = page.getByTestId(`home-team-dd-item-${teamUsername}`);
+  let visible = await teamItem.isVisible().catch(() => false);
+  if (!visible) {
+    for (let i = 0; i < 30; i++) {
+      const reachedBottom = await page.evaluate(() => {
+        const el = document.getElementById("home-teams-dd-list");
+        if (!el) return true;
+        const before = el.scrollTop;
+        el.scrollTop = el.scrollHeight;
+        return el.scrollTop === before;
+      });
+      await page.waitForTimeout(400);
+      visible = await teamItem.isVisible().catch(() => false);
+      if (visible) break;
+      if (reachedBottom) break;
+    }
+  }
   await expect(teamItem).toBeVisible({ timeout: 15000 });
   await teamItem.click();
 
@@ -350,7 +412,11 @@ export async function createTeamPostFromHome(
  * the FAB has been hidden if it overlaps modal buttons.
  */
 export async function createAction(page, spaceUrl, typeKey, urlRegex) {
-  await goto(page, spaceUrl);
+  // Use gotoFresh — `admin-add-action-card` toggles `type_picker_open`, a
+  // signal mutation that no longer triggers re-render once the Dioxus
+  // arena is corrupted. This helper typically runs after space-creation
+  // flows that involve toggles/popups, so reload defensively.
+  await gotoFresh(page, spaceUrl);
   // Hide FAB that may overlap the TypePicker buttons.
   await page.evaluate(() => {
     const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
