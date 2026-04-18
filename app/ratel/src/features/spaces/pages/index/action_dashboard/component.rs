@@ -241,6 +241,10 @@ pub fn ActionDashboard(
                     match ty.create(space_id()).await {
                         Ok(route) => {
                             space_ctx.current_role.set(SpaceUserRole::Creator);
+                            // Refresh the actions list so the newly-created
+                            // action appears when the user returns to the
+                            // dashboard from the editor.
+                            space_ctx.actions.restart();
                             nav.push(route);
                         }
                         Err(err) => {

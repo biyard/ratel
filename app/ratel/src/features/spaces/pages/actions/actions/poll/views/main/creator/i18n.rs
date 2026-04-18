@@ -94,6 +94,22 @@ translate! {
         en: "Add question",
         ko: "질문 추가",
     },
+    add_option: {
+        en: "Add option",
+        ko: "선지 추가",
+    },
+    remove_option: {
+        en: "Remove option",
+        ko: "선지 삭제",
+    },
+    option_placeholder: {
+        en: "Option text",
+        ko: "선지 내용",
+    },
+    allow_other: {
+        en: "Allow \"Other\" option",
+        ko: "기타 옵션 허용",
+    },
     subjective_hint: {
         en: "Response hint · shown to voters",
         ko: "응답 힌트 · 투표자에게 표시",
