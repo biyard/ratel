@@ -40,6 +40,7 @@ futures = { version = "0.3", optional = true }
 urlencoding = { version = "2" }
 tokio = { workspace = true, optional = true }
 tower = { version = "0.5", features = ["util"], optional = true }
+tower-http = { version = "0.6", features = ["catch-panic"], optional = true }
 
 web-sys = { workspace = true, features = [
   "Blob",
@@ -152,6 +153,7 @@ server = [
   "ssi",
   "tokio",
   "tower",
+  "tower-http",
   "tower-sessions",
   "url",
   "validator",
