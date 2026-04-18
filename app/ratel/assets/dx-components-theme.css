@@ -3,16 +3,6 @@
  */
 @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
 
-/*
- * Declare support for both color schemes. Without this, Android WebView
- * (and some desktop WebViews) force the page into "light" mode and
- * `matchMedia("(prefers-color-scheme: dark)")` always returns false,
- * which breaks the Theme::System default on mobile.
- */
-:root {
-  color-scheme: light dark;
-}
-
 body {
   color: var(--secondary-color-4);
   font-family: Inter, sans-serif;

@@ -122,24 +122,6 @@ export async function goto(page, url) {
   await page.waitForTimeout(500);
 }
 
-/**
- * Wait until a specific element (by testId) has been hydrated by Dioxus —
- * i.e. it carries a `data-dioxus-id` attribute so its event listeners are
- * attached. Use this before clicking SSR-rendered interactive elements;
- * clicks on non-hydrated nodes are silently dropped, manifesting later as
- * "dropdown did not open / state did not toggle" failures.
- */
-export async function waitForHydrated(page, testId, timeout = 15000) {
-  await page.waitForFunction(
-    (id) => {
-      const el = document.querySelector(`[data-testid="${id}"]`);
-      return !!el && el.hasAttribute("data-dioxus-id");
-    },
-    testId,
-    { timeout },
-  );
-}
-
 export async function getEditor(page) {
   const editor = page.locator("[contenteditable]");
   await expect(editor).toBeVisible();
@@ -167,7 +149,6 @@ export async function createTeamFromHome(
   // Wait until the button itself is hydrated — otherwise the click fires
   // before Dioxus attaches the `teams_open.toggle()` handler and the event
   // is silently dropped.
-  await waitForHydrated(page, "home-btn-teams");
   await clickNoNav(page, { testId: "home-btn-teams" });
   // Dropdown is always rendered but toggled via aria-expanded + CSS
   // visibility, so bump the timeout past the CSS transition (0.18s) plus
@@ -214,10 +195,6 @@ export async function openTeamFromHome(page, teamUsername) {
   await expect(page.getByTestId("home-btn-teams")).toBeVisible({
     timeout: 15000,
   });
-  // Wait until the button itself is hydrated — clicks on SSR-rendered
-  // elements that haven't received their Dioxus event handlers yet are
-  // silently dropped.
-  await waitForHydrated(page, "home-btn-teams");
 
   // Open the dropdown — non-navigation toggle, so clickNoNav.
   await clickNoNav(page, { testId: "home-btn-teams" });
