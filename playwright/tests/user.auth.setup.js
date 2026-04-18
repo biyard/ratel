@@ -10,7 +10,7 @@ test("create storage state", async ({ page }) => {
   // Wait for the Sign In button to be hydrated — hot-patch toasts from
   // Dioxus dev server can trigger re-renders that temporarily detach
   // event handlers, causing the click to be silently dropped.
-  // await waitForHydrated(page, "home-btn-signin");
+  await waitForHydrated(page, "home-btn-signin");
   await click(page, { testId: "home-btn-signin" });
   await fill(page, { placeholder: "Enter your email address" }, email);
   await click(page, { text: "Continue" });
