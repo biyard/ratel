@@ -199,7 +199,7 @@ test.describe.serial("Arena action editor", () => {
     await commitAutosave(page);
   });
 
-  test("Delete: full flow — click, confirm popup, navigate to actions", async ({
+  test("Delete: full flow — click, confirm popup, navigate to space home", async ({
     page,
   }) => {
     // Create a throwaway follow action and delete it from its own page.
@@ -215,8 +215,8 @@ test.describe.serial("Arena action editor", () => {
     await waitPopup(page, { visible: true });
     await click(page, { text: "Confirm" });
 
-    // Navigates to the Actions list page after delete completes.
-    await page.waitForURL(/\/actions\/?$/, {
+    // Navigates to the space home page after delete completes.
+    await page.waitForURL(/\/spaces\/[0-9a-f-]+\/?$/, {
       waitUntil: "load",
       timeout: 30000,
     });

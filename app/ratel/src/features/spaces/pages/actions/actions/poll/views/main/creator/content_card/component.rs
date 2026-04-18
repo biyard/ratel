@@ -240,6 +240,48 @@ pub fn ContentCard() -> Element {
                                     }
                                 }
                             },
+                            on_option_add: move |i: usize| {
+                                {
+                                    let mut qs = questions.write();
+                                    if let Some(q) = qs.get_mut(i) {
+                                        if let Question::SingleChoice(cq)
+                                        | Question::MultipleChoice(cq) = q
+                                        {
+                                            cq.options.push(String::new());
+                                        }
+                                    }
+                                }
+                                save_questions();
+                            },
+                            on_option_remove: move |(i, opt_idx): (usize, usize)| {
+                                {
+                                    let mut qs = questions.write();
+                                    if let Some(q) = qs.get_mut(i) {
+                                        if let Question::SingleChoice(cq)
+                                        | Question::MultipleChoice(cq) = q
+                                        {
+                                            if cq.options.len() > 1 && opt_idx < cq.options.len() {
+                                                cq.options.remove(opt_idx);
+                                            }
+                                        }
+                                    }
+                                }
+                                save_questions();
+                            },
+                            on_allow_other_toggle: move |i: usize| {
+                                {
+                                    let mut qs = questions.write();
+                                    if let Some(q) = qs.get_mut(i) {
+                                        if let Question::SingleChoice(cq)
+                                        | Question::MultipleChoice(cq) = q
+                                        {
+                                            let current = cq.allow_other.unwrap_or(false);
+                                            cq.allow_other = Some(!current);
+                                        }
+                                    }
+                                }
+                                save_questions();
+                            },
                             on_remove: move |i: usize| {
                                 {
                                     let mut qs = questions.write();
@@ -337,6 +379,9 @@ fn QuestionBlock(
     on_title_change: EventHandler<(usize, String)>,
     on_type_change: EventHandler<(usize, String)>,
     on_option_change: EventHandler<(usize, usize, String)>,
+    on_option_add: EventHandler<usize>,
+    on_option_remove: EventHandler<(usize, usize)>,
+    on_allow_other_toggle: EventHandler<usize>,
     on_remove: EventHandler<usize>,
     on_subjective_change: EventHandler<(usize, String)>,
     on_linear_change: EventHandler<(usize, i64, i64)>,
@@ -438,6 +483,9 @@ fn QuestionBlock(
                     question: question.clone(),
                     is_check: false,
                     on_option_change,
+                    on_option_add,
+                    on_option_remove,
+                    on_allow_other_toggle,
                     on_blur_save,
                 }
             }
@@ -447,6 +495,9 @@ fn QuestionBlock(
                     question: question.clone(),
                     is_check: true,
                     on_option_change,
+                    on_option_add,
+                    on_option_remove,
+                    on_allow_other_toggle,
                     on_blur_save,
                 }
             }
@@ -476,9 +527,20 @@ fn ChoiceOptions(
     question: Question,
     is_check: bool,
     on_option_change: EventHandler<(usize, usize, String)>,
+    on_option_add: EventHandler<usize>,
+    on_option_remove: EventHandler<(usize, usize)>,
+    on_allow_other_toggle: EventHandler<usize>,
     on_blur_save: EventHandler<()>,
 ) -> Element {
+    let tr: PollCreatorTranslate = use_translate();
     let options = options_of(&question);
+    let has_multiple_options = options.len() > 1;
+    let allow_other = match &question {
+        Question::SingleChoice(cq) | Question::MultipleChoice(cq) => {
+            cq.allow_other.unwrap_or(false)
+        }
+        _ => false,
+    };
 
     let body_class = if is_check {
         "q-body q-body--multi"
@@ -502,7 +564,60 @@ fn ChoiceOptions(
                         oninput: move |e| on_option_change.call((idx, i, e.value())),
                         onblur: move |_| on_blur_save.call(()),
                     }
+                    if has_multiple_options {
+                        button {
+                            class: "q-opt__remove",
+                            r#type: "button",
+                            aria_label: "{tr.remove_option}",
+                            "data-testid": "poll-question-{idx}-opt-{i}-remove",
+                            onclick: move |_| on_option_remove.call((idx, i)),
+                            svg {
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_width: "2",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                width: "16",
+                                height: "16",
+                                polyline { points: "3 6 5 6 21 6" }
+                                path { d: "M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" }
+                                path { d: "M10 11v6" }
+                                path { d: "M14 11v6" }
+                                path { d: "M9 6V4a2 2 0 012-2h2a2 2 0 012 2v2" }
+                            }
+                        }
+                    }
                 }
+            }
+            button {
+                class: "add-btn add-btn--sm",
+                r#type: "button",
+                "data-testid": "poll-question-{idx}-opt-add",
+                onclick: move |_| on_option_add.call(idx),
+                svg {
+                    view_box: "0 0 24 24",
+                    fill: "none",
+                    stroke: "currentColor",
+                    stroke_width: "2",
+                    stroke_linecap: "round",
+                    stroke_linejoin: "round",
+                    width: "14",
+                    height: "14",
+                    line { x1: "12", y1: "5", x2: "12", y2: "19" }
+                    line { x1: "5", y1: "12", x2: "19", y2: "12" }
+                }
+                "{tr.add_option}"
+            }
+            label {
+                class: "q-opt__other-toggle",
+                "data-testid": "poll-question-{idx}-allow-other",
+                input {
+                    r#type: "checkbox",
+                    checked: allow_other,
+                    onchange: move |_| on_allow_other_toggle.call(idx),
+                }
+                span { "{tr.allow_other}" }
             }
         }
     }
