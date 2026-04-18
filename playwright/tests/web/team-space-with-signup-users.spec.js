@@ -7,6 +7,7 @@ import {
   createTeamPostFromHome,
   fill,
   goto,
+  gotoFresh,
   getLocator,
   getEditor,
   waitPopup,
@@ -737,9 +738,14 @@ test.describe.serial("Space with actions created by a team", () => {
       },
     ];
 
-    // Helper: open discussion overlay from the ActionDashboard carousel
+    // Helper: open discussion overlay from the ActionDashboard carousel.
+    // Use gotoFresh — every comment cycle reopens this, and Dioxus's
+    // arena gets corrupted by the prior overlay close, so a plain
+    // `goto` would no-op the discussion-card click on subsequent
+    // iterations (Playwright sees the card visible but the overlay
+    // never opens).
     async function openDiscussionOverlay(pg) {
-      await goto(pg, spaceUrl);
+      await gotoFresh(pg, spaceUrl);
       const discCard = pg.locator('[data-type="discuss"]').first();
       await expect(discCard).toBeVisible({ timeout: 10000 });
       await pg.waitForTimeout(500);
