@@ -251,19 +251,27 @@ export async function openTeamFromHome(page, teamUsername) {
 
   // CI PR runs start from a clean DB, so the freshly-created team is
   // guaranteed to be on the first page of the infinite-scroll dropdown.
-  // Locally the dropdown can hold many older teams — scroll-search to
-  // find the requested one with a bounded number of attempts.
+  // Locally the dropdown can hold many older teams — scroll the inner
+  // list (`#home-teams-dd-list`, the actual scrollable container that
+  // triggers pagination via its onscroll handler) until the requested
+  // team item appears. Bounded to 30 attempts to avoid infinite loops.
   const teamItem = page.getByTestId(`home-team-dd-item-${teamUsername}`);
   let visible = await teamItem.isVisible().catch(() => false);
   if (!visible) {
-    const dd = page.getByTestId("home-teams-dd");
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 30; i++) {
+      const reachedBottom = await page.evaluate(() => {
+        const el = document.getElementById("home-teams-dd-list");
+        if (!el) return true;
+        const before = el.scrollTop;
+        el.scrollTop = el.scrollHeight;
+        // If scroll didn't move we're at the bottom and there is no more to load.
+        return el.scrollTop === before;
+      });
+      // Give pagination + render a moment to catch up after scroll.
+      await page.waitForTimeout(400);
       visible = await teamItem.isVisible().catch(() => false);
       if (visible) break;
-      await dd.evaluate((el) => {
-        el.scrollTop = el.scrollTop + el.clientHeight;
-      });
-      await page.waitForTimeout(200);
+      if (reachedBottom) break;
     }
   }
   await expect(teamItem).toBeVisible({ timeout: 15000 });
