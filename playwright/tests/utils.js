@@ -38,7 +38,6 @@ export async function click(page, opt) {
 
   await selected.click();
   await page.waitForLoadState("load");
-  await suppressDevToast(page);
 
   return selected;
 }
