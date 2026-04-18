@@ -38,6 +38,7 @@ export async function click(page, opt) {
 
   await selected.click();
   await page.waitForLoadState("load");
+  await suppressDevToast(page);
 
   return selected;
 }
@@ -131,6 +132,40 @@ export async function goto(page, url) {
   // 1500ms is a conservative heuristic — replace if Dioxus exposes a real
   // hydration-complete signal.
   await page.waitForTimeout(1500);
+  await suppressDevToast(page);
+}
+
+const DEV_TOAST_CSS =
+  "#__dx-toast,#__dx-toast-inner{display:none!important;visibility:hidden!important;pointer-events:none!important;}";
+
+/**
+ * Permanently hide the Dioxus dev-server toast overlay (`#__dx-toast`,
+ * z-index 2147483647) that intercepts clicks during local `dx serve` runs.
+ * Registers an init script (idempotent) so the rule is reapplied on every
+ * navigation, then injects a style tag for the current page. The CI docker
+ * image strips these dev assets so this is a no-op there.
+ */
+export async function suppressDevToast(page) {
+  if (!page.__dxToastInit) {
+    page.__dxToastInit = true;
+    await page
+      .addInitScript((css) => {
+        const apply = () => {
+          if (document.getElementById("__dx-toast-suppress")) return;
+          const style = document.createElement("style");
+          style.id = "__dx-toast-suppress";
+          style.textContent = css;
+          (document.head || document.documentElement).appendChild(style);
+        };
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", apply);
+        } else {
+          apply();
+        }
+      }, DEV_TOAST_CSS)
+      .catch(() => {});
+  }
+  await page.addStyleTag({ content: DEV_TOAST_CSS }).catch(() => {});
 }
 
 /**
