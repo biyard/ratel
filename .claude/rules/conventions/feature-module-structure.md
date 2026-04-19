@@ -25,19 +25,23 @@ types/          - Custom types + error enums
 
 ## HTML-First Pages with Sub-Components
 
-For pages built with the HTML-first pattern (see `conventions/html-first-components.md`), each page owns its sub-components in named subdirectories:
+For pages built with the HTML-first pattern (see `conventions/html-first-components.md`), each page owns its sub-components in named subdirectories. **CSS lives centrally in `app/ratel/assets/main.css`** — not in per-component `style.css` files.
 
 ```
 pages/<page>/
 ├── mod.rs              # Page module
 ├── component.rs        # Page component
-├── style.css           # Page styles
 ├── i18n.rs             # Shared translations
 ├── <sub_component>/    # Self-contained UI section
 │   ├── mod.rs
-│   ├── component.rs
-│   └── style.css       # Own styles loaded via asset!()
+│   └── component.rs    # Styles live in main.css, not here
 └── ...
 ```
 
 Extract into a sub-component when a section is self-contained (panel, modal, card) and > ~50 lines of RSX.
+
+Component styles go into `app/ratel/assets/main.css` under a section marker:
+```css
+/* === features/<module>/pages/<page>/<sub_component> === */
+.my-component { ... }
+```

@@ -52,7 +52,6 @@ pub fn Home(username: ReadSignal<String>) -> Element {
         Ok(ctx) => ctx.clone(),
         Err(_) => {
             return rsx! {
-                document::Link { rel: "stylesheet", href: asset!("./style.css") }
                 ViewerPage { username: username() }
             }
         }
@@ -114,8 +113,6 @@ pub fn Home(username: ReadSignal<String>) -> Element {
     let team_pk_for_actions = team_pk.clone();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
-
         div { class: "tm-section-label",
             span { class: "tm-section-label__dash" }
             span { class: "tm-section-label__title",

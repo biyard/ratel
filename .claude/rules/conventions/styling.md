@@ -34,6 +34,23 @@ Standard scale values don't need brackets: `z-10`, `gap-4`.
 
 Define CSS variables in `tailwind.css` with the space toggle pattern, never use raw `bg-green-500` or `text-red-400`.
 
+## Rule: All component CSS lives in `app/ratel/assets/main.css`
+
+All custom CSS is centralized in a single `main.css` loaded once globally from `app.rs`. Do NOT create per-component `style.css` files and do NOT add `document::Link { rel: "stylesheet", href: asset!("./style.css") }` in components.
+
+**Why**: Per-component CSS loaded via `document::Link` unloads during route transitions, causing flashes of unstyled content. A single globally-loaded `main.css` avoids this entirely.
+
+**How to apply**:
+
+- Add new component styles by appending to `app/ratel/assets/main.css` with a section marker comment:
+  ```css
+  /* === features/<module>/pages/<page>/<component> === */
+  .my-component { ... }
+  ```
+- Keep selectors unique (use BEM-like names or component-scoped prefixes) — everything shares one global namespace.
+- Prefer Tailwind utility classes inline in RSX. Only use `main.css` for things Tailwind cannot express cleanly (complex keyframes, pseudo-element tricks, state-machine `data-*` selectors).
+- Never re-introduce per-component `style.css` + `document::Link`. If you see an existing one, migrate it to `main.css`.
+
 ## Semantic Color Classes
 
 | Purpose | Tailwind Class |
@@ -61,9 +78,9 @@ Define CSS variables in `tailwind.css` with the space toggle pattern, never use 
 - Token definitions: `app/ratel/tailwind.css` + `app/ratel/assets/tailwind-colors.css`
 - Component theme: `app/ratel/assets/dx-components-theme.css`
 
-### Space Toggle Pattern (for custom CSS files)
+### Space Toggle Pattern (for CSS in `main.css`)
 
-In component `style.css` files (HTML-first pattern), use the space toggle for dark/light colors:
+When writing CSS rules in `main.css`, use the space toggle for dark/light colors:
 
 ```css
 .my-component {

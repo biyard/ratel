@@ -5,7 +5,6 @@ pub fn QuestEditButton(action_id: String, on_edit: EventHandler<()>) -> Element 
     let tr: SpaceViewerTranslate = use_translate();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         button {
             aria_label: "{tr.edit}",
             class: "quest-card__edit-btn",

@@ -67,8 +67,6 @@ pub fn ArenaSpaceCard(
     let rank_str = format!("#{:02}", rank);
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
-
         div { class: "space-card space-card--{heat_css}", "data-heat": heat_css,
             div { class: "space-card__wave" }
 

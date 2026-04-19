@@ -12,7 +12,6 @@ pub fn DropdownMenu(props: DropdownMenuProps) -> Element {
     let merged = merge_attributes(vec![base, props.attributes.clone()]);
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         dropdown_menu::DropdownMenu {
             open: props.open,
             default_open: props.default_open,

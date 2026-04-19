@@ -29,7 +29,6 @@ pub fn BottomSheet(
     }
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         // Backdrop
         div {
             class: "bottom-sheet-backdrop",

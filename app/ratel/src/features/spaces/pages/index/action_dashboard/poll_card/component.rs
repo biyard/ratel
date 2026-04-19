@@ -38,7 +38,6 @@ pub fn PollActionCard(
         .unwrap_or_default();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div {
             class: "quest-card quest-card--poll",
             "data-type": "poll",

@@ -219,6 +219,29 @@ status.translate(&lang())
 
 ## HTML-First Components
 
+### Per-component `style.css` + `document::Link`
+
+```rust
+// BAD — per-component style.css unloads during route transitions,
+// causing flashes of unstyled content
+rsx! {
+    document::Link { rel: "stylesheet", href: asset!("./style.css") }
+    // ...
+}
+
+// GOOD — all CSS lives in app/ratel/assets/main.css (loaded once in app.rs)
+rsx! {
+    // No document::Link for CSS
+    // ...
+}
+```
+
+Append component styles to `app/ratel/assets/main.css` under a section marker:
+```css
+/* === features/<module>/pages/<page>/<component> === */
+.my-component { ... }
+```
+
 ### Missing `defer` on Script
 
 ```rust

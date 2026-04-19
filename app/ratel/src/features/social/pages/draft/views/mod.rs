@@ -41,7 +41,6 @@ pub fn Home(username: ReadSignal<String>) -> Element {
         Ok(ctx) => ctx.clone(),
         Err(_) => {
             return rsx! {
-                document::Link { rel: "stylesheet", href: asset!("./style.css") }
                 ViewerPage { username: username() }
             }
         }
@@ -49,7 +48,6 @@ pub fn Home(username: ReadSignal<String>) -> Element {
     let can_edit = perm_ctx.role.is_admin_or_owner();
     if !can_edit {
         return rsx! {
-            document::Link { rel: "stylesheet", href: asset!("./style.css") }
             ViewerPage { username: username() }
         };
     }
@@ -104,8 +102,6 @@ pub fn Home(username: ReadSignal<String>) -> Element {
     };
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
-
         div { class: "td-section-label",
             span { class: "td-section-label__dash" }
             span { class: "td-section-label__title",

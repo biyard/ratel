@@ -25,7 +25,6 @@ pub fn QuizCreatorPage(
     let title = use_signal(|| initial_title);
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div { class: "arena",
             ActionEditTopbar {
                 space_name: space.title.clone(),

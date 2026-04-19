@@ -19,7 +19,6 @@ pub fn QuizActionCard(
     let action_id_edit = action.action_id.clone();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div {
             class: "quest-card quest-card--quiz",
             "data-type": "quiz",

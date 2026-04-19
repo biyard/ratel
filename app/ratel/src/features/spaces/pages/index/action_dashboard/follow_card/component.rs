@@ -30,7 +30,6 @@ pub fn FollowActionCard(
     let mut completed_action: CompletedActionCard = use_context();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div {
             class: "quest-card quest-card--follow",
             "data-type": "follow",

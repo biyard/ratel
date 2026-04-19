@@ -28,7 +28,6 @@ pub fn PollSubjective(
     let char_count = draft().len();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div { class: "subjective-wrap",
             if is_short {
                 input {

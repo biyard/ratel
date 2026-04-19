@@ -22,7 +22,6 @@ pub fn TimePicker(
     let display = format!("{:02}:{:02}", selected_hour(), selected_minute());
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div { class: "time-picker @max-mobile:w-full",
             div {
                 class: "time-picker-trigger @max-mobile:w-full",

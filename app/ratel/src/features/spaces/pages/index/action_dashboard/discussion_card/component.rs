@@ -23,7 +23,6 @@ pub fn DiscussionActionCard(
     let prerequisite = action.prerequisite;
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div {
             class: "quest-card quest-card--discuss",
             "data-prerequisite": prerequisite,

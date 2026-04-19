@@ -42,14 +42,19 @@ app/ratel/src/features/<module>/pages/<page>/
 
 ## Step 3: Separate HTML, CSS, JS
 
-Split the HTML file into three concerns in the component directory:
+Split the HTML file into three concerns. CSS goes into the global stylesheet; JS (optional) and HTML reference stay in the component directory:
 
-### CSS (`style.css`)
+### CSS → append to `app/ratel/assets/main.css`
 - Extract all styles from `<style>` blocks and inline styles
-- Use CSS classes with BEM-like naming (`.block__element--modifier`)
+- Append to `app/ratel/assets/main.css` under a section marker:
+  ```css
+  /* === features/<module>/pages/<page>/<component> === */
+  .my-component { ... }
+  ```
+- Use CSS classes with BEM-like naming (`.block__element--modifier`) — all CSS shares one global namespace
 - Use `data-*` / `aria-*` attribute selectors for Dioxus-controlled state (`[data-open="true"]`)
 - Use CSS classes (`.active`, `.open`) for JS-controlled state (scroll, animations)
-- Avoid Tailwind utilities in CSS files — Tailwind is for RSX `class:` attributes only
+- Avoid Tailwind utilities in `main.css` — Tailwind is for RSX `class:` attributes only
 - Use space toggle for dark/light theme colors:
   ```css
   .my-component {
@@ -57,6 +62,7 @@ Split the HTML file into three concerns in the component directory:
     --comp-text: var(--dark, #f0f0f5) var(--light, #12121a);
   }
   ```
+- Do NOT create a local `style.css` file and do NOT add `document::Link { rel: "stylesheet", href: asset!("./style.css") }` in the component
 
 ### JS (`script.js`) — only if needed
 - Register helpers on `window.ratel.<module>` namespace
@@ -126,13 +132,13 @@ dx translate -f <path>/page.html
 
 ```rust
 rsx! {
-    document::Link { rel: "preload", href: asset!("./style.css"), r#as: "style" }
+    // No document::Link for CSS — all styles live in app/ratel/assets/main.css
     document::Script { defer: true, src: asset!("./script.js") }  // only if JS exists
     // ... component RSX
 }
 ```
 
-- Each sub-component loads its own `style.css` via its own `document::Link`
+- Styles for all components are loaded once globally via `main.css` from `app.rs` — do NOT add `document::Link { rel: "stylesheet" }` per component
 - Always use `defer: true` on `document::Script`
 
 ## Step 8: Create i18n Translations
@@ -180,14 +186,15 @@ cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' cargo chec
 ## Checklist
 
 - [ ] Original HTML preserved as `page.html` reference
-- [ ] CSS extracted to `style.css` with space toggle for dark/light
+- [ ] CSS appended to `app/ratel/assets/main.css` under a `/* === <path> === */` section marker (NOT a local `style.css`)
+- [ ] No `document::Link { rel: "stylesheet", href: asset!("./style.css") }` added in any component
+- [ ] Space toggle pattern used for dark/light colors
 - [ ] JS (if any) extracted to `script.js` with MutationObserver pattern
 - [ ] Class names and IDs match HTML exactly
 - [ ] All text uses `translate!` macro
 - [ ] Raw HTML elements replaced with project primitives (`Button`, `Input`, `Row`, `Col`)
 - [ ] Semantic color tokens used (no raw Tailwind palette colors)
 - [ ] `defer: true` on all `document::Script` tags
-- [ ] Sub-components each load their own `style.css`
 - [ ] Module registered in parent `mod.rs`
 - [ ] `rustywind` + `dx fmt` applied
 - [ ] `dx check --features web` passes

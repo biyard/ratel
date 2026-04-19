@@ -2,32 +2,41 @@
 
 Build Dioxus components by designing in HTML/CSS/JS first, then converting to RSX.
 
+## CSS lives in `app/ratel/assets/main.css` — never per-component
+
+All custom CSS is centralized in a single `app/ratel/assets/main.css` loaded once globally from `app.rs`. Per-component `style.css` files and `document::Link` tags are forbidden — they unload during route transitions and cause flashes of unstyled content.
+
+When adding styles for a new component:
+1. Append the CSS to `app/ratel/assets/main.css` with a section marker:
+   ```css
+   /* === features/<module>/pages/<page>/<component> === */
+   .my-component { ... }
+   ```
+2. Use unique class names (BEM-like or component-scoped prefixes) — everything shares one global namespace.
+3. Do NOT add `document::Link { rel: "stylesheet", href: asset!("./style.css") }` in any component.
+
 ## File Structure
 
-Pages and their sub-components each own their assets. The page `mod.rs` is the entry point; sub-components live in named subdirectories with the same structure:
+Pages and their sub-components share styles via the central `main.css`. Each component still owns its RSX, i18n, and (optionally) its own JS:
 
 ```
 <page_dir>/
 ├── mod.rs              # Page module: registers sub-components, re-exports
 ├── component.rs        # Page-level Dioxus component
-├── style.css           # Page-level styles (arena, portal, HUD, etc.)
 ├── script.js           # Page-level JS helpers (optional)
 ├── i18n.rs             # Translations shared across the page
 ├── page.html           # Source HTML (kept as reference, not compiled)
 ├── <sub_component>/
 │   ├── mod.rs          # Sub-component module
-│   ├── component.rs    # Sub-component Dioxus component
-│   └── style.css       # Sub-component styles (loaded via own asset!())
+│   └── component.rs    # Sub-component Dioxus component (styles live in main.css)
 ├── <another_component>/
 │   ├── mod.rs
-│   ├── component.rs
-│   └── style.css
+│   └── component.rs
 └── ...
 ```
 
 ### Key rules
-- Each sub-component loads its own `style.css` via `document::Link { rel: "stylesheet", href: asset!("./style.css") }` inside its component
-- CSS for a sub-component lives in that sub-component's directory, not in the parent
+- Styles for a sub-component live in `app/ratel/assets/main.css` under a section marker — NOT in a local `style.css`
 - The page `mod.rs` declares sub-component modules and re-exports them for use in `component.rs`
 - i18n is shared at the page level — sub-components import from the parent via `use crate::features::<module>::pages::<page>::*`
 - Extract a sub-component when it is self-contained (own panel, modal, card) and > ~50 lines of RSX
@@ -65,7 +74,7 @@ pub fn MySubComponent(open: bool, on_close: EventHandler<()>) -> Element {
     let tr: PageTranslate = use_translate();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        // No document::Link — styles live in app/ratel/assets/main.css
         // ... RSX
     }
 }
@@ -87,19 +96,21 @@ HTML mockups in `docs/design/`:
 ```
 1. Write HTML mockup (docs/design/<name>.html)
 2. Approve design with user — iterate in browser
-3. Split into page.html + style.css + script.js in component directory
-4. Run: dx translate -f page.html
-5. Paste RSX output into component.rs
-6. Replace static IDs/text with signals + translate!
-7. Add event handlers
-8. Extract large sections into sub-component directories
+3. Extract CSS from mockup into app/ratel/assets/main.css with a section marker
+   (/* === features/<module>/pages/<page>/<component> === */)
+4. Keep page.html + script.js (optional) in the component directory as reference/helpers
+5. Run: dx translate -f page.html
+6. Paste RSX output into component.rs
+7. Replace static IDs/text with signals + translate!
+8. Add event handlers
+9. Extract large sections into sub-component directories
 ```
 
 ## Asset Loading
 
 ```rust
 rsx! {
-    document::Link { rel: "stylesheet", href: asset!("./style.css") }
+    // No document::Link for CSS — all styles live in app/ratel/assets/main.css
     document::Script { defer: true, src: asset!("./script.js") }
     // ... component RSX
 }
@@ -125,7 +136,7 @@ rsx! {
 
 Use the space toggle pattern (`var(--dark, ...) var(--light, ...)`) for all colors that differ between themes. This leverages the `--dark` / `--light` custom properties set on `html[data-theme]` in `dx-components-theme.css`.
 
-Define component-scoped CSS variables at the root element of each component:
+Define component-scoped CSS variables at the root element of each component (all of this lives in `main.css`):
 
 ```css
 .my-component {
@@ -191,7 +202,7 @@ cards.forEach((c, i) => c.classList.toggle('active', i === closest));
 **Critical:** When converting an HTML mockup to a Dioxus component, keep the **exact same CSS class names and element IDs** as the mockup. The JS file queries elements by these names. Renaming classes (e.g., `carousel-track` → `action-carousel__track`) breaks JS selectors silently.
 
 Checklist:
-- CSS class names in `style.css` match the HTML mockup exactly
+- CSS class names in `main.css` match the HTML mockup exactly
 - Element IDs in RSX match what `script.js` queries via `getElementById`
 - JS selectors (`.querySelector`, `.querySelectorAll`) match the CSS classes
 - If the mockup uses `.quest-card`, the RSX uses `class: "quest-card"`, not `class: "action-card"`

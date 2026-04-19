@@ -54,8 +54,6 @@ pub fn OverviewPanel(
     });
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
-
         div {
             class: "overview-panel",
             "data-testid": "overview-panel",

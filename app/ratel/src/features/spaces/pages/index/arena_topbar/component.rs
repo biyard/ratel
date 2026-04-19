@@ -24,7 +24,6 @@ pub fn ArenaTopbar(
     let settings_open = active_panel() == ActivePanel::Settings;
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div { class: "arena-topbar",
             div { class: "arena-topbar__brand",
                 img {
