@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Social Connections</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --bg-input:rgba(255,255,255,0.025);--bg-input-focus:rgba(255,255,255,0.04);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-coral:#ef4444;--accent-green:#22c55e;--accent-violet:#818cf8;
+      --bsky:#0a85ff;--linkedin:#0a66c2;--threads:#f5f5f5;--farcaster:#8a63d2;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+    }
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+    body{overflow-x:hidden}
+
+    .arena{position:relative;min-height:100vh;display:flex;flex-direction:column;isolation:isolate}
+    .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 30% 20%,rgba(10,133,255,0.05) 0%,transparent 55%),radial-gradient(ellipse 60% 60% at 85% 70%,rgba(110,237,216,0.04) 0%,transparent 60%);z-index:-1;pointer-events:none}
+
+    /* ─── Top bar ────────────────────────────────────────── */
+    .arena-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:18px 28px;background:rgba(6,6,14,0.80);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-subtle)}
+    .arena-topbar__left{display:flex;align-items:center;gap:14px}
+    .back-btn{width:38px;height:38px;border-radius:10px;background:var(--bg-glass);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0}
+    .back-btn:hover{border-color:rgba(252,179,0,0.25);background:var(--bg-glass-hover)}
+    .back-btn svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+    .back-btn:hover svg{color:var(--accent-gold)}
+
+    .topbar-title{display:flex;flex-direction:column;gap:2px}
+    .topbar-title__eyebrow{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim)}
+    .topbar-title__main{font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-primary)}
+
+    .arena-topbar__right{display:flex;align-items:center;gap:10px}
+    .topbar-btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--bg-glass);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all 0.25s ease}
+    .topbar-btn:hover{border-color:rgba(252,179,0,0.25);color:var(--accent-gold);background:var(--bg-glass-hover)}
+    .topbar-btn svg{width:13px;height:13px}
+
+    /* ─── Page ───────────────────────────────────────────── */
+    .page{position:relative;z-index:1;flex:1;max-width:920px;margin:0 auto;width:100%;padding:36px 28px 60px;display:flex;flex-direction:column;gap:26px}
+
+    /* ─── Hero ───────────────────────────────────────────── */
+    .hero{position:relative;overflow:hidden;border-radius:22px;border:1px solid var(--border-subtle);background:var(--bg-glass);backdrop-filter:blur(16px);padding:30px 32px;display:grid;grid-template-columns:1fr auto;gap:28px;align-items:center}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 60% at 15% 15%,rgba(10,133,255,0.16) 0%,transparent 60%),radial-gradient(ellipse 45% 55% at 95% 90%,rgba(110,237,216,0.10) 0%,transparent 60%);pointer-events:none}
+    .hero > *{position:relative;z-index:1}
+    .hero__main{display:flex;flex-direction:column;gap:12px;min-width:0}
+    .hero__eyebrow{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim);display:flex;align-items:center;gap:8px}
+    .hero__eyebrow svg{width:12px;height:12px;color:var(--bsky)}
+    .hero__title{font-family:var(--font-display);font-size:28px;font-weight:700;letter-spacing:0.02em;line-height:1.2;color:var(--text-primary)}
+    .hero__title-accent{background:linear-gradient(135deg,var(--bsky),var(--accent-teal));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .hero__sub{font-size:14px;color:var(--text-muted);line-height:1.55;max-width:520px}
+
+    .hero__stats{display:flex;gap:18px;flex-wrap:wrap;margin-top:6px}
+    .hero__stat{display:flex;flex-direction:column;gap:2px;padding:10px 16px;border-radius:11px;background:rgba(0,0,0,0.25);border:1px solid var(--border-subtle);min-width:92px}
+    .hero__stat-value{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text-primary);letter-spacing:0.02em}
+    .hero__stat-label{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
+    .hero__stat-value--accent{color:var(--accent-teal)}
+
+    .hero__orbit{width:180px;height:180px;position:relative;display:none}
+    @media (min-width:720px){.hero__orbit{display:block}}
+    .hero__orbit-ring{position:absolute;inset:0;border-radius:50%;border:1px dashed rgba(255,255,255,0.10)}
+    .hero__orbit-ring--inner{inset:30px;border-style:solid;border-color:rgba(255,255,255,0.06)}
+    .hero__orbit-core{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--accent-gold),#e5a200);display:flex;align-items:center;justify-content:center;color:#0a0a0a;font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:0.10em;box-shadow:0 0 32px rgba(252,179,0,0.35)}
+    .hero__orbit-chip{position:absolute;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #0a0a12}
+    .hero__orbit-chip--bsky{background:var(--bsky);top:6px;left:50%;transform:translateX(-50%)}
+    .hero__orbit-chip--linkedin{background:var(--linkedin);bottom:14px;left:16px}
+    .hero__orbit-chip--threads{background:#0a0a0a;border-color:rgba(255,255,255,0.25);bottom:14px;right:16px}
+    .hero__orbit-chip svg{width:18px;height:18px;color:#fff}
+
+    /* ─── Section heading ────────────────────────────────── */
+    .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:-6px}
+    .section-head__title{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-muted);display:flex;align-items:center;gap:10px}
+    .section-head__title::before{content:'';width:4px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--accent-gold),transparent)}
+    .section-head__meta{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-dim)}
+
+    /* ─── Platform card ──────────────────────────────────── */
+    .platforms{display:flex;flex-direction:column;gap:14px}
+    .plat{position:relative;border-radius:16px;border:1px solid var(--border-subtle);background:var(--bg-glass);backdrop-filter:blur(16px);overflow:hidden;transition:all 0.25s ease}
+    .plat:hover{border-color:rgba(255,255,255,0.10)}
+    .plat[data-connected="true"]{border-color:rgba(34,197,94,0.18)}
+    .plat[data-connected="true"]::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 0% 0%,rgba(34,197,94,0.06) 0%,transparent 55%);pointer-events:none}
+    .plat[data-soon="true"]{opacity:0.65}
+
+    .plat__body{position:relative;display:grid;grid-template-columns:auto 1fr auto;gap:20px;padding:20px 22px;align-items:center}
+
+    .plat__logo{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .plat__logo--bsky{background:linear-gradient(135deg,#0a85ff,#1da1f2);box-shadow:0 0 24px rgba(10,133,255,0.20)}
+    .plat__logo--linkedin{background:#0a66c2;box-shadow:0 0 24px rgba(10,102,194,0.18)}
+    .plat__logo--threads{background:#0a0a0a;border:1px solid rgba(255,255,255,0.18)}
+    .plat__logo--farcaster{background:linear-gradient(135deg,#8a63d2,#6945b5)}
+    .plat__logo svg{width:28px;height:28px;color:#fff}
+
+    .plat__main{display:flex;flex-direction:column;gap:6px;min-width:0}
+    .plat__name-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .plat__name{font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:0.04em;color:var(--text-primary)}
+    .status-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:100px;font-family:var(--font-display);font-size:9.5px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;border:1px solid transparent}
+    .status-pill::before{content:'';width:6px;height:6px;border-radius:50%;box-shadow:0 0 6px currentColor}
+    .status-pill--connected{background:rgba(34,197,94,0.08);color:var(--accent-green);border-color:rgba(34,197,94,0.20)}
+    .status-pill--connected::before{animation:pulse-dot 2s ease-in-out infinite}
+    @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+    .status-pill--off{background:rgba(255,255,255,0.03);color:var(--text-dim);border-color:var(--border-subtle)}
+    .status-pill--off::before{background:var(--text-dim);box-shadow:none}
+    .status-pill--soon{background:rgba(129,140,248,0.08);color:var(--accent-violet);border-color:rgba(129,140,248,0.20)}
+    .status-pill--soon::before{background:var(--accent-violet)}
+
+    .plat__handle{font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .plat__handle svg{width:12px;height:12px;color:var(--text-dim)}
+    .plat__handle-sep{color:var(--text-dim)}
+    .plat__limit{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--text-dim);text-transform:uppercase}
+
+    .plat__actions{display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+    .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:10px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;cursor:pointer;transition:all 0.25s ease;border:1px solid transparent}
+    .btn svg{width:12px;height:12px}
+    .btn--connect{background:linear-gradient(135deg,var(--accent-gold),#e5a200);color:#0a0a0a;box-shadow:0 2px 14px rgba(252,179,0,0.18)}
+    .btn--connect:hover{box-shadow:0 4px 22px rgba(252,179,0,0.35);transform:translateY(-1px)}
+    .btn--connect-bsky{background:linear-gradient(135deg,#0a85ff,#1da1f2);color:#fff;box-shadow:0 2px 14px rgba(10,133,255,0.25)}
+    .btn--connect-linkedin{background:#0a66c2;color:#fff;box-shadow:0 2px 14px rgba(10,102,194,0.25)}
+    .btn--connect-threads{background:#fff;color:#0a0a0a;border-color:rgba(0,0,0,0.1)}
+    .btn--ghost{background:var(--bg-glass);border-color:var(--border-subtle);color:var(--text-muted)}
+    .btn--ghost:hover{border-color:rgba(239,68,68,0.25);color:var(--accent-coral);background:rgba(239,68,68,0.05)}
+
+    .plat__subrow{display:flex;align-items:center;gap:14px;padding:12px 22px;border-top:1px solid var(--border-subtle);background:rgba(0,0,0,0.18);flex-wrap:wrap}
+    .plat__subrow-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted)}
+    .plat__subrow-item svg{width:13px;height:13px;color:var(--text-dim)}
+    .plat__subrow-item strong{color:var(--text-primary);font-weight:600}
+    .plat__subrow-sep{flex:1}
+
+    /* Switch */
+    .switch{position:relative;width:34px;height:20px;border-radius:100px;background:rgba(255,255,255,0.06);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.25s;flex-shrink:0;padding:0}
+    .switch::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--text-muted);transition:all 0.25s}
+    .switch[aria-checked="true"]{background:rgba(34,197,94,0.25);border-color:rgba(34,197,94,0.40)}
+    .switch[aria-checked="true"]::after{transform:translateX(14px);background:var(--accent-green)}
+
+    /* ─── Stats strip ────────────────────────────────────── */
+    .usage{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:18px;border-radius:16px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle)}
+    .usage__cell{display:flex;flex-direction:column;gap:3px;padding:8px 12px;border-left:1px solid var(--border-subtle)}
+    .usage__cell:first-child{border-left:none}
+    .usage__value{font-family:var(--font-display);font-size:22px;font-weight:700;letter-spacing:0.02em;color:var(--text-primary);display:flex;align-items:baseline;gap:6px}
+    .usage__value-tag{font-family:var(--font-display);font-size:10px;font-weight:700;color:var(--accent-green);letter-spacing:0.04em}
+    .usage__label{font-family:var(--font-display);font-size:9.5px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
+
+    /* ─── Modal ──────────────────────────────────────────── */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0);pointer-events:none;z-index:60;display:flex;align-items:center;justify-content:center;transition:background 0.25s ease;padding:20px}
+    .modal-backdrop[data-open="true"]{background:rgba(6,6,14,0.72);pointer-events:auto;backdrop-filter:blur(8px)}
+    .modal{width:100%;max-width:480px;background:rgba(12,12,26,0.96);backdrop-filter:blur(24px);border:1px solid var(--border-strong);border-radius:20px;padding:0;overflow:hidden;transform:translateY(20px) scale(0.96);opacity:0;transition:all 0.3s cubic-bezier(0.16,1,0.3,1)}
+    .modal-backdrop[data-open="true"] .modal{transform:translateY(0) scale(1);opacity:1}
+
+    .modal__head{display:flex;align-items:center;gap:14px;padding:22px 24px;border-bottom:1px solid var(--border-subtle);position:relative}
+    .modal__logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#0a85ff,#1da1f2);display:flex;align-items:center;justify-content:center}
+    .modal__logo svg{width:22px;height:22px;color:#fff}
+    .modal__head-body{flex:1}
+    .modal__head-title{font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-primary)}
+    .modal__head-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+    .modal__close{width:32px;height:32px;border-radius:8px;background:transparent;border:1px solid var(--border-subtle);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:all 0.2s}
+    .modal__close:hover{border-color:rgba(239,68,68,0.3);color:var(--accent-coral)}
+    .modal__close svg{width:14px;height:14px}
+
+    .modal__body{padding:22px 24px;display:flex;flex-direction:column;gap:16px}
+    .modal__info{padding:12px 14px;border-radius:10px;background:rgba(10,133,255,0.06);border:1px solid rgba(10,133,255,0.18);font-size:12.5px;line-height:1.55;color:var(--text-muted);display:flex;gap:10px}
+    .modal__info svg{width:16px;height:16px;flex-shrink:0;color:var(--bsky);margin-top:1px}
+    .modal__info a{color:var(--bsky);text-decoration:none}
+    .modal__info a:hover{text-decoration:underline}
+
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field__label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);display:flex;align-items:center;gap:6px}
+    .field__label svg{width:11px;height:11px}
+    .field__input{width:100%;padding:12px 14px;border-radius:11px;background:var(--bg-input);border:1px solid var(--border-subtle);font-family:var(--font-body);font-size:14px;color:var(--text-primary);outline:none;transition:all 0.2s ease}
+    .field__input:focus{border-color:rgba(10,133,255,0.35);background:var(--bg-input-focus)}
+    .field__input::placeholder{color:var(--text-dim)}
+    .field__hint{font-size:11.5px;color:var(--text-dim);line-height:1.5}
+    .field__hint code{font-family:var(--font-display);color:var(--accent-teal);padding:1px 6px;border-radius:4px;background:rgba(110,237,216,0.06);font-size:10.5px}
+
+    .modal__foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 24px;border-top:1px solid var(--border-subtle);background:rgba(0,0,0,0.20)}
+    .modal__foot-hint{font-size:11px;color:var(--text-dim)}
+    .modal__actions{display:flex;gap:8px}
+    .btn--cancel{background:transparent;border-color:var(--border-subtle);color:var(--text-muted)}
+    .btn--cancel:hover{border-color:var(--border-strong);color:var(--text-primary)}
+    .btn--primary-bsky{background:linear-gradient(135deg,#0a85ff,#1da1f2);color:#fff;box-shadow:0 2px 14px rgba(10,133,255,0.30)}
+
+    /* ─── Responsive ─────────────────────────────────────── */
+    @media (max-width:720px){
+      .hero{grid-template-columns:1fr;padding:24px}
+      .hero__title{font-size:22px}
+      .usage{grid-template-columns:repeat(2,1fr)}
+      .usage__cell:nth-child(3){border-left:none}
+      .plat__body{grid-template-columns:auto 1fr;gap:14px;padding:16px 18px}
+      .plat__actions{grid-column:1/-1;flex-direction:row;justify-content:flex-end}
+      .plat__subrow{padding:10px 18px;gap:10px}
+      .plat__subrow-sep{display:none}
+    }
+    @media (max-width:500px){
+      .arena-topbar{padding:12px 14px}
+      .topbar-title__eyebrow{display:none}
+      .topbar-title__main{font-size:13px}
+      .page{padding:22px 14px 60px;gap:18px}
+      .hero__title{font-size:20px}
+      .hero__stats{gap:8px}
+      .hero__stat{padding:8px 12px;min-width:82px}
+      .hero__stat-value{font-size:16px}
+      .plat__logo{width:46px;height:46px;border-radius:12px}
+      .plat__logo svg{width:22px;height:22px}
+      .plat__name{font-size:14px}
+      .btn{padding:8px 12px;font-size:9.5px}
+    }
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <!-- ─── TOP BAR ─── -->
+    <div class="arena-topbar">
+      <div class="arena-topbar__left">
+        <button class="back-btn" aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="topbar-title">
+          <span class="topbar-title__eyebrow">Settings</span>
+          <span class="topbar-title__main">Connections</span>
+        </div>
+      </div>
+      <div class="arena-topbar__right">
+        <button class="topbar-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Learn More
+        </button>
+      </div>
+    </div>
+
+    <main class="page">
+
+      <!-- ─── HERO ─── -->
+      <section class="hero">
+        <div class="hero__main">
+          <span class="hero__eyebrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Essence · Syndication
+          </span>
+          <h1 class="hero__title">
+            Post once.<br />
+            <span class="hero__title-accent">Reach every network.</span>
+          </h1>
+          <p class="hero__sub">
+            Publish on Ratel and your thoughts flow out to Bluesky, LinkedIn, and Threads automatically — with a backlink that brings new readers to your Essence House.
+          </p>
+          <div class="hero__stats">
+            <div class="hero__stat">
+              <span class="hero__stat-value hero__stat-value--accent">2</span>
+              <span class="hero__stat-label">Connected</span>
+            </div>
+            <div class="hero__stat">
+              <span class="hero__stat-value">127</span>
+              <span class="hero__stat-label">This month</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero__orbit" aria-hidden="true">
+          <div class="hero__orbit-ring"></div>
+          <div class="hero__orbit-ring hero__orbit-ring--inner"></div>
+          <div class="hero__orbit-core">RATEL</div>
+          <div class="hero__orbit-chip hero__orbit-chip--bsky">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.5c-1.3-2.5-4.9-7.2-8.2-9.5C.7-1.2 0 .5 0 1.5c0 1.1.6 9.1 1 10.3.8 4 5.5 5.1 9.6 4.4-6.5 1.1-12.3 3.5-4.7 11.4 2.5 2.6 3.5-2.6 4-5.2.5 2.6 1.6 7.8 4 5.2 7.7-7.9 1.9-10.4-4.6-11.5 4 .7 8.8-.4 9.6-4.4.4-1.2 1-9.2 1-10.3 0-1-.7-2.7-3.8-.5-3.3 2.3-6.9 7-8.2 9.6z"/></svg>
+          </div>
+          <div class="hero__orbit-chip hero__orbit-chip--linkedin">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.063 2.063 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          </div>
+          <div class="hero__orbit-chip hero__orbit-chip--threads">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.284 3.272-.886 1.102-2.14 1.704-3.73 1.79z"/></svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── PLATFORMS ─── -->
+      <div class="section-head">
+        <span class="section-head__title">Networks</span>
+        <span class="section-head__meta">3 Available · 1 Coming soon</span>
+      </div>
+
+      <div class="platforms">
+
+        <!-- Bluesky — CONNECTED -->
+        <article class="plat" data-platform="bsky" data-connected="true">
+          <div class="plat__body">
+            <span class="plat__logo plat__logo--bsky">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.5c-1.3-2.5-4.9-7.2-8.2-9.5C.7-1.2 0 .5 0 1.5c0 1.1.6 9.1 1 10.3.8 4 5.5 5.1 9.6 4.4-6.5 1.1-12.3 3.5-4.7 11.4 2.5 2.6 3.5-2.6 4-5.2.5 2.6 1.6 7.8 4 5.2 7.7-7.9 1.9-10.4-4.6-11.5 4 .7 8.8-.4 9.6-4.4.4-1.2 1-9.2 1-10.3 0-1-.7-2.7-3.8-.5-3.3 2.3-6.9 7-8.2 9.6z"/></svg>
+            </span>
+            <div class="plat__main">
+              <div class="plat__name-row">
+                <span class="plat__name">Bluesky</span>
+                <span class="status-pill status-pill--connected">Connected</span>
+                <span class="plat__limit">300 chars · 4 images</span>
+              </div>
+              <div class="plat__handle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>@sangwoo.bsky.social</span>
+                <span class="plat__handle-sep">·</span>
+                <span>Last sync 2 min ago</span>
+              </div>
+            </div>
+            <div class="plat__actions">
+              <button class="btn btn--ghost">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+                Disconnect
+              </button>
+            </div>
+          </div>
+          <div class="plat__subrow">
+            <div class="plat__subrow-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              <strong>73</strong> posts syndicated
+            </div>
+            <span class="plat__subrow-sep"></span>
+            <div class="plat__subrow-item">
+              <span>Auto-post new posts</span>
+              <button class="switch" aria-checked="true" aria-label="Auto-post Bluesky"></button>
+            </div>
+          </div>
+        </article>
+
+        <!-- LinkedIn — CONNECTED -->
+        <article class="plat" data-platform="linkedin" data-connected="true">
+          <div class="plat__body">
+            <span class="plat__logo plat__logo--linkedin">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.063 2.063 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            </span>
+            <div class="plat__main">
+              <div class="plat__name-row">
+                <span class="plat__name">LinkedIn</span>
+                <span class="status-pill status-pill--connected">Connected</span>
+                <span class="plat__limit">3,000 chars · OAuth 2.0</span>
+              </div>
+              <div class="plat__handle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>Sangwoo Kim</span>
+                <span class="plat__handle-sep">·</span>
+                <span>Token refreshes in 54 days</span>
+              </div>
+            </div>
+            <div class="plat__actions">
+              <button class="btn btn--ghost">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+                Disconnect
+              </button>
+            </div>
+          </div>
+          <div class="plat__subrow">
+            <div class="plat__subrow-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              <strong>54</strong> posts syndicated
+            </div>
+            <span class="plat__subrow-sep"></span>
+            <div class="plat__subrow-item">
+              <span>Auto-post new posts</span>
+              <button class="switch" aria-checked="true" aria-label="Auto-post LinkedIn"></button>
+            </div>
+          </div>
+        </article>
+
+        <!-- Threads — NOT CONNECTED -->
+        <article class="plat" data-platform="threads" data-connected="false">
+          <div class="plat__body">
+            <span class="plat__logo plat__logo--threads">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.284 3.272-.886 1.102-2.14 1.704-3.73 1.79-1.202.065-2.361-.218-3.259-.801-1.063-.689-1.685-1.74-1.752-2.964-.065-1.19.408-2.285 1.33-3.082.88-.76 2.119-1.207 3.583-1.291a13.853 13.853 0 013.02.142c-.126-.742-.375-1.332-.75-1.757-.513-.586-1.308-.883-2.359-.89h-.029c-.844 0-1.992.232-2.721 1.32L9.136 8.723c.976-1.45 2.561-2.249 4.464-2.249h.042c3.186.02 5.083 1.965 5.276 5.35.108.046.216.094.324.14 1.61.664 2.757 1.733 3.304 3.095 1.03 2.54.63 5.43-1.192 7.194-1.923 1.865-4.24 2.742-7.168 2.742v.005z"/></svg>
+            </span>
+            <div class="plat__main">
+              <div class="plat__name-row">
+                <span class="plat__name">Threads</span>
+                <span class="status-pill status-pill--off">Not connected</span>
+                <span class="plat__limit">500 chars · Requires IG account</span>
+              </div>
+              <div class="plat__handle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <span>Meta OAuth · read &amp; publish scopes</span>
+              </div>
+            </div>
+            <div class="plat__actions">
+              <button class="btn btn--connect-threads" onclick="alert('Redirecting to Meta OAuth… (demo)')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12 19 12"/><polyline points="12 5 19 12 12 19"/></svg>
+                Connect
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <!-- Farcaster — COMING SOON -->
+        <article class="plat" data-platform="farcaster" data-soon="true">
+          <div class="plat__body">
+            <span class="plat__logo plat__logo--farcaster">
+              <svg viewBox="0 0 225 225" fill="currentColor"><path d="M59 34h107v157h-15v-72h-.1c-1.7-18.5-17.3-33-36.3-33S78.9 100.5 77.1 119H77v72H59V34z"/><path d="M28 56l6 22h6v91c-3 0-5 2-5 5v7h-1c-3 0-5 2-5 5v7h57v-7c0-3-2-5-5-5h-1v-7c0-3-2-5-5-5h-7v-91-22H28z"/><path d="M145 169c-3 0-5 2-5 5v7h-1c-3 0-5 2-5 5v7h57v-7c0-3-2-5-5-5h-1v-7c0-3-2-5-5-5v-91l6-22h-40v22 91h-1z"/></svg>
+            </span>
+            <div class="plat__main">
+              <div class="plat__name-row">
+                <span class="plat__name">Farcaster</span>
+                <span class="status-pill status-pill--soon">Phase 2</span>
+                <span class="plat__limit">320 chars · Web3-native</span>
+              </div>
+              <div class="plat__handle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>Frames integration + Agent posting in Phase 2</span>
+              </div>
+            </div>
+            <div class="plat__actions">
+              <button class="btn btn--ghost" disabled style="opacity:0.5;cursor:not-allowed">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Notify me
+              </button>
+            </div>
+          </div>
+        </article>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ─── BLUESKY APP PASSWORD MODAL ─── -->
+  <div class="modal-backdrop" id="bskyModal" data-open="false">
+    <div class="modal" role="dialog" aria-labelledby="bskyModalTitle">
+      <header class="modal__head">
+        <span class="modal__logo">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.5c-1.3-2.5-4.9-7.2-8.2-9.5C.7-1.2 0 .5 0 1.5c0 1.1.6 9.1 1 10.3.8 4 5.5 5.1 9.6 4.4-6.5 1.1-12.3 3.5-4.7 11.4 2.5 2.6 3.5-2.6 4-5.2.5 2.6 1.6 7.8 4 5.2 7.7-7.9 1.9-10.4-4.6-11.5 4 .7 8.8-.4 9.6-4.4.4-1.2 1-9.2 1-10.3 0-1-.7-2.7-3.8-.5-3.3 2.3-6.9 7-8.2 9.6z"/></svg>
+        </span>
+        <div class="modal__head-body">
+          <div class="modal__head-title" id="bskyModalTitle">Connect Bluesky</div>
+          <div class="modal__head-sub">Enter your handle + app password</div>
+        </div>
+        <button class="modal__close" data-close-modal aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </header>
+
+      <div class="modal__body">
+        <div class="modal__info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div>
+            Bluesky uses <strong>app passwords</strong>, not OAuth. Generate one at <a href="#">bsky.app/settings/app-passwords</a> — we store it encrypted (KMS) and never see your main password.
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            Handle
+          </label>
+          <input class="field__input" type="text" placeholder="you.bsky.social" />
+          <span class="field__hint">Your Bluesky handle — don't include @</span>
+        </div>
+
+        <div class="field">
+          <label class="field__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            App password
+          </label>
+          <input class="field__input" type="password" placeholder="xxxx-xxxx-xxxx-xxxx" />
+          <span class="field__hint">Format: <code>xxxx-xxxx-xxxx-xxxx</code>. Revokable anytime from Bluesky settings.</span>
+        </div>
+      </div>
+
+      <footer class="modal__foot">
+        <span class="modal__foot-hint">Encrypted at rest · revocable anytime</span>
+        <div class="modal__actions">
+          <button class="btn btn--cancel" data-close-modal>Cancel</button>
+          <button class="btn btn--primary-bsky">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Connect
+          </button>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      // Switch toggles
+      document.querySelectorAll('.switch').forEach(btn => {
+        if(btn.hasAttribute('disabled')) return;
+        btn.addEventListener('click', () => {
+          const current = btn.getAttribute('aria-checked') === 'true';
+          btn.setAttribute('aria-checked', !current);
+        });
+      });
+
+      // Bluesky connect button (the disconnected Bluesky card would open modal,
+      // but in this demo Bluesky is already connected. We'll wire the modal to
+      // clicking the logo area as a quick demo.)
+      const bskyModal = document.getElementById('bskyModal');
+      function openBsky(){ bskyModal.setAttribute('data-open', 'true'); }
+      function closeBsky(){ bskyModal.setAttribute('data-open', 'false'); }
+
+      // Simulate: clicking bsky card's logo re-opens the app-password modal (for demo)
+      document.querySelectorAll('.plat[data-platform="bsky"] .plat__logo').forEach(el => {
+        el.style.cursor = 'pointer';
+        el.title = 'Open connect modal (demo)';
+        el.addEventListener('click', openBsky);
+      });
+
+      document.querySelectorAll('[data-close-modal]').forEach(el => {
+        el.addEventListener('click', closeBsky);
+      });
+
+      // Click backdrop to close
+      bskyModal.addEventListener('click', (e) => {
+        if(e.target === bskyModal) closeBsky();
+      });
+
+      // ESC to close
+      document.addEventListener('keydown', (e) => {
+        if(e.key === 'Escape' && bskyModal.getAttribute('data-open') === 'true') closeBsky();
+      });
+    })();
+  </script>
+</body>
+</html>

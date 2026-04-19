@@ -34,7 +34,7 @@ impl Default for WalletConnectConfig {
                 })
                 .to_string(),
             app_name: "Ratel".to_string(),
-            app_description: "Decentralized Legislative Platform".to_string(),
+            app_description: "Human Essence Platform".to_string(),
             app_url: "".to_string(),
         }
     }

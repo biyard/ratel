@@ -1,0 +1,34 @@
+# Scenario 2: Create a post and verify editor works (IME included)
+# Depends on: 01-login (user must be signed in)
+appId: co.biyard.ratel
+---
+- launchApp
+
+- waitForAnimationToEnd
+
+# Tap the Create button on home
+- tapOn: "Create"
+
+# Should navigate to post editor
+- extendedWaitUntil:
+    visible: "New Post"
+    timeout: 10000
+
+# Fill title
+- assertVisible: "Title your post"
+- tapOn: "Title your post"
+- inputText: "Maestro Test Post"
+
+# Type into the editor body (contenteditable via WebView)
+- tapOn: "Type here"
+- inputText: "This is a test post created by Maestro automated testing."
+
+# Wait for autosave
+- extendedWaitUntil:
+    visible: "Autosaved"
+    timeout: 10000
+
+- takeScreenshot: 02-post-created
+
+# Go back to home
+- tapOn: "Back"

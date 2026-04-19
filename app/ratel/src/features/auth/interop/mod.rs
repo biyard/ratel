@@ -1,14 +1,18 @@
+#[cfg(feature = "web")]
 use wasm_bindgen::prelude::*;
+#[cfg(feature = "web")]
 use wasm_bindgen_futures::JsFuture;
+#[cfg(feature = "web")]
 use web_sys::js_sys::Promise;
 
+mod native_signin;
 mod wallet_connect;
 use super::*;
+pub use native_signin::sign_in_native;
 pub use wallet_connect::*;
 // ── Firebase interop ──────────────────────────────────────────────────
 
-// static INITIALIZED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-
+#[cfg(feature = "web")]
 #[wasm_bindgen(js_namespace = ["window","ratel", "auth", "firebase"])]
 extern "C" {
     pub fn init_firebase(conf: &JsValue);
@@ -25,9 +29,21 @@ pub struct UserInfo {
     pub display_name: Option<String>,
     pub photo_url: Option<String>,
 }
-#[cfg(not(feature = "web"))]
+
+/// Google sign-in entry point.
+///
+/// - **Web**: Firebase `signInWithPopup` over a wasm-bindgen FFI.
+/// - **Android**: Credential Manager API via the Kotlin `GoogleAuthPlugin`
+///   (manganis FFI). See [`native_signin::sign_in_native`].
+/// - **Other non-web targets**: returns `SignInUnsupportedOnPlatform`.
+#[cfg(all(not(feature = "web"), target_os = "android"))]
 pub async fn sign_in() -> crate::common::Result<UserInfo> {
-    unimplemented!("sign_in is only implemented for the web feature")
+    sign_in_native().await
+}
+
+#[cfg(all(not(feature = "web"), not(target_os = "android")))]
+pub async fn sign_in() -> crate::common::Result<UserInfo> {
+    Err(AuthError::SignInUnsupportedOnPlatform.into())
 }
 
 #[cfg(feature = "web")]

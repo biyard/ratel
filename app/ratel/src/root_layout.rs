@@ -25,15 +25,22 @@ fn ErrorPage(ctx: ErrorContext) -> Element {
     let tr: ErrorPageTranslate = use_translate();
     let lang = use_language();
     let nav = use_navigator();
+    let mut user_ctx = crate::features::auth::hooks::use_user_context();
 
-    let message = if let Some(err) = ctx.error() {
-        if let Some(e) = err.downcast_ref::<Error>() {
-            e.translate(&lang()).to_string()
-        } else {
-            format!("{err:?}")
-        }
-    } else {
-        tr.description.to_string()
+    let (is_auth_error, message) = match ctx.error() {
+        Some(err) => match err.downcast_ref::<Error>() {
+            Some(typed) => {
+                let is_auth = matches!(
+                    typed,
+                    Error::NoSessionFound
+                        | Error::UnauthorizedAccess
+                        | Error::UserNotFoundInContext
+                );
+                (is_auth, typed.translate(&lang()).to_string())
+            }
+            None => (false, format!("{err:?}")),
+        },
+        None => (false, tr.description.to_string()),
     };
 
     rsx! {
@@ -49,6 +56,17 @@ fn ErrorPage(ctx: ErrorContext) -> Element {
                     onclick: {
                         let ctx = ctx;
                         move |_| {
+                            // If the error came from a missing/expired
+                            // session, the cached user_ctx is now lying
+                            // (server-side it's gone). Reset it and wipe
+                            // the localStorage cache before navigating
+                            // home, otherwise the Index page's auth-gated
+                            // loaders refire the same 401 immediately and
+                            // we bounce right back to this error page.
+                            if is_auth_error {
+                                user_ctx.set(crate::features::auth::context::UserContext::default());
+                                crate::common::services::persistent_state::clear_cached_session();
+                            }
                             ctx.clear_errors();
                             nav.push(Route::Index {});
                         }

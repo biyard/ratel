@@ -75,7 +75,8 @@ percent-encoding = "2.3.2"
 base64 = "0.22.1"
 hyper = "1.6.0"
 
-dioxus = { version = "0.7.1", features = ["fullstack", "router"] }
+dioxus = { version = "0.7", features = ["fullstack", "router"] }
+manganis = "0.7"
 lucide-dioxus = { version = "2.569.0", features = ["all-icons"] }
 
 web-sys = {version = "0.3", features = ["Clipboard"] }

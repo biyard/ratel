@@ -29,7 +29,8 @@ tracing = { workspace = true }
 gloo-timers = { version = "0.3", features = ["futures"], optional = true }
 serde_dynamo = { workspace = true, optional = true }
 base64 = { workspace = true }
-uuid = { workspace = true, optional = true }
+# `js` feature: source of randomness on `wasm32-unknown-unknown` for `Uuid::now_v7()`.
+uuid = { workspace = true, features = ["js"] }
 chrono = { workspace = true }
 regex = { version = "1" }
 ethers = { version = "=2.0.14", optional = true }
@@ -39,6 +40,7 @@ futures = { version = "0.3", optional = true }
 urlencoding = { version = "2" }
 tokio = { workspace = true, optional = true }
 tower = { version = "0.5", features = ["util"], optional = true }
+tower-http = { version = "0.6", features = ["catch-panic"], optional = true }
 
 web-sys = { workspace = true, features = [
   "Blob",
@@ -93,6 +95,7 @@ lambda_http = { version = "1.0.2", optional = true }
 dioxus-primitives = { git = "https://github.com/DioxusLabs/components", version = "0.0.1", default-features = false, features = [
   "router",
 ] }
+manganis = { workspace = true }
 time = { version = "0.3.47", features = ["formatting"] }
 ic-agent = { version = "0.46", optional = true }
 candid = { version = "0.10", optional = true }
@@ -150,9 +153,9 @@ server = [
   "ssi",
   "tokio",
   "tower",
+  "tower-http",
   "tower-sessions",
   "url",
-  "uuid",
   "validator",
   "rmcp",
 ]
@@ -162,6 +165,13 @@ layout_test = ["web"]
 local-dev = ["beta","bypass"]
 beta = []
 futures = ["dep:futures"]
+
+# Android-only: route tracing events into logcat so they show up in `adb logcat`.
+# Without this, Rust `tracing::info!` / `error!` calls silently vanish on device
+# because the default fmt subscriber writes to stdout, which is not captured by
+# logcat on Android.
+[target.'cfg(target_os = "android")'.dependencies]
+tracing-android = "0.2"
 
 [dev-dependencies]
 axum = { workspace = true }

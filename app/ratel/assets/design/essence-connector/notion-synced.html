@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Notion · Connected</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --bg-input:rgba(255,255,255,0.025);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-green:#22c55e;--accent-coral:#ef4444;--accent-violet:#818cf8;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+    }
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+    body{overflow-x:hidden}
+
+    .arena{position:relative;min-height:100vh;display:flex;flex-direction:column;isolation:isolate}
+    .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 30% 10%,rgba(34,197,94,0.05) 0%,transparent 55%),radial-gradient(ellipse 60% 60% at 80% 95%,rgba(110,237,216,0.04) 0%,transparent 55%);z-index:-1;pointer-events:none}
+
+    .arena-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:18px 28px;background:rgba(6,6,14,0.80);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-subtle)}
+    .arena-topbar__left{display:flex;align-items:center;gap:14px}
+    .back-btn{width:38px;height:38px;border-radius:10px;background:var(--bg-glass);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0}
+    .back-btn:hover{border-color:rgba(252,179,0,0.25);background:var(--bg-glass-hover)}
+    .back-btn svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+    .back-btn:hover svg{color:var(--accent-gold)}
+    .topbar-title{display:flex;flex-direction:column;gap:2px}
+    .topbar-title__eyebrow{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim)}
+    .topbar-title__main{font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-primary)}
+    .topbar-btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--bg-glass);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all 0.25s ease;text-decoration:none}
+    .topbar-btn:hover{border-color:rgba(252,179,0,0.25);color:var(--accent-gold)}
+    .topbar-btn svg{width:13px;height:13px}
+
+    .page{position:relative;z-index:1;flex:1;max-width:920px;margin:0 auto;width:100%;padding:32px 28px 60px;display:flex;flex-direction:column;gap:24px}
+
+    /* ─── Status hero card ── */
+    .status{position:relative;overflow:hidden;border-radius:20px;border:1px solid rgba(34,197,94,0.22);background:var(--bg-glass);backdrop-filter:blur(16px);padding:28px 30px;display:grid;grid-template-columns:auto 1fr auto;gap:24px;align-items:center}
+    .status::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 65% at 0% 30%,rgba(34,197,94,0.08) 0%,transparent 55%);pointer-events:none}
+    .status > *{position:relative;z-index:1}
+
+    .status__logo{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#f5f5f5,#ffffff);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:32px;font-weight:800;color:#0a0a0a;flex-shrink:0}
+
+    .status__main{display:flex;flex-direction:column;gap:6px;min-width:0}
+    .status__row1{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .status__name{font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:0.04em;color:var(--text-primary)}
+    .status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:100px;font-family:var(--font-display);font-size:9.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;background:rgba(34,197,94,0.08);color:var(--accent-green);border:1px solid rgba(34,197,94,0.22)}
+    .status-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent-green);box-shadow:0 0 6px var(--accent-green);animation:pulse-dot 2s ease-in-out infinite}
+    @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+    .status__workspace{font-size:13.5px;color:var(--text-muted);display:flex;align-items:center;gap:8px}
+    .status__workspace svg{width:12px;height:12px;color:var(--text-dim)}
+
+    .status__actions{display:flex;gap:8px;flex-shrink:0}
+    .action-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:10px;background:var(--bg-glass);border:1px solid var(--border-subtle);color:var(--text-muted);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+    .action-btn:hover{border-color:rgba(252,179,0,0.22);color:var(--accent-gold)}
+    .action-btn svg{width:12px;height:12px}
+    .action-btn--danger:hover{border-color:rgba(239,68,68,0.30);color:var(--accent-coral);background:rgba(239,68,68,0.04)}
+    .action-btn--primary{background:linear-gradient(135deg,var(--accent-gold),#e5a200);color:#0a0a0a;border-color:transparent;box-shadow:0 2px 12px rgba(252,179,0,0.20)}
+    .action-btn--primary:hover{color:#0a0a0a;box-shadow:0 4px 20px rgba(252,179,0,0.35)}
+
+    /* ─── Stats grid ── */
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .stat-cell{padding:18px 18px;border-radius:14px;background:var(--bg-glass);backdrop-filter:blur(14px);border:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:4px}
+    .stat-cell__label{font-family:var(--font-display);font-size:9.5px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);display:flex;align-items:center;gap:6px}
+    .stat-cell__label svg{width:11px;height:11px}
+    .stat-cell__value{font-family:var(--font-display);font-size:22px;font-weight:700;letter-spacing:0.02em;color:var(--text-primary);display:flex;align-items:baseline;gap:6px}
+    .stat-cell__value--accent{color:var(--accent-teal)}
+    .stat-cell__value small{font-size:12px;font-weight:500;color:var(--text-muted);letter-spacing:0}
+    .stat-cell__sub{font-size:11.5px;color:var(--text-muted);margin-top:2px}
+
+    /* ─── Section heading ── */
+    .section-head{display:flex;align-items:center;justify-content:space-between}
+    .section-head__title{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-muted);display:flex;align-items:center;gap:10px}
+    .section-head__title::before{content:'';width:4px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--accent-gold),transparent)}
+    .section-head__meta{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-dim)}
+
+    /* ─── Settings panel ── */
+    .settings{border-radius:16px;border:1px solid var(--border-subtle);background:var(--bg-glass);backdrop-filter:blur(14px);overflow:hidden}
+    .setting-row{display:grid;grid-template-columns:1fr auto;gap:16px;padding:18px 22px;align-items:center;border-bottom:1px solid var(--border-subtle)}
+    .setting-row:last-child{border-bottom:none}
+    .setting-row__body{display:flex;flex-direction:column;gap:3px;min-width:0}
+    .setting-row__title{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:0.04em;color:var(--text-primary)}
+    .setting-row__sub{font-size:12.5px;color:var(--text-muted);line-height:1.5}
+    .setting-row__sub code{font-family:var(--font-display);color:var(--accent-teal);padding:1px 5px;border-radius:4px;background:rgba(110,237,216,0.06);font-size:10.5px}
+
+    .switch{position:relative;width:38px;height:22px;border-radius:100px;background:rgba(255,255,255,0.06);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.25s;padding:0}
+    .switch::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--text-muted);transition:all 0.25s}
+    .switch[aria-checked="true"]{background:rgba(252,179,0,0.30);border-color:rgba(252,179,0,0.40)}
+    .switch[aria-checked="true"]::after{transform:translateX(16px);background:var(--accent-gold)}
+
+    .slider-wrap{display:flex;align-items:center;gap:10px;min-width:180px}
+    .slider-val{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--accent-gold);min-width:16px;text-align:right}
+    .slider{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,0.05);position:relative;cursor:pointer}
+    .slider__fill{position:absolute;inset:0 auto 0 0;border-radius:2px;background:var(--accent-gold);box-shadow:0 0 8px rgba(252,179,0,0.4)}
+    .slider__thumb{position:absolute;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+
+    .segmented{display:inline-flex;padding:3px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border-subtle)}
+    .seg{padding:7px 12px;border-radius:7px;background:transparent;border:none;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all 0.2s}
+    .seg[aria-selected="true"]{background:rgba(252,179,0,0.10);color:var(--accent-gold);box-shadow:inset 0 0 0 1px rgba(252,179,0,0.22)}
+
+    /* ─── Recent sources list ── */
+    .sources{display:flex;flex-direction:column;border-radius:16px;overflow:hidden;border:1px solid var(--border-subtle);background:var(--bg-glass);backdrop-filter:blur(14px)}
+    .src-row{display:grid;grid-template-columns:22px 1fr auto auto;gap:14px;padding:13px 18px;align-items:center;border-bottom:1px solid var(--border-subtle);transition:all 0.2s}
+    .src-row:last-child{border-bottom:none}
+    .src-row:hover{background:rgba(255,255,255,0.02)}
+    .src-row__icon{color:var(--text-dim)}
+    .src-row__icon svg{width:15px;height:15px}
+    .src-row__body{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .src-row__title{font-size:13.5px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .src-row__meta{font-size:11.5px;color:var(--text-dim);display:flex;gap:10px}
+    .src-row__meta strong{color:var(--text-muted);font-weight:500}
+    .src-row__status{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;border:1px solid transparent;white-space:nowrap}
+    .src-row__status--synced{background:rgba(34,197,94,0.06);color:var(--accent-green);border-color:rgba(34,197,94,0.18)}
+    .src-row__status--syncing{background:rgba(252,179,0,0.06);color:var(--accent-gold);border-color:rgba(252,179,0,0.20)}
+    .src-row__status--paused{background:rgba(255,255,255,0.03);color:var(--text-dim);border-color:var(--border-subtle)}
+    .src-row__action{width:30px;height:30px;border-radius:8px;background:transparent;border:1px solid transparent;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:all 0.2s}
+    .src-row__action:hover{border-color:var(--border-subtle);color:var(--text-muted)}
+    .src-row__action svg{width:13px;height:13px}
+
+    .sources__foot{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:rgba(0,0,0,0.20);border-top:1px solid var(--border-subtle)}
+    .sources__foot-note{font-size:12px;color:var(--text-dim)}
+    .sources__foot-link{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--accent-gold);text-decoration:none}
+    .sources__foot-link:hover{color:#ffd24a}
+
+    /* Pill with tooltip */
+    .pill-info{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:5px;background:rgba(129,140,248,0.08);color:var(--accent-violet);border:1px solid rgba(129,140,248,0.20);font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase}
+
+    @media (max-width:720px){
+      .status{grid-template-columns:auto 1fr;padding:20px 22px}
+      .status__actions{grid-column:1/-1}
+      .stats-grid{grid-template-columns:1fr 1fr}
+      .section-head{flex-direction:column;align-items:flex-start;gap:6px}
+      .page{padding:22px 14px 60px}
+      .src-row{grid-template-columns:20px 1fr auto}
+      .src-row__action{display:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <div class="arena-topbar">
+      <div class="arena-topbar__left">
+        <button class="back-btn" aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="topbar-title">
+          <span class="topbar-title__eyebrow">Settings · Connectors</span>
+          <span class="topbar-title__main">Notion</span>
+        </div>
+      </div>
+      <a href="#" class="topbar-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        All sources
+      </a>
+    </div>
+
+    <main class="page">
+
+      <!-- STATUS HERO -->
+      <section class="status">
+        <span class="status__logo">N</span>
+        <div class="status__main">
+          <div class="status__row1">
+            <span class="status__name">Notion</span>
+            <span class="status-pill">Connected</span>
+          </div>
+          <div class="status__workspace">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Sangwoo's Workspace · connected Apr 2, 2026</span>
+          </div>
+        </div>
+        <div class="status__actions">
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Sync now
+          </button>
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            Pause
+          </button>
+          <button class="action-btn action-btn--danger">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+            Disconnect
+          </button>
+        </div>
+      </section>
+
+      <!-- STATS -->
+      <section class="stats-grid">
+        <div class="stat-cell">
+          <div class="stat-cell__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Sources
+          </div>
+          <div class="stat-cell__value"><span class="stat-cell__value--accent">342</span></div>
+          <div class="stat-cell__sub">Pages + 4 databases</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-cell__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Essence chunks
+          </div>
+          <div class="stat-cell__value">4,182</div>
+          <div class="stat-cell__sub">~1.2M tokens embedded</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-cell__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Last sync
+          </div>
+          <div class="stat-cell__value">2m <small>ago</small></div>
+          <div class="stat-cell__sub">Webhook · live</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-cell__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Avg quality
+          </div>
+          <div class="stat-cell__value">4.6 <small>/ 5</small></div>
+          <div class="stat-cell__sub">Signal-weighted</div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <div class="section-head">
+        <span class="section-head__title">Sync settings</span>
+        <span class="section-head__meta">Changes apply on next sync</span>
+      </div>
+
+      <section class="settings">
+        <div class="setting-row">
+          <div class="setting-row__body">
+            <div class="setting-row__title">Include databases</div>
+            <div class="setting-row__sub">Pull rows from shared DBs as individual sources. Best for reading logs or highlight lists. <code>off by default</code></div>
+          </div>
+          <button class="switch" aria-checked="false" aria-label="Include databases"></button>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-row__body">
+            <div class="setting-row__title">Child page depth</div>
+            <div class="setting-row__sub">How many levels of nested pages to follow from each shared root. Deeper = more content but more noise.</div>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider">
+              <div class="slider__fill" style="width:60%"></div>
+              <div class="slider__thumb" style="left:60%"></div>
+            </div>
+            <span class="slider-val">3</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-row__body">
+            <div class="setting-row__title">AI-authored content</div>
+            <div class="setting-row__sub">How to treat pages that look AI-generated. <span class="pill-info">Beta</span></div>
+          </div>
+          <div class="segmented">
+            <button class="seg">Exclude</button>
+            <button class="seg" aria-selected="true">Flag</button>
+            <button class="seg">Include</button>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-row__body">
+            <div class="setting-row__title">Public Essence House</div>
+            <div class="setting-row__sub">Let subscribers query the inference layer on top of these sources. Raw text is never exposed.</div>
+          </div>
+          <button class="switch" aria-checked="true" aria-label="Public house"></button>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-row__body">
+            <div class="setting-row__title">Auto-sync on Notion edits</div>
+            <div class="setting-row__sub">Webhooks push every edit. Turn off for manual-only mode.</div>
+          </div>
+          <button class="switch" aria-checked="true" aria-label="Auto-sync"></button>
+        </div>
+      </section>
+
+      <!-- RECENT SOURCES -->
+      <div class="section-head">
+        <span class="section-head__title">Recently synced</span>
+        <span class="section-head__meta">Last 10 · live</span>
+      </div>
+
+      <section class="sources">
+
+        <div class="src-row">
+          <span class="src-row__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </span>
+          <div class="src-row__body">
+            <div class="src-row__title">Why MCP changes everything for knowledge creators</div>
+            <div class="src-row__meta"><strong>1,340 words</strong><span>·</span><strong>6 chunks</strong><span>·</span>edited 2m ago</div>
+          </div>
+          <span class="src-row__status src-row__status--syncing">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Syncing
+          </span>
+          <button class="src-row__action" aria-label="More">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+        </div>
+
+        <div class="src-row">
+          <span class="src-row__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </span>
+          <div class="src-row__body">
+            <div class="src-row__title">Notes on governance token design (2026 draft)</div>
+            <div class="src-row__meta"><strong>2,870 words</strong><span>·</span><strong>12 chunks</strong><span>·</span>edited 18m ago</div>
+          </div>
+          <span class="src-row__status src-row__status--synced">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Synced
+          </span>
+          <button class="src-row__action" aria-label="More">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+        </div>
+
+        <div class="src-row">
+          <span class="src-row__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </span>
+          <div class="src-row__body">
+            <div class="src-row__title">Reading log · Q1 2026</div>
+            <div class="src-row__meta"><strong>820 words</strong><span>·</span><strong>3 chunks</strong><span>·</span>edited 2h ago</div>
+          </div>
+          <span class="src-row__status src-row__status--synced">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Synced
+          </span>
+          <button class="src-row__action" aria-label="More">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+        </div>
+
+        <div class="src-row">
+          <span class="src-row__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </span>
+          <div class="src-row__body">
+            <div class="src-row__title">Interview prep — Ratel Series A</div>
+            <div class="src-row__meta"><strong>460 words</strong><span>·</span><strong>2 chunks</strong><span>·</span>edited yesterday</div>
+          </div>
+          <span class="src-row__status src-row__status--paused">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            Paused
+          </span>
+          <button class="src-row__action" aria-label="More">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+        </div>
+
+        <div class="src-row">
+          <span class="src-row__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </span>
+          <div class="src-row__body">
+            <div class="src-row__title">Three years of decentralization arguments, reviewed</div>
+            <div class="src-row__meta"><strong>5,210 words</strong><span>·</span><strong>23 chunks</strong><span>·</span>edited 3 days ago</div>
+          </div>
+          <span class="src-row__status src-row__status--synced">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Synced
+          </span>
+          <button class="src-row__action" aria-label="More">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+        </div>
+
+        <div class="sources__foot">
+          <span class="sources__foot-note">Showing 5 of 342 sources</span>
+          <a class="sources__foot-link" href="#">View all sources →</a>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    document.querySelectorAll('.switch').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        btn.setAttribute('aria-checked', btn.getAttribute('aria-checked') !== 'true');
+      });
+    });
+    document.querySelectorAll('.segmented').forEach(function(group){
+      const segs = group.querySelectorAll('.seg');
+      segs.forEach(function(seg){
+        seg.addEventListener('click', function(){
+          segs.forEach(function(s){ s.setAttribute('aria-selected', 'false'); });
+          seg.setAttribute('aria-selected', 'true');
+        });
+      });
+    });
+  </script>
+</body>
+</html>

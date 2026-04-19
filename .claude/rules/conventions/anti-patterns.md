@@ -127,6 +127,26 @@ onfocusout: move |_| async move {
 },
 ```
 
+## Async Sleep
+
+```rust
+// BAD — gloo_timers is web-only; breaks mobile/desktop builds and
+// forces every caller to cfg-gate between gloo_timers and tokio::time
+#[cfg(feature = "web")]
+gloo_timers::future::sleep(Duration::from_millis(300)).await;
+#[cfg(feature = "server")]
+tokio::time::sleep(Duration::from_millis(300)).await;
+
+// GOOD — centralized sleep works across web, server, and mobile
+use crate::common::utils::time::sleep;
+sleep(Duration::from_millis(300)).await;
+```
+
+`gloo_timers` must never be used directly in feature code. Call
+`crate::common::utils::time::sleep` instead — it handles the feature-gating
+(`tokio::time::sleep` on server, `gloo_timers` on web, no-op elsewhere) in
+one place so callers stay platform-agnostic.
+
 ## Error Handling
 
 ```rust
