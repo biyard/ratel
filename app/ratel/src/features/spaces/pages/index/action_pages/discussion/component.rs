@@ -4,8 +4,9 @@ use crate::common::components::mention_autocomplete::{
 use crate::common::hooks::use_interval;
 use crate::common::utils::mention::{apply_mention_markup, parse_mention_segments, ContentSegment};
 use crate::features::spaces::pages::actions::actions::discussion::controllers::{
-    add_comment, get_discussion_detail, like_comment, list_comments, list_replies, reply_comment,
-    AddCommentRequest, LikeCommentRequest, ReplyCommentRequest,
+    add_comment, delete_comment, get_discussion_detail, like_comment, list_comments, list_replies,
+    reply_comment, update_comment, AddCommentRequest, LikeCommentRequest, ReplyCommentRequest,
+    UpdateCommentRequest,
 };
 use crate::features::spaces::pages::actions::actions::discussion::{
     DiscussionCommentResponse, DiscussionStatus, SpacePostCommentTargetEntityType,
@@ -100,12 +101,23 @@ pub fn DiscussionArenaPage(
         });
     });
 
+    // Merge priority: the base page (returned by the loader, ordered by the
+    // server's canonical GSI) is the source of truth for content. Polled items
+    // that haven't yet been picked up by a restart are appended at the end.
+    // This way a loader restart after an edit immediately reflects the new
+    // content — the polled list may still carry the stale snapshot with the
+    // same sk, but base wins and the polled duplicate is filtered out.
     let comments: Vec<DiscussionCommentResponse> = {
         let polled = polled_new();
         let base = comments_data.items.clone();
+        let base_sks: std::collections::HashSet<String> =
+            base.iter().map(|c| c.sk.to_string()).collect();
         base.into_iter()
-            .filter(|bi| !polled.iter().any(|p| p.sk == bi.sk))
-            .chain(polled.iter().cloned())
+            .chain(
+                polled
+                    .into_iter()
+                    .filter(|p| !base_sks.contains(&p.sk.to_string())),
+            )
             .collect()
     };
 
@@ -386,6 +398,7 @@ pub fn DiscussionArenaPage(
                                     can_comment,
                                     members,
                                     comments_loader,
+                                    polled_new,
                                 }
                             }
                         }
@@ -405,9 +418,11 @@ fn CommentItem(
     can_comment: bool,
     members: ReadSignal<Vec<MentionCandidate>>,
     comments_loader: Loader<ListResponse<DiscussionCommentResponse>>,
+    polled_new: Signal<Vec<DiscussionCommentResponse>>,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
     let mut comments_loader = comments_loader;
+    let mut polled_new = polled_new;
     let mut toast = use_toast();
 
     let mut show_replies = use_signal(|| false);
@@ -420,6 +435,22 @@ fn CommentItem(
     let liked = comment.liked;
     let likes = comment.likes;
     let reply_count = comment.replies;
+
+    // Ownership: only the author sees the edit/delete menu. Server-side
+    // update/delete controllers also verify `comment.author_pk == user.pk`,
+    // so the UI gate is a UX affordance, not a security boundary.
+    let user_ctx = crate::features::auth::hooks::use_user_context();
+    let is_own = user_ctx
+        .read()
+        .user
+        .as_ref()
+        .map(|u| u.pk == comment.author_pk)
+        .unwrap_or(false);
+
+    let mut menu_open = use_signal(|| false);
+    let mut editing = use_signal(|| false);
+    let mut edit_text = use_signal(|| comment.content.clone());
+    let original_content = comment.content.clone();
 
     let on_like = move |_| async move {
         let target_sk: SpacePostCommentTargetEntityType = comment_sk().into();
@@ -481,6 +512,74 @@ fn CommentItem(
         }
     };
 
+    let start_edit_content = original_content.clone();
+    let on_edit_start = move |_| {
+        edit_text.set(start_edit_content.clone());
+        editing.set(true);
+        menu_open.set(false);
+    };
+
+    let on_edit_cancel = move |_| {
+        editing.set(false);
+    };
+
+    let on_edit_save = move |_| async move {
+        let new_text = edit_text().trim().to_string();
+        if new_text.is_empty() {
+            return;
+        }
+        let target_sk: SpacePostCommentTargetEntityType = comment_sk().into();
+        let req = UpdateCommentRequest {
+            content: new_text.clone(),
+            images: None,
+        };
+        match update_comment(space_id(), discussion_id(), target_sk, req).await {
+            Ok(_) => {
+                // Reflect the edit immediately: base (refreshed via restart)
+                // wins on content, but any stale poll-cached copy of the same
+                // sk would still override rendering for a frame if present.
+                // Patch the polled entry's content so nothing shows the old
+                // text even momentarily.
+                let sk = comment_sk();
+                polled_new.with_mut(|list| {
+                    for item in list.iter_mut() {
+                        if item.sk == sk {
+                            item.content = new_text.clone();
+                        }
+                    }
+                });
+                editing.set(false);
+                comments_loader.restart();
+                toast.info(tr.edit_success);
+            }
+            Err(err) => {
+                tracing::error!("Failed to update comment: {:?}", err);
+                toast.error(err);
+            }
+        }
+    };
+
+    let on_delete = move |_| async move {
+        let target_sk: SpacePostCommentTargetEntityType = comment_sk().into();
+        menu_open.set(false);
+        match delete_comment(space_id(), discussion_id(), target_sk).await {
+            Ok(_) => {
+                // Scrub the polled cache — list_comments(since=...) only
+                // returns comments by created_at, so a deleted item is never
+                // re-observed by polling; without this, the stale copy would
+                // linger in the polled tail forever.
+                let sk = comment_sk();
+                polled_new.with_mut(|list| list.retain(|c| c.sk != sk));
+                comments_loader.restart();
+                toast.info(tr.delete_success);
+            }
+            Err(err) => {
+                tracing::error!("Failed to delete comment: {:?}", err);
+                toast.error(err);
+            }
+        }
+    };
+
     rsx! {
         div { class: "comment-entry",
             div { class: "comment-item",
@@ -493,48 +592,113 @@ fn CommentItem(
                     div { class: "comment-item__top",
                         span { class: "comment-item__name", "{comment.author_display_name}" }
                         span { class: "comment-item__time", "{time_ago}" }
-                    }
-                    div { class: "comment-item__text",
-                        for segment in parse_mention_segments(&comment.content) {
-                            match segment {
-                                ContentSegment::Text(t) => rsx! {
-                                    span { "{t}" }
-                                },
-                                ContentSegment::Mention { display_name, .. } => rsx! {
-                                    span { class: "font-medium text-primary", "@{display_name}" }
-                                },
+                        if is_own && !editing() {
+                            div { class: "comment-menu",
+                                button {
+                                    class: "comment-menu__trigger",
+                                    "data-testid": "comment-menu-trigger",
+                                    aria_label: "{tr.more_options}",
+                                    onclick: move |_| menu_open.set(!menu_open()),
+                                    svg {
+                                        view_box: "0 0 24 24",
+                                        fill: "currentColor",
+                                        xmlns: "http://www.w3.org/2000/svg",
+                                        circle { cx: "5", cy: "12", r: "1.6" }
+                                        circle { cx: "12", cy: "12", r: "1.6" }
+                                        circle { cx: "19", cy: "12", r: "1.6" }
+                                    }
+                                }
+                                if menu_open() {
+                                    div { class: "comment-menu__dropdown",
+                                        button {
+                                            class: "comment-menu__item",
+                                            "data-testid": "comment-menu-edit",
+                                            onclick: on_edit_start,
+                                            "{tr.edit_btn}"
+                                        }
+                                        button {
+                                            class: "comment-menu__item comment-menu__item--danger",
+                                            "data-testid": "comment-menu-delete",
+                                            onclick: on_delete,
+                                            "{tr.delete_btn}"
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
-                    div { class: "comment-item__actions",
-                        button {
-                            class: if liked { "comment-action comment-action--liked" } else { "comment-action" },
-                            onclick: on_like,
-                            svg {
-                                view_box: "0 0 24 24",
-                                fill: if liked { "currentColor" } else { "none" },
-                                stroke: "currentColor",
-                                stroke_width: "2",
-                                stroke_linecap: "round",
-                                stroke_linejoin: "round",
-                                path { d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" }
+                    if editing() {
+                        div { class: "comment-item__edit",
+                            textarea {
+                                class: "comment-item__edit-input",
+                                "data-testid": "comment-edit-input",
+                                rows: "2",
+                                value: "{edit_text}",
+                                oninput: move |e| {
+                                    edit_text.set(e.value());
+                                },
                             }
-                            span { "{likes}" }
+                            div { class: "comment-item__edit-actions",
+                                button {
+                                    class: "comment-item__edit-cancel",
+                                    "data-testid": "comment-edit-cancel",
+                                    onclick: on_edit_cancel,
+                                    "{tr.cancel_btn}"
+                                }
+                                button {
+                                    class: "comment-item__edit-save",
+                                    "data-testid": "comment-edit-save",
+                                    disabled: edit_text().trim().is_empty(),
+                                    onclick: on_edit_save,
+                                    "{tr.save_btn}"
+                                }
+                            }
                         }
-                        if can_comment {
+                    } else {
+                        div { class: "comment-item__text",
+                            for segment in parse_mention_segments(&comment.content) {
+                                match segment {
+                                    ContentSegment::Text(t) => rsx! {
+                                        span { "{t}" }
+                                    },
+                                    ContentSegment::Mention { display_name, .. } => rsx! {
+                                        span { class: "font-medium text-primary", "@{display_name}" }
+                                    },
+                                }
+                            }
+                        }
+                    }
+                    if !editing() {
+                        div { class: "comment-item__actions",
                             button {
-                                class: "comment-action comment-action--reply",
-                                onclick: on_toggle_replies,
+                                class: if liked { "comment-action comment-action--liked" } else { "comment-action" },
+                                onclick: on_like,
                                 svg {
                                     view_box: "0 0 24 24",
-                                    fill: "none",
+                                    fill: if liked { "currentColor" } else { "none" },
                                     stroke: "currentColor",
                                     stroke_width: "2",
                                     stroke_linecap: "round",
                                     stroke_linejoin: "round",
-                                    path { d: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" }
+                                    path { d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" }
                                 }
-                                span { "{tr.reply_label}" }
+                                span { "{likes}" }
+                            }
+                            if can_comment {
+                                button {
+                                    class: "comment-action comment-action--reply",
+                                    onclick: on_toggle_replies,
+                                    svg {
+                                        view_box: "0 0 24 24",
+                                        fill: "none",
+                                        stroke: "currentColor",
+                                        stroke_width: "2",
+                                        stroke_linecap: "round",
+                                        stroke_linejoin: "round",
+                                        path { d: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" }
+                                    }
+                                    span { "{tr.reply_label}" }
+                                }
                             }
                         }
                     }
