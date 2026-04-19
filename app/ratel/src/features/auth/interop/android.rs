@@ -19,7 +19,6 @@
 use crate::features::auth::interop::UserInfo;
 use crate::features::auth::types::AuthError;
 
-#[cfg(target_os = "android")]
 #[manganis::ffi("src/features/auth/interop/android")]
 extern "Kotlin" {
     /// The Kotlin `GoogleAuthPlugin` class.
@@ -47,7 +46,6 @@ extern "Kotlin" {
     ) -> String;
 }
 
-#[cfg(target_os = "android")]
 pub async fn sign_in_native() -> crate::common::Result<UserInfo> {
     let cfg = match firebase_config::get() {
         Ok(c) => c,
@@ -86,16 +84,10 @@ pub async fn sign_in_native() -> crate::common::Result<UserInfo> {
     })
 }
 
-#[cfg(not(target_os = "android"))]
-pub async fn sign_in_native() -> crate::common::Result<UserInfo> {
-    Err(AuthError::SignInUnsupportedOnPlatform.into())
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // google-services.json parsing
 // ─────────────────────────────────────────────────────────────────────────────
 
-#[cfg(target_os = "android")]
 mod firebase_config {
     use serde::Deserialize;
     use std::sync::OnceLock;
@@ -211,4 +203,8 @@ mod firebase_config {
             .find(|c| c.client_type == 3)
             .map(|c| c.client_id.clone())
     }
+}
+
+pub async fn sign_in() -> crate::common::Result<super::UserInfo> {
+    sign_in_native().await
 }
