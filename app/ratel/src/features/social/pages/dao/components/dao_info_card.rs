@@ -1,6 +1,7 @@
 use super::super::TeamDaoTranslate;
 use super::super::*;
 use dioxus::prelude::*;
+#[cfg(feature = "web")]
 use std::time::Duration;
 
 #[component]
@@ -74,7 +75,7 @@ pub fn DaoInfoCard(dao_address: String, explorer_url: Option<String>) -> Element
     }
 }
 
-#[cfg(not(feature = "server"))]
+#[cfg(feature = "web")]
 async fn copy_to_clipboard(text: &str) -> std::result::Result<(), String> {
     use wasm_bindgen_futures::JsFuture;
 
@@ -85,15 +86,15 @@ async fn copy_to_clipboard(text: &str) -> std::result::Result<(), String> {
     Ok(())
 }
 
-#[cfg(feature = "server")]
+#[cfg(not(feature = "web"))]
 async fn copy_to_clipboard(_text: &str) -> std::result::Result<(), String> {
     Err("Clipboard is only available on web".to_string())
 }
 
-#[cfg(not(feature = "server"))]
+#[cfg(feature = "web")]
 async fn after_copy_delay() {
     gloo_timers::future::sleep(Duration::from_millis(2000)).await;
 }
 
-#[cfg(feature = "server")]
+#[cfg(not(feature = "web"))]
 async fn after_copy_delay() {}

@@ -18,7 +18,34 @@ fn launch(app: fn() -> Element) {
 }
 
 #[cfg(feature = "server")]
+fn install_panic_hook() {
+    use std::sync::Once;
+    static INIT: Once = Once::new();
+    INIT.call_once(|| {
+        let prev = std::panic::take_hook();
+        std::panic::set_hook(Box::new(move |info| {
+            let payload = info
+                .payload()
+                .downcast_ref::<&str>()
+                .copied()
+                .or_else(|| info.payload().downcast_ref::<String>().map(|s| s.as_str()))
+                .unwrap_or("<non-string panic payload>");
+            let location = info
+                .location()
+                .map(|l| format!("{}:{}:{}", l.file(), l.line(), l.column()))
+                .unwrap_or_else(|| "<unknown location>".to_string());
+            tracing::error!(panic = %payload, location = %location, "server thread panicked");
+            // Delegate to the previous hook so backtraces still print when
+            // RUST_BACKTRACE=1 and tests still observe the panic normally.
+            prev(info);
+        }));
+    });
+}
+
+#[cfg(feature = "server")]
 fn serve(app: fn() -> Element) {
+    install_panic_hook();
+
     let cfg = crate::common::CommonConfig::default();
 
     let cli = cfg.dynamodb();
@@ -30,7 +57,13 @@ fn serve(app: fn() -> Element) {
     let dioxus_router = dioxus::server::router(app)
         .merge(mcp_router)
         .merge(membership_router);
-    let app = dioxus_router.layer(session_layer);
+    // CatchPanicLayer turns any panic in the request future into a 500 response
+    // instead of letting it propagate up the spawn_pinned worker thread, which
+    // would terminate the worker (and drop the connection). Pairs with the
+    // panic hook below so we still capture the backtrace in logs.
+    let app = dioxus_router
+        .layer(tower_http::catch_panic::CatchPanicLayer::new())
+        .layer(session_layer);
 
     crate::common::mcp::set_app_router(app.clone());
 

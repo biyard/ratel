@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ratel-app, ratel-app-lambda]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
@@ -64,7 +64,7 @@ jobs:
 
       - name: Restore cache
         id: app-shell-build-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
@@ -97,7 +97,7 @@ jobs:
 
       - name: Install Dioxus-cli
         run: |
-          cargo binstall dioxus-cli@0.7.3 --force
+          cargo binstall dioxus-cli --force
 
       - name: Building APIs
         env:
@@ -190,7 +190,7 @@ jobs:
           tar czvf app-shell.tar.gz target/dx/app-shell/release/web
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: app-shell-${{ github.sha }}
           path: ${{ github.workspace }}/app-shell.tar.gz
@@ -201,7 +201,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
@@ -218,7 +218,7 @@ jobs:
 
       - name: Restore cache
         id: app-shell-build-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           key: app-shell-lambda-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
@@ -251,7 +251,7 @@ jobs:
 
       - name: Install Dioxus-cli
         run: |
-          cargo binstall dioxus-cli@0.7.3 --force
+          cargo binstall dioxus-cli --force
 
       - name: Building APIs
         env:
@@ -344,7 +344,7 @@ jobs:
           tar czvf app-shell-lambda.tar.gz target/dx/app-shell/release/web
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: app-shell-lambda-${{ github.sha }}
           path: ${{ github.workspace }}/app-shell-lambda.tar.gz

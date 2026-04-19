@@ -38,9 +38,28 @@ pub fn use_language() -> Signal<Language> {
     LANGUAGE.signal()
 }
 
+/// On non-wasm targets the same binary runs both the SSR server and native
+/// clients (desktop / mobile). Distinguish them at runtime via
+/// `FullstackContext`: if a fullstack request context exists we're handling
+/// an HTTP render and should read the language from the request cookie; if
+/// not we're a native client and the language lives in the global
+/// `LANGUAGE` signal — the same source of truth as web — hydrated from the
+/// WebView's `localStorage` by the app layer on startup.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn use_language() -> Signal<Language> {
-    use_signal(|| language_from_cookie())
+    use dioxus::fullstack::FullstackContext;
+    if FullstackContext::current().is_some() {
+        use_signal(|| language_from_cookie())
+    } else {
+        LANGUAGE.signal()
+    }
+}
+
+/// Overwrite the global language signal. Used by the app-level persistence
+/// layer to restore a saved preference on startup before any component
+/// renders reading the signal.
+pub fn set_initial_language(lang: Language) {
+    LANGUAGE.signal().set(lang);
 }
 
 /// Reads the language from the `language` cookie in the current HTTP request.

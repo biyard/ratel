@@ -15,7 +15,7 @@ pub fn ArenaSettingsPanel(
     let mut theme_service = use_theme();
     let current_theme = theme_service.current();
     let lang = use_language();
-    let mut user_ctx = use_user_context();
+    let user_ctx = use_user_context();
     let is_logged_in = user_ctx.read().user.is_some();
     let mut popup = use_popup();
     let nav = use_navigator();
@@ -205,14 +205,14 @@ pub fn ArenaSettingsPanel(
                                 move |_| {
                                     let username = username.clone();
                                     async move {
-                                        let _ = crate::features::auth::controllers::logout_handler().await;
-                                        // Clear the client auth context so the UI flips to
-                                        // logged-out immediately (login button, hidden
-                                        // admin HUD, etc.) without a full page reload.
-                                        user_ctx.set(crate::features::auth::UserContext::default());
-                                        // Redirect to team home instead of staying on an
-                                        // admin-only sub-page that would show ViewerPage
-                                        // under the new logged-out state.
+                                        // Centralized sign-out: flushes server session,
+                                        // clears UserContext + cached refresh token,
+                                        // reloads on web. Mobile doesn't reload, so we
+                                        // navigate to TeamHome explicitly afterward
+                                        // — staying on an admin-only sub-page would
+                                        // render ViewerPage under the now-logged-out
+                                        // state.
+                                        crate::features::auth::services::sign_out(user_ctx).await;
                                         nav.replace(Route::TeamHome { username });
                                     }
                                 }

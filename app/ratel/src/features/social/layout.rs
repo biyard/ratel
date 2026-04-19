@@ -61,11 +61,13 @@ pub fn UserLayout(username: String) -> Element {
     rsx! {
         div { class: "antialiased bg-bg",
             crate::AppMenu {}
-            div { class: "flex overflow-x-hidden gap-5 justify-between py-3 mx-auto min-h-screen text-white bg-bg max-w-desktop max-tablet:px-2.5",
+            div { class: "flex overflow-x-hidden gap-5 justify-between py-3 mx-auto min-h-screen text-white bg-bg max-w-desktop max-tablet:px-2.5 max-mobile:px-0 max-mobile:py-0 max-mobile:gap-0",
                 if logged_in {
                     UserSidemenu { username: username.clone() }
                 }
-                div { class: "flex flex-col px-5 grow", Outlet::<Route> {} }
+                div { class: "flex flex-col px-5 grow max-mobile:px-0",
+                    Outlet::<Route> {}
+                }
             }
         }
     }
@@ -332,13 +334,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                             onclick: move |_| {
                                                 show_user_menu.set(false);
                                                 spawn(async move {
-                                                    let _ = crate::features::auth::controllers::logout_handler().await;
-                                                    #[cfg(target_arch = "wasm32")]
-                                                    {
-                                                        if let Some(window) = web_sys::window() {
-                                                            let _ = window.location().reload();
-                                                        }
-                                                    }
+                                                    crate::features::auth::services::sign_out(user_ctx).await;
                                                 });
                                             },
                                             lucide_dioxus::LogOut { class: "w-[15px] h-[15px] [&>path]:stroke-destructive shrink-0" }

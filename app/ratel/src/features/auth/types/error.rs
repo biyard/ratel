@@ -113,6 +113,13 @@ pub enum AuthError {
         ko = "지갑 주소가 일치하지 않습니다."
     )]
     EvmAddressMismatch,
+
+    #[error("sign-in unsupported on this platform")]
+    #[translate(
+        en = "Google sign-in is not available on mobile yet. Please use email sign-in.",
+        ko = "모바일에서는 Google 로그인을 지원하지 않습니다. 이메일 로그인을 이용해주세요."
+    )]
+    SignInUnsupportedOnPlatform,
 }
 
 #[cfg(feature = "server")]
@@ -142,7 +149,8 @@ impl AuthError {
             | AuthError::WalletConnectFailed
             | AuthError::UserInfoParseFailed
             | AuthError::EmailTemplateFailed
-            | AuthError::TelegramBotTokenMissing => StatusCode::INTERNAL_SERVER_ERROR,
+            | AuthError::TelegramBotTokenMissing
+            | AuthError::SignInUnsupportedOnPlatform => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }
