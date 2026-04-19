@@ -75,4 +75,32 @@ translate! {
         en: "Reply posted successfully.",
         ko: "답글이 성공적으로 게시되었습니다.",
     },
+    more_options: {
+        en: "More options",
+        ko: "더보기",
+    },
+    edit_btn: {
+        en: "Edit",
+        ko: "편집",
+    },
+    delete_btn: {
+        en: "Delete",
+        ko: "삭제",
+    },
+    save_btn: {
+        en: "Save",
+        ko: "저장",
+    },
+    cancel_btn: {
+        en: "Cancel",
+        ko: "취소",
+    },
+    edit_success: {
+        en: "Comment updated.",
+        ko: "댓글이 수정되었습니다.",
+    },
+    delete_success: {
+        en: "Comment deleted.",
+        ko: "댓글이 삭제되었습니다.",
+    },
 }
