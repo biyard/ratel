@@ -29,14 +29,23 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
-      - name: Download lambda bootstrap
+      - name: Download lambda artifact
         uses: actions/download-artifact@v5
         with:
-          name: app-shell-bootstrap-${{ github.sha }}
-          path: cdk/.build/app-shell
+          name: app-shell-lambda-${{ github.sha }}
+          path: /tmp/lambda
 
-      - name: Mark bootstrap executable
-        run: chmod +x cdk/.build/app-shell/bootstrap
+      # Extract bootstrap + public/ into cdk/.build/app-shell so that
+      # `lambda.Code.fromAsset(".build/app-shell")` in regional-lambda-stack.ts
+      # sees both. CDK re-zips this directory as the Lambda deployment bundle.
+      - name: Extract lambda package
+        run: |
+          set -euo pipefail
+          rm -rf cdk/.build/app-shell
+          mkdir -p cdk/.build/app-shell
+          unzip -o /tmp/lambda/app-shell-lambda.zip -d cdk/.build/app-shell
+          chmod +x cdk/.build/app-shell/bootstrap
+          ls -la cdk/.build/app-shell
 
       - name: Deploy
         env:
@@ -162,19 +171,29 @@ jobs:
         run: |
           aws s3 sync target/dx/app-shell/release/web/public $BUCKET
           aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
-          tar czvf app-shell-lambda.tar.gz target/dx/app-shell/release/web
 
-      - name: Prepare lambda bootstrap
+      # Build a Lambda deployment zip with `bootstrap` at the root plus the
+      # SSR `public/` tree so the runtime can serve static assets alongside
+      # server functions. CDK's `Code.fromAsset("<dir>")` will re-zip the
+      # directory itself, but we also upload this zip as the CI artifact so
+      # the deploy job (and anyone running `aws lambda update-function-code`
+      # out-of-band) has a ready-to-push package.
+      - name: Package lambda deployment zip
         run: |
+          set -euo pipefail
+          rm -rf .build/app-shell app-shell-lambda.zip
           mkdir -p .build/app-shell
           cp target/dx/app-shell/release/web/server .build/app-shell/bootstrap
+          cp -r target/dx/app-shell/release/web/public .build/app-shell/public
           chmod +x .build/app-shell/bootstrap
+          (cd .build/app-shell && zip -r ../../app-shell-lambda.zip . >/dev/null)
+          unzip -l app-shell-lambda.zip | head -20
 
-      - name: Upload Artifacts
+      - name: Upload lambda artifact
         uses: actions/upload-artifact@v7
         with:
           name: app-shell-lambda-${{ github.sha }}
-          path: ${{ github.workspace }}/app-shell-lambda.tar.gz
+          path: ${{ github.workspace }}/app-shell-lambda.zip
           if-no-files-found: error
           retention-days: 7
 
