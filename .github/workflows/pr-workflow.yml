@@ -312,12 +312,34 @@ jobs:
 
       - name: Run Playwright Tests
         env:
-          CI: true
           PLAYWRIGHT_BASE_URL: http://localhost:8080
           PLAYWRIGHT_TIMEOUT: 60000
         working-directory: playwright
         run: |
           make test
+
+      - name: Setup SSH session with tmate
+        uses: mxschmitt/action-tmate@v3
+        if: failure()
+        timeout-minutes: 300
+        env:
+          DYNAMO_TABLE_PREFIX: ratel-local
+          ENV: local
+          RUSTFLAGS: "-D warnings"
+          RUST_LOG: info
+          DYNAMO_ENDPOINT: http://localstack:4566
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: ap-northeast-2
+          AWS_ACCOUNT_ID: test
+          COMMIT: pr-${{ github.sha }}
+          ECR: ratel/app-shell
+          PLAYWRIGHT_BASE_URL: http://localhost:8080
+          PLAYWRIGHT_TIMEOUT: 60000
+
+        with:
+          limit-access-to-actor: true
+
 
       - name: Move Playwright Tests
         if: always()
