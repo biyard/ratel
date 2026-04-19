@@ -52,6 +52,10 @@ QDRANT_API_KEY ?= ""
 ARCH ?= $(shell uname -m)
 AVD_NAME ?= Pixel_6_API_34
 ANDROID_EMULATOR_ID ?= $(shell adb devices | grep emulator | cut -f1)
+DISABLE_ANSI ?= false
+BUCKET_NAME ?= metadata.ratel.foundation
+HOST_UID ?= $(shell id -u)
+HOST_GID ?= $(shell id -g)
 
 ifneq ($(ANDROID_EMULATOR_ID),)
 	DEVICE_FLAG ?= --device $(AVD_NAME)
@@ -89,6 +93,82 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					QDRANT_API_KEY=$(QDRANT_API_KEY) \
 					QDRANT_PREFIX=$(QDRANT_PREFIX) \
 					MOBILE_API_URL=$(MOBILE_API_URL) \
+					DISABLE_ANSI=$(DISABLE_ANSI) \
+					BUCKET_NAME=$(BUCKET_NAME) \
+					SLACK_HOOK=$(SLACK_HOOK) \
+
+.PHONY: env.sh
+env.sh:
+	@echo "export AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID)" > $@
+	@echo "export AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY)" >> $@
+	@echo "export AWS_REGION=$(AWS_REGION)" >> $@
+	@echo "export AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID)" >> $@
+	@echo "export REGION=$(AWS_REGION)" >> $@
+	@echo "export ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID)" >> $@
+	@echo "export SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY)" >> $@
+	@echo "export ACCOUNT_ID=$(ACCOUNT_ID)" >> $@
+	@echo "export DYNAMO_TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX)" >> $@
+	@echo "export DYNAMO_ENDPOINT=$(DYNAMO_ENDPOINT)" >> $@
+	@echo "export RUST_LOG=$(RUST_LOG)" >> $@
+	@echo "export ENV=$(ENV)" >> $@
+	@echo "export COMMIT=$(COMMIT)" >> $@
+	@echo "export PORT=$(PORT)" >> $@
+	@echo "export SERVICE=$(SERVICE)" >> $@
+	@echo "export DOMAIN=$(DOMAIN)" >> $@
+	@echo "export REDIRECT_DOMAIN=$(REDIRECT_DOMAIN)" >> $@
+	@echo "export BUCKET_NAME=$(BUCKET_NAME)" >> $@
+	@echo "export SLACK_HOOK=$(SLACK_HOOK)" >> $@
+	@echo "export DISABLE_ANSI=$(DISABLE_ANSI)" >> $@
+	@echo "export ECR=$(ECR)" >> $@
+	@echo "export MOBILE_API_URL=$(MOBILE_API_URL)" >> $@
+	@echo "export PORTONE_STORE_ID=$(PORTONE_STORE_ID)" >> $@
+	@echo "export PORTONE_KPN_CHANNEL_KEY=$(PORTONE_KPN_CHANNEL_KEY)" >> $@
+	@echo "export PORTONE_INICIS_CHANNEL_KEY=$(PORTONE_INICIS_CHANNEL_KEY)" >> $@
+	@echo "export PORTONE_API_SECRET='$(PORTONE_API_SECRET)'" >> $@
+	@echo "export KAIA_ENDPOINT=$(KAIA_ENDPOINT)" >> $@
+	@echo "export KAIA_ARCHIVE_ENDPOINT=$(KAIA_ARCHIVE_ENDPOINT)" >> $@
+	@echo "export BLOCK_EXPLORER_URL=$(BLOCK_EXPLORER_URL)" >> $@
+	@echo "export KAIA_FEEPAYER_KEY='$(KAIA_FEEPAYER_KEY)'" >> $@
+	@echo "export KAIA_FEEPAYER_ADDR=$(KAIA_FEEPAYER_ADDR)" >> $@
+	@echo "export KAIA_OWNER_KEY='$(KAIA_OWNER_KEY)'" >> $@
+	@echo "export KAIA_OWNER_ADDR=$(KAIA_OWNER_ADDR)" >> $@
+	@echo "export BINANCE_API_KEY='$(BINANCE_API_KEY)'" >> $@
+	@echo "export BINANCE_SECRET_KEY='$(BINANCE_SECRET_KEY)'" >> $@
+	@echo "export BINANCE_WEBHOOK=$(BINANCE_WEBHOOK)" >> $@
+	@echo "export TELEGRAM_TOKEN='$(TELEGRAM_TOKEN)'" >> $@
+	@echo "export BBS_BLS_X='$(BBS_BLS_X)'" >> $@
+	@echo "export BBS_BLS_Y='$(BBS_BLS_Y)'" >> $@
+	@echo "export BBS_BLS_D='$(BBS_BLS_D)'" >> $@
+	@echo "export BBS_BLS_CRV='$(BBS_BLS_CRV)'" >> $@
+	@echo "export P256_X='$(P256_X)'" >> $@
+	@echo "export P256_Y='$(P256_Y)'" >> $@
+	@echo "export P256_D='$(P256_D)'" >> $@
+	@echo "export P256_CRV='$(P256_CRV)'" >> $@
+	@echo "export FCM_ENABLED=$(FCM_ENABLED)" >> $@
+	@echo "export RATEL_PROJECT_ID=$(RATEL_PROJECT_ID)" >> $@
+	@echo "export REWARD=$(REWARD)" >> $@
+	@echo "export BEDROCK_AGENT_ID='$(BEDROCK_AGENT_ID)'" >> $@
+	@echo "export BEDROCK_AGENT_ALIAS_ID='$(BEDROCK_AGENT_ALIAS_ID)'" >> $@
+	@echo "export BIYARD_API_KEY='$(BIYARD_API_KEY)'" >> $@
+	@echo "export BIYARD_PROJECT_ID='$(BIYARD_PROJECT_ID)'" >> $@
+	@echo "export FIREBASE_API_KEY='$(FIREBASE_API_KEY)'" >> $@
+	@echo "export FIREBASE_AUTH_DOMAIN=$(FIREBASE_AUTH_DOMAIN)" >> $@
+	@echo "export FIREBASE_PROJECT_ID=$(FIREBASE_PROJECT_ID)" >> $@
+	@echo "export FIREBASE_STORAGE_BUCKET=$(FIREBASE_STORAGE_BUCKET)" >> $@
+	@echo "export FIREBASE_MESSAGING_SENDER_ID='$(FIREBASE_MESSAGING_SENDER_ID)'" >> $@
+	@echo "export FIREBASE_APP_ID='$(FIREBASE_APP_ID)'" >> $@
+	@echo "export FIREBASE_MEASUREMENT_ID=$(FIREBASE_MEASUREMENT_ID)" >> $@
+	@echo "export QDRANT_URL=$(QDRANT_URL)" >> $@
+	@echo "export QDRANT_API_KEY='$(QDRANT_API_KEY)'" >> $@
+	@echo "export QDRANT_PREFIX=$(QDRANT_PREFIX)" >> $@
+	@echo "export WALLETCONNECT_PROJECT_ID='$(WALLETCONNECT_PROJECT_ID)'" >> $@
+	@echo "export RATEL_CANISTER_ID=$(RATEL_CANISTER_ID)" >> $@
+	@echo "export IC_URL=$(IC_URL)" >> $@
+	@echo "export ICP_IDENTITY_PEM='$(ICP_IDENTITY_PEM)'" >> $@
+	@echo "export VOTER_TAG_SECRET='$(VOTER_TAG_SECRET)'" >> $@
+	@echo "export ATTR_VOTING_AUTHORITY_JSON='$(ATTR_VOTING_AUTHORITY_JSON)'" >> $@
+	@echo "export HOST_UID='$(HOST_UID)'" >> $@
+	@echo "export HOST_GID='$(HOST_GID)'" >> $@
 
 test:
 	mkdir -p ./test-build-target/debug/deps/public
@@ -152,8 +232,8 @@ build-testing:
 build-arm:
 	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server --platform server --target aarch64-unknown-linux-gnu
 
-build-lambda:
-	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features lambda --platform server
+build-lambda: env.sh
+	docker run -v $(PWD)/../..:/app -v $(HOME)/.cargo/bin:/root/.cargo/bin -w /app public.ecr.aws/sam/build-provided.al2023 /bin/bash -c "scripts/building-lambda-bootstrap.sh"
 
 docker:
 	docker build -t $(ECR):$(COMMIT) -f Dockerfile ../../target/dx/app-shell/release/web
