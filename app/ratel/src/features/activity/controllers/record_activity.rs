@@ -76,8 +76,8 @@ pub async fn record_activity(
     let activity = SpaceActivity::new_with_dedup(
         space_id,
         author,
-        action_id,
-        action_type,
+        action_id.clone(),
+        action_type.clone(),
         data,
         xp,
         0,
