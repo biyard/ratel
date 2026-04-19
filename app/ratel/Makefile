@@ -54,6 +54,8 @@ AVD_NAME ?= Pixel_6_API_34
 ANDROID_EMULATOR_ID ?= $(shell adb devices | grep emulator | cut -f1)
 DISABLE_ANSI ?= false
 BUCKET_NAME ?= metadata.ratel.foundation
+HOST_UID ?= $(shell id -u)
+HOST_GID ?= $(shell id -g)
 
 ifneq ($(ANDROID_EMULATOR_ID),)
 	DEVICE_FLAG ?= --device $(AVD_NAME)
@@ -165,6 +167,8 @@ env.sh:
 	@echo "export ICP_IDENTITY_PEM='$(ICP_IDENTITY_PEM)'" >> $@
 	@echo "export VOTER_TAG_SECRET='$(VOTER_TAG_SECRET)'" >> $@
 	@echo "export ATTR_VOTING_AUTHORITY_JSON='$(ATTR_VOTING_AUTHORITY_JSON)'" >> $@
+	@echo "export HOST_UID='$(HOST_UID)'" >> $@
+	@echo "export HOST_GID='$(HOST_GID)'" >> $@
 
 test:
 	mkdir -p ./test-build-target/debug/deps/public

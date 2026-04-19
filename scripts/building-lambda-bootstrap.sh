@@ -29,3 +29,8 @@ npm i
 cd app/ratel
 
 dx build --release --debug-symbols false @client --features web --platform web @server --features server,lambda --platform server
+
+cd ../..
+
+chown -R $HOST_UID:$HOST_GID target
+chown -R $HOST_UID:$HOST_GID /root/.cargo
