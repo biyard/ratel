@@ -11,9 +11,9 @@ pub struct SpaceScore {
     #[dynamo(prefix = "SCSP", name = "find_by_space_rank", index = "gsi2", pk)]
     pub space_pk: Partition,
     #[dynamo(prefix = "SCR", index = "gsi1", sk)]
+    #[dynamo(prefix = "SCR", index = "gsi2", order = 1, sk)]
     pub total_score: i64,
     #[serde(default)]
-    #[dynamo(prefix = "SCR", index = "gsi2", order = 1, sk)]
     pub rank_total_score: i64,
 
     #[dynamo(index = "gsi2", order = 3, sk)]
