@@ -126,7 +126,11 @@ fn month_parts(month: &str) -> (String, String) {
 
 fn pretty_month(month: &str) -> String {
     let (name, year) = month_parts(month);
-    if name.is_empty() { month.to_string() } else { format!("{} {}", name, year) }
+    if name.is_empty() {
+        month.to_string()
+    } else {
+        format!("{} {}", name, year)
+    }
 }
 
 fn time_ago(ts: i64) -> String {
@@ -139,38 +143,19 @@ pub fn Home(username: ReadSignal<String>) -> Element {
     let current_month = utils::time::current_month();
     let nav = use_navigator();
 
-    let rewards_resource = use_server_future(use_reactive((&username,), |(name,)| async move {
-        get_user_rewards_handler(name(), None).await
-    }))?;
-    let transactions_resource =
-        use_server_future(use_reactive((&username,), |(name,)| async move {
-            list_user_transactions_handler(name(), Some(utils::time::current_month()), None).await
-        }))?;
+    let rewards_resource =
+        use_loader(move || async move { get_user_rewards_handler(username(), None).await })?;
+    let transactions_resource = use_loader(move || async move {
+        list_user_transactions_handler(username(), Some(utils::time::current_month()), None).await
+    })?;
     let summaries_resource =
-        use_server_future(use_reactive((&username,), |(name,)| async move {
-            get_monthly_summaries_handler(name()).await
-        }))?;
+        use_loader(move || async move { get_monthly_summaries_handler(username()).await })?;
 
-    let rewards_binding = rewards_resource.read();
-    let rewards: RewardsResponse = rewards_binding
-        .as_ref()
-        .and_then(|r| r.as_ref().ok())
-        .cloned()
-        .unwrap_or_default();
+    let rewards = rewards_resource();
+    let initial_transactions = transactions_resource();
 
-    let tx_binding = transactions_resource.read();
-    let initial_transactions: super::controllers::ListTransactionsResponse = tx_binding
-        .as_ref()
-        .and_then(|r| r.as_ref().ok())
-        .cloned()
-        .unwrap_or_default();
-
-    let summaries_binding = summaries_resource.read();
-    let past_months: Vec<MonthlySummaryItem> = summaries_binding
-        .as_ref()
-        .and_then(|r| r.as_ref().ok())
-        .map(|r| r.months.clone())
-        .unwrap_or_default();
+    let summaries_binding = summaries_resource();
+    let past_months = summaries_binding.months;
 
     let mut transactions = use_signal(Vec::<PointTransactionResponse>::new);
     let mut next_bookmark = use_signal(|| Option::<String>::None);
@@ -178,7 +163,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
     let mut is_fetching_next = use_signal(|| false);
 
     use_effect(move || {
-        if *transactions_loaded.read() {
+        if transactions_loaded() {
             return;
         }
         let current = current_month.clone();
@@ -228,7 +213,9 @@ pub fn Home(username: ReadSignal<String>) -> Element {
         if *is_fetching_next.read() {
             return;
         }
-        let Some(bookmark) = next_bookmark.read().clone() else { return };
+        let Some(bookmark) = next_bookmark.read().clone() else {
+            return;
+        };
         let month = month_for_load.clone();
         let name = username();
         is_fetching_next.set(true);
@@ -265,7 +252,11 @@ pub fn Home(username: ReadSignal<String>) -> Element {
         })
         .collect();
     let (cur_name, _) = month_parts(&rewards.month);
-    combo_points.push((cur_name.chars().take(3).collect(), rewards.points, estimated_tokens));
+    combo_points.push((
+        cur_name.chars().take(3).collect(),
+        rewards.points,
+        estimated_tokens,
+    ));
 
     let combo_svg = render_combo(&combo_points);
 
@@ -410,7 +401,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                                 if donut_items.is_empty() {
                                     div { class: "empty-desc", "{tr.activity_empty}" }
                                 } else {
-                                    for (name , value , color) in donut_items.iter() {
+                                    for (name, value, color) in donut_items.iter() {
                                         div {
                                             class: "legend-item",
                                             key: "{name}",
@@ -703,8 +694,16 @@ fn TokenCard(tr: UserRewardsTranslate, token_symbol: String, price_svg: String) 
 
 #[component]
 fn ActivityRow(tx: PointTransactionResponse, pts_unit: String) -> Element {
-    let amount_class = if tx.amount >= 0 { "activity__amount--in" } else { "activity__amount--out" };
-    let icon_class = if tx.amount >= 0 { "activity__icon--in" } else { "activity__icon--out" };
+    let amount_class = if tx.amount >= 0 {
+        "activity__amount--in"
+    } else {
+        "activity__amount--out"
+    };
+    let icon_class = if tx.amount >= 0 {
+        "activity__icon--in"
+    } else {
+        "activity__icon--out"
+    };
     let sign = if tx.amount >= 0 { "+" } else { "" };
     let title = tx
         .description
@@ -924,7 +923,11 @@ fn render_combo(points: &[(String, i64, f64)]) -> String {
     let inner_h = height - margin_t - margin_b;
 
     let max_p = points.iter().map(|(_, p, _)| *p).max().unwrap_or(1).max(1) as f64;
-    let max_t = points.iter().map(|(_, _, t)| *t).fold(0.0_f64, f64::max).max(1.0);
+    let max_t = points
+        .iter()
+        .map(|(_, _, t)| *t)
+        .fold(0.0_f64, f64::max)
+        .max(1.0);
     let n = points.len() as f64;
     let slot = inner_w / n;
     let bar_w = slot * 0.45;
@@ -987,7 +990,11 @@ fn render_donut(items: &[(String, i64, &str)], total: i64) -> String {
         let start = offset;
         let end = offset + frac * std::f64::consts::TAU;
         offset = end;
-        let large = if (end - start) > std::f64::consts::PI { 1 } else { 0 };
+        let large = if (end - start) > std::f64::consts::PI {
+            1
+        } else {
+            0
+        };
         let x0 = cx + r_outer * start.cos();
         let y0 = cy + r_outer * start.sin();
         let x1 = cx + r_outer * end.cos();
@@ -1009,7 +1016,9 @@ fn render_donut(items: &[(String, i64, &str)], total: i64) -> String {
 }
 
 fn render_price_spark() -> String {
-    let points = [0.39, 0.41, 0.40, 0.42, 0.43, 0.41, 0.42, 0.44, 0.45, 0.43, 0.42, 0.42];
+    let points = [
+        0.39, 0.41, 0.40, 0.42, 0.43, 0.41, 0.42, 0.44, 0.45, 0.43, 0.42, 0.42,
+    ];
     let width = 520.0_f64;
     let height = 170.0_f64;
     let margin = 12.0;

@@ -1,10 +1,11 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+
 import {
   GoogleAuthProvider,
   getAuth,
   signInWithPopup,
   signOut,
-} from "firebase/auth";
+} from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
 let app;
 let auth;
