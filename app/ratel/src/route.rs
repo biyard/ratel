@@ -55,14 +55,13 @@ fn CredentialsHome() -> Element {
 use crate::features::social::layout::SocialLayout;
 use crate::features::social::pages::dao::Home as TeamDao;
 use crate::features::social::pages::draft::Home as TeamDraft;
-use crate::features::social::pages::group::Home as TeamGroup;
 use crate::features::social::pages::home::Home as TeamHome;
 use crate::features::social::pages::member::Home as TeamMember;
 use crate::features::social::pages::reward::Home as TeamReward;
-use crate::features::social::pages::setting::layout::TeamSettingLayout;
 use crate::features::social::pages::setting::Home as TeamSetting;
 use crate::features::social::pages::setting::ManagementPage as TeamSettingMember;
 use crate::features::social::pages::setting::SubscriptionPage as TeamSettingSubscription;
+use crate::features::social::pages::team_arena::TeamArenaLayout;
 
 // User pages
 use crate::features::social::pages::credentials::Home as CredentialPage;
@@ -79,84 +78,80 @@ use crate::features::social::user_views::Home as UserHomeRoot;
 #[rustfmt::skip]
 pub enum Route {
     #[layout(RootLayout)]
-        #[layout(AppLayout)]
+        #[route("/")]
+        Index { },
+
+        #[route("/privacy")]
+        PrivacyPolicyPage { },
+
+        #[route("/terms")]
+        TermsOfServicePage { },
+
+        #[route("/membership")]
+        MembershipHome {  },
+
+        #[route("/credentials")]
+        CredentialsHome {  },
+
+        #[nest("/posts")]
             #[route("/")]
-            Index { },
+            PostIndex { },
+            #[route("/:post_id/edit")]
+            PostEdit { post_id: FeedPartition },
+            #[route("/:post_id")]
+            PostDetail { post_id: FeedPartition },
+        #[end_nest]
 
-            #[route("/privacy")]
-            PrivacyPolicyPage { },
+        #[route("/my-follower")]
+        MyFollowerPage { },
 
-            #[route("/terms")]
-            TermsOfServicePage { },
-
-            #[route("/membership")]
-            MembershipHome {  },
-
-            #[route("/credentials")]
-            CredentialsHome {  },
-
-            #[nest("/posts")]
+        #[nest("/admin")]
+            #[layout(AdminLayout)]
                 #[route("/")]
-                PostIndex { },
-                #[route("/:post_id/edit")]
-                PostEdit { post_id: FeedPartition },
-                #[route("/:post_id")]
-                PostDetail { post_id: FeedPartition },
-            #[end_nest]
+                AdminMainPage {},
+            #[end_layout]
+        #[end_nest]
 
-            #[route("/my-follower")]
-            MyFollowerPage { },
-
-            #[nest("/admin")]
-                #[layout(AdminLayout)]
-                    #[route("/")]
-                    AdminMainPage {},
-                #[end_layout]
-            #[end_nest]
-
-            #[nest("/:username")]
-                #[route("/rewards")]
-                UserRewards { username: String },
-                #[route("/settings")]
-                UserSettingPage { username: String },
-                #[layout(SocialLayout)]
-                    #[route("/")]
-                    UserHomeRoot { username: String },
-                    #[route("/posts")]
-                    UserPosts { username: String },
-                    #[route("/memberships")]
-                    UserMemberships { username: String },
-                    #[route("/drafts")]
-                    UserDrafts { username: String },
-                    #[route("/credentials")]
-                    CredentialPage { username: String },
-                    #[route("/spaces")]
-                    UserSpaces { username: String },
-                    #[route("/home")]
-                    TeamHome { username: String },
-                    #[route("/team-drafts")]
-                    TeamDraft { username: String },
-                    #[route("/groups")]
-                    TeamGroup { username: String },
-                    #[route("/dao")]
-                    TeamDao { username: String },
-                    #[route("/members")]
-                    TeamMember { username: String },
-                    #[route("/team-rewards")]
-                    TeamReward { username: String },
-                    #[route("/team-memberships")]
-                    TeamMemberships { username: String },
-                #[end_layout]
-                #[layout(TeamSettingLayout)]
-                    #[route("/team-settings")]
-                    TeamSetting { username: String },
-                    #[route("/team-settings/members")]
-                    TeamSettingMember { username: String },
-                    #[route("/team-settings/subscription")]
-                    TeamSettingSubscription { username: String },
-                #[end_layout]
-            #[end_nest]
-        #[end_layout]
+        #[nest("/:username")]
+            #[route("/rewards")]
+            UserRewards { username: String },
+            #[route("/settings")]
+            UserSettingPage { username: String },
+            #[route("/drafts")]
+            UserDrafts { username: String },
+            #[layout(SocialLayout)]
+                #[route("/")]
+                UserHomeRoot { username: String },
+                #[route("/posts")]
+                UserPosts { username: String },
+                #[route("/memberships")]
+                UserMemberships { username: String },
+                #[route("/credentials")]
+                CredentialPage { username: String },
+                #[route("/spaces")]
+                UserSpaces { username: String },
+            #[end_layout]
+            #[layout(TeamArenaLayout)]
+                #[route("/home")]
+                TeamHome { username: String },
+                #[route("/team-drafts")]
+                TeamDraft { username: String },
+                #[route("/dao")]
+                TeamDao { username: String },
+                #[route("/members")]
+                TeamMember { username: String },
+                #[route("/team-rewards")]
+                TeamReward { username: String },
+                #[route("/team-memberships")]
+                TeamMemberships { username: String },
+                #[route("/team-settings")]
+                TeamSetting { username: String },
+                #[route("/team-settings/members")]
+                TeamSettingMember { username: String },
+                #[route("/team-settings/subscription")]
+                TeamSettingSubscription { username: String },
+            #[end_layout]
+        #[end_nest]
 
         #[nest("/spaces/:space_id")]
             #[layout(SpaceLayout)]

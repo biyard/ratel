@@ -37,10 +37,36 @@ impl SpaceActivity {
         user_name: String,
         user_avatar: String,
     ) -> Self {
+        Self::new_with_dedup(
+            space_id,
+            author,
+            action_id.clone(),
+            action_type,
+            data,
+            base_score,
+            additional_score,
+            user_name,
+            user_avatar,
+            action_id,
+        )
+    }
+
+    pub fn new_with_dedup(
+        space_id: SpacePartition,
+        author: AuthorPartition,
+        action_id: String,
+        action_type: SpaceActionType,
+        data: SpaceActivityData,
+        base_score: i64,
+        additional_score: i64,
+        user_name: String,
+        user_avatar: String,
+        dedup_key: String,
+    ) -> Self {
         let now = crate::common::utils::time::get_now_timestamp_millis();
         let space_pk: Partition = space_id.clone().into();
         let total_score = base_score + additional_score;
-        let sk = EntityType::SpaceActivity(format!("{}#{}", action_id, now));
+        let sk = EntityType::SpaceActivity(format!("{}#{}", dedup_key, now));
 
         Self {
             pk: CompositePartition(space_id, author.clone()),

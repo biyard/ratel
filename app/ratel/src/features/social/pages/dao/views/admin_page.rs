@@ -4,7 +4,6 @@ use super::super::models::{DaoWalletError, create_dao};
 use super::TeamDaoTranslate;
 use super::super::*;
 use dioxus::prelude::*;
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::features::social::pages::setting::controllers::{UpdateTeamRequest, update_team_handler};
 
 #[component]
@@ -16,8 +15,7 @@ pub fn AdminPage(username: String, context: TeamDao) -> Element {
     let eligible_admins = context.eligible_admins.clone();
     let eligible_admins_count = eligible_admins.len();
 
-    let permissions: TeamGroupPermissions = context.permissions.into();
-    let is_admin = permissions.contains(TeamGroupPermission::TeamAdmin);
+    let is_admin = context.role.is_owner();
     let can_register = eligible_admins_count >= 3 && is_admin;
 
     let mut is_popup_open = use_signal(|| false);

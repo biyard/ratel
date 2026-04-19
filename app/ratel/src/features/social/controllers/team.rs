@@ -38,14 +38,26 @@ pub async fn create_team_handler(body: CreateTeamRequest) -> crate::features::so
         return Err(crate::features::social::types::SocialError::InvalidTeamName.into());
     }
 
-    // Check username uniqueness
+    // Check username uniqueness against teams
     use crate::features::posts::models::Team;
-    let opt = crate::features::posts::models::TeamQueryOption::builder()
-        .sk(username.clone())
-        .limit(1);
+    let opt = Team::opt().limit(1);
     let (existing, _): (Vec<Team>, _) = Team::find_by_username_prefix(cli, &username, opt).await?;
 
-    if !existing.is_empty() {
+    if existing.iter().any(|t| t.username == username) {
+        return Err(crate::features::social::types::SocialError::TeamNameTaken.into());
+    }
+
+    // Check username uniqueness against users
+    let (existing_users, _) = crate::common::models::User::find_by_username(
+        cli,
+        &username,
+        crate::features::auth::UserQueryOption::builder()
+            .sk("TS#".to_string())
+            .limit(1),
+    )
+    .await?;
+
+    if !existing_users.is_empty() {
         return Err(crate::features::social::types::SocialError::TeamNameTaken.into());
     }
 
@@ -91,13 +103,15 @@ pub async fn get_user_teams_handler() -> crate::features::social::Result<Vec<cra
             (Vec::new(), String::new())
         } else {
             let team_pk: crate::common::types::Partition = team_pk.parse().unwrap_or_default();
-            let perms = crate::features::posts::models::Team::get_permissions_by_team_pk(
-                cli,
-                &team_pk,
-                &user_pk,
+            let role = crate::features::posts::models::Team::get_user_role(
+                cli, &team_pk, &user_pk,
             )
             .await
-            .unwrap_or_else(|_| crate::features::posts::types::TeamGroupPermissions::empty());
+            .ok()
+            .flatten()
+            .unwrap_or_default();
+            let perms: crate::features::posts::types::TeamGroupPermissions =
+                role.to_legacy_permissions().into();
             let description = crate::features::posts::models::Team::get(
                 cli,
                 &team_pk,

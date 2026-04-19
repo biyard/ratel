@@ -1,4 +1,6 @@
 use crate::features::spaces::pages::index::*;
+use crate::features::spaces::space_common::controllers::{self, update_space};
+use crate::features::spaces::space_common::components::SpaceVisibilityModal;
 use crate::features::spaces::space_common::providers::use_space_context;
 
 #[component]
@@ -10,8 +12,13 @@ pub fn ArenaTopbar(
 ) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
     let mut ctx = use_space_context();
+    let mut popup = use_popup();
     let real_role = ctx.role();
     let is_admin = real_role.is_admin();
+    let is_published = ctx.space().publish_state == SpacePublishState::Published;
+    let is_in_progress = ctx.space().status == Some(SpaceStatus::Open);
+    let is_started = ctx.space().status == Some(SpaceStatus::Ongoing);
+    let space_id = ctx.space().id;
     let overview_open = active_panel() == ActivePanel::Overview;
     let leaderboard_open = active_panel() == ActivePanel::Leaderboard;
     let settings_open = active_panel() == ActivePanel::Settings;
@@ -27,28 +34,125 @@ pub fn ArenaTopbar(
                 }
                 span { class: "arena-topbar__title", "{title}" }
                 span { class: "arena-topbar__status", "{status_text}" }
-            }
-            div { class: "arena-topbar__actions",
                 if is_admin {
-                    button {
-                        aria_label: "{tr.switch_to_creator}",
-                        class: "hud-btn hud-btn--creator",
-                        "data-testid": "btn-switch-creator",
-                        onclick: move |_| {
-                            ctx.current_role.set(SpaceUserRole::Creator);
-                        },
+                    span {
+                        class: "arena-topbar__role",
+                        "data-testid": "arena-topbar-admin-badge",
                         svg {
                             fill: "none",
                             stroke: "currentColor",
                             stroke_linecap: "round",
                             stroke_linejoin: "round",
-                            stroke_width: "1.5",
+                            stroke_width: "2",
                             view_box: "0 0 24 24",
                             xmlns: "http://www.w3.org/2000/svg",
-                            path { d: "M12 20h9" }
-                            path { d: "M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z" }
+                            path { d: "M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" }
                         }
-                        span { class: "tooltip", "{tr.switch_to_creator}" }
+                        "{tr.admin_badge}"
+                    }
+                }
+            }
+            div { class: "arena-topbar__actions",
+                if is_admin {
+                    if !is_published {
+                        button {
+                            aria_label: "{tr.publish}",
+                            class: "hud-btn hud-btn--publish",
+                            "data-testid": "btn-publish",
+                            onclick: move |_| {
+                                let initial = ctx.space().visibility;
+                                popup.open(rsx! {
+                                    SpaceVisibilityModal {
+                                        initial,
+                                        on_confirm: move |visibility| async move {
+                                            let space_id = ctx.space().id;
+                                            update_space(
+                                                    space_id,
+                                                    controllers::UpdateSpaceRequest::Publish {
+                                                        publish: true,
+                                                        visibility,
+                                                    },
+                                                )
+                                                .await;
+                                            ctx.space.restart();
+                                        },
+                                    }
+                                });
+                            },
+                            svg {
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "1.5",
+                                view_box: "0 0 24 24",
+                                xmlns: "http://www.w3.org/2000/svg",
+                                path { d: "M4 12 L20 4 L16 12 L20 20 Z" }
+                            }
+                            span { class: "tooltip", "{tr.publish}" }
+                        }
+                    } else if is_in_progress {
+                        button {
+                            aria_label: "{tr.start}",
+                            class: "hud-btn hud-btn--publish",
+                            "data-testid": "btn-start",
+                            onclick: move |_| {
+                                let space_id = space_id.clone();
+                                popup.open(rsx! {
+                                    crate::features::spaces::space_common::components::SpaceStartModal {
+                                        space_id,
+                                        on_success: move |_| {
+                                            ctx.space.restart();
+                                        },
+                                    }
+                                });
+                            },
+                            svg {
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "1.5",
+                                view_box: "0 0 24 24",
+                                xmlns: "http://www.w3.org/2000/svg",
+                                polygon { points: "6 3 20 12 6 21 6 3" }
+                            }
+                            span { class: "tooltip", "{tr.start}" }
+                        }
+                    } else if is_started {
+                        button {
+                            aria_label: "{tr.finish}",
+                            class: "hud-btn hud-btn--publish",
+                            "data-testid": "btn-finish",
+                            onclick: move |_| {
+                                let space_id = space_id.clone();
+                                popup.open(rsx! {
+                                    crate::features::spaces::space_common::components::SpaceEndModal {
+                                        space_id,
+                                        on_success: move |_| {
+                                            ctx.space.restart();
+                                        },
+                                    }
+                                });
+                            },
+                            svg {
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "1.5",
+                                view_box: "0 0 24 24",
+                                xmlns: "http://www.w3.org/2000/svg",
+                                rect {
+                                    x: "6",
+                                    y: "6",
+                                    width: "12",
+                                    height: "12",
+                                    rx: "2",
+                                }
+                            }
+                            span { class: "tooltip", "{tr.finish}" }
+                        }
                     }
                 }
                 button {

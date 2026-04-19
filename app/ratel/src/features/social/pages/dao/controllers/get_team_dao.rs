@@ -2,15 +2,21 @@ use super::super::dto::{EligibleAdminResponse, TeamDao, TeamDaoTeamResponse};
 use super::super::*;
 
 use crate::features::posts::models::{Team, TeamOwner};
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
 use std::collections::{HashMap, HashSet};
 
-#[get("/api/teams/:username/dao/context", user: crate::features::auth::OptionalUser, team: Team, permissions: TeamGroupPermissions)]
+#[get("/api/teams/:username/dao/context", user: crate::features::auth::OptionalUser, team: Team)]
 pub async fn get_team_dao_handler(username: String) -> Result<TeamDao> {
     let conf = super::super::config::get();
     let cli = conf.common.dynamodb();
 
-    let is_admin = permissions.contains(TeamGroupPermission::TeamAdmin);
+    let user: Option<crate::features::auth::User> = user.into();
+    let role = match &user {
+        Some(u) => Team::get_user_role(cli, &team.pk, &u.pk)
+            .await?
+            .unwrap_or_default(),
+        None => crate::features::social::pages::member::dto::TeamRole::default(),
+    };
+    let is_admin = role.is_owner();
     #[cfg(feature = "server")]
     let eligible_admins = if is_admin {
         list_eligible_admins(cli, &team.pk).await?
@@ -27,8 +33,9 @@ pub async fn get_team_dao_handler(username: String) -> Result<TeamDao> {
             nickname: team.display_name,
             dao_address: team.dao_address,
         },
-        permissions: permissions.into(),
+        permissions: role.to_legacy_permissions(),
         eligible_admins,
+        role,
     })
 }
 

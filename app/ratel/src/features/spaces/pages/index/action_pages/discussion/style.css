@@ -267,6 +267,10 @@
 
 .comment-list { display: flex; flex-direction: column; gap: 2px; }
 
+/* Single-root wrapper so each CommentItem has one DOM root; `display: contents`
+   keeps the existing flex/gap layout untouched (wrapper is visually transparent). */
+.comment-entry { display: contents; }
+
 /* ── Comment Item ──────────────────────────────── */
 .comment-item { display: flex; gap: 10px; padding: 12px 20px; border-radius: 0; transition: background 0.2s ease; }
 .comment-item:hover { background: var(--surface-raised); }
@@ -316,17 +320,22 @@
 
 /* ── Reply Input ───────────────────────────────── */
 .reply-input {
-  margin-left: 38px; display: flex; gap: 8px;
+  margin-left: 38px; display: flex; gap: 8px; align-items: center;
   padding: 10px 12px; background: var(--surface-raised);
   border: 1px solid var(--border); border-radius: 10px; margin-top: 2px; margin-right: 20px;
 }
 .reply-input:focus-within { border-color: var(--discuss-border); }
+/* MentionAutocomplete wraps its children in <div class="relative">. That
+   wrapper becomes the flex item inside .reply-input — force it to grow so
+   the input fills the row and the send button stays inline on the right. */
+.reply-input > .relative { flex: 1; min-width: 0; }
 .reply-input__avatar {
   width: 22px; height: 22px; border-radius: 50%; object-fit: cover;
   border: 1px solid var(--border); flex-shrink: 0;
 }
 .reply-input__field {
-  flex: 1; border: none; background: transparent; color: var(--text);
+  width: 100%; min-width: 0;
+  border: none; background: transparent; color: var(--text);
   font-family: 'Outfit', sans-serif; font-size: 12px; outline: none;
 }
 .reply-input__field::placeholder { color: var(--text-dim); }
@@ -362,23 +371,85 @@
   background: rgba(34,211,238,0.08); border: 1px solid rgba(34,211,238,0.15); color: #22d3ee;
 }
 
-/* ── Responsive ────────────────────────────────── */
+/* ── Sheet Handle (hidden on desktop) ─────────── */
+.sheet-handle { display: none; }
+/* ── Responsive: Bottom Sheet ─────────────────── */
 @media (max-width: 900px) {
-  .discussion-layout { flex-direction: column; }
-  .discussion-main { padding: 24px 20px 32px; }
-  .comments-panel { width: 100%; height: 50vh; border-left: none; border-top: 1px solid var(--border); }
+  .discussion-layout { flex-direction: column; flex: 1; min-height: 0; }
+  .discussion-arena { height: 100%; overflow: hidden; }
+  .discussion-main { padding: 24px 20px 100px; overflow-y: auto; flex: 1; min-height: 0; }
   .disc-files__grid { grid-template-columns: 1fr; }
-  .discussion-arena { height: auto; min-height: 100vh; overflow: visible; }
-  .discussion-layout { overflow: visible; }
-  .discussion-main { overflow: visible; }
+
+  /* Convert comments-panel to bottom sheet */
+  .comments-panel {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 100;
+    width: 100%;
+    max-height: 85vh;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 40px var(--shadow);
+    transform: translateY(calc(100% - 64px));
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    will-change: transform;
+    touch-action: none;
+  }
+  .comments-panel.expanded { transform: translateY(0); }
+  .comments-panel.dragging { transition: none; }
+
+  /* Show sheet handle */
+  .sheet-handle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 16px 10px;
+    cursor: grab;
+    flex-shrink: 0;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .sheet-handle:active { cursor: grabbing; }
+  .sheet-handle__bar {
+    width: 36px; height: 4px; border-radius: 2px;
+    background: var(--dark, rgba(255,255,255,0.15)) var(--light, rgba(0,0,0,0.15));
+    margin-bottom: 10px;
+  }
+  .sheet-handle__row {
+    width: 100%; display: flex;
+    align-items: center; justify-content: space-between;
+  }
+  .sheet-handle__left { display: flex; align-items: center; gap: 8px; }
+  .sheet-handle__title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .sheet-handle__count {
+    padding: 2px 8px; border-radius: 100px;
+    background: var(--discuss-bg); color: var(--discuss-color);
+    font-size: 12px; font-weight: 700;
+    border: 1px solid var(--discuss-border);
+  }
+  .sheet-handle__chevron {
+    width: 20px; height: 20px; color: var(--text-muted);
+    transition: transform 0.35s ease;
+  }
+  .comments-panel.expanded .sheet-handle__chevron { transform: rotate(180deg); }
+
+  /* Hide desktop header when sheet handle is visible */
+  .comments-panel__header { display: none; }
+
+  /* Scroll area */
+  .comments-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
 }
+
 @media (max-width: 500px) {
   .topbar { padding: 12px 16px; }
   .topbar__title { font-size: 11px; }
-  .discussion-main { padding: 20px 16px 24px; }
+  .discussion-main { padding: 20px 16px 100px; }
   .disc-header__title { font-size: 20px; }
   .disc-body { padding: 20px; }
-  .comments-panel { height: 60vh; }
   .comment-item { padding: 10px 16px; }
   .comment-replies { margin-left: 28px; padding-left: 10px; }
   .reply-toggle { margin-left: 28px; }

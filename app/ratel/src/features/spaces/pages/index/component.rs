@@ -2,7 +2,6 @@ use super::*;
 use crate::features::spaces::pages::index::action_pages::quiz::*;
 use crate::features::spaces::space_common::hooks::use_space;
 use crate::features::spaces::space_common::hooks::use_space_role;
-use crate::spaces::pages::dashboard::SpaceDashboardPage;
 
 const DEFAULT_LOGO: &str = "https://metadata.ratel.foundation/logos/logo-symbol.png";
 
@@ -20,15 +19,13 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
     let space = use_space()();
     let role = use_space_role()();
+    let ctx = crate::features::spaces::space_common::providers::use_space_context();
+    let real_role = (ctx.role)();
     let mut active_panel = use_signal(|| ActivePanel::None);
     let action_overlay = use_context_provider(|| ActiveActionOverlaySignal(Signal::new(None)));
     let _completed_quiz = use_context_provider(|| CompletedActionCard(Signal::new(None)));
 
-    if role.is_admin() {
-        return rsx! {
-            SpaceDashboardPage { space_id: space_id() }
-        };
-    }
+    let is_admin = real_role.is_admin();
 
     let logo = if space.logo.is_empty() {
         DEFAULT_LOGO.to_string()
@@ -73,13 +70,41 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
         document::Link { rel: "preload", href: asset!("./style.css"), r#as: "style" }
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         // Preload sub-component CSS to prevent flash of unstyled content
-        document::Link { rel: "preload", href: asset!("./arena_topbar/style.css"), r#as: "style" }
-        document::Link { rel: "preload", href: asset!("./arena_viewer/style.css"), r#as: "style" }
-        document::Link { rel: "preload", href: asset!("./prerequisite_card/style.css"), r#as: "style" }
-        document::Link { rel: "preload", href: asset!("./action_dashboard/style.css"), r#as: "style" }
-        document::Link { rel: "preload", href: asset!("./action_pages/poll/style.css"), r#as: "style" }
-        document::Link { rel: "preload", href: asset!("./action_pages/quiz/style.css"), r#as: "style" }
-        document::Link { rel: "preload", href: asset!("./action_pages/discussion/style.css"), r#as: "style" }
+        document::Link {
+            rel: "preload",
+            href: asset!("./arena_topbar/style.css"),
+            r#as: "style",
+        }
+        document::Link {
+            rel: "preload",
+            href: asset!("./arena_viewer/style.css"),
+            r#as: "style",
+        }
+        document::Link {
+            rel: "preload",
+            href: asset!("./prerequisite_card/style.css"),
+            r#as: "style",
+        }
+        document::Link {
+            rel: "preload",
+            href: asset!("./action_dashboard/style.css"),
+            r#as: "style",
+        }
+        document::Link {
+            rel: "preload",
+            href: asset!("./action_pages/poll/style.css"),
+            r#as: "style",
+        }
+        document::Link {
+            rel: "preload",
+            href: asset!("./action_pages/quiz/style.css"),
+            r#as: "style",
+        }
+        document::Link {
+            rel: "preload",
+            href: asset!("./action_pages/discussion/style.css"),
+            r#as: "style",
+        }
 
         div { class: "arena", "data-testid": "space-index-page",
             ArenaTopbar {
@@ -89,9 +114,9 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
                 active_panel,
             }
 
-            if matches!(role, SpaceUserRole::Participant) {
+            if matches!(role, SpaceUserRole::Participant | SpaceUserRole::Creator) {
                 SuspenseBoundary {
-                    ActionDashboard { space_id }
+                    ActionDashboard { space_id, is_admin }
                 }
             } else if matches!(role, SpaceUserRole::Candidate) {
                 ArenaViewer {
@@ -117,6 +142,8 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
                 participants: participants.clone(),
                 remaining: remaining.clone(),
                 rewards: rewards.clone(),
+                is_admin,
+                space_id,
             }
 
             LeaderboardPanel {
@@ -132,6 +159,8 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
                 on_close: move |_| {
                     active_panel.set(ActivePanel::None);
                 },
+                is_admin,
+                space_id,
             }
         }
         match action_overlay.0() {
@@ -158,22 +187,28 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
             },
             None => rsx! {},
         }
-        PopupZone {}
     }
 }
 
 #[component]
 fn CandidateView(space_id: ReadSignal<SpacePartition>) -> Element {
-    use crate::features::spaces::space_common::types::space_page_actions_key;
-
-    let key = space_page_actions_key(&space_id());
-    let actions = use_query(&key, move || async move {
-        crate::features::spaces::pages::actions::controllers::list_actions(space_id()).await
-    })?;
-    let actions = actions();
+    let actions_loader = crate::features::spaces::space_common::hooks::use_actions();
+    let actions = actions_loader();
+    let space = use_space()();
+    let mut ctx = crate::features::spaces::space_common::providers::use_space_context();
 
     let prereqs: Vec<_> = actions.iter().filter(|a| a.prerequisite).cloned().collect();
     let all_done = prereqs.is_empty() || prereqs.iter().all(|a| a.user_participated);
+
+    // When all prerequisites are done and space is Ongoing (join_anytime),
+    // restart the full context so `role` reloads from the server. The
+    // server will return Participant instead of Candidate, causing the
+    // parent to render ActionDashboard instead of CandidateView.
+    let mut already_restarted = use_signal(|| false);
+    if all_done && matches!(space.status, Some(SpaceStatus::Ongoing)) && !already_restarted() {
+        already_restarted.set(true);
+        ctx.restart();
+    }
 
     if all_done {
         rsx! {

@@ -11,7 +11,7 @@ use crate::features::membership::models::{handle_downgrade, handle_upgrade};
 use crate::features::membership::services::portone::PortOne;
 use crate::features::membership::*;
 use crate::features::posts::models::Team;
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::social::pages::member::dto::TeamRole;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -32,13 +32,13 @@ pub struct ChangeTeamMembershipResponse {
     pub membership: Option<MembershipResponse>,
 }
 
-#[post("/v3/teams/:username/memberships", user: User, team: Team, permissions: TeamGroupPermissions)]
+#[post("/v3/teams/:username/memberships", user: User, team: Team, role: TeamRole)]
 pub async fn change_team_membership_handler(
     username: String,
     req: ChangeTeamMembershipRequest,
 ) -> Result<ChangeTeamMembershipResponse> {
     let result = async {
-        if !permissions.contains(TeamGroupPermission::TeamAdmin) {
+        if !role.is_admin_or_owner() {
             return Err(Error::NotFound("Permission denied".to_string()));
         }
 

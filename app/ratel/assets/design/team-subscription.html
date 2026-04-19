@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Team Membership Arena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+    --border-subtle:rgba(255,255,255,0.06);--text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+    --accent-gold:#fcb300;--accent-teal:#6eedd8;
+    --accent-poll:#818cf8;--accent-quiz:#a855f7;--accent-discuss:#22d3ee;
+    --tier-free-c:#8888a8;--tier-free-bg:rgba(136,136,168,0.08);--tier-free-bd:rgba(136,136,168,0.22);
+    --tier-pro-c:#6eedd8;--tier-pro-bg:rgba(110,237,216,0.08);--tier-pro-bd:rgba(110,237,216,0.28);
+    --tier-max-c:#a855f7;--tier-max-bg:rgba(168,85,247,0.08);--tier-max-bd:rgba(168,85,247,0.30);
+    --tier-vip-c:#fcb300;--tier-vip-bg:rgba(252,179,0,0.10);--tier-vip-bd:rgba(252,179,0,0.34);
+    --tier-ent-c:#ff7ab6;--tier-ent-bg:rgba(255,122,182,0.08);--tier-ent-bd:rgba(255,122,182,0.26);
+    --font-display:'Orbitron',sans-serif;--font-body:'Outfit','Noto Sans KR',sans-serif;
+  }
+  html,body{height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+
+  .arena{position:relative;width:100%;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
+  .arena::before{
+    content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 50%, rgba(252,179,0,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 120% 100% at 50% 120%, rgba(110,237,216,0.03) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, var(--bg-void) 0%, var(--bg-void) 100%);
+  }
+
+  /* ── BG layers ── */
+  .bg-stars{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .star{position:absolute;border-radius:50%;background:#fff;animation:twinkle ease-in-out infinite}
+  @keyframes twinkle{0%,100%{opacity:0.08;transform:scale(0.9)}50%{opacity:0.9;transform:scale(1.3)}}
+  .shooting{
+    position:absolute;width:120px;height:1px;
+    background:linear-gradient(90deg, transparent, rgba(252,179,0,0.8), rgba(252,179,0,0));
+    opacity:0;animation:shoot 8s linear infinite;transform-origin:left center;
+  }
+  @keyframes shoot{
+    0%{opacity:0;transform:translateX(0) translateY(0) rotate(-18deg) scaleX(0.1)}
+    4%{opacity:1;transform:translateX(0) translateY(0) rotate(-18deg) scaleX(1)}
+    14%{opacity:0;transform:translateX(400px) translateY(-130px) rotate(-18deg) scaleX(0.6)}
+    100%{opacity:0;transform:translateX(400px) translateY(-130px) rotate(-18deg) scaleX(0.6)}
+  }
+  .bg-grid{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .bg-grid__plane{
+    position:absolute;bottom:-40%;left:-20%;right:-20%;height:120%;
+    background:linear-gradient(rgba(252,179,0,0.025) 1px, transparent 1px),linear-gradient(90deg, rgba(252,179,0,0.025) 1px, transparent 1px);
+    background-size:80px 80px;
+    transform:perspective(600px) rotateX(55deg);
+    animation:gridScroll 20s linear infinite;
+    mask-image:linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 70%);
+  }
+  @keyframes gridScroll{0%{background-position:0 0}100%{background-position:0 80px}}
+  .bg-orbs{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .bg-orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.10;animation:orbFloat 25s ease-in-out infinite}
+  .bg-orb--1{width:500px;height:500px;background:radial-gradient(circle, var(--accent-gold), transparent 70%);top:-10%;right:10%}
+  .bg-orb--2{width:400px;height:400px;background:radial-gradient(circle, var(--accent-teal), transparent 70%);bottom:10%;left:-5%;animation-delay:-8s;animation-duration:30s}
+  .bg-orb--3{width:300px;height:300px;background:radial-gradient(circle, var(--accent-quiz), transparent 70%);top:40%;right:-5%;animation-delay:-15s;animation-duration:22s}
+  @keyframes orbFloat{
+    0%,100%{transform:translate(0,0) scale(1)}
+    25%{transform:translate(40px,-30px) scale(1.1)}
+    50%{transform:translate(-20px,20px) scale(0.95)}
+    75%{transform:translate(30px,40px) scale(1.05)}
+  }
+  .bg-scanline{position:absolute;inset:0;z-index:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.006) 2px, rgba(255,255,255,0.006) 4px);
+  }
+
+  /* ── Top bar ── */
+  .arena-topbar{position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:20px 28px;flex-shrink:0}
+  .arena-topbar__brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .brand-home{
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    width:36px;height:36px;border-radius:10px;
+    background:rgba(12,12,26,0.6);backdrop-filter:blur(10px);
+    border:1px solid var(--border-subtle);
+    cursor:pointer;transition:all 0.25s;
+  }
+  .brand-home:hover{border-color:rgba(252,179,0,0.3);box-shadow:0 0 14px rgba(252,179,0,0.12);transform:translateY(-1px)}
+  .brand-home svg{width:18px;height:18px;color:var(--accent-gold)}
+  .brand-home__divider{width:1px;height:24px;background:var(--border-subtle);flex-shrink:0}
+
+  .team-switcher{position:relative;display:flex;align-items:center;gap:10px;padding:4px 8px 4px 4px;border-radius:12px;cursor:pointer;transition:all 0.25s;min-width:0;border:1px solid transparent}
+  .team-switcher:hover{background:rgba(255,255,255,0.03);border-color:var(--border-subtle)}
+  .team-switcher__body{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .team-switcher__chevron{width:14px;height:14px;color:var(--text-muted);flex-shrink:0;transition:transform 0.25s}
+  .arena-topbar__logo{
+    width:40px;height:40px;border-radius:10px;object-fit:cover;
+    border:1px solid rgba(252,179,0,0.15);
+    box-shadow:0 2px 12px rgba(0,0,0,0.3);
+    background:linear-gradient(135deg, rgba(252,179,0,0.3), rgba(110,237,216,0.15));
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--accent-gold);
+  }
+  .arena-topbar__title{font-family:var(--font-display);font-weight:800;font-size:18px;letter-spacing:0.10em;text-transform:uppercase;background:linear-gradient(135deg,var(--accent-gold),#ffd24a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}
+  .arena-topbar__handle{font-family:var(--font-display);font-size:11px;font-weight:500;color:var(--text-muted);letter-spacing:0.08em}
+
+  .close-btn{
+    width:42px;height:42px;border-radius:11px;background:var(--bg-glass);backdrop-filter:blur(16px);
+    border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;
+    cursor:pointer;transition:all 0.25s ease;color:var(--text-muted);
+  }
+  .close-btn:hover{background:var(--bg-glass-hover);border-color:rgba(239,68,68,0.25);color:#ef4444}
+  .close-btn svg{width:18px;height:18px}
+
+  /* ── Section label ── */
+  .section-label{position:relative;z-index:10;text-align:center;padding:0 28px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:10px;flex-shrink:0}
+  .section-label__dash{width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--text-dim),transparent)}
+  .section-label__title{font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:var(--text-dim)}
+  .section-label__title strong{color:var(--accent-gold);font-weight:700}
+
+  /* ── Hero ── */
+  .hero{
+    position:relative;z-index:10;text-align:center;
+    max-width:820px;margin:0 auto 28px;padding:0 28px;
+  }
+  .hero__title{
+    font-family:var(--font-display);font-size:34px;font-weight:900;letter-spacing:0.08em;
+    text-transform:uppercase;
+    background:linear-gradient(135deg,#ffffff 0%,var(--accent-gold) 50%,#ffd24a 100%);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    margin-bottom:14px;line-height:1.1;
+  }
+  .hero__title-ko{
+    font-family:var(--font-body);font-weight:800;letter-spacing:0.02em;
+    display:block;margin-top:6px;font-size:22px;
+    background:linear-gradient(135deg,var(--accent-gold),#ffd24a);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  }
+  .hero__desc{
+    font-size:14px;color:var(--text-muted);line-height:1.7;letter-spacing:0.02em;
+    max-width:620px;margin:0 auto;
+  }
+  .hero__desc strong{color:var(--accent-gold);font-weight:700;font-family:var(--font-display);letter-spacing:0.08em}
+  .hero__desc em{color:var(--accent-teal);font-style:normal;font-weight:600}
+
+  /* ── Page container ── */
+  .page{position:relative;z-index:10;max-width:1200px;margin:0 auto;padding:4px 28px 80px;width:100%;display:flex;flex-direction:column;gap:18px}
+
+  /* ── Tier grid ── */
+  .tier-grid{
+    display:grid;gap:16px;
+    grid-template-columns:repeat(4, 1fr);
+  }
+
+  .tier-card{
+    --tier-c:var(--tier-free-c);
+    --tier-bg:var(--tier-free-bg);
+    --tier-bd:var(--tier-free-bd);
+    position:relative;
+    display:flex;flex-direction:column;
+    padding:22px 20px 24px;
+    background:var(--bg-glass);backdrop-filter:blur(16px) saturate(1.3);
+    border:1px solid var(--border-subtle);border-radius:16px;
+    box-shadow:0 4px 24px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.03);
+    transition:all 0.3s;
+    overflow:hidden;min-height:520px;
+  }
+  .tier-card::before{
+    content:'';position:absolute;left:0;right:0;top:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--tier-c),transparent);
+    opacity:0.6;
+  }
+  .tier-card::after{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse 60% 50% at 50% 0%, var(--tier-bg), transparent 70%);
+    opacity:0.8;
+  }
+  .tier-card:hover{
+    border-color:var(--tier-bd);
+    transform:translateY(-4px);
+    box-shadow:0 12px 36px rgba(0,0,0,0.4),0 0 32px var(--tier-bg);
+  }
+
+  .tier-card--pro{--tier-c:var(--tier-pro-c);--tier-bg:var(--tier-pro-bg);--tier-bd:var(--tier-pro-bd)}
+  .tier-card--max{--tier-c:var(--tier-max-c);--tier-bg:var(--tier-max-bg);--tier-bd:var(--tier-max-bd)}
+  .tier-card--vip{
+    --tier-c:var(--tier-vip-c);--tier-bg:var(--tier-vip-bg);--tier-bd:var(--tier-vip-bd);
+    border-color:rgba(252,179,0,0.18);
+  }
+  .tier-card--vip::before{height:3px;opacity:1}
+
+  .tier-card__ribbon{
+    position:absolute;top:12px;right:12px;
+    display:inline-flex;align-items:center;gap:4px;
+    padding:3px 9px;border-radius:100px;
+    background:rgba(252,179,0,0.15);border:1px solid rgba(252,179,0,0.3);
+    font-family:var(--font-display);font-size:9px;font-weight:800;
+    letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-gold);
+    z-index:2;
+  }
+  .tier-card__ribbon::before{
+    content:'';width:5px;height:5px;border-radius:50%;
+    background:var(--accent-gold);box-shadow:0 0 6px rgba(252,179,0,0.8);
+  }
+
+  .tier-card__head{position:relative;z-index:1;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border-subtle)}
+  .tier-card__name{
+    font-family:var(--font-display);font-size:22px;font-weight:800;
+    letter-spacing:0.08em;text-transform:uppercase;color:var(--tier-c);
+    margin-bottom:6px;
+  }
+  .tier-card__desc{
+    font-size:12px;color:var(--text-muted);line-height:1.55;
+    min-height:40px;
+  }
+
+  .tier-card__features{
+    position:relative;z-index:1;
+    display:flex;flex-direction:column;gap:9px;
+    flex:1;margin-bottom:18px;
+  }
+  .feature{
+    display:flex;align-items:flex-start;gap:8px;
+    font-size:12px;color:var(--text-primary);line-height:1.55;
+  }
+  .feature__dot{
+    flex-shrink:0;margin-top:5px;
+    width:4px;height:4px;border-radius:50%;
+    background:var(--tier-c);
+    box-shadow:0 0 6px var(--tier-c);
+  }
+  .feature span{color:var(--text-muted)}
+  .feature strong{color:var(--tier-c);font-weight:700;font-family:var(--font-display);letter-spacing:0.04em}
+
+  .tier-card__price{
+    position:relative;z-index:1;
+    display:flex;align-items:baseline;gap:6px;margin-bottom:14px;
+  }
+  .tier-card__price-prefix{font-size:12px;color:var(--text-dim);font-family:var(--font-display);letter-spacing:0.08em;text-transform:uppercase}
+  .tier-card__price-amt{
+    font-family:var(--font-display);font-size:24px;font-weight:800;
+    color:var(--text-primary);letter-spacing:0.02em;
+  }
+  .tier-card__price-suffix{font-size:11px;color:var(--text-dim)}
+
+  .tier-btn{
+    position:relative;z-index:1;
+    width:100%;padding:12px 16px;border-radius:11px;
+    background:var(--tier-bg);color:var(--tier-c);
+    border:1px solid var(--tier-bd);
+    font-family:var(--font-display);font-size:12px;font-weight:800;
+    letter-spacing:0.14em;text-transform:uppercase;
+    cursor:pointer;transition:all 0.25s;
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  }
+  .tier-btn:hover{
+    background:var(--tier-c);color:var(--bg-void);
+    box-shadow:0 0 20px var(--tier-bg);transform:translateY(-1px);
+  }
+  .tier-btn svg{width:12px;height:12px}
+
+  .tier-btn--current{
+    background:rgba(255,255,255,0.02);color:var(--text-dim);
+    border-color:var(--border-subtle);cursor:default;
+  }
+  .tier-btn--current:hover{background:rgba(255,255,255,0.02);color:var(--text-dim);box-shadow:none;transform:none}
+
+  /* ── Enterprise wide row ── */
+  .enterprise-card{
+    --tier-c:var(--tier-ent-c);
+    --tier-bg:var(--tier-ent-bg);
+    --tier-bd:var(--tier-ent-bd);
+    position:relative;
+    display:flex;align-items:center;gap:22px;flex-wrap:wrap;
+    padding:22px 24px;
+    background:var(--bg-glass);backdrop-filter:blur(16px) saturate(1.3);
+    border:1px solid var(--border-subtle);border-radius:16px;
+    box-shadow:0 4px 24px rgba(0,0,0,0.25);
+    overflow:hidden;
+  }
+  .enterprise-card::before{
+    content:'';position:absolute;left:0;right:0;top:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--tier-c),transparent);
+    opacity:0.6;
+  }
+  .enterprise-card::after{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse 40% 60% at 0% 50%, var(--tier-bg), transparent 70%);
+  }
+  .enterprise-card__left{
+    position:relative;z-index:1;
+    flex:1;min-width:220px;display:flex;flex-direction:column;gap:6px;
+  }
+  .enterprise-card__name{
+    font-family:var(--font-display);font-size:20px;font-weight:800;
+    letter-spacing:0.08em;text-transform:uppercase;color:var(--tier-c);
+  }
+  .enterprise-card__desc{font-size:13px;color:var(--text-muted);line-height:1.55}
+
+  .enterprise-card__features{
+    position:relative;z-index:1;
+    display:flex;flex-direction:column;gap:7px;
+    flex:1;min-width:220px;
+  }
+
+  .enterprise-card__cta{
+    position:relative;z-index:1;
+    display:flex;flex-direction:column;align-items:flex-end;gap:10px;
+    flex-shrink:0;
+  }
+  .enterprise-card__price{
+    font-family:var(--font-display);font-size:15px;font-weight:700;
+    color:var(--text-primary);letter-spacing:0.04em;
+  }
+  .enterprise-card__price strong{color:var(--tier-c);font-weight:800}
+
+  /* ── Footer note ── */
+  .footer-note{
+    position:relative;z-index:10;max-width:820px;margin:10px auto 0;padding:0 28px;
+    text-align:center;font-size:11px;color:var(--text-dim);letter-spacing:0.04em;line-height:1.7;
+  }
+  .footer-note a{color:var(--text-muted);text-decoration:underline;text-underline-offset:3px}
+  .footer-note a:hover{color:var(--accent-gold)}
+
+  /* ── Responsive ── */
+  @media (max-width: 1100px){
+    .tier-grid{grid-template-columns:repeat(2, 1fr)}
+  }
+  @media (max-width: 720px){
+    .arena-topbar{padding:12px 14px;gap:8px;flex-wrap:nowrap}
+    .arena-topbar__logo{width:30px;height:30px;font-size:13px;border-radius:8px}
+    .arena-topbar__title{font-size:13px;max-width:100px}
+    .arena-topbar__handle{font-size:10px}
+    .brand-home{width:32px;height:32px;border-radius:9px}
+    .brand-home svg{width:15px;height:15px}
+    .brand-home__divider{display:none}
+    .team-switcher{gap:6px;padding:3px 4px 3px 3px}
+    .team-switcher__chevron{width:12px;height:12px}
+    .close-btn{width:34px;height:34px;border-radius:9px}
+    .close-btn svg{width:14px;height:14px}
+
+    .hero{margin-bottom:20px;padding:0 14px}
+    .hero__title{font-size:24px}
+    .hero__title-ko{font-size:18px}
+    .hero__desc{font-size:12px}
+
+    .page{padding:4px 14px 60px;gap:14px}
+    .section-label{padding:0 14px;margin-bottom:10px}
+    .tier-grid{grid-template-columns:1fr;gap:12px}
+    .tier-card{min-height:0;padding:18px 16px 20px}
+    .tier-card__name{font-size:18px}
+    .tier-card__price-amt{font-size:20px}
+
+    .enterprise-card{padding:18px 16px;gap:14px}
+    .enterprise-card__name{font-size:16px}
+    .enterprise-card__cta{align-items:stretch;width:100%}
+    .tier-btn{width:100%}
+  }
+
+  /* ═══════════ Light theme override ═══════════ */
+  [data-theme="light"] {
+    --bg-void: #f4f3ef;
+    --bg-glass: rgba(255, 255, 255, 0.78);
+    --bg-glass-hover: rgba(255, 255, 255, 0.92);
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --text-primary: #1a1a24;
+    --text-muted: #5f6075;
+    --text-dim: #9d9db3;
+    --accent-gold: #c68700;
+    --accent-teal: #12a58a;
+    --accent-poll: #4f46e5;
+    --accent-quiz: #7e22ce;
+    --accent-discuss: #0891b2;
+  }
+  [data-theme="light"] body { background: var(--bg-void); color: var(--text-primary); }
+  [data-theme="light"] .star { background: rgba(20, 20, 40, 0.45); }
+  [data-theme="light"] .shooting {
+    background: linear-gradient(90deg, transparent, rgba(198, 135, 0, 0.75), rgba(198, 135, 0, 0));
+  }
+  [data-theme="light"] .bg-grid__plane {
+    background:
+      linear-gradient(rgba(198, 135, 0, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(198, 135, 0, 0.06) 1px, transparent 1px);
+  }
+  [data-theme="light"] .bg-orb { opacity: 0.12; mix-blend-mode: multiply; }
+  [data-theme="light"] .bg-scanline {
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.015) 2px, rgba(0,0,0,0.015) 4px);
+  }
+  [data-theme="light"] .arena::before,
+  [data-theme="light"] .team-arena::before {
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 50%, rgba(252, 179, 0, 0.09) 0%, transparent 60%),
+      radial-gradient(ellipse 120% 100% at 50% 120%, rgba(110, 237, 216, 0.06) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, var(--bg-void) 0%, var(--bg-void) 100%);
+  }
+  [data-theme="light"] .post-card,
+  [data-theme="light"] .action-card,
+  [data-theme="light"] .tier-card,
+  [data-theme="light"] .draft-card,
+  [data-theme="light"] .member-card,
+  [data-theme="light"] .setting-card,
+  [data-theme="light"] .reward-card,
+  [data-theme="light"] .hud-stat,
+  [data-theme="light"] .team-intro__chip,
+  [data-theme="light"] .enterprise-card,
+  [data-theme="light"] .page-header {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 4px 20px rgba(0,0,0,0.06);
+  }
+  [data-theme="light"] .post-card.active {
+    box-shadow: 0 12px 60px rgba(0, 0, 0, 0.15);
+    border-color: rgba(252, 179, 0, 0.35);
+  }
+  [data-theme="light"] .post-card__thumb,
+  [data-theme="light"] .arena-topbar__logo {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+  [data-theme="light"] .arena-topbar__title,
+  [data-theme="light"] .modal__title,
+  [data-theme="light"] .hero__title-ko {
+    background: linear-gradient(135deg, #c68700, #8d5f00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  [data-theme="light"] .arena-topbar__status { background: rgba(18, 165, 138, 0.10); border-color: rgba(18, 165, 138, 0.25); color: #0d7f6b; }
+  [data-theme="light"] .arena-topbar__status::before { background: #0d7f6b; box-shadow: 0 0 6px #0d7f6b; }
+
+
+  /* ══════════ Settings Sidebar (arena pattern) ══════════ */
+  .ta-sidebar-backdrop {
+    position: fixed; inset: 0; z-index: 140;
+    background: rgba(6, 6, 14, 0.45); backdrop-filter: blur(4px);
+    opacity: 0; visibility: hidden; transition: opacity 0.25s ease;
+  }
+  .ta-sidebar-backdrop[data-open="true"] { opacity: 1; visibility: visible; }
+
+  .ta-sidebar {
+    position: fixed; top: 0; right: 0;
+    width: 360px; height: 100vh; z-index: 150;
+    background: var(--bg-void);
+    backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px);
+    border-left: 1px solid var(--border-subtle);
+    box-shadow: -8px 0 60px rgba(0,0,0,0.4);
+    transform: translateX(100%); transition: transform 0.45s cubic-bezier(0.16,1,0.3,1);
+    display: flex; flex-direction: column; overflow: hidden;
+    color: var(--text-primary); font-family: var(--font-body);
+  }
+  [data-theme="light"] .ta-sidebar { box-shadow: -8px 0 60px rgba(0,0,0,0.12); }
+  .ta-sidebar[data-open="true"] { transform: translateX(0); }
+
+  .ta-sidebar__header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 28px 20px; border-bottom: 1px solid var(--border-subtle); flex-shrink: 0;
+  }
+  .ta-sidebar__title {
+    font-family: var(--font-display); font-size: 14px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-primary);
+  }
+  .ta-sidebar__close {
+    width: 32px; height: 32px; border-radius: 8px; padding: 0;
+    background: transparent; border: 1px solid var(--border-subtle);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s; color: var(--text-muted);
+  }
+  .ta-sidebar__close:hover { background: rgba(20,20,40,0.8); border-color: rgba(252,179,0,0.2); color: var(--accent-gold); }
+  [data-theme="light"] .ta-sidebar__close:hover { background: rgba(0,0,0,0.06); }
+  .ta-sidebar__close svg { width: 16px; height: 16px; }
+
+  .ta-sidebar__body {
+    flex: 1; overflow-y: auto; padding: 28px;
+    display: flex; flex-direction: column; gap: 28px;
+  }
+  .ta-sidebar__group { display: flex; flex-direction: column; gap: 14px; }
+  .ta-sidebar__group-label {
+    font-family: var(--font-display); font-size: 10px; font-weight: 600;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim);
+  }
+  .ta-sidebar__options { display: flex; gap: 8px; }
+  .ta-sidebar__opt {
+    flex: 1; padding: 12px 16px; border-radius: 10px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle);
+    cursor: pointer; transition: all 0.25s;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    color: var(--text-muted); font-size: 12px; font-weight: 500;
+  }
+  [data-theme="light"] .ta-sidebar__opt { background: rgba(0,0,0,0.03); }
+  .ta-sidebar__opt:hover { background: rgba(252,179,0,0.04); border-color: rgba(252,179,0,0.15); }
+  .ta-sidebar__opt[aria-selected="true"] {
+    background: rgba(252,179,0,0.08); border-color: rgba(252,179,0,0.3); color: var(--accent-gold);
+  }
+  .ta-sidebar__opt svg { width: 22px; height: 22px; }
+  .ta-sidebar__opt-icon {
+    font-family: var(--font-display); font-size: 16px; font-weight: 700; line-height: 1;
+  }
+
+  .ta-sidebar__footer {
+    margin-top: auto; padding-top: 24px; border-top: 1px solid var(--border-subtle);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .ta-sidebar__action {
+    width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 16px; border-radius: 10px; font-family: var(--font-display);
+    font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.25s; border: 1px solid var(--border-subtle);
+    background: rgba(255,255,255,0.03); color: var(--text-primary); text-decoration: none;
+  }
+  [data-theme="light"] .ta-sidebar__action { background: rgba(0,0,0,0.03); }
+  .ta-sidebar__action:hover {
+    border-color: rgba(252,179,0,0.3); color: var(--accent-gold);
+    box-shadow: 0 0 14px rgba(252,179,0,0.06);
+  }
+  .ta-sidebar__action svg { width: 16px; height: 16px; }
+  .ta-sidebar__action--login {
+    background: linear-gradient(135deg,rgba(252,179,0,0.2),rgba(110,237,216,0.08));
+    border-color: rgba(252,179,0,0.3); color: var(--accent-gold);
+  }
+  .ta-sidebar__action--login:hover {
+    background: linear-gradient(135deg,rgba(252,179,0,0.3),rgba(110,237,216,0.14));
+    box-shadow: 0 0 24px rgba(252,179,0,0.22); transform: translateY(-1px);
+  }
+  .ta-sidebar__action--logout {
+    border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.06); color: #ef4444;
+  }
+  .ta-sidebar__action--logout:hover {
+    background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.4);
+    box-shadow: 0 0 16px rgba(239,68,68,0.08); color: #ef4444;
+  }
+  @media (max-width: 500px) { .ta-sidebar { width: 100%; } }
+
+
+  /* ── Back/Home buttons unified with HUD style ── */
+  .brand-home {
+    background: var(--bg-glass) !important;
+    border: 1px solid var(--border-subtle) !important;
+  }
+  .brand-home svg { color: var(--text-muted) !important; transition: color 0.2s; }
+  .brand-home:hover svg { color: var(--accent-gold) !important; }
+  .brand-home:hover {
+    background: var(--bg-glass-hover) !important;
+    border-color: rgba(252,179,0,0.25) !important;
+  }
+  [data-theme="light"] .brand-home:hover {
+    border-color: rgba(198,135,0,0.30) !important;
+  }
+
+  @media (max-width: 720px) {
+    .arena-topbar {
+      padding: 10px 12px;
+      gap: 6px;
+    }
+    /* Compress the team switcher so it doesn't squeeze the HUD row */
+    .arena-topbar__title { max-width: 88px; font-size: 12px; }
+    .arena-topbar__handle { display: none; }
+    .team-switcher__body { gap: 0; }
+    .arena-topbar__actions { gap: 4px; }
+    .hud-btn { width: 32px; height: 32px; border-radius: 8px; }
+    .hud-btn svg { width: 13px; height: 13px; }
+    .follow-btn { padding: 5px 10px; font-size: 10px; letter-spacing: 0.06em; }
+  }
+
+  @media (max-width: 540px) {
+    /* Hide the team title text entirely — keep only logo + chevron */
+    .arena-topbar { padding: 8px 10px; gap: 4px; }
+    .arena-topbar__title,
+    .team-switcher__body { display: none; }
+    .team-switcher { padding: 2px; gap: 0; }
+    .team-switcher__chevron { display: none; }
+    .arena-topbar__logo { width: 28px; height: 28px; font-size: 12px; border-radius: 7px; }
+
+    .brand-home { width: 30px; height: 30px; border-radius: 8px; }
+    .brand-home svg { width: 14px; height: 14px; }
+
+    .hud-btn { width: 30px; height: 30px; border-radius: 8px; }
+    .hud-btn svg { width: 13px; height: 13px; }
+
+    /* Follow becomes icon-only */
+    .follow-btn {
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      font-size: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .follow-btn::before {
+      content: '+';
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0;
+      color: var(--accent-gold);
+    }
+  }
+
+  @media (max-width: 380px) {
+    /* Very narrow phones — drop the team logo too */
+    .team-switcher,
+    .brand-home__divider { display: none; }
+  }
+
+
+  /* ── Topbar fixed with gradient fade (matches Dioxus implementation) ── */
+  .arena-topbar {
+    position: fixed !important;
+    top: 0; left: 0; right: 0;
+    z-index: 100 !important;
+    background: linear-gradient(180deg, var(--bg-void) 0%, rgba(6,6,14,0.85) 65%, transparent 100%) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: none !important;
+  }
+  [data-theme="light"] .arena-topbar {
+    background: linear-gradient(180deg, var(--bg-void) 0%, rgba(244,243,239,0.85) 65%, transparent 100%) !important;
+  }
+  .arena {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 100vh;
+    padding-top: 80px;
+  }
+  html, body {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh;
+  }
+  @media (max-width: 540px) {
+    .arena { padding-top: 64px; }
+  }
+
+
+  /* ── Topbar fixed with gradient fade (matches Dioxus implementation) ── */
+  .arena-topbar {
+    position: fixed !important;
+    top: 0; left: 0; right: 0;
+    z-index: 100 !important;
+    background: linear-gradient(180deg, var(--bg-void) 0%, var(--bg-void) 70%, transparent 100%) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: none !important;
+  }
+  [data-theme="light"] .arena-topbar {
+    background: linear-gradient(180deg, var(--bg-void) 0%, var(--bg-void) 70%, transparent 100%) !important;
+  }
+  .arena {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 100vh;
+    padding-top: 110px;
+  }
+  html, body {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh;
+  }
+  @media (max-width: 540px) {
+    .arena { padding-top: 84px; }
+  }
+
+</style>
+</head>
+<body>
+
+<div class="arena">
+
+  <!-- BG layers -->
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs">
+    <div class="bg-orb bg-orb--1"></div>
+    <div class="bg-orb bg-orb--2"></div>
+    <div class="bg-orb bg-orb--3"></div>
+  </div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <!-- ═══════ TOP BAR ═══════ -->
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back" aria-label="뒤로">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"/>
+          <polyline points="12 19 5 12 12 5"/>
+        </svg>
+      </button>
+      <!-- Home (team home) -->
+      <button class="brand-home" id="brand-home" aria-label="Team home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        </svg>
+      </button>
+      <span class="brand-home__divider"></span>
+
+      <div class="team-switcher">
+        <div class="arena-topbar__logo">V</div>
+        <div class="team-switcher__body">
+          <span class="arena-topbar__title">victor_team</span>
+          <span class="arena-topbar__handle">@victor_team</span>
+        </div>
+        <svg class="team-switcher__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════ SECTION LABEL ═══════ -->
+  <div class="section-label">
+    <span class="section-label__dash"></span>
+    <span class="section-label__title">Choose Your <strong>Tier</strong></span>
+    <span class="section-label__dash"></span>
+  </div>
+
+  <!-- ═══════ HERO ═══════ -->
+  <div class="hero">
+    <h1 class="hero__title">
+      Membership Plans
+      <span class="hero__title-ko">멤버십 플랜</span>
+    </h1>
+    <p class="hero__desc">
+      <strong>Credits</strong>은 <em>보상 스페이스</em>를 생성하거나 부스팅시키는 데 사용할 수 있는 월간 포인트입니다.
+    </p>
+  </div>
+
+  <!-- ═══════ PAGE ═══════ -->
+  <div class="page">
+
+    <!-- 4-tier grid -->
+    <div class="tier-grid">
+
+      <!-- Free -->
+      <div class="tier-card">
+        <div class="tier-card__head">
+          <div class="tier-card__name">무료</div>
+          <div class="tier-card__desc">누구나 참여 가능한 기본 멤버십</div>
+        </div>
+        <div class="tier-card__features">
+          <div class="feature"><span class="feature__dot"></span><span>포스트 게재</span></div>
+          <div class="feature"><span class="feature__dot"></span><span>스페이스 생성</span></div>
+          <div class="feature"><span class="feature__dot"></span><span>인맥 관리</span></div>
+          <div class="feature"><span class="feature__dot"></span><span>보상 스페이스 참여</span></div>
+        </div>
+        <div class="tier-card__price">
+          <span class="tier-card__price-amt">Free</span>
+        </div>
+        <button class="tier-btn tier-btn--current" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          현재 플랜
+        </button>
+      </div>
+
+      <!-- Pro -->
+      <div class="tier-card tier-card--pro">
+        <div class="tier-card__head">
+          <div class="tier-card__name">Pro</div>
+          <div class="tier-card__desc">Reward Space setup for small communities</div>
+        </div>
+        <div class="tier-card__features">
+          <div class="feature"><span class="feature__dot"></span><span>모든 무료 플랜 포함</span></div>
+          <div class="feature"><span class="feature__dot"></span><span>월별 <strong>40 크레딧</strong> 제공</span></div>
+          <div class="feature"><span class="feature__dot"></span><span>보상 스페이스 또는 보상 기능별 최대 2 크레딧 사용 가능</span></div>
+          <div class="feature"><span class="feature__dot"></span><span>참여자 전체 보상의 10% 생성 보상 획득</span></div>
+        </div>
+        <div class="tier-card__price">
+          <span class="tier-card__price-prefix">월</span>
+          <span class="tier-card__price-amt">30,000</span>
+          <span class="tier-card__price-suffix">원</span>
+        </div>
+        <button class="tier-btn">
+          Pro 신청
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Max -->
+      <div class="tier-card tier-card--max">
+        <div class="tier-card__head">
+          <div class="tier-card__name">Max</div>
+          <div class="tier-card__desc">대규모 커뮤니티를 위한 보상 스페이스 기능 제공</div>
+        </div>
+        <div class="tier-card__features">
+          <div class="feature"><span class="feature__dot"></span><span>모든 무료 플랜 포함</span></div>
+          <div class="feature"><span class="feature__dot"></span><span>월별 <strong>190 크레딧</strong> 제공</span></div>
+          <div class="feature"><span class="feature__dot"></span><span>보상 스페이스 또는 보상 기능별 최대 10 크레딧 사용 가능</span></div>
+          <div class="feature"><span class="feature__dot"></span><span>참여자 전체 보상의 10% 생성 보상 획득</span></div>
+          <div class="feature"><span class="feature__dot"></span><span>신뢰 크리에이터 배지 획득</span></div>
+        </div>
+        <div class="tier-card__price">
+          <span class="tier-card__price-prefix">월</span>
+          <span class="tier-card__price-amt">75,000</span>
+          <span class="tier-card__price-suffix">원</span>
+        </div>
+        <button class="tier-btn">
+          Max 신청
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- VIP -->
+      <div class="tier-card tier-card--vip">
+        <div class="tier-card__ribbon">Most Popular</div>
+        <div class="tier-card__head">
+          <div class="tier-card__name">VIP</div>
+          <div class="tier-card__desc">인플루언서 및 마케팅 전문 기업을 위한 보상 스페이스 기능 제공</div>
+        </div>
+        <div class="tier-card__features">
+          <div class="feature"><span class="feature__dot"></span><span>모든 무료 플랜 포함</span></div>
+          <div class="feature"><span class="feature__dot"></span><span>월별 <strong>1,360 크레딧</strong> 제공</span></div>
+          <div class="feature"><span class="feature__dot"></span><span>보상 스페이스 또는 보상 기능별 최대 100 크레딧 사용 가능</span></div>
+          <div class="feature"><span class="feature__dot"></span><span>참여자 전체 보상의 10% 생성 보상 획득</span></div>
+          <div class="feature"><span class="feature__dot"></span><span>신뢰 크리에이터 배지 획득</span></div>
+          <div class="feature"><span class="feature__dot"></span><span>참여자 원본 데이터 열람</span></div>
+        </div>
+        <div class="tier-card__price">
+          <span class="tier-card__price-prefix">월</span>
+          <span class="tier-card__price-amt">150,000</span>
+          <span class="tier-card__price-suffix">원</span>
+        </div>
+        <button class="tier-btn">
+          VIP 신청
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Enterprise wide card -->
+    <div class="enterprise-card">
+      <div class="enterprise-card__left">
+        <div class="enterprise-card__name">엔터프라이즈</div>
+        <div class="enterprise-card__desc">기업 및 기관 맞춤형 파트너 멤버십</div>
+      </div>
+      <div class="enterprise-card__features">
+        <div class="feature" style="--tier-c:var(--tier-ent-c)"><span class="feature__dot" style="background:var(--tier-ent-c);box-shadow:0 0 6px var(--tier-ent-c)"></span><span>모든 무료 플랜 포함</span></div>
+        <div class="feature"><span class="feature__dot" style="background:var(--tier-ent-c);box-shadow:0 0 6px var(--tier-ent-c)"></span><span>완전 맞춤형 서비스 제공</span></div>
+      </div>
+      <div class="enterprise-card__cta">
+        <div class="enterprise-card__price">월 <strong>1,000,000원</strong> 이상</div>
+        <button class="tier-btn" style="--tier-c:var(--tier-ent-c);--tier-bg:var(--tier-ent-bg);--tier-bd:var(--tier-ent-bd);min-width:180px">
+          Contact Us
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Footer note -->
+    <div class="footer-note">
+      모든 플랜은 월 단위로 결제되며 언제든 변경하거나 해지할 수 있습니다. 부가세 별도.
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  // Back / close
+  document.getElementById('brand-back')?.addEventListener('click', () => {
+    if (window.history.length > 1) window.history.back();
+    else window.location.href = '/';
+  });
+  // Stars
+  (function(){
+    const layer = document.getElementById('stars');
+    if(!layer) return;
+    const count = 90;
+    for(let i=0; i<count; i++){
+      const s = document.createElement('div');
+      s.className = 'star';
+      const size = Math.random() < 0.15 ? 2 + Math.random()*1.5 : 1 + Math.random()*0.8;
+      s.style.width = size + 'px';
+      s.style.height = size + 'px';
+      s.style.left = Math.random()*100 + '%';
+      s.style.top = Math.random()*100 + '%';
+      s.style.animationDuration = (3 + Math.random()*5).toFixed(2) + 's';
+      s.style.animationDelay = (-Math.random()*6).toFixed(2) + 's';
+      if(Math.random() < 0.08){
+        s.style.background = '#fcb300';
+        s.style.boxShadow = '0 0 6px rgba(252,179,0,0.5)';
+      } else if(Math.random() < 0.10){
+        s.style.background = '#6eedd8';
+        s.style.boxShadow = '0 0 4px rgba(110,237,216,0.4)';
+      }
+      layer.appendChild(s);
+    }
+    for(let i=0; i<2; i++){
+      const ss = document.createElement('div');
+      ss.className = 'shooting';
+      ss.style.top = (10 + i*38 + Math.random()*10) + '%';
+      ss.style.left = (Math.random()*40) + '%';
+      ss.style.animationDelay = (-Math.random()*8 + (i*3)).toFixed(2) + 's';
+      layer.appendChild(ss);
+    }
+  })();
+</script>
+
+<!-- ══════════ SETTINGS SIDEBAR ══════════ -->
+<div class="ta-sidebar-backdrop" id="ta-sidebar-backdrop"></div>
+<aside class="ta-sidebar" id="ta-sidebar" aria-label="Settings">
+  <div class="ta-sidebar__header">
+    <span class="ta-sidebar__title">Settings</span>
+    <button class="ta-sidebar__close" id="ta-sidebar-close" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="ta-sidebar__body">
+    <div class="ta-sidebar__group">
+      <span class="ta-sidebar__group-label">Theme</span>
+      <div class="ta-sidebar__options">
+        <div class="ta-sidebar__opt" data-ta-theme="dark" role="button" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+          Dark
+        </div>
+        <div class="ta-sidebar__opt" data-ta-theme="light" role="button" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+          Light
+        </div>
+        <div class="ta-sidebar__opt" data-ta-theme="system" role="button" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          System
+        </div>
+      </div>
+    </div>
+    <div class="ta-sidebar__group">
+      <span class="ta-sidebar__group-label">Language</span>
+      <div class="ta-sidebar__options">
+        <div class="ta-sidebar__opt" data-ta-lang="en" role="button" tabindex="0"><span class="ta-sidebar__opt-icon">EN</span>English</div>
+        <div class="ta-sidebar__opt" data-ta-lang="ko" role="button" tabindex="0"><span class="ta-sidebar__opt-icon">KO</span>Korean</div>
+      </div>
+    </div>
+    <div class="ta-sidebar__footer">
+      <a class="ta-sidebar__action" href="team-setting.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        Team Settings
+      </a>
+      <button class="ta-sidebar__action ta-sidebar__action--logout" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Log Out
+      </button>
+    </div>
+  </div>
+</aside>
+<script>
+(function(){
+  var sidebar = document.getElementById('ta-sidebar');
+  var backdrop = document.getElementById('ta-sidebar-backdrop');
+  var closeBtn = document.getElementById('ta-sidebar-close');
+  var settingsBtn = document.querySelector('.hud-btn[aria-label="Settings"]');
+  function open(){ sidebar.setAttribute('data-open','true'); backdrop.setAttribute('data-open','true'); }
+  function close(){ sidebar.setAttribute('data-open','false'); backdrop.setAttribute('data-open','false'); }
+  if(settingsBtn) settingsBtn.addEventListener('click', function(e){ e.preventDefault(); open(); });
+  if(closeBtn) closeBtn.addEventListener('click', close);
+  if(backdrop) backdrop.addEventListener('click', close);
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') close(); });
+
+  // Theme options
+  document.querySelectorAll('[data-ta-theme]').forEach(function(el){
+    el.addEventListener('click', function(){
+      var mode = el.getAttribute('data-ta-theme');
+      var html = document.documentElement;
+      if(mode === 'system'){
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        html.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+      } else {
+        html.setAttribute('data-theme', mode);
+      }
+      syncOptions();
+    });
+  });
+  function syncOptions(){
+    var cur = document.documentElement.getAttribute('data-theme') || 'dark';
+    document.querySelectorAll('[data-ta-theme]').forEach(function(el){
+      el.setAttribute('aria-selected', el.getAttribute('data-ta-theme') === cur ? 'true' : 'false');
+    });
+  }
+  syncOptions();
+
+  // Language options (visual-only for mockup)
+  document.querySelectorAll('[data-ta-lang]').forEach(function(el){
+    el.addEventListener('click', function(){
+      document.querySelectorAll('[data-ta-lang]').forEach(function(b){ b.setAttribute('aria-selected','false'); });
+      el.setAttribute('aria-selected','true');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

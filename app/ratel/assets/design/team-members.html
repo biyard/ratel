@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Team Members Arena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+    --border-subtle:rgba(255,255,255,0.06);--text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+    --accent-gold:#fcb300;--accent-teal:#6eedd8;
+    --accent-poll:#818cf8;--accent-quiz:#a855f7;--accent-discuss:#22d3ee;
+    --role-owner-c:#fcb300;--role-owner-bg:rgba(252,179,0,0.08);--role-owner-bd:rgba(252,179,0,0.22);
+    --role-admin-c:#a855f7;--role-admin-bg:rgba(168,85,247,0.08);--role-admin-bd:rgba(168,85,247,0.22);
+    --role-member-c:#6eedd8;--role-member-bg:rgba(110,237,216,0.08);--role-member-bd:rgba(110,237,216,0.22);
+    --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+  }
+  html,body{height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+
+  .arena{position:relative;width:100%;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
+  .arena::before{
+    content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 50%, rgba(252,179,0,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 120% 100% at 50% 120%, rgba(110,237,216,0.03) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, var(--bg-void) 0%, var(--bg-void) 100%);
+  }
+
+  /* ── BG layers (shared with team-arena) ── */
+  .bg-stars{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .star{position:absolute;border-radius:50%;background:#fff;animation:twinkle ease-in-out infinite}
+  @keyframes twinkle{0%,100%{opacity:0.08;transform:scale(0.9)}50%{opacity:0.9;transform:scale(1.3)}}
+  .shooting{
+    position:absolute;width:120px;height:1px;
+    background:linear-gradient(90deg, transparent, rgba(252,179,0,0.8), rgba(252,179,0,0));
+    opacity:0;animation:shoot 8s linear infinite;transform-origin:left center;
+  }
+  @keyframes shoot{
+    0%{opacity:0;transform:translateX(0) translateY(0) rotate(-18deg) scaleX(0.1)}
+    4%{opacity:1;transform:translateX(0) translateY(0) rotate(-18deg) scaleX(1)}
+    14%{opacity:0;transform:translateX(400px) translateY(-130px) rotate(-18deg) scaleX(0.6)}
+    100%{opacity:0;transform:translateX(400px) translateY(-130px) rotate(-18deg) scaleX(0.6)}
+  }
+  .bg-grid{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .bg-grid__plane{
+    position:absolute;bottom:-40%;left:-20%;right:-20%;height:120%;
+    background:linear-gradient(rgba(252,179,0,0.025) 1px, transparent 1px),linear-gradient(90deg, rgba(252,179,0,0.025) 1px, transparent 1px);
+    background-size:80px 80px;
+    transform:perspective(600px) rotateX(55deg);
+    animation:gridScroll 20s linear infinite;
+    mask-image:linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 70%);
+  }
+  @keyframes gridScroll{0%{background-position:0 0}100%{background-position:0 80px}}
+  .bg-orbs{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .bg-orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.10;animation:orbFloat 25s ease-in-out infinite}
+  .bg-orb--1{width:500px;height:500px;background:radial-gradient(circle, var(--accent-gold), transparent 70%);top:-10%;right:10%}
+  .bg-orb--2{width:400px;height:400px;background:radial-gradient(circle, var(--accent-teal), transparent 70%);bottom:10%;left:-5%;animation-delay:-8s;animation-duration:30s}
+  .bg-orb--3{width:300px;height:300px;background:radial-gradient(circle, var(--accent-quiz), transparent 70%);top:40%;right:-5%;animation-delay:-15s;animation-duration:22s}
+  @keyframes orbFloat{
+    0%,100%{transform:translate(0,0) scale(1)}
+    25%{transform:translate(40px,-30px) scale(1.1)}
+    50%{transform:translate(-20px,20px) scale(0.95)}
+    75%{transform:translate(30px,40px) scale(1.05)}
+  }
+  .bg-scanline{position:absolute;inset:0;z-index:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.006) 2px, rgba(255,255,255,0.006) 4px);
+  }
+
+  /* ── Top bar (identical to team-arena) ── */
+  .arena-topbar{position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:20px 28px;flex-shrink:0}
+  .arena-topbar__brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .brand-home{
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    width:36px;height:36px;border-radius:10px;
+    background:rgba(12,12,26,0.6);backdrop-filter:blur(10px);
+    border:1px solid var(--border-subtle);
+    cursor:pointer;transition:all 0.25s;
+    background-color:rgba(12,12,26,0.6);
+  }
+  .brand-home:hover{border-color:rgba(252,179,0,0.3);box-shadow:0 0 14px rgba(252,179,0,0.12);transform:translateY(-1px)}
+  .brand-home svg{width:18px;height:18px;color:var(--accent-gold)}
+  .brand-home__divider{width:1px;height:24px;background:var(--border-subtle);flex-shrink:0}
+
+  .team-switcher{position:relative;display:flex;align-items:center;gap:10px;padding:4px 8px 4px 4px;border-radius:12px;cursor:pointer;transition:all 0.25s;min-width:0;border:1px solid transparent}
+  .team-switcher:hover{background:rgba(255,255,255,0.03);border-color:var(--border-subtle)}
+  .team-switcher__body{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .team-switcher__chevron{width:14px;height:14px;color:var(--text-muted);flex-shrink:0;transition:transform 0.25s}
+  .team-switcher[aria-expanded="true"] .team-switcher__chevron{transform:rotate(180deg);color:var(--accent-gold)}
+
+  .arena-topbar__logo{
+    width:40px;height:40px;border-radius:10px;object-fit:cover;
+    border:1px solid rgba(252,179,0,0.15);
+    box-shadow:0 2px 12px rgba(0,0,0,0.3);
+    background:linear-gradient(135deg, rgba(252,179,0,0.3), rgba(110,237,216,0.15));
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--accent-gold);
+  }
+  .arena-topbar__title{font-family:var(--font-display);font-weight:800;font-size:18px;letter-spacing:0.10em;text-transform:uppercase;background:linear-gradient(135deg,var(--accent-gold),#ffd24a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}
+  .arena-topbar__handle{font-family:var(--font-display);font-size:11px;font-weight:500;color:var(--text-muted);letter-spacing:0.08em}
+  .arena-topbar__status{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;background:rgba(110,237,216,0.08);border:1px solid rgba(110,237,216,0.15);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent-teal);margin-left:12px}
+  .arena-topbar__status::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal);animation:pulse-dot 1.6s ease-in-out infinite}
+  @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+
+  .arena-topbar__actions{display:flex;gap:10px;align-items:center}
+  .hud-btn{position:relative;width:42px;height:42px;border-radius:11px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0}
+  .hud-btn:hover{background:var(--bg-glass-hover);border-color:rgba(252,179,0,0.25);transform:translateY(-1px)}
+  .hud-btn svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+  .hud-btn:hover svg{color:var(--accent-gold)}
+  .hud-btn--active{background:linear-gradient(135deg,rgba(252,179,0,0.18),rgba(252,179,0,0.06));border-color:rgba(252,179,0,0.3)}
+  .hud-btn--active svg{color:var(--accent-gold)}
+  .hud-btn__label{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);white-space:nowrap;opacity:0;transition:opacity 0.2s ease;pointer-events:none}
+  .hud-btn:hover .hud-btn__label{opacity:1}
+
+  .follow-btn{padding:9px 18px;border-radius:11px;background:linear-gradient(135deg,rgba(252,179,0,0.18),rgba(252,179,0,0.06));border:1px solid rgba(252,179,0,0.3);color:var(--accent-gold);font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.25s ease;box-shadow:0 0 16px rgba(252,179,0,0.08)}
+  .follow-btn:hover{background:linear-gradient(135deg,rgba(252,179,0,0.28),rgba(252,179,0,0.1));box-shadow:0 0 24px rgba(252,179,0,0.2);transform:translateY(-1px)}
+
+  /* ── Section label ── */
+  .section-label{position:relative;z-index:10;text-align:center;padding:0 28px;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px;flex-shrink:0}
+  .section-label__dash{width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--text-dim),transparent)}
+  .section-label__title{font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:var(--text-dim)}
+  .section-label__title strong{color:var(--accent-gold);font-weight:700}
+
+  /* ── Page container (scroll) ── */
+  .page{position:relative;z-index:10;max-width:980px;margin:0 auto;padding:8px 28px 80px;width:100%}
+
+  /* ── Page header (title + count + add) ── */
+  .page-header{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:18px 22px;margin-bottom:20px;
+    background:var(--bg-glass);backdrop-filter:blur(16px) saturate(1.3);
+    border:1px solid var(--border-subtle);border-radius:16px;
+    box-shadow:0 4px 24px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  .page-header__left{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .page-header__title{font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--text-primary);letter-spacing:0.05em}
+  .page-header__sub{font-size:12px;color:var(--text-muted);letter-spacing:0.04em}
+  .page-header__sub strong{color:var(--accent-gold);font-weight:700;font-family:var(--font-display)}
+
+  .btn-primary{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:11px 20px;border-radius:11px;border:1px solid rgba(252,179,0,0.3);
+    background:linear-gradient(135deg,rgba(252,179,0,0.2),rgba(110,237,216,0.08));
+    color:var(--accent-gold);
+    font-family:var(--font-display);font-size:11px;font-weight:700;
+    letter-spacing:0.1em;text-transform:uppercase;
+    cursor:pointer;transition:all 0.3s;
+    box-shadow:0 0 16px rgba(252,179,0,0.1);white-space:nowrap;
+  }
+  .btn-primary:hover{background:linear-gradient(135deg,rgba(252,179,0,0.3),rgba(110,237,216,0.14));box-shadow:0 0 24px rgba(252,179,0,0.22);transform:translateY(-1px)}
+  .btn-primary svg{width:14px;height:14px}
+
+  /* ── Filter bar (role tabs + search) ── */
+  .filter-bar{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+  .role-tabs{
+    display:flex;gap:4px;padding:4px;
+    background:var(--bg-glass);backdrop-filter:blur(12px);
+    border:1px solid var(--border-subtle);border-radius:12px;
+  }
+  .role-tab{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:8px 14px;border-radius:9px;background:none;border:none;
+    font-family:var(--font-display);font-size:10px;font-weight:600;
+    letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);
+    cursor:pointer;transition:all 0.25s;
+  }
+  .role-tab:hover{color:var(--text-primary)}
+  .role-tab.active{color:var(--accent-gold);background:rgba(252,179,0,0.1);box-shadow:0 0 10px rgba(252,179,0,0.06)}
+  .role-tab__count{
+    padding:1px 7px;border-radius:6px;
+    background:rgba(255,255,255,0.05);color:var(--text-dim);font-weight:700;
+    font-size:9px;font-family:var(--font-display);
+  }
+  .role-tab.active .role-tab__count{background:rgba(252,179,0,0.15);color:var(--accent-gold)}
+
+  .search-wrap{
+    flex:1;min-width:180px;position:relative;
+  }
+  .search-wrap svg{
+    position:absolute;left:14px;top:50%;transform:translateY(-50%);
+    width:15px;height:15px;color:var(--text-dim);pointer-events:none;
+  }
+  .search-input{
+    width:100%;padding:10px 14px 10px 38px;border-radius:11px;
+    background:var(--bg-glass);backdrop-filter:blur(12px);
+    border:1px solid var(--border-subtle);
+    color:var(--text-primary);font-family:var(--font-body);font-size:13px;
+    transition:all 0.25s;outline:none;
+  }
+  .search-input::placeholder{color:var(--text-dim)}
+  .search-input:focus{border-color:rgba(252,179,0,0.3);box-shadow:0 0 14px rgba(252,179,0,0.1)}
+
+  /* ── Members grid ── */
+  .members-grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:14px}
+
+  .member-card{
+    position:relative;
+    display:flex;align-items:center;gap:14px;
+    padding:16px 18px;
+    background:var(--bg-glass);backdrop-filter:blur(16px) saturate(1.2);
+    border:1px solid var(--border-subtle);border-radius:14px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.25);
+    transition:all 0.3s;
+    cursor:pointer;overflow:hidden;
+  }
+  .member-card:hover{
+    border-color:rgba(252,179,0,0.25);
+    transform:translateY(-2px);
+    box-shadow:0 8px 30px rgba(0,0,0,0.4),0 0 24px rgba(252,179,0,0.08);
+  }
+  .member-card::before{
+    content:'';position:absolute;left:0;top:20%;bottom:20%;width:3px;
+    border-radius:0 3px 3px 0;
+    background:linear-gradient(180deg,var(--accent-gold),var(--accent-teal));
+    opacity:0;transition:opacity 0.3s;
+    box-shadow:0 0 10px rgba(252,179,0,0.3);
+  }
+  .member-card:hover::before{opacity:1}
+
+  .member-avatar{
+    width:44px;height:44px;border-radius:50%;flex-shrink:0;
+    background:linear-gradient(135deg, rgba(252,179,0,0.3), rgba(110,237,216,0.15));
+    border:2px solid var(--border-subtle);
+    box-shadow:0 0 12px rgba(252,179,0,0.08);
+    object-fit:cover;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-weight:800;font-size:16px;color:var(--accent-gold);
+  }
+  .member-avatar--alt1{background:linear-gradient(135deg, rgba(168,85,247,0.3), rgba(34,211,238,0.12));color:var(--accent-quiz)}
+  .member-avatar--alt2{background:linear-gradient(135deg, rgba(34,211,238,0.3), rgba(110,237,216,0.12));color:var(--accent-discuss)}
+  .member-avatar--alt3{background:linear-gradient(135deg, rgba(110,237,216,0.3), rgba(252,179,0,0.12));color:var(--accent-teal)}
+
+  .member-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+  .member-name{
+    font-size:15px;font-weight:700;color:var(--text-primary);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .member-handle{
+    font-family:var(--font-display);font-size:11px;color:var(--text-muted);
+    letter-spacing:0.06em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+
+  .role-badge{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:5px 11px;border-radius:8px;
+    font-family:var(--font-display);font-size:10px;font-weight:700;
+    letter-spacing:0.1em;text-transform:uppercase;
+    border:1px solid transparent;flex-shrink:0;
+  }
+  .role-badge--owner{background:var(--role-owner-bg);color:var(--role-owner-c);border-color:var(--role-owner-bd)}
+  .role-badge--admin{background:var(--role-admin-bg);color:var(--role-admin-c);border-color:var(--role-admin-bd)}
+  .role-badge--member{background:var(--role-member-bg);color:var(--role-member-c);border-color:var(--role-member-bd)}
+  .role-badge svg{width:11px;height:11px}
+
+  .member-action{
+    width:30px;height:30px;border-radius:8px;padding:0;flex-shrink:0;
+    background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--text-muted);cursor:pointer;transition:all 0.2s;
+  }
+  .member-action:hover{background:rgba(255,255,255,0.06);color:var(--text-primary);border-color:rgba(255,255,255,0.12)}
+  .member-action svg{width:14px;height:14px}
+
+  /* ── Empty state ── */
+  .empty-state{
+    padding:60px 20px;text-align:center;
+    border:1px dashed var(--border-subtle);border-radius:14px;
+    background:rgba(12,12,26,0.3);
+  }
+  .empty-state__icon{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:56px;height:56px;border-radius:14px;
+    background:rgba(252,179,0,0.06);border:1px solid rgba(252,179,0,0.16);
+    margin-bottom:12px;
+  }
+  .empty-state__icon svg{width:24px;height:24px;color:var(--accent-gold)}
+  .empty-state__title{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;margin-bottom:6px;color:var(--text-primary)}
+  .empty-state__desc{font-size:12px;color:var(--text-muted)}
+
+  /* ══════════════════════════════════════════════════
+     Add Member Modal
+     ══════════════════════════════════════════════════ */
+  .modal-overlay{
+    position:fixed;inset:0;z-index:100;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(6,6,14,0.75);backdrop-filter:blur(8px);
+    padding:24px;
+    opacity:0;visibility:hidden;transition:all 0.25s;
+  }
+  .modal-overlay.open{opacity:1;visibility:visible}
+  .modal{
+    position:relative;width:100%;max-width:480px;
+    padding:28px 28px 24px;
+    background:linear-gradient(180deg, rgba(20,20,40,0.85) 0%, rgba(12,12,26,0.9) 100%);
+    backdrop-filter:blur(20px);
+    border:1px solid rgba(252,179,0,0.14);
+    border-radius:18px;
+    box-shadow:0 24px 80px rgba(0,0,0,0.6),0 0 40px rgba(252,179,0,0.06);
+    transform:translateY(20px) scale(0.96);
+    transition:transform 0.3s cubic-bezier(0.16,1,0.3,1);
+  }
+  .modal-overlay.open .modal{transform:translateY(0) scale(1)}
+
+  .modal__header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .modal__title{font-family:var(--font-display);font-size:14px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;background:linear-gradient(135deg,var(--accent-gold),#ffd24a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .modal__close{
+    width:30px;height:30px;padding:0;border-radius:8px;
+    background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);
+    color:var(--text-muted);cursor:pointer;transition:all 0.2s;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .modal__close:hover{color:var(--text-primary);background:rgba(255,255,255,0.08)}
+  .modal__close svg{width:14px;height:14px}
+
+  .modal__body{display:flex;flex-direction:column;gap:18px}
+  .field__label{
+    font-family:var(--font-display);font-size:10px;font-weight:700;
+    letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);
+    margin-bottom:8px;display:block;
+  }
+  .field__input,.field__select{
+    width:100%;padding:11px 14px;border-radius:11px;
+    background:rgba(6,6,14,0.6);border:1px solid var(--border-subtle);
+    color:var(--text-primary);font-family:var(--font-body);font-size:13px;
+    transition:all 0.25s;outline:none;
+  }
+  .field__input::placeholder{color:var(--text-dim)}
+  .field__input:focus,.field__select:focus{border-color:rgba(252,179,0,0.3);box-shadow:0 0 14px rgba(252,179,0,0.1)}
+  .field__select{
+    appearance:none;-webkit-appearance:none;cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238888a8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat;background-position:right 14px center;background-size:14px;
+    background-color:rgba(6,6,14,0.6);
+    padding-right:38px;
+  }
+  .field__hint{margin-top:6px;font-size:11px;color:var(--text-dim);letter-spacing:0.04em}
+
+  .modal__submit{
+    width:100%;padding:13px;border-radius:11px;border:1px solid rgba(252,179,0,0.3);
+    background:linear-gradient(135deg,rgba(252,179,0,0.22),rgba(110,237,216,0.1));
+    color:var(--accent-gold);
+    font-family:var(--font-display);font-size:12px;font-weight:800;
+    letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;transition:all 0.3s;
+    box-shadow:0 0 20px rgba(252,179,0,0.1);
+  }
+  .modal__submit:hover{background:linear-gradient(135deg,rgba(252,179,0,0.32),rgba(110,237,216,0.16));box-shadow:0 0 30px rgba(252,179,0,0.24)}
+
+  /* ── Responsive ── */
+  @media (max-width: 720px){
+    .arena-topbar{padding:12px 14px;gap:8px;flex-wrap:nowrap}
+    .arena-topbar__logo{width:30px;height:30px;font-size:13px;border-radius:8px}
+    .arena-topbar__title{font-size:13px;max-width:100px}
+    .arena-topbar__handle{font-size:10px}
+    .arena-topbar__status{display:none}
+    .brand-home{width:32px;height:32px;border-radius:9px}
+    .brand-home svg{width:15px;height:15px}
+    .brand-home__divider{display:none}
+    .team-switcher{gap:6px;padding:3px 4px 3px 3px}
+    .team-switcher__chevron{width:12px;height:12px}
+    .arena-topbar__actions{gap:6px}
+    .hud-btn{width:34px;height:34px;border-radius:9px}
+    .hud-btn svg{width:14px;height:14px}
+    .hud-btn__label{display:none}
+    .follow-btn{padding:6px 10px;font-size:10px}
+
+    .page{padding:8px 14px 60px}
+    .section-label{padding:0 14px;margin-bottom:14px}
+    .page-header{padding:14px 16px;gap:10px;flex-wrap:wrap}
+    .page-header__title{font-size:16px}
+    .btn-primary{padding:9px 14px;font-size:10px}
+
+    .filter-bar{gap:8px}
+    .role-tabs{width:100%;overflow-x:auto}
+    .role-tab{padding:7px 10px;font-size:9px}
+    .search-wrap{width:100%}
+
+    .members-grid{grid-template-columns:1fr;gap:10px}
+    .member-card{padding:12px 14px;gap:10px}
+    .member-avatar{width:38px;height:38px;font-size:14px}
+    .member-name{font-size:13px}
+    .member-handle{font-size:10px}
+    .role-badge{padding:4px 9px;font-size:9px}
+
+    .modal{padding:22px 20px 18px}
+    .modal__title{font-size:12px}
+  }
+
+  /* ═══════════ Light theme override ═══════════ */
+  [data-theme="light"] {
+    --bg-void: #f4f3ef;
+    --bg-glass: rgba(255, 255, 255, 0.78);
+    --bg-glass-hover: rgba(255, 255, 255, 0.92);
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --text-primary: #1a1a24;
+    --text-muted: #5f6075;
+    --text-dim: #9d9db3;
+    --accent-gold: #c68700;
+    --accent-teal: #12a58a;
+    --accent-poll: #4f46e5;
+    --accent-quiz: #7e22ce;
+    --accent-discuss: #0891b2;
+  }
+  [data-theme="light"] body { background: var(--bg-void); color: var(--text-primary); }
+  [data-theme="light"] .star { background: rgba(20, 20, 40, 0.45); }
+  [data-theme="light"] .shooting {
+    background: linear-gradient(90deg, transparent, rgba(198, 135, 0, 0.75), rgba(198, 135, 0, 0));
+  }
+  [data-theme="light"] .bg-grid__plane {
+    background:
+      linear-gradient(rgba(198, 135, 0, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(198, 135, 0, 0.06) 1px, transparent 1px);
+  }
+  [data-theme="light"] .bg-orb { opacity: 0.12; mix-blend-mode: multiply; }
+  [data-theme="light"] .bg-scanline {
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.015) 2px, rgba(0,0,0,0.015) 4px);
+  }
+  [data-theme="light"] .arena::before,
+  [data-theme="light"] .team-arena::before {
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 50%, rgba(252, 179, 0, 0.09) 0%, transparent 60%),
+      radial-gradient(ellipse 120% 100% at 50% 120%, rgba(110, 237, 216, 0.06) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, var(--bg-void) 0%, var(--bg-void) 100%);
+  }
+  [data-theme="light"] .post-card,
+  [data-theme="light"] .action-card,
+  [data-theme="light"] .tier-card,
+  [data-theme="light"] .draft-card,
+  [data-theme="light"] .member-card,
+  [data-theme="light"] .setting-card,
+  [data-theme="light"] .reward-card,
+  [data-theme="light"] .hud-stat,
+  [data-theme="light"] .team-intro__chip,
+  [data-theme="light"] .enterprise-card,
+  [data-theme="light"] .page-header {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 4px 20px rgba(0,0,0,0.06);
+  }
+  [data-theme="light"] .post-card.active {
+    box-shadow: 0 12px 60px rgba(0, 0, 0, 0.15);
+    border-color: rgba(252, 179, 0, 0.35);
+  }
+  [data-theme="light"] .post-card__thumb,
+  [data-theme="light"] .arena-topbar__logo {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+  [data-theme="light"] .arena-topbar__title,
+  [data-theme="light"] .modal__title,
+  [data-theme="light"] .hero__title-ko {
+    background: linear-gradient(135deg, #c68700, #8d5f00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  [data-theme="light"] .arena-topbar__status { background: rgba(18, 165, 138, 0.10); border-color: rgba(18, 165, 138, 0.25); color: #0d7f6b; }
+  [data-theme="light"] .arena-topbar__status::before { background: #0d7f6b; box-shadow: 0 0 6px #0d7f6b; }
+
+
+  /* ══════════ Settings Sidebar (arena pattern) ══════════ */
+  .ta-sidebar-backdrop {
+    position: fixed; inset: 0; z-index: 140;
+    background: rgba(6, 6, 14, 0.45); backdrop-filter: blur(4px);
+    opacity: 0; visibility: hidden; transition: opacity 0.25s ease;
+  }
+  .ta-sidebar-backdrop[data-open="true"] { opacity: 1; visibility: visible; }
+
+  .ta-sidebar {
+    position: fixed; top: 0; right: 0;
+    width: 360px; height: 100vh; z-index: 150;
+    background: var(--bg-void);
+    backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px);
+    border-left: 1px solid var(--border-subtle);
+    box-shadow: -8px 0 60px rgba(0,0,0,0.4);
+    transform: translateX(100%); transition: transform 0.45s cubic-bezier(0.16,1,0.3,1);
+    display: flex; flex-direction: column; overflow: hidden;
+    color: var(--text-primary); font-family: var(--font-body);
+  }
+  [data-theme="light"] .ta-sidebar { box-shadow: -8px 0 60px rgba(0,0,0,0.12); }
+  .ta-sidebar[data-open="true"] { transform: translateX(0); }
+
+  .ta-sidebar__header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 28px 20px; border-bottom: 1px solid var(--border-subtle); flex-shrink: 0;
+  }
+  .ta-sidebar__title {
+    font-family: var(--font-display); font-size: 14px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-primary);
+  }
+  .ta-sidebar__close {
+    width: 32px; height: 32px; border-radius: 8px; padding: 0;
+    background: transparent; border: 1px solid var(--border-subtle);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s; color: var(--text-muted);
+  }
+  .ta-sidebar__close:hover { background: rgba(20,20,40,0.8); border-color: rgba(252,179,0,0.2); color: var(--accent-gold); }
+  [data-theme="light"] .ta-sidebar__close:hover { background: rgba(0,0,0,0.06); }
+  .ta-sidebar__close svg { width: 16px; height: 16px; }
+
+  .ta-sidebar__body {
+    flex: 1; overflow-y: auto; padding: 28px;
+    display: flex; flex-direction: column; gap: 28px;
+  }
+  .ta-sidebar__group { display: flex; flex-direction: column; gap: 14px; }
+  .ta-sidebar__group-label {
+    font-family: var(--font-display); font-size: 10px; font-weight: 600;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim);
+  }
+  .ta-sidebar__options { display: flex; gap: 8px; }
+  .ta-sidebar__opt {
+    flex: 1; padding: 12px 16px; border-radius: 10px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle);
+    cursor: pointer; transition: all 0.25s;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    color: var(--text-muted); font-size: 12px; font-weight: 500;
+  }
+  [data-theme="light"] .ta-sidebar__opt { background: rgba(0,0,0,0.03); }
+  .ta-sidebar__opt:hover { background: rgba(252,179,0,0.04); border-color: rgba(252,179,0,0.15); }
+  .ta-sidebar__opt[aria-selected="true"] {
+    background: rgba(252,179,0,0.08); border-color: rgba(252,179,0,0.3); color: var(--accent-gold);
+  }
+  .ta-sidebar__opt svg { width: 22px; height: 22px; }
+  .ta-sidebar__opt-icon {
+    font-family: var(--font-display); font-size: 16px; font-weight: 700; line-height: 1;
+  }
+
+  .ta-sidebar__footer {
+    margin-top: auto; padding-top: 24px; border-top: 1px solid var(--border-subtle);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .ta-sidebar__action {
+    width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 16px; border-radius: 10px; font-family: var(--font-display);
+    font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.25s; border: 1px solid var(--border-subtle);
+    background: rgba(255,255,255,0.03); color: var(--text-primary); text-decoration: none;
+  }
+  [data-theme="light"] .ta-sidebar__action { background: rgba(0,0,0,0.03); }
+  .ta-sidebar__action:hover {
+    border-color: rgba(252,179,0,0.3); color: var(--accent-gold);
+    box-shadow: 0 0 14px rgba(252,179,0,0.06);
+  }
+  .ta-sidebar__action svg { width: 16px; height: 16px; }
+  .ta-sidebar__action--login {
+    background: linear-gradient(135deg,rgba(252,179,0,0.2),rgba(110,237,216,0.08));
+    border-color: rgba(252,179,0,0.3); color: var(--accent-gold);
+  }
+  .ta-sidebar__action--login:hover {
+    background: linear-gradient(135deg,rgba(252,179,0,0.3),rgba(110,237,216,0.14));
+    box-shadow: 0 0 24px rgba(252,179,0,0.22); transform: translateY(-1px);
+  }
+  .ta-sidebar__action--logout {
+    border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.06); color: #ef4444;
+  }
+  .ta-sidebar__action--logout:hover {
+    background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.4);
+    box-shadow: 0 0 16px rgba(239,68,68,0.08); color: #ef4444;
+  }
+  @media (max-width: 500px) { .ta-sidebar { width: 100%; } }
+
+
+  /* ── Back/Home buttons unified with HUD style ── */
+  .brand-home {
+    background: var(--bg-glass) !important;
+    border: 1px solid var(--border-subtle) !important;
+  }
+  .brand-home svg { color: var(--text-muted) !important; transition: color 0.2s; }
+  .brand-home:hover svg { color: var(--accent-gold) !important; }
+  .brand-home:hover {
+    background: var(--bg-glass-hover) !important;
+    border-color: rgba(252,179,0,0.25) !important;
+  }
+  [data-theme="light"] .brand-home:hover {
+    border-color: rgba(198,135,0,0.30) !important;
+  }
+
+  @media (max-width: 720px) {
+    .arena-topbar {
+      padding: 10px 12px;
+      gap: 6px;
+    }
+    /* Compress the team switcher so it doesn't squeeze the HUD row */
+    .arena-topbar__title { max-width: 88px; font-size: 12px; }
+    .arena-topbar__handle { display: none; }
+    .team-switcher__body { gap: 0; }
+    .arena-topbar__actions { gap: 4px; }
+    .hud-btn { width: 32px; height: 32px; border-radius: 8px; }
+    .hud-btn svg { width: 13px; height: 13px; }
+    .follow-btn { padding: 5px 10px; font-size: 10px; letter-spacing: 0.06em; }
+  }
+
+  @media (max-width: 540px) {
+    /* Hide the team title text entirely — keep only logo + chevron */
+    .arena-topbar { padding: 8px 10px; gap: 4px; }
+    .arena-topbar__title,
+    .team-switcher__body { display: none; }
+    .team-switcher { padding: 2px; gap: 0; }
+    .team-switcher__chevron { display: none; }
+    .arena-topbar__logo { width: 28px; height: 28px; font-size: 12px; border-radius: 7px; }
+
+    .brand-home { width: 30px; height: 30px; border-radius: 8px; }
+    .brand-home svg { width: 14px; height: 14px; }
+
+    .hud-btn { width: 30px; height: 30px; border-radius: 8px; }
+    .hud-btn svg { width: 13px; height: 13px; }
+
+    /* Follow becomes icon-only */
+    .follow-btn {
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      font-size: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .follow-btn::before {
+      content: '+';
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0;
+      color: var(--accent-gold);
+    }
+  }
+
+  @media (max-width: 380px) {
+    /* Very narrow phones — drop the team logo too */
+    .team-switcher,
+    .brand-home__divider { display: none; }
+  }
+
+
+  /* ── Topbar fixed with gradient fade (matches Dioxus implementation) ── */
+  .arena-topbar {
+    position: fixed !important;
+    top: 0; left: 0; right: 0;
+    z-index: 100 !important;
+    background: linear-gradient(180deg, var(--bg-void) 0%, rgba(6,6,14,0.85) 65%, transparent 100%) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: none !important;
+  }
+  [data-theme="light"] .arena-topbar {
+    background: linear-gradient(180deg, var(--bg-void) 0%, rgba(244,243,239,0.85) 65%, transparent 100%) !important;
+  }
+  .arena {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 100vh;
+    padding-top: 80px;
+  }
+  html, body {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh;
+  }
+  @media (max-width: 540px) {
+    .arena { padding-top: 64px; }
+  }
+
+
+  /* ── Topbar fixed with gradient fade (matches Dioxus implementation) ── */
+  .arena-topbar {
+    position: fixed !important;
+    top: 0; left: 0; right: 0;
+    z-index: 100 !important;
+    background: linear-gradient(180deg, var(--bg-void) 0%, var(--bg-void) 70%, transparent 100%) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: none !important;
+  }
+  [data-theme="light"] .arena-topbar {
+    background: linear-gradient(180deg, var(--bg-void) 0%, var(--bg-void) 70%, transparent 100%) !important;
+  }
+  .arena {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 100vh;
+    padding-top: 110px;
+  }
+  html, body {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh;
+  }
+  @media (max-width: 540px) {
+    .arena { padding-top: 84px; }
+  }
+
+
+  /* ── Member action menu ─────────────────────────── */
+  .member-action-wrap { position: relative; flex-shrink: 0; }
+  .member-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 200px;
+    padding: 6px;
+    background: var(--bg-glass);
+    backdrop-filter: blur(18px);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+    opacity: 0; visibility: hidden; transform: translateY(-4px);
+    transition: all 0.18s ease;
+    z-index: 40;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  [data-theme="light"] .member-menu { box-shadow: 0 12px 30px rgba(0,0,0,0.14); }
+  .member-action-wrap[aria-expanded="true"] .member-menu {
+    opacity: 1; visibility: visible; transform: translateY(0);
+  }
+  .member-menu__item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 11px; border-radius: 8px;
+    background: none; border: none; cursor: pointer;
+    color: var(--text-primary);
+    font-family: var(--font-body); font-size: 13px; font-weight: 500;
+    text-align: left; width: 100%;
+    transition: background 0.15s;
+  }
+  .member-menu__item:hover { background: rgba(255,255,255,0.05); }
+  [data-theme="light"] .member-menu__item:hover { background: rgba(0,0,0,0.05); }
+  .member-menu__item svg { width: 14px; height: 14px; color: var(--text-muted); flex-shrink: 0; }
+  .member-menu__item--danger { color: #ef4444; }
+  .member-menu__item--danger svg { color: #ef4444; }
+  [data-theme="light"] .member-menu__item--danger,
+  [data-theme="light"] .member-menu__item--danger svg { color: #b91c1c; }
+  .member-menu__item--danger:hover { background: rgba(239,68,68,0.08); }
+  .member-menu__divider { height: 1px; background: var(--border-subtle); margin: 2px 0; }
+
+
+  /* When a member action menu is open, allow the card to overflow so the
+     dropdown isn't clipped (the card has overflow: hidden by default). */
+  .member-card:has(.member-action-wrap[aria-expanded="true"]) {
+    overflow: visible !important;
+    z-index: 50;
+  }
+
+
+  /* Light theme: keep visible border on member-action hover */
+  [data-theme="light"] .member-action {
+    background: rgba(0,0,0,0.03);
+  }
+  [data-theme="light"] .member-action:hover {
+    background: rgba(0,0,0,0.06);
+    border-color: rgba(0,0,0,0.18);
+    color: var(--text-primary);
+  }
+
+
+  /* Light theme: Invite Member modal */
+  [data-theme="light"] .modal {
+    background: linear-gradient(180deg, #ffffff 0%, #faf8f3 100%);
+    border-color: rgba(198, 135, 0, 0.22);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.14), 0 0 30px rgba(198, 135, 0, 0.06);
+  }
+  [data-theme="light"] .field__input,
+  [data-theme="light"] .field__select {
+    background-color: rgba(0, 0, 0, 0.03);
+    color: var(--text-primary);
+    border-color: var(--border-subtle);
+  }
+  [data-theme="light"] .field__select {
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 14px;
+  }
+  [data-theme="light"] .field__input::placeholder { color: var(--text-dim); }
+  [data-theme="light"] .field__input:focus,
+  [data-theme="light"] .field__select:focus {
+    border-color: rgba(198, 135, 0, 0.35);
+    box-shadow: 0 0 14px rgba(198, 135, 0, 0.10);
+  }
+  [data-theme="light"] .field__select {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235f6075' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+  [data-theme="light"] .modal__close {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: var(--border-subtle);
+    color: var(--text-muted);
+  }
+  [data-theme="light"] .modal__close:hover {
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--text-primary);
+  }
+  [data-theme="light"] .modal__submit {
+    background: linear-gradient(135deg, rgba(198, 135, 0, 0.22), rgba(18, 165, 138, 0.10));
+    border-color: rgba(198, 135, 0, 0.35);
+    color: var(--accent-gold);
+  }
+  [data-theme="light"] .modal__submit:hover {
+    background: linear-gradient(135deg, rgba(198, 135, 0, 0.32), rgba(18, 165, 138, 0.16));
+    box-shadow: 0 0 28px rgba(198, 135, 0, 0.24);
+  }
+  [data-theme="light"] .modal__title {
+    background: linear-gradient(135deg, #c68700, #8d5f00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="arena">
+
+  <!-- BG layers -->
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs">
+    <div class="bg-orb bg-orb--1"></div>
+    <div class="bg-orb bg-orb--2"></div>
+    <div class="bg-orb bg-orb--3"></div>
+  </div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <!-- ═══════ TOP BAR ═══════ -->
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <!-- Back -->
+      <button class="brand-home" id="brand-back" aria-label="Go back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"/>
+          <polyline points="12 19 5 12 12 5"/>
+        </svg>
+      </button>
+      <!-- Home (team home) -->
+      <button class="brand-home" id="brand-home" aria-label="Team home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        </svg>
+      </button>
+      <span class="brand-home__divider"></span>
+
+      <!-- Team switcher (simplified, no dropdown here — same pattern as team-arena) -->
+      <div class="team-switcher" id="team-switcher" aria-expanded="false" role="button" tabindex="0">
+        <div class="arena-topbar__logo">V</div>
+        <div class="team-switcher__body">
+          <span class="arena-topbar__title">victor_team</span>
+          <span class="arena-topbar__handle">@victor_team</span>
+        </div>
+        <svg class="team-switcher__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+
+      <span class="arena-topbar__status">Team · Active</span>
+    </div>
+
+    <div class="arena-topbar__actions">
+      <button class="hud-btn" aria-label="Drafts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+        <span class="hud-btn__label">Drafts</span>
+      </button>
+      <span class="brand-home__divider" style="margin:0 2px"></span>
+      <button class="hud-btn hud-btn--active" aria-label="Members">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span class="hud-btn__label">Members</span>
+      </button>
+      <button class="hud-btn" aria-label="Rewards">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+        </svg>
+        <span class="hud-btn__label">Rewards</span>
+      </button>
+      <button class="hud-btn" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span class="hud-btn__label">Settings</span>
+      </button>
+      <button class="follow-btn">Follow</button>
+    </div>
+  </div>
+
+  <!-- ═══════ SECTION LABEL ═══════ -->
+  <div class="section-label">
+    <span class="section-label__dash"></span>
+    <span class="section-label__title">Team <strong>Members</strong></span>
+    <span class="section-label__dash"></span>
+  </div>
+
+  <!-- ═══════ PAGE ═══════ -->
+  <div class="page">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div class="page-header__left">
+        <h1 class="page-header__title">Team Management</h1>
+        <span class="page-header__sub"><strong>4</strong> members · manage access and roles</span>
+      </div>
+      <button class="btn-primary" id="open-add">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
+        </svg>
+        Add Member
+      </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+      <div class="role-tabs">
+        <button class="role-tab active">All <span class="role-tab__count">4</span></button>
+        <button class="role-tab">Owner <span class="role-tab__count">1</span></button>
+        <button class="role-tab">Admin <span class="role-tab__count">1</span></button>
+        <button class="role-tab">Member <span class="role-tab__count">2</span></button>
+      </div>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input class="search-input" type="text" placeholder="Search by name or handle…" />
+      </div>
+    </div>
+
+    <!-- Members grid -->
+    <div class="members-grid">
+
+      <!-- Owner -->
+      <div class="member-card">
+        <div class="member-avatar">V</div>
+        <div class="member-body">
+          <span class="member-name">victor10</span>
+          <span class="member-handle">@victor10</span>
+        </div>
+        <span class="role-badge role-badge--owner">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 17l10 5 10-5M2 12l10 5 10-5M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg>
+          Owner
+        </span>
+
+      </div>
+
+      <!-- Admin -->
+      <div class="member-card">
+        <div class="member-avatar member-avatar--alt1">H</div>
+        <div class="member-body">
+          <span class="member-name">hackartist</span>
+          <span class="member-handle">@hackartist</span>
+        </div>
+        <span class="role-badge role-badge--admin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Admin
+        </span>
+              <div class="member-action-wrap" data-role="admin" aria-expanded="false">
+        <button class="member-action" aria-label="More" type="button">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+        </button>
+        <div class="member-menu" role="menu">
+          <button class="member-menu__item" type="button" data-action="toggle-role">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            멤버로 변경
+          </button>
+          <div class="member-menu__divider"></div>
+          <button class="member-menu__item member-menu__item--danger" type="button" data-action="remove">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+            팀에서 제거
+          </button>
+        </div>
+      </div>
+      </div>
+
+      <!-- Member -->
+      <div class="member-card">
+        <div class="member-avatar member-avatar--alt2">S</div>
+        <div class="member-body">
+          <span class="member-name">sophia.eth</span>
+          <span class="member-handle">@sophia</span>
+        </div>
+        <span class="role-badge role-badge--member">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Member
+        </span>
+              <div class="member-action-wrap" data-role="member" aria-expanded="false">
+        <button class="member-action" aria-label="More" type="button">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+        </button>
+        <div class="member-menu" role="menu">
+          <button class="member-menu__item" type="button" data-action="toggle-role">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            관리자로 변경
+          </button>
+          <div class="member-menu__divider"></div>
+          <button class="member-menu__item member-menu__item--danger" type="button" data-action="remove">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+            팀에서 제거
+          </button>
+        </div>
+      </div>
+      </div>
+
+      <!-- Member -->
+      <div class="member-card">
+        <div class="member-avatar member-avatar--alt3">M</div>
+        <div class="member-body">
+          <span class="member-name">minji</span>
+          <span class="member-handle">@minji</span>
+        </div>
+        <span class="role-badge role-badge--member">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Member
+        </span>
+              <div class="member-action-wrap" data-role="member" aria-expanded="false">
+        <button class="member-action" aria-label="More" type="button">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+        </button>
+        <div class="member-menu" role="menu">
+          <button class="member-menu__item" type="button" data-action="toggle-role">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            관리자로 변경
+          </button>
+          <div class="member-menu__divider"></div>
+          <button class="member-menu__item member-menu__item--danger" type="button" data-action="remove">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+            팀에서 제거
+          </button>
+        </div>
+      </div>
+      </div>
+
+    </div>
+
+    <!-- Empty state example (hidden by default) -->
+    <div class="empty-state" style="margin-top:20px;display:none" id="empty-state">
+      <div class="empty-state__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      </div>
+      <div class="empty-state__title">No members yet</div>
+      <div class="empty-state__desc">Invite teammates to collaborate on proposals and governance.</div>
+    </div>
+
+  </div>
+
+  <!-- ═══════ ADD MEMBER MODAL ═══════ -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" role="dialog" aria-labelledby="modal-title">
+      <div class="modal__header">
+        <span class="modal__title" id="modal-title">Invite Member</span>
+        <button class="modal__close" id="modal-close" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <div>
+          <label class="field__label" for="group-select">Group</label>
+          <select class="field__select" id="group-select">
+            <option value="admin">Admin — full management access</option>
+            <option value="member" selected>Member — standard access</option>
+          </select>
+        </div>
+        <div>
+          <label class="field__label" for="invite-input">Email, name, or phone</label>
+          <input class="field__input" id="invite-input" type="text" placeholder="e.g. john@example.com · john · 01012345678" />
+          <p class="field__hint">We'll send an invite that lets them join this team.</p>
+        </div>
+        <button class="modal__submit">Send Invite</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Back
+  document.getElementById('brand-back')?.addEventListener('click', () => {
+    if (window.history.length > 1) window.history.back();
+    else window.location.href = '/';
+  });
+
+  // Stars
+  (function(){
+    const layer = document.getElementById('stars');
+    if(!layer) return;
+    const count = 90;
+    for(let i=0; i<count; i++){
+      const s = document.createElement('div');
+      s.className = 'star';
+      const size = Math.random() < 0.15 ? 2 + Math.random()*1.5 : 1 + Math.random()*0.8;
+      s.style.width = size + 'px';
+      s.style.height = size + 'px';
+      s.style.left = Math.random()*100 + '%';
+      s.style.top = Math.random()*100 + '%';
+      s.style.animationDuration = (3 + Math.random()*5).toFixed(2) + 's';
+      s.style.animationDelay = (-Math.random()*6).toFixed(2) + 's';
+      if(Math.random() < 0.08){
+        s.style.background = '#fcb300';
+        s.style.boxShadow = '0 0 6px rgba(252,179,0,0.5)';
+      } else if(Math.random() < 0.10){
+        s.style.background = '#6eedd8';
+        s.style.boxShadow = '0 0 4px rgba(110,237,216,0.4)';
+      }
+      layer.appendChild(s);
+    }
+    for(let i=0; i<2; i++){
+      const ss = document.createElement('div');
+      ss.className = 'shooting';
+      ss.style.top = (10 + i*38 + Math.random()*10) + '%';
+      ss.style.left = (Math.random()*40) + '%';
+      ss.style.animationDelay = (-Math.random()*8 + (i*3)).toFixed(2) + 's';
+      layer.appendChild(ss);
+    }
+  })();
+
+  // Role tab toggle
+  document.querySelectorAll('.role-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.role-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  // Modal
+  const modal = document.getElementById('modal-overlay');
+  document.getElementById('open-add')?.addEventListener('click', () => modal.classList.add('open'));
+  document.getElementById('modal-close')?.addEventListener('click', () => modal.classList.remove('open'));
+  modal?.addEventListener('click', (e) => {
+    if(e.target === modal) modal.classList.remove('open');
+  });
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') modal.classList.remove('open');
+  });
+</script>
+
+<!-- ══════════ SETTINGS SIDEBAR ══════════ -->
+<div class="ta-sidebar-backdrop" id="ta-sidebar-backdrop"></div>
+<aside class="ta-sidebar" id="ta-sidebar" aria-label="Settings">
+  <div class="ta-sidebar__header">
+    <span class="ta-sidebar__title">Settings</span>
+    <button class="ta-sidebar__close" id="ta-sidebar-close" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="ta-sidebar__body">
+    <div class="ta-sidebar__group">
+      <span class="ta-sidebar__group-label">Theme</span>
+      <div class="ta-sidebar__options">
+        <div class="ta-sidebar__opt" data-ta-theme="dark" role="button" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+          Dark
+        </div>
+        <div class="ta-sidebar__opt" data-ta-theme="light" role="button" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+          Light
+        </div>
+        <div class="ta-sidebar__opt" data-ta-theme="system" role="button" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          System
+        </div>
+      </div>
+    </div>
+    <div class="ta-sidebar__group">
+      <span class="ta-sidebar__group-label">Language</span>
+      <div class="ta-sidebar__options">
+        <div class="ta-sidebar__opt" data-ta-lang="en" role="button" tabindex="0"><span class="ta-sidebar__opt-icon">EN</span>English</div>
+        <div class="ta-sidebar__opt" data-ta-lang="ko" role="button" tabindex="0"><span class="ta-sidebar__opt-icon">KO</span>Korean</div>
+      </div>
+    </div>
+    <div class="ta-sidebar__footer">
+      <a class="ta-sidebar__action" href="team-setting.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        Team Settings
+      </a>
+      <button class="ta-sidebar__action ta-sidebar__action--logout" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Log Out
+      </button>
+    </div>
+  </div>
+</aside>
+<script>
+(function(){
+  var sidebar = document.getElementById('ta-sidebar');
+  var backdrop = document.getElementById('ta-sidebar-backdrop');
+  var closeBtn = document.getElementById('ta-sidebar-close');
+  var settingsBtn = document.querySelector('.hud-btn[aria-label="Settings"]');
+  function open(){ sidebar.setAttribute('data-open','true'); backdrop.setAttribute('data-open','true'); }
+  function close(){ sidebar.setAttribute('data-open','false'); backdrop.setAttribute('data-open','false'); }
+  if(settingsBtn) settingsBtn.addEventListener('click', function(e){ e.preventDefault(); open(); });
+  if(closeBtn) closeBtn.addEventListener('click', close);
+  if(backdrop) backdrop.addEventListener('click', close);
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') close(); });
+
+  // Theme options
+  document.querySelectorAll('[data-ta-theme]').forEach(function(el){
+    el.addEventListener('click', function(){
+      var mode = el.getAttribute('data-ta-theme');
+      var html = document.documentElement;
+      if(mode === 'system'){
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        html.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+      } else {
+        html.setAttribute('data-theme', mode);
+      }
+      syncOptions();
+    });
+  });
+  function syncOptions(){
+    var cur = document.documentElement.getAttribute('data-theme') || 'dark';
+    document.querySelectorAll('[data-ta-theme]').forEach(function(el){
+      el.setAttribute('aria-selected', el.getAttribute('data-ta-theme') === cur ? 'true' : 'false');
+    });
+  }
+  syncOptions();
+
+  // Language options (visual-only for mockup)
+  document.querySelectorAll('[data-ta-lang]').forEach(function(el){
+    el.addEventListener('click', function(){
+      document.querySelectorAll('[data-ta-lang]').forEach(function(b){ b.setAttribute('aria-selected','false'); });
+      el.setAttribute('aria-selected','true');
+    });
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  document.addEventListener('click', function(e){
+    var toggle = e.target.closest('.member-action');
+    if(toggle && toggle.closest('.member-action-wrap')){
+      e.stopPropagation();
+      var wrap = toggle.closest('.member-action-wrap');
+      var isOpen = wrap.getAttribute('aria-expanded') === 'true';
+      document.querySelectorAll('.member-action-wrap[aria-expanded="true"]').forEach(function(w){ w.setAttribute('aria-expanded','false'); });
+      wrap.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+      return;
+    }
+    var item = e.target.closest('.member-menu__item');
+    if(item){
+      e.stopPropagation();
+      var wrap2 = item.closest('.member-action-wrap');
+      var card = wrap2.closest('.member-card');
+      var action = item.getAttribute('data-action');
+      var role = wrap2.getAttribute('data-role');
+      if(action === 'toggle-role'){
+        var badge = card.querySelector('.role-badge');
+        if(role === 'admin'){
+          badge.className = 'role-badge role-badge--member';
+          badge.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Member';
+          wrap2.setAttribute('data-role','member');
+          var btn = wrap2.querySelector('[data-action="toggle-role"]');
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> 관리자로 변경';
+        } else if(role === 'member'){
+          badge.className = 'role-badge role-badge--admin';
+          badge.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Admin';
+          wrap2.setAttribute('data-role','admin');
+          var btn2 = wrap2.querySelector('[data-action="toggle-role"]');
+          btn2.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> 멤버로 변경';
+        }
+      } else if(action === 'remove'){
+        card.style.transition = 'all 0.25s ease';
+        card.style.opacity = '0'; card.style.transform = 'translateX(16px)';
+        setTimeout(function(){ card.remove(); }, 260);
+      }
+      wrap2.setAttribute('aria-expanded','false');
+      return;
+    }
+    // Click outside: close all menus
+    document.querySelectorAll('.member-action-wrap[aria-expanded="true"]').forEach(function(w){ w.setAttribute('aria-expanded','false'); });
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+      document.querySelectorAll('.member-action-wrap[aria-expanded="true"]').forEach(function(w){ w.setAttribute('aria-expanded','false'); });
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

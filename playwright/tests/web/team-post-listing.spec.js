@@ -1,5 +1,10 @@
 import { test, expect } from "@playwright/test";
-import { click, fill, goto, getLocator, getEditor } from "../utils";
+import {
+  click,
+  createTeamFromHome,
+  createTeamPostFromHome,
+  openTeamFromHome,
+} from "../utils";
 
 // This test verifies the fix for issue #1311:
 // Team posts should appear in the Team Home list after creation.
@@ -19,47 +24,28 @@ test.describe.serial("Team post listing (issue-1311)", () => {
   test("Create a team and publish a post, then verify it appears in team home", async ({
     page,
   }) => {
-    // Step 1: Navigate to home and create a team
-    await goto(page, "/");
-    await click(page, { label: "User Profile" });
-    await click(page, { text: "Create Team" });
-
-    // Fill in team creation form
-    const nicknameInput = page.locator('[data-testid="team-nickname-input"]');
-    await nicknameInput.fill(teamNickname);
-
-    const usernameInput = page.locator('[data-testid="team-username-input"]');
-    await usernameInput.fill(teamUsername);
-
-    const descInput = page.locator('[data-testid="team-description-input"]');
-    await descInput.fill("E2E test team for post listing");
-
-    await click(page, { text: "Create" });
-
-    // Wait for navigation to team home
-    await page.waitForURL(new RegExp(`/${teamUsername}/home`), {
-      waitUntil: "load",
+    // Step 1: Create the team through the home → Teams HUD → "Create Team"
+    // popup UI flow (same path a user exercises in production).
+    await createTeamFromHome(page, {
+      username: teamUsername,
+      nickname: teamNickname,
+      description: "E2E test team for post listing",
     });
 
-    // Step 2: Create a post from the team home page
-    await click(page, { text: "Create" });
-    await page.waitForURL(/\/posts\/.*\/edit/, { waitUntil: "load" });
+    // Step 2: Drive post creation through the production UI flow:
+    // home (`/`) → Teams HUD dropdown → pick team → team home → Create Post.
+    // createTeamPostFromHome fills title + body and waits for autosave.
+    await createTeamPostFromHome(page, teamUsername, postTitle, postContents);
 
-    // Step 3: Fill in post content
-    await fill(page, { placeholder: "Title" }, postTitle);
+    // Step 3: Publish the post. The post-edit renewal dropped the old
+    // visibility modal — the top-bar Publish button publishes directly
+    // using the inline visibility selector (defaults to Public).
+    await click(page, { role: "button", text: "Publish" });
+    await page.waitForURL(/\/posts\/[^/]+$/, { waitUntil: "load" });
 
-    const editor = await getEditor(page);
-    await editor.fill(postContents);
-
-    // Step 4: Publish the post
-    await click(page, { text: "Publish" }); // opens VisibilityModal
-    await click(page, { label: "Confirm visibility selection" }); // confirm publish
-    await page.waitForURL(/\/posts\//, { waitUntil: "load" });
-
-    // Step 5: Navigate back to team home
-    await goto(page, `/${teamUsername}/home`);
-
-    // Step 6: Verify the post appears in the team home list
+    // Step 4: Navigate back to team home via the home dropdown to confirm
+    // the post surfaces in the team home list.
+    await openTeamFromHome(page, teamUsername);
     const postElement = page.getByText(postTitle);
     await expect(postElement).toBeVisible({ timeout: 10000 });
   });

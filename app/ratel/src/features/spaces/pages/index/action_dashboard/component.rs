@@ -1,9 +1,8 @@
-use crate::features::spaces::pages::actions::controllers::list_actions;
 use crate::features::spaces::pages::actions::types::{SpaceActionSummary, SpaceActionType};
-use crate::features::spaces::pages::index::action_pages::quiz::CompletedActionCard;
+use crate::features::spaces::pages::index::action_pages::quiz::{
+    ActiveActionOverlay, ActiveActionOverlaySignal, CompletedActionCard,
+};
 use crate::features::spaces::pages::index::*;
-use crate::features::spaces::space_common::hooks::use_space;
-use crate::features::spaces::space_common::types::space_page_actions_key;
 
 #[derive(Clone, Copy, PartialEq)]
 pub(super) enum ActionStatus {
@@ -57,13 +56,17 @@ pub(super) fn derive_action_status(action: &SpaceActionSummary) -> ActionStatus 
 }
 
 #[component]
-pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
+pub fn ActionDashboard(
+    space_id: ReadSignal<SpacePartition>,
+    #[props(default)] is_admin: bool,
+) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
-    let actions_key = space_page_actions_key(&space_id());
-    let actions_loader = use_query(&actions_key, move || list_actions(space_id()))?;
-    let actions = actions_loader();
+    let mut space_ctx = crate::features::spaces::space_common::providers::use_space_context();
+    let actions = space_ctx.actions();
     let lang = use_language();
-    let mut query = use_query_store();
+    let mut type_picker_open = use_signal(|| false);
+    let nav = use_navigator();
+    let mut toast = use_toast();
 
     let active: Vec<_> = actions
         .iter()
@@ -97,12 +100,11 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
     // After fly animation: clear signal and refresh the actions list
     use_effect(move || {
         if completed_action.0().is_some() {
-            let actions_key = space_page_actions_key(&space_id());
             spawn(async move {
                 #[cfg(feature = "web")]
                 gloo_timers::future::sleep(std::time::Duration::from_millis(1500)).await;
                 completed_action.0.set(None);
-                query.invalidate(&actions_key);
+                space_ctx.actions.restart();
             });
         }
     });
@@ -113,9 +115,35 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
 
         div { class: "quest-label",
             span { class: "quest-label__title", "{tr.your_quests}" }
+            span {
+                class: "quest-label__info",
+                aria_label: "{tr.your_quests_tooltip}",
+                svg {
+                    view_box: "0 0 24 24",
+                    fill: "none",
+                    stroke: "currentColor",
+                    stroke_linecap: "round",
+                    stroke_linejoin: "round",
+                    stroke_width: "2",
+                    circle { cx: "12", cy: "12", r: "10" }
+                    line {
+                        x1: "12",
+                        y1: "16",
+                        x2: "12",
+                        y2: "12",
+                    }
+                    line {
+                        x1: "12",
+                        y1: "8",
+                        x2: "12.01",
+                        y2: "8",
+                    }
+                }
+                span { class: "quest-label__info-tip", "{tr.your_quests_tooltip}" }
+            }
         }
 
-        if active.is_empty() {
+        if active.is_empty() && !is_admin {
             div { class: "quest-empty",
                 div { class: "quest-empty__icon",
                     svg {
@@ -144,18 +172,45 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
                             let key = action.action_id.clone();
                             match action.action_type {
                                 SpaceActionType::Poll => rsx! {
-                                    PollActionCard { key: "{key}", action, space_id }
+                                    PollActionCard {
+                                        key: "{key}",
+                                        action,
+                                        space_id,
+                                        is_admin,
+                                    }
                                 },
                                 SpaceActionType::TopicDiscussion => rsx! {
-                                    DiscussionActionCard { key: "{key}", action, space_id }
+                                    DiscussionActionCard {
+                                        key: "{key}",
+                                        action,
+                                        space_id,
+                                        is_admin,
+                                    }
                                 },
                                 SpaceActionType::Quiz => rsx! {
-                                    QuizActionCard { key: "{key}", action, space_id }
+                                    QuizActionCard {
+                                        key: "{key}",
+                                        action,
+                                        space_id,
+                                        is_admin,
+                                    }
                                 },
                                 SpaceActionType::Follow => rsx! {
-                                    FollowActionCard { key: "{key}", action, space_id }
+                                    FollowActionCard {
+                                        key: "{key}",
+                                        action,
+                                        space_id,
+                                        is_admin,
+                                    }
                                 },
                             }
+                        }
+                    }
+                    if is_admin {
+                        AddActionCard {
+                            on_click: move |_| {
+                                type_picker_open.set(true);
+                            },
                         }
                     }
                 }
@@ -168,6 +223,35 @@ pub fn ActionDashboard(space_id: ReadSignal<SpacePartition>) -> Element {
                         "data-type": quest_type_css(&action.action_type),
                     }
                 }
+                if is_admin {
+                    button { class: "carousel-dot", "data-type": "add" }
+                }
+            }
+        }
+
+        // Type picker modal (admin only)
+        if is_admin {
+            TypePickerModal {
+                open: type_picker_open(),
+                on_close: move |_| {
+                    type_picker_open.set(false);
+                },
+                on_pick: move |ty: SpaceActionType| async move {
+                    type_picker_open.set(false);
+                    match ty.create(space_id()).await {
+                        Ok(route) => {
+                            space_ctx.current_role.set(SpaceUserRole::Creator);
+                            // Refresh the actions list so the newly-created
+                            // action appears when the user returns to the
+                            // dashboard from the editor.
+                            space_ctx.actions.restart();
+                            nav.push(route);
+                        }
+                        Err(err) => {
+                            toast.error(err);
+                        }
+                    }
+                },
             }
         }
 
@@ -273,8 +357,9 @@ fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus, space_id: Space
     let is_completed = status == ActionStatus::Completed;
     let is_poll = action.action_type == SpaceActionType::Poll;
     let can_reopen = is_completed && is_poll;
-    let nav = navigator();
-    let url = action.get_url(&space_id);
+    let mut overlay: ActiveActionOverlaySignal = use_context();
+    let action_id = action.action_id.clone();
+    let space_id_for_click = space_id.clone();
 
     rsx! {
         div {
@@ -282,7 +367,10 @@ fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus, space_id: Space
             style: if can_reopen { "cursor: pointer;" } else { "" },
             onclick: move |_| {
                 if can_reopen {
-                    nav.push(url.clone());
+                    let pid: SpacePollEntityType = action_id.clone().into();
+                    overlay
+                        .0
+                        .set(Some(ActiveActionOverlay::Poll(space_id_for_click.clone(), pid)));
                 }
             },
             div { class: "archive-item__info",

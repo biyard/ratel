@@ -19,7 +19,7 @@
 .option-multi[data-selected="true"] .option-multi__checkbox { border-color: #818cf8; background: #818cf8; }
 .option-multi__check svg { width: 12px; height: 12px; color: #fff; opacity: 0; transform: scale(0); transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1); }
 .option-multi[data-selected="true"] .option-multi__check svg { opacity: 1; transform: scale(1); }
-.option-multi__label { font-size: 15px; font-weight: 500; color: var(--dark, #f0f0f5) var(--light, #1a1a2e); flex: 1; }
+.option-multi__label { font-size: 15px; font-weight: 500; color: var(--dark, #f0f0f5) var(--light, #1a1a2e); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .option-multi[data-disabled="true"] { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 
 .option-multi__other-input {

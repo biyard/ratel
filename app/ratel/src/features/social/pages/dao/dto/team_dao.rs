@@ -16,4 +16,6 @@ pub struct TeamDao {
     pub team: TeamDaoTeamResponse,
     pub permissions: i64,
     pub eligible_admins: Vec<EligibleAdminResponse>,
+    #[serde(default)]
+    pub role: crate::features::social::pages::member::dto::TeamRole,
 }

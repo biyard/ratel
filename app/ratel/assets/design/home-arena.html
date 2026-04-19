@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Hot Spaces Arena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --border-subtle:rgba(255,255,255,0.06);--text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+      /* Heat level palettes */
+      --blazing-color:#ef4444;--blazing-bg:rgba(239,68,68,0.08);--blazing-border:rgba(239,68,68,0.20);--blazing-glow:rgba(239,68,68,0.18);
+      --trending-color:#fcb300;--trending-bg:rgba(252,179,0,0.08);--trending-border:rgba(252,179,0,0.20);--trending-glow:rgba(252,179,0,0.18);
+      --rising-color:#6eedd8;--rising-bg:rgba(110,237,216,0.08);--rising-border:rgba(110,237,216,0.20);--rising-glow:rgba(110,237,216,0.18);
+    }
+    html,body{height:100%;overflow:hidden;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+
+    .arena{position:relative;width:100%;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+    .arena::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(252,179,0,0.04) 0%,transparent 60%),radial-gradient(ellipse 120% 100% at 50% 120%,rgba(110,237,216,0.03) 0%,transparent 50%),radial-gradient(circle at 50% 50%,var(--bg-void) 0%,var(--bg-void) 100%);z-index:0}
+
+    /* Top bar */
+    .arena-topbar{position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:20px 28px;flex-shrink:0}
+    .arena-topbar__brand{display:flex;align-items:center;gap:14px}
+    .arena-topbar__logo{width:40px;height:40px;border-radius:10px;object-fit:cover;border:1px solid rgba(252,179,0,0.15);box-shadow:0 2px 12px rgba(0,0,0,0.3)}
+    .arena-topbar__title{font-family:var(--font-display);font-weight:800;font-size:18px;letter-spacing:0.10em;text-transform:uppercase;background:linear-gradient(135deg,var(--accent-gold),#ffd24a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .arena-topbar__status{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;background:rgba(110,237,216,0.08);border:1px solid rgba(110,237,216,0.15);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent-teal);margin-left:12px}
+    .arena-topbar__status::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal);animation:pulse-dot 1.6s ease-in-out infinite}
+    @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+
+    .arena-topbar__actions{display:flex;gap:10px}
+    .hud-btn{position:relative;width:42px;height:42px;border-radius:11px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0}
+    .hud-btn:hover{background:var(--bg-glass-hover);border-color:rgba(252,179,0,0.25);transform:translateY(-1px)}
+    .hud-btn svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+    .hud-btn:hover svg{color:var(--accent-gold)}
+    .hud-btn--primary{background:linear-gradient(135deg,rgba(252,179,0,0.18),rgba(252,179,0,0.06));border-color:rgba(252,179,0,0.3)}
+    .hud-btn--primary svg{color:var(--accent-gold)}
+    .hud-btn--primary:hover{box-shadow:0 0 20px rgba(252,179,0,0.25)}
+    .hud-btn__label{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);white-space:nowrap;opacity:0;transition:opacity 0.2s ease;pointer-events:none}
+    .hud-btn:hover .hud-btn__label{opacity:1}
+    .hud-btn__badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:var(--accent-gold);color:#0a0a0a;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;box-shadow:0 0 8px rgba(252,179,0,0.4)}
+
+    /* Section label */
+    .section-label{position:relative;z-index:10;text-align:center;padding:0 28px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:10px}
+    .section-label__dash{width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--text-dim),transparent)}
+    .section-label__title{font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:var(--text-dim)}
+    .section-label__title strong{color:var(--accent-gold);font-weight:700}
+
+    /* Carousel */
+    .carousel-wrapper{position:relative;z-index:10;flex:1;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+    .carousel-wrapper::before,.carousel-wrapper::after{content:'';position:absolute;top:0;bottom:0;width:220px;z-index:15;pointer-events:none}
+    .carousel-wrapper::before{left:0;background:linear-gradient(to right,var(--bg-void),transparent)}
+    .carousel-wrapper::after{right:0;background:linear-gradient(to left,var(--bg-void),transparent)}
+    .carousel-track{display:flex;align-items:center;gap:28px;padding:60px 0;scroll-snap-type:x mandatory;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;padding-left:calc(50vw - 200px);padding-right:calc(50vw - 200px)}
+    .carousel-track::-webkit-scrollbar{display:none}
+
+    /* Space card */
+    .space-card{flex-shrink:0;width:400px;min-height:420px;padding:26px 26px 22px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);border-radius:20px;display:flex;flex-direction:column;gap:16px;cursor:pointer;scroll-snap-align:center;position:relative;overflow:hidden;transform:scale(0.78);opacity:0.30;filter:blur(5px);transition:all 0.5s cubic-bezier(0.16,1,0.3,1)}
+    .space-card.active{transform:scale(1.05);opacity:1;filter:blur(0);box-shadow:0 12px 60px rgba(0,0,0,0.5)}
+    .space-card--blazing.active{border-color:var(--blazing-border);box-shadow:0 12px 60px rgba(0,0,0,0.5),0 0 50px var(--blazing-glow)}
+    .space-card--trending.active{border-color:var(--trending-border);box-shadow:0 12px 60px rgba(0,0,0,0.5),0 0 50px var(--trending-glow)}
+    .space-card--rising.active{border-color:var(--rising-border);box-shadow:0 12px 60px rgba(0,0,0,0.5),0 0 50px var(--rising-glow)}
+
+    /* Wave aurora — gentle flowing gradient across the whole card */
+    .space-card__wave{position:absolute;inset:0;border-radius:20px;pointer-events:none;overflow:hidden;opacity:0;transition:opacity 0.8s ease;z-index:0}
+    .space-card.active .space-card__wave{opacity:1}
+
+    .space-card__wave::before,.space-card__wave::after{content:'';position:absolute;inset:-40%;background-repeat:no-repeat;mix-blend-mode:screen;will-change:transform,opacity}
+    .space-card__wave::before{
+      background:
+        radial-gradient(ellipse 55% 40% at 20% 30%, var(--wave-tint-strong) 0%, transparent 60%),
+        radial-gradient(ellipse 45% 35% at 75% 65%, var(--wave-tint-soft) 0%, transparent 65%);
+      animation: wave-drift-a 7s ease-in-out infinite;
+    }
+    .space-card__wave::after{
+      background:
+        radial-gradient(ellipse 50% 40% at 70% 25%, var(--wave-tint-soft) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 45% at 25% 80%, var(--wave-tint-strong) 0%, transparent 65%);
+      animation: wave-drift-b 9s ease-in-out infinite;
+    }
+
+    /* Subtle stationary tint at idle (non-active) so cards aren't dead grey */
+    .space-card::before{content:'';position:absolute;inset:0;border-radius:20px;pointer-events:none;opacity:0.35;transition:opacity 0.6s ease;background:radial-gradient(ellipse 70% 50% at 30% 30%, var(--wave-tint-soft) 0%, transparent 70%)}
+    .space-card.active::before{opacity:0}
+
+    @keyframes wave-drift-a{
+      0%,100%{transform:translate3d(0,0,0) rotate(0deg);opacity:0.9}
+      33%{transform:translate3d(6%,-4%,0) rotate(8deg);opacity:1}
+      66%{transform:translate3d(-4%,5%,0) rotate(-6deg);opacity:0.85}
+    }
+    @keyframes wave-drift-b{
+      0%,100%{transform:translate3d(0,0,0) rotate(0deg) scale(1);opacity:0.75}
+      40%{transform:translate3d(-5%,4%,0) rotate(-10deg) scale(1.05);opacity:0.95}
+      70%{transform:translate3d(5%,-3%,0) rotate(7deg) scale(0.98);opacity:0.8}
+    }
+
+    /* Per-heat wave tints — soft, low-opacity */
+    .space-card--blazing{--wave-tint-strong:rgba(239,68,68,0.10);--wave-tint-soft:rgba(239,68,68,0.05)}
+    .space-card--trending{--wave-tint-strong:rgba(252,179,0,0.10);--wave-tint-soft:rgba(252,179,0,0.05)}
+    .space-card--rising{--wave-tint-strong:rgba(110,237,216,0.10);--wave-tint-soft:rgba(110,237,216,0.05)}
+
+    /* Ensure card content stays above the wave layer */
+    .space-card > *:not(.space-card__wave){position:relative;z-index:1}
+
+    @media (prefers-reduced-motion: reduce){
+      .space-card__wave::before,.space-card__wave::after{animation:none}
+    }
+
+    .space-card__top{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1}
+    .space-card__heat{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:8px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase}
+    .space-card__heat svg{width:14px;height:14px}
+    .space-card__heat--blazing{background:var(--blazing-bg);color:var(--blazing-color);border:1px solid var(--blazing-border)}
+    .space-card__heat--trending{background:var(--trending-bg);color:var(--trending-color);border:1px solid var(--trending-border)}
+    .space-card__heat--rising{background:var(--rising-bg);color:var(--rising-color);border:1px solid var(--rising-border)}
+    .space-card__rank{font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--text-dim);letter-spacing:0.08em}
+    .space-card__rank strong{color:var(--text-primary);font-size:14px}
+
+    /* Identity row */
+    .space-card__identity{display:flex;align-items:center;gap:14px;position:relative;z-index:1}
+    .space-card__logo{width:56px;height:56px;border-radius:14px;object-fit:cover;border:1px solid var(--border-subtle);box-shadow:0 4px 16px rgba(0,0,0,0.4);flex-shrink:0;background:#1a1a2a}
+    .space-card__id{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+    .space-card__category{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim)}
+    .space-card__category::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--text-dim)}
+    .space-card__title{font-size:20px;font-weight:700;color:var(--text-primary);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+    .space-card__desc{font-size:13.5px;line-height:1.55;color:var(--text-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;position:relative;z-index:1}
+
+    /* Stats grid */
+    .space-card__stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;position:relative;z-index:1}
+    .space-stat{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;border-radius:10px;background:rgba(255,255,255,0.025);border:1px solid var(--border-subtle)}
+    .space-stat__value{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text-primary);line-height:1}
+    .space-stat__label{font-size:9px;font-weight:600;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-dim)}
+    .space-card--blazing.active .space-stat__value{color:var(--blazing-color)}
+    .space-card--trending.active .space-stat__value{color:var(--trending-color)}
+    .space-card--rising.active .space-stat__value{color:var(--rising-color)}
+
+    /* Active action chips */
+    .space-card__chips{display:flex;gap:6px;flex-wrap:wrap;position:relative;z-index:1}
+    .action-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;font-size:10px;font-weight:600;letter-spacing:0.04em;background:rgba(255,255,255,0.04);border:1px solid var(--border-subtle);color:var(--text-muted)}
+    .action-chip svg{width:11px;height:11px}
+    .action-chip--poll{color:#818cf8;border-color:rgba(99,102,241,0.18)}
+    .action-chip--discuss{color:#22d3ee;border-color:rgba(34,211,238,0.18)}
+    .action-chip--quiz{color:#a855f7;border-color:rgba(168,85,247,0.18)}
+    .action-chip--follow{color:#fb923c;border-color:rgba(251,146,60,0.18)}
+
+    /* Footer */
+    .space-card__footer{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--border-subtle);margin-top:auto;position:relative;z-index:1}
+    .space-card__reward{display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--accent-gold)}
+    .space-card__reward svg{width:16px;height:16px}
+    .space-card__reward small{font-size:9px;font-weight:600;letter-spacing:0.08em;color:var(--text-dim);text-transform:uppercase;margin-left:4px}
+    .space-card__cta{padding:9px 18px;border-radius:8px;border:none;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;cursor:pointer;transition:all 0.25s ease;display:inline-flex;align-items:center;gap:6px}
+    .space-card__cta svg{width:12px;height:12px}
+    .space-card--blazing .space-card__cta{background:linear-gradient(135deg,var(--blazing-color),#dc2626);color:#fff;box-shadow:0 2px 12px var(--blazing-glow)}
+    .space-card--trending .space-card__cta{background:linear-gradient(135deg,var(--trending-color),#e5a200);color:#0a0a0a;box-shadow:0 2px 12px var(--trending-glow)}
+    .space-card--rising .space-card__cta{background:linear-gradient(135deg,var(--rising-color),#3acab2);color:#0a0a0a;box-shadow:0 2px 12px var(--rising-glow)}
+    .space-card__cta:hover{transform:translateY(-1px);filter:brightness(1.08)}
+
+    /* Dots */
+    .carousel-dots{position:relative;z-index:10;display:flex;justify-content:center;gap:8px;padding:12px 0 20px}
+    .carousel-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;cursor:pointer;transition:all 0.3s ease;padding:0}
+    .carousel-dot.active{width:28px;border-radius:4px}
+    .carousel-dot.active--blazing{background:var(--blazing-color);box-shadow:0 0 8px var(--blazing-glow)}
+    .carousel-dot.active--trending{background:var(--trending-color);box-shadow:0 0 8px var(--trending-glow)}
+    .carousel-dot.active--rising{background:var(--rising-color);box-shadow:0 0 8px var(--rising-glow)}
+
+    /* Bottom HUD bar */
+    .bottom-bar{position:relative;z-index:10;display:flex;align-items:center;gap:12px;padding:14px 28px 22px;flex-shrink:0}
+    .hud-stat{flex:1;display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);border-radius:12px}
+    .hud-stat__icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(252,179,0,0.10);color:var(--accent-gold)}
+    .hud-stat__icon svg{width:16px;height:16px}
+    .hud-stat--rising .hud-stat__icon{background:rgba(110,237,216,0.10);color:var(--accent-teal)}
+    .hud-stat__body{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+    .hud-stat__label{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-dim)}
+    .hud-stat__value{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--text-primary);display:flex;align-items:baseline;gap:4px}
+    .hud-stat__value small{font-size:10px;font-weight:600;color:var(--text-dim);letter-spacing:0.08em;text-transform:uppercase}
+    .hud-stat__value strong{color:var(--accent-gold)}
+    .hud-stat--rising .hud-stat__value strong{color:var(--accent-teal)}
+
+    .browse-btn{padding:0 18px;height:42px;border-radius:11px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:all 0.25s ease;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-muted);flex-shrink:0}
+    .browse-btn:hover{background:var(--bg-glass-hover);border-color:rgba(252,179,0,0.25);color:var(--accent-gold)}
+    .browse-btn svg{width:14px;height:14px}
+
+    @media(max-width:500px){
+      .arena-topbar{padding:14px 16px;flex-wrap:wrap;gap:10px}
+      .arena-topbar__brand{gap:10px}
+      .arena-topbar__logo{width:32px;height:32px}
+      .arena-topbar__title{font-size:14px;letter-spacing:0.08em}
+      .arena-topbar__status{margin-left:6px;padding:2px 8px;font-size:9px}
+      .arena-topbar__actions{gap:8px;width:100%;justify-content:space-between;order:2}
+      .hud-btn{width:46px;height:46px;flex:1;max-width:64px}
+      .hud-btn__label{display:none}
+      .section-label__dash{width:24px}
+      .section-label__title{font-size:10px;letter-spacing:0.18em}
+      .space-card{width:300px;min-height:400px;padding:22px 20px 18px;gap:14px}
+      .space-card__title{font-size:17px}
+      .space-card__desc{font-size:12.5px}
+      .space-card__logo{width:48px;height:48px;border-radius:12px}
+      .carousel-track{padding-left:calc(50vw - 150px);padding-right:calc(50vw - 150px);gap:16px}
+      .carousel-wrapper::before,.carousel-wrapper::after{width:60px}
+      .bottom-bar{flex-direction:column;align-items:stretch;padding:12px 16px 18px;gap:8px}
+      .hud-stat{padding:9px 12px}
+      .browse-btn{justify-content:center;width:100%}
+    }
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <!-- TOP BAR -->
+    <div class="arena-topbar">
+      <div class="arena-topbar__brand">
+        <img class="arena-topbar__logo" src="https://metadata.ratel.foundation/logos/logo-symbol.png" alt="Ratel logo" />
+        <span class="arena-topbar__title">Ratel</span>
+      </div>
+      <div class="arena-topbar__actions">
+        <button class="hud-btn hud-btn--primary" aria-label="Create post">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span class="hud-btn__label">Create</span>
+        </button>
+        <button class="hud-btn" aria-label="Drafts">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+          <span class="hud-btn__badge">3</span>
+          <span class="hud-btn__label">Drafts</span>
+        </button>
+        <button class="hud-btn" aria-label="Rewards">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+          <span class="hud-btn__label">Rewards</span>
+        </button>
+        <button class="hud-btn" aria-label="Credentials">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+          <span class="hud-btn__label">Credentials</span>
+        </button>
+        <button class="hud-btn" aria-label="Settings">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span class="hud-btn__label">Settings</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- SECTION LABEL -->
+    <div class="section-label">
+      <span class="section-label__dash"></span>
+      <span class="section-label__title"><strong>Hot</strong> Spaces</span>
+      <span class="section-label__dash"></span>
+    </div>
+
+    <!-- CAROUSEL -->
+    <div class="carousel-wrapper">
+      <div class="carousel-track" id="carousel-track">
+
+        <!-- BLAZING -->
+        <div class="space-card space-card--blazing" data-heat="blazing" data-index="0">
+          <div class="space-card__wave"></div>
+          <div class="space-card__top">
+            <span class="space-card__heat space-card__heat--blazing">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+              Blazing
+            </span>
+            <span class="space-card__rank">RANK <strong>#01</strong></span>
+          </div>
+
+          <div class="space-card__identity">
+            <img class="space-card__logo" src="https://metadata.ratel.foundation/logos/logo-symbol.png" alt="" />
+            <div class="space-card__id">
+              <span class="space-card__category">Politics · DAO</span>
+              <span class="space-card__title">Climate Action DAO</span>
+            </div>
+          </div>
+
+          <div class="space-card__desc">
+            Coordinating global climate policy proposals, carbon offset votes, and on-chain pledges from leading climate activists worldwide.
+          </div>
+
+          <div class="space-card__stats">
+            <div class="space-stat">
+              <span class="space-stat__value">12.4k</span>
+              <span class="space-stat__label">Members</span>
+            </div>
+            <div class="space-stat">
+              <span class="space-stat__value">8</span>
+              <span class="space-stat__label">Quests</span>
+            </div>
+            <div class="space-stat">
+              <span class="space-stat__value">+312%</span>
+              <span class="space-stat__label">7d Heat</span>
+            </div>
+          </div>
+
+          <div class="space-card__chips">
+            <span class="action-chip action-chip--poll"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>3 Polls</span>
+            <span class="action-chip action-chip--discuss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>2 Discussions</span>
+            <span class="action-chip action-chip--quiz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>1 Quiz</span>
+          </div>
+
+          <div class="space-card__footer">
+            <div class="space-card__reward">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12"/><path d="M16 10H8"/></svg>
+              2,400 CR
+              <small>pool</small>
+            </div>
+            <button class="space-card__cta">
+              Enter Arena
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- TRENDING -->
+        <div class="space-card space-card--trending" data-heat="trending" data-index="1">
+          <div class="space-card__wave"></div>
+          <div class="space-card__top">
+            <span class="space-card__heat space-card__heat--trending">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Trending
+            </span>
+            <span class="space-card__rank">RANK <strong>#02</strong></span>
+          </div>
+
+          <div class="space-card__identity">
+            <img class="space-card__logo" src="https://metadata.ratel.foundation/logos/logo-symbol.png" alt="" />
+            <div class="space-card__id">
+              <span class="space-card__category">Tech · Open Source</span>
+              <span class="space-card__title">Decentralized Web Builders</span>
+            </div>
+          </div>
+
+          <div class="space-card__desc">
+            Open collaboration on protocol design, governance experiments, and shipping decentralized infrastructure that scales beyond billions.
+          </div>
+
+          <div class="space-card__stats">
+            <div class="space-stat">
+              <span class="space-stat__value">8.7k</span>
+              <span class="space-stat__label">Members</span>
+            </div>
+            <div class="space-stat">
+              <span class="space-stat__value">5</span>
+              <span class="space-stat__label">Quests</span>
+            </div>
+            <div class="space-stat">
+              <span class="space-stat__value">+148%</span>
+              <span class="space-stat__label">7d Heat</span>
+            </div>
+          </div>
+
+          <div class="space-card__chips">
+            <span class="action-chip action-chip--discuss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>3 Discussions</span>
+            <span class="action-chip action-chip--quiz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>2 Quizzes</span>
+          </div>
+
+          <div class="space-card__footer">
+            <div class="space-card__reward">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12"/><path d="M16 10H8"/></svg>
+              1,650 CR
+              <small>pool</small>
+            </div>
+            <button class="space-card__cta">
+              Enter Arena
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- RISING -->
+        <div class="space-card space-card--rising" data-heat="rising" data-index="2">
+          <div class="space-card__wave"></div>
+          <div class="space-card__top">
+            <span class="space-card__heat space-card__heat--rising">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              Rising
+            </span>
+            <span class="space-card__rank">RANK <strong>#03</strong></span>
+          </div>
+
+          <div class="space-card__identity">
+            <img class="space-card__logo" src="https://metadata.ratel.foundation/logos/logo-symbol.png" alt="" />
+            <div class="space-card__id">
+              <span class="space-card__category">Culture · Creators</span>
+              <span class="space-card__title">Indie Filmmakers Coalition</span>
+            </div>
+          </div>
+
+          <div class="space-card__desc">
+            Pooling distribution rights, voting on festival picks, and rewarding crew contributions across independent film communities.
+          </div>
+
+          <div class="space-card__stats">
+            <div class="space-stat">
+              <span class="space-stat__value">3.2k</span>
+              <span class="space-stat__label">Members</span>
+            </div>
+            <div class="space-stat">
+              <span class="space-stat__value">4</span>
+              <span class="space-stat__label">Quests</span>
+            </div>
+            <div class="space-stat">
+              <span class="space-stat__value">+86%</span>
+              <span class="space-stat__label">7d Heat</span>
+            </div>
+          </div>
+
+          <div class="space-card__chips">
+            <span class="action-chip action-chip--poll"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>2 Polls</span>
+            <span class="action-chip action-chip--follow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>1 Follow Quest</span>
+          </div>
+
+          <div class="space-card__footer">
+            <div class="space-card__reward">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12"/><path d="M16 10H8"/></svg>
+              820 CR
+              <small>pool</small>
+            </div>
+            <button class="space-card__cta">
+              Enter Arena
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- TRENDING #2 -->
+        <div class="space-card space-card--trending" data-heat="trending" data-index="3">
+          <div class="space-card__wave"></div>
+          <div class="space-card__top">
+            <span class="space-card__heat space-card__heat--trending">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Trending
+            </span>
+            <span class="space-card__rank">RANK <strong>#04</strong></span>
+          </div>
+
+          <div class="space-card__identity">
+            <img class="space-card__logo" src="https://metadata.ratel.foundation/logos/logo-symbol.png" alt="" />
+            <div class="space-card__id">
+              <span class="space-card__category">Finance · Public Goods</span>
+              <span class="space-card__title">Public Goods Treasury</span>
+            </div>
+          </div>
+
+          <div class="space-card__desc">
+            Quadratic funding rounds and public-goods grants distributed by member-weighted on-chain governance, cycle by cycle.
+          </div>
+
+          <div class="space-card__stats">
+            <div class="space-stat">
+              <span class="space-stat__value">5.1k</span>
+              <span class="space-stat__label">Members</span>
+            </div>
+            <div class="space-stat">
+              <span class="space-stat__value">6</span>
+              <span class="space-stat__label">Quests</span>
+            </div>
+            <div class="space-stat">
+              <span class="space-stat__value">+112%</span>
+              <span class="space-stat__label">7d Heat</span>
+            </div>
+          </div>
+
+          <div class="space-card__chips">
+            <span class="action-chip action-chip--poll"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>4 Polls</span>
+            <span class="action-chip action-chip--discuss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>2 Discussions</span>
+          </div>
+
+          <div class="space-card__footer">
+            <div class="space-card__reward">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12"/><path d="M16 10H8"/></svg>
+              1,200 CR
+              <small>pool</small>
+            </div>
+            <button class="space-card__cta">
+              Enter Arena
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- RISING #2 -->
+        <div class="space-card space-card--rising" data-heat="rising" data-index="4">
+          <div class="space-card__wave"></div>
+          <div class="space-card__top">
+            <span class="space-card__heat space-card__heat--rising">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              Rising
+            </span>
+            <span class="space-card__rank">RANK <strong>#05</strong></span>
+          </div>
+
+          <div class="space-card__identity">
+            <img class="space-card__logo" src="https://metadata.ratel.foundation/logos/logo-symbol.png" alt="" />
+            <div class="space-card__id">
+              <span class="space-card__category">Education · Research</span>
+              <span class="space-card__title">Open Science Network</span>
+            </div>
+          </div>
+
+          <div class="space-card__desc">
+            Peer-reviewed research bounties, replication studies, and open dataset votes — coordinated by working scientists across labs.
+          </div>
+
+          <div class="space-card__stats">
+            <div class="space-stat">
+              <span class="space-stat__value">2.6k</span>
+              <span class="space-stat__label">Members</span>
+            </div>
+            <div class="space-stat">
+              <span class="space-stat__value">3</span>
+              <span class="space-stat__label">Quests</span>
+            </div>
+            <div class="space-stat">
+              <span class="space-stat__value">+64%</span>
+              <span class="space-stat__label">7d Heat</span>
+            </div>
+          </div>
+
+          <div class="space-card__chips">
+            <span class="action-chip action-chip--quiz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>2 Quizzes</span>
+            <span class="action-chip action-chip--discuss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>1 Discussion</span>
+          </div>
+
+          <div class="space-card__footer">
+            <div class="space-card__reward">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12"/><path d="M16 10H8"/></svg>
+              540 CR
+              <small>pool</small>
+            </div>
+            <button class="space-card__cta">
+              Enter Arena
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="carousel-dots" id="carousel-dots"></div>
+
+    <!-- BOTTOM HUD -->
+    <div class="bottom-bar">
+      <div class="hud-stat">
+        <div class="hud-stat__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12"/><path d="M16 10H8"/></svg>
+        </div>
+        <div class="hud-stat__body">
+          <span class="hud-stat__label">Your Balance</span>
+          <span class="hud-stat__value"><strong>1,840</strong> <small>CR</small></span>
+        </div>
+      </div>
+      <div class="hud-stat hud-stat--rising">
+        <div class="hud-stat__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        </div>
+        <div class="hud-stat__body">
+          <span class="hud-stat__label">Hot Right Now</span>
+          <span class="hud-stat__value"><strong>24</strong> <small>active spaces</small></span>
+        </div>
+      </div>
+      <button class="browse-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Browse All
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Carousel — same active-detection pattern as space-participant
+    const track = document.getElementById('carousel-track');
+    const cards = Array.from(track.querySelectorAll('.space-card'));
+    const dotsContainer = document.getElementById('carousel-dots');
+    let activeIndex = 0;
+
+    cards.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'carousel-dot';
+      dot.dataset.heat = cards[i].dataset.heat;
+      dot.addEventListener('click', () => scrollToCard(i));
+      dotsContainer.appendChild(dot);
+    });
+    const dots = Array.from(dotsContainer.querySelectorAll('.carousel-dot'));
+
+    function updateActive() {
+      const trackRect = track.getBoundingClientRect();
+      const center = trackRect.left + trackRect.width / 2;
+      let closest = 0, closestDist = Infinity;
+      cards.forEach((card, i) => {
+        const rect = card.getBoundingClientRect();
+        const dist = Math.abs(center - (rect.left + rect.width / 2));
+        if (dist < closestDist) { closestDist = dist; closest = i; }
+      });
+      activeIndex = closest;
+      const activeHeat = cards[activeIndex].dataset.heat;
+      cards.forEach((c, i) => c.classList.toggle('active', i === activeIndex));
+      dots.forEach((d, i) => {
+        d.classList.remove('active', 'active--blazing', 'active--trending', 'active--rising');
+        if (i === activeIndex) d.classList.add('active', 'active--' + activeHeat);
+      });
+    }
+
+    function scrollToCard(i) {
+      const card = cards[i];
+      const trackRect = track.getBoundingClientRect();
+      const cardRect = card.getBoundingClientRect();
+      const offset = cardRect.left - trackRect.left - (trackRect.width - cardRect.width) / 2;
+      track.scrollBy({ left: offset, behavior: 'smooth' });
+    }
+
+    track.addEventListener('scroll', updateActive, { passive: true });
+    window.addEventListener('resize', updateActive);
+    requestAnimationFrame(updateActive);
+  </script>
+</body>
+</html>

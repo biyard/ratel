@@ -19,6 +19,7 @@ pub fn ActionDeleteButton(space_id: SpacePartition, action_id: String) -> Elemen
     let mut toast = crate::common::use_toast();
     let mut popup = use_popup();
     let nav = navigator();
+    let mut space_ctx = crate::features::spaces::space_common::providers::use_space_context();
 
     rsx! {
         div { class: "flex justify-end pt-5 w-full max-tablet:justify-stretch",
@@ -43,7 +44,13 @@ pub fn ActionDeleteButton(space_id: SpacePartition, action_id: String) -> Elemen
                                 Ok(_) => {
                                     popup.close();
                                     toast.info(tr.delete_success.to_string());
-                                    nav.push(Route::SpaceActionsPage { space_id });
+                                    // Refresh the actions list so the deleted
+                                    // action disappears from the dashboard.
+                                    space_ctx.actions.restart();
+                                    // `replace` so the deleted editor URL
+                                    // isn't left in history — otherwise the
+                                    // back button reloads a 404.
+                                    nav.replace(Route::SpaceIndexPage { space_id });
                                 }
                                 Err(err) => {
                                     toast.error(err);

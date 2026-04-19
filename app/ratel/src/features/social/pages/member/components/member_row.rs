@@ -36,6 +36,7 @@ pub fn render_member(
     };
 
     let role_class = match role {
+        TeamRole::Owner => "bg-primary/20 text-primary border-primary/30",
         TeamRole::Admin => "bg-primary/10 text-primary border-primary/20",
         TeamRole::Member => "bg-card-bg text-text-primary border-border",
     };
@@ -54,8 +55,7 @@ pub fn render_member(
                     }
                 }
                 div { class: "flex flex-row items-center gap-2 ml-auto",
-                    div {
-                        class: "flex items-center px-[8px] py-[4px] border rounded-lg font-medium text-sm {role_class}",
+                    div { class: "flex items-center px-[8px] py-[4px] border rounded-lg font-medium text-sm {role_class}",
                         "{role}"
                     }
                     if !is_owner {
@@ -63,7 +63,12 @@ pub fn render_member(
                             style: ButtonStyle::Text,
                             size: ButtonSize::Icon,
                             disabled: is_removing,
-                            onclick: move |_| on_remove.call(RemovePayload { member_id: member_id.clone() }),
+                            onclick: move |_| {
+                                on_remove
+                                    .call(RemovePayload {
+                                        member_id: member_id.clone(),
+                                    })
+                            },
                             lucide_dioxus::X { class: "w-4 h-4 [&>path]:stroke-foreground-muted" }
                         }
                     }

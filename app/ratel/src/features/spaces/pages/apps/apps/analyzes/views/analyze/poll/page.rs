@@ -1,5 +1,4 @@
 use super::components::*;
-use crate::common::use_query;
 use crate::common::utils::time::get_now_timestamp_millis;
 use crate::features::spaces::pages::actions::actions::poll::controllers::{
     get_poll, get_poll_result, PollResultResponse, PollResultSummary,
@@ -12,7 +11,6 @@ use crate::features::spaces::pages::apps::apps::panels::{
     list_panels, CollectiveAttribute, PanelAttribute, SpacePanelQuotaResponse, VerifiableAttribute,
 };
 use crate::features::spaces::space_common::hooks::use_space_role;
-use crate::features::spaces::space_common::types::space_page_actions_poll_key;
 
 const ANALYZE_CHART_COLORS: [&str; 6] = [
     "#f97316", "#6366f1", "#22c55e", "#3b82f6", "#8b5cf6", "#eab308",
@@ -32,16 +30,6 @@ struct AnalyzeExportAttributes {
     include_university: bool,
 }
 
-const PANELS_QUERY_KEY: &str = "Panels";
-
-fn panels_key(space_id: &SpacePartition) -> Vec<String> {
-    vec![
-        "Space".to_string(),
-        space_id.to_string(),
-        PANELS_QUERY_KEY.to_string(),
-    ]
-}
-
 #[component]
 pub fn SpaceAnalyzeDetailPage(
     space_id: ReadSignal<SpacePartition>,
@@ -55,14 +43,9 @@ pub fn SpaceAnalyzeDetailPage(
         return rsx! {};
     }
 
-    let poll_key = space_page_actions_poll_key(&space_id(), &poll_id());
-    let panels_query_key = panels_key(&space_id());
-    let mut result_key = poll_key.clone();
-    result_key.push("results".into());
-
-    let panels_query = use_query(&panels_query_key, move || list_panels(space_id()))?;
-    let poll_query = use_query(&poll_key, move || get_poll(space_id(), poll_id()))?;
-    let result_query = use_query(&result_key, move || get_poll_result(space_id(), poll_id()))?;
+    let panels_query = use_loader(move || list_panels(space_id()))?;
+    let poll_query = use_loader(move || get_poll(space_id(), poll_id()))?;
+    let result_query = use_loader(move || get_poll_result(space_id(), poll_id()))?;
 
     let panels = panels_query.read().clone();
     let poll = poll_query.read().clone();

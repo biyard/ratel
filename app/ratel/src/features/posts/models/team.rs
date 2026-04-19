@@ -97,29 +97,9 @@ impl Team {
 
         let team_owner = TeamOwner::new(team.pk.clone(), user.clone());
 
-        let admin_group = TeamGroup::new(
-            team.pk.clone(),
-            "Admin".to_string(),
-            "Administrators group with all permissions".to_string(),
-            TeamGroupPermissions::all(),
-        );
-
-        let member_group = TeamGroup::new(
-            team.pk.clone(),
-            "Member".to_string(),
-            "Default group for team members".to_string(),
-            TeamGroupPermissions::member(),
-        );
-
         let user_pk = user.pk.clone();
         let team_pk = team.pk.clone();
 
-        let user_team_group = crate::features::auth::UserTeamGroup::new(
-            user_pk.clone(),
-            admin_group.sk.clone(),
-            admin_group.permissions,
-            team_pk.clone(),
-        );
         let user_team = crate::features::auth::UserTeam::new(
             user_pk,
             team_pk.clone(),
@@ -127,15 +107,14 @@ impl Team {
             team.profile_url.clone(),
             team.username.clone(),
             team.dao_address.clone(),
+            // Team creator is the owner.
+            crate::features::social::pages::member::dto::TeamRole::Owner,
         );
 
         cli.transact_write_items()
             .set_transact_items(Some(vec![
                 team.create_transact_write_item(),
                 team_owner.create_transact_write_item(),
-                admin_group.create_transact_write_item(),
-                member_group.create_transact_write_item(),
-                user_team_group.create_transact_write_item(),
                 user_team.create_transact_write_item(),
             ]))
             .send()
@@ -168,26 +147,41 @@ impl Team {
         user_pk: &Partition,
         perm: TeamGroupPermission,
     ) -> Result<bool> {
-        // Check if the user is the team owner first
-        let owner = TeamOwner::get(cli, team_pk, Some(&EntityType::TeamOwner)).await?;
-        if let Some(owner) = owner {
+        // Resolve membership via the TeamRole model instead of the legacy
+        // UserTeamGroup table (which is no longer populated on new teams).
+        // Role → legacy permissions mapping keeps `perm` argument honoured
+        // so existing callsites (PostWrite, SpaceEdit, etc.) work unchanged.
+        let Some(role) = Self::get_user_role(cli, team_pk, user_pk).await? else {
+            return Ok(false);
+        };
+        let permissions: TeamGroupPermissions = role.to_legacy_permissions().into();
+        Ok(permissions.contains(perm))
+    }
+
+    /// Returns the calling user's role on this team. TeamOwner record takes
+    /// precedence over UserTeam.role (defensive); falls back to UserTeam.role
+    /// if present, else Member. Replaces the legacy permissions extractor.
+    /// Returns `Some(role)` when the user has a membership on the team,
+    /// `None` when the user is not a member at all. Callers that need a
+    /// strict "member vs non-member" distinction should rely on the
+    /// `Option`; treating a non-member as `TeamRole::Member` (the enum
+    /// default) was the old behaviour and incorrectly hid the follow
+    /// button / granted Member-level UI to logged-in strangers.
+    pub async fn get_user_role(
+        cli: &aws_sdk_dynamodb::Client,
+        team_pk: &Partition,
+        user_pk: &Partition,
+    ) -> Result<Option<crate::features::social::pages::member::dto::TeamRole>> {
+        use crate::features::social::pages::member::dto::TeamRole;
+        if let Some(owner) = TeamOwner::get(cli, team_pk, Some(&EntityType::TeamOwner)).await? {
             if owner.user_pk == *user_pk {
-                return Ok(true);
+                return Ok(Some(TeamRole::Owner));
             }
         }
-
-        let opt = UserTeamGroup::opt().sk(user_pk.to_string()).limit(1);
-
-        let (group, _bookmark) = UserTeamGroup::find_by_team_pk(cli, team_pk.clone(), opt).await?;
-
-        let group = group
-            .first()
-            .cloned()
-            .ok_or::<Error>(PostError::TeamNotFound.into())?;
-
-        let permissions: TeamGroupPermissions = group.team_group_permissions.into();
-
-        Ok(permissions.contains(perm))
+        let user_team_sk = EntityType::UserTeam(team_pk.to_string());
+        let user_team =
+            crate::features::auth::UserTeam::get(cli, user_pk, Some(&user_team_sk)).await?;
+        Ok(user_team.map(|ut| ut.role))
     }
 
     pub async fn get_permissions_by_team_pk(
@@ -195,29 +189,10 @@ impl Team {
         team_pk: &Partition,
         user_pk: &Partition,
     ) -> Result<TeamGroupPermissions> {
-        // Check if the user is the team owner first
-        let owner = TeamOwner::get(cli, team_pk, Some(&EntityType::TeamOwner)).await?;
-        if let Some(owner) = owner {
-            if owner.user_pk == *user_pk {
-                return Ok(TeamGroupPermissions::all());
-            }
-        }
-
-        let opt = UserTeamGroup::opt().sk(user_pk.to_string()).limit(50);
-
-        let (groups, _bookmark) = UserTeamGroup::find_by_team_pk(cli, team_pk.clone(), opt).await?;
-
-        let mut perms = 0i64;
-
-        for UserTeamGroup {
-            team_group_permissions,
-            ..
-        } in groups
-        {
-            perms |= team_group_permissions;
-        }
-
-        Ok(perms.into())
+        let role = Self::get_user_role(cli, team_pk, user_pk)
+            .await?
+            .unwrap_or_default();
+        Ok(role.to_legacy_permissions().into())
     }
 }
 
@@ -319,5 +294,42 @@ where
 
         parts.extensions.insert(permissions.clone());
         Ok(permissions)
+    }
+}
+
+#[cfg(feature = "server")]
+impl<S> FromRequestParts<S> for crate::features::social::pages::member::dto::TeamRole
+where
+    S: Send + Sync,
+{
+    type Rejection = Error;
+
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self> {
+        use crate::features::social::pages::member::dto::TeamRole;
+        if let Some(role) = parts.extensions.get::<TeamRole>() {
+            return Ok(*role);
+        }
+
+        let team = Team::from_request_parts(parts, state).await?;
+        let user: Option<crate::features::auth::User> =
+            OptionalUser::from_request_parts(parts, state).await?.into();
+        let user = user.ok_or(Error::UnauthorizedAccess)?;
+        let cli = crate::features::posts::config::get().dynamodb();
+
+        if let Some(owner) = TeamOwner::get(cli, &team.pk, Some(&EntityType::TeamOwner)).await? {
+            if owner.user_pk == user.pk {
+                parts.extensions.insert(TeamRole::Owner);
+                return Ok(TeamRole::Owner);
+            }
+        }
+        let user_team_sk = EntityType::UserTeam(team.pk.to_string());
+        let user_team =
+            crate::features::auth::UserTeam::get(cli, &user.pk, Some(&user_team_sk)).await?;
+        let role = user_team
+            .map(|ut| ut.role)
+            .ok_or(Error::UnauthorizedAccess)?;
+
+        parts.extensions.insert(role);
+        Ok(role)
     }
 }

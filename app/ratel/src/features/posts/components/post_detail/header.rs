@@ -31,9 +31,11 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: FeedPartition) -> E
 
     let post_user_pk = post.user_pk.clone();
     let admin_state = use_memo(move || {
-        let permissions: TeamGroupPermissions = detail.permissions.into();
-        let can_edit = permissions.contains(TeamGroupPermission::PostEdit);
-        let can_delete = permissions.contains(TeamGroupPermission::PostDelete);
+        let role = crate::features::social::pages::member::dto::TeamRole::from_legacy_permissions(
+            detail.permissions,
+        );
+        let can_edit = role.is_admin_or_owner();
+        let can_delete = role.is_admin_or_owner();
         let is_post_owner = user_ctx()
             .user
             .as_ref()
@@ -95,7 +97,9 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: FeedPartition) -> E
                                     let existing_space_id = existing_space_id();
                                     spawn(async move {
                                         if let Some(space_id) = existing_space_id {
-                                            nav.push(format!("/spaces/{space_id}/dashboard"));
+                                            nav.push(crate::Route::SpaceIndexPage {
+                                                space_id: SpacePartition(space_id),
+                                            });
                                             return;
                                         }
                                         match create_space_handler(CreateSpaceRequest {
@@ -104,7 +108,9 @@ pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: FeedPartition) -> E
                                             .await
                                         {
                                             Ok(resp) => {
-                                                nav.push(format!("/spaces/{}/dashboard", resp.space_id));
+                                                nav.push(crate::Route::SpaceIndexPage {
+                                                    space_id: resp.space_id,
+                                                });
                                             }
                                             Err(e) => {
                                                 dioxus::logger::tracing::error!("Failed to create space: {:?}", e);

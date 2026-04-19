@@ -1,0 +1,776 @@
+import { test, expect } from "@playwright/test";
+import {
+  addPollQuestion,
+  click,
+  clickNoNav,
+  commitAutosave,
+  createAction,
+  createTeamFromHome,
+  createTeamPostFromHome,
+  fill,
+  fillPollQuestion,
+  getEditor,
+  getLocator,
+  goto,
+  setReward,
+  togglePrerequisite,
+  waitPopup,
+} from "../utils";
+
+// Full space lifecycle E2E test:
+//
+// 1.  Creator: Create team → post → space
+// 2.  Creator: Create poll (prerequisite) + set reward
+// 3.  Creator: Create poll (normal) + set reward
+// 4.  Creator: Create discussion + set reward
+// 5.  Creator: Create quiz + set reward
+// 6.  Creator: Create follow + set reward
+// 7.  Creator: Enable anonymous participation + join anytime
+// 8.  Creator: Publish space
+// 9.  User1: Sign up → participate (only prereq visible) → complete prereq (before start)
+// 10. Creator: Start space
+// 11. User1: Complete each action (follow, quiz, poll, discussion) (after start)
+// 12. User2: Sign up → participate (only prereq visible) → complete prereq (after start)
+// 13. User2: Complete each action (follow, quiz, poll, discussion) (after start)
+// 14. Creator: Finish space
+
+const user2 = {
+  email: "hi+user2@biyard.co",
+  password: "admin!234",
+};
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+async function hideFab(page) {
+  await page.evaluate(() => {
+    const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
+    if (fab) fab.style.display = "none";
+  });
+}
+
+async function pauseAnimations(page) {
+  await page.addStyleTag({
+    content:
+      "*, *::before, *::after { animation-play-state: paused !important; }",
+  });
+}
+
+async function signUpFromSpace(browser, spaceUrl) {
+  const context = await browser.newContext({
+    storageState: { cookies: [], origins: [] },
+    viewport: { width: 1440, height: 950 },
+    locale: "en-US",
+  });
+  const page = await context.newPage();
+
+  await goto(page, spaceUrl);
+  await pauseAnimations(page);
+  await clickNoNav(page, { testId: "btn-signin" });
+  await waitPopup(page, { visible: true });
+  await click(page, { text: "Create an account" });
+
+  const signupEmail = `e2e_signup_${Date.now()}@biyard.co`;
+  await fill(page, { placeholder: "Enter your email address" }, signupEmail);
+  await click(page, { text: "Send" });
+  await fill(page, { placeholder: "Enter the verification code" }, "000000");
+  await click(page, { text: "Verify" });
+  await expect(page.getByText("Send", { exact: true })).toBeHidden({
+    timeout: 10000,
+  });
+
+  await fill(page, { placeholder: "Enter your password" }, "Test!234");
+  await fill(page, { placeholder: "Re-enter your password" }, "Test!234");
+
+  const uniqueId = Date.now().toString();
+  const displayName = `E2E User ${uniqueId}`;
+  await fill(page, { placeholder: "Enter your display name" }, displayName);
+  await fill(page, { placeholder: "Enter your user name" }, `u${uniqueId}`);
+  await click(page, {
+    label: "[Required] I have read and accept the Terms of Service.",
+  });
+  await click(page, { text: "Finished Sign-up" });
+  await waitPopup(page, { visible: false });
+
+  return { context, page, displayName };
+}
+
+async function participateAndCompletePoll(page, pollOptionText) {
+  const verifyBtn = page.getByTestId("btn-verify");
+  if (await verifyBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await verifyBtn.click({ force: true });
+    await page.waitForLoadState();
+  }
+
+  await pauseAnimations(page);
+
+  // Click participate
+  await clickNoNav(page, { testId: "btn-participate" });
+
+  // PrerequisiteCard appears
+  await expect(page.getByTestId("card-prerequisite")).toBeVisible({
+    timeout: 30000,
+  });
+
+  // Verify only prereq poll is visible, other actions should NOT be visible
+  // (discussion, quiz, follow cards should be hidden before prereq completion)
+  const prereqCard = page.getByTestId("card-prerequisite");
+  const prereqItems = prereqCard.locator(".prereq-item");
+  await expect(prereqItems).toHaveCount(1, { timeout: 10000 });
+
+  // Click prereq poll item → opens poll overlay
+  await prereqItems.first().click();
+
+  const overlay = page.getByTestId("poll-arena-overlay");
+  await expect(overlay).toBeVisible();
+
+  await clickNoNav(page, { testId: "poll-arena-begin" });
+
+  await expect(overlay.locator(".option-single").first()).toBeVisible({
+    timeout: 30000,
+  });
+
+  await overlay.getByText(pollOptionText, { exact: true }).click();
+
+  await clickNoNav(page, { testId: "poll-submit" });
+  await clickNoNav(page, { testId: "poll-confirm-submit" });
+
+  await expect(page.getByTestId("poll-arena-overlay")).toBeHidden({
+    timeout: 30000,
+  });
+
+  // After prereq done, user should see the WaitingCard (space not started)
+  // or ActionDashboard (space started)
+}
+
+async function loginUser2FromSpace(browser, spaceUrl) {
+  const context = await browser.newContext({
+    storageState: { cookies: [], origins: [] },
+    viewport: { width: 1440, height: 950 },
+    locale: "en-US",
+  });
+  const page = await context.newPage();
+
+  await goto(page, spaceUrl);
+  await pauseAnimations(page);
+  await clickNoNav(page, { testId: "btn-signin" });
+  await waitPopup(page, { visible: true });
+  await fill(page, { placeholder: "Enter your email address" }, user2.email);
+  await click(page, { text: "Continue" });
+  await fill(page, { placeholder: "Enter your password" }, user2.password);
+  await click(page, { text: "Continue" });
+  await waitPopup(page, { visible: false });
+
+  return { context, page };
+}
+
+// ─── Test suite ─────────────────────────────────────────────────────────────
+
+test.describe.serial("Full space lifecycle with rewards", () => {
+  test.setTimeout(120000);
+
+  let spaceUrl;
+  let newUserStoragePath;
+  let user2StoragePath;
+
+  const teamNickname = "Lifecycle Team";
+  const teamUsername = `e2e_lc_${Date.now()}`;
+  const postTitle = "Full Lifecycle E2E Test Post";
+  const postContents =
+    "This is a comprehensive end-to-end test post for verifying the full " +
+    "space lifecycle including team creation, all action types with rewards, " +
+    "prerequisite checks, anonymous participation, join anytime settings, " +
+    "multi-user participation, and space finish flow.";
+
+  // ─── 1. Creator: Create team + post + space ──────────────────────────────
+
+  test("Create team, post, and space", async ({ page }) => {
+    await createTeamFromHome(page, {
+      username: teamUsername,
+      nickname: teamNickname,
+      description: "E2E test team for full lifecycle",
+    });
+
+    const postId = await createTeamPostFromHome(
+      page,
+      teamUsername,
+      postTitle,
+      postContents
+    );
+
+    const spaceRes = await page.request.post("/api/spaces/create", {
+      data: { req: { post_id: postId } },
+    });
+    expect(
+      spaceRes.ok(),
+      `create space: ${await spaceRes.text()}`
+    ).toBeTruthy();
+    const spaceId = (await spaceRes.json()).space_id;
+
+    spaceUrl = `/spaces/${spaceId}`;
+
+    await goto(page, `${spaceUrl}/dashboard`);
+    await getLocator(page, { text: "Dashboard" });
+  });
+
+  // ─── 2. Create poll (prerequisite) + reward ──────────────────────────────
+
+  test("Create prerequisite poll with reward", async ({ page }) => {
+    // Arena TypePicker: creates the poll and navigates to PollCreatorPage.
+    await createAction(page, spaceUrl, "poll", /\/actions\/polls\//);
+
+    await fill(
+      page,
+      { placeholder: "Enter poll title..." },
+      "Prerequisite Poll: Interest Check"
+    );
+    await commitAutosave(page);
+
+    // Arena poll editor exposes two option inputs by default (no "Add Option").
+    await addPollQuestion(page, "single");
+    await fillPollQuestion(page, 0, {
+      title: "What topic interests you most?",
+      options: ["Technology", "Science"],
+    });
+
+    // Prerequisite + reward live inline on the ConfigCard — no more Settings tab.
+    await togglePrerequisite(page);
+    await setReward(page, 1);
+  });
+
+  // ─── 3. Create poll (normal) + reward ────────────────────────────────────
+
+  test("Create normal poll with reward", async ({ page }) => {
+    await createAction(page, spaceUrl, "poll", /\/actions\/polls\//);
+
+    await fill(
+      page,
+      { placeholder: "Enter poll title..." },
+      "Survey: Feature Priority"
+    );
+    await commitAutosave(page);
+
+    await addPollQuestion(page, "single");
+    await fillPollQuestion(page, 0, {
+      title: "Which feature should we build next?",
+      options: ["Mobile app", "API improvements"],
+    });
+
+    await setReward(page, 2);
+  });
+
+  // ─── 4. Create discussion + reward ───────────────────────────────────────
+
+  test("Create discussion with reward", async ({ page }) => {
+    // Arena discussion editor lives under `/edit` (list view has no suffix).
+    await createAction(
+      page,
+      spaceUrl,
+      "discuss",
+      /\/actions\/discussions\/[^/]+\/edit/
+    );
+
+    await fill(
+      page,
+      { placeholder: "Enter discussion title..." },
+      "Discussion: Roadmap Planning"
+    );
+
+    const editor = await getEditor(page);
+    await editor.fill(
+      "Let's discuss the upcoming roadmap priorities and share ideas for the next quarter."
+    );
+    // Arena editor: no Save button, blur commits autosave.
+    await commitAutosave(page);
+
+    await setReward(page, 2);
+  });
+
+  // ─── 5. Create quiz + reward ─────────────────────────────────────────────
+
+  test("Create quiz with reward", async ({ page }) => {
+    await createAction(page, spaceUrl, "quiz", /\/actions\/quizzes\//);
+
+    await fill(
+      page,
+      { placeholder: "Enter quiz title..." },
+      "Quiz: Platform Knowledge"
+    );
+
+    const editor = await getEditor(page);
+    await editor.fill("Test your knowledge about our platform fundamentals.");
+    await commitAutosave(page);
+
+    // Arena QuestionsCard: inline add button + 2 option inputs fixed. Fill
+    // title + both options on quiz-question-0 with a blur after each so the
+    // per-field onblur autosave commits.
+    await click(page, { testId: "quiz-question-add" });
+    const q0 = page.getByTestId("quiz-question-0");
+    const q0Inputs = q0.locator("input.input");
+    const fills = [
+      "What is the main purpose of spaces?",
+      "Collective decision-making",
+      "Social media posting",
+    ];
+    for (let i = 0; i < fills.length; i += 1) {
+      await q0Inputs.nth(i).fill(fills[i]);
+      await q0Inputs.nth(i).press("Tab");
+      await page.waitForLoadState("load");
+      await page.waitForTimeout(200);
+    }
+
+    // Mark the first option correct by clicking its radio span.
+    await page
+      .getByTestId("quiz-question-0-opt-0")
+      .locator(".q-opt__radio")
+      .click();
+    await page.waitForLoadState("load");
+
+    await setReward(page, 2);
+  });
+
+  // ─── 6. Create follow + reward ───────────────────────────────────────────
+
+  test("Create follow with reward", async ({ page }) => {
+    await createAction(page, spaceUrl, "follow", /\/actions\/follows\//);
+    // Arena follow creator exposes TargetsCard + ConfigCard inline.
+    await getLocator(page, { testId: "page-card-config" });
+
+    await setReward(page, 2);
+  });
+
+  // ─── 7. Enable anonymous + join anytime via UI ───────────────────────────
+
+  test("Enable anonymous participation and join anytime", async ({ page }) => {
+    await goto(page, spaceUrl + "/apps/general");
+
+    // Toggle "Anonymous Participation" switch
+    const anonCard = page
+      .locator("text=Anonymous Participation")
+      .locator("../..");
+    const anonSwitch = anonCard.locator("button").first();
+    await anonSwitch.click();
+    await page.waitForLoadState("load");
+
+    // Toggle "Join Anytime" switch
+    const joinCard = page.locator("text=Join Anytime").locator("../..");
+    const joinSwitch = joinCard.locator("button").first();
+    await joinSwitch.click();
+    await page.waitForLoadState("load");
+  });
+
+  // ─── 8. Publish space ────────────────────────────────────────────────────
+
+  test("Publish the space publicly", async ({ page }) => {
+    // Arena HUD exposes Publish as btn-publish; SpaceVisibilityModal opens
+    // in-place. The legacy /dashboard Publish button no longer drives this.
+    await goto(page, spaceUrl);
+    await hideFab(page);
+    await click(page, { testId: "btn-publish" });
+    await click(page, { testId: "public-option" });
+    await click(page, { label: "Confirm visibility selection" });
+  });
+
+  // ─── 9. User1: Sign up + prereq BEFORE start ────────────────────────────
+
+  test("User1: Sign up and complete prerequisite (before start)", async ({
+    browser,
+  }) => {
+    const { context, page } = await signUpFromSpace(browser, spaceUrl);
+    try {
+      await participateAndCompletePoll(page, "Technology");
+
+      // Before start, user should see WaitingCard (space not started yet)
+      await expect(page.getByTestId("card-waiting")).toBeVisible({
+        timeout: 30000,
+      });
+
+      newUserStoragePath = `e2e-lifecycle-user1-${Date.now()}.json`;
+      await context.storageState({ path: newUserStoragePath });
+    } finally {
+      await context.close();
+    }
+  });
+
+  // ─── 10. Creator: Start space ────────────────────────────────────────────
+
+  test("Start the space", async ({ page }) => {
+    // After publish, ArenaTopbar swaps btn-publish for btn-start; clicking
+    // it opens SpaceStartModal where start-space-button fires the transition.
+    await goto(page, spaceUrl);
+    await hideFab(page);
+    await click(page, { testId: "btn-start" });
+    await click(page, { testId: "start-space-button" });
+  });
+
+  // ─── 11. User1: Complete each action (after start) ──────────────────────
+
+  test("User1: Complete follow action", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: newUserStoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, spaceUrl);
+      await pauseAnimations(page);
+
+      const followBtn = page.getByRole("button", { name: "Follow" }).first();
+      await expect(followBtn).toBeVisible({ timeout: 10000 });
+      await followBtn.click();
+
+      const archiveCount = page.locator(".archive-btn__count");
+      await expect(archiveCount).toBeVisible({ timeout: 15000 });
+
+      await context.storageState({ path: newUserStoragePath });
+    } finally {
+      await context.close();
+    }
+  });
+
+  test("User1: Complete quiz action", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: newUserStoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, spaceUrl);
+      await pauseAnimations(page);
+
+      const quizCard = page.locator('[data-type="quiz"]').first();
+      await expect(quizCard).toBeVisible({ timeout: 10000 });
+      await quizCard.click();
+
+      const overlay = page.getByTestId("quiz-arena-overlay");
+      await expect(overlay).toBeVisible({ timeout: 10000 });
+
+      await expect(page.getByTestId("quiz-arena-overview")).toBeVisible({
+        timeout: 10000,
+      });
+      await clickNoNav(page, { testId: "quiz-arena-begin" });
+
+      await expect(page.getByTestId("quiz-arena-questions")).toBeVisible({
+        timeout: 10000,
+      });
+
+      await expect(
+        overlay.getByText("Collective decision-making", { exact: true })
+      ).toBeVisible({ timeout: 10000 });
+      await overlay
+        .getByText("Collective decision-making", { exact: true })
+        .click();
+
+      await clickNoNav(page, { testId: "quiz-arena-submit" });
+
+      await expect(page.getByTestId("quiz-arena-overlay")).toBeHidden({
+        timeout: 30000,
+      });
+
+      await context.storageState({ path: newUserStoragePath });
+    } finally {
+      await context.close();
+    }
+  });
+
+  test("User1: Complete normal poll", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: newUserStoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, spaceUrl);
+      await pauseAnimations(page);
+
+      const pollCard = page.locator('[data-type="poll"]').first();
+      await expect(pollCard).toBeVisible({ timeout: 10000 });
+      await pollCard.click();
+
+      const overlay = page.getByTestId("poll-arena-overlay");
+      await expect(overlay).toBeVisible({ timeout: 15000 });
+
+      await clickNoNav(page, { testId: "poll-arena-begin" });
+
+      await expect(
+        overlay.getByText("Mobile app", { exact: true })
+      ).toBeVisible({ timeout: 10000 });
+      await overlay.getByText("Mobile app", { exact: true }).click();
+
+      await clickNoNav(page, { testId: "poll-submit" });
+      await clickNoNav(page, { testId: "poll-confirm-submit" });
+
+      await expect(overlay).toBeHidden({ timeout: 30000 });
+
+      await context.storageState({ path: newUserStoragePath });
+    } finally {
+      await context.close();
+    }
+  });
+
+  test("User1: Comment on discussion", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: newUserStoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, spaceUrl);
+      await pauseAnimations(page);
+
+      const discCard = page.locator('[data-type="discuss"]').first();
+      await expect(discCard).toBeVisible({ timeout: 10000 });
+      await page.waitForTimeout(500);
+      await discCard.click();
+
+      await expect(page.getByTestId("discussion-arena-overlay")).toBeVisible({
+        timeout: 10000,
+      });
+
+      const textarea = page.locator(".comment-input__textarea");
+      await expect(textarea).toBeVisible({ timeout: 10000 });
+      await textarea.fill(
+        "I think we should prioritize mobile app development for wider reach."
+      );
+      await page.locator(".comment-input__submit").click();
+
+      await expect(
+        page.locator(".comment-item__text", {
+          hasText: "prioritize mobile app",
+        })
+      ).toBeVisible({ timeout: 10000 });
+
+      await context.storageState({ path: newUserStoragePath });
+    } finally {
+      await context.close();
+    }
+  });
+
+  // ─── 12. User2: Login + participate (after start, check prereq only) ────
+
+  test("User2: Login and complete prerequisite (after start)", async ({
+    browser,
+  }) => {
+    const { context, page } = await loginUser2FromSpace(browser, spaceUrl);
+    try {
+      await participateAndCompletePoll(page, "Science");
+
+      user2StoragePath = `e2e-lifecycle-user2-${Date.now()}.json`;
+      await context.storageState({ path: user2StoragePath });
+    } finally {
+      await context.close();
+    }
+  });
+
+  // ─── 13. User2: Complete each action ─────────────────────────────────────
+
+  test("User2: Complete follow action", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: user2StoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, spaceUrl);
+      await pauseAnimations(page);
+
+      const followBtn = page.getByRole("button", { name: "Follow" }).first();
+      await expect(followBtn).toBeVisible({ timeout: 10000 });
+      await followBtn.click();
+      await page.waitForLoadState("load");
+
+      await context.storageState({ path: user2StoragePath });
+    } finally {
+      await context.close();
+    }
+  });
+
+  test("User2: Complete quiz action", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: user2StoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, spaceUrl);
+      await pauseAnimations(page);
+
+      const quizCard = page.locator('[data-type="quiz"]').first();
+      await expect(quizCard).toBeVisible({ timeout: 10000 });
+      await quizCard.click();
+
+      const overlay = page.getByTestId("quiz-arena-overlay");
+      await expect(overlay).toBeVisible({ timeout: 10000 });
+
+      await expect(page.getByTestId("quiz-arena-overview")).toBeVisible({
+        timeout: 10000,
+      });
+      await clickNoNav(page, { testId: "quiz-arena-begin" });
+
+      await expect(page.getByTestId("quiz-arena-questions")).toBeVisible({
+        timeout: 10000,
+      });
+
+      await expect(
+        overlay.getByText("Collective decision-making", { exact: true })
+      ).toBeVisible({ timeout: 10000 });
+      await overlay
+        .getByText("Collective decision-making", { exact: true })
+        .click();
+
+      await clickNoNav(page, { testId: "quiz-arena-submit" });
+
+      await expect(page.getByTestId("quiz-arena-overlay")).toBeHidden({
+        timeout: 30000,
+      });
+
+      await context.storageState({ path: user2StoragePath });
+    } finally {
+      await context.close();
+    }
+  });
+
+  test("User2: Complete normal poll", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: user2StoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, spaceUrl);
+      await pauseAnimations(page);
+
+      const pollCard = page.locator('[data-type="poll"]').first();
+      await expect(pollCard).toBeVisible({ timeout: 10000 });
+      await pollCard.click();
+
+      const overlay = page.getByTestId("poll-arena-overlay");
+      await expect(overlay).toBeVisible({ timeout: 15000 });
+
+      await clickNoNav(page, { testId: "poll-arena-begin" });
+
+      await expect(
+        overlay.getByText("API improvements", { exact: true })
+      ).toBeVisible({ timeout: 10000 });
+      await overlay.getByText("API improvements", { exact: true }).click();
+
+      await clickNoNav(page, { testId: "poll-submit" });
+      await clickNoNav(page, { testId: "poll-confirm-submit" });
+
+      await expect(overlay).toBeHidden({ timeout: 30000 });
+
+      await context.storageState({ path: user2StoragePath });
+    } finally {
+      await context.close();
+    }
+  });
+
+  test("User2: Comment on discussion", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: user2StoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, spaceUrl);
+      await pauseAnimations(page);
+
+      const discCard = page.locator('[data-type="discuss"]').first();
+      await expect(discCard).toBeVisible({ timeout: 10000 });
+      await page.waitForTimeout(500);
+      await discCard.click();
+
+      await expect(page.getByTestId("discussion-arena-overlay")).toBeVisible({
+        timeout: 10000,
+      });
+
+      const textarea = page.locator(".comment-input__textarea");
+      await expect(textarea).toBeVisible({ timeout: 10000 });
+      await textarea.fill(
+        "API improvements would unlock many integration opportunities for developers."
+      );
+      await page.locator(".comment-input__submit").click();
+
+      await expect(
+        page.locator(".comment-item__text", {
+          hasText: "API improvements would unlock",
+        })
+      ).toBeVisible({ timeout: 10000 });
+    } finally {
+      await context.close();
+    }
+  });
+
+  // ─── 14. Creator: Finish space ─────────────────────────────────────────
+
+  test("Creator: Finish the space", async ({ page }) => {
+    // After space is Ongoing, ArenaTopbar shows btn-finish. Its "Finish"
+    // label lives only in the :hover tooltip (opacity:0) so we cannot click
+    // by text — use the stable testid instead. Clicking opens SpaceEndModal.
+    await goto(page, spaceUrl);
+    await hideFab(page);
+    await click(page, { testId: "btn-finish" });
+    await click(page, { testId: "end-space-button" });
+  });
+
+  // ─── 15. Post-finish: discussion comment blocked ─────────────────────────
+
+  test("User1: Cannot comment on discussion after finish", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      storageState: newUserStoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, spaceUrl);
+      await pauseAnimations(page);
+
+      const discCard = page.locator('[data-type="discuss"]').first();
+      await expect(discCard).toBeVisible({ timeout: 10000 });
+      await page.waitForTimeout(500);
+      await discCard.click();
+
+      await expect(page.getByTestId("discussion-arena-overlay")).toBeVisible({
+        timeout: 10000,
+      });
+
+      // Comment input should be hidden or disabled after space is finished
+      const textarea = page.locator(".comment-input__textarea");
+      const submitBtn = page.locator(".comment-input__submit");
+
+      const textareaHidden = await textarea
+        .isVisible({ timeout: 3000 })
+        .catch(() => false);
+      const submitHidden = await submitBtn
+        .isVisible({ timeout: 3000 })
+        .catch(() => false);
+
+      // Either textarea is hidden, or submit is disabled/hidden
+      expect(
+        !textareaHidden || !submitHidden,
+        "Comment input should be hidden or submit disabled after space finish"
+      ).toBeTruthy();
+    } finally {
+      await context.close();
+    }
+  });
+});

@@ -46,38 +46,32 @@ test.describe.serial("Space publish and invitation (event-driven notification)",
   test("Creator: Create a post with a space and verify dashboard", async ({
     page,
   }) => {
-    await goto(page, "/");
+    // The post-edit renewal dropped the "skip-space-checkbox" and
+    // "Go to Space" flow. Drive post + space setup through the REST endpoints
+    // so this suite can focus on the publish + invitation notification path.
+    const postRes = await page.request.post("/api/posts", { data: {} });
+    expect(postRes.ok(), `create post: ${await postRes.text()}`).toBeTruthy();
+    const postPk = (await postRes.json()).post_pk;
+    const postId = postPk.includes("#") ? postPk.split("#")[1] : postPk;
 
-    // Create a post using the "Create Post" button
-    await click(page, { label: "Create Post" });
-
-    // Wait for post editor page
-    await page.waitForURL(/\/posts\/.*\/edit/, {
-      waitUntil: "load",
-    });
-
-    // Fill in the post title
-    await fill(page, { placeholder: "Title" }, postTitle);
-
-    // Uncheck "Skip creating space" to enable space creation
-    await click(page, { testId: "skip-space-checkbox" });
-
-    // Fill in the post body
+    await goto(page, `/posts/${postId}/edit`);
+    await fill(page, { placeholder: "Title your post…" }, postTitle);
     const editor = await getEditor(page);
     await editor.fill(postContents);
-
-    // Click "Go to Space" to create the space alongside the post
-    await click(page, { text: "Go to Space" });
-
-    // Wait for navigation to the space dashboard
-    await page.waitForURL(/\/spaces\/[a-z0-9-]+\/dashboard/, {
-      waitUntil: "load",
+    await expect(page.getByText("All changes saved")).toBeVisible({
+      timeout: 15000,
     });
-    await getLocator(page, { text: "Dashboard" });
 
-    // Capture the space URL for subsequent tests
-    const url = new URL(page.url());
-    spaceUrl = url.pathname.replace(/\/dashboard$/, "");
+    const spaceRes = await page.request.post("/api/spaces/create", {
+      data: { req: { post_id: postId } },
+    });
+    expect(spaceRes.ok(), `create space: ${await spaceRes.text()}`).toBeTruthy();
+    const spaceId = (await spaceRes.json()).space_id;
+
+    spaceUrl = `/spaces/${spaceId}`;
+
+    await goto(page, `${spaceUrl}/dashboard`);
+    await getLocator(page, { text: "Dashboard" });
   });
 
   // --- 2. Invite a member via the General app ---
