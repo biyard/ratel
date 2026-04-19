@@ -114,7 +114,9 @@ impl FieldInfo {
 fn parse_struct_cfg(attrs: &[Attribute]) -> StructCfg {
     let mut cfg = StructCfg {
         table: "main".into(),
-        table_prefix: option_env!("DYNAMO_TABLE_PREFIX").unwrap_or_default().into(),
+        table_prefix: option_env!("DYNAMO_TABLE_PREFIX")
+            .unwrap_or_default()
+            .into(),
         result_ty: "std::result::Result".into(),
         // FIXME: rename after finishing migration
         error_ctor: "crate::Error".into(),
@@ -1883,6 +1885,16 @@ fn generate_query_option(st_name: &str, cfg: &StructCfg) -> proc_macro2::TokenSt
 
             pub fn scan_index_forward(mut self, scan_index_forward: bool) -> Self {
                 self.scan_index_forward = scan_index_forward;
+                self
+            }
+
+            pub fn oldest(mut self) -> Self {
+                self.scan_index_forward = true;
+                self
+            }
+
+            pub fn latest(mut self) -> Self {
+                self.scan_index_forward = false;
                 self
             }
         }
