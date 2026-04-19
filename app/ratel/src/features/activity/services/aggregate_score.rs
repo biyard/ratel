@@ -50,7 +50,7 @@ pub async fn aggregate_score(
 
     SpaceScore::updater(&score_pk, &score_sk)
         .with_total_score(new_total)
-        .with_rank_total_score(-new_total)
+        .with_rank_total_score(new_total)
         .with_poll_score(poll)
         .with_quiz_score(quiz)
         .with_follow_score(follow)
