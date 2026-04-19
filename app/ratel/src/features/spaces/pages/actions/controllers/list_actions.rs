@@ -100,9 +100,6 @@ pub async fn list_actions(
         });
     }
 
-    // Sort by started_at descending
-    actions.sort_by(|a, b| b.started_at.cmp(&a.started_at));
-
     // Pre-action filtering for non-creators
     if !matches!(role, SpaceUserRole::Creator) {
         let has_pre_actions = actions.iter().any(|a| a.prerequisite);
