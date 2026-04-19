@@ -559,3 +559,91 @@ jobs:
           base: main
           head: dev
           token: ${{ secrets.GITHUB_TOKEN }}
+
+  ratel-app:
+    runs-on: ubuntu-latest
+
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Restore cache
+        id: app-shell-build-cache
+        uses: actions/cache/restore@v5
+        with:
+          key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            app-shell-build-${{ runner.os }}-rust-
+          path: |
+            ~/.cargo/bin
+            target
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          toolchain: stable
+          target: wasm32-unknown-unknown
+          cache: false
+
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            lld
+
+      - name: Install Dioxus-cli
+        run: |
+          cargo binstall dioxus-cli --force
+
+      - name: Building test
+        id: build
+        env:
+          DYNAMO_TABLE_PREFIX: ratel-local
+          ENV: local
+          RUSTFLAGS: "-D warnings"
+          RUST_LOG: error
+          DYNAMO_ENDPOINT: http://localstack:4566
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: ap-northeast-2
+          AWS_ACCOUNT_ID: test
+          COMMIT: pr-${{ github.sha }}
+          ECR: ratel/app-shell
+        run: |
+          npm i
+          rm -rf target/dx
+
+          cd app/ratel
+          make build-testing
+          make docker
+
+          # Save image for artifact upload
+          docker save $ECR:$COMMIT | gzip > /tmp/app-shell-image.tar.gz
+          echo "image=$ECR:$COMMIT" >> $GITHUB_OUTPUT
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: app-shell-image-${{ github.sha }}
+          path: /tmp/app-shell-image.tar.gz
+          retention-days: 7
+
+      - name: Save cache
+        if: always()
+        uses: actions/cache/save@v5
+        with:
+          key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          path: |
+            ~/.cargo/bin
+            target
