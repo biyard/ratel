@@ -29,8 +29,6 @@ test.describe
   .serial("Reward anonymous team space with collective panel", () => {
   let spaceUrl;
 
-  const adminEmail = "hi+admin1@biyard.co";
-  const adminPassword = "admin!234";
   const teamNickname = "Reward Panel Team";
   const teamUsername = `e2e_rp_${Date.now()}`;
   const postTitle = "Reward Panel E2E Test Post";
@@ -49,342 +47,246 @@ test.describe
     });
   }
 
-  // Helper: login as admin1 in a fresh context
-  async function loginAsAdmin(browser) {
-    const context = await browser.newContext({
-      storageState: { cookies: [], origins: [] },
-      viewport: { width: 1440, height: 950 },
-      locale: "en-US",
-    });
-    const page = await context.newPage();
-
-    await goto(page, "/");
-    await click(page, { label: "Sign In" });
-    await fill(page, { placeholder: "Enter your email address" }, adminEmail);
-    await click(page, { text: "Continue" });
-    await fill(page, { placeholder: "Enter your password" }, adminPassword);
-    await click(page, { text: "Continue" });
-    await waitPopup(page, { visible: false });
-
-    // Save storageState for reuse across serial tests
-    await context.storageState({ path: "admin1.json" });
-
-    return { context, page };
-  }
-
-  test("Login as admin and create a team with post and space", async ({
-    browser,
+  test("Login as space admin and create a team with post and space", async ({
+    page,
   }) => {
-    const { context, page } = await loginAsAdmin(browser);
+    // Drive the full setup through the production UI:
+    //   home (`/`) → Teams HUD → "Create Team" → ArenaTeamCreationPopup → submit
+    // then home → Teams HUD → pick team → team home → Create Post button.
+    await createTeamFromHome(page, {
+      username: teamUsername,
+      nickname: teamNickname,
+      description: "E2E test team for reward panel flow",
+    });
 
-    try {
-      // Drive the full setup through the production UI:
-      //   home (`/`) → Teams HUD → "Create Team" → ArenaTeamCreationPopup → submit
-      // then home → Teams HUD → pick team → team home → Create Post button.
-      await createTeamFromHome(page, {
-        username: teamUsername,
-        nickname: teamNickname,
-        description: "E2E test team for reward panel flow",
-      });
+    const postId = await createTeamPostFromHome(
+      page,
+      teamUsername,
+      postTitle,
+      postContents,
+    );
 
-      const postId = await createTeamPostFromHome(
-        page,
-        teamUsername,
-        postTitle,
-        postContents,
-      );
+    // Space creation stays REST — the post-edit "Go to Space" affordance
+    // was removed, and this suite focuses on reward/panel rather than
+    // space-creation UX.
+    const spaceRes = await page.request.post("/api/spaces/create", {
+      data: { req: { post_id: postId } },
+    });
+    expect(
+      spaceRes.ok(),
+      `create space: ${await spaceRes.text()}`,
+    ).toBeTruthy();
+    const spaceId = (await spaceRes.json()).space_id;
 
-      // Space creation stays REST — the post-edit "Go to Space" affordance
-      // was removed, and this suite focuses on reward/panel rather than
-      // space-creation UX.
-      const spaceRes = await page.request.post("/api/spaces/create", {
-        data: { req: { post_id: postId } },
-      });
-      expect(spaceRes.ok(), `create space: ${await spaceRes.text()}`).toBeTruthy();
-      const spaceId = (await spaceRes.json()).space_id;
+    spaceUrl = `/spaces/${spaceId}`;
 
-      spaceUrl = `/spaces/${spaceId}`;
-
-      await goto(page, `${spaceUrl}/dashboard`);
-      await getLocator(page, { text: "Dashboard" });
-    } finally {
-      await context.close();
-    }
+    await goto(page, `${spaceUrl}/dashboard`);
+    await getLocator(page, { text: "Dashboard" });
   });
 
-  test("Create a follow action with 2 credits", async ({ browser }) => {
-    const context = await browser.newContext({
-      storageState: "admin1.json",
-      viewport: { width: 1440, height: 950 },
-      locale: "en-US",
+  test("Create a follow action with 2 credits", async ({ page }) => {
+    // Arena: admin's add-action card opens the TypePicker directly and
+    // picking a type creates + navigates to the creator page. There is no
+    // intermediate "Create" confirmation and no /actions list page.
+    await goto(page, spaceUrl);
+    await hideFab(page);
+    await click(page, { testId: "admin-add-action-card" });
+    await click(page, { testId: "type-option-follow" });
+
+    await page.waitForURL(/\/actions\/follows\//, {
+      waitUntil: "load",
+      timeout: 60000,
     });
-    const page = await context.newPage();
 
-    try {
-      // Arena: admin's add-action card opens the TypePicker directly and
-      // picking a type creates + navigates to the creator page. There is no
-      // intermediate "Create" confirmation and no /actions list page.
-      await goto(page, spaceUrl);
-      await hideFab(page);
-      await click(page, { testId: "admin-add-action-card" });
-      await click(page, { testId: "type-option-follow" });
+    // Wait for hydration by looking for a testid on the ConfigCard.
+    await getLocator(page, { testId: "page-card-config" });
 
-      await page.waitForURL(/\/actions\/follows\//, {
-        waitUntil: "load",
-        timeout: 60000,
-      });
-
-      // Wait for hydration by looking for a testid on the ConfigCard.
-      await getLocator(page, { testId: "page-card-config" });
-
-      // Reward toggle is only rendered for paid memberships with credits.
-      // setReward no-ops when it is absent.
-      await setReward(page, 2);
-    } finally {
-      await context.close();
-    }
+    // Reward toggle is only rendered for paid memberships with credits.
+    // setReward no-ops when it is absent.
+    await setReward(page, 2);
   });
 
-  test("Create a quiz action with 2 credits", async ({ browser }) => {
-    const context = await browser.newContext({
-      storageState: "admin1.json",
-      viewport: { width: 1440, height: 950 },
-      locale: "en-US",
+  test("Create a quiz action with 2 credits", async ({ page }) => {
+    await goto(page, spaceUrl);
+    await hideFab(page);
+    await click(page, { testId: "admin-add-action-card" });
+    // Quiz is the default pick in the TypePicker.
+    await click(page, { testId: "type-option-quiz" });
+
+    await page.waitForURL(/\/actions\/quizzes\//, {
+      waitUntil: "load",
+      timeout: 60000,
     });
-    const page = await context.newPage();
 
-    try {
-      await goto(page, spaceUrl);
-      await hideFab(page);
-      await click(page, { testId: "admin-add-action-card" });
-      // Quiz is the default pick in the TypePicker.
-      await click(page, { testId: "type-option-quiz" });
+    // Arena quiz creator: ContentCard + QuestionsCard + ConfigCard inline
+    // with per-field autosave. No tabs, no Save button.
+    await fill(
+      page,
+      { placeholder: "Enter quiz title..." },
+      "Reward Quiz: Knowledge Check",
+    );
 
-      await page.waitForURL(/\/actions\/quizzes\//, {
-        waitUntil: "load",
-        timeout: 60000,
-      });
+    const editor = await getEditor(page);
+    await editor.fill(
+      "This quiz tests participant knowledge and awards reward credits upon completion.",
+    );
+    await commitAutosave(page);
 
-      // Arena quiz creator: ContentCard + QuestionsCard + ConfigCard inline
-      // with per-field autosave. No tabs, no Save button.
-      await fill(
-        page,
-        { placeholder: "Enter quiz title..." },
-        "Reward Quiz: Knowledge Check",
-      );
-
-      const editor = await getEditor(page);
-      await editor.fill(
-        "This quiz tests participant knowledge and awards reward credits upon completion.",
-      );
-      await commitAutosave(page);
-
-      // Single question with per-field blur so each onblur autosave commits.
-      await click(page, { testId: "quiz-question-add" });
-      const q0 = page.getByTestId("quiz-question-0");
-      const q0Inputs = q0.locator("input.input");
-      const fills = [
-        "What does DAO stand for?",
-        "Decentralized Autonomous Organization",
-        "Digital Asset Operation",
-      ];
-      for (let i = 0; i < fills.length; i += 1) {
-        await q0Inputs.nth(i).fill(fills[i]);
-        await q0Inputs.nth(i).press("Tab");
-        await page.waitForLoadState("load");
-        await page.waitForTimeout(200);
-      }
-
-      // Reward toggle + 2 credits — no-op when the workspace is free-tier.
-      await setReward(page, 2);
-    } finally {
-      await context.close();
-    }
-  });
-
-  test("Create a poll with prerequisite enabled", async ({ browser }) => {
-    const context = await browser.newContext({
-      storageState: "admin1.json",
-      viewport: { width: 1440, height: 950 },
-      locale: "en-US",
-    });
-    const page = await context.newPage();
-
-    try {
-      await goto(page, spaceUrl);
-      await hideFab(page);
-      await click(page, { testId: "admin-add-action-card" });
-      await click(page, { testId: "type-option-poll" });
-
-      await page.waitForURL(/\/actions\/polls\//, {
-        waitUntil: "load",
-        timeout: 60000,
-      });
-
-      await fill(
-        page,
-        { placeholder: "Enter poll title..." },
-        "Prerequisite Poll: Budget Allocation",
-      );
-      await commitAutosave(page);
-
-      await addPollQuestion(page, "single");
-      await fillPollQuestion(page, 0, {
-        title: "How should the budget be allocated?",
-        options: ["Marketing", "R&D"],
-      });
-
-      // Prerequisite is toggled via the ConfigCard tile (no Settings tab).
-      await togglePrerequisite(page);
-    } finally {
-      await context.close();
-    }
-  });
-
-  test("Create a final poll scheduled one day later", async ({ browser }) => {
-    test.setTimeout(120000);
-
-    const context = await browser.newContext({
-      storageState: "admin1.json",
-      viewport: { width: 1440, height: 950 },
-      locale: "en-US",
-    });
-    const page = await context.newPage();
-
-    try {
-      await goto(page, spaceUrl);
-      await hideFab(page);
-      await click(page, { testId: "admin-add-action-card" });
-      await click(page, { testId: "type-option-poll" });
-
-      await page.waitForURL(/\/actions\/polls\//, {
-        waitUntil: "load",
-        timeout: 60000,
-      });
-
-      await fill(
-        page,
-        { placeholder: "Enter poll title..." },
-        "Final Poll: One Day Later",
-      );
-      await commitAutosave(page);
-
-      await addPollQuestion(page, "single");
-      await fillPollQuestion(page, 0, {
-        title: "Should we proceed with the proposal?",
-        options: ["Yes", "No"],
-      });
-
-      // Arena Schedule: native datetime-local inputs (schedule-start /
-      // schedule-end). Set start = tomorrow, end = day after tomorrow.
-      const fmt = (d) => {
-        const y = d.getFullYear();
-        const mo = String(d.getMonth() + 1).padStart(2, "0");
-        const da = String(d.getDate()).padStart(2, "0");
-        const h = String(d.getHours()).padStart(2, "0");
-        const mi = String(d.getMinutes()).padStart(2, "0");
-        return `${y}-${mo}-${da}T${h}:${mi}`;
-      };
-      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
-      const dayAfter = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
-
-      const startInput = page.getByTestId("schedule-start");
-      await expect(startInput).toBeVisible();
-      await startInput.fill(fmt(tomorrow));
-      await startInput.blur();
+    // Single question with per-field blur so each onblur autosave commits.
+    await click(page, { testId: "quiz-question-add" });
+    const q0 = page.getByTestId("quiz-question-0");
+    const q0Inputs = q0.locator("input.input");
+    const fills = [
+      "What does DAO stand for?",
+      "Decentralized Autonomous Organization",
+      "Digital Asset Operation",
+    ];
+    for (let i = 0; i < fills.length; i += 1) {
+      await q0Inputs.nth(i).fill(fills[i]);
+      await q0Inputs.nth(i).press("Tab");
       await page.waitForLoadState("load");
-
-      const endInput = page.getByTestId("schedule-end");
-      await expect(endInput).toBeVisible();
-      await endInput.fill(fmt(dayAfter));
-      await endInput.blur();
-      await page.waitForLoadState("load");
-      await page.waitForTimeout(500);
-    } finally {
-      await context.close();
+      await page.waitForTimeout(200);
     }
+
+    // Reward toggle + 2 credits — no-op when the workspace is free-tier.
+    await setReward(page, 2);
+  });
+
+  test("Create a poll with prerequisite enabled", async ({ page }) => {
+    await goto(page, spaceUrl);
+    await hideFab(page);
+    await click(page, { testId: "admin-add-action-card" });
+    await click(page, { testId: "type-option-poll" });
+
+    await page.waitForURL(/\/actions\/polls\//, {
+      waitUntil: "load",
+      timeout: 60000,
+    });
+
+    await fill(
+      page,
+      { placeholder: "Enter poll title..." },
+      "Prerequisite Poll: Budget Allocation",
+    );
+    await commitAutosave(page);
+
+    await addPollQuestion(page, "single");
+    await fillPollQuestion(page, 0, {
+      title: "How should the budget be allocated?",
+      options: ["Marketing", "R&D"],
+    });
+
+    // Prerequisite is toggled via the ConfigCard tile (no Settings tab).
+    await togglePrerequisite(page);
+  });
+
+  test("Create a final poll scheduled one day later", async ({ page }) => {
+    await goto(page, spaceUrl);
+    await hideFab(page);
+    await click(page, { testId: "admin-add-action-card" });
+    await click(page, { testId: "type-option-poll" });
+
+    await page.waitForURL(/\/actions\/polls\//, {
+      waitUntil: "load",
+      timeout: 60000,
+    });
+
+    await fill(
+      page,
+      { placeholder: "Enter poll title..." },
+      "Final Poll: One Day Later",
+    );
+    await commitAutosave(page);
+
+    await addPollQuestion(page, "single");
+    await fillPollQuestion(page, 0, {
+      title: "Should we proceed with the proposal?",
+      options: ["Yes", "No"],
+    });
+
+    // Arena Schedule: native datetime-local inputs (schedule-start /
+    // schedule-end). Set start = tomorrow, end = day after tomorrow.
+    const fmt = (d) => {
+      const y = d.getFullYear();
+      const mo = String(d.getMonth() + 1).padStart(2, "0");
+      const da = String(d.getDate()).padStart(2, "0");
+      const h = String(d.getHours()).padStart(2, "0");
+      const mi = String(d.getMinutes()).padStart(2, "0");
+      return `${y}-${mo}-${da}T${h}:${mi}`;
+    };
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const dayAfter = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+
+    const startInput = page.getByTestId("schedule-start");
+    await expect(startInput).toBeVisible();
+    await startInput.fill(fmt(tomorrow));
+    await startInput.blur();
+    await page.waitForLoadState("load");
+
+    const endInput = page.getByTestId("schedule-end");
+    await expect(endInput).toBeVisible();
+    await endInput.fill(fmt(dayAfter));
+    await endInput.blur();
+    await page.waitForLoadState("load");
+    await page.waitForTimeout(500);
   });
 
   test("Configure Panel app with Age and Gender attributes", async ({
-    browser,
+    page,
   }) => {
-    const context = await browser.newContext({
-      storageState: "admin1.json",
-      viewport: { width: 1440, height: 950 },
-      locale: "en-US",
-    });
-    const page = await context.newPage();
+    await goto(page, spaceUrl + "/apps");
 
-    try {
-      await goto(page, spaceUrl + "/apps");
-
-      // The Panels app card has a "Setting" button with data-testid="configure-app-panels".
-      // But Panels might need to be installed first if not default.
-      // Check if Panels is in "Available Apps" or "Installed Apps".
-      const installButton = page.locator('[data-testid="install-app-panels"]');
-      if ((await installButton.count()) > 0) {
-        // Panels app needs to be installed first
-        await installButton.click();
-        await page.waitForLoadState("load");
-        // Wait for the app to appear in installed section
-        await page.waitForTimeout(1000);
-      }
-
-      // Now click Settings on the Panels app card
-      const settingButton = page.locator(
-        '[data-testid="configure-app-panels"]',
-      );
-      // There may be multiple "Setting" buttons — the Panels one should be visible
-      // after install. Find the one associated with Panels.
-      // Each AppCard renders the Setting button. We need the Panels one.
-      // The cards show app names. Find "Panels" text and its sibling Setting button.
-      const panelsCard = page.locator("text=Panels").locator("../..");
-      const panelsSettingBtn = panelsCard.locator(
-        '[data-testid="configure-app-panels"]',
-      );
-
-      if ((await panelsSettingBtn.count()) > 0) {
-        await panelsSettingBtn.click();
-      } else {
-        // Fallback: click any configure-app-panels button
-        await settingButton.first().click();
-      }
-
-      await page.waitForURL(/\/apps\/panels/, { waitUntil: "load" });
-
-      // Toggle Age attribute button via data-testid
-      await getLocator(page, { text: "Attribute groups" });
-      await click(page, { testId: "attr-btn-age" });
+    // The Panels app card has a "Setting" button with data-testid="configure-app-panels".
+    // But Panels might need to be installed first if not default.
+    // Check if Panels is in "Available Apps" or "Installed Apps".
+    const installButton = page.locator('[data-testid="install-app-panels"]');
+    if ((await installButton.count()) > 0) {
+      // Panels app needs to be installed first
+      await installButton.click();
       await page.waitForLoadState("load");
-
-      // Toggle Gender attribute button via data-testid
-      await click(page, { testId: "attr-btn-gender" });
-      await page.waitForLoadState("load");
-
-      // Verify collective panel shows Age and Gender badges
-      await getLocator(page, { text: "Collective Panel Attributes" });
-    } finally {
-      await context.close();
+      // Wait for the app to appear in installed section
+      await page.waitForTimeout(1000);
     }
+
+    // Now click Settings on the Panels app card
+    const settingButton = page.locator('[data-testid="configure-app-panels"]');
+    // There may be multiple "Setting" buttons — the Panels one should be visible
+    // after install. Find the one associated with Panels.
+    // Each AppCard renders the Setting button. We need the Panels one.
+    // The cards show app names. Find "Panels" text and its sibling Setting button.
+    const panelsCard = page.locator("text=Panels").locator("../..");
+    const panelsSettingBtn = panelsCard.locator(
+      '[data-testid="configure-app-panels"]',
+    );
+
+    if ((await panelsSettingBtn.count()) > 0) {
+      await panelsSettingBtn.click();
+    } else {
+      // Fallback: click any configure-app-panels button
+      await settingButton.first().click();
+    }
+
+    await page.waitForURL(/\/apps\/panels/, { waitUntil: "load" });
+
+    // Toggle Age attribute button via data-testid
+    await getLocator(page, { text: "Attribute groups" });
+    await click(page, { testId: "attr-btn-age" });
+    await page.waitForLoadState("load");
+
+    // Toggle Gender attribute button via data-testid
+    await click(page, { testId: "attr-btn-gender" });
+    await page.waitForLoadState("load");
+
+    // Verify collective panel shows Age and Gender badges
+    await getLocator(page, { text: "Collective Panel Attributes" });
   });
 
-  test("Publish the space as public", async ({ browser }) => {
-    const context = await browser.newContext({
-      storageState: "admin1.json",
-      viewport: { width: 1440, height: 950 },
-      locale: "en-US",
-    });
-    const page = await context.newPage();
+  test("Publish the space as public", async ({ page }) => {
+    await goto(page, spaceUrl + "/dashboard");
 
-    try {
-      await goto(page, spaceUrl + "/dashboard");
-
-      await click(page, { text: "Publish" });
-      await click(page, { testId: "public-option" });
-      await click(page, { label: "Confirm visibility selection" });
-    } finally {
-      await context.close();
-    }
+    await click(page, { text: "Publish" });
+    await click(page, { testId: "public-option" });
+    await click(page, { label: "Confirm visibility selection" });
   });
 
   test("New user signs up and participates in the space", async ({

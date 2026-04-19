@@ -416,13 +416,7 @@ fn ProfileButton(collapsed: bool) -> Element {
                         onclick: move |_| {
                             open.set(false);
                             spawn(async move {
-                                let _ = crate::features::auth::controllers::logout_handler().await;
-                                #[cfg(target_arch = "wasm32")]
-                                {
-                                    if let Some(window) = web_sys::window() {
-                                        let _ = window.location().reload();
-                                    }
-                                }
+                                crate::features::auth::services::sign_out(user_ctx).await;
                             });
                         },
                         "{tr.logout}"

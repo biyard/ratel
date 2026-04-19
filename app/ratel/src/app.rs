@@ -20,6 +20,11 @@ pub fn App() -> Element {
     ThemeService::init();
     let _ = crate::features::auth::Context::init()?;
     crate::common::contexts::TeamContext::init();
+    // Hydrate language + cached user session from the WebView's
+    // localStorage and keep them in sync on every change. Must run after
+    // `Context::init` so we don't overwrite a server-validated user with
+    // stale cached data.
+    crate::common::services::use_persist_ui_state();
     use_effect(move || {
         document::eval(
             r#"
@@ -43,7 +48,13 @@ pub fn App() -> Element {
             rel: "stylesheet",
             href: asset!("/assets/dx-components-theme.css"),
         }
-        document::Script { src: MAIN_JS }
+        // Loaded as a module: Dioxus's `asset!()` post-processes JS into
+        // an ES module wrapper (the bundle ends with `export default …`),
+        // so a classic `<script>` tag throws `Unexpected token 'export'`
+        // and breaks `window.ratel` namespace setup. The bundle's only
+        // side effect is populating `window.ratel`, which still happens
+        // when loaded as a module.
+        document::Script { r#type: "module", src: MAIN_JS }
         document::Script { src: "https://cdn.portone.io/v2/browser-sdk.js" }
         document::Link { rel: "stylesheet", href: asset!("/assets/tailwind.css") }
 

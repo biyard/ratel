@@ -737,16 +737,48 @@ test.describe.serial("Space with actions created by a team", () => {
       },
     ];
 
-    // Helper: open discussion overlay from the ActionDashboard carousel
+    // Helper: open discussion overlay from the ActionDashboard carousel.
+    //
+    // The discussion card is selected by `[data-type="discuss"]` (not a
+    // testid), so `click()` helper's per-testid hydration precheck
+    // doesn't fire for it. When this helper is called a SECOND time
+    // after a back-close cycle (creator re-opens for verification), the
+    // click occasionally lands before Dioxus re-binds the card's onclick
+    // handler and is silently dropped — the overlay never opens.
+    //
+    // Wrap the click in a retry loop that does a hard reload on each
+    // retry to force a fresh SSR + hydration pass, bounded to 3 attempts
+    // so a genuinely broken overlay still fails fast.
     async function openDiscussionOverlay(pg) {
-      await goto(pg, spaceUrl);
-      const discCard = pg.locator('[data-type="discuss"]').first();
-      await expect(discCard).toBeVisible({ timeout: 10000 });
-      await pg.waitForTimeout(500);
-      await discCard.click();
-      await expect(pg.getByTestId("discussion-arena-overlay")).toBeVisible({
-        timeout: 10000,
-      });
+      const overlay = pg.getByTestId("discussion-arena-overlay");
+      let lastError;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await goto(pg, spaceUrl);
+        if (attempt > 0) {
+          // Hard reload to purge any stale Dioxus state left over from
+          // the previous overlay session. Mirrors the deleted gotoFresh
+          // helper — a plain page.goto to the same URL can be absorbed
+          // by the SPA router and preserve the stale component tree.
+          await pg.reload();
+          await pg.waitForLoadState("domcontentloaded");
+          await pg.waitForFunction(
+            () => document.querySelector("[data-dioxus-id]") !== null,
+          );
+          await pg.waitForTimeout(1500);
+        }
+        const discCard = pg.locator('[data-type="discuss"]').first();
+        await expect(discCard).toBeVisible({ timeout: 10000 });
+        await pg.waitForTimeout(500);
+        await discCard.click();
+        try {
+          await expect(overlay).toBeVisible({ timeout: 5000 });
+          return;
+        } catch (err) {
+          lastError = err;
+          // Fall through — retry on a fresh page.
+        }
+      }
+      throw lastError;
     }
 
     // Helper: post a comment in the discussion overlay textarea. The

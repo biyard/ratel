@@ -35,11 +35,27 @@ RUSTFLAGS ?= "-D warnings"
 PORT ?= 8080
 RUN_FEATURES ?= local-dev
 
+# Auto-detect the host's LAN IP so Android devices / emulators on the same
+# network can reach `dx serve` running on this workstation. Tries Linux
+# (`ip route get`) then macOS (`ipconfig getifaddr en0`); falls back to the
+# Android emulator loopback alias `10.0.2.2`, which works for emulators but
+# not physical phones. Override explicitly when needed:
+#   MOBILE_API_URL=http://10.20.30.40:8080 make android
+HOST_IP ?= $(shell ip route get 1.1.1.1 2>/dev/null | awk '/src/ {for(i=1;i<=NF;i++) if($$i=="src") {print $$(i+1); exit}}' || ipconfig getifaddr en0 2>/dev/null || echo 10.0.2.2)
+MOBILE_API_URL ?= http://$(HOST_IP):$(PORT)
+
 REPOSITORY ?= ratel/app-shell
 ECR ?= $(shell aws ecr describe-repositories --repository-names $(REPOSITORY)  --query "repositories[0].repositoryUri" --output text)
 QDRANT_PREFIX ?= ratel-$(ENV)
 QDRANT_URL ?= http://localhost:6334
 QDRANT_API_KEY ?= ""
+ARCH ?= $(shell uname -m)
+AVD_NAME ?= Pixel_6_API_34
+ANDROID_EMULATOR_ID ?= $(shell adb devices | grep emulator | cut -f1)
+
+ifneq ($(ANDROID_EMULATOR_ID),)
+	DEVICE_FLAG ?= --device $(AVD_NAME)
+endif
 
 BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
@@ -72,6 +88,7 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					QDRANT_URL=$(QDRANT_URL) \
 					QDRANT_API_KEY=$(QDRANT_API_KEY) \
 					QDRANT_PREFIX=$(QDRANT_PREFIX) \
+					MOBILE_API_URL=$(MOBILE_API_URL) \
 
 test:
 	mkdir -p ./test-build-target/debug/deps/public
@@ -81,6 +98,50 @@ test:
 run:
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES)
 
+ANDROID_NDK_HOME ?= /opt/android-ndk
+ANDROID_NDK_TOOLCHAIN ?= $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64
+ANDROID_API_LEVEL ?= 24
+ANDROID_TARGET ?= aarch64-linux-android
+ANDROID_CC ?= $(ANDROID_NDK_TOOLCHAIN)/bin/$(ANDROID_TARGET)$(ANDROID_API_LEVEL)-clang
+
+# Gradle + Android Gradle Plugin 8.x don't parse class-file major 70 (OpenJDK 26+).
+# Force a JDK that Gradle supports; override ANDROID_JAVA_HOME if yours lives elsewhere.
+ANDROID_JAVA_HOME ?= /usr/lib/jvm/java-17-openjdk
+
+ANDROID_ENV = \
+	JAVA_HOME=$(ANDROID_JAVA_HOME) \
+	PATH="$(ANDROID_JAVA_HOME)/bin:$(PATH)" \
+	CC_aarch64_linux_android=$(ANDROID_CC) \
+	CXX_aarch64_linux_android=$(ANDROID_CC)++ \
+	AR_aarch64_linux_android=$(ANDROID_NDK_TOOLCHAIN)/bin/llvm-ar \
+	CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$(ANDROID_CC) \
+	CC_armv7_linux_androideabi=$(ANDROID_NDK_TOOLCHAIN)/bin/armv7a-linux-androideabi$(ANDROID_API_LEVEL)-clang \
+	CXX_armv7_linux_androideabi=$(ANDROID_NDK_TOOLCHAIN)/bin/armv7a-linux-androideabi$(ANDROID_API_LEVEL)-clang++ \
+	AR_armv7_linux_androideabi=$(ANDROID_NDK_TOOLCHAIN)/bin/llvm-ar \
+	CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER=$(ANDROID_NDK_TOOLCHAIN)/bin/armv7a-linux-androideabi$(ANDROID_API_LEVEL)-clang
+
+$(HOME)/.android/debug.keystore:
+	keytool -genkey -v -keystore $@ -storepass android -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Korea,O=Biyard,C=KR"
+
+	keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android | grep SHA1
+
+$(HOME)/.android/avd/$(AVD_NAME).avd: $(ANDROID_HOME)/system-images/android-34/google_apis/$(ARCH)
+	avdmanager create avd  -n $(AVD_NAME) -k "system-images;android-34;google_apis;$(ARCH)" -d "pixel_6"
+
+$(ANDROID_HOME)/emulator/emulator:
+	sdkmanager --install emulator
+
+$(ANDROID_HOME)/system-images/android-34/google_apis/$(ARCH):
+	sdkmanager --install "system-images;android-34;google_apis;$(ARCH)"
+
+android-emulator: $(HOME)/.android/debug.keystore $(HOME)/.android/avd/$(AVD_NAME).avd $(ANDROID_HOME)/emulator/emulator
+	$(ANDROID_HOME)/emulator/emulator -avd $(AVD_NAME) -netdelay none -netspeed full &
+
+android: $(HOME)/.android/debug.keystore
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --android --target $(ANDROID_TARGET) --features $(RUN_FEATURES) $(DEVICE_FLAG)
+
+ios:
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --ios --features $(RUN_FEATURES)
 
 build:
 	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server --platform server

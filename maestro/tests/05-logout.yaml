@@ -1,0 +1,26 @@
+# Scenario 5: Logout flow
+# Depends on: 01-login (user must be signed in)
+appId: co.biyard.ratel
+---
+- launchApp
+
+- waitForAnimationToEnd
+
+# Open settings
+- tapOn: "Settings"
+
+# Tap logout
+- scrollUntilVisible:
+    element: "Log Out"
+    direction: DOWN
+- tapOn: "Log Out"
+
+# Should return to home with Sign In button visible
+- extendedWaitUntil:
+    visible: "Sign In"
+    timeout: 10000
+
+- takeScreenshot: 05-logged-out
+
+# Verify user context is cleared
+- assertNotVisible: "Log Out"
