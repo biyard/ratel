@@ -283,6 +283,13 @@ impl SpaceReward {
             .await
         {
             Ok(user_res) => {
+                crate::info!(
+                    target_pk = %target_pk,
+                    amount = amount,
+                    reward_key = %space_reward.sk,
+                    "Awarded points via Biyard"
+                );
+
                 if let Some(ref owner) = owner_pk {
                     if *owner == target_pk {
                         return Ok(user_reward);
@@ -302,6 +309,13 @@ impl SpaceReward {
                             reward_key = %space_reward.sk,
                             error = %e,
                             "Failed to award owner points via Biyard"
+                        );
+                    } else {
+                        tracing::info!(
+                            owner_pk = %owner,
+                            amount = amount * 10 / 100,
+                            reward_key = %space_reward.sk,
+                            "Awarded owner points via Biyard"
                         );
                     }
                 }
