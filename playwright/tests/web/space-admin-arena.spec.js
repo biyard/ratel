@@ -1,43 +1,30 @@
 import { expect, test } from "@playwright/test";
-import { click, fill, goto, getEditor } from "../utils";
+import {
+  click,
+  createTeamFromHome,
+  createTeamPostFromHome,
+  fill,
+  getLocator,
+  goto,
+} from "../utils";
 
+// Mirrors the reward-anonymous-space-with-collective-panel-by-user spec's
+// proven setup path: team via UI → team post via UI → space via REST, then
+// each action creation is its own test so every step starts from a fresh
+// page context (avoids any cross-step UI state bleed that broke the previous
+// single-test setup).
 test.describe.serial("Space admin arena", () => {
   let spaceUrl;
+
+  const teamNickname = "Admin Arena Team";
+  const teamUsername = `e2e_aa_${Date.now()}`;
   const postTitle = "Admin Arena Playwright Space";
   const postContents =
     "This space is created by the admin-arena Playwright spec to exercise admin-only UI (overview edit, settings apps section, action creation, quest edit controls).";
   const uniqueAbout = `ADMIN ARENA TEST ${Date.now()}`;
 
-  async function createSpaceFromPost(page) {
-    await goto(page, "/");
-
-    // Home → Create Post (creates a draft post, navigates to /posts/:id/edit)
-    await click(page, { testId: "home-btn-create" });
-    await page.waitForURL(/\/posts\/[^/]+\/edit/, { waitUntil: "load" });
-    await page.waitForFunction(
-      () => document.querySelector("[data-dioxus-id]") !== null,
-    );
-
-    // Fill post metadata + body
-    await fill(page, { placeholder: "Title your post…" }, postTitle);
-    const editor = await getEditor(page);
-    await editor.fill(postContents);
-
-    // Enable the Space toggle (switch with aria-label "Enable Space"),
-    // then hit the primary action which is now labeled "Design Space".
-    await click(page, { label: "Enable Space" });
-    await click(page, { testId: "post-edit-publish-btn" });
-
-    // Post-edit navigates to SpaceIndexPage (arena) after space creation.
-    await page.waitForURL(/\/spaces\/[a-z0-9-]+\/?$/, { waitUntil: "load" });
-    await page.waitForFunction(
-      () => document.querySelector("[data-dioxus-id]") !== null,
-    );
-
-    const url = new URL(page.url());
-    spaceUrl = url.pathname.replace(/\/$/, "");
-  }
-
+  // Hide the floating action button (DevTools FAB) that may overlap modal
+  // buttons and steal clicks.
   async function hideFab(page) {
     await page.evaluate(() => {
       const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
@@ -45,44 +32,80 @@ test.describe.serial("Space admin arena", () => {
     });
   }
 
-  // Arena-style action creation: from SpaceIndexPage the admin clicks
-  // `admin-add-action-card` to open TypePickerModal, then picks a type which
-  // immediately creates the action and navigates to the creator page. There
-  // is no intermediate "Create" confirmation.
-  async function createAction(page, typeTestId, urlRegex) {
+  test("Setup: create team, post, and space", async ({ page }) => {
+    // Drive team + post creation through production UI, then create the
+    // space via REST — the same approach used by the reward-panel spec.
+    await createTeamFromHome(page, {
+      username: teamUsername,
+      nickname: teamNickname,
+      description: "E2E test team for admin arena",
+    });
+
+    const postId = await createTeamPostFromHome(
+      page,
+      teamUsername,
+      postTitle,
+      postContents,
+    );
+
+    const spaceRes = await page.request.post("/api/spaces/create", {
+      data: { req: { post_id: postId } },
+    });
+    expect(
+      spaceRes.ok(),
+      `create space: ${await spaceRes.text()}`,
+    ).toBeTruthy();
+    const spaceId = (await spaceRes.json()).space_id;
+
+    spaceUrl = `/spaces/${spaceId}`;
+
+    // Sanity-check the creator dashboard is reachable before proceeding.
+    await goto(page, `${spaceUrl}/dashboard`);
+    await getLocator(page, { text: "Dashboard" });
+  });
+
+  test("Setup: create poll action", async ({ page }) => {
     await goto(page, spaceUrl);
     await hideFab(page);
     await click(page, { testId: "admin-add-action-card" });
-    await click(page, { testId: typeTestId });
-    // Per-step navigation can take >30s when the server creates the action
-    // and routes to the creator page with a fresh SSR pass.
-    await page.waitForURL(urlRegex, { waitUntil: "load", timeout: 60000 });
-  }
+    await click(page, { testId: "type-option-poll" });
+    await page.waitForURL(/\/actions\/polls\//, {
+      waitUntil: "load",
+      timeout: 60000,
+    });
+  });
 
-  test.beforeAll(async ({ browser }) => {
-    // beforeAll runs five navigations + four action creations; give it a
-    // generous overall window so flaky server latency doesn't kill the run.
-    test.setTimeout(300_000);
+  test("Setup: create discussion action", async ({ page }) => {
+    await goto(page, spaceUrl);
+    await hideFab(page);
+    await click(page, { testId: "admin-add-action-card" });
+    await click(page, { testId: "type-option-discuss" });
+    await page.waitForURL(/\/actions\/discussions\/[^/]+\/edit/, {
+      waitUntil: "load",
+      timeout: 60000,
+    });
+  });
 
-    const context = await browser.newContext({ storageState: "user.json" });
-    const page = await context.newPage();
+  test("Setup: create quiz action", async ({ page }) => {
+    await goto(page, spaceUrl);
+    await hideFab(page);
+    await click(page, { testId: "admin-add-action-card" });
+    await click(page, { testId: "type-option-quiz" });
+    await page.waitForURL(/\/actions\/quizzes\//, {
+      waitUntil: "load",
+      timeout: 60000,
+    });
+  });
 
-    try {
-      await createSpaceFromPost(page);
-
-      // Create 4 actions (Poll, Discussion, Quiz, Follow) via the new
-      // type-picker testIds exposed on the arena dashboard.
-      await createAction(page, "type-option-poll", /\/actions\/polls\//);
-      await createAction(
-        page,
-        "type-option-discuss",
-        /\/actions\/discussions\/[^/]+\/edit/,
-      );
-      await createAction(page, "type-option-quiz", /\/actions\/quizzes\//);
-      await createAction(page, "type-option-follow", /\/actions\/follows\//);
-    } finally {
-      await context.close();
-    }
+  test("Setup: create follow action", async ({ page }) => {
+    await goto(page, spaceUrl);
+    await hideFab(page);
+    await click(page, { testId: "admin-add-action-card" });
+    await click(page, { testId: "type-option-follow" });
+    await page.waitForURL(/\/actions\/follows\//, {
+      waitUntil: "load",
+      timeout: 60000,
+    });
   });
 
   test("Test 1: Admin badge visible in arena topbar", async ({ page }) => {
