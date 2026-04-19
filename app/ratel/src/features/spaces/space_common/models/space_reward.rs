@@ -140,15 +140,24 @@ impl SpaceReward {
             return Ok(None);
         }
 
-        match Self::award(cli, &space_reward, target_pk, owner_pk).await {
+        match Self::award(cli, &space_reward, target_pk.clone(), owner_pk).await {
             Ok(user_reward) => Ok(Some(user_reward)),
             // Repeat claims inside the same period are expected on subsequent
             // activities — swallow them so the event handler stays idempotent.
-            Err(e) if matches!(
-                e,
-                crate::common::Error::SpaceReward(SpaceRewardError::AlreadyClaimedInPeriod)
-            ) =>
+            Err(e)
+                if matches!(
+                    e,
+                    crate::common::Error::SpaceReward(SpaceRewardError::AlreadyClaimedInPeriod)
+                ) =>
             {
+                crate::warn!(
+                    space_pk = %space_pk,
+                    action_id = %action_id,
+                    behavior = ?behavior,
+                    target_pk = %target_pk,
+                    error = %e,
+                    "reward already claimed in this period — skipping duplicate claim"
+                );
                 Ok(None)
             }
             Err(e) => Err(e),
@@ -274,6 +283,13 @@ impl SpaceReward {
             .await
         {
             Ok(user_res) => {
+                crate::info!(
+                    target_pk = %target_pk,
+                    amount = amount,
+                    reward_key = %space_reward.sk,
+                    "Awarded points via Biyard"
+                );
+
                 if let Some(ref owner) = owner_pk {
                     if *owner == target_pk {
                         return Ok(user_reward);
@@ -293,6 +309,13 @@ impl SpaceReward {
                             reward_key = %space_reward.sk,
                             error = %e,
                             "Failed to award owner points via Biyard"
+                        );
+                    } else {
+                        tracing::info!(
+                            owner_pk = %owner,
+                            amount = amount * 10 / 100,
+                            reward_key = %space_reward.sk,
+                            "Awarded owner points via Biyard"
                         );
                     }
                 }

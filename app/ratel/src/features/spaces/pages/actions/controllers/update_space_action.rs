@@ -6,8 +6,8 @@ use super::*;
 use crate::common::models::space::SpaceCommon;
 #[cfg(feature = "server")]
 use crate::features::membership::models::{
-    Membership, TeamMembership, UserMembership, ensure_team_membership_monthly_refill,
-    ensure_user_membership_monthly_refill,
+    ensure_team_membership_monthly_refill, ensure_user_membership_monthly_refill, Membership,
+    TeamMembership, UserMembership,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -240,11 +240,10 @@ async fn set_credits(
         ),
         update_action_credits_item(pk, credits, total_points, now),
     ];
-    crate::transact_write_items!(cli, items)
-        .map_err(|e| {
-            crate::error!("Failed to execute transaction: {e:?}");
-            SpaceActionError::TransactionFailed
-        })?;
+    crate::transact_write_items!(cli, items).map_err(|e| {
+        crate::error!("Failed to execute transaction: {e:?}");
+        SpaceActionError::TransactionFailed
+    })?;
 
     Ok(())
 }
@@ -289,8 +288,7 @@ async fn remove_credits(
                     SpaceActionError::MembershipCheckFailed
                 })? {
                     let team_membership =
-                        ensure_team_membership_monthly_refill(cli, team_membership.clone())
-                            .await?;
+                        ensure_team_membership_monthly_refill(cli, team_membership.clone()).await?;
                     items.push(
                         TeamMembership::updater(&team_membership.pk, &team_membership.sk)
                             .increase_remaining_credits(reward.credits)
@@ -302,9 +300,9 @@ async fn remove_credits(
                 UserMembership::get(cli, user.pk.clone(), Some(EntityType::UserMembership))
                     .await
                     .map_err(|e| {
-                    crate::error!("Failed to get user membership: {e:?}");
-                    SpaceActionError::MembershipCheckFailed
-                })?
+                        crate::error!("Failed to get user membership: {e:?}");
+                        SpaceActionError::MembershipCheckFailed
+                    })?
             {
                 let um = ensure_user_membership_monthly_refill(cli, um.clone()).await?;
                 items.push(
@@ -319,11 +317,10 @@ async fn remove_credits(
     }
 
     items.push(update_action_credits_item(pk, 0, 0, now));
-    crate::transact_write_items!(cli, items)
-        .map_err(|e| {
-            crate::error!("Failed to execute transaction: {e:?}");
-            SpaceActionError::TransactionFailed
-        })?;
+    crate::transact_write_items!(cli, items).map_err(|e| {
+        crate::error!("Failed to execute transaction: {e:?}");
+        SpaceActionError::TransactionFailed
+    })?;
 
     Ok(())
 }
