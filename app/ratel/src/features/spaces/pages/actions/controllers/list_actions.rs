@@ -16,11 +16,13 @@ use crate::features::spaces::pages::actions::actions::quiz::{SpaceQuiz, SpaceQui
 #[cfg(feature = "server")]
 use std::collections::HashSet;
 
-#[mcp_tool(name = "list_actions", description = "List all actions in a space (polls, quizzes, discussions, follow). Shows action type, title, and status.")]
+#[mcp_tool(
+    name = "list_actions",
+    description = "List all actions in a space (polls, quizzes, discussions, follow). Shows action type, title, and status."
+)]
 #[get("/api/spaces/{space_pk}/actions", role: SpaceUserRole, user: OptionalUser, space: SpaceCommon)]
 pub async fn list_actions(
-    #[mcp(description = "Space partition key")]
-    space_pk: SpacePartition,
+    #[mcp(description = "Space partition key")] space_pk: SpacePartition,
 ) -> Result<Vec<SpaceActionSummary>> {
     let cli = crate::features::spaces::pages::actions::config::get()
         .common
@@ -29,12 +31,13 @@ pub async fn list_actions(
     let space_status = space.status.clone();
     let join_anytime = space.join_anytime;
 
-    let (space_actions, _) = SpaceAction::find_by_space(cli, &space_pk, SpaceAction::opt())
-        .await
-        .map_err(|e| {
-            crate::error!("failed to load actions: {e:?}");
-            SpaceActionError::ActionLoadFailed
-        })?;
+    let (space_actions, _) =
+        SpaceAction::find_by_space(cli, &space_pk, SpaceAction::opt().oldest())
+            .await
+            .map_err(|e| {
+                crate::error!("failed to load actions: {e:?}");
+                SpaceActionError::ActionLoadFailed
+            })?;
 
     let mut actions: Vec<SpaceActionSummary> = space_actions.into_iter().map(Into::into).collect();
 
@@ -88,7 +91,8 @@ pub async fn list_actions(
     // Prerequisite actions are always visible regardless of started_at — Candidates need them
     // during the Open phase before the individual action timer starts.
     let now = crate::common::utils::time::get_now_timestamp_millis();
-    actions.retain(|action| action.prerequisite || is_visible_for_role(&role, action.started_at, now));
+    actions
+        .retain(|action| action.prerequisite || is_visible_for_role(&role, action.started_at, now));
 
     if !matches!(role, SpaceUserRole::Creator) {
         actions.retain(|action| {
