@@ -140,6 +140,34 @@
 }
 .quest-card__cta:hover { box-shadow: 0 4px 20px rgba(252,179,0,0.35); transform: translateY(-1px); }
 
+/* ── Arrow nav (desktop/tablet only) ─────────────── */
+.carousel-arrow {
+  position: absolute; top: 50%;
+  transform: translateY(-50%);
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--dark, rgba(12,12,26,0.85)) var(--light, rgba(255,255,255,0.9));
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--dark, rgba(255,255,255,0.08)) var(--light, rgba(0,0,0,0.08));
+  color: var(--dark, #8888a8) var(--light, #6b6b80);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0;
+  z-index: 20;
+  transition: all 0.2s ease;
+}
+.carousel-arrow svg { width: 18px; height: 18px; }
+.carousel-arrow:hover:not(:disabled) {
+  color: #fcb300;
+  border-color: rgba(252,179,0,0.3);
+  box-shadow: 0 4px 20px rgba(252,179,0,0.15);
+}
+.carousel-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.carousel-arrow--prev { left: 24px; }
+.carousel-arrow--next { right: 24px; }
+
 /* ── Dots ────────────────────────────────────────── */
 .carousel-dots {
   position: relative; z-index: 10;
@@ -288,6 +316,7 @@
   .quest-card__title { font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .carousel-track { padding-left: calc(50vw - 160px); padding-right: calc(50vw - 160px); gap: 20px; }
   .carousel-wrapper::before, .carousel-wrapper::after { width: 60px; }
+  .carousel-arrow { display: none; }
   .bottom-bar { padding: 10px 16px 16px; gap: 10px; }
   .quest-progress { gap: 10px; }
   .quest-progress__label { font-size: 9px; }

@@ -205,6 +205,16 @@ translate! {
         ko: "모든 퀘스트를 완료했습니다!",
     },
 
+    prev_quest: {
+        en: "Previous quest",
+        ko: "이전 퀘스트",
+    },
+
+    next_quest: {
+        en: "Next quest",
+        ko: "다음 퀘스트",
+    },
+
     required_label: {
         en: "Required",
         ko: "필수",

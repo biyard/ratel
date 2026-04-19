@@ -18,6 +18,26 @@
       });
     });
 
+    // Bind prev/next arrow clicks (desktop/tablet; hidden on mobile via CSS)
+    var prevBtn = document.querySelector('[data-testid="carousel-prev"]');
+    var nextBtn = document.querySelector('[data-testid="carousel-next"]');
+    if (prevBtn) {
+      prevBtn.addEventListener("click", function () {
+        scrollToCard(activeIndex - 1);
+      });
+    }
+    if (nextBtn) {
+      nextBtn.addEventListener("click", function () {
+        scrollToCard(activeIndex + 1);
+      });
+    }
+
+    function updateArrowStates() {
+      var count = track.querySelectorAll(".quest-card").length;
+      if (prevBtn) prevBtn.disabled = activeIndex <= 0;
+      if (nextBtn) nextBtn.disabled = activeIndex >= count - 1;
+    }
+
     function updateActive() {
       var trackRect = track.getBoundingClientRect();
       var center = trackRect.left + trackRect.width / 2;
@@ -58,11 +78,13 @@
         if (i === activeIndex)
           d.classList.add("active", "active--" + activeType);
       });
+
+      updateArrowStates();
     }
 
     function scrollToCard(index) {
       var currentCards = Array.from(track.querySelectorAll(".quest-card"));
-      if (index >= currentCards.length) return;
+      if (index < 0 || index >= currentCards.length) return;
       var card = currentCards[index];
       var trackRect = track.getBoundingClientRect();
       var cardRect = card.getBoundingClientRect();
