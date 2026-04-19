@@ -2,6 +2,7 @@ mod components;
 mod controllers;
 mod layout;
 mod models;
+pub mod templates;
 pub mod types;
 
 mod views;
