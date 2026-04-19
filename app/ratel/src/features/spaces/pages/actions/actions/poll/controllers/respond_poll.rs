@@ -1,4 +1,4 @@
-use crate::common::models::space::{SpaceUser, SpaceCommon};
+use crate::common::models::space::{SpaceCommon, SpaceUser};
 use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::features::spaces::pages::actions::models::SpaceAction;
 
@@ -121,14 +121,17 @@ async fn get_respondent_from_panels(
     ))
 }
 
-#[mcp_tool(name = "respond_poll", description = "Submit answers to a poll. Requires participant role and space in Ongoing status.")]
+#[mcp_tool(
+    name = "respond_poll",
+    description = "Submit answers to a poll. Requires participant role and space in Ongoing status."
+)]
 #[post("/api/spaces/{space_pk}/polls/{poll_sk}/respond", role: SpaceUserRole, member: SpaceUser, space: SpaceCommon, user: crate::features::auth::User)]
 pub async fn respond_poll(
-    #[mcp(description = "Space partition key")]
-    space_pk: SpacePartition,
-    #[mcp(description = "Poll sort key (e.g. 'SpacePoll#<uuid>')")]
-    poll_sk: SpacePollEntityType,
-    #[mcp(description = "Poll answers. Each answer: {\"answer_type\": \"single_choice\", \"answer\": <index>} or {\"answer_type\": \"multiple_choice\", \"answer\": [<indices>]}")]
+    #[mcp(description = "Space partition key")] space_pk: SpacePartition,
+    #[mcp(description = "Poll sort key (e.g. 'SpacePoll#<uuid>')")] poll_sk: SpacePollEntityType,
+    #[mcp(
+        description = "Poll answers. Each answer: {\"answer_type\": \"single_choice\", \"answer\": <index>} or {\"answer_type\": \"multiple_choice\", \"answer\": [<indices>]}"
+    )]
     req: RespondPollRequest,
 ) -> Result<RespondPollResponse> {
     let common_config = crate::common::CommonConfig::default();
