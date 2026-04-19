@@ -21,7 +21,7 @@ pub struct RewardKey {
 impl Display for RewardKey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match (&self.space_pk, &self.action_id) {
-            // Space-scoped reward: SpaceReward##{space}##{action_id}##{behavior}
+            // Space-scoped reward: SPACE_REWARD##{space}##{action_id}##{behavior}
             (Some(space), Some(action_id)) => {
                 write!(
                     f,
@@ -95,9 +95,7 @@ impl FromStr for RewardKey {
 
 /// Creates a space-scoped `RewardKey` from a `(SpacePartition, String, RewardUserBehavior)` tuple.
 impl From<(SpacePartition, String, RewardUserBehavior)> for RewardKey {
-    fn from(
-        (space_pk, action_id, behavior): (SpacePartition, String, RewardUserBehavior),
-    ) -> Self {
+    fn from((space_pk, action_id, behavior): (SpacePartition, String, RewardUserBehavior)) -> Self {
         Self {
             space_pk: Some(space_pk),
             action_id: Some(action_id),

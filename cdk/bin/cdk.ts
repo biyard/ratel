@@ -54,7 +54,25 @@ const escStack = new EcsClusterStack(
 escStack.addDependency(vpcEndpointStack);
 
 // High traffic region ECS stack
-new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
+// new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
+//   env: {
+//     account: awsAccount,
+//     region: "ap-northeast-2",
+//   },
+//   stage: env,
+//   commit: process.env.COMMIT!,
+//   baseDomain,
+//   apiDomain,
+//   vpc: escStack.vpc,
+//   cluster: escStack.cluster,
+//   namespace: escStack.namespace,
+//   sharedSecurityGroup: vpcEndpointStack.sharedSecurityGroup,
+//   icUrl: process.env.IC_URL,
+//   ratelCanisterId: process.env.RATEL_CANISTER_ID,
+//   icpIdentityPem: process.env.ICP_IDENTITY_PEM,
+// });
+
+new RegionalLambdaStack(app, `ratel-${env}-svc-ap-northeast-2`, {
   env: {
     account: awsAccount,
     region: "ap-northeast-2",
@@ -63,13 +81,6 @@ new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
   commit: process.env.COMMIT!,
   baseDomain,
   apiDomain,
-  vpc: escStack.vpc,
-  cluster: escStack.cluster,
-  namespace: escStack.namespace,
-  sharedSecurityGroup: vpcEndpointStack.sharedSecurityGroup,
-  icUrl: process.env.IC_URL,
-  ratelCanisterId: process.env.RATEL_CANISTER_ID,
-  icpIdentityPem: process.env.ICP_IDENTITY_PEM,
 });
 
 // Shared ALB for Qdrant gRPC across dev and prod

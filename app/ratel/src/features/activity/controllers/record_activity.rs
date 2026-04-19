@@ -19,7 +19,11 @@ fn calculate_xp(data: &SpaceActivityData) -> i64 {
         SpaceActivityData::Poll { .. } => XP_POLL,
         SpaceActivityData::Follow { .. } => XP_FOLLOW,
         SpaceActivityData::Quiz { passed, .. } => {
-            if *passed { XP_QUIZ_PASSED } else { XP_QUIZ_FAILED }
+            if *passed {
+                XP_QUIZ_PASSED
+            } else {
+                XP_QUIZ_FAILED
+            }
         }
         SpaceActivityData::Discussion { .. } => XP_DISCUSSION_REPLY,
         SpaceActivityData::Unknown => 0,
@@ -61,7 +65,7 @@ pub async fn record_activity(
     let opt = SpaceActivity::opt().sk(sk_prefix).limit(1);
     let (existing, _) = SpaceActivity::query(cli, pk, opt).await?;
     if !existing.is_empty() {
-        tracing::info!(
+        tracing::warn!(
             action_id = %action_id,
             action_type = ?action_type,
             "activity already recorded — skipping duplicate"
@@ -72,8 +76,8 @@ pub async fn record_activity(
     let activity = SpaceActivity::new_with_dedup(
         space_id,
         author,
-        action_id,
-        action_type,
+        action_id.clone(),
+        action_type.clone(),
         data,
         xp,
         0,
@@ -82,5 +86,11 @@ pub async fn record_activity(
         dedup.clone(),
     );
     activity.create(cli).await?;
+    tracing::info!(
+        action_id = %action_id,
+        action_type = ?action_type,
+        xp = xp,
+        "recorded new activity"
+    );
     Ok(())
 }
