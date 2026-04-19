@@ -73,6 +73,14 @@ async fn try_award(
             error = %e,
             "reward payout failed on event bridge"
         );
+    } else {
+        tracing::info!(
+            space_pk = %space_partition,
+            action_id = %action_id,
+            behavior = ?behavior,
+            user_pk = %target_pk,
+            "reward payout succeeded on event bridge"
+        );
     }
 }
 
@@ -320,8 +328,7 @@ pub async fn handle_follow_xp(
     };
 
     let space_partition = crate::common::types::SpacePartition(space_id_str);
-    let author =
-        crate::features::activity::types::AuthorPartition::from(follow.user_pk.clone());
+    let author = crate::features::activity::types::AuthorPartition::from(follow.user_pk.clone());
 
     let user_name = follow.display_name.unwrap_or_default();
     let user_avatar = follow.profile_url.unwrap_or_default();
