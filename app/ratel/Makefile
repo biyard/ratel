@@ -229,7 +229,7 @@ build-arm:
 	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server --platform server --target aarch64-unknown-linux-gnu
 
 build-lambda: env.sh
-	docker run -v $(PWD)/../..:/app -w /app public.ecr.aws/sam/build-provided.al2023 /bin/bash -c "scripts/building-lambda-bootstrap.sh"
+	docker run -v $(PWD)/../..:/app -v $(HOME)/.cargo/bin:/root/.cargo/bin -w /app public.ecr.aws/sam/build-provided.al2023 /bin/bash -c "scripts/building-lambda-bootstrap.sh"
 
 docker:
 	docker build -t $(ECR):$(COMMIT) -f Dockerfile ../../target/dx/app-shell/release/web
