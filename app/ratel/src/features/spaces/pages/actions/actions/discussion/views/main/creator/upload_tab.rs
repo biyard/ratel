@@ -4,7 +4,6 @@ use crate::common::components::{FileUploader, UploadedFileMeta};
 use crate::common::types::extract_filename_from_url;
 use crate::common::utils::time::time_ago;
 use crate::features::spaces::hooks::use_user;
-use crate::features::spaces::space_common::types::space_page_actions_discussion_key;
 
 const DEFAULT_PROFILE_URL: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
 
@@ -34,7 +33,7 @@ pub fn UploadTab(can_edit: bool) -> Element {
     };
     let upload_uploader_name = uploader_name.clone();
     let upload_uploader_profile_url = uploader_profile_url.clone();
-    let mut query = use_query_store();
+    let mut ctx = use_discussion_context();
 
     let save_files = move |next_files: Vec<File>| async move {
         let req = UpdateDiscussionRequest {
@@ -45,8 +44,7 @@ pub fn UploadTab(can_edit: bool) -> Element {
             error!("Failed to update discussion files: {:?}", err);
             toast.error(err);
         } else {
-            let keys = space_page_actions_discussion_key(&space_id(), &discussion_id());
-            query.invalidate(&keys);
+            ctx.discussion.restart();
         }
     };
 

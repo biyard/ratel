@@ -3,6 +3,7 @@ package-lock.json
 .vscode/*
 /.build/
 .DS_Store
+.superpowers/
 /packages/main-api/.build/
 target/
 /packages/main-ui/public/dep.js
@@ -64,6 +65,6 @@ user.json
 
 .playwright-mcp
 /playwright/admin1.json
-/docs/superpowers/
 /app/ratel/test-build-target/
 /playwright/admin.json
+/.claude/worktrees/

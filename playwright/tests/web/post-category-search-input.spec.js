@@ -1,164 +1,123 @@
 import { test, expect } from "@playwright/test";
-import { click, fill, goto, getLocator, getEditor } from "../utils";
+import { click, fill, goto, getEditor } from "../utils";
 
 /**
- * Post Category SearchInput — E2E
+ * Post tag input — E2E
  *
- * Verifies the SearchInput component used for category selection in the post
- * edit page (issue #1342). Categories should appear as styled badges with X
- * buttons inside the input box, not as unstyled text above it.
+ * Originally written against the old `SearchInput`-based category UI (testids
+ * `category-search-input`, `search-input-field`, `search-input-tag`). The
+ * post-edit renewal replaced that component with an inline `.tag-input`
+ * container that uses class names and an aria-label on each tag's remove
+ * button instead of testids. It also dropped comma-separator support — tags
+ * are now added only via Enter.
  *
- * Test flow:
- *   1. Create a draft post
- *   2. Type a category name and press Enter to add it as a tag
- *   3. Verify the tag appears as a badge inside the SearchInput
- *   4. Add a second category via comma separator
- *   5. Verify both tags are displayed
- *   6. Remove a tag by clicking its X button
- *   7. Verify the tag is removed
- *
- * Test IDs used:
- *   - data-testid="category-search-input"    — SearchInput outer container
- *   - data-testid="search-input-field"       — the text input inside SearchInput
- *   - data-testid="search-input-tag"         — each tag badge wrapper
- *   - data-testid="search-input-tag-remove"  — the X button on each tag
+ * This suite verifies the renewed tag UI: add via Enter, render as styled
+ * badges with per-tag remove buttons, and remove via the X button.
  */
 
-test.describe.serial("Post category SearchInput", () => {
+test.describe.serial("Post tag input (post-edit renewal)", () => {
   const uniqueId = `${Date.now()}${Math.random().toString(36).slice(2, 6)}`;
-  const postTitle = `Category Test ${uniqueId}`;
+  const postTitle = `Tag Test ${uniqueId}`;
   const categoryA = `CatA${uniqueId.slice(-6)}`;
   const categoryB = `CatB${uniqueId.slice(-6)}`;
 
   let postEditUrl;
 
-  // --- 1. Create a draft post and navigate to its edit page ---
+  // --- 1. Create a draft post and land on its edit page ---
 
-  test("Create a draft post for category testing", async ({ page }) => {
+  test("Create a draft post for tag testing", async ({ page }) => {
     await goto(page, "/");
 
-    // Click Create Post to start a new post
-    await click(page, { text: "Create Post" });
-
-    // Wait for post edit page
+    await click(page, { testId: "home-btn-create" });
     await page.waitForURL(/\/posts\/.*\/edit/, { waitUntil: "load" });
     postEditUrl = new URL(page.url()).pathname;
 
-    // Fill in the title
-    await fill(page, { placeholder: "Title" }, postTitle);
+    await fill(page, { placeholder: "Title your post…" }, postTitle);
 
-    // Fill in content so autosave triggers
     const editor = await getEditor(page);
     await editor.fill(
-      "This is test content for the category SearchInput E2E test. It needs to be long enough to pass validation."
+      "This is test content for the tag input E2E test. It needs to be long enough to pass server-side validation.",
     );
 
-    // Wait for autosave
     await expect(page.getByText("All changes saved")).toBeVisible({
       timeout: 15000,
     });
   });
 
-  // --- 2. Add a category by typing and pressing Enter ---
+  // --- 2. Add a tag by typing and pressing Enter ---
 
-  test("Add a category tag by typing and pressing Enter", async ({ page }) => {
+  test("Add a tag by typing and pressing Enter", async ({ page }) => {
     await goto(page, postEditUrl);
 
-    // Locate the SearchInput container
-    const searchInput = await getLocator(page, {
-      testId: "category-search-input",
-    });
-    await expect(searchInput).toBeVisible();
+    const tagInput = page.locator(".tag-input__field");
+    await expect(tagInput).toBeVisible();
 
-    // Type a category name in the input field
-    const inputField = searchInput.getByTestId("search-input-field");
-    await inputField.fill(categoryA);
+    await tagInput.fill(categoryA);
+    await tagInput.press("Enter");
 
-    // Press Enter to add the tag
-    await inputField.press("Enter");
-
-    // Verify the tag appears as a badge inside the SearchInput
-    const tags = searchInput.getByTestId("search-input-tag");
+    const tags = page.locator(".tag-input .tag");
     await expect(tags).toHaveCount(1);
     await expect(tags.first()).toContainText(categoryA);
   });
 
-  // --- 3. Add a second category using comma separator ---
+  // --- 3. Add a second tag — categories are not autosaved ---
 
-  test("Add a second category tag using comma", async ({ page }) => {
+  test("Add a second tag via Enter", async ({ page }) => {
     await goto(page, postEditUrl);
 
-    const searchInput = await getLocator(page, {
-      testId: "category-search-input",
-    });
+    const tagInput = page.locator(".tag-input__field");
+    await expect(tagInput).toBeVisible();
+    const tags = page.locator(".tag-input .tag");
 
-    const inputField = searchInput.getByTestId("search-input-field");
-
-    // Categories are not auto-saved (only title/content auto-save),
-    // so re-add the first category in this session before adding the second.
-    await inputField.fill(categoryA);
-    await inputField.press("Enter");
-    const tags = searchInput.getByTestId("search-input-tag");
+    // Tags are not autosaved, so re-add the first tag in this session.
+    await tagInput.fill(categoryA);
+    await tagInput.press("Enter");
     await expect(tags).toHaveCount(1);
 
-    // Type a second category with trailing comma
-    await inputField.fill(categoryB + ",");
+    await tagInput.fill(categoryB);
+    await tagInput.press("Enter");
 
-    // Wait for both tags to appear
     await expect(tags).toHaveCount(2);
-    await expect(searchInput).toContainText(categoryA);
-    await expect(searchInput).toContainText(categoryB);
+    await expect(tags.filter({ hasText: categoryA })).toHaveCount(1);
+    await expect(tags.filter({ hasText: categoryB })).toHaveCount(1);
   });
 
-  // --- 4. Verify tags are styled as badges (not plain text) ---
+  // --- 4. Verify each tag has a remove (X) button ---
 
-  test("Category tags are rendered as badges with remove buttons", async ({
-    page,
-  }) => {
+  test("Tag badges render with remove buttons", async ({ page }) => {
     await goto(page, postEditUrl);
 
-    const searchInput = await getLocator(page, {
-      testId: "category-search-input",
-    });
+    const tagInput = page.locator(".tag-input__field");
+    await expect(tagInput).toBeVisible();
+    await tagInput.fill(categoryA);
+    await tagInput.press("Enter");
 
-    // Categories are not auto-saved, so add one in this session
-    const inputField = searchInput.getByTestId("search-input-field");
-    await inputField.fill(categoryA);
-    await inputField.press("Enter");
-
-    const tags = searchInput.getByTestId("search-input-tag");
+    const tags = page.locator(".tag-input .tag");
     await expect(tags).toHaveCount(1);
 
-    // Each tag should have an X (remove) button
     const count = await tags.count();
     for (let i = 0; i < count; i++) {
-      const removeBtn = tags.nth(i).getByTestId("search-input-tag-remove");
+      const removeBtn = tags.nth(i).getByLabel("Remove tag", { exact: true });
       await expect(removeBtn).toBeVisible();
     }
   });
 
-  // --- 5. Remove a category by clicking its X button ---
+  // --- 5. Remove a tag by clicking its X button ---
 
-  test("Remove a category tag by clicking the X button", async ({ page }) => {
+  test("Remove a tag by clicking its X button", async ({ page }) => {
     await goto(page, postEditUrl);
 
-    const searchInput = await getLocator(page, {
-      testId: "category-search-input",
-    });
+    const tagInput = page.locator(".tag-input__field");
+    await expect(tagInput).toBeVisible();
+    await tagInput.fill(categoryA);
+    await tagInput.press("Enter");
 
-    // Categories are not auto-saved, so add one in this session
-    const inputField = searchInput.getByTestId("search-input-field");
-    await inputField.fill(categoryA);
-    await inputField.press("Enter");
-
-    const tags = searchInput.getByTestId("search-input-tag");
+    const tags = page.locator(".tag-input .tag");
     await expect(tags).toHaveCount(1);
 
-    // Click the X button on the first tag
-    const firstRemoveBtn = tags.first().getByTestId("search-input-tag-remove");
+    const firstRemoveBtn = tags.first().getByLabel("Remove tag", { exact: true });
     await firstRemoveBtn.click();
 
-    // Verify the tag is removed
     await expect(tags).toHaveCount(0);
   });
 });

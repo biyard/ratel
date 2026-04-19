@@ -38,6 +38,53 @@ pub async fn sleep(_duration: std::time::Duration) {
     tokio::time::sleep(_duration).await;
 }
 
+/// Convert a UTC epoch (milliseconds) into the string format expected by
+/// HTML `<input type="datetime-local">`, interpreted in the **browser's
+/// local timezone**. The server-side fallback uses UTC.
+pub fn epoch_ms_to_datetime_local(ms: i64) -> String {
+    if ms <= 0 {
+        return String::new();
+    }
+
+    #[cfg(all(feature = "web", not(feature = "server")))]
+    {
+        use chrono::{FixedOffset, Utc};
+        let dt = chrono::DateTime::<Utc>::from_timestamp_millis(ms).unwrap_or_default();
+        // `Date.prototype.getTimezoneOffset()` returns minutes WEST of UTC.
+        let offset_min = js_sys::Date::new_0().get_timezone_offset() as i32;
+        let offset = FixedOffset::west_opt(offset_min * 60)
+            .unwrap_or_else(|| FixedOffset::east_opt(0).unwrap());
+        let local = dt.with_timezone(&offset);
+        return local.format("%Y-%m-%dT%H:%M").to_string();
+    }
+
+    #[cfg(not(all(feature = "web", not(feature = "server"))))]
+    {
+        let dt = chrono::DateTime::<chrono::Utc>::from_timestamp_millis(ms).unwrap_or_default();
+        dt.format("%Y-%m-%dT%H:%M").to_string()
+    }
+}
+
+/// Parse a `<input type="datetime-local">` value (interpreted in the
+/// browser's local timezone) into a UTC epoch in milliseconds.
+pub fn datetime_local_to_epoch_ms(s: &str) -> Option<i64> {
+    let naive = chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M").ok()?;
+
+    #[cfg(all(feature = "web", not(feature = "server")))]
+    {
+        use chrono::{FixedOffset, TimeZone};
+        let offset_min = js_sys::Date::new_0().get_timezone_offset() as i32;
+        let offset = FixedOffset::west_opt(offset_min * 60)?;
+        let local = offset.from_local_datetime(&naive).single()?;
+        return Some(local.timestamp_millis());
+    }
+
+    #[cfg(not(all(feature = "web", not(feature = "server"))))]
+    {
+        Some(naive.and_utc().timestamp_millis())
+    }
+}
+
 pub fn time_ago(timestamp_millis: i64) -> String {
     let now = chrono::Utc::now().timestamp_millis();
     let diff = now - timestamp_millis;

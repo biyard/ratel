@@ -459,7 +459,7 @@ impl RatelMcpServer {
 
     #[rmcp::tool(
         name = "list_comments",
-        description = "List comments on a discussion, sorted by likes. Supports pagination."
+        description = "List comments on a discussion, sorted by likes. Supports pagination. Pass `since` (unix seconds) to fetch only comments created after that time, ordered newest-first with no pagination."
     )]
     async fn list_comments(
         &self,

@@ -16,6 +16,8 @@ pub fn FollowActionPage(
     follow_id: SpaceActionFollowEntityType,
 ) -> Element {
     let role = use_space_role()();
+    let space_ctx = crate::features::spaces::space_common::providers::use_space_context();
+    let is_admin = space_ctx.role().is_admin();
     let space_id_sig: ReadSignal<SpacePartition> = use_signal(|| space_id.clone()).into();
     let follow_id_sig: ReadSignal<SpaceActionFollowEntityType> =
         use_signal(|| follow_id.clone()).into();
@@ -33,13 +35,17 @@ pub fn FollowActionPage(
 
     // Edit-mode override: creators can flip this from the settings
     // button inside the participant view to open the configuration UI
-    // even after the action has started.
-    let edit_mode = use_context_provider(|| ActionEditMode(Signal::new(false)));
-    let show_creator_view = !locked || edit_mode.0();
+    // even after the action has started. Admins always start in edit mode.
+    let edit_mode = use_context_provider(|| ActionEditMode(Signal::new(is_admin)));
+    let show_creator_view = is_admin || !locked || edit_mode.0();
 
     let content = match (role, show_creator_view) {
         (SpaceUserRole::Creator, true) => rsx! {
-            FollowCreatorPage { space_id, follow_id }
+            FollowCreatorPage { space_id: space_id_sig, follow_id: follow_id_sig }
+        },
+        // Admin in any role view → always show creator UI.
+        _ if is_admin => rsx! {
+            FollowCreatorPage { space_id: space_id_sig, follow_id: follow_id_sig }
         },
         // Default: creators after start, and all others, see the
         // viewer/participant experience.
@@ -49,7 +55,7 @@ pub fn FollowActionPage(
     };
 
     rsx! {
-        div { class: "flex flex-col flex-1 mx-auto w-full min-h-0 max-w-desktop",
+        div { class: if show_creator_view { "flex flex-col flex-1 w-full min-h-0" } else { "flex flex-col flex-1 mx-auto w-full min-h-0 max-w-desktop" },
             if !show_creator_view {
                 SettingsSwitchButton {}
             }

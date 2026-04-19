@@ -15,7 +15,9 @@ pub type CommonConfig = web::WebConfig;
 mod environment;
 mod log_level;
 mod portone_config;
+mod site_config;
 
 pub use environment::*;
 pub use log_level::*;
 pub use portone_config::*;
+pub use site_config::*;

@@ -15,4 +15,8 @@ pub mod server;
 mod views;
 pub use views::*;
 
+#[path = "views/i18n.rs"]
+pub mod i18n;
+pub use i18n::*;
+
 use crate::*;

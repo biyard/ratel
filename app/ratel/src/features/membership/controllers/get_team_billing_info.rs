@@ -5,12 +5,12 @@ use crate::features::membership::controllers::normalize_error;
 use crate::features::membership::models::TeamPayment;
 use crate::features::membership::*;
 use crate::features::posts::models::Team;
-use crate::features::posts::types::{TeamGroupPermission, TeamGroupPermissions};
+use crate::features::social::pages::member::dto::TeamRole;
 
-#[get("/v3/teams/:username/billing", user: User, team: Team, permissions: TeamGroupPermissions)]
+#[get("/v3/teams/:username/billing", user: User, team: Team, role: TeamRole)]
 pub async fn get_team_billing_info_handler(username: String) -> Result<BillingInfoResponse> {
     let result = async {
-        if !permissions.contains(TeamGroupPermission::TeamAdmin) {
+        if !role.is_admin_or_owner() {
             return Err(Error::NotFound("Permission denied".to_string()));
         }
 

@@ -2,11 +2,18 @@ import { test, expect } from "@playwright/test";
 import {
   click,
   clickNoNav,
+  createAction,
+  createTeamFromHome,
+  createTeamPostFromHome,
   fill,
   goto,
   getLocator,
   getEditor,
   waitPopup,
+  addPollQuestion,
+  fillPollQuestion,
+  togglePrerequisite,
+  commitAutosave,
 } from "../utils";
 
 // This test covers the full space lifecycle with three users:
@@ -38,6 +45,51 @@ const user2 = {
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
+
+/**
+ * Set the action start date+time to now via the Settings tab.
+ * Clicks today in the date picker, then sets the hour to the current
+ * hour (or one hour earlier) so the action is immediately In Progress.
+ * Assumes the Settings tab is already active.
+ */
+async function setStartDateToToday(page) {
+  // Arena editor uses native datetime-local inputs for schedule. Fill both
+  // start and end — the server-side save (UpdatePollRequest::Time) early-
+  // returns unless both values are > 0, so filling start alone is a no-op.
+  //
+  // NOTE: the backend's `datetime_local_to_epoch_ms` parses the string with
+  // `and_utc()`, i.e. treats the datetime-local value as UTC. JS local
+  // getters (getFullYear/…/getHours) would produce a local-time string that
+  // the backend would then re-interpret as UTC — on a non-UTC machine
+  // (e.g. KST) this stores `started_at` hours in the future and the poll
+  // becomes invisible to non-Creator roles. Use UTC getters so the string
+  // matches the backend's UTC interpretation on any host timezone.
+  const fmt = (date) => {
+    const y = date.getUTCFullYear();
+    const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(date.getUTCDate()).padStart(2, "0");
+    const h = String(date.getUTCHours()).padStart(2, "0");
+    const mm = String(date.getUTCMinutes()).padStart(2, "0");
+    return `${y}-${m}-${d}T${h}:${mm}`;
+  };
+  const now = new Date();
+  const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  const startInput = page.getByTestId("schedule-start");
+  await expect(startInput).toBeVisible();
+  await startInput.fill(fmt(now));
+  await startInput.blur();
+  await page.waitForLoadState("load");
+
+  const endInput = page.getByTestId("schedule-end");
+  await expect(endInput).toBeVisible();
+  await endInput.fill(fmt(endDate));
+  await endInput.blur();
+  await page.waitForLoadState("load");
+  // Small settle so the onblur server round-trip finishes before the caller
+  // navigates away.
+  await page.waitForTimeout(500);
+}
 
 /** Hide the floating action button that may overlap modal buttons. */
 async function hideFab(page) {
@@ -154,8 +206,9 @@ async function participateAndCompletePoll(page, _spaceUrl, pollOptionText) {
   // Submit the poll using testId (avoids ambiguity with confirm dialog)
   await clickNoNav(page, { testId: "poll-submit" });
 
-  // Confirm dialog appears — click confirm
-  await click(page, { testId: "poll-confirm-submit" });
+  // Confirm dialog appears — click confirm. Poll submit closes the overlay
+  // in place (no navigation), so we must not wait for a load event.
+  await clickNoNav(page, { testId: "poll-confirm-submit" });
 
   // Wait for overlay to close (server call completes + overlay signal cleared)
   await expect(page.getByTestId("poll-arena-overlay")).toBeHidden({
@@ -175,6 +228,11 @@ test.describe.serial("Space with actions created by a team", () => {
   test.setTimeout(120000);
 
   let spaceUrl;
+  // `discussionUrl` is assigned inside the "Create a discussion action"
+  // test and kept for later inspection by future step additions. The
+  // read-side is intentionally absent for now; the declaration is required
+  // so the assignment doesn't throw a ReferenceError in strict mode.
+  // eslint-disable-next-line no-unused-vars
   let discussionUrl;
 
   // We'll save newUser and user2 storage states for reuse across tests
@@ -195,66 +253,55 @@ test.describe.serial("Space with actions created by a team", () => {
   test("Create a team and post with space, then verify dashboard", async ({
     page,
   }) => {
-    await goto(page, "/");
-    await click(page, { label: "User Profile" });
-    await click(page, { text: "Create Team" });
-
-    const nicknameInput = page.locator('[data-testid="team-nickname-input"]');
-    await nicknameInput.fill(teamNickname);
-    const usernameInput = page.locator('[data-testid="team-username-input"]');
-    await usernameInput.fill(teamUsername);
-    const descInput = page.locator('[data-testid="team-description-input"]');
-    await descInput.fill("E2E test team for space actions");
-
-    await click(page, { text: "Create" });
-    await page.waitForURL(new RegExp(`/${teamUsername}/home`), {
-      waitUntil: "load",
+    // Drive the full setup through the production UI:
+    //   home (`/`) → Teams HUD → "Create Team" → ArenaTeamCreationPopup → submit
+    // then home → Teams HUD → pick team → team home → "Create Post".
+    await createTeamFromHome(page, {
+      username: teamUsername,
+      nickname: teamNickname,
+      description: "E2E test team for space actions",
     });
 
-    await click(page, { text: "Create" });
-    await page.waitForURL(/\/posts\/.*\/edit/, { waitUntil: "load" });
+    const postId = await createTeamPostFromHome(
+      page,
+      teamUsername,
+      postTitle,
+      postContents,
+    );
 
-    await fill(page, { placeholder: "Title" }, postTitle);
-    await click(page, { testId: "skip-space-checkbox" });
-
-    const editor = await getEditor(page);
-    await editor.fill(postContents);
-
-    await click(page, { text: "Go to Space" });
-    await page.waitForURL(/\/spaces\/[a-z0-9-]+\/dashboard/, {
-      waitUntil: "load",
+    // Space creation remains REST — the post-edit "Go to Space" affordance was
+    // removed by the post-edit renewal, so this suite keeps its focus on the
+    // governance/actions flow rather than the orthogonal space-creation UI.
+    const spaceRes = await page.request.post("/api/spaces/create", {
+      data: { req: { post_id: postId } },
     });
+    expect(spaceRes.ok(), `create space: ${await spaceRes.text()}`).toBeTruthy();
+    const spaceId = (await spaceRes.json()).space_id;
+
+    spaceUrl = `/spaces/${spaceId}`;
+
+    await goto(page, `${spaceUrl}/dashboard`);
     await getLocator(page, { text: "Dashboard" });
-
-    const url = new URL(page.url());
-    spaceUrl = url.pathname.replace(/\/dashboard$/, "");
   });
 
   // ─── 2. Creator: Add actions ──────────────────────────────────────────────
 
   test("Create a discussion action in the space", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-discussion" });
-    await hideFab(page);
-    await click(page, { text: "Create" });
-
-    await page.waitForURL(/\/actions\/discussions\//, {
-      waitUntil: "load",
-    });
+    await createAction(
+      page,
+      spaceUrl,
+      "discuss",
+      /\/actions\/discussions\/[^/]+\/edit/,
+    );
 
     // Save the discussion URL for later use
     discussionUrl = new URL(page.url()).pathname;
 
+    // Arena-style editor: inline autosave, no category field, no Save button.
     await fill(
       page,
       { placeholder: "Enter discussion title..." },
       "Team Discussion: Governance Framework",
-    );
-    await fill(
-      page,
-      { placeholder: "Enter category (optional)..." },
-      "Governance",
     );
 
     const editor = await getEditor(page);
@@ -262,58 +309,36 @@ test.describe.serial("Space with actions created by a team", () => {
       "This discussion was created by a team to explore governance frameworks and decision-making processes within the space.",
     );
 
-    await click(page, { text: "Save" });
+    // Blur the editor so the autosave debounce commits.
+    await page.keyboard.press("Tab");
   });
 
   test("Create a poll action (prerequisite) in the space", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-poll" });
-    await hideFab(page);
-    await click(page, { text: "Create" });
-
-    await page.waitForURL(/\/actions\/polls\//, { waitUntil: "load" });
+    await createAction(page, spaceUrl, "poll", /\/actions\/polls\//);
 
     await fill(
       page,
       { placeholder: "Enter poll title..." },
       "Team Poll: Budget Allocation",
     );
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
+    await commitAutosave(page);
 
-    await click(page, { testId: "poll-add-question" });
-    await click(page, { text: "Single Choice" });
+    // Arena poll editor: exactly two option inputs, no "Add Option" button.
+    await addPollQuestion(page, "single");
+    await fillPollQuestion(page, 0, {
+      title: "How should the team allocate the Q2 budget?",
+      options: ["Increase marketing spend", "Invest in R&D"],
+    });
 
-    // nth(0) is the poll title input (still visible); question starts at nth(1)
-    const textInputs = page.locator('input[type="text"]:visible');
-    await textInputs.nth(1).fill("How should the team allocate the Q2 budget?");
-    await textInputs.nth(2).fill("Increase marketing spend");
-    await textInputs.nth(3).fill("Invest in R&D");
-
-    await page.getByRole("button", { name: "Add Option" }).first().click();
-    await page.waitForLoadState("load");
-    await textInputs.nth(4).fill("Save for reserves");
-
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
-
-    // Enable prerequisite setting
-    await page.getByRole("tab", { name: "Settings" }).click();
-    await page.waitForLoadState("load");
-
-    const prerequisiteCard = page.locator("text=Prerequisite").locator("../..");
-    await prerequisiteCard.locator("button").click();
-    await page.waitForLoadState("load");
+    // Prerequisite is toggled via the ConfigCard tile (no more Settings tab).
+    await togglePrerequisite(page);
   });
 
   test("Create a quiz action in the space", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
-    await click(page, { text: "Select Action Type" });
-    await hideFab(page);
-    await click(page, { text: "Create" });
+    await createAction(page, spaceUrl, "quiz", /\/actions\/quizzes\//);
 
-    await page.waitForURL(/\/actions\/quizzes\//, { waitUntil: "load" });
+    // Arena-style quiz creator page: no tabs, no Save button. ContentCard +
+    // QuestionsCard + ConfigCard render inline with per-field autosave.
 
     await fill(
       page,
@@ -325,69 +350,42 @@ test.describe.serial("Space with actions created by a team", () => {
     await editor.fill(
       "This quiz tests knowledge about the governance protocol. Created by the team for participant engagement.",
     );
-    await click(page, { text: "Save" });
+    await commitAutosave(page);
 
-    await page.getByRole("tab", { name: "Quiz" }).click();
-    await page.waitForLoadState("load");
-
-    // Add first question (Single Choice)
-    await click(page, { testId: "quiz-add-question" });
-    await click(page, { text: "Single Choice" });
-
-    const textInputs = page.locator('input[type="text"]:visible');
-    await textInputs
-      .nth(0)
-      .fill("What is the primary purpose of governance in a DAO?");
-    await textInputs.nth(1).fill("To centralize power");
-    await textInputs.nth(2).fill("To enable collective decision-making");
-
-    await page.getByRole("button", { name: "Add Option" }).first().click();
-    await page.waitForLoadState("load");
-    await textInputs.nth(3).fill("To maximize profits only");
-
-    // Mark correct answer (option 2)
-    const checkboxLabels = page.locator('label:has(input[type="checkbox"])');
-    await checkboxLabels.nth(1).click();
-    await page.waitForLoadState("load");
-
-    // Add second question (Multiple Choice)
-    await click(page, { testId: "quiz-add-question" });
-    await click(page, { text: "Multiple Choice" });
-
-    await textInputs
-      .nth(4)
-      .fill("Which of the following are benefits of decentralized governance?");
-    await textInputs.nth(5).fill("Transparency");
-    await textInputs.nth(6).fill("Community participation");
-
-    await page.getByRole("button", { name: "Add Option" }).nth(1).click();
-    await page.waitForLoadState("load");
-    await textInputs.nth(7).fill("Single point of failure");
-
-    // Mark correct answers (options 1 and 2 for Q2)
-    await checkboxLabels.nth(3).click();
-    await checkboxLabels.nth(4).click();
-
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
+    // Single question with per-field blur so each onblur autosave
+    // completes before the next input is touched.
+    await click(page, { testId: "quiz-question-add" });
+    const q0 = page.getByTestId("quiz-question-0");
+    const q0Inputs = q0.locator("input.input");
+    const fills = [
+      "What is the primary purpose of governance in a DAO?",
+      "To centralize power",
+      "To enable collective decision-making",
+    ];
+    for (let i = 0; i < fills.length; i += 1) {
+      await q0Inputs.nth(i).fill(fills[i]);
+      await q0Inputs.nth(i).press("Tab");
+      await page.waitForLoadState("load");
+      await page.waitForTimeout(200);
+    }
   });
 
   test("Create a follow action in the space", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-follow" });
-    await hideFab(page);
-    await click(page, { text: "Create" });
-
-    await page.waitForURL(/\/actions\/follows\//, { waitUntil: "load" });
-    await getLocator(page, { text: "General" });
+    await createAction(page, spaceUrl, "follow", /\/actions\/follows\//);
+    // Arena follow creator: verify the ConfigCard renders (TargetsCard +
+    // ConfigCard are inline, no more General tab).
+    await getLocator(page, { testId: "page-card-config" });
   });
 
   // ─── 3. Creator: Publish space ────────────────────────────────────────────
 
   test("Publish the space publicly", async ({ page }) => {
-    await goto(page, spaceUrl + "/dashboard");
-    await click(page, { text: "Publish" });
+    // Arena flow: ArenaTopbar exposes the Publish action as an admin-only
+    // HUD button (btn-publish). The legacy "/dashboard" Publish button has
+    // been superseded — Publish now opens SpaceVisibilityModal in-place.
+    await goto(page, spaceUrl);
+    await hideFab(page);
+    await click(page, { testId: "btn-publish" });
     await click(page, { testId: "public-option" });
     await click(page, { label: "Confirm visibility selection" });
   });
@@ -454,10 +452,13 @@ test.describe.serial("Space with actions created by a team", () => {
   // ─── 6. Creator: Start the space ──────────────────────────────────────────
 
   test("Creator: Start the space", async ({ page }) => {
-    await goto(page, spaceUrl + "/dashboard");
-    await click(page, { text: "Start" });
+    // Arena flow: after publish, ArenaTopbar swaps btn-publish for btn-start
+    // (admin-only). Clicking it opens SpaceStartModal; start-space-button
+    // inside the modal fires the actual state transition.
+    await goto(page, spaceUrl);
+    await hideFab(page);
+    await click(page, { testId: "btn-start" });
     await click(page, { testId: "start-space-button" });
-    await page.waitForLoadState("load");
   });
 
   // ─── 7. Both participants: Follow action ──────────────────────────────────
@@ -566,19 +567,7 @@ test.describe.serial("Space with actions created by a team", () => {
         .getByText("To enable collective decision-making", { exact: true })
         .click();
 
-      // Click Next to go to Q2
-      await clickNoNav(page, { testId: "quiz-arena-next" });
-
-      // Q2 (Multiple Choice): Wait for options to appear, then select
-      await expect(
-        overlay.getByText("Transparency", { exact: true }),
-      ).toBeVisible({ timeout: 10000 });
-      await overlay.getByText("Transparency", { exact: true }).click();
-      await overlay
-        .getByText("Community participation", { exact: true })
-        .click();
-
-      // Submit quiz
+      // Quiz was simplified to a single question — submit directly.
       await clickNoNav(page, { testId: "quiz-arena-submit" });
 
       // Wait for overlay to close (submission completes + overlay signal cleared)
@@ -641,19 +630,7 @@ test.describe.serial("Space with actions created by a team", () => {
         .getByText("To enable collective decision-making", { exact: true })
         .click();
 
-      // Click Next to go to Q2
-      await clickNoNav(page, { testId: "quiz-arena-next" });
-
-      // Q2 (Multiple Choice): Wait for options, then select
-      await expect(
-        overlay.getByText("Transparency", { exact: true }),
-      ).toBeVisible({ timeout: 10000 });
-      await overlay.getByText("Transparency", { exact: true }).click();
-      await overlay
-        .getByText("Community participation", { exact: true })
-        .click();
-
-      // Submit quiz
+      // Quiz was simplified to a single question — submit directly.
       await clickNoNav(page, { testId: "quiz-arena-submit" });
 
       // Wait for overlay to close
@@ -672,6 +649,10 @@ test.describe.serial("Space with actions created by a team", () => {
     page,
     browser,
   }) => {
+    // 20 comments across 3 browser contexts — full page navigation +
+    // WASM hydration per comment easily blows through the 120s suite
+    // default, so give this test its own budget.
+    test.setTimeout(240000);
     // Discussion now opens as an overlay from the ActionDashboard carousel.
     // Each user navigates to spaceUrl, clicks the discussion card, types
     // in the comment textarea ("Share your thoughts..."), and clicks "Post".
@@ -768,79 +749,80 @@ test.describe.serial("Space with actions created by a team", () => {
       });
     }
 
-    // Helper: post a comment in the discussion overlay textarea
+    // Helper: post a comment in the discussion overlay textarea. The
+    // submit handler clears the textarea and calls comments_loader.restart
+    // on success, so the overlay stays open and shows the latest server
+    // state on every submit — good enough for cross-user interleaving.
     async function postComment(pg, text) {
-      const textarea = pg.locator(".comment-input__textarea");
+      const textarea = pg.locator(".comment-input__textarea").first();
       await expect(textarea).toBeVisible({ timeout: 10000 });
       await textarea.fill(text);
-      await pg.locator(".comment-input__submit").click();
-      // Wait for the comment to appear
+      await pg.locator(".comment-input__submit").first().click();
+      // Wait for the comment to render in the list (text is unique per entry)
       await expect(
-        pg.locator(".comment-item__text", { hasText: text }),
+        pg.locator(".comment-item__text", { hasText: text }).first(),
       ).toBeVisible({
         timeout: 10000,
       });
     }
 
-    // ── Creator comments ──
-    const creatorComments = comments.filter((c) => c.user === "creator");
-    for (const c of creatorComments) {
-      await openDiscussionOverlay(page);
-      await postComment(page, c.text);
+    // Open 3 concurrent browser contexts — one per user — and leave the
+    // discussion overlay open in each so we can interleave comments in
+    // the order declared by `comments` (simulating a real-time thread)
+    // without paying SSR/WASM-hydration costs per message.
+    const newUserContext = await browser.newContext({
+      storageState: newUserStoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const user2Context = await browser.newContext({
+      storageState: user2StoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const newUserPage = await newUserContext.newPage();
+    const user2Page = await user2Context.newPage();
+
+    try {
+      // Open the discussion overlay in all three tabs up front.
+      await Promise.all([
+        openDiscussionOverlay(page),
+        openDiscussionOverlay(newUserPage),
+        openDiscussionOverlay(user2Page),
+      ]);
+
+      const pageByUser = {
+        creator: page,
+        newUser: newUserPage,
+        user2: user2Page,
+      };
+
+      // Walk the comment script in order. After each submit, that user's
+      // overlay refetches comments (add_comment → comments_loader.restart),
+      // so the next time they post they see everyone else's prior messages.
+      for (const c of comments) {
+        const pg = pageByUser[c.user];
+        await postComment(pg, c.text);
+      }
+
+      // Close each participant's overlay.
+      await clickNoNav(newUserPage, { testId: "discussion-arena-back" });
+      await expect(
+        newUserPage.getByTestId("discussion-arena-overlay"),
+      ).toBeHidden({ timeout: 10000 });
+
+      await clickNoNav(user2Page, { testId: "discussion-arena-back" });
+      await expect(
+        user2Page.getByTestId("discussion-arena-overlay"),
+      ).toBeHidden({ timeout: 10000 });
+
       await clickNoNav(page, { testId: "discussion-arena-back" });
       await expect(page.getByTestId("discussion-arena-overlay")).toBeHidden({
         timeout: 10000,
       });
-    }
-
-    // ── NewUser comments ──
-    {
-      const context = await browser.newContext({
-        storageState: newUserStoragePath,
-        viewport: { width: 1440, height: 950 },
-        locale: "en-US",
-      });
-      const userPage = await context.newPage();
-      try {
-        const userComments = comments.filter((c) => c.user === "newUser");
-        for (const c of userComments) {
-          await openDiscussionOverlay(userPage);
-          await postComment(userPage, c.text);
-          await clickNoNav(userPage, { testId: "discussion-arena-back" });
-          await expect(
-            userPage.getByTestId("discussion-arena-overlay"),
-          ).toBeHidden({
-            timeout: 10000,
-          });
-        }
-      } finally {
-        await context.close();
-      }
-    }
-
-    // ── User2 comments ──
-    {
-      const context = await browser.newContext({
-        storageState: user2StoragePath,
-        viewport: { width: 1440, height: 950 },
-        locale: "en-US",
-      });
-      const userPage = await context.newPage();
-      try {
-        const userComments = comments.filter((c) => c.user === "user2");
-        for (const c of userComments) {
-          await openDiscussionOverlay(userPage);
-          await postComment(userPage, c.text);
-          await clickNoNav(userPage, { testId: "discussion-arena-back" });
-          await expect(
-            userPage.getByTestId("discussion-arena-overlay"),
-          ).toBeHidden({
-            timeout: 10000,
-          });
-        }
-      } finally {
-        await context.close();
-      }
+    } finally {
+      await newUserContext.close();
+      await user2Context.close();
     }
 
     // Verify comment count from creator's perspective
@@ -853,48 +835,37 @@ test.describe.serial("Space with actions created by a team", () => {
 
   test("Creator: Add a final survey poll", async ({ page }) => {
     await goto(page, spaceUrl);
-    await click(page, { testId: "btn-switch-creator" });
-    await click(page, { text: "Actions" });
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-poll" });
     await hideFab(page);
-    await click(page, { text: "Create" });
+    // Arena: admin's add-action card opens the TypePicker directly; the
+    // type pick immediately creates the action and navigates.
+    await click(page, { testId: "admin-add-action-card" });
+    await click(page, { testId: "type-option-poll" });
 
-    await page.waitForURL(/\/actions\/polls\//, { waitUntil: "load" });
+    await page.waitForURL(/\/actions\/polls\//, {
+      waitUntil: "load",
+      timeout: 60000,
+    });
 
-    // The space has already been started by this point in the
-    // scenario, so the brand-new poll's `started_at` (defaulted to
-    // creation time) means `is_action_locked` returns true and the
-    // creator lands on the Participant view with a "Settings" toggle
-    // in the top-right corner. Click that toggle to open the creator
-    // configuration UI before we can fill in the poll fields.
-    await click(page, { testId: "action-settings-switch" });
+    // After the space is published, new actions default to started_at =
+    // now + 1 hour, so is_action_locked is false and the creator lands
+    // directly on PollCreatorPage — no settings toggle needed.
 
     await fill(
       page,
       { placeholder: "Enter poll title..." },
       "Final Survey: Space Experience",
     );
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
+    await commitAutosave(page);
 
-    await click(page, { testId: "poll-add-question" });
-    await click(page, { text: "Single Choice" });
+    await addPollQuestion(page, "single");
+    await fillPollQuestion(page, 0, {
+      title: "How would you rate your overall experience in this space?",
+      options: ["Excellent", "Good"],
+    });
 
-    // nth(0) is the poll title input (still visible); question starts at nth(1)
-    const textInputs = page.locator('input[type="text"]:visible');
-    await textInputs
-      .nth(1)
-      .fill("How would you rate your overall experience in this space?");
-    await textInputs.nth(2).fill("Excellent");
-    await textInputs.nth(3).fill("Good");
-
-    await page.getByRole("button", { name: "Add Option" }).first().click();
-    await page.waitForLoadState("load");
-    await textInputs.nth(4).fill("Needs improvement");
-
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
+    // Set start date to today via the ConfigCard's Schedule section
+    // (the old "Settings" tab is gone in the arena editor).
+    await setStartDateToToday(page);
   });
 
   // ─── 11. Both participants: Complete final survey ─────────────────────────
@@ -911,26 +882,26 @@ test.describe.serial("Space with actions created by a team", () => {
       // Navigate to space root — ActionDashboard shows poll card in carousel
       await goto(page, spaceUrl);
 
-      // Click the poll card — it navigates to the poll page
+      // Clicking the poll card now opens the full-screen poll overlay
+      // in place (no navigation).
       const pollCard = page.locator('[data-type="poll"]').first();
       await expect(pollCard).toBeVisible({ timeout: 10000 });
       await pollCard.click();
-      await page.waitForURL(/\/actions\/polls\//, {
-        waitUntil: "load",
-        timeout: 15000,
-      });
-      await page.waitForFunction(
-        () => document.querySelector("[data-dioxus-id]") !== null,
-      );
 
-      await click(page, { testId: "poll-arena-begin" });
-      // Wait for poll option to be visible, then answer
-      await expect(page.getByText("Excellent", { exact: true })).toBeVisible({
-        timeout: 10000,
-      });
-      await click(page, { text: "Excellent" });
-      await click(page, { text: "Submit" });
-      await page.waitForLoadState("load");
+      const overlay = page.getByTestId("poll-arena-overlay");
+      await expect(overlay).toBeVisible({ timeout: 15000 });
+
+      await clickNoNav(page, { testId: "poll-arena-begin" });
+
+      await expect(
+        overlay.getByText("Excellent", { exact: true }),
+      ).toBeVisible({ timeout: 10000 });
+      await overlay.getByText("Excellent", { exact: true }).click();
+
+      await clickNoNav(page, { testId: "poll-submit" });
+      await clickNoNav(page, { testId: "poll-confirm-submit" });
+
+      await expect(overlay).toBeHidden({ timeout: 30000 });
     } finally {
       await context.close();
     }
@@ -948,27 +919,26 @@ test.describe.serial("Space with actions created by a team", () => {
       // Navigate to space root — ActionDashboard shows poll card in carousel
       await goto(page, spaceUrl);
 
-      // Click the poll card — it navigates to the poll page
+      // Clicking the poll card now opens the full-screen poll overlay
+      // in place (no navigation).
       const pollCard = page.locator('[data-type="poll"]').first();
       await expect(pollCard).toBeVisible({ timeout: 10000 });
       await pollCard.click();
-      await page.waitForURL(/\/actions\/polls\//, {
-        waitUntil: "load",
-        timeout: 15000,
-      });
-      await page.waitForFunction(
-        () => document.querySelector("[data-dioxus-id]") !== null,
-      );
 
-      // Wait for poll option to be visible, then answer
-      await click(page, { testId: "poll-arena-begin" });
+      const overlay = page.getByTestId("poll-arena-overlay");
+      await expect(overlay).toBeVisible({ timeout: 15000 });
 
-      await expect(page.getByText("Good", { exact: true })).toBeVisible({
+      await clickNoNav(page, { testId: "poll-arena-begin" });
+
+      await expect(overlay.getByText("Good", { exact: true })).toBeVisible({
         timeout: 10000,
       });
-      await click(page, { text: "Good" });
-      await click(page, { text: "Submit" });
-      await page.waitForLoadState("load");
+      await overlay.getByText("Good", { exact: true }).click();
+
+      await clickNoNav(page, { testId: "poll-submit" });
+      await clickNoNav(page, { testId: "poll-confirm-submit" });
+
+      await expect(overlay).toBeHidden({ timeout: 30000 });
     } finally {
       await context.close();
     }
@@ -977,11 +947,14 @@ test.describe.serial("Space with actions created by a team", () => {
   // ─── 12. Creator: Finish the space ────────────────────────────────────────
 
   test("Creator: Finish the space", async ({ page }) => {
+    // Arena flow: after space is Ongoing, ArenaTopbar swaps btn-start for
+    // btn-finish (admin-only). The "Finish" label lives only in the
+    // hover tooltip (opacity:0 until :hover) so we cannot click by text —
+    // use the stable testid instead. Clicking opens SpaceEndModal;
+    // end-space-button inside the modal fires the actual transition.
     await goto(page, spaceUrl);
-    await click(page, { testId: "btn-switch-creator" });
-
-    await click(page, { text: "Finish" });
+    await hideFab(page);
+    await click(page, { testId: "btn-finish" });
     await click(page, { testId: "end-space-button" });
-    await page.waitForLoadState("load");
   });
 });

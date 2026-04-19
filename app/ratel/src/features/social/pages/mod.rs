@@ -1,13 +1,13 @@
 pub mod credentials;
 pub mod dao;
 pub mod draft;
-pub mod group;
 pub mod home;
 pub mod member;
 pub mod post;
 pub mod reward;
 pub mod setting;
 pub mod space;
+pub mod team_arena;
 pub mod team_membership;
 pub mod user_draft;
 pub mod user_membership;

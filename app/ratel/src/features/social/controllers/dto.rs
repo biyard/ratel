@@ -36,12 +36,26 @@ pub struct TeamResponse {
     pub html_contents: String,
     pub thumbnail_url: Option<String>,
     pub permissions: Option<Vec<crate::features::posts::types::TeamGroupPermission>>,
+    /// `None` means the current viewer is not a member of the team (or is
+    /// logged out). `Some(role)` = actual team membership with that role.
+    /// Clients should use this for all access control decisions; never
+    /// derive from `permissions` on the client.
+    #[serde(default)]
+    pub role: Option<crate::features::social::pages::member::dto::TeamRole>,
 }
 
 #[cfg(feature = "server")]
-impl From<(crate::features::posts::models::Team, i64)> for TeamResponse {
-    fn from((team, permissions): (crate::features::posts::models::Team, i64)) -> Self {
-        let perms: crate::features::posts::types::TeamGroupPermissions = permissions.into();
+impl From<(crate::features::posts::models::Team, Option<crate::features::social::pages::member::dto::TeamRole>)>
+    for TeamResponse
+{
+    fn from(
+        (team, role): (
+            crate::features::posts::models::Team,
+            Option<crate::features::social::pages::member::dto::TeamRole>,
+        ),
+    ) -> Self {
+        let permissions_i64: i64 = role.map(|r| r.to_legacy_permissions()).unwrap_or(0);
+        let perms: crate::features::posts::types::TeamGroupPermissions = permissions_i64.into();
         Self {
             pk: team.pk.to_string(),
             created_at: team.created_at,
@@ -53,6 +67,7 @@ impl From<(crate::features::posts::models::Team, i64)> for TeamResponse {
             html_contents: team.description,
             thumbnail_url: team.thumbnail_url,
             permissions: Some(perms.0),
+            role,
         }
     }
 }

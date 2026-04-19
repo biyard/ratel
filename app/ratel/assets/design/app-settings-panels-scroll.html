@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>App Settings — Panels (Scroll)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+    html[data-theme="dark"]{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --surface-soft:rgba(255,255,255,0.02);--surface-hover:rgba(255,255,255,0.04);
+      --glow-aura-a:rgba(14,165,233,0.05);--glow-aura-b:rgba(252,179,0,0.03);
+      --panel-bg:rgba(12,12,26,1);--input-bg:rgba(255,255,255,0.02);--input-border:rgba(255,255,255,0.08);
+      --danger-bg:rgba(239,68,68,0.04);--danger-border:rgba(239,68,68,0.18);
+      --warn-bg:rgba(252,179,0,0.06);--warn-border:rgba(252,179,0,0.24);
+      --row-hover:rgba(255,255,255,0.03);
+    }
+    html[data-theme="light"]{
+      --bg-void:#f5f5fb;--bg-glass:rgba(255,255,255,0.75);--bg-glass-hover:rgba(255,255,255,0.95);
+      --border-subtle:rgba(10,10,30,0.08);--border-strong:rgba(10,10,30,0.16);
+      --text-primary:#12121a;--text-muted:#5b5b75;--text-dim:#9898ad;
+      --surface-soft:rgba(10,10,30,0.03);--surface-hover:rgba(10,10,30,0.05);
+      --glow-aura-a:rgba(14,165,233,0.10);--glow-aura-b:rgba(252,179,0,0.06);
+      --panel-bg:rgba(255,255,255,1);--input-bg:rgba(10,10,30,0.02);--input-border:rgba(10,10,30,0.1);
+      --danger-bg:rgba(239,68,68,0.06);--danger-border:rgba(239,68,68,0.22);
+      --warn-bg:rgba(252,179,0,0.10);--warn-border:rgba(252,179,0,0.3);
+      --row-hover:rgba(10,10,30,0.03);
+    }
+
+    :root{
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-red:#ef4444;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+      --panels-color:#0ea5e9;--panels-bg:rgba(14,165,233,0.10);--panels-border:rgba(14,165,233,0.24);--panels-glow:rgba(14,165,233,0.16);
+      --uni-color:#60a5fa;--uni-bg:rgba(96,165,250,0.10);--uni-border:rgba(96,165,250,0.24);
+      --age-color:#22c55e;--age-bg:rgba(34,197,94,0.10);--age-border:rgba(34,197,94,0.24);
+      --gen-color:#a855f7;--gen-bg:rgba(168,85,247,0.10);--gen-border:rgba(168,85,247,0.24);
+    }
+
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body);transition:background 0.25s,color 0.25s}
+
+    .arena{position:relative;min-height:100vh;display:flex;flex-direction:column}
+    .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 20%,var(--glow-aura-a),transparent 60%),radial-gradient(ellipse 120% 100% at 50% 120%,var(--glow-aura-b),transparent 50%);z-index:0;pointer-events:none}
+
+    .arena-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:16px 28px;gap:16px;background:var(--bg-glass);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-subtle)}
+    .arena-topbar__left{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+    .back-btn{width:36px;height:36px;border-radius:10px;background:var(--surface-soft);border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s}
+    .back-btn:hover{border-color:rgba(252,179,0,0.3);color:var(--accent-gold)}
+    .back-btn svg{width:16px;height:16px}
+    .arena-topbar__logo{width:36px;height:36px;border-radius:9px;object-fit:cover;border:1px solid rgba(252,179,0,0.15);flex-shrink:0}
+    .breadcrumb{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .breadcrumb__item{font-family:var(--font-display);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted)}
+    .breadcrumb__sep{color:var(--text-dim);font-size:10px}
+    .breadcrumb__current{color:var(--text-primary);font-weight:600}
+    .type-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:var(--panels-bg);color:var(--panels-color);border:1px solid var(--panels-border)}
+    .type-badge svg{width:13px;height:13px}
+
+    .topbar-title{flex:1;min-width:180px;color:var(--text-primary);font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:0.04em;padding:6px 10px}
+
+    .arena-topbar__right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+    .autosave{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted)}
+    .autosave__dot{width:6px;height:6px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal)}
+    .autosave--saving .autosave__dot{background:var(--panels-color);box-shadow:0 0 6px var(--panels-color);animation:pulse 1.4s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+    .btn{padding:8px 14px;border-radius:10px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;border:1px solid var(--border-subtle);background:transparent;color:var(--text-primary);display:inline-flex;align-items:center;gap:6px}
+    .btn:hover{border-color:rgba(252,179,0,0.3);color:var(--accent-gold);background:var(--surface-hover)}
+    .btn--secondary{background:var(--surface-soft)}
+    .btn--primary{background:linear-gradient(135deg,var(--accent-gold),#e5a200);border:none;color:#0a0a0a;box-shadow:0 2px 12px rgba(252,179,0,0.25)}
+    .btn--primary:hover{color:#0a0a0a;transform:translateY(-1px);box-shadow:0 4px 16px rgba(252,179,0,0.4)}
+    .btn--accent{background:linear-gradient(135deg,var(--panels-color),#0284c7);border:none;color:#fff;box-shadow:0 2px 12px var(--panels-glow)}
+    .btn--accent:hover{transform:translateY(-1px);color:#fff;box-shadow:0 4px 16px var(--panels-glow)}
+    .btn--lg{padding:10px 20px;font-size:11px}
+    .btn--icon{width:36px;height:36px;padding:0;justify-content:center}
+    .btn--icon svg{width:14px;height:14px}
+
+    .hud-btn{width:40px;height:40px;border-radius:10px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s;padding:0}
+    .hud-btn:hover{background:var(--bg-glass-hover);border-color:rgba(252,179,0,0.2)}
+    .hud-btn svg{width:16px;height:16px;color:var(--text-muted)}
+    .hud-btn:hover svg{color:var(--accent-gold)}
+
+    .arena-body{position:relative;z-index:10;flex:1;padding:28px 28px 120px;max-width:1200px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:18px}
+
+    .section{background:var(--bg-glass);backdrop-filter:blur(18px);border:1px solid var(--border-subtle);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px}
+    .section__head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .section__title{display:flex;align-items:center;gap:8px}
+    .section__label{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
+    .section__hint{font-size:12px;color:var(--text-muted)}
+    .info-icon{width:16px;height:16px;color:var(--text-dim);cursor:help}
+    .info-icon:hover{color:var(--text-muted)}
+
+    /* Total quota */
+    .quota-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+    .quota-label{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);display:flex;align-items:center;gap:6px}
+    .quota-input{width:140px;padding:11px 14px;border-radius:10px;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary);font-family:var(--font-display);font-size:15px;font-weight:700;text-align:center;outline:none;transition:all 0.2s}
+    .quota-input:focus{border-color:var(--panels-border);box-shadow:0 0 0 3px var(--panels-glow)}
+    .quota-meter{flex:1;min-width:220px;display:flex;flex-direction:column;gap:6px}
+    .quota-meter__bar{position:relative;height:8px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);overflow:hidden}
+    .quota-meter__fill{position:absolute;top:0;left:0;bottom:0;width:72%;background:linear-gradient(90deg,var(--panels-color),#38bdf8);border-radius:100px;box-shadow:0 0 8px var(--panels-glow)}
+    .quota-meter__labels{display:flex;justify-content:space-between;font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--text-muted);text-transform:uppercase}
+    .quota-meter__labels strong{color:var(--panels-color);font-weight:700}
+
+    /* Attribute toggles */
+    .attr-toggles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .attr-toggle{padding:16px;border-radius:14px;background:var(--surface-soft);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;gap:8px;position:relative;text-align:left;color:var(--text-primary);font-family:var(--font-body)}
+    .attr-toggle:hover{border-color:var(--panels-border);background:var(--surface-hover)}
+    .attr-toggle[aria-selected="true"]{border-color:var(--panels-border);background:var(--panels-bg)}
+    .attr-toggle__head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .attr-toggle__name{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-primary);display:flex;align-items:center;gap:8px}
+    .attr-toggle__swatch{width:10px;height:10px;border-radius:3px;display:inline-block}
+    .attr-toggle--uni .attr-toggle__swatch{background:var(--uni-color);box-shadow:0 0 8px var(--uni-color)}
+    .attr-toggle--age .attr-toggle__swatch{background:var(--age-color);box-shadow:0 0 8px var(--age-color)}
+    .attr-toggle--gen .attr-toggle__swatch{background:var(--gen-color);box-shadow:0 0 8px var(--gen-color)}
+    .attr-toggle__desc{font-size:12px;color:var(--text-muted);line-height:1.5}
+    .attr-toggle__check{width:22px;height:22px;border-radius:7px;background:var(--surface-hover);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;color:transparent;transition:all 0.15s}
+    .attr-toggle[aria-selected="true"] .attr-toggle__check{background:var(--panels-color);border-color:var(--panels-color);color:#fff}
+    .attr-toggle__check svg{width:12px;height:12px}
+
+    /* Collective chips */
+    .collective-row{display:flex;flex-wrap:wrap;gap:10px}
+    .collective-chip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:100px;border:1px solid var(--border-subtle);background:var(--surface-soft);font-size:12px;font-weight:600;color:var(--text-primary)}
+    .collective-chip--uni{background:var(--uni-bg);border-color:var(--uni-border);color:var(--uni-color)}
+    .collective-chip--age{background:var(--age-bg);border-color:var(--age-border);color:var(--age-color)}
+    .collective-chip--gen{background:var(--gen-bg);border-color:var(--gen-border);color:var(--gen-color)}
+    .collective-chip__dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+    .collective-chip__action{width:18px;height:18px;border-radius:4px;background:transparent;border:none;color:currentColor;opacity:0.6;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity 0.15s}
+    .collective-chip__action:hover{opacity:1}
+    .collective-chip__action svg{width:12px;height:12px}
+    .empty-hint{font-size:12px;color:var(--text-dim);font-style:italic;padding:16px 0;text-align:center}
+
+    .section__actions{display:flex;align-items:center;gap:8px}
+    .dropdown{position:relative}
+    .dropdown-menu{position:absolute;right:0;top:42px;min-width:160px;background:var(--panel-bg);border:1px solid var(--border-subtle);border-radius:12px;padding:6px;box-shadow:0 12px 40px rgba(0,0,0,0.4);z-index:40;display:none;flex-direction:column;gap:2px}
+    .dropdown-menu[data-open="true"]{display:flex}
+    .dropdown-menu__item{padding:10px 12px;border-radius:8px;background:transparent;border:none;cursor:pointer;color:var(--text-primary);font-size:13px;text-align:left;transition:all 0.1s}
+    .dropdown-menu__item:hover{background:var(--surface-hover)}
+
+    /* Warning ribbon */
+    .warn{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:12px;background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--text-primary);font-size:12px;line-height:1.5}
+    .warn__icon{width:22px;height:22px;border-radius:6px;background:rgba(252,179,0,0.18);color:var(--accent-gold);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+    .warn__icon svg{width:13px;height:13px}
+    .warn strong{color:var(--accent-gold)}
+
+    /* Conditional table */
+    .table-wrap{border-radius:14px;overflow:hidden;border:1px solid var(--border-subtle);background:var(--surface-soft)}
+    .p-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+    .p-table thead{background:var(--surface-soft)}
+    .p-table th{padding:12px 16px;text-align:left;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border-subtle);white-space:nowrap}
+    .p-table th.num{text-align:right;width:140px}
+    .p-table td{padding:12px 16px;border-bottom:1px solid var(--border-subtle);vertical-align:middle;color:var(--text-primary)}
+    .p-table tr:last-child td{border-bottom:none}
+    .p-table tbody tr{transition:background 0.1s}
+    .p-table tbody tr:hover{background:var(--row-hover)}
+    .p-table td.num{text-align:right;font-family:var(--font-display);font-weight:700;letter-spacing:0.04em}
+    .p-table__group{display:inline-flex;align-items:center;gap:8px;font-weight:600}
+    .p-table__swatch{width:8px;height:8px;border-radius:2px;display:inline-block}
+    .p-table__group--uni .p-table__swatch{background:var(--uni-color)}
+    .p-table__group--age .p-table__swatch{background:var(--age-color)}
+    .p-table__group--gen .p-table__swatch{background:var(--gen-color)}
+    .attr-pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:100px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-right:4px;margin-bottom:2px}
+    .attr-pill--uni{background:var(--uni-bg);color:var(--uni-color);border:1px solid var(--uni-border)}
+    .attr-pill--age{background:var(--age-bg);color:var(--age-color);border:1px solid var(--age-border)}
+    .attr-pill--gen{background:var(--gen-bg);color:var(--gen-color);border:1px solid var(--gen-border)}
+    .ratio-bar{position:relative;width:100%;max-width:180px;height:6px;border-radius:100px;background:var(--surface-hover);overflow:hidden;margin-top:4px}
+    .ratio-bar__fill{position:absolute;top:0;left:0;bottom:0;border-radius:100px}
+    .ratio-bar__fill--uni{background:var(--uni-color)}
+    .ratio-bar__fill--age{background:var(--age-color)}
+    .ratio-bar__fill--gen{background:var(--gen-color)}
+    .quota-cell{display:flex;justify-content:flex-end;align-items:center;gap:6px}
+    .num-input{width:80px;padding:6px 10px;border-radius:8px;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-primary);font-family:var(--font-display);font-size:12px;font-weight:700;text-align:right;outline:none;transition:all 0.15s}
+    .num-input:focus{border-color:var(--panels-border);box-shadow:0 0 0 3px var(--panels-glow)}
+    .table-empty{padding:48px 24px;text-align:center;color:var(--text-dim);font-size:13px}
+
+    /* Sticky footer */
+    .sticky-footer{position:sticky;bottom:0;z-index:25;background:var(--bg-glass);backdrop-filter:blur(20px);border-top:1px solid var(--border-subtle);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto}
+    .sticky-footer__left{font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:10px}
+    .sticky-footer__pill{padding:4px 10px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.08em;color:var(--text-muted);display:inline-flex;align-items:center;gap:6px}
+    .sticky-footer__actions{display:flex;gap:10px}
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <header class="arena-topbar" role="banner">
+      <div class="arena-topbar__left">
+        <button class="back-btn" aria-label="Back" data-testid="topbar-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        </button>
+        <img class="arena-topbar__logo" alt="Space logo" src="https://api.dicebear.com/7.x/shapes/svg?seed=climate&backgroundColor=0ea5e9" />
+        <nav class="breadcrumb">
+          <span class="breadcrumb__item">Climate Action DAO</span>
+          <span class="breadcrumb__sep">›</span>
+          <span class="breadcrumb__item">Apps</span>
+          <span class="breadcrumb__sep">›</span>
+          <span class="breadcrumb__item breadcrumb__current">Panels</span>
+        </nav>
+        <span class="type-badge" data-testid="type-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Panels
+        </span>
+        <span class="topbar-title">Panel Settings</span>
+      </div>
+      <div class="arena-topbar__right">
+        <span class="autosave autosave--saving" data-testid="autosave-pill">
+          <span class="autosave__dot"></span><span>Saving</span>
+        </span>
+        <button class="btn" data-testid="cancel-btn">Cancel</button>
+        <button class="btn btn--primary btn--lg" data-testid="save-btn">Save Changes</button>
+        <button class="hud-btn" aria-label="Settings" data-testid="settings-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="arena-body">
+      <!-- Total quotas -->
+      <section class="section" data-testid="section-total-quotas">
+        <div class="section__head">
+          <div class="section__title">
+            <span class="section__label">Total quotas</span>
+            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          </div>
+          <span class="section__hint">Setting the quota to 0 allows anyone to participate without a limit.</span>
+        </div>
+        <div class="quota-row">
+          <span class="quota-label">Total</span>
+          <input class="quota-input" type="text" value="250" data-testid="total-quota-input" />
+          <div class="quota-meter">
+            <div class="quota-meter__bar"><div class="quota-meter__fill"></div></div>
+            <div class="quota-meter__labels">
+              <span><strong>180</strong> allocated</span>
+              <span>70 unassigned</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Attribute groups toggle -->
+      <section class="section" data-testid="section-attribute-groups">
+        <div class="section__head">
+          <div class="section__title">
+            <span class="section__label">Attribute groups</span>
+          </div>
+          <span class="section__hint">Select which attributes to use for this space</span>
+        </div>
+        <div class="attr-toggles" data-testid="attr-toggles">
+          <button class="attr-toggle attr-toggle--uni" aria-selected="true" data-testid="attr-university">
+            <div class="attr-toggle__head">
+              <span class="attr-toggle__name"><span class="attr-toggle__swatch"></span>University</span>
+              <span class="attr-toggle__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            </div>
+            <div class="attr-toggle__desc">Participation limited to users with a verified university affiliation.</div>
+          </button>
+          <button class="attr-toggle attr-toggle--age" aria-selected="true" data-testid="attr-age">
+            <div class="attr-toggle__head">
+              <span class="attr-toggle__name"><span class="attr-toggle__swatch"></span>Age</span>
+              <span class="attr-toggle__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            </div>
+            <div class="attr-toggle__desc">Split participation by age brackets (adult / minor / generation).</div>
+          </button>
+          <button class="attr-toggle attr-toggle--gen" aria-selected="false" data-testid="attr-gender">
+            <div class="attr-toggle__head">
+              <span class="attr-toggle__name"><span class="attr-toggle__swatch"></span>Gender</span>
+              <span class="attr-toggle__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            </div>
+            <div class="attr-toggle__desc">Enforce a gender balance across the participant pool.</div>
+          </button>
+        </div>
+      </section>
+
+      <!-- Collective attributes -->
+      <section class="section" data-testid="section-collective">
+        <div class="section__head">
+          <div class="section__title">
+            <span class="section__label">Collective Panel Attributes</span>
+            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          </div>
+          <div class="section__actions">
+            <div class="dropdown">
+              <button class="btn btn--icon" aria-label="Move to conditional" data-testid="collective-add-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <div class="dropdown-menu" data-testid="collective-menu">
+                <button class="dropdown-menu__item">Move Age to Conditional</button>
+                <button class="dropdown-menu__item">Move Gender to Conditional</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <span class="section__hint">Users must have these attributes to participate.</span>
+        <div class="collective-row" data-testid="collective-list">
+          <span class="collective-chip collective-chip--uni">
+            <span class="collective-chip__dot"></span>
+            University
+          </span>
+          <span class="collective-chip collective-chip--age">
+            <span class="collective-chip__dot"></span>
+            Age
+            <button class="collective-chip__action" aria-label="Move to conditional" data-testid="collective-move-age">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+          </span>
+        </div>
+      </section>
+
+      <!-- Conditional attributes table -->
+      <section class="section" data-testid="section-conditional">
+        <div class="section__head">
+          <div class="section__title">
+            <span class="section__label">Conditional Panel Attributes</span>
+            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          </div>
+          <span class="section__hint">Participation is based on quotas, and participants are distributed by attribute.</span>
+        </div>
+
+        <div class="warn" data-testid="ratio-warning">
+          <span class="warn__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </span>
+          <span><strong>Over-allocated:</strong> The sum of max quotas exceeds total quotas. Some attributes may not reach their max quota.</span>
+        </div>
+
+        <div class="table-wrap">
+          <table class="p-table" data-testid="conditional-table">
+            <thead>
+              <tr>
+                <th>Attribute group</th>
+                <th>Attributes</th>
+                <th>Ratio</th>
+                <th class="num">Max quotas</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <span class="p-table__group p-table__group--age">
+                    <span class="p-table__swatch"></span>
+                    Age
+                  </span>
+                </td>
+                <td>
+                  <span class="attr-pill attr-pill--age">Adult</span>
+                  <span class="attr-pill attr-pill--age">Minor</span>
+                </td>
+                <td>
+                  <span style="font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--age-color)">60%</span>
+                  <div class="ratio-bar"><span class="ratio-bar__fill ratio-bar__fill--age" style="width:60%"></span></div>
+                </td>
+                <td class="num">
+                  <div class="quota-cell">
+                    <input class="num-input" type="text" value="150" />
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="p-table__group p-table__group--gen">
+                    <span class="p-table__swatch"></span>
+                    Gender
+                  </span>
+                </td>
+                <td>
+                  <span class="attr-pill attr-pill--gen">Male</span>
+                  <span class="attr-pill attr-pill--gen">Female</span>
+                </td>
+                <td>
+                  <span style="font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--gen-color)">50%</span>
+                  <div class="ratio-bar"><span class="ratio-bar__fill ratio-bar__fill--gen" style="width:50%"></span></div>
+                </td>
+                <td class="num">
+                  <div class="quota-cell">
+                    <input class="num-input" type="text" value="125" />
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="p-table__group p-table__group--age">
+                    <span class="p-table__swatch"></span>
+                    Age, Gender
+                  </span>
+                </td>
+                <td>
+                  <span class="attr-pill attr-pill--age">Adult</span>
+                  <span class="attr-pill attr-pill--gen">Female</span>
+                </td>
+                <td>
+                  <span style="font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--panels-color)">30%</span>
+                  <div class="ratio-bar"><span class="ratio-bar__fill" style="width:30%;background:var(--panels-color)"></span></div>
+                </td>
+                <td class="num">
+                  <div class="quota-cell">
+                    <input class="num-input" type="text" value="75" />
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Empty conditional state (hidden) -->
+      <section class="section" data-testid="section-conditional-empty" style="display:none">
+        <div class="table-empty">No conditional attributes configured. Move Collective attributes above into Conditional to set quotas.</div>
+      </section>
+    </main>
+
+    <footer class="sticky-footer">
+      <div class="sticky-footer__left">
+        <span>Last saved 8s ago</span>
+        <span class="sticky-footer__pill"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent-teal);display:inline-block"></span>Changes saved</span>
+      </div>
+      <div class="sticky-footer__actions">
+        <button class="btn" data-testid="footer-cancel">Cancel</button>
+        <button class="btn btn--accent btn--lg" data-testid="footer-save">Save Changes</button>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    (function(){
+      var saved = localStorage.getItem('ratel-theme');
+      if (saved) document.documentElement.setAttribute('data-theme', saved);
+
+      document.querySelectorAll('.attr-toggle').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          btn.setAttribute('aria-selected', btn.getAttribute('aria-selected') === 'true' ? 'false' : 'true');
+        });
+      });
+
+      var addBtn = document.querySelector('[data-testid="collective-add-btn"]');
+      var menu = document.querySelector('[data-testid="collective-menu"]');
+      if (addBtn && menu){
+        addBtn.addEventListener('click', function(e){
+          e.stopPropagation();
+          menu.setAttribute('data-open', menu.getAttribute('data-open') === 'true' ? 'false' : 'true');
+        });
+        document.addEventListener('click', function(){ menu.setAttribute('data-open', 'false'); });
+        menu.addEventListener('click', function(e){ e.stopPropagation(); });
+      }
+    })();
+  </script>
+</body>
+</html>

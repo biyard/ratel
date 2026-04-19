@@ -1,4 +1,5 @@
 use crate::features::auth::*;
+use crate::features::social::pages::member::dto::TeamRole;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -15,6 +16,14 @@ pub struct UserTeam {
     pub username: String,
 
     pub dao_address: Option<String>,
+
+    /// Single-source-of-truth role on the team. Replaces the prior
+    /// TeamGroup/UserTeamGroup permissions chain. `#[serde(default)]` so
+    /// records persisted before this field was introduced deserialize as
+    /// `TeamRole::Member`; a one-shot migration backfills the correct
+    /// value for every existing membership.
+    #[serde(default)]
+    pub role: TeamRole,
 }
 
 #[cfg(feature = "server")]
@@ -26,6 +35,7 @@ impl UserTeam {
         profile_url: String,
         username: String,
         dao_address: Option<String>,
+        role: TeamRole,
     ) -> Self {
         let now = crate::common::utils::time::get_now_timestamp_millis();
 
@@ -37,6 +47,7 @@ impl UserTeam {
             profile_url,
             username,
             dao_address,
+            role,
         }
     }
 }

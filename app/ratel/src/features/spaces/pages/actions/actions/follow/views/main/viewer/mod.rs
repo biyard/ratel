@@ -1,6 +1,6 @@
 use crate::common::hooks::use_infinite_query;
-use crate::common::query::use_query_store;
 use crate::common::use_toast;
+use crate::features::spaces::space_common::providers::use_space_context;
 use crate::features::spaces::pages::actions::actions::follow::components::follow_user_list::i18n::FollowUserListTranslate;
 use crate::features::spaces::pages::actions::actions::follow::components::FollowViewerCards;
 use crate::features::spaces::pages::actions::actions::follow::controllers::{
@@ -8,7 +8,6 @@ use crate::features::spaces::pages::actions::actions::follow::controllers::{
 };
 use crate::features::spaces::pages::actions::actions::follow::*;
 use crate::features::spaces::pages::actions::components::FullActionLayover;
-use crate::features::spaces::space_common::types::{space_my_score_key, space_ranking_key};
 mod i18n;
 use i18n::FollowViewerTranslate;
 
@@ -22,7 +21,7 @@ pub fn FollowViewerPage(
     let nav = navigator();
     let nav_back = nav.clone();
     let mut toast = use_toast();
-    let mut query = use_query_store();
+    let mut space_ctx = use_space_context();
     let mut users_query =
         use_infinite_query(move |bookmark| list_follow_users(space_id(), bookmark))?;
     let users = users_query.items();
@@ -44,8 +43,8 @@ pub fn FollowViewerPage(
                     Ok(_) => {
                         toast.info(list_tr.subscribed_toast.to_string());
                         on_refresh_list(());
-                        query.invalidate(&space_ranking_key(&space_id()));
-                        query.invalidate(&space_my_score_key(&space_id()));
+                        space_ctx.ranking.restart();
+                        space_ctx.my_score.restart();
                     }
                     Err(err) => {
                         toast.error(err);
@@ -65,8 +64,8 @@ pub fn FollowViewerPage(
                     Ok(_) => {
                         toast.info(list_tr.unsubscribed_toast.to_string());
                         on_refresh_list(());
-                        query.invalidate(&space_ranking_key(&space_id()));
-                        query.invalidate(&space_my_score_key(&space_id()));
+                        space_ctx.ranking.restart();
+                        space_ctx.my_score.restart();
                     }
                     Err(err) => {
                         toast.error(err);

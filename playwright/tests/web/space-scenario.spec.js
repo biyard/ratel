@@ -1,5 +1,20 @@
 import { test, expect } from "@playwright/test";
-import { click, clickNoNav, fill, goto, getLocator, getEditor, waitPopup } from "../utils";
+import {
+  click,
+  clickNoNav,
+  createAction,
+  createTeamFromHome,
+  createTeamPostFromHome,
+  fill,
+  goto,
+  getLocator,
+  getEditor,
+  waitPopup,
+  addPollQuestion,
+  fillPollQuestion,
+  togglePrerequisite,
+  commitAutosave,
+} from "../utils";
 
 /**
  * Space Governance Scenario — Full E2E
@@ -177,8 +192,9 @@ async function signUpAndParticipate(browser, user, spaceUrl) {
     // Submit the poll using testId (avoids ambiguity with confirm dialog's Submit text)
     await clickNoNav(page, { testId: "poll-submit" });
 
-    // Confirm dialog appears — click confirm
-    await click(page, { testId: "poll-confirm-submit" });
+    // Confirm dialog appears — click confirm. Poll submit now closes the
+    // overlay in place (no navigation), so we must not wait for a load event.
+    await clickNoNav(page, { testId: "poll-confirm-submit" });
 
     // Wait for overlay to close (server call completes + overlay signal cleared)
     await expect(page.getByTestId("poll-arena-overlay")).toBeHidden({
@@ -249,69 +265,34 @@ test.describe.serial("Space governance scenario", () => {
   test("Create a team and post with space, then verify dashboard", async ({
     page,
   }) => {
-    // Step 1: Navigate to home and open profile dropdown
-    await goto(page, "/");
-
-    // Open profile dropdown by clicking the user profile button in the navbar
-    // Target the button specifically by its accessible name (img alt + text)
-    await click(page, { label: "User Profile" });
-
-    // Step 2: Click "Create Team" in the dropdown
-    await click(page, { text: "Create Team" });
-
-    // Step 3: Fill in team creation form
-    // Team Name (nickname)
-    const nicknameInput = page.locator('[data-testid="team-nickname-input"]');
-    await nicknameInput.fill(teamNickname);
-
-    // Team ID (username)
-    const usernameInput = page.locator('[data-testid="team-username-input"]');
-    await usernameInput.fill(teamUsername);
-
-    // Team description
-    const descInput = page.locator('[data-testid="team-description-input"]');
-    await descInput.fill("E2E test team for space actions");
-
-    // Click Create button to submit the form
-    await click(page, { text: "Create" });
-
-    // Wait for navigation to the team home page
-    // Routes use /{username}/home (no /teams/ prefix)
-    await page.waitForURL(new RegExp(`/${teamUsername}/home`), {
-      waitUntil: "load",
+    // Drive the full setup through the production UI:
+    //   home (`/`) → Teams HUD → "Create Team" → ArenaTeamCreationPopup → submit
+    // then home → Teams HUD → pick team → team home → "Create Post".
+    await createTeamFromHome(page, {
+      username: teamUsername,
+      nickname: teamNickname,
+      description: "E2E test team for space actions",
     });
-    await page.waitForFunction(
-      () => document.querySelector("[data-dioxus-id]") !== null
+
+    const postId = await createTeamPostFromHome(
+      page,
+      teamUsername,
+      postTitle,
+      postContents,
     );
 
-    // Step 4: Create a post via the Create button on the team home page
-    await click(page, { text: "Create" });
-
-    // Wait for post edit page to load
-    await page.waitForURL(/\/posts\/.*\/edit/, {
-      waitUntil: "load",
+    // Space creation stays REST — the post-edit "Go to Space" affordance was
+    // removed, and this suite focuses on governance rather than space-creation.
+    const spaceRes = await page.request.post("/api/spaces/create", {
+      data: { req: { post_id: postId } },
     });
+    expect(spaceRes.ok(), `create space: ${await spaceRes.text()}`).toBeTruthy();
+    const spaceId = (await spaceRes.json()).space_id;
 
-    // Step 6: Fill in the post
-    await fill(page, { placeholder: "Title" }, postTitle);
+    spaceUrl = `/spaces/${spaceId}`;
 
-    // Uncheck "Skip creating space" to enable space creation
-    await click(page, { testId: "skip-space-checkbox" });
-
-    const editor = await getEditor(page);
-    await editor.fill(postContents);
-
-    // Step 7: Click "Go to Space" to create the space
-    await click(page, { text: "Go to Space" });
-
-    // Wait for navigation to the space dashboard
-    await page.waitForURL(/\/spaces\/[a-z0-9-]+\/dashboard/, {
-      waitUntil: "load",
-    });
+    await goto(page, `${spaceUrl}/dashboard`);
     await getLocator(page, { text: "Dashboard" });
-
-    const url = new URL(page.url());
-    spaceUrl = url.pathname.replace(/\/dashboard$/, "");
   });
 
   // TODO: add team member into team
@@ -345,18 +326,7 @@ test.describe.serial("Space governance scenario", () => {
   // ─── 4. Follow Team action ────────────────────────────────────────────────
 
   test("Creator1: Add Follow Team action", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
-
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-follow" });
-
-    await page.evaluate(() => {
-      const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
-      if (fab) fab.style.display = "none";
-    });
-
-    await click(page, { text: "Create" });
-    await page.waitForURL(/\/actions\/follows\//, { waitUntil: "networkidle" });
+    await createAction(page, spaceUrl, "follow", /\/actions\/follows\//);
   });
 
   // ─── 5. Quiz + 3 study attachments + 2x boost ────────────────────────────
@@ -364,19 +334,11 @@ test.describe.serial("Space governance scenario", () => {
   test("Creator1: Add Quiz with study materials and 2x boost", async ({
     page,
   }) => {
-    await goto(page, spaceUrl + "/actions");
+    await createAction(page, spaceUrl, "quiz", /\/actions\/quizzes\//);
 
-    await click(page, { text: "Select Action Type" });
-    // Quiz is the default selection — no extra click needed
+    // Arena-style quiz creator page: no tabs — ContentCard + QuestionsCard +
+    // ConfigCard are all inline on the same page with per-field autosave.
 
-    await page.evaluate(() => {
-      const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
-      if (fab) fab.style.display = "none";
-    });
-    await click(page, { text: "Create" });
-    await page.waitForURL(/\/actions\/quizzes\//, { waitUntil: "networkidle" });
-
-    // Overview tab: title + description
     await fill(
       page,
       { placeholder: "Enter quiz title..." },
@@ -389,10 +351,7 @@ test.describe.serial("Space governance scenario", () => {
         "This quiz verifies understanding of the governance framework."
     );
 
-    await page.getByRole("tab", { name: "Upload" }).click();
-    await page.waitForLoadState("load");
-
-    // Attach 3 dummy study material files
+    // Attach study material files via the inline Attachments section
     const dummyPdf = {
       name: "study-material-1.pdf",
       mimeType: "application/pdf",
@@ -401,67 +360,37 @@ test.describe.serial("Space governance scenario", () => {
     const fileInputs = page.locator('input[type="file"][accept*=".pdf"]');
     if ((await fileInputs.count()) > 0) {
       const uploader = fileInputs.first();
-
       await uploader.setInputFiles(dummyPdf);
-      // FIXME: check this logic
-      // await expect(
-      //   page.getByText("study-material-1.pdf", { exact: true })
-      // ).toBeVisible();
-
       await uploader.setInputFiles({
         ...dummyPdf,
         name: "study-material-2.pdf",
       });
-      // await expect(
-      //   page.getByText("study-material-2.pdf", { exact: true })
-      // ).toBeVisible();
-
       await uploader.setInputFiles({
         ...dummyPdf,
         name: "study-material-3.pdf",
       });
-      // await expect(
-      //   page.getByText("study-material-3.pdf", { exact: true })
-      // ).toBeVisible();
     }
 
-    // Setting tab: 2x boost reward
-    await page.getByRole("tab", { name: "Setting" }).click();
+    // INFO: available credits is zero when free membership — reward boost
+    // configuration removed with the arena migration of the creator page.
+
+    // QuestionsCard (arena-style): clicking the add button creates a
+    // SingleChoice question with two empty option inputs directly. There is
+    // no question-type picker modal and no "Add Option" button in the new
+    // UI, so we just fill the default options in place.
+    await click(page, { testId: "quiz-question-add" });
     await page.waitForLoadState("load");
 
-    // INFO: available credits is zero when free membership
-    // const rewardCard = page.locator("text=Reward").locator("../../..");
-    // await rewardCard.locator("button[role='switch']").click();
-    // await page.waitForLoadState("load");
-
-    // const creditInput = page.locator('input[type="number"]:visible');
-    // await creditInput.first().fill("2");
-    // await page.keyboard.press("Tab");
-    // await page.waitForLoadState("load");
-
-    // Quiz tab: add a single-choice question
-    await page.getByRole("tab", { name: "Quiz" }).click();
-    await page.waitForLoadState("load");
-
-    await click(page, { testId: "quiz-add-question" });
-    await click(page, { text: "Single Choice" });
-
-    const textInputs = page.locator('input[type="text"]:visible');
-    await textInputs
+    const q0 = page.getByTestId("quiz-question-0");
+    const q0Inputs = q0.locator("input.input");
+    await q0Inputs
       .nth(0)
       .fill("What is the primary goal of decentralized governance?");
-    await textInputs.nth(1).fill("Centralize all decisions in one authority");
-    await textInputs
-      .nth(2)
-      .fill("Enable transparent collective decision-making");
+    await q0Inputs.nth(1).fill("Centralize all decisions in one authority");
+    await q0Inputs.nth(2).fill("Enable transparent collective decision-making");
 
-    await page.getByRole("button", { name: "Add Option" }).first().click();
-    await page.waitForLoadState("load");
-    await textInputs.nth(3).fill("Maximize individual profit");
-
-    // Mark option 2 as the correct answer
-    const checkboxLabels = page.locator('label:has(input[type="checkbox"])');
-    await checkboxLabels.nth(1).click();
+    // Mark option 2 as the correct answer via the radio dot
+    await page.getByTestId("quiz-question-0-opt-1").locator(".q-opt__radio").click();
     await page.waitForLoadState("load");
 
     await page.keyboard.press("Tab");
@@ -473,109 +402,48 @@ test.describe.serial("Space governance scenario", () => {
   test("Creator1: Add preliminary Poll (사전조사, prerequisite)", async ({
     page,
   }) => {
-    await goto(page, spaceUrl + "/actions");
-
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-poll" });
-
-    await page.evaluate(() => {
-      const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
-      if (fab) fab.style.display = "none";
-    });
-
-    await click(page, { text: "Create" });
-    await page.waitForURL(/\/actions\/polls\//, { waitUntil: "networkidle" });
+    await createAction(page, spaceUrl, "poll", /\/actions\/polls\//);
 
     await fill(
       page,
       { placeholder: "Enter poll title..." },
       "Opinion Survey: Pre-study"
     );
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
+    await commitAutosave(page);
 
-    await click(page, { testId: "poll-add-question" });
-    await click(page, { text: "Single Choice" });
+    // Arena poll editor: two option inputs, no Add Option button.
+    await addPollQuestion(page, "single");
+    await fillPollQuestion(page, 0, {
+      title: "How familiar are you with decentralized governance?",
+      options: ["Very familiar", "Not familiar at all"],
+    });
 
-    const textInputs = page.locator('input[type="text"]:visible');
-    await textInputs
-      .nth(0)
-      .fill("How familiar are you with decentralized governance?");
-    await textInputs.nth(1).fill("Very familiar");
-    await textInputs.nth(2).fill("Somewhat familiar");
-
-    await page.getByRole("button", { name: "Add Option" }).first().click();
-    await page.waitForLoadState("load");
-    await textInputs.nth(3).fill("Not familiar at all");
-
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
-
-    // Settings tab: mark as prerequisite
-    await page.getByRole("tab", { name: "Settings" }).click();
-    await page.waitForLoadState("load");
-
-    const prerequisiteCard = page.locator("text=Prerequisite").locator("../..");
-    await prerequisiteCard.locator("button").click();
-    await page.waitForLoadState("load");
+    // Mark as prerequisite via the ConfigCard tile (no more Settings tab).
+    await togglePrerequisite(page);
   });
 
   // ─── 7. Poll 2 — 최종조사 (10x boost) ────────────────────────────────────
 
   test("Creator1: Add final Poll (최종조사, 10x boost)", async ({ page }) => {
-    await goto(page, spaceUrl + "/actions");
-
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-poll" });
-
-    await page.evaluate(() => {
-      const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
-      if (fab) fab.style.display = "none";
-    });
-
-    await click(page, { text: "Create" });
-    await page.waitForURL(/\/actions\/polls\//, { waitUntil: "networkidle" });
+    await createAction(page, spaceUrl, "poll", /\/actions\/polls\//);
 
     await fill(
       page,
       { placeholder: "Enter poll title..." },
       "Opinion Survey: Post-study"
     );
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
+    await commitAutosave(page);
 
-    await click(page, { testId: "poll-add-question" });
-    await click(page, { text: "Single Choice" });
+    await addPollQuestion(page, "single");
+    await fillPollQuestion(page, 0, {
+      title:
+        "After studying the materials, how would you rate your understanding?",
+      options: ["Significantly improved", "No change"],
+    });
 
-    const textInputs = page.locator('input[type="text"]:visible');
-    await textInputs
-      .nth(0)
-      .fill(
-        "After studying the materials, how would you rate your understanding?"
-      );
-    await textInputs.nth(1).fill("Significantly improved");
-    await textInputs.nth(2).fill("Somewhat improved");
-
-    await page.getByRole("button", { name: "Add Option" }).first().click();
-    await page.waitForLoadState("load");
-    await textInputs.nth(3).fill("No change");
-
-    await page.keyboard.press("Tab");
-    await page.waitForLoadState("load");
-
-    // Settings tab: 10x boost reward
-    await page.getByRole("tab", { name: "Settings" }).click();
-    await page.waitForLoadState("load");
-
-    // INFO: available credits is zero when free membership
-    // const rewardCard = page.locator("text=Reward").locator("../../..");
-    // await rewardCard.locator("button[role='switch']").click();
-    // await page.waitForLoadState("load");
-
-    // const creditInput = page.locator('input[type="number"]:visible');
-    // await creditInput.first().fill("10");
-    // await page.keyboard.press("Tab");
-    // await page.waitForLoadState("load");
+    // Reward + boost setup: free-tier credits would be 0, so the boost
+    // steps from the legacy Settings tab are intentionally skipped here.
+    // setReward(page, 10) can be invoked once the user has paid credits.
   });
 
   // ─── 8. Discussion — saved but not published, 5x boost ───────────────────
@@ -583,55 +451,31 @@ test.describe.serial("Space governance scenario", () => {
   test("Creator1: Add Discussion (not published, 5x boost)", async ({
     page,
   }) => {
-    await goto(page, spaceUrl + "/actions");
-
-    await click(page, { text: "Select Action Type" });
-    await click(page, { testId: "action-type-discussion" });
-
-    await page.evaluate(() => {
-      const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
-      if (fab) fab.style.display = "none";
-    });
-
-    await click(page, { text: "Create" });
-    await page.waitForURL(/\/actions\/discussions\//, {
-      waitUntil: "networkidle",
-    });
+    await createAction(
+      page,
+      spaceUrl,
+      "discuss",
+      /\/actions\/discussions\/[^/]+\/edit/,
+    );
 
     await fill(
       page,
       { placeholder: "Enter discussion title..." },
       "Governance Framework Discussion"
     );
-    await fill(
-      page,
-      { placeholder: "Enter category (optional)..." },
-      "Governance"
-    );
+    // Arena discussion editor has no category field and no Save button —
+    // fields autosave on blur.
 
     const editor = await getEditor(page);
     await editor.fill(
       "This is the main governance discussion thread. Share your insights after completing " +
         "the study materials and preliminary survey."
     );
+    await commitAutosave(page);
 
-    // Save without publishing
-    await click(page, { text: "Save" });
-    await page.waitForLoadState("load");
-
-    // Settings tab: 5x boost reward
-    await page.getByRole("tab", { name: "Setting" }).click();
-    await page.waitForLoadState("load");
-
-    // INFO: available credits is zero when free membership
-    // const rewardCard = page.locator("text=Reward").locator("../../..");
-    // await rewardCard.locator("button[role='switch']").click();
-    // await page.waitForLoadState("load");
-
-    // const creditInput = page.locator('input[type="number"]:visible');
-    // await creditInput.first().fill("5");
-    // await page.keyboard.press("Tab");
-    // await page.waitForLoadState("load");
+    // Reward + boost setup: free-tier credits would be 0, so the boost
+    // steps from the legacy Settings tab are intentionally skipped here.
+    // setReward(page, 5) can be invoked once the user has paid credits.
   });
 
   // ─── 9. General settings — anonymous ON ───────────────────────────────────

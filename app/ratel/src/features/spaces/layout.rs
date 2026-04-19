@@ -2,9 +2,7 @@ use super::*;
 use crate::features::auth::hooks::use_user_context;
 use crate::features::auth::{LoginModal, UserContextStoreExt};
 use crate::features::spaces::space_common::controllers::get_user_role;
-use crate::features::spaces::space_common::hooks::use_space_query;
 use crate::features::spaces::space_common::providers::SpaceContextProvider;
-use crate::features::spaces::space_common::types::space_key;
 use crate::features::spaces::space_common::{
     components::{SpaceNav, SpaceNavItem, SpaceTop, SpaceTopLabel},
     hooks::use_space_role,
@@ -24,18 +22,29 @@ pub fn use_space_layout_ui() -> SpaceLayoutUiContext {
 pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
     let mut ctx = SpaceContextProvider::init(space_id)?;
 
-    use_context_provider(|| PopupService::new());
     use_context_provider(|| LayoverService::new());
     let sidebar_visible = use_signal(|| true);
     use_context_provider(move || SpaceLayoutUiContext { sidebar_visible });
-    let role = ctx.current_role();
+    let role = ctx.role();
     let space = ctx.space();
     let lang = use_language();
     let show_sidebar = sidebar_visible();
 
-    if !role.is_admin() {
+    let router = use_context::<dioxus::router::RouterContext>();
+    let current_route: Route = router.current();
+    let is_arena_route = matches!(current_route, Route::SpaceIndexPage { .. });
+    let is_action_edit_route = matches!(
+        current_route,
+        Route::QuizActionPage { .. }
+            | Route::PollActionPage { .. }
+            | Route::FollowActionPage { .. }
+            | Route::DiscussionActionEditorPage { .. }
+    );
+
+    if !role.is_admin() || is_arena_route || is_action_edit_route {
         return rsx! {
             Outlet::<Route> {}
+            Layover {}
         };
     }
 
@@ -193,7 +202,6 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
                 }
             }
         }
-        PopupZone {}
         Layover {}
     }
 }
