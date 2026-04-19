@@ -140,7 +140,7 @@ impl SpaceReward {
             return Ok(None);
         }
 
-        match Self::award(cli, &space_reward, target_pk, owner_pk).await {
+        match Self::award(cli, &space_reward, target_pk.clone(), owner_pk).await {
             Ok(user_reward) => Ok(Some(user_reward)),
             // Repeat claims inside the same period are expected on subsequent
             // activities — swallow them so the event handler stays idempotent.
