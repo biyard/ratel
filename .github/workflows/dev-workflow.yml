@@ -116,7 +116,7 @@ jobs:
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
       - name: Restore cache
-        id: app-shell-build-cache
+        id: app-shell-lambda-build-cache
         uses: actions/cache/restore@v5
         with:
           key: app-shell-lambda-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
@@ -207,7 +207,6 @@ jobs:
           VOTER_TAG_SECRET: ${{ secrets.DEV_VOTER_TAG_SECRET }}
           ATTR_VOTING_AUTHORITY_JSON: ${{ secrets.DEV_ATTR_VOTING_AUTHORITY_JSON }}
         run: |
-          npm i
           rm -rf target/dx
 
           cd app/ratel
@@ -248,7 +247,7 @@ jobs:
         if: always()
         uses: actions/cache/save@v5
         with:
-          key: app-shell-lambda-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ steps.app-shell-lambda-build-cache.outputs.cache-primary-key }}
           path: |
             ~/.cargo/bin
             target
@@ -643,7 +642,7 @@ jobs:
         if: always()
         uses: actions/cache/save@v5
         with:
-          key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ steps.app-shell-build-cache.outputs.cache-primary-key }}
           path: |
             ~/.cargo/bin
             target
