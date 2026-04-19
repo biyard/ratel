@@ -117,7 +117,6 @@ jobs:
 
   ratel-app-lambda:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v6
         with:
@@ -253,6 +252,13 @@ jobs:
           path: ${{ github.workspace }}/app-shell-lambda.zip
           if-no-files-found: error
           retention-days: 7
+
+      - name: Delete Previous Cache
+        if: ${{ steps.app-shell-lambda-build-cache.outputs.cache-hit }}
+        continue-on-error: true
+        run: |
+          gh extension install actions/gh-actions-cache
+          gh actions-cache delete "${{ steps.app-shell-lambda-build-cache.outputs.cache-primary-key }}" --confirm
 
       - name: Save cache
         if: always()
@@ -648,6 +654,13 @@ jobs:
           name: app-shell-image-${{ github.sha }}
           path: /tmp/app-shell-image.tar.gz
           retention-days: 7
+
+      - name: Delete Previous Cache
+        if: ${{ steps.app-shell-build-cache.outputs.cache-hit }}
+        continue-on-error: true
+        run: |
+          gh extension install actions/gh-actions-cache
+          gh actions-cache delete "${{ steps.app-shell-build-cache.outputs.cache-primary-key }}" --confirm
 
       - name: Save cache
         if: always()
