@@ -162,6 +162,36 @@ pub fn ActionDashboard(
             }
         } else {
             div { class: "carousel-wrapper",
+                button {
+                    class: "carousel-arrow carousel-arrow--prev",
+                    "data-testid": "carousel-prev",
+                    aria_label: "{tr.prev_quest}",
+                    svg {
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        stroke_width: "2",
+                        view_box: "0 0 24 24",
+                        xmlns: "http://www.w3.org/2000/svg",
+                        polyline { points: "15 18 9 12 15 6" }
+                    }
+                }
+                button {
+                    class: "carousel-arrow carousel-arrow--next",
+                    "data-testid": "carousel-next",
+                    aria_label: "{tr.next_quest}",
+                    svg {
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        stroke_width: "2",
+                        view_box: "0 0 24 24",
+                        xmlns: "http://www.w3.org/2000/svg",
+                        polyline { points: "9 18 15 12 9 6" }
+                    }
+                }
                 div {
                     class: "carousel-track",
                     id: "carousel-track",
