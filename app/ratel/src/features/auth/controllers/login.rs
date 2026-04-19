@@ -23,14 +23,23 @@ pub enum LoginRequest {
     OAuth {
         provider: OauthProvider,
         access_token: String,
+        // Optional so existing web clients don't break. Mobile clients
+        // pass a stable device-scoped UUID so the server can mint a
+        // refresh_token that survives app restarts.
+        #[serde(default)]
+        device_id: Option<String>,
     },
     Telegram {
         telegram_raw: String,
+        #[serde(default)]
+        device_id: Option<String>,
     },
     Wallet {
         signature: String,
         evm_address: String,
         message: String,
+        #[serde(default)]
+        device_id: Option<String>,
     },
 }
 
@@ -62,12 +71,17 @@ pub async fn login_handler(req: LoginRequest) -> Result<LoginResponse> {
         LoginRequest::OAuth {
             provider,
             access_token,
+            device_id: _,
         } => login_with_oauth(cli, provider, access_token).await?,
-        LoginRequest::Telegram { telegram_raw } => login_with_telegram(cli, telegram_raw).await?,
+        LoginRequest::Telegram {
+            telegram_raw,
+            device_id: _,
+        } => login_with_telegram(cli, telegram_raw).await?,
         LoginRequest::Wallet {
             signature,
             evm_address,
             message,
+            device_id: _,
         } => wallet_login_handler(cli, evm_address, signature, message, &session).await?,
     };
 
@@ -78,7 +92,9 @@ pub async fn login_handler(req: LoginRequest) -> Result<LoginResponse> {
     let device_id: Option<String> = match &req.clone() {
         LoginRequest::Phone { device_id, .. } => device_id.clone(),
         LoginRequest::Email { device_id, .. } => device_id.clone(),
-        _ => None,
+        LoginRequest::OAuth { device_id, .. } => device_id.clone(),
+        LoginRequest::Telegram { device_id, .. } => device_id.clone(),
+        LoginRequest::Wallet { device_id, .. } => device_id.clone(),
     };
 
     let refresh_token = if let Some(device_id) = device_id {

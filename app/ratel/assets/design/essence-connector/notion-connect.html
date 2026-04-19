@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Connect Notion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --bg-input:rgba(255,255,255,0.025);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-green:#22c55e;--accent-violet:#818cf8;
+      --notion:#ffffff;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+    }
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+    body{overflow-x:hidden}
+
+    .arena{position:relative;min-height:100vh;display:flex;flex-direction:column;isolation:isolate}
+    .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 55% at 50% 15%,rgba(252,179,0,0.06) 0%,transparent 55%),radial-gradient(ellipse 80% 60% at 50% 110%,rgba(110,237,216,0.04) 0%,transparent 55%);z-index:-1;pointer-events:none}
+
+    /* ─── Top bar ── */
+    .arena-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:18px 28px;background:rgba(6,6,14,0.80);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-subtle)}
+    .arena-topbar__left{display:flex;align-items:center;gap:14px}
+    .back-btn{width:38px;height:38px;border-radius:10px;background:var(--bg-glass);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0}
+    .back-btn:hover{border-color:rgba(252,179,0,0.25);background:var(--bg-glass-hover)}
+    .back-btn svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+    .back-btn:hover svg{color:var(--accent-gold)}
+    .topbar-title{display:flex;flex-direction:column;gap:2px}
+    .topbar-title__eyebrow{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim)}
+    .topbar-title__main{font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-primary)}
+    .topbar-btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--bg-glass);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all 0.25s ease;text-decoration:none}
+    .topbar-btn:hover{border-color:rgba(252,179,0,0.25);color:var(--accent-gold)}
+    .topbar-btn svg{width:13px;height:13px}
+
+    /* ─── Page ── */
+    .page{position:relative;z-index:1;flex:1;max-width:920px;margin:0 auto;width:100%;padding:48px 28px 60px;display:flex;flex-direction:column;gap:34px}
+
+    /* ─── Hero ── */
+    .hero{position:relative;overflow:hidden;border-radius:24px;border:1px solid var(--border-subtle);background:var(--bg-glass);backdrop-filter:blur(16px);padding:44px 40px;display:grid;grid-template-columns:1fr 200px;gap:36px;align-items:center}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 55% at 10% 15%,rgba(252,179,0,0.12) 0%,transparent 55%),radial-gradient(ellipse 55% 65% at 95% 95%,rgba(110,237,216,0.10) 0%,transparent 55%);pointer-events:none}
+    .hero > *{position:relative;z-index:1}
+
+    .hero__main{display:flex;flex-direction:column;gap:14px;min-width:0}
+    .hero__eyebrow{font-family:var(--font-display);font-size:10.5px;font-weight:600;letter-spacing:0.20em;text-transform:uppercase;color:var(--text-dim);display:inline-flex;align-items:center;gap:10px}
+    .hero__eyebrow svg{width:13px;height:13px;color:var(--accent-gold)}
+    .hero__title{font-family:var(--font-display);font-size:34px;font-weight:700;letter-spacing:0.01em;line-height:1.18;color:var(--text-primary)}
+    .hero__title-accent{background:linear-gradient(135deg,var(--accent-gold),var(--accent-teal));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .hero__sub{font-size:15.5px;color:var(--text-muted);line-height:1.6;max-width:520px}
+
+    /* Notion shield logo motif */
+    .hero__logo{width:180px;height:180px;border-radius:22px;background:linear-gradient(135deg,#f5f5f5,#ffffff);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 40px rgba(255,255,255,0.10),inset 0 1px 0 rgba(255,255,255,0.5);position:relative;align-self:center;justify-self:end}
+    .hero__logo::before{content:'';position:absolute;inset:-4px;border-radius:24px;background:linear-gradient(135deg,rgba(252,179,0,0.15),rgba(110,237,216,0.10));z-index:-1;filter:blur(24px)}
+    .hero__logo-mark{font-family:var(--font-display);font-size:90px;font-weight:800;color:#0a0a0a;letter-spacing:-0.05em;line-height:1}
+
+    /* ─── Value props ── */
+    .props{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .prop{padding:22px 20px;border-radius:16px;background:var(--bg-glass);backdrop-filter:blur(14px);border:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:10px;transition:all 0.25s ease}
+    .prop:hover{border-color:rgba(252,179,0,0.18);background:var(--bg-glass-hover)}
+    .prop__icon{width:40px;height:40px;border-radius:11px;background:rgba(252,179,0,0.08);border:1px solid rgba(252,179,0,0.22);display:flex;align-items:center;justify-content:center;color:var(--accent-gold)}
+    .prop__icon svg{width:18px;height:18px}
+    .prop--teal .prop__icon{background:rgba(110,237,216,0.06);border-color:rgba(110,237,216,0.20);color:var(--accent-teal)}
+    .prop--violet .prop__icon{background:rgba(129,140,248,0.08);border-color:rgba(129,140,248,0.22);color:var(--accent-violet)}
+    .prop__title{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-primary)}
+    .prop__body{font-size:13px;line-height:1.55;color:var(--text-muted)}
+
+    /* ─── Flow diagram ── */
+    .flow{position:relative;padding:30px;border-radius:18px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:22px}
+    .flow__title{font-family:var(--font-display);font-size:11.5px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-muted);display:flex;align-items:center;gap:10px}
+    .flow__title::before{content:'';width:4px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--accent-gold),transparent)}
+
+    .flow__chain{display:grid;grid-template-columns:1fr 28px 1fr 28px 1fr;gap:10px;align-items:stretch}
+    .flow-node{padding:18px 16px;border-radius:14px;border:1px solid var(--border-subtle);background:rgba(0,0,0,0.25);display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center}
+    .flow-node--notion{border-color:rgba(255,255,255,0.12);background:rgba(255,255,255,0.04)}
+    .flow-node--pipeline{border-color:rgba(252,179,0,0.22);background:rgba(252,179,0,0.04)}
+    .flow-node--essence{border-color:rgba(110,237,216,0.20);background:rgba(110,237,216,0.04)}
+    .flow-node__icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .flow-node--notion .flow-node__icon{background:#fff;color:#0a0a0a}
+    .flow-node--pipeline .flow-node__icon{background:rgba(252,179,0,0.10);color:var(--accent-gold);border:1px solid rgba(252,179,0,0.25)}
+    .flow-node--essence .flow-node__icon{background:rgba(110,237,216,0.08);color:var(--accent-teal);border:1px solid rgba(110,237,216,0.22)}
+    .flow-node__icon svg{width:18px;height:18px}
+    .flow-node__mark{font-family:var(--font-display);font-size:18px;font-weight:800;color:#0a0a0a}
+    .flow-node__label{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-primary)}
+    .flow-node__sub{font-size:11.5px;color:var(--text-dim);line-height:1.4}
+    .flow-arrow{display:flex;align-items:center;justify-content:center;color:var(--text-dim)}
+    .flow-arrow svg{width:18px;height:18px}
+
+    /* ─── CTA block ── */
+    .cta-block{padding:32px 30px;border-radius:20px;background:linear-gradient(135deg,rgba(252,179,0,0.08),rgba(110,237,216,0.04));border:1px solid rgba(252,179,0,0.18);display:flex;flex-direction:column;gap:18px;align-items:center;text-align:center;position:relative;overflow:hidden}
+    .cta-block::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 50% 60% at 50% 0%,rgba(252,179,0,0.08) 0%,transparent 55%);pointer-events:none}
+    .cta-block > *{position:relative;z-index:1}
+    .cta-block__title{font-family:var(--font-display);font-size:22px;font-weight:700;letter-spacing:0.02em;color:var(--text-primary)}
+    .cta-block__sub{font-size:14px;color:var(--text-muted);max-width:460px;line-height:1.55}
+
+    .connect-btn{display:inline-flex;align-items:center;gap:12px;padding:15px 28px;border-radius:14px;background:#fff;color:#0a0a0a;font-family:var(--font-display);font-size:13px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;border:none;cursor:pointer;transition:all 0.25s ease;box-shadow:0 4px 20px rgba(255,255,255,0.10)}
+    .connect-btn:hover{background:#f5f5f5;transform:translateY(-1px);box-shadow:0 6px 30px rgba(255,255,255,0.18)}
+    .connect-btn__logo{width:26px;height:26px;border-radius:6px;background:#0a0a0a;color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:15px;font-weight:800;flex-shrink:0}
+
+    .cta-block__note{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim)}
+
+    /* ─── Trust strip ── */
+    .trust{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .trust-item{padding:14px 16px;border-radius:12px;background:var(--bg-input);border:1px solid var(--border-subtle);display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-muted)}
+    .trust-item svg{width:14px;height:14px;color:var(--accent-green);flex-shrink:0}
+    .trust-item strong{color:var(--text-primary);font-weight:600}
+
+    /* ─── Step-by-step ── */
+    .steps{display:flex;flex-direction:column;gap:0;border-radius:16px;border:1px solid var(--border-subtle);overflow:hidden;background:var(--bg-glass);backdrop-filter:blur(14px)}
+    .step{display:grid;grid-template-columns:48px 1fr auto;gap:16px;padding:18px 22px;align-items:center;border-bottom:1px solid var(--border-subtle)}
+    .step:last-child{border-bottom:none}
+    .step__num{width:32px;height:32px;border-radius:50%;background:rgba(252,179,0,0.08);border:1px solid rgba(252,179,0,0.22);color:var(--accent-gold);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:13px;font-weight:800}
+    .step__body{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .step__title{font-family:var(--font-display);font-size:12.5px;font-weight:700;letter-spacing:0.04em;color:var(--text-primary)}
+    .step__sub{font-size:12.5px;color:var(--text-muted);line-height:1.5}
+    .step__timing{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-dim)}
+
+    @media (max-width:720px){
+      .hero{grid-template-columns:1fr;padding:28px 24px}
+      .hero__logo{width:120px;height:120px;justify-self:start}
+      .hero__logo-mark{font-size:60px}
+      .hero__title{font-size:24px}
+      .props{grid-template-columns:1fr}
+      .flow__chain{grid-template-columns:1fr;gap:10px}
+      .flow-arrow{transform:rotate(90deg)}
+      .trust{grid-template-columns:1fr 1fr}
+      .page{padding:28px 18px 60px}
+    }
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <div class="arena-topbar">
+      <div class="arena-topbar__left">
+        <button class="back-btn" aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="topbar-title">
+          <span class="topbar-title__eyebrow">Settings · Connectors</span>
+          <span class="topbar-title__main">Notion</span>
+        </div>
+      </div>
+      <a href="#" class="topbar-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Learn more
+      </a>
+    </div>
+
+    <main class="page">
+
+      <!-- HERO -->
+      <section class="hero">
+        <div class="hero__main">
+          <span class="hero__eyebrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Essence Connector · Notion
+          </span>
+          <h1 class="hero__title">
+            Turn your Notion into<br />
+            <span class="hero__title-accent">queryable Essence.</span>
+          </h1>
+          <p class="hero__sub">
+            Every page you've written becomes part of your personal knowledge asset — embedded, searchable, and sellable through your Essence House. You keep ownership. Subscribers query inference, never raw content.
+          </p>
+        </div>
+        <div class="hero__logo">
+          <span class="hero__logo-mark">N</span>
+        </div>
+      </section>
+
+      <!-- VALUE PROPS -->
+      <section class="props">
+        <article class="prop">
+          <span class="prop__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </span>
+          <div class="prop__title">Every page, every thought</div>
+          <p class="prop__body">Essays, meeting notes, reading logs, braindumps — the full depth of your Notion becomes your Essence.</p>
+        </article>
+        <article class="prop prop--teal">
+          <span class="prop__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </span>
+          <div class="prop__title">Real-time sync</div>
+          <p class="prop__body">Edit in Notion, update in Essence. Webhooks push changes within seconds. No copy-paste, no re-upload.</p>
+        </article>
+        <article class="prop prop--violet">
+          <span class="prop__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </span>
+          <div class="prop__title">You stay in control</div>
+          <p class="prop__body">You pick pages in Notion. KMS-encrypted tokens. Revoke anytime from either side. Delete = disappears from Essence.</p>
+        </article>
+      </section>
+
+      <!-- FLOW -->
+      <section class="flow">
+        <div class="flow__title">How it works</div>
+        <div class="flow__chain">
+          <div class="flow-node flow-node--notion">
+            <div class="flow-node__icon">
+              <span class="flow-node__mark">N</span>
+            </div>
+            <div class="flow-node__label">Notion</div>
+            <div class="flow-node__sub">Your selected pages + databases</div>
+          </div>
+          <div class="flow-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="flow-node flow-node--pipeline">
+            <div class="flow-node__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            </div>
+            <div class="flow-node__label">Pipeline</div>
+            <div class="flow-node__sub">Block extract · Chunk · Embed · Quality score</div>
+          </div>
+          <div class="flow-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="flow-node flow-node--essence">
+            <div class="flow-node__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="10"/></svg>
+            </div>
+            <div class="flow-node__label">Essence</div>
+            <div class="flow-node__sub">Queryable via your House's MCP endpoint</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEPS -->
+      <section class="steps">
+        <div class="step">
+          <span class="step__num">1</span>
+          <div class="step__body">
+            <div class="step__title">Authorize in Notion</div>
+            <div class="step__sub">You'll be redirected to Notion. Pick the pages and databases you want Ratel to access.</div>
+          </div>
+          <span class="step__timing">~30 sec</span>
+        </div>
+        <div class="step">
+          <span class="step__num">2</span>
+          <div class="step__body">
+            <div class="step__title">Initial sync runs in background</div>
+            <div class="step__sub">We fetch every shared page, extract blocks, and embed content into your Essence.</div>
+          </div>
+          <span class="step__timing">~5 min / 1k pages</span>
+        </div>
+        <div class="step">
+          <span class="step__num">3</span>
+          <div class="step__body">
+            <div class="step__title">Live updates flow in automatically</div>
+            <div class="step__sub">Every Notion edit hits a webhook and updates your Essence within seconds.</div>
+          </div>
+          <span class="step__timing">Forever</span>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <section class="cta-block">
+        <h2 class="cta-block__title">Ready to turn years of writing into a live asset?</h2>
+        <p class="cta-block__sub">Takes under a minute. You can disconnect any time — your Essence stays with you.</p>
+        <button class="connect-btn">
+          <span class="connect-btn__logo">N</span>
+          Connect Notion
+        </button>
+        <span class="cta-block__note">Read-only · Revocable · KMS-encrypted</span>
+      </section>
+
+      <!-- TRUST STRIP -->
+      <section class="trust">
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <strong>Read-only</strong> — we never write to Notion
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <strong>KMS-encrypted</strong> tokens at rest
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <strong>You pick pages</strong> in Notion's UI
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <strong>Revocable</strong> from Ratel or Notion
+        </div>
+      </section>
+
+    </main>
+  </div>
+</body>
+</html>

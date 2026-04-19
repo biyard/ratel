@@ -22,12 +22,7 @@ jobs:
         working-directory: contracts
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
+      - uses: actions/checkout@v6
 
       - name: Install dependencies
         run: |
@@ -45,11 +40,11 @@ jobs:
         working-directory: app/ratel
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Restore cache
         id: dx-check-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
@@ -82,12 +77,16 @@ jobs:
 
       - name: Install Dioxus-cli
         run: |
-          cargo binstall dioxus-cli@0.7.3 --force
+          cargo binstall dioxus-cli --force
 
       - name: Building test
         id: build
+        env:
+          RUSTFLAGS: "-D warnings"
         run: |
           dx check --web
+          dx check --ios
+          dx check --android
 
   ratel-app:
     runs-on: ubuntu-latest
@@ -96,11 +95,11 @@ jobs:
       image: ${{ steps.build.outputs.image }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Restore cache
         id: app-shell-build-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
@@ -133,7 +132,7 @@ jobs:
 
       - name: Install Dioxus-cli
         run: |
-          cargo binstall dioxus-cli@0.7.3 --force
+          cargo binstall dioxus-cli --force
 
       - name: Building test
         id: build
@@ -151,6 +150,7 @@ jobs:
           ECR: ratel/app-shell
         run: |
           npm i
+          rm -rf target/dx
 
           cd app/ratel
           make build-testing
@@ -161,7 +161,7 @@ jobs:
           echo "image=$ECR:$COMMIT" >> $GITHUB_OUTPUT
 
       - name: Upload Docker image artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: app-shell-image-${{ github.sha }}
           path: /tmp/app-shell-image.tar.gz
@@ -171,11 +171,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Restore cache
         id: app-shell-build-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           key: app-shell-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
@@ -208,7 +208,7 @@ jobs:
 
       - name: Install Dioxus-cli
         run: |
-          cargo binstall dioxus-cli@0.7.3 --force
+          cargo binstall dioxus-cli --force
 
       - name: Start infrastructure
         run: |
@@ -235,17 +235,20 @@ jobs:
 
   playwright-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Bumped from 30 to 45 to accommodate gotoFresh helper which purges
+    # Dioxus 0.7 arena via page.reload at popup-following navigations
+    # (adds ~1-2s per call). Local runtime is ~29min so 30 was too tight.
+    timeout-minutes: 45
     needs: [ratel-app]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
       - name: Download Docker image artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: app-shell-image-${{ github.sha }}
           path: /tmp
@@ -309,12 +312,34 @@ jobs:
 
       - name: Run Playwright Tests
         env:
-          CI: true
           PLAYWRIGHT_BASE_URL: http://localhost:8080
           PLAYWRIGHT_TIMEOUT: 60000
         working-directory: playwright
         run: |
           make test
+
+      - name: Setup SSH session with tmate
+        uses: mxschmitt/action-tmate@v3
+        if: failure()
+        timeout-minutes: 300
+        env:
+          DYNAMO_TABLE_PREFIX: ratel-local
+          ENV: local
+          RUSTFLAGS: "-D warnings"
+          RUST_LOG: info
+          DYNAMO_ENDPOINT: http://localstack:4566
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: ap-northeast-2
+          AWS_ACCOUNT_ID: test
+          COMMIT: pr-${{ github.sha }}
+          ECR: ratel/app-shell
+          PLAYWRIGHT_BASE_URL: http://localhost:8080
+          PLAYWRIGHT_TIMEOUT: 60000
+
+        with:
+          limit-access-to-actor: true
+
 
       - name: Move Playwright Tests
         if: always()
@@ -322,7 +347,7 @@ jobs:
           mv playwright/playwright-report ./
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-test-results

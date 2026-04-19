@@ -10,6 +10,29 @@ pub enum Environment {
     Production,
 }
 
+impl Environment {
+    pub fn mobile_endpoint(self) -> &'static str {
+        match self {
+            // Local builds for Android talk to the dev server running on the
+            // developer's workstation, so the device (emulator or physical
+            // phone on the same Wi-Fi) needs a reachable LAN address — not
+            // `localhost`, which would resolve to the device itself.
+            //
+            // `MOBILE_API_URL` is injected by `make android` (see Makefile —
+            // it auto-detects the host's LAN IP via `ip route get`). The
+            // `10.0.2.2` fallback is the Android emulator's alias for the
+            // host loopback, so raw `cargo build` still produces a working
+            // emulator binary when the Makefile isn't in play.
+            Environment::Local => {
+                option_env!("MOBILE_API_URL").unwrap_or("http://10.0.2.2:8080")
+            }
+            Environment::Dev => "https://dev.ratel.foundation",
+            Environment::Staging => "https://stg.ratel.foundation",
+            Environment::Production => "https://ratel.foundation",
+        }
+    }
+}
+
 impl Default for Environment {
     fn default() -> Self {
         let default_env = option_env!("ENV").unwrap_or("local");

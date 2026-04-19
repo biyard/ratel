@@ -20,8 +20,16 @@ pub enum Error {
     #[translate(en = "Please sign in first", ko = "먼저 로그인 해주세요.")]
     NoSessionFound,
 
+    // `#[serde(skip)]` here would make `serde_json::to_string(&Error::Aws(_))`
+    // fail with "the enum variant Error::Aws cannot be serialized", which then
+    // panics at `dioxus-fullstack-0.7.4/src/magic.rs:679` (unwrap on the
+    // serializer Result) and kills the spawn_pinned worker thread. Instead we
+    // emit the inner `to_string()` payload so serialization always succeeds.
+    // The variant only exists on server (cfg-gated), and clients deserialize
+    // the response body as `serde_json::Value` (see dioxus-fullstack
+    // request.rs:64), so the unknown "Aws" tag is harmless on the wire.
     #[cfg(feature = "server")]
-    #[serde(skip)]
+    #[serde(serialize_with = "serialize_aws_error", skip_deserializing)]
     #[error("AWS error: {0}")]
     #[translate(
         en = "Internal server error",
@@ -30,7 +38,7 @@ pub enum Error {
     Aws(#[from] crate::common::utils::aws::error::AwsError),
 
     #[cfg(feature = "server")]
-    #[serde(skip)]
+    #[serde(serialize_with = "serialize_session_error", skip_deserializing)]
     #[error("Session error: {0}")]
     #[translate(en = "Please sign in first", ko = "먼저 로그인 해주세요.")]
     Session(#[from] tower_sessions::session::Error),
@@ -616,3 +624,25 @@ impl dioxus::fullstack::AsStatusCode for Error {
 // is provided by the blanket impl in std, since Error implements std::error::Error + Send + Sync.
 // This preserves the full error source chain for Lambda debugging, unlike the previous
 // to_string()-based conversion.
+
+#[cfg(feature = "server")]
+fn serialize_aws_error<S>(
+    err: &crate::common::utils::aws::error::AwsError,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    serializer.serialize_str(&err.to_string())
+}
+
+#[cfg(feature = "server")]
+fn serialize_session_error<S>(
+    err: &tower_sessions::session::Error,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    serializer.serialize_str(&err.to_string())
+}

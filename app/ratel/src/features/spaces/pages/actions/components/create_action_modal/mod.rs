@@ -134,6 +134,7 @@ pub fn CreateActionModal(space_id: SpacePartition) -> Element {
                     {tr.back}
                 }
                 Button {
+                    "data-testid": "create-action-confirm",
                     class: "hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed !px-5 !py-3 !rounded-[0.625rem] !text-[0.875rem]/[1rem] !font-bold !bg-btn-primary-bg !text-btn-primary-text"
                         .to_string(),
                     style: ButtonStyle::Text,

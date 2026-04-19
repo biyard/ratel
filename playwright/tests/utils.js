@@ -114,6 +114,19 @@ export async function goto(page, url) {
           response.url().endsWith(".wasm") &&
           response.status() === 200,
       ),
+      page.waitForResponse(
+        (response) =>
+          response.url().includes("ratel-app-shell") &&
+          response.url().endsWith(".js") &&
+          response.status() === 200,
+      ),
+
+      page.waitForResponse(
+        (response) =>
+          response.url().includes("/app-shell") &&
+          response.url().endsWith(".js") &&
+          response.status() === 200,
+      ),
       new Promise((resolve) => setTimeout(resolve, 5000)),
     ]),
     page.goto(url),
@@ -159,6 +172,36 @@ export async function getEditor(page) {
 }
 
 /**
+ * Open the home page Teams HUD dropdown reliably.
+ *
+ * `home-btn-teams` is SSR-rendered, so any hydration probe based on
+ * `data-dioxus-id` (the only signal we have) can resolve before WASM has
+ * attached the `teams_open.toggle()` handler — the resulting click is
+ * silently dropped and the dropdown never opens. The only ground truth is
+ * `.hud-teams[aria-expanded="true"]`, so we retry click-and-verify until
+ * the toggle actually sticks. The pre-click `aria-expanded` check makes the
+ * retry idempotent: if a previous click already opened the dropdown we
+ * skip the click instead of toggling it back closed.
+ */
+export async function openHomeTeamsDropdown(page) {
+  const button = page.getByTestId("home-btn-teams");
+  await expect(button).toBeVisible({ timeout: 15000 });
+
+  await expect(async () => {
+    const expanded = await page
+      .locator(".hud-teams")
+      .first()
+      .getAttribute("aria-expanded");
+    if (expanded !== "true") {
+      await button.click();
+    }
+    await expect(page.getByTestId("home-teams-dd")).toBeVisible({
+      timeout: 1500,
+    });
+  }).toPass({ timeout: 15000, intervals: [300, 600, 1200, 2000] });
+}
+
+/**
  * Create a team by driving the home → Teams HUD dropdown → "Create Team"
  * footer → ArenaTeamCreationPopup UI flow. After submit, Dioxus navigates
  * to `/{teamUsername}/home`, which the helper waits for.
@@ -172,23 +215,10 @@ export async function createTeamFromHome(
   await goto(page, "/");
 
   // Open the Teams dropdown (same trigger as openTeamFromHome).
-  await expect(page.getByTestId("home-btn-teams")).toBeVisible({
-    timeout: 15000,
-  });
-  // Wait until the button itself is hydrated — otherwise the click fires
-  // before Dioxus attaches the `teams_open.toggle()` handler and the event
-  // is silently dropped.
-  await waitForHydrated(page, "home-btn-teams");
-  await clickNoNav(page, { testId: "home-btn-teams" });
-  // Dropdown is always rendered but toggled via aria-expanded + CSS
-  // visibility, so bump the timeout past the CSS transition (0.18s) plus
-  // a safety margin for Dioxus re-render.
-  await expect(page.getByTestId("home-teams-dd")).toBeVisible({
-    timeout: 10000,
-  });
+  await click(page, { testId: "home-btn-teams" });
 
   // Click the "Create Team" footer — opens ArenaTeamCreationPopup.
-  await clickNoNav(page, { testId: "home-btn-create-team" });
+  await click(page, { testId: "home-btn-create-team" });
   await expect(page.getByTestId("arena-create-team-popup")).toBeVisible({
     timeout: 10000,
   });
@@ -225,19 +255,11 @@ export async function openTeamFromHome(page, teamUsername) {
   await expect(page.getByTestId("home-btn-teams")).toBeVisible({
     timeout: 15000,
   });
-  // Wait until the button itself is hydrated — clicks on SSR-rendered
-  // elements that haven't received their Dioxus event handlers yet are
-  // silently dropped.
-  await waitForHydrated(page, "home-btn-teams");
-
-  // Open the dropdown — non-navigation toggle, so clickNoNav.
-  await clickNoNav(page, { testId: "home-btn-teams" });
-  // Dropdown is always rendered but toggled via aria-expanded + CSS
-  // visibility, so bump the timeout past the CSS transition (0.18s) plus
-  // a safety margin for Dioxus re-render.
-  await expect(page.getByTestId("home-teams-dd")).toBeVisible({
-    timeout: 10000,
-  });
+  // SSR-rendered button: `data-dioxus-id` is in the initial markup so a
+  // hydration check on the attribute can pass before the click handler is
+  // actually attached. Drive the open via retry-and-verify on the dropdown
+  // state instead.
+  await openHomeTeamsDropdown(page);
 
   // CI PR runs start from a clean DB, so the freshly-created team is
   // guaranteed to be on the first page of the infinite-scroll dropdown.

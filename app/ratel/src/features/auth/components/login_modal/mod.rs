@@ -114,15 +114,24 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                     .clone()
                     .filter(|email| !email.trim().is_empty());
                 let access_token = user_info.access_token.clone();
+                // Send a stable per-install device id so the server can
+                // mint a refresh_token. Without it, the next app restart
+                // would 401 on every authenticated call.
+                let device_id =
+                    crate::features::auth::services::device_id::get_or_create().await;
                 let result = login_handler(LoginRequest::OAuth {
                     provider: OauthProvider::Google,
                     access_token: user_info.access_token,
+                    device_id,
                 })
                 .await;
                 loading.set(false);
 
                 match result {
                     Ok(user) => {
+                        if let Some(token) = user.refresh_token.as_ref() {
+                            crate::features::auth::services::restore_session::save_refresh_token(token);
+                        }
                         user_ctx.set(UserContext {
                             user: Some(user.user),
                             refresh_token: user.refresh_token,
@@ -224,10 +233,13 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
 
             wallet_step.set(WalletStep::Done);
 
+            let device_id =
+                crate::features::auth::services::device_id::get_or_create().await;
             let login_result = login_handler(LoginRequest::Wallet {
                 signature,
                 evm_address: connect_result.address.clone(),
                 message: nonce_resp.message,
+                device_id,
             })
             .await;
             loading.set(false);

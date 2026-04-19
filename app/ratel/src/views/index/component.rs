@@ -10,7 +10,7 @@ use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::social::pages::team_arena::ArenaTeamCreationPopup;
 use crate::features::spaces::pages::index::SettingsPanel;
 use crate::features::spaces::space_common::controllers::{
-    HotSpaceHeat, HotSpaceResponse, list_hot_spaces_handler, list_my_home_spaces_handler,
+    list_hot_spaces_handler, list_my_home_spaces_handler, HotSpaceHeat, HotSpaceResponse,
 };
 use crate::*;
 
@@ -59,21 +59,20 @@ pub fn Index() -> Element {
 
     let keywords = vec![
         "ratel".to_string(),
-        "knowledge platform".to_string(),
-        "ai knowledge base".to_string(),
-        "hot spaces".to_string(),
-        "participatory platform".to_string(),
-        "survey rewards".to_string(),
-        "poll rewards".to_string(),
-        "web3 knowledge economy".to_string(),
+        "human essence platform".to_string(),
+        "essence house".to_string(),
+        "personal ai agent".to_string(),
+        "mcp subscription".to_string(),
+        "passive income ai".to_string(),
+        "rag knowledge base".to_string(),
+        "notion to ai".to_string(),
+        "creator monetization".to_string(),
         "collective intelligence".to_string(),
     ];
 
     let brand_logo = "https://metadata.ratel.foundation/logos/logo-symbol.png".to_string();
 
-    let hot_spaces = use_loader(move || async move {
-        list_hot_spaces_handler(None).await
-    })?;
+    let hot_spaces = use_loader(move || async move { list_hot_spaces_handler(None).await })?;
     let my_spaces = use_loader(move || async move {
         if has_user {
             list_my_home_spaces_handler(None).await
@@ -106,7 +105,7 @@ pub fn Index() -> Element {
                 .open(rsx! {
                     LoginModal { on_success: on_login_success }
                 })
-                .with_title("Join the movement");
+                .with_title("Start building your Essence");
             return;
         }
         spawn(async move {
@@ -130,7 +129,7 @@ pub fn Index() -> Element {
                 .open(rsx! {
                     LoginModal { on_success: on_login_success }
                 })
-                .with_title("Join the movement");
+                .with_title("Start building your Essence");
             return;
         }
         nav.push(Route::UserDrafts {
@@ -145,7 +144,7 @@ pub fn Index() -> Element {
                 .open(rsx! {
                     LoginModal { on_success: on_login_success }
                 })
-                .with_title("Join the movement");
+                .with_title("Start building your Essence");
             return;
         }
         nav.push(Route::UserRewards {
@@ -159,7 +158,7 @@ pub fn Index() -> Element {
                 .open(rsx! {
                     LoginModal { on_success: on_login_success }
                 })
-                .with_title("Join the movement");
+                .with_title("Start building your Essence");
             return;
         }
         nav.push(Route::CredentialsHome {});
@@ -175,8 +174,8 @@ pub fn Index() -> Element {
 
     rsx! {
         SeoMeta {
-            title: "Ratel – Hot Spaces Arena",
-            description: "Enter the arena. Vote in polls, join discussions, complete quests, and earn rewards across the hottest decentralized communities on Ratel.",
+            title: "Ratel – Human Essence Platform",
+            description: "Turn your thoughts into your Essence. Post, discuss, vote — then plug your Essence House into ChatGPT or Claude via a single MCP endpoint, deploy agents, and earn passive income.",
             image: "https://metadata.ratel.foundation/logos/logo-symbol.png",
             url: "https://ratel.foundation",
             robots: Robots::IndexNofollow,
@@ -353,12 +352,12 @@ pub fn Index() -> Element {
                                     // onscroll + JS so pagination triggers reliably.
                                     onscroll: move |_| {
                                         let js = r#"
-                                                                                                            const el = document.getElementById('home-teams-dd-list');
-                                                                                                            if (!el) { dioxus.send(false); return; }
-                                                                                                            const nearBottom =
-                                                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
-                                                                                                            dioxus.send(nearBottom);
-                                                                                                        "#;
+                                                                                                                                            const el = document.getElementById('home-teams-dd-list');
+                                                                                                                                            if (!el) { dioxus.send(false); return; }
+                                                                                                                                            const nearBottom =
+                                                                                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+                                                                                                                                            dioxus.send(nearBottom);
+                                                                                                                                        "#;
                                         let mut ctrl = teams_query;
                                         spawn(async move {
                                             let mut eval = document::eval(js);
@@ -436,7 +435,7 @@ pub fn Index() -> Element {
                             onclick: move |_| {
                                 popup.open(rsx! {
                                     LoginModal { on_success: on_login_success }
-                                }).with_title("Join the movement");
+                                }).with_title("Start building your Essence");
                             },
                             svg {
                                 fill: "none",
@@ -746,7 +745,11 @@ fn heat_label(total_actions: i64) -> String {
 }
 
 fn balance_text(has_user: bool) -> String {
-    if has_user { "—".to_string() } else { "0".to_string() }
+    if has_user {
+        "—".to_string()
+    } else {
+        "0".to_string()
+    }
 }
 
 #[component]

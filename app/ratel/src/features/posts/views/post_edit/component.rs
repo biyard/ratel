@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use super::i18n::PostEditTranslate;
-use crate::common::components::TiptapEditor;
+use crate::common::components::editor::Editor as RichEditor;
 use crate::features::auth::hooks::use_user_context;
 use crate::features::posts::controllers::get_post::get_post_handler;
 use crate::features::posts::controllers::update_post::{update_post_handler, UpdatePostRequest};
@@ -12,7 +12,6 @@ use crate::features::posts::types::Visibility;
 use crate::features::posts::*;
 
 const TITLE_MAX_LENGTH: usize = 80;
-const CONTENT_MAX_CHARS: usize = 5000;
 const CONTENT_MIN_LENGTH: usize = 10;
 const DEFAULT_AVATAR: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
 
@@ -235,7 +234,8 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                         });
                     }
                     Err(e) => {
-                        dioxus::logger::tracing::error!("Create space failed: {:?}", e);
+                        crate::error!("create_space_handler failed: {e:?}");
+                        toast.error(e);
                         status.set(EditorStatus::Unsaved);
                     }
                 }
@@ -524,102 +524,15 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                         div { class: "title-divider" }
                     }
 
-                    div { class: "composer-toolbar",
-                        div { class: "composer-toolbar__group",
-                            ToolbarIcon { label: "Heading",
-                                path { d: "M6 4v16M18 4v16M6 12h12" }
-                            }
-                            ToolbarIcon { label: "Bold",
-                                path { d: "M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" }
-                                path { d: "M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" }
-                            }
-                            ToolbarIcon { label: "Italic",
-                                line {
-                                    x1: "19",
-                                    y1: "4",
-                                    x2: "10",
-                                    y2: "4",
-                                }
-                                line {
-                                    x1: "14",
-                                    y1: "20",
-                                    x2: "5",
-                                    y2: "20",
-                                }
-                                line {
-                                    x1: "15",
-                                    y1: "4",
-                                    x2: "9",
-                                    y2: "20",
-                                }
-                            }
-                        }
-                        div { class: "composer-toolbar__divider" }
-                        div { class: "composer-toolbar__group",
-                            ToolbarIcon { label: "Bullet list",
-                                line {
-                                    x1: "8",
-                                    y1: "6",
-                                    x2: "21",
-                                    y2: "6",
-                                }
-                                line {
-                                    x1: "8",
-                                    y1: "12",
-                                    x2: "21",
-                                    y2: "12",
-                                }
-                                line {
-                                    x1: "8",
-                                    y1: "18",
-                                    x2: "21",
-                                    y2: "18",
-                                }
-                                line {
-                                    x1: "3",
-                                    y1: "6",
-                                    x2: "3.01",
-                                    y2: "6",
-                                }
-                                line {
-                                    x1: "3",
-                                    y1: "12",
-                                    x2: "3.01",
-                                    y2: "12",
-                                }
-                                line {
-                                    x1: "3",
-                                    y1: "18",
-                                    x2: "3.01",
-                                    y2: "18",
-                                }
-                            }
-                            ToolbarIcon { label: "Quote",
-                                path { d: "M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z" }
-                                path { d: "M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z" }
-                            }
-                            ToolbarIcon { label: "Code",
-                                polyline { points: "16 18 22 12 16 6" }
-                                polyline { points: "8 6 2 12 8 18" }
-                            }
-                        }
-                        div { class: "composer-toolbar__spacer" }
-                        span { class: "composer-toolbar__count",
-                            "{content_text_chars()} / {CONTENT_MAX_CHARS}"
-                        }
-                    }
-
-                    div { class: "body-editor",
-                        TiptapEditor {
-                            class: "w-full",
-                            content: content(),
-                            editable: true,
-                            placeholder: tr.body_placeholder,
-                            on_content_change: move |html: String| {
-                                content.set(html.clone());
-                                mark_unsaved(&title(), &html, &categories(), last_saved, status, save_version);
-                            },
-                        }
+                    RichEditor {
+                        class: "w-full",
+                        content: content(),
+                        editable: true,
+                        placeholder: tr.body_placeholder.to_string(),
+                        on_content_change: move |html: String| {
+                            content.set(html.clone());
+                            mark_unsaved(&title(), &html, &categories(), last_saved, status, save_version);
+                        },
                     }
                 }
 
@@ -836,6 +749,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                             }
                             input {
                                 class: "tag-input__field",
+                                "data-testid": "tag-input-field",
                                 r#type: "text",
                                 placeholder: tr.tag_placeholder,
                                 value: "{tag_input}",
@@ -1096,23 +1010,6 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                         span { "{publish_label}" }
                     }
                 }
-            }
-        }
-    }
-}
-
-#[component]
-fn ToolbarIcon(label: &'static str, children: Element) -> Element {
-    rsx! {
-        button { class: "tool-btn", "aria-label": label,
-            svg {
-                view_box: "0 0 24 24",
-                fill: "none",
-                stroke: "currentColor",
-                stroke_width: "2",
-                stroke_linecap: "round",
-                stroke_linejoin: "round",
-                {children}
             }
         }
     }

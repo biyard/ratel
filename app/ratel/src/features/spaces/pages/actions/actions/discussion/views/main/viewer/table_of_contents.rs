@@ -9,7 +9,7 @@ pub fn DiscussionToc() -> Element {
     let ctx = use_discussion_toc_context();
     let entries = ctx.headings.read().clone();
 
-    #[cfg(not(feature = "server"))]
+    #[cfg(feature = "web")]
     {
         let entries_dep = entries.clone();
         use_effect(move || {
@@ -59,7 +59,7 @@ pub fn DiscussionToc() -> Element {
     }
 }
 
-#[cfg(not(feature = "server"))]
+#[cfg(feature = "web")]
 fn setup_observer(
     mut ctx: crate::features::spaces::pages::actions::actions::discussion::views::main::viewer::DiscussionTocContext,
 ) {
