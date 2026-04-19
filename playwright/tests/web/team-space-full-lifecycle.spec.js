@@ -716,6 +716,74 @@ test.describe.serial("Full space lifecycle with rewards", () => {
     }
   });
 
+  // ─── 13b. User2: Edit + delete own comment via context menu ──────────────
+
+  test("User2: Edit and delete own comment", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: user2StoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, spaceUrl);
+      await pauseAnimations(page);
+
+      const discCard = page.locator('[data-type="discuss"]').first();
+      await expect(discCard).toBeVisible({ timeout: 10000 });
+      await page.waitForTimeout(500);
+      await discCard.click();
+
+      await expect(page.getByTestId("discussion-arena-overlay")).toBeVisible({
+        timeout: 10000,
+      });
+
+      // Post a fresh comment that will be edited, then deleted.
+      const textarea = page.locator(".comment-input__textarea");
+      await expect(textarea).toBeVisible({ timeout: 10000 });
+      const originalText = "Draft comment from User2 — editing test.";
+      await textarea.fill(originalText);
+      await page.locator(".comment-input__submit").click();
+
+      const originalItem = page.locator(".comment-item", {
+        hasText: originalText,
+      });
+      await expect(originalItem).toBeVisible({ timeout: 10000 });
+
+      // Open the context menu on the just-posted comment and click Edit.
+      // The ⋮ trigger renders only for comments whose author matches the
+      // current user, so scoping via `hasText` uniquely targets the new one.
+      await originalItem.getByTestId("comment-menu-trigger").click();
+      await page.getByTestId("comment-menu-edit").click();
+
+      // Only one comment is editable at a time, so page-wide testids resolve
+      // to the single edit form without needing to re-scope the parent.
+      const editInput = page.getByTestId("comment-edit-input");
+      await expect(editInput).toBeVisible({ timeout: 5000 });
+      const editedText = "Edited via context-menu action.";
+      await editInput.fill(editedText);
+      await page.getByTestId("comment-edit-save").click();
+
+      // After save, comments_loader restarts and the new content renders.
+      const editedItem = page.locator(".comment-item", { hasText: editedText });
+      await expect(editedItem).toBeVisible({ timeout: 10000 });
+      await expect(
+        page.locator(".comment-item", { hasText: originalText })
+      ).toBeHidden({ timeout: 10000 });
+
+      // Delete the edited comment via the context menu.
+      await editedItem.getByTestId("comment-menu-trigger").click();
+      await page.getByTestId("comment-menu-delete").click();
+
+      await expect(
+        page.locator(".comment-item", { hasText: editedText })
+      ).toBeHidden({ timeout: 10000 });
+    } finally {
+      await context.close();
+    }
+  });
+
   // ─── 14. Creator: Finish space ─────────────────────────────────────────
 
   test("Creator: Finish the space", async ({ page }) => {

@@ -63,10 +63,15 @@ pub async fn update_comment(
     }
 
     let now = chrono::Utc::now().timestamp();
+    // Only touch `content` / `updated_at` / `images`. `updated_at_align` is the
+    // tiebreaker in GSI2 (`find_by_post_order_by_likes`) and GSI3
+    // (`find_replies_by_likes`); rewriting it on every edit causes the comment
+    // to jump in the list. Leaving it at its creation-time value keeps the
+    // ordering pinned to `created_at`, which matches user expectations when
+    // they edit their own comment.
     let mut updater = SpacePostComment::updater(&space_post_pk, &comment_sk_entity)
         .with_content(req.content)
-        .with_updated_at(now)
-        .with_updated_at_align(format!("{:020}", now));
+        .with_updated_at(now);
 
     if let Some(images) = req.images {
         updater = updater.with_images(images);
