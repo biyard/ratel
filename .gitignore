@@ -69,3 +69,4 @@ user.json
 /playwright/admin.json
 /.claude/worktrees/
 google-services.json
+/app/ratel/env.sh
