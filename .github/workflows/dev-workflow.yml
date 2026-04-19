@@ -218,8 +218,8 @@ jobs:
           BUCKET: ${{ secrets.DEV_RATEL_BUCKET }}
           CDN: ${{ secrets.DEV_RATEL_CDN }}
         run: |
-          aws s3 sync target/dx/app-shell/release/web/public "$BUCKET"
-          aws cloudfront create-invalidation --distribution-id "$CDN" --paths "/*"
+          aws s3 sync target/dx/app-shell/release/web/public $BUCKET
+          aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
           tar czvf app-shell-lambda.tar.gz target/dx/app-shell/release/web
 
       - name: Prepare lambda bootstrap
