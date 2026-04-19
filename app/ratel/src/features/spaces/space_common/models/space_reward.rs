@@ -144,11 +144,20 @@ impl SpaceReward {
             Ok(user_reward) => Ok(Some(user_reward)),
             // Repeat claims inside the same period are expected on subsequent
             // activities — swallow them so the event handler stays idempotent.
-            Err(e) if matches!(
-                e,
-                crate::common::Error::SpaceReward(SpaceRewardError::AlreadyClaimedInPeriod)
-            ) =>
+            Err(e)
+                if matches!(
+                    e,
+                    crate::common::Error::SpaceReward(SpaceRewardError::AlreadyClaimedInPeriod)
+                ) =>
             {
+                crate::warn!(
+                    space_pk = %space_pk,
+                    action_id = %action_id,
+                    behavior = ?behavior,
+                    target_pk = %target_pk,
+                    error = %e,
+                    "reward already claimed in this period — skipping duplicate claim"
+                );
                 Ok(None)
             }
             Err(e) => Err(e),
