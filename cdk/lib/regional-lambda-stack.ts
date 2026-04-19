@@ -14,7 +14,6 @@ import {
   HttpServiceDiscoveryIntegration,
 } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
-import { Repository } from "aws-cdk-lib/aws-ecr";
 
 import {
   Duration,
@@ -72,12 +71,6 @@ export class RegionalLambdaStack extends Stack {
       description: "Ratel API Gateway",
     });
 
-    const appShellRepository = Repository.fromRepositoryName(
-      this,
-      "AppShellRepository",
-      "ratel/app-shell-lambda",
-    );
-
     const environment: { [key: string]: string } = {
       REGION: this.region,
       DISABLE_ANSI: "true",
@@ -85,10 +78,14 @@ export class RegionalLambdaStack extends Stack {
       GOOGLE_APPLICATION_CREDENTIALS: ".gcp/firebase-service-account.json",
     };
 
-    const apiLambda = new lambda.DockerImageFunction(this, "Function", {
-      code: lambda.DockerImageCode.fromEcr(appShellRepository, {
-        tagOrDigest: props.commit,
-      }),
+    // Bootstrap binary produced by `scripts/building-lambda-bootstrap.sh` and
+    // copied into `cdk/.build/app-shell/bootstrap` by the root Makefile rule
+    // `cdk/.build/%/bootstrap`. Path is resolved relative to the CDK cwd.
+    const apiLambda = new lambda.Function(this, "Function", {
+      runtime: lambda.Runtime.PROVIDED_AL2023,
+      architecture: lambda.Architecture.X86_64,
+      code: lambda.Code.fromAsset(".build/app-shell"),
+      handler: "bootstrap",
       environment,
       memorySize: 128,
       timeout: cdk.Duration.seconds(30),
