@@ -71,6 +71,10 @@ translate! {
         en: "You have no remaining attempts.",
         ko: "남은 시도 횟수가 없습니다.",
     },
+    no_permission: {
+        en: "You do not have permission to take this quiz.",
+        ko: "이 퀴즈에 참여할 권한이 없습니다.",
+    },
     no_questions: {
         en: "No questions yet.",
         ko: "아직 질문이 없습니다.",

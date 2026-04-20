@@ -239,28 +239,34 @@ pub fn QuizArenaPage(
             if !is_in_progress && now > quiz.ended_at {
                 div {
                     class: "quiz-banner quiz-banner--warning",
-                    style: "position:relative;z-index:10;margin:0 28px",
                     "{tr.quiz_ended}"
                 }
             }
             if !is_in_progress && now < quiz.started_at {
                 div {
                     class: "quiz-banner quiz-banner--info",
-                    style: "position:relative;z-index:10;margin:0 28px",
                     "{tr.quiz_not_started}"
+                }
+            }
+            // Viewer role, space is Processing/Finished, or prerequisite
+            // missing → show the permission banner (matches poll's arena
+            // behavior). `can_execute` already folds in space status +
+            // prerequisite + join_anytime.
+            if is_in_progress && (!can_respond || !can_execute) {
+                div {
+                    class: "quiz-banner quiz-banner--warning",
+                    "{tr.no_permission}"
                 }
             }
             if is_in_progress && has_passed {
                 div {
                     class: "quiz-banner quiz-banner--success",
-                    style: "position:relative;z-index:10;margin:0 28px",
                     "{tr.already_passed}"
                 }
             }
             if is_in_progress && !has_passed && quiz.attempt_count >= total_allowed && can_respond {
                 div {
                     class: "quiz-banner quiz-banner--warning",
-                    style: "position:relative;z-index:10;margin:0 28px",
                     "{tr.no_remaining_attempts}"
                 }
             }
@@ -386,10 +392,10 @@ pub fn QuizArenaPage(
                                     question,
                                     answer: answers.read().get(idx).cloned(),
                                     correct_answer: quiz
-                                        .correct_answers
-                                        .as_ref()
-                                        .and_then(|a| a.get(idx))
-                                        .cloned(),
+                                                                            .correct_answers
+                                                                            .as_ref()
+                                                                            .and_then(|a| a.get(idx))
+                                                                            .cloned(),
                                     disabled: !can_submit,
                                     on_change: move |next_answer: Answer| {
                                         let mut next = answers();
@@ -530,7 +536,7 @@ fn QuestionCardView(
             }
 
             div { class: if use_single_col { "option-grid option-grid--single" } else { "option-grid" },
-                for (opt_idx , option_text) in options.iter().enumerate() {
+                for (opt_idx, option_text) in options.iter().enumerate() {
                     {
                         let is_selected = check_selected(&answer, opt_idx as i32, is_multi);
                         let is_correct =

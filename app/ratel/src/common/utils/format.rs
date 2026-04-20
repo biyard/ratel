@@ -42,3 +42,13 @@ pub fn format_with_commas_str(value: &str) -> String {
         format!("{}{}", sign, int_formatted)
     }
 }
+
+pub fn format_number(n: i64) -> String {
+    if n >= 1_000_000 {
+        format!("{}M", n / 1_000_000)
+    } else if n >= 1_000 {
+        format!("{}K", n / 1_000)
+    } else {
+        n.to_string()
+    }
+}

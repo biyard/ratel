@@ -310,8 +310,10 @@
 
 /* ── Banner messages ─────────────────────────────── */
 .quiz-banner {
-  max-width: 640px; width: 100%; padding: 12px 20px; border-radius: 12px;
+  margin: 16px 28px 0;
+  padding: 12px 20px; border-radius: 12px;
   font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px;
+  position: relative; z-index: 10;
 }
 .quiz-banner--info { background: rgba(168,85,247,0.08); border: 1px solid rgba(168,85,247,0.18); color: #a855f7; }
 .quiz-banner--success { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.18); color: #22c55e; }
