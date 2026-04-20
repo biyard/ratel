@@ -18,6 +18,10 @@ impl UserContext {
         self.user.as_ref().map(|u| u.id())
     }
 
+    pub fn user_pk(&self) -> Option<String> {
+        self.user.as_ref().map(|u| u.pk.to_string())
+    }
+
     pub fn did(&self) -> String {
         self.user
             .as_ref()
