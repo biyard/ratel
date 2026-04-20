@@ -20,3 +20,5 @@ pub mod activity;
 
 pub mod did;
 pub mod me;
+
+pub mod notifications;
