@@ -417,9 +417,10 @@ fn CommentComposer(
         rsx! {
             div { class: "reply-input",
                 MentionAutocomplete { text, on_select: on_mention_select, members,
-                    input {
+                    textarea {
                         class: "reply-input__field",
                         placeholder: "{placeholder}",
+                        rows: "1",
                         value: "{text}",
                         oninput: move |e| {
                             text.set(e.value());
