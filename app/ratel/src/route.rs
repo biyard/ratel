@@ -20,6 +20,9 @@ use crate::features::spaces::pages::apps::apps::incentive_pool::SpaceIncentivePo
 use crate::features::spaces::pages::apps::apps::panels::SpacePanelsAppPage;
 use crate::features::spaces::pages::apps::Layout as SpaceAppsLayout;
 use crate::features::spaces::pages::apps::SpaceAppsPage;
+use crate::features::spaces::pages::index::action_pages::{
+    SpaceDiscussionCommentPage, SpaceDiscussionPage,
+};
 use crate::features::spaces::pages::index::SpaceIndexPage;
 
 // Space Actions
@@ -161,6 +164,17 @@ pub enum Route {
                 SpaceOverviewPage { space_id: SpacePartition },
                 #[route("/report")]
                 SpaceReportPage { space_id: SpacePartition },
+
+                // Deep link to a discussion (standalone page, no arena overlay).
+                #[route("/discussions/:discussion_id")]
+                SpaceDiscussionPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
+
+                // Deep link with a specific comment to scroll to + highlight.
+                // The comment id lives in the path (not query/fragment) because
+                // Dioxus Router strips both query strings and fragments during
+                // URL normalization on hydration.
+                #[route("/discussions/:discussion_id/c/:comment_id")]
+                SpaceDiscussionCommentPage { space_id: SpacePartition, discussion_id: SpacePostEntityType, comment_id: String },
 
                 #[nest("/actions")]
                     #[route("/")]
