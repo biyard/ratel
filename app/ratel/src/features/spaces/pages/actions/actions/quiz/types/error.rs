@@ -26,12 +26,12 @@ pub enum SpaceActionQuizError {
     )]
     AnswersMismatch,
 
-    #[error("Quiz cannot be edited after responses exist")]
+    #[error("Quiz cannot be edited after it has finished")]
     #[translate(
-        en = "Quiz cannot be edited after responses exist",
-        ko = "응답이 존재하는 퀴즈는 수정할 수 없습니다."
+        en = "Quiz cannot be edited after it has finished",
+        ko = "종료된 퀴즈는 수정할 수 없습니다."
     )]
-    CannotEditAfterResponses,
+    CannotEditAfterFinished,
 
     #[error("started_at is required")]
     #[translate(en = "Start time is required", ko = "시작 시간이 필요합니다.")]

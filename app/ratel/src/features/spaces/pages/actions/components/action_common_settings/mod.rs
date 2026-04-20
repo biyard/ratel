@@ -156,6 +156,7 @@ pub fn ActionCommonSettings(
                 max_credits: base_max_credits,
                 remaining_credits,
                 upgrade_route: upgrade_route.clone(),
+                started_at: setting.started_at,
                 on_change: move |credits: u64| async move {
                     let previous_credits = current_credits();
                     let req = UpdateSpaceActionRequest::Credits {
