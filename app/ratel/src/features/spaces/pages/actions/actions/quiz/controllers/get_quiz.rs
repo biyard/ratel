@@ -37,17 +37,44 @@ pub async fn get_quiz(
     response.ended_at = space_action.ended_at;
     response.space_action = space_action;
 
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    let is_ended = response.ended_at > 0 && now >= response.ended_at;
+
+    let mut include_correct_answers = false;
+
     if let Some(user) = user.0 {
-        let limit: i32 = response
+        let max_attempts = response
             .retry_count
             .saturating_add(1)
-            .min(MAX_TOTAL_ATTEMPTS) as i32;
-        let attempts = SpaceQuizAttempt::list_by_quiz_user(cli, &quiz_id, &user.pk, limit).await?;
+            .min(MAX_TOTAL_ATTEMPTS);
+        let attempts =
+            SpaceQuizAttempt::list_by_quiz_user(cli, &quiz_id, &user.pk, max_attempts as i32)
+                .await?;
         response.attempt_count = attempts.len() as i64;
-        if let Some(latest) = attempts.first() {
+        let has_passed = if let Some(latest) = attempts.first() {
+            let passed = latest.score >= response.pass_score;
             response.my_response = Some(latest.answers.clone());
             response.my_score = Some(latest.score);
-            response.passed = Some(latest.score >= response.pass_score);
+            response.passed = Some(passed);
+            passed
+        } else {
+            false
+        };
+
+        // Reveal correct answers only once the quiz is effectively over.
+        // This applies to Creators too — while they're viewing the live
+        // participant screen (not the editor), answers must stay hidden so
+        // nobody ever sees highlighted correct options during an attempt.
+        let retries_used_up = attempts.len() as i64 >= max_attempts;
+        include_correct_answers = has_passed || retries_used_up || is_ended;
+    }
+
+    if include_correct_answers {
+        let answer_sk = EntityType::SpaceQuizAnswer(quiz_id.to_string());
+        if let Some(answer) =
+            SpaceQuizAnswer::get(cli, &space_pk, Some(answer_sk)).await?
+        {
+            response.correct_answers = Some(answer.answers);
         }
     }
 

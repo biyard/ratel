@@ -9,7 +9,7 @@ use crate::features::social::pages::team_arena::{use_team_arena, TeamArenaTab};
 use crate::route::Route;
 
 #[component]
-pub fn Home(username: String) -> Element {
+pub fn Home(username: ReadSignal<String>) -> Element {
     let tr: HomeTranslate = use_translate();
     let nav = use_navigator();
 
@@ -18,11 +18,9 @@ pub fn Home(username: String) -> Element {
     use_effect(move || arena.active_tab.set(TeamArenaTab::Home));
 
     // Fetch team profile (for description, created_at, team pk).
-    let team_resource = use_server_future(use_reactive((&username,), |(name,)| async move {
-        find_team_handler(name).await
-    }))?;
-    let team_data = team_resource.read();
-    let team = team_data.as_ref().and_then(|r| r.as_ref().ok()).cloned();
+    let team = use_loader(move || async move {
+        Result::<_, Error>::Ok(find_team_handler(username()).await.ok())
+    })?;
 
     let description_html = team
         .as_ref()
@@ -34,28 +32,19 @@ pub fn Home(username: String) -> Element {
 
     // Posts feed with category filter + infinite pagination.
     let mut selected_category: Signal<Option<String>> = use_signal(|| None);
-    let mut cat_signal = use_signal(|| selected_category());
-    let mut name_signal = use_signal(|| username.clone());
 
     let mut feed = use_infinite_query(move |bookmark| {
-        let name = name_signal();
-        let category = cat_signal();
-        async move { list_team_posts_handler(name, category, bookmark).await }
+        let username = username();
+        let category = selected_category();
+        async move { list_team_posts_handler(username, category, bookmark).await }
     })?;
 
-    let mut feed_clone = feed.clone();
-    use_effect(use_reactive(
-        (&username, &selected_category),
-        move |(name, cat)| {
-            let cat_val = cat();
-            let changed = *name_signal.peek() != name || *cat_signal.peek() != cat_val;
-            if changed {
-                name_signal.set(name);
-                cat_signal.set(cat_val);
-                feed_clone.restart();
-            }
-        },
-    ));
+    use_effect(move || {
+        let _ = username();
+        let _ = selected_category();
+
+        feed.restart();
+    });
 
     let items = feed.items();
 
@@ -151,7 +140,7 @@ pub fn Home(username: String) -> Element {
                 } else {
                     div { class: "carousel-wrapper",
                         div { class: "carousel-track",
-                            for (idx , post) in items.iter().cloned().enumerate() {
+                            for (idx, post) in items.iter().cloned().enumerate() {
                                 PostCard { key: "{post.pk}", index: idx, post }
                             }
                         }

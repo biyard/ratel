@@ -281,6 +281,15 @@
   background: var(--dark, rgba(255,255,255,0.04)) var(--light, rgba(0,0,0,0.04));
   flex-shrink: 0;
 }
+.archive-item__score {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.02em;
+  color: #f97316;
+  padding: 3px 10px; border-radius: 6px;
+  background: rgba(249,115,22,0.1);
+  border: 1px solid rgba(249,115,22,0.2);
+  flex-shrink: 0;
+  font-family: 'Orbitron', sans-serif;
+}
 
 /* ── Credits fly animation (shared) ──────────────── */
 @keyframes credits-fly {
