@@ -138,8 +138,6 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
                 on_close: move |_| {
                     active_panel.set(ActivePanel::None);
                 },
-                space: space.clone(),
-                participants: participants.clone(),
                 remaining: remaining.clone(),
                 rewards: rewards.clone(),
                 is_admin,

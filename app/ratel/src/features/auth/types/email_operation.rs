@@ -33,6 +33,12 @@ pub enum EmailOperation {
         comment_preview: String,
         cta_url: String,
     },
+    ReplyOnCommentNotification {
+        replier_name: String,
+        comment_preview: String,
+        reply_preview: String,
+        cta_url: String,
+    },
 }
 
 impl Default for EmailOperation {
@@ -56,6 +62,7 @@ impl EmailOperation {
             EmailOperation::SpaceInviteVerification { .. } => "email_verification",
             EmailOperation::SpaceStatusNotification { .. } => "space_status_notification",
             EmailOperation::MentionNotification { .. } => "mention_notification",
+            EmailOperation::ReplyOnCommentNotification { .. } => "reply_on_comment_notification",
         }
     }
 }
