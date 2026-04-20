@@ -14,11 +14,15 @@ pub fn use_my_spaces() -> Result<UseMySpaces, Loading> {
     if let Some(ctx) = ctx {
         return Ok(ctx);
     }
-    let my_spaces = use_loader(move || async move {
-        if user_ctx().user.is_some() {
-            list_my_home_spaces_handler(None).await
-        } else {
-            Ok(Default::default())
+    let my_spaces = use_loader(move || {
+        let has_user = user_ctx().user.is_some();
+
+        async move {
+            if has_user {
+                list_my_home_spaces_handler(None).await
+            } else {
+                Ok(Default::default())
+            }
         }
     })?;
 
