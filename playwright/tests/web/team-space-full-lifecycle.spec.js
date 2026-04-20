@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../fixtures";
 import {
   addPollQuestion,
   click,
@@ -275,12 +275,17 @@ test.describe.serial("Full space lifecycle with rewards", () => {
       "Discussion: Roadmap Planning"
     );
 
-    // Wait for the contenteditable + the editor JS to bind so the bridge
-    // <input> exists before we drive autosave.
+    // Wait for the <tiptap-editor> web component to mount + initialize
+    // its internal editor so setContent() actually takes effect.
     await getEditor(page);
-    await page.waitForSelector(".ratel-editor[data-bound='true'] .re-bridge", {
-      timeout: 10000,
-    });
+    await page.waitForFunction(
+      () => {
+        const el = document.querySelector("tiptap-editor");
+        return !!el && typeof el.setContent === "function" && !!el._editor;
+      },
+      null,
+      { timeout: 15000 },
+    );
 
     // Build a payload that exercises every format the disc-body viewer
     // styles — h1/h2 headings, bold/italic/inline-code/links, nested ul +
@@ -326,17 +331,22 @@ test.describe.serial("Full space lifecycle with rewards", () => {
       "RFCs. Use <code>@team-name</code> to ping a specific group.</p>",
     ].join("");
 
-    // The editor's JS bridges the contenteditable to Dioxus via a hidden
-    // <input>. Writing the bridge value + dispatching `input` is the
-    // same path the live editor uses on every keystroke, which triggers
-    // the standard 3s html_contents autosave. We only touch the bridge,
-    // not the contenteditable itself, so the persisted HTML — what the
-    // disc-body viewer renders — is exactly what we set here.
+    // The <tiptap-editor> web component exposes setContent() which runs
+    // `editor.commands.setContent` internally. We call it and then also
+    // dispatch the `change` CustomEvent the editor normally emits on
+    // user input so Dioxus's onchange handler picks up the HTML and
+    // triggers the standard 3s html_contents autosave.
     await page.evaluate((html) => {
-      const bridge = document.querySelector(".ratel-editor .re-bridge");
-      if (!bridge) throw new Error(".re-bridge not found");
-      bridge.value = html;
-      bridge.dispatchEvent(new Event("input", { bubbles: true }));
+      const el = document.querySelector("tiptap-editor");
+      if (!el) throw new Error("tiptap-editor not found");
+      el.setContent(html);
+      el.dispatchEvent(
+        new CustomEvent("change", {
+          detail: html,
+          bubbles: true,
+          composed: true,
+        }),
+      );
     }, richHtml);
 
     // Blur to commit any focused field, then wait for the html autosave
