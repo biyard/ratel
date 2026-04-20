@@ -63,6 +63,7 @@ fn LeaderboardContent(space_id: ReadSignal<SpacePartition>) -> Element {
 
     let ranking_loader = use_ranking();
     let my_score_loader = use_my_score();
+    let user = use_space_user()?;
 
     let ranking = ranking_loader();
     let my_score = my_score_loader();
@@ -71,6 +72,9 @@ fn LeaderboardContent(space_id: ReadSignal<SpacePartition>) -> Element {
     let top3: Vec<_> = entries.iter().take(3).cloned().collect();
     let rest: Vec<_> = entries.iter().skip(3).cloned().collect();
 
+    let user = &user;
+    let user_pk = user.pk.to_string();
+
     rsx! {
         // My Rank Card
         if my_score.rank > 0 {
@@ -78,15 +82,7 @@ fn LeaderboardContent(space_id: ReadSignal<SpacePartition>) -> Element {
                 div { class: "leaderboard-my-rank__position", "#{my_score.rank}" }
                 div { class: "leaderboard-my-rank__info",
                     div { class: "leaderboard-my-rank__label", "{tr.your_rank}" }
-                    div { class: "leaderboard-my-rank__name",
-                        {
-                            entries
-                                .iter()
-                                .find(|e| e.rank == my_score.rank)
-                                .map(|e| e.name.clone())
-                                .unwrap_or_default()
-                        }
-                    }
+                    div { class: "leaderboard-my-rank__name", {user.username.clone()} }
                 }
                 div {
                     div { class: "leaderboard-my-rank__score", "{my_score.total_score}" }
@@ -141,7 +137,7 @@ fn LeaderboardContent(space_id: ReadSignal<SpacePartition>) -> Element {
                             LeaderboardEntry {
                                 key: "{entry.rank}",
                                 entry: entry.clone(),
-                                is_me: my_score.rank > 0 && entry.rank == my_score.rank,
+                                is_me: &user_pk == &entry.user_pk,
                                 you_label: tr.you.to_string(),
                             }
                         }
@@ -150,7 +146,7 @@ fn LeaderboardContent(space_id: ReadSignal<SpacePartition>) -> Element {
                             LeaderboardEntry {
                                 key: "{entry.rank}",
                                 entry: entry.clone(),
-                                is_me: my_score.rank > 0 && entry.rank == my_score.rank,
+                                is_me: &user_pk == &entry.user_pk,
                                 you_label: tr.you.to_string(),
                             }
                         }

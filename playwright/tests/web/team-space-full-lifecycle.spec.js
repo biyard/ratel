@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../fixtures";
 import {
   addPollQuestion,
   click,
@@ -280,12 +280,86 @@ test.describe.serial("Full space lifecycle with rewards", () => {
       "Discussion: Roadmap Planning"
     );
 
-    const editor = await getEditor(page);
-    await editor.fill(
-      "Let's discuss the upcoming roadmap priorities and share ideas for the next quarter."
+    // Wait for the <tiptap-editor> web component to mount + initialize
+    // its internal editor so setContent() actually takes effect.
+    await getEditor(page);
+    await page.waitForFunction(
+      () => {
+        const el = document.querySelector("tiptap-editor");
+        return !!el && typeof el.setContent === "function" && !!el._editor;
+      },
+      null,
+      { timeout: 15000 }
     );
-    // Arena editor: no Save button, blur commits autosave.
+
+    // Build a payload that exercises every format the disc-body viewer
+    // styles — h1/h2 headings, bold/italic/inline-code/links, nested ul +
+    // ol, blockquote, table, and <hr> — so the rendered space surfaces
+    // any discussion-body styling regression at a glance. Constructed as
+    // an array of fragments so no single literal looks like an HTML doc.
+    const richHtml = [
+      "<h1>1. Roadmap Planning Overview</h1>",
+      "<p>Welcome to the <strong>roadmap planning</strong> discussion. ",
+      "We use this thread to coordinate <em>quarterly priorities</em> and ",
+      "surface blockers across teams. See the ",
+      '<a href="https://ratel.foundation">Ratel Foundation site</a> for the ',
+      "full charter.</p>",
+      "<h2>2. Top Priorities (Q1 -&gt; Q2)</h2>",
+      "<ul>",
+      "<li><p>Mobile experience parity (iOS + Android)</p></li>",
+      "<li><p>Backend hardening</p>",
+      "<ul>",
+      "<li><p>API <code>rate-limit</code> policy</p></li>",
+      "<li><p>Migration path for legacy tables</p></li>",
+      "</ul>",
+      "</li>",
+      "<li><p>New onboarding flow with reward gating</p></li>",
+      "</ul>",
+      "<h2>3. Sequencing Plan</h2>",
+      "<ol>",
+      "<li><p>Lock scope by week 2</p></li>",
+      "<li><p>Engineering kickoff in week 3</p></li>",
+      "<li><p>Internal beta by week 6</p></li>",
+      "</ol>",
+      "<blockquote><p>Decisions made in the open hold up better than ",
+      "decisions made behind closed doors. -- community guideline</p>",
+      "</blockquote>",
+      "<h2>4. Track Comparison</h2>",
+      "<table><tbody>",
+      "<tr><td><p>Track</p></td><td><p>Owner</p></td><td><p>Status</p></td></tr>",
+      "<tr><td><p>Mobile</p></td><td><p>Team A</p></td><td><p>In progress</p></td></tr>",
+      "<tr><td><p>Backend</p></td><td><p>Team B</p></td><td><p>Planning</p></td></tr>",
+      "<tr><td><p>Onboarding</p></td><td><p>Team C</p></td><td><p>Discovery</p></td></tr>",
+      "</tbody></table>",
+      "<hr>",
+      "<p>Reach out in this thread with questions, edits, or links to ",
+      "RFCs. Use <code>@team-name</code> to ping a specific group.</p>",
+    ].join("");
+
+    // The <tiptap-editor> web component exposes setContent() which runs
+    // `editor.commands.setContent` internally. We call it and then also
+    // dispatch the `change` CustomEvent the editor normally emits on
+    // user input so Dioxus's onchange handler picks up the HTML and
+    // triggers the standard 3s html_contents autosave.
+    await page.evaluate((html) => {
+      const el = document.querySelector("tiptap-editor");
+      if (!el) throw new Error("tiptap-editor not found");
+      el.setContent(html);
+      el.dispatchEvent(
+        new CustomEvent("change", {
+          detail: html,
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }, richHtml);
+
+    // Blur to commit any focused field, then wait for the html autosave
+    // (3s debounce + server roundtrip) to flip the badge to "Saved".
     await commitAutosave(page);
+    await expect(page.locator(".autosave--saved").first()).toBeVisible({
+      timeout: 15000,
+    });
 
     await setReward(page, 2);
   });
@@ -783,6 +857,95 @@ test.describe.serial("Full space lifecycle with rewards", () => {
 
       await expect(
         page.locator(".comment-item", { hasText: editedText })
+      ).toBeHidden({ timeout: 10000 });
+    } finally {
+      await context.close();
+    }
+  });
+
+  // ─── 13c. User2: Edit + delete own reply via context menu ────────────────
+
+  test("User2: Edit and delete own reply", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: user2StoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, spaceUrl);
+      await pauseAnimations(page);
+
+      const discCard = page.locator('[data-type="discuss"]').first();
+      await expect(discCard).toBeVisible({ timeout: 10000 });
+      await page.waitForTimeout(500);
+      await discCard.click();
+
+      await expect(page.getByTestId("discussion-arena-overlay")).toBeVisible({
+        timeout: 10000,
+      });
+
+      // Reply to the comment User2 posted in step 13. We scope by the
+      // parent's unique text snippet because `.comment-item` is shared by
+      // both the parent and each reply below it.
+      const parentSnippet = "API improvements";
+      const parentComment = page.locator(".comment-item", {
+        hasText: parentSnippet,
+      });
+      await expect(parentComment).toBeVisible({ timeout: 10000 });
+
+      // Open the reply input on the parent comment.
+      await parentComment.locator(".comment-action--reply").click();
+
+      const replyInput = page.locator(".reply-input__field");
+      await expect(replyInput).toBeVisible({ timeout: 5000 });
+
+      const replyOriginal = "Reply from User2 — editing test.";
+      await replyInput.fill(replyOriginal);
+      await page.locator(".reply-input__send").click();
+
+      // New reply renders inside .comment-replies. Restricting the selector
+      // to that container avoids accidentally matching the parent comment.
+      const originalReply = page.locator(".comment-replies .comment-item", {
+        hasText: replyOriginal,
+      });
+      await expect(originalReply).toBeVisible({ timeout: 10000 });
+
+      // Open the context menu on the just-posted reply and click Edit.
+      // The ⋮ trigger renders only for replies whose author matches the
+      // current user, so scoping via the unique reply text is enough.
+      await originalReply.getByTestId("comment-menu-trigger").click();
+      await page.getByTestId("comment-menu-edit").click();
+
+      // Only one comment/reply is editable at a time, so page-wide testids
+      // resolve to the single edit form.
+      const editInput = page.getByTestId("comment-edit-input");
+      await expect(editInput).toBeVisible({ timeout: 5000 });
+      const replyEdited = "Edited reply via context-menu action.";
+      await editInput.fill(replyEdited);
+      await page.getByTestId("comment-edit-save").click();
+
+      // After save the parent patches its local replies signal in place;
+      // the edited text renders without needing a loader restart.
+      const editedReply = page.locator(".comment-replies .comment-item", {
+        hasText: replyEdited,
+      });
+      await expect(editedReply).toBeVisible({ timeout: 10000 });
+      await expect(
+        page.locator(".comment-replies .comment-item", {
+          hasText: replyOriginal,
+        })
+      ).toBeHidden({ timeout: 10000 });
+
+      // Delete the edited reply via the context menu.
+      await editedReply.getByTestId("comment-menu-trigger").click();
+      await page.getByTestId("comment-menu-delete").click();
+
+      await expect(
+        page.locator(".comment-replies .comment-item", {
+          hasText: replyEdited,
+        })
       ).toBeHidden({ timeout: 10000 });
     } finally {
       await context.close();
