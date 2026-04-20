@@ -51,6 +51,20 @@ pub async fn reply_comment(
 
     let comment_sk_entity: EntityType = comment_sk.into();
 
+    // Fetch parent comment + prior replies before mutating so we can notify
+    // the original author and everyone who has participated in the thread.
+    let space_post_pk_partition: Partition = space_post_pk.clone().into();
+    let parent_comment =
+        SpacePostComment::get(cli, &space_post_pk_partition, Some(comment_sk_entity.clone()))
+            .await?;
+    let prior_replies = {
+        let opt = SpacePostComment::opt_all().scan_index_forward(false).limit(100);
+        SpacePostComment::list_by_comment(cli, comment_sk_entity.clone(), opt)
+            .await
+            .map(|(items, _)| items)
+            .unwrap_or_default()
+    };
+
     let comment = SpacePostComment::reply(
         cli,
         space_id.clone(),
@@ -75,19 +89,43 @@ pub async fn reply_comment(
 
     // XP recording is now handled via EventBridge on SPACE_POST_COMMENT_REPLY# INSERT
 
+    let cta_url = format!(
+        "{}/spaces/{}/actions/discussion/{}",
+        crate::common::config::site_base_url(),
+        space_id,
+        discussion_sk
+    );
+
     // Send mention notifications
-    {
-        let cta_url = format!(
-            "{}/spaces/{}/actions/discussion/{}",
-            crate::common::config::site_base_url(),
-            space_id,
-            discussion_sk
-        );
-        crate::common::utils::mention::create_mention_notifications(
+    crate::common::utils::mention::create_mention_notifications(
+        cli,
+        &comment.content,
+        &member.pk,
+        &member.display_name,
+        &cta_url,
+    )
+    .await;
+
+    // Send reply-on-comment notifications to parent author + thread participants
+    if let Some(parent) = parent_comment {
+        let mut recipient_pks: Vec<Partition> = Vec::new();
+        recipient_pks.push(parent.author_pk.clone());
+        for reply in prior_replies {
+            recipient_pks.push(reply.author_pk);
+        }
+
+        let comment_preview =
+            crate::common::utils::reply_notification::build_preview(&parent.content);
+        let reply_preview =
+            crate::common::utils::reply_notification::build_preview(&comment.content);
+
+        crate::common::utils::reply_notification::create_reply_on_comment_notifications(
             cli,
-            &comment.content,
+            recipient_pks,
             &member.pk,
             &member.display_name,
+            &comment_preview,
+            &reply_preview,
             &cta_url,
         )
         .await;
