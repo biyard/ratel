@@ -8,12 +8,18 @@ pub fn RewardSetting(
     max_credits: u64,
     remaining_credits: ReadSignal<u64>,
     upgrade_route: String,
+    started_at: i64,
     #[props(default)] on_change: EventHandler<u64>,
 ) -> Element {
     let tr: RewardSettingTranslate = use_translate();
+    let mut toast = crate::common::use_toast();
     let mut enable_reward = use_signal(move || saved_credits() > 0);
     let mut credits = use_signal(move || saved_credits());
     let available_credits = remaining_credits().saturating_add(saved_credits());
+
+    let space = crate::features::spaces::space_common::hooks::use_space();
+    let reward_locked =
+        crate::features::spaces::pages::actions::is_action_locked(space().status, started_at);
 
     let boost_multiplier = credits();
     let total_reward = credits() * 10_000;
@@ -66,6 +72,10 @@ pub fn RewardSetting(
                                     Switch {
                                         active: enable_reward(),
                                         on_toggle: move |_| {
+                                            if reward_locked {
+                                                toast.info(tr.locked_started.to_string());
+                                                return;
+                                            }
                                             let new_enabled = !enable_reward();
                                             enable_reward.set(new_enabled);
                                             let new_credits = if new_enabled { 1 } else { 0 };
@@ -129,8 +139,13 @@ pub fn RewardSetting(
                                         r#type: InputType::Number,
                                         "data-testid": "reward-credit-input",
                                         class: "font-semibold text-right !w-[150px] font-raleway text-[15px]/[18px] tracking-[-0.16px]",
+                                        readonly: reward_locked,
+                                        disabled: reward_locked,
                                         value: "{credits()}",
                                         oninput: move |evt: FormEvent| {
+                                            if reward_locked {
+                                                return;
+                                            }
                                             let val = evt.value().parse::<u64>().unwrap_or(0);
                                             let limit = if max_credits > 0 {
                                                 val.min(max_credits).min(available_credits)
@@ -293,6 +308,10 @@ translate! {
     point_boost_line_three: {
         en: "Credits are consumed when boost is applied to an action.",
         ko: "액션에 부스트를 적용하면 크레딧이 소모됩니다.",
+    },
+    locked_started: {
+        en: "Rewards cannot be changed after the action has started.",
+        ko: "액션이 시작된 이후에는 보상을 변경할 수 없습니다.",
     },
 }
 

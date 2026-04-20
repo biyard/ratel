@@ -26,8 +26,8 @@ pub fn PostDetail(post_id: FeedPartition) -> Element {
         .map(|p| {
             let re = regex::Regex::new(r"<[^>]*>").unwrap();
             let text = re.replace_all(&p.html_contents, "").to_string();
-            if text.len() > 200 {
-                text[..200].to_string()
+            if text.chars().count() > 200 {
+                text.chars().take(200).collect::<String>()
             } else {
                 text
             }
