@@ -275,12 +275,76 @@ test.describe.serial("Full space lifecycle with rewards", () => {
       "Discussion: Roadmap Planning"
     );
 
-    const editor = await getEditor(page);
-    await editor.fill(
-      "Let's discuss the upcoming roadmap priorities and share ideas for the next quarter."
-    );
-    // Arena editor: no Save button, blur commits autosave.
+    // Wait for the contenteditable + the editor JS to bind so the bridge
+    // <input> exists before we drive autosave.
+    await getEditor(page);
+    await page.waitForSelector(".ratel-editor[data-bound='true'] .re-bridge", {
+      timeout: 10000,
+    });
+
+    // Build a payload that exercises every format the disc-body viewer
+    // styles — h1/h2 headings, bold/italic/inline-code/links, nested ul +
+    // ol, blockquote, table, and <hr> — so the rendered space surfaces
+    // any discussion-body styling regression at a glance. Constructed as
+    // an array of fragments so no single literal looks like an HTML doc.
+    const richHtml = [
+      "<h1>1. Roadmap Planning Overview</h1>",
+      "<p>Welcome to the <strong>roadmap planning</strong> discussion. ",
+      "We use this thread to coordinate <em>quarterly priorities</em> and ",
+      "surface blockers across teams. See the ",
+      '<a href="https://ratel.foundation">Ratel Foundation site</a> for the ',
+      "full charter.</p>",
+      "<h2>2. Top Priorities (Q1 -&gt; Q2)</h2>",
+      "<ul>",
+      "<li><p>Mobile experience parity (iOS + Android)</p></li>",
+      "<li><p>Backend hardening</p>",
+      "<ul>",
+      "<li><p>API <code>rate-limit</code> policy</p></li>",
+      "<li><p>Migration path for legacy tables</p></li>",
+      "</ul>",
+      "</li>",
+      "<li><p>New onboarding flow with reward gating</p></li>",
+      "</ul>",
+      "<h2>3. Sequencing Plan</h2>",
+      "<ol>",
+      "<li><p>Lock scope by week 2</p></li>",
+      "<li><p>Engineering kickoff in week 3</p></li>",
+      "<li><p>Internal beta by week 6</p></li>",
+      "</ol>",
+      "<blockquote><p>Decisions made in the open hold up better than ",
+      "decisions made behind closed doors. -- community guideline</p>",
+      "</blockquote>",
+      "<h2>4. Track Comparison</h2>",
+      "<table><tbody>",
+      "<tr><td><p>Track</p></td><td><p>Owner</p></td><td><p>Status</p></td></tr>",
+      "<tr><td><p>Mobile</p></td><td><p>Team A</p></td><td><p>In progress</p></td></tr>",
+      "<tr><td><p>Backend</p></td><td><p>Team B</p></td><td><p>Planning</p></td></tr>",
+      "<tr><td><p>Onboarding</p></td><td><p>Team C</p></td><td><p>Discovery</p></td></tr>",
+      "</tbody></table>",
+      "<hr>",
+      "<p>Reach out in this thread with questions, edits, or links to ",
+      "RFCs. Use <code>@team-name</code> to ping a specific group.</p>",
+    ].join("");
+
+    // The editor's JS bridges the contenteditable to Dioxus via a hidden
+    // <input>. Writing the bridge value + dispatching `input` is the
+    // same path the live editor uses on every keystroke, which triggers
+    // the standard 3s html_contents autosave. We only touch the bridge,
+    // not the contenteditable itself, so the persisted HTML — what the
+    // disc-body viewer renders — is exactly what we set here.
+    await page.evaluate((html) => {
+      const bridge = document.querySelector(".ratel-editor .re-bridge");
+      if (!bridge) throw new Error(".re-bridge not found");
+      bridge.value = html;
+      bridge.dispatchEvent(new Event("input", { bubbles: true }));
+    }, richHtml);
+
+    // Blur to commit any focused field, then wait for the html autosave
+    // (3s debounce + server roundtrip) to flip the badge to "Saved".
     await commitAutosave(page);
+    await expect(
+      page.locator(".autosave--saved").first()
+    ).toBeVisible({ timeout: 15000 });
 
     await setReward(page, 2);
   });

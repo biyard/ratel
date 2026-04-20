@@ -729,32 +729,13 @@ fn CommentItem(
             if show_replies() {
                 div { class: "comment-replies",
                     for reply in replies().iter() {
-                        div { class: "comment-item", key: "{reply.sk}",
-                            img {
-                                class: "comment-item__avatar",
-                                src: "{reply.author_profile_url}",
-                                alt: "{reply.author_display_name}",
-                            }
-                            div { class: "comment-item__body",
-                                div { class: "comment-item__top",
-                                    span { class: "comment-item__name", "{reply.author_display_name}" }
-                                    span { class: "comment-item__time",
-                                        "{format_time_ago(reply.created_at)}"
-                                    }
-                                }
-                                div { class: "comment-item__text",
-                                    for segment in parse_mention_segments(&reply.content) {
-                                        match segment {
-                                            ContentSegment::Text(t) => rsx! {
-                                                span { "{t}" }
-                                            },
-                                            ContentSegment::Mention { display_name, .. } => rsx! {
-                                                span { class: "font-medium text-primary", "@{display_name}" }
-                                            },
-                                        }
-                                    }
-                                }
-                            }
+                        ReplyItem {
+                            key: "{reply.sk}",
+                            reply: reply.clone(),
+                            space_id,
+                            discussion_id,
+                            replies,
+                            comments_loader,
                         }
                     }
                 }
@@ -833,5 +814,193 @@ fn format_time_ago(timestamp: i64) -> String {
     } else {
         let days = diff_secs / 86400;
         format!("{}d ago", days)
+    }
+}
+
+// ── Reply Item ──────────────────────────────────────
+// Same edit/delete affordances as CommentItem, but scoped to a single reply.
+// Replies live in a parent-owned `replies: Signal<Vec<...>>` (not the global
+// comments_loader), so mutations patch that signal locally and also kick
+// `comments_loader.restart()` to refresh the parent's `reply_count`.
+#[component]
+fn ReplyItem(
+    reply: DiscussionCommentResponse,
+    space_id: ReadSignal<SpacePartition>,
+    discussion_id: ReadSignal<SpacePostEntityType>,
+    replies: Signal<Vec<DiscussionCommentResponse>>,
+    comments_loader: Loader<ListResponse<DiscussionCommentResponse>>,
+) -> Element {
+    let tr: DiscussionArenaTranslate = use_translate();
+    let mut toast = use_toast();
+    let mut comments_loader = comments_loader;
+    let mut replies = replies;
+
+    let user_ctx = crate::features::auth::hooks::use_user_context();
+    let is_own = user_ctx
+        .read()
+        .user
+        .as_ref()
+        .map(|u| u.pk == reply.author_pk)
+        .unwrap_or(false);
+
+    let reply_sk = use_signal(|| reply.sk.clone());
+    let mut menu_open = use_signal(|| false);
+    let mut editing = use_signal(|| false);
+    let mut edit_text = use_signal(|| reply.content.clone());
+    let original_content = reply.content.clone();
+    let time_ago = format_time_ago(reply.created_at);
+
+    let start_edit_content = original_content.clone();
+    let on_edit_start = move |_| {
+        edit_text.set(start_edit_content.clone());
+        editing.set(true);
+        menu_open.set(false);
+    };
+
+    let on_edit_cancel = move |_| {
+        editing.set(false);
+    };
+
+    let on_edit_save = move |_| async move {
+        let new_text = edit_text().trim().to_string();
+        if new_text.is_empty() {
+            return;
+        }
+        let target_sk: SpacePostCommentTargetEntityType = reply_sk().into();
+        let req = UpdateCommentRequest {
+            content: new_text.clone(),
+            images: None,
+        };
+        match update_comment(space_id(), discussion_id(), target_sk, req).await {
+            Ok(_) => {
+                // Patch the local replies list optimistically — replies are
+                // held in the parent's signal (not comments_loader), so
+                // there's no "base page" to fall back to here.
+                let sk = reply_sk();
+                replies.with_mut(|list| {
+                    for r in list.iter_mut() {
+                        if r.sk == sk {
+                            r.content = new_text.clone();
+                        }
+                    }
+                });
+                editing.set(false);
+                toast.info(tr.edit_success);
+            }
+            Err(err) => {
+                tracing::error!("Failed to update reply: {:?}", err);
+                toast.error(err);
+            }
+        }
+    };
+
+    let on_delete = move |_| async move {
+        let target_sk: SpacePostCommentTargetEntityType = reply_sk().into();
+        menu_open.set(false);
+        match delete_comment(space_id(), discussion_id(), target_sk).await {
+            Ok(_) => {
+                let sk = reply_sk();
+                replies.with_mut(|list| list.retain(|r| r.sk != sk));
+                // Server decrements the parent's `replies` counter — refresh
+                // the base list so the "N replies" toggle shows the new count.
+                comments_loader.restart();
+                toast.info(tr.delete_success);
+            }
+            Err(err) => {
+                tracing::error!("Failed to delete reply: {:?}", err);
+                toast.error(err);
+            }
+        }
+    };
+
+    rsx! {
+        div { class: "comment-item",
+            img {
+                class: "comment-item__avatar",
+                src: "{reply.author_profile_url}",
+                alt: "{reply.author_display_name}",
+            }
+            div { class: "comment-item__body",
+                div { class: "comment-item__top",
+                    span { class: "comment-item__name", "{reply.author_display_name}" }
+                    span { class: "comment-item__time", "{time_ago}" }
+                    if is_own && !editing() {
+                        div { class: "comment-menu",
+                            button {
+                                class: "comment-menu__trigger",
+                                "data-testid": "comment-menu-trigger",
+                                aria_label: "{tr.more_options}",
+                                onclick: move |_| menu_open.set(!menu_open()),
+                                svg {
+                                    view_box: "0 0 24 24",
+                                    fill: "currentColor",
+                                    xmlns: "http://www.w3.org/2000/svg",
+                                    circle { cx: "5", cy: "12", r: "1.6" }
+                                    circle { cx: "12", cy: "12", r: "1.6" }
+                                    circle { cx: "19", cy: "12", r: "1.6" }
+                                }
+                            }
+                            if menu_open() {
+                                div { class: "comment-menu__dropdown",
+                                    button {
+                                        class: "comment-menu__item",
+                                        "data-testid": "comment-menu-edit",
+                                        onclick: on_edit_start,
+                                        "{tr.edit_btn}"
+                                    }
+                                    button {
+                                        class: "comment-menu__item comment-menu__item--danger",
+                                        "data-testid": "comment-menu-delete",
+                                        onclick: on_delete,
+                                        "{tr.delete_btn}"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if editing() {
+                    div { class: "comment-item__edit",
+                        textarea {
+                            class: "comment-item__edit-input",
+                            "data-testid": "comment-edit-input",
+                            rows: "2",
+                            value: "{edit_text}",
+                            oninput: move |e| {
+                                edit_text.set(e.value());
+                            },
+                        }
+                        div { class: "comment-item__edit-actions",
+                            button {
+                                class: "comment-item__edit-cancel",
+                                "data-testid": "comment-edit-cancel",
+                                onclick: on_edit_cancel,
+                                "{tr.cancel_btn}"
+                            }
+                            button {
+                                class: "comment-item__edit-save",
+                                "data-testid": "comment-edit-save",
+                                disabled: edit_text().trim().is_empty(),
+                                onclick: on_edit_save,
+                                "{tr.save_btn}"
+                            }
+                        }
+                    }
+                } else {
+                    div { class: "comment-item__text",
+                        for segment in parse_mention_segments(&reply.content) {
+                            match segment {
+                                ContentSegment::Text(t) => rsx! {
+                                    span { "{t}" }
+                                },
+                                ContentSegment::Mention { display_name, .. } => rsx! {
+                                    span { class: "font-medium text-primary", "@{display_name}" }
+                                },
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
