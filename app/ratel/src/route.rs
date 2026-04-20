@@ -23,9 +23,7 @@ use crate::features::spaces::pages::apps::SpaceAppsPage;
 use crate::features::spaces::pages::index::SpaceIndexPage;
 
 // Space Actions
-use crate::features::spaces::pages::actions::actions::discussion::{
-    DiscussionActionEditorPage, DiscussionActionPage,
-};
+use crate::features::spaces::pages::actions::actions::discussion::DiscussionActionEditorPage;
 use crate::features::spaces::pages::actions::actions::follow::FollowActionPage;
 use crate::features::spaces::pages::actions::actions::poll::PollActionPage;
 use crate::features::spaces::pages::actions::actions::quiz::QuizActionPage;
@@ -167,9 +165,6 @@ pub enum Route {
                 #[nest("/actions")]
                     #[route("/")]
                     SpaceActionsPage { space_id: SpacePartition },
-
-                    #[route("/discussions/:discussion_id")]
-                    DiscussionActionPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
 
                     #[route("/discussions/:discussion_id/edit")]
                     DiscussionActionEditorPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
