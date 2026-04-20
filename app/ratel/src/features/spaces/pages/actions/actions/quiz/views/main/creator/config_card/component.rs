@@ -139,6 +139,7 @@ pub fn ConfigCard() -> Element {
                         space_id,
                         action_id: action_id_signal,
                         saved_credits,
+                        started_at: started_at_signal(),
                     }
                     // Prerequisite — wired via update_space_action::Prerequisite
                     div { class: "tile", "data-testid": "tile-prereq",

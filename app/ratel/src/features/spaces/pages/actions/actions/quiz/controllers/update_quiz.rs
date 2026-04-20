@@ -23,14 +23,17 @@ pub struct UpdateQuizRequest {
     pub files: Option<Vec<File>>,
 }
 
-#[mcp_tool(name = "update_quiz", description = "Update a quiz (title, description, time, questions, answers, pass_score, retry_count, files). Requires creator role.")]
+#[mcp_tool(
+    name = "update_quiz",
+    description = "Update a quiz (title, description, time, questions, answers, pass_score, retry_count, files). Requires creator role."
+)]
 #[post("/api/spaces/{space_pk}/quizzes/{quiz_id}", role: SpaceUserRole)]
 pub async fn update_quiz(
-    #[mcp(description = "Space partition key")]
-    space_pk: SpacePartition,
-    #[mcp(description = "Quiz sort key (e.g. 'SpaceQuiz#<uuid>')")]
-    quiz_id: SpaceQuizEntityType,
-    #[mcp(description = "Quiz update data as JSON. Fields: title, description, started_at, ended_at, retry_count, pass_score, questions, answers, files (all optional)")]
+    #[mcp(description = "Space partition key")] space_pk: SpacePartition,
+    #[mcp(description = "Quiz sort key (e.g. 'SpaceQuiz#<uuid>')")] quiz_id: SpaceQuizEntityType,
+    #[mcp(
+        description = "Quiz update data as JSON. Fields: title, description, started_at, ended_at, retry_count, pass_score, questions, answers, files (all optional)"
+    )]
     req: UpdateQuizRequest,
 ) -> Result<String> {
     SpaceQuiz::can_edit(&role)?;
@@ -49,10 +52,6 @@ pub async fn update_quiz(
         || req.pass_score.is_some()
         || req.questions.is_some()
         || req.answers.is_some();
-
-    if existing.user_response_count > 0 && updates_locked_fields {
-        return Err(SpaceActionQuizError::CannotEditAfterResponses.into());
-    }
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
     let mut updater = SpaceQuiz::updater(&space_pk, &quiz_sk).with_updated_at(now);
@@ -75,12 +74,12 @@ pub async fn update_quiz(
     }
 
     if req.started_at.is_some() || req.ended_at.is_some() {
-        let started_at = req
-            .started_at
-            .ok_or(Error::SpaceActionQuiz(SpaceActionQuizError::StartedAtRequired))?;
-        let ended_at = req
-            .ended_at
-            .ok_or(Error::SpaceActionQuiz(SpaceActionQuizError::EndedAtRequired))?;
+        let started_at = req.started_at.ok_or(Error::SpaceActionQuiz(
+            SpaceActionQuizError::StartedAtRequired,
+        ))?;
+        let ended_at = req.ended_at.ok_or(Error::SpaceActionQuiz(
+            SpaceActionQuizError::EndedAtRequired,
+        ))?;
         if started_at >= ended_at {
             return Err(SpaceActionQuizError::InvalidTimeRange.into());
         }
