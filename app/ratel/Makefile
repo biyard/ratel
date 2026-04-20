@@ -57,6 +57,7 @@ BUCKET_NAME ?= metadata.ratel.foundation
 HOST_UID ?= $(shell id -u)
 HOST_GID ?= $(shell id -g)
 
+
 ifneq ($(ANDROID_EMULATOR_ID),)
 	DEVICE_FLAG ?= --device $(AVD_NAME)
 endif
@@ -169,6 +170,8 @@ env.sh:
 	@echo "export ATTR_VOTING_AUTHORITY_JSON='$(ATTR_VOTING_AUTHORITY_JSON)'" >> $@
 	@echo "export HOST_UID='$(HOST_UID)'" >> $@
 	@echo "export HOST_GID='$(HOST_GID)'" >> $@
+	@echo "export BIYARD_API_URL='$(BIYARD_API_URL)'" >> $@
+
 
 test:
 	mkdir -p ./test-build-target/debug/deps/public

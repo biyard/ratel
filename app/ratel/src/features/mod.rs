@@ -19,3 +19,4 @@ pub mod rag;
 pub mod activity;
 
 pub mod did;
+pub mod me;
