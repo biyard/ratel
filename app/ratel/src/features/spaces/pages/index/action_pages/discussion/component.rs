@@ -346,43 +346,13 @@ pub fn DiscussionArenaPage(
 
                     // Comment Input
                     if can_comment {
-                        div { class: "comment-input",
-                            div { class: "comment-input__wrapper",
-                                div { class: "comment-input__body",
-                                    MentionAutocomplete {
-                                        text: comment_text,
-                                        on_select: move |insert: MentionInsert| {
-                                            let mut val = comment_text();
-                                            if insert.start_offset <= val.len() && insert.end_offset <= val.len() {
-                                                val.replace_range(
-                                                    insert.start_offset..insert.end_offset,
-                                                    &insert.display_text,
-                                                );
-                                                comment_text.set(val);
-                                                tracked_mentions.write().push((insert.display_name, insert.user_pk));
-                                            }
-                                        },
-                                        members,
-                                        textarea {
-                                            class: "comment-input__textarea",
-                                            placeholder: "{tr.comment_placeholder}",
-                                            rows: "2",
-                                            value: "{comment_text}",
-                                            oninput: move |e| {
-                                                comment_text.set(e.value());
-                                            },
-                                        }
-                                    }
-                                    div { class: "comment-input__footer",
-                                        button {
-                                            class: "comment-input__submit",
-                                            disabled: comment_text().trim().is_empty(),
-                                            onclick: on_submit_comment,
-                                            "{tr.post_btn}"
-                                        }
-                                    }
-                                }
-                            }
+                        CommentComposer {
+                            text: comment_text,
+                            tracked_mentions,
+                            members,
+                            on_submit: move |_| on_submit_comment(()),
+                            placeholder: tr.comment_placeholder.to_string(),
+                            disabled: comment_text().trim().is_empty(),
                         }
                     }
 
@@ -400,6 +370,109 @@ pub fn DiscussionArenaPage(
                                     comments_loader,
                                     polled_new,
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── Comment Composer ────────────────────────────────
+//
+// Shared input for the top-level comment box and the per-comment reply box.
+// Both flows need the same MentionAutocomplete, mention-insert handling and
+// submit semantics, so they live here once. DOM classes and structure are
+// intentionally left identical to the pre-refactor markup so CSS and
+// Playwright selectors (`.comment-input__*`, `.reply-input__*`) keep working
+// without changes.
+#[component]
+fn CommentComposer(
+    text: Signal<String>,
+    tracked_mentions: Signal<Vec<(String, String)>>,
+    members: ReadSignal<Vec<MentionCandidate>>,
+    on_submit: EventHandler<()>,
+    placeholder: String,
+    #[props(default)] compact: bool,
+    disabled: bool,
+) -> Element {
+    let tr: DiscussionArenaTranslate = use_translate();
+
+    let on_mention_select = move |insert: MentionInsert| {
+        let mut val = text();
+        if insert.start_offset <= val.len() && insert.end_offset <= val.len() {
+            val.replace_range(
+                insert.start_offset..insert.end_offset,
+                &insert.display_text,
+            );
+            text.set(val);
+            tracked_mentions
+                .write()
+                .push((insert.display_name, insert.user_pk));
+        }
+    };
+
+    if compact {
+        rsx! {
+            div { class: "reply-input",
+                MentionAutocomplete { text, on_select: on_mention_select, members,
+                    input {
+                        class: "reply-input__field",
+                        placeholder: "{placeholder}",
+                        value: "{text}",
+                        oninput: move |e| {
+                            text.set(e.value());
+                        },
+                    }
+                }
+                button {
+                    class: "reply-input__send",
+                    disabled,
+                    onclick: move |_| on_submit.call(()),
+                    svg {
+                        view_box: "0 0 24 24",
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_width: "2",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        line {
+                            x1: "22",
+                            y1: "2",
+                            x2: "11",
+                            y2: "13",
+                        }
+                        polygon { points: "22 2 15 22 11 13 2 9 22 2" }
+                    }
+                }
+            }
+        }
+    } else {
+        rsx! {
+            div { class: "comment-input",
+                div { class: "comment-input__wrapper",
+                    div { class: "comment-input__body",
+                        MentionAutocomplete {
+                            text,
+                            on_select: on_mention_select,
+                            members,
+                            textarea {
+                                class: "comment-input__textarea",
+                                placeholder: "{placeholder}",
+                                rows: "2",
+                                value: "{text}",
+                                oninput: move |e| {
+                                    text.set(e.value());
+                                },
+                            }
+                        }
+                        div { class: "comment-input__footer",
+                            button {
+                                class: "comment-input__submit",
+                                disabled,
+                                onclick: move |_| on_submit.call(()),
+                                "{tr.post_btn}"
                             }
                         }
                     }
@@ -743,49 +816,14 @@ fn CommentItem(
 
                 // Reply input
                 if can_comment {
-                    div { class: "reply-input",
-                        MentionAutocomplete {
-                            text: reply_text,
-                            on_select: move |insert: MentionInsert| {
-                                let mut val = reply_text();
-                                if insert.start_offset <= val.len() && insert.end_offset <= val.len() {
-                                    val.replace_range(
-                                        insert.start_offset..insert.end_offset,
-                                        &insert.display_text,
-                                    );
-                                    reply_text.set(val);
-                                    reply_tracked_mentions.write().push((insert.display_name, insert.user_pk));
-                                }
-                            },
-                            members,
-                            input {
-                                class: "reply-input__field",
-                                placeholder: "{tr.reply_placeholder}",
-                                value: "{reply_text}",
-                                oninput: move |e| {
-                                    reply_text.set(e.value());
-                                },
-                            }
-                        }
-                        button {
-                            class: "reply-input__send",
-                            onclick: on_submit_reply,
-                            svg {
-                                view_box: "0 0 24 24",
-                                fill: "none",
-                                stroke: "currentColor",
-                                stroke_width: "2",
-                                stroke_linecap: "round",
-                                stroke_linejoin: "round",
-                                line {
-                                    x1: "22",
-                                    y1: "2",
-                                    x2: "11",
-                                    y2: "13",
-                                }
-                                polygon { points: "22 2 15 22 11 13 2 9 22 2" }
-                            }
-                        }
+                    CommentComposer {
+                        text: reply_text,
+                        tracked_mentions: reply_tracked_mentions,
+                        members,
+                        on_submit: move |_| on_submit_reply(()),
+                        placeholder: tr.reply_placeholder.to_string(),
+                        compact: true,
+                        disabled: reply_text().trim().is_empty(),
                     }
                 }
             }
