@@ -1,4 +1,4 @@
-use crate::common::models::space::{SpaceUser, SpaceCommon};
+use crate::common::models::space::{SpaceCommon, SpaceUser};
 use crate::features::spaces::pages::actions::actions::discussion::*;
 use crate::features::spaces::pages::actions::models::SpaceAction;
 
@@ -10,15 +10,16 @@ pub struct AddCommentRequest {
     pub images: Vec<String>,
 }
 
-#[mcp_tool(name = "add_comment", description = "Add a comment to a discussion. Requires participant role and discussion in progress.")]
+#[mcp_tool(
+    name = "add_comment",
+    description = "Add a comment to a discussion. Requires participant role and discussion in progress."
+)]
 #[post("/api/spaces/{space_id}/discussions/{discussion_sk}/comments", role: SpaceUserRole, member: SpaceUser, space: SpaceCommon, user: crate::features::auth::User )]
 pub async fn add_comment(
-    #[mcp(description = "Space partition key")]
-    space_id: SpacePartition,
+    #[mcp(description = "Space partition key")] space_id: SpacePartition,
     #[mcp(description = "Discussion sort key (e.g. 'SpacePost#<uuid>')")]
     discussion_sk: SpacePostEntityType,
-    #[mcp(description = "Comment content as JSON: {\"content\": \"text\"}")]
-    req: AddCommentRequest,
+    #[mcp(description = "Comment content as JSON: {\"content\": \"text\"}")] req: AddCommentRequest,
 ) -> Result<DiscussionCommentResponse> {
     SpacePost::can_view(&role)?;
     let common_config = crate::common::CommonConfig::default();
@@ -53,8 +54,15 @@ pub async fn add_comment(
         return Err(Error::DiscussionNotInProgress);
     }
 
-    let comment =
-        SpacePost::comment(cli, space_id.clone(), space_post_id, req.content, req.images, &member).await?;
+    let comment = SpacePost::comment(
+        cli,
+        space_id.clone(),
+        space_post_id,
+        req.content,
+        req.images,
+        &member,
+    )
+    .await?;
 
     let space_pk: Partition = space_id.clone().into();
     let agg_item =
@@ -69,12 +77,20 @@ pub async fn add_comment(
 
     // Send mention notifications
     {
+        // let cta_url = format!(
+        //     "{}/spaces/{}/actions/discussion/{}",
+        //     crate::common::config::site_base_url(),
+        //     space_id,
+        //     discussion_sk
+        // );
+
+        // FIXME: Now, it doesn't support access to discussion/comment directly.
         let cta_url = format!(
-            "{}/spaces/{}/actions/discussion/{}",
+            "{}/spaces/{}",
             crate::common::config::site_base_url(),
             space_id,
-            discussion_sk
         );
+
         crate::common::utils::mention::create_mention_notifications(
             cli,
             &comment.content,

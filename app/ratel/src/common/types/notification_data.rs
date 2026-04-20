@@ -31,6 +31,20 @@ pub enum NotificationData {
         cta_url: String,
         space_title: String,
     },
+    /// Reply-on-comment notification. Only carries identifiers; the actual
+    /// recipient resolution (parent author + thread participants → emails)
+    /// happens at send time in
+    /// `crate::common::utils::reply_notification::send_reply_on_comment`
+    /// so the reply API stays fast.
+    ReplyOnComment {
+        source: crate::common::utils::reply_notification::ReplyCommentSource,
+        parent_comment_pk: String,
+        parent_comment_sk: String,
+        replier_pk: String,
+        replier_name: String,
+        reply_content: String,
+        cta_url: String,
+    },
 }
 
 #[cfg(feature = "server")]
@@ -122,6 +136,26 @@ impl NotificationData {
                     operation,
                 };
                 template.send_email(ses).await?;
+            }
+            NotificationData::ReplyOnComment {
+                source,
+                parent_comment_pk,
+                parent_comment_sk,
+                replier_pk,
+                replier_name,
+                reply_content,
+                cta_url,
+            } => {
+                crate::common::utils::reply_notification::send_reply_on_comment(
+                    source,
+                    parent_comment_pk,
+                    parent_comment_sk,
+                    replier_pk,
+                    replier_name,
+                    reply_content,
+                    cta_url,
+                )
+                .await?;
             }
             NotificationData::None => {
                 tracing::warn!("Received notification with no data, skipping");
