@@ -58,6 +58,20 @@ pub fn DiscussionArenaPage(
     let post = disc.post.clone();
     let space_action = disc.space_action.clone();
 
+    let toc_ctx = DiscussionTocContext::init();
+    let has_toc = heading_count(&post.html_contents) >= 3;
+
+    // Collect heading anchors after Dioxus applies `dangerous_inner_html`.
+    // Reactive read on `disc_loader()` re-runs the collector when the post
+    // content is refreshed (e.g. after a creator edit).
+    #[cfg(feature = "web")]
+    {
+        use_effect(move || {
+            let _ = disc_loader();
+            collect_headings(toc_ctx);
+        });
+    }
+
     let status = post.status();
     let is_in_progress = status == DiscussionStatus::InProgress;
     let can_respond = matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant);
@@ -260,84 +274,97 @@ pub fn DiscussionArenaPage(
 
                 // Left: Discussion Content
                 div { class: "discussion-main",
-                    div { class: "discussion-main__inner",
+                    div {
+                        class: "discussion-main__grid",
+                        "data-has-toc": has_toc,
+                        div { class: "discussion-main__inner",
 
-                        // Header
-                        div { class: "disc-header",
-                            span { class: "disc-header__type",
-                                svg {
-                                    view_box: "0 0 24 24",
-                                    fill: "none",
-                                    stroke: "currentColor",
-                                    stroke_width: "2",
-                                    stroke_linecap: "round",
-                                    stroke_linejoin: "round",
-                                    path { d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" }
-                                }
-                                "{tr.discussion_label}"
-                            }
-                            h1 { class: "disc-header__title", "{post.title}" }
-                            div { class: "disc-header__meta",
-                                div { class: "disc-header__author",
-                                    img {
-                                        class: "disc-header__avatar",
-                                        src: "{post.author_profile_url}",
-                                        alt: "{post.author_display_name}",
+                            // Header
+                            div { class: "disc-header",
+                                span { class: "disc-header__type",
+                                    svg {
+                                        view_box: "0 0 24 24",
+                                        fill: "none",
+                                        stroke: "currentColor",
+                                        stroke_width: "2",
+                                        stroke_linecap: "round",
+                                        stroke_linejoin: "round",
+                                        path { d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" }
                                     }
-                                    span { class: "disc-header__author-name",
-                                        "{post.author_display_name}"
+                                    "{tr.discussion_label}"
+                                }
+                                h1 { class: "disc-header__title", "{post.title}" }
+                                div { class: "disc-header__meta",
+                                    div { class: "disc-header__author",
+                                        img {
+                                            class: "disc-header__avatar",
+                                            src: "{post.author_profile_url}",
+                                            alt: "{post.author_display_name}",
+                                        }
+                                        span { class: "disc-header__author-name",
+                                            "{post.author_display_name}"
+                                        }
+                                    }
+                                    span { class: "disc-header__separator" }
+                                    span { class: "disc-header__date", "{created_date}" }
+                                    if !post.category_name.is_empty() {
+                                        span { class: "disc-header__type", "{post.category_name}" }
                                     }
                                 }
-                                span { class: "disc-header__separator" }
-                                span { class: "disc-header__date", "{created_date}" }
-                                if !post.category_name.is_empty() {
-                                    span { class: "disc-header__type", "{post.category_name}" }
+                            }
+
+                            // Body
+                            if !post.html_contents.is_empty() {
+                                div { class: "disc-body",
+                                    div {
+                                        class: "disc-body__content",
+                                        dangerous_inner_html: "{post.html_contents}",
+                                    }
                                 }
                             }
-                        }
 
-                        // Body
-                        if !post.html_contents.is_empty() {
-                            div { class: "disc-body",
-                                div {
-                                    class: "disc-body__content",
-                                    dangerous_inner_html: "{post.html_contents}",
-                                }
-                            }
-                        }
-
-                        // Files
-                        if !post.files.is_empty() {
-                            div { class: "disc-files",
-                                span { class: "disc-files__label", "{tr.attachments_label}" }
-                                div { class: "disc-files__grid",
-                                    for file in post.files.iter() {
-                                        a {
-                                            class: "file-card",
-                                            key: "{file.id}",
-                                            href: file.url.clone().unwrap_or_default(),
-                                            target: "_blank",
-                                            download: "{file.name}",
-                                            div { class: "file-card__icon",
-                                                svg {
-                                                    view_box: "0 0 24 24",
-                                                    fill: "none",
-                                                    stroke: "currentColor",
-                                                    stroke_width: "2",
-                                                    stroke_linecap: "round",
-                                                    stroke_linejoin: "round",
-                                                    path { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }
-                                                    polyline { points: "14 2 14 8 20 8" }
+                            // Files
+                            if !post.files.is_empty() {
+                                div { class: "disc-files",
+                                    span { class: "disc-files__label", "{tr.attachments_label}" }
+                                    div { class: "disc-files__grid",
+                                        for file in post.files.iter() {
+                                            a {
+                                                class: "file-card",
+                                                key: "{file.id}",
+                                                href: file.url.clone().unwrap_or_default(),
+                                                target: "_blank",
+                                                download: "{file.name}",
+                                                div { class: "file-card__icon",
+                                                    svg {
+                                                        view_box: "0 0 24 24",
+                                                        fill: "none",
+                                                        stroke: "currentColor",
+                                                        stroke_width: "2",
+                                                        stroke_linecap: "round",
+                                                        stroke_linejoin: "round",
+                                                        path { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }
+                                                        polyline { points: "14 2 14 8 20 8" }
+                                                    }
                                                 }
-                                            }
-                                            div { class: "file-card__info",
-                                                div { class: "file-card__name", "{file.name}" }
-                                                div { class: "file-card__size", "{file.size}" }
+                                                div { class: "file-card__info",
+                                                    div { class: "file-card__name",
+                                                        "{file.name}"
+                                                    }
+                                                    div { class: "file-card__size",
+                                                        "{file.size}"
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
+                        }
+
+                        // Right column (desktop, ≥ 3 headings): Table of Contents
+                        if has_toc {
+                            DiscussionToc {}
                         }
                     }
                 }
@@ -380,7 +407,7 @@ pub fn DiscussionArenaPage(
                             on_submit: move |_| on_submit_comment(()),
                             placeholder: tr.comment_placeholder.to_string(),
                             disabled: comment_text().trim().is_empty()
-                                                                                                                                                                            && pending_images.read().is_empty(),
+                                                                                                                                                                                                        && pending_images.read().is_empty(),
                         }
                     }
 
@@ -576,9 +603,15 @@ fn CommentItem(
 
     let time_ago = format_time_ago(comment.created_at);
     let comment_sk = use_signal(|| comment.sk.clone());
-    let liked = comment.liked;
-    let likes = comment.likes;
     let reply_count = comment.replies;
+
+    // Optimistic like state — mirrors the reply path. Local signals own the
+    // visible state so toggling feels instant; server mutations reconcile
+    // via `polled_new` patch so a subsequent `comments_loader.restart()`
+    // (post/reply/delete) doesn't flip the indicator back to a stale value.
+    let mut liked = use_signal(|| comment.liked);
+    let mut likes = use_signal(|| comment.likes as i64);
+    let mut like_processing = use_signal(|| false);
 
     // Ownership: only the author sees the edit/delete menu. Server-side
     // update/delete controllers also verify `comment.author_pk == user.pk`,
@@ -597,17 +630,42 @@ fn CommentItem(
     let original_content = comment.content.clone();
 
     let on_like = move |_| async move {
+        if like_processing() {
+            return;
+        }
+        let next = !liked();
+        let prev_liked = liked();
+        let prev_likes = likes();
+        liked.set(next);
+        likes.set((prev_likes + if next { 1 } else { -1 }).max(0));
+        like_processing.set(true);
+
         let target_sk: SpacePostCommentTargetEntityType = comment_sk().into();
-        let req = LikeCommentRequest { like: !liked };
+        let req = LikeCommentRequest { like: next };
         match like_comment(space_id(), discussion_id(), target_sk, req).await {
             Ok(_) => {
-                comments_loader.restart();
+                // Patch any poll-cached copy so a later `comments_loader`
+                // merge doesn't fight the optimistic state. Base pages come
+                // fresh from the server after a restart, so they already
+                // reflect the new like count.
+                let sk = comment_sk();
+                polled_new.with_mut(|list| {
+                    for item in list.iter_mut() {
+                        if item.sk == sk {
+                            item.liked = next;
+                            item.likes = likes().max(0) as u64;
+                        }
+                    }
+                });
             }
             Err(err) => {
+                liked.set(prev_liked);
+                likes.set(prev_likes);
                 tracing::error!("Failed to toggle like: {:?}", err);
                 toast.error(err);
             }
         }
+        like_processing.set(false);
     };
 
     let on_toggle_replies = move |_| async move {
@@ -819,18 +877,19 @@ fn CommentItem(
                     if !editing() {
                         div { class: "comment-item__actions",
                             button {
-                                class: if liked { "comment-action comment-action--liked" } else { "comment-action" },
+                                class: if liked() { "comment-action comment-action--liked" } else { "comment-action" },
+                                disabled: like_processing(),
                                 onclick: on_like,
                                 svg {
                                     view_box: "0 0 24 24",
-                                    fill: if liked { "currentColor" } else { "none" },
+                                    fill: if liked() { "currentColor" } else { "none" },
                                     stroke: "currentColor",
                                     stroke_width: "2",
                                     stroke_linecap: "round",
                                     stroke_linejoin: "round",
                                     path { d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" }
                                 }
-                                span { "{likes}" }
+                                span { "{likes()}" }
                             }
                             if can_comment {
                                 button {
@@ -900,7 +959,7 @@ fn CommentItem(
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
                         disabled: reply_text().trim().is_empty()
-                                                                                                                                                    && reply_pending_images.read().is_empty(),
+                                                                                                                                                                            && reply_pending_images.read().is_empty(),
                     }
                 }
             }
