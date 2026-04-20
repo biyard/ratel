@@ -20,7 +20,11 @@ impl BedrockEmbeddingsClient {
 
     pub async fn embed(&self, text: &str) -> Result<Vec<f32>> {
         let input_text = if text.len() > MAX_INPUT_CHARS {
-            &text[..MAX_INPUT_CHARS]
+            let mut end = MAX_INPUT_CHARS;
+            while end > 0 && !text.is_char_boundary(end) {
+                end -= 1;
+            }
+            &text[..end]
         } else {
             text
         };
