@@ -385,22 +385,44 @@ fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus, space_id: Space
     let lang = use_language();
     let tr: SpaceViewerTranslate = use_translate();
     let is_completed = status == ActionStatus::Completed;
-    let is_poll = action.action_type == SpaceActionType::Poll;
-    let can_reopen = is_completed && is_poll;
+    // Completed actions reopen their overlay on click so participants can
+    // revisit their entry. Skipped quizzes are also clickable in read-only
+    // mode — the submit button inside the overlay stays disabled because
+    // `can_submit` checks `attempt_count < total_allowed && !has_passed`.
+    let can_reopen = is_completed
+        || (status == ActionStatus::Skipped
+            && action.action_type == SpaceActionType::Quiz);
     let mut overlay: ActiveActionOverlaySignal = use_context();
     let action_id = action.action_id.clone();
     let space_id_for_click = space_id.clone();
+    let action_type = action.action_type.clone();
 
     rsx! {
         div {
             class: "archive-item",
             style: if can_reopen { "cursor: pointer;" } else { "" },
             onclick: move |_| {
-                if can_reopen {
-                    let pid: SpacePollEntityType = action_id.clone().into();
-                    overlay
-                        .0
-                        .set(Some(ActiveActionOverlay::Poll(space_id_for_click.clone(), pid)));
+                if !can_reopen {
+                    return;
+                }
+                let sid = space_id_for_click.clone();
+                let aid = action_id.clone();
+                match action_type {
+                    SpaceActionType::Poll => {
+                        let pid: SpacePollEntityType = aid.into();
+                        overlay.0.set(Some(ActiveActionOverlay::Poll(sid, pid)));
+                    }
+                    SpaceActionType::Quiz => {
+                        let qid: SpaceQuizEntityType = aid.into();
+                        overlay.0.set(Some(ActiveActionOverlay::Quiz(sid, qid)));
+                    }
+                    SpaceActionType::TopicDiscussion => {
+                        let did: SpacePostEntityType = aid.into();
+                        overlay.0.set(Some(ActiveActionOverlay::Discussion(sid, did)));
+                    }
+                    SpaceActionType::Follow => {
+                        // Follow has no in-overlay detail view yet; skip.
+                    }
                 }
             },
             div { class: "archive-item__info",

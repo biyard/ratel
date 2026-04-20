@@ -23,6 +23,10 @@ translate! {
         en: "Begin Quiz",
         ko: "퀴즈 시작",
     },
+    review_quiz: {
+        en: "Review Quiz",
+        ko: "퀴즈 확인",
+    },
     btn_back: {
         en: "Back",
         ko: "뒤로",

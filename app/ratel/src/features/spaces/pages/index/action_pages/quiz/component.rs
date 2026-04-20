@@ -354,12 +354,16 @@ pub fn QuizArenaPage(
                         button {
                             class: "quiz-begin-btn",
                             "data-testid": "quiz-arena-begin",
-                            disabled: total_questions == 0 || !can_submit,
+                            disabled: total_questions == 0,
                             onclick: move |_| {
                                 question_index.set(0);
                                 step.set(QuizStep::Quiz);
                             },
-                            "{tr.begin_quiz}"
+                            if can_submit {
+                                "{tr.begin_quiz}"
+                            } else {
+                                "{tr.review_quiz}"
+                            }
                         }
                     }
                 }
