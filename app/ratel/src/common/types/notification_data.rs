@@ -31,6 +31,13 @@ pub enum NotificationData {
         cta_url: String,
         space_title: String,
     },
+    ReplyOnComment {
+        emails: Vec<String>,
+        replier_name: String,
+        comment_preview: String,
+        reply_preview: String,
+        cta_url: String,
+    },
 }
 
 #[cfg(feature = "server")]
@@ -114,6 +121,26 @@ impl NotificationData {
                     headline: headline.clone(),
                     body: body.clone(),
                     space_title: space_title.clone(),
+                    cta_url: cta_url.clone(),
+                };
+
+                let template = EmailTemplate {
+                    targets: emails.clone(),
+                    operation,
+                };
+                template.send_email(ses).await?;
+            }
+            NotificationData::ReplyOnComment {
+                emails,
+                replier_name,
+                comment_preview,
+                reply_preview,
+                cta_url,
+            } => {
+                let operation = EmailOperation::ReplyOnCommentNotification {
+                    replier_name: replier_name.clone(),
+                    comment_preview: comment_preview.clone(),
+                    reply_preview: reply_preview.clone(),
                     cta_url: cta_url.clone(),
                 };
 
