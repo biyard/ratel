@@ -1,6 +1,9 @@
+use crate::common::components::image_upload_preview::{ImageUploadPreview, PendingImage};
 use crate::common::components::mention_autocomplete::{
     MentionAutocomplete, MentionCandidate, MentionInsert,
 };
+use crate::common::components::paste_image_uploader;
+use crate::common::components::CommentImageGrid;
 use crate::common::hooks::use_interval;
 use crate::common::utils::mention::{apply_mention_markup, parse_mention_segments, ContentSegment};
 use crate::features::spaces::pages::actions::actions::discussion::controllers::{
@@ -144,6 +147,7 @@ pub fn DiscussionArenaPage(
 
     let mut comment_text = use_signal(String::new);
     let mut tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
+    let mut pending_images: Signal<Vec<PendingImage>> = use_signal(Vec::new);
 
     let members_loader = use_loader(move || {
         list_space_members(space_id(), None)
@@ -186,20 +190,23 @@ pub fn DiscussionArenaPage(
 
     let on_submit_comment = move |_| async move {
         let raw_text = comment_text().trim().to_string();
-        if raw_text.is_empty() {
+        let images: Vec<String> = pending_images
+            .read()
+            .iter()
+            .filter_map(|img| img.remote_url.clone())
+            .collect();
+        if raw_text.is_empty() && images.is_empty() {
             return;
         }
         let content = apply_mention_markup(&raw_text, &tracked_mentions.read());
-        let req = AddCommentRequest {
-            content,
-            images: vec![],
-        };
+        let req = AddCommentRequest { content, images };
         match add_comment(space_id(), discussion_id(), req).await {
             Ok(_) => {
                 comments_loader.restart();
                 space_ctx.actions.restart();
                 comment_text.set(String::new());
                 tracked_mentions.set(Vec::new());
+                pending_images.set(Vec::new());
                 toast.info(tr.comment_success);
             }
             Err(err) => {
@@ -368,10 +375,12 @@ pub fn DiscussionArenaPage(
                         CommentComposer {
                             text: comment_text,
                             tracked_mentions,
+                            pending_images,
                             members,
                             on_submit: move |_| on_submit_comment(()),
                             placeholder: tr.comment_placeholder.to_string(),
-                            disabled: comment_text().trim().is_empty(),
+                            disabled: comment_text().trim().is_empty()
+                                                                                                                                                                            && pending_images.read().is_empty(),
                         }
                     }
 
@@ -410,6 +419,7 @@ pub fn DiscussionArenaPage(
 fn CommentComposer(
     text: Signal<String>,
     tracked_mentions: Signal<Vec<(String, String)>>,
+    pending_images: Signal<Vec<PendingImage>>,
     members: ReadSignal<Vec<MentionCandidate>>,
     on_submit: EventHandler<()>,
     placeholder: String,
@@ -417,6 +427,13 @@ fn CommentComposer(
     disabled: bool,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
+
+    let on_paste = move |evt: ClipboardEvent| {
+        #[cfg(feature = "web")]
+        paste_image_uploader::handle_paste_event(&evt, pending_images);
+        #[cfg(not(feature = "web"))]
+        let _ = evt;
+    };
 
     let on_mention_select = move |insert: MentionInsert| {
         let mut val = text();
@@ -454,46 +471,57 @@ fn CommentComposer(
 
     if compact {
         rsx! {
-            div { class: "reply-input",
-                MentionAutocomplete { text, on_select: on_mention_select, members,
-                    textarea {
-                        class: "reply-input__field",
-                        placeholder: "{placeholder}",
-                        rows: "1",
-                        value: "{text}",
-                        oninput: move |e| {
-                            text.set(e.value());
-                        },
-                        onkeydown: on_keydown,
-                    }
-                }
-                button {
-                    class: "reply-input__send",
-                    disabled,
-                    onclick: move |_| on_submit.call(()),
-                    svg {
-                        view_box: "0 0 24 24",
-                        fill: "none",
-                        stroke: "currentColor",
-                        stroke_width: "2",
-                        stroke_linecap: "round",
-                        stroke_linejoin: "round",
-                        line {
-                            x1: "22",
-                            y1: "2",
-                            x2: "11",
-                            y2: "13",
+            div { class: "comment-composer-wrapper", onpaste: on_paste,
+                ImageUploadPreview { images: pending_images }
+                div { class: "reply-input",
+                    MentionAutocomplete { text, on_select: on_mention_select, members,
+                        textarea {
+                            class: "reply-input__field",
+                            placeholder: "{placeholder}",
+                            rows: "1",
+                            value: "{text}",
+                            oninput: move |e| {
+                                text.set(e.value());
+                            },
+                            onkeydown: on_keydown,
+                            // The reply composer mounts only when the user
+                            // opens it via the reply button, so auto-focusing
+                            // here matches the click intent without
+                            // hijacking focus on unrelated renders.
+                            onmounted: move |e: MountedEvent| async move {
+                                let _ = e.set_focus(true).await;
+                            },
                         }
-                        polygon { points: "22 2 15 22 11 13 2 9 22 2" }
+                    }
+                    button {
+                        class: "reply-input__send",
+                        disabled,
+                        onclick: move |_| on_submit.call(()),
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            line {
+                                x1: "22",
+                                y1: "2",
+                                x2: "11",
+                                y2: "13",
+                            }
+                            polygon { points: "22 2 15 22 11 13 2 9 22 2" }
+                        }
                     }
                 }
             }
         }
     } else {
         rsx! {
-            div { class: "comment-input",
+            div { class: "comment-input", onpaste: on_paste,
                 div { class: "comment-input__wrapper",
                     div { class: "comment-input__body",
+                        ImageUploadPreview { images: pending_images }
                         MentionAutocomplete {
                             text,
                             on_select: on_mention_select,
@@ -542,6 +570,7 @@ fn CommentItem(
 
     let mut show_replies = use_signal(|| false);
     let mut reply_text = use_signal(String::new);
+    let mut reply_pending_images: Signal<Vec<PendingImage>> = use_signal(Vec::new);
     let mut reply_tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
     let mut replies: Signal<Vec<DiscussionCommentResponse>> = use_signal(Vec::new);
 
@@ -600,16 +629,18 @@ fn CommentItem(
 
     let on_submit_reply = move |_| async move {
         let raw_text = reply_text().trim().to_string();
-        if raw_text.is_empty() {
+        let images: Vec<String> = reply_pending_images
+            .read()
+            .iter()
+            .filter_map(|img| img.remote_url.clone())
+            .collect();
+        if raw_text.is_empty() && images.is_empty() {
             return;
         }
         let content = apply_mention_markup(&raw_text, &reply_tracked_mentions.read());
         let comment_sk_entity: SpacePostCommentEntityType =
             comment_sk().try_into().unwrap_or_default();
-        let req = ReplyCommentRequest {
-            content,
-            images: vec![],
-        };
+        let req = ReplyCommentRequest { content, images };
         match reply_comment(space_id(), discussion_id(), comment_sk_entity, req).await {
             Ok(new_reply) => {
                 let mut current = replies();
@@ -617,6 +648,7 @@ fn CommentItem(
                 replies.set(current);
                 reply_text.set(String::new());
                 reply_tracked_mentions.set(Vec::new());
+                reply_pending_images.set(Vec::new());
                 comments_loader.restart();
                 toast.info(tr.reply_success);
             }
@@ -782,6 +814,7 @@ fn CommentItem(
                                 }
                             }
                         }
+                        CommentImageGrid { images: comment.images.clone() }
                     }
                     if !editing() {
                         div { class: "comment-item__actions",
@@ -861,11 +894,13 @@ fn CommentItem(
                     CommentComposer {
                         text: reply_text,
                         tracked_mentions: reply_tracked_mentions,
+                        pending_images: reply_pending_images,
                         members,
                         on_submit: move |_| on_submit_reply(()),
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
-                        disabled: reply_text().trim().is_empty(),
+                        disabled: reply_text().trim().is_empty()
+                                                                                                                                                    && reply_pending_images.read().is_empty(),
                     }
                 }
             }
@@ -1120,6 +1155,7 @@ fn ReplyItem(
                             }
                         }
                     }
+                    CommentImageGrid { images: reply.images.clone() }
                     div { class: "comment-item__actions",
                         button {
                             class: if liked() { "comment-action comment-action--liked" } else { "comment-action" },
