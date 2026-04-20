@@ -513,10 +513,12 @@
   gap: 8px;
 }
 .comment-input__textarea {
+  /* 140px leaves room for panel header + composer padding + submit button. */
   width: 100%;
   min-height: 48px;
-  max-height: 120px;
+  max-height: calc(100vh - 140px);
   resize: none;
+  overflow-y: auto;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface-raised);
@@ -902,6 +904,9 @@
   outline: none;
   resize: none;
   line-height: 1.5;
+  /* Deeper chrome than top-level composer (parent comment + expand panel). */
+  max-height: calc(100vh - 240px);
+  overflow-y: auto;
 }
 .reply-input__field::placeholder {
   color: var(--text-dim);
@@ -1127,4 +1132,13 @@
   .reply-input {
     margin-left: 28px;
   }
+}
+
+/* Mention dropdown: script.js sets data-mention-flip="up" when the
+   anchor is near the viewport bottom; we render above instead of below. */
+.relative[data-mention-flip="up"] > [role="listbox"] {
+  top: auto;
+  bottom: 100%;
+  margin-top: 0;
+  margin-bottom: 4px;
 }

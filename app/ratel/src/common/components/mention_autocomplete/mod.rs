@@ -78,6 +78,14 @@ pub fn MentionAutocomplete(
                         selected_index.set(selected_index().saturating_sub(1));
                     }
                     Key::Enter | Key::Tab => {
+                        // Leave modifier-qualified Enter/Tab for parent
+                        // shortcuts (e.g. Ctrl+Enter to submit).
+                        if evt.modifiers().contains(Modifiers::CONTROL)
+                            || evt.modifiers().contains(Modifiers::META)
+                            || evt.modifiers().contains(Modifiers::ALT)
+                        {
+                            return;
+                        }
                         if let Some(member) = filtered_for_keydown.get(selected_index()) {
                             evt.prevent_default();
                             evt.stop_propagation();
@@ -109,10 +117,7 @@ pub fn MentionAutocomplete(
                                     class: "flex gap-2 items-center py-1 px-3 w-full text-left transition-colors text-text-primary aria-selected:bg-hover hover:bg-hover",
                                     role: "option",
                                     "aria-selected": is_selected,
-                                    // Prevent the browser from shifting focus from the textarea to
-                                    // this button on mousedown. The click handler still fires, but
-                                    // the textarea keeps its caret so the user can continue typing
-                                    // right after the inserted mention without an extra click.
+                                    // Preserve textarea focus across the click.
                                     onmousedown: move |evt| {
                                         evt.prevent_default();
                                     },
