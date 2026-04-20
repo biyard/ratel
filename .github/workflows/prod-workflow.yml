@@ -137,6 +137,10 @@ jobs:
 
           BIYARD_API_KEY: ${{ secrets.BIYARD_API_KEY }}
           BIYARD_PROJECT_ID: ${{ secrets.BIYARD_PROJECT_ID }}
+          # Use the in-VPC CloudMap A-record (added by biyard app-cluster
+          # stack) so VPC-attached Lambdas reach the console API directly,
+          # avoiding the missing NAT path to `api.biyard.co`.
+          BIYARD_API_URL: http://api.biyard-prod-svc.local:8080
 
           FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
           FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
