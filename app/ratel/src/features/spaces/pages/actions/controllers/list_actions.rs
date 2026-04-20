@@ -52,32 +52,12 @@ pub async fn list_actions(
                 action.quiz_total_score = Some(quiz.questions.len() as i64);
 
                 if let Some(user) = current_user.as_ref() {
-                    // Total attempts allowed = initial try + configured retries.
-                    let max_attempts = quiz.retry_count.saturating_add(1);
-                    let attempts = SpaceQuizAttempt::list_by_quiz_user(
-                        cli,
-                        &quiz_id,
-                        &user.pk,
-                        max_attempts as i32,
-                    )
-                    .await?;
-                    if let Some(latest) = attempts.first() {
-                        action.quiz_score = Some(latest.score);
-                        let passed = latest.score >= quiz.pass_score;
-                        // If the user still has retries remaining after a
-                        // failing attempt, surface it as "not yet answered"
-                        // so the dashboard keeps it Active instead of moving
-                        // it into the Skipped archive.
-                        let attempts_used = attempts.len() as i64;
-                        let has_retries_left = attempts_used < max_attempts;
-                        if !passed && has_retries_left {
-                            action.quiz_passed = None;
-                            action.quiz_score = None;
-                            action.user_participated = false;
-                        } else {
-                            action.quiz_passed = Some(passed);
-                            action.user_participated = true;
-                        }
+                    if let Some(attempt) =
+                        SpaceQuizAttempt::find_latest_by_quiz_user(cli, &quiz_id, &user.pk).await?
+                    {
+                        action.quiz_score = Some(attempt.score);
+                        action.quiz_passed = Some(attempt.score >= quiz.pass_score);
+                        action.user_participated = true;
                     }
                 }
             }

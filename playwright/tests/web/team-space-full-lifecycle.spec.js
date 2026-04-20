@@ -39,6 +39,11 @@ const user2 = {
   password: "admin!234",
 };
 
+const user3 = {
+  email: "hi+user3@biyard.co",
+  password: "admin!234",
+};
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 async function hideFab(page) {
@@ -142,7 +147,7 @@ async function participateAndCompletePoll(page, pollOptionText) {
   // or ActionDashboard (space started)
 }
 
-async function loginUser2FromSpace(browser, spaceUrl) {
+async function loginFromSpace(browser, spaceUrl, { email, password }) {
   const context = await browser.newContext({
     storageState: { cookies: [], origins: [] },
     viewport: { width: 1440, height: 950 },
@@ -154,9 +159,9 @@ async function loginUser2FromSpace(browser, spaceUrl) {
   await pauseAnimations(page);
   await clickNoNav(page, { testId: "btn-signin" });
   await waitPopup(page, { visible: true });
-  await fill(page, { placeholder: "Enter your email address" }, user2.email);
+  await fill(page, { placeholder: "Enter your email address" }, email);
   await click(page, { text: "Continue" });
-  await fill(page, { placeholder: "Enter your password" }, user2.password);
+  await fill(page, { placeholder: "Enter your password" }, password);
   await click(page, { text: "Continue" });
   await waitPopup(page, { visible: false });
 
@@ -558,7 +563,7 @@ test.describe.serial("Full space lifecycle with rewards", () => {
   test("User2: Login and complete prerequisite (after start)", async ({
     browser,
   }) => {
-    const { context, page } = await loginUser2FromSpace(browser, spaceUrl);
+    const { context, page } = await loginFromSpace(browser, spaceUrl, user2);
     try {
       await participateAndCompletePoll(page, "Science");
 
@@ -784,7 +789,131 @@ test.describe.serial("Full space lifecycle with rewards", () => {
     }
   });
 
-  // ─── 13c. Creator: Quiz is locked after responses exist ──────────────────
+  // ─── 13c. User3: Login + complete prerequisite (after start) ────────────
+
+  let user3StoragePath;
+
+  test("User3: Login and complete prerequisite (after start)", async ({
+    browser,
+  }) => {
+    const { context, page } = await loginFromSpace(browser, spaceUrl, user3);
+    try {
+      await participateAndCompletePoll(page, "Science");
+
+      user3StoragePath = `e2e-lifecycle-user3-${Date.now()}.json`;
+      await context.storageState({ path: user3StoragePath });
+    } finally {
+      await context.close();
+    }
+  });
+
+  // ─── 13d. User3: Complete quiz action ────────────────────────────────────
+  // User3 submits the correct answer — retries are exhausted after one
+  // passing attempt, so the server must reveal correct answers on re-open.
+
+  test("User3: Complete quiz action", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: user3StoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, spaceUrl);
+      await pauseAnimations(page);
+
+      const quizCard = page.locator('[data-type="quiz"]').first();
+      await expect(quizCard).toBeVisible({ timeout: 10000 });
+      await quizCard.click();
+
+      const overlay = page.getByTestId("quiz-arena-overlay");
+      await expect(overlay).toBeVisible({ timeout: 10000 });
+
+      await expect(page.getByTestId("quiz-arena-overview")).toBeVisible({
+        timeout: 10000,
+      });
+      await clickNoNav(page, { testId: "quiz-arena-begin" });
+
+      await expect(page.getByTestId("quiz-arena-questions")).toBeVisible({
+        timeout: 10000,
+      });
+
+      await expect(
+        overlay.getByText("Collective decision-making", { exact: true })
+      ).toBeVisible({ timeout: 10000 });
+      await overlay
+        .getByText("Collective decision-making", { exact: true })
+        .click();
+
+      await clickNoNav(page, { testId: "quiz-arena-submit" });
+
+      await expect(page.getByTestId("quiz-arena-overlay")).toBeHidden({
+        timeout: 30000,
+      });
+
+      await context.storageState({ path: user3StoragePath });
+    } finally {
+      await context.close();
+    }
+  });
+
+  // ─── 13e. User3: Review correct answer via archive ──────────────────────
+  // After the attempt is recorded, retries are exhausted (retry_count=0).
+  // The server now returns `correct_answers` and the overlay highlights
+  // the right option via data-correct on the option tile.
+
+  test("User3: Review correct answer via archive", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: user3StoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, spaceUrl);
+      await pauseAnimations(page);
+
+      // Open the archive panel from the bottom bar.
+      await clickNoNav(page, { testId: "btn-archive" });
+      const archivePanel = page.getByTestId("archive-panel");
+      await expect(archivePanel).toBeVisible({ timeout: 10000 });
+
+      // Completed quiz row lives in the archive with a green check.
+      const archivedQuiz = archivePanel
+        .locator(".archive-item")
+        .filter({ hasText: /Quiz/i })
+        .first();
+      await expect(archivedQuiz).toBeVisible({ timeout: 10000 });
+      await archivedQuiz.click();
+
+      const overlay = page.getByTestId("quiz-arena-overlay");
+      await expect(overlay).toBeVisible({ timeout: 10000 });
+
+      await clickNoNav(page, { testId: "quiz-arena-begin" });
+      await expect(page.getByTestId("quiz-arena-questions")).toBeVisible({
+        timeout: 10000,
+      });
+
+      // Correct option highlighted via data-correct.
+      const correctOption = overlay.locator(
+        '.option-tile[data-correct="true"]'
+      );
+      await expect(correctOption).toBeVisible({ timeout: 10000 });
+      await expect(correctOption).toContainText("Collective decision-making");
+
+      // Submit stays disabled because retries are exhausted.
+      const submitBtn = page.getByTestId("quiz-arena-submit");
+      if (await submitBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await expect(submitBtn).toBeDisabled();
+      }
+    } finally {
+      await context.close();
+    }
+  });
+
+  // ─── 13f. Creator: Quiz is locked after responses exist ──────────────────
   // Once participants have submitted quiz attempts, the server rejects
   // further edits. The editor surfaces the rejection as a toast and the
   // radio click must not change the persisted correct answer.
@@ -816,7 +945,7 @@ test.describe.serial("Full space lifecycle with rewards", () => {
     // User1 and User2 have already submitted attempts by this point, so
     // the server must reject the mutation.
     const q1Options = questionsPage.locator(
-      '[data-testid="quiz-question-0"] .q-opt',
+      '[data-testid="quiz-question-0"] .q-opt'
     );
     await expect(q1Options.first()).toBeVisible({ timeout: 10000 });
     await q1Options.nth(1).locator(".q-opt__radio").click();
@@ -825,7 +954,7 @@ test.describe.serial("Full space lifecycle with rewards", () => {
     // A toast should announce that the quiz is locked. The exact wording is
     // set by the server error variant "QuizCannotBeEditedAfterResponses".
     await expect(
-      page.getByText(/quiz cannot be edited after responses exist/i).first(),
+      page.getByText(/quiz cannot be edited after responses exist/i).first()
     ).toBeVisible({ timeout: 10000 });
   });
 

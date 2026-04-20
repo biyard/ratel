@@ -2,7 +2,7 @@ use crate::features::spaces::pages::actions::actions::poll::{Answer, ChoiceQuest
 use crate::features::spaces::pages::actions::actions::quiz::controllers::{
     get_quiz, respond_quiz, RespondQuizRequest,
 };
-use crate::features::spaces::pages::actions::actions::quiz::QuizResponse;
+use crate::features::spaces::pages::actions::actions::quiz::{QuizCorrectAnswer, QuizResponse};
 use crate::features::spaces::pages::index::action_pages::quiz::*;
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
@@ -385,6 +385,11 @@ pub fn QuizArenaPage(
                                     total: total_questions,
                                     question,
                                     answer: answers.read().get(idx).cloned(),
+                                    correct_answer: quiz
+                                        .correct_answers
+                                        .as_ref()
+                                        .and_then(|a| a.get(idx))
+                                        .cloned(),
                                     disabled: !can_submit,
                                     on_change: move |next_answer: Answer| {
                                         let mut next = answers();
@@ -472,6 +477,7 @@ fn QuestionCardView(
     total: usize,
     question: Question,
     answer: Option<Answer>,
+    #[props(default)] correct_answer: Option<QuizCorrectAnswer>,
     disabled: bool,
     on_change: EventHandler<Answer>,
 ) -> Element {
@@ -527,6 +533,8 @@ fn QuestionCardView(
                 for (opt_idx , option_text) in options.iter().enumerate() {
                     {
                         let is_selected = check_selected(&answer, opt_idx as i32, is_multi);
+                        let is_correct =
+                            check_correct(correct_answer.as_ref(), opt_idx as i32, is_multi);
                         let on_change = on_change.clone();
                         let answer_clone = answer.clone();
                         rsx! {
@@ -534,6 +542,8 @@ fn QuestionCardView(
                                 key: "opt-{index}-{opt_idx}",
                                 class: "option-tile",
                                 "aria-selected": is_selected,
+                                "data-correct": is_correct,
+                                "data-user-wrong": is_selected && !is_correct && correct_answer.is_some(),
                                 disabled,
                                 onclick: move |_| {
                                     let next = if is_multi {
@@ -629,6 +639,18 @@ fn check_selected(answer: &Option<Answer>, opt_idx: i32, is_multi: bool) -> bool
             answer: Some(selected),
             ..
         }) if is_multi => selected.contains(&opt_idx),
+        _ => false,
+    }
+}
+
+fn check_correct(
+    correct: Option<&QuizCorrectAnswer>,
+    opt_idx: i32,
+    is_multi: bool,
+) -> bool {
+    match correct {
+        Some(QuizCorrectAnswer::Single { answer: Some(v) }) if !is_multi => *v == opt_idx,
+        Some(QuizCorrectAnswer::Multiple { answers }) if is_multi => answers.contains(&opt_idx),
         _ => false,
     }
 }
