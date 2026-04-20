@@ -1,4 +1,4 @@
-use crate::common::models::space::{SpaceUser, SpaceCommon};
+use crate::common::models::space::{SpaceCommon, SpaceUser};
 use crate::features::spaces::pages::actions::actions::discussion::*;
 use crate::features::spaces::pages::actions::models::SpaceAction;
 
@@ -81,11 +81,18 @@ pub async fn reply_comment(
 
     // XP recording is now handled via EventBridge on SPACE_POST_COMMENT_REPLY# INSERT
 
+    // let cta_url = format!(
+    //     "{}/spaces/{}/actions/discussion/{}",
+    //     crate::common::config::site_base_url(),
+    //     space_id,
+    //     discussion_sk
+    // );
+
+    // FIXME: This is the same CTA URL as the parent comment — ideally it should deep link to the reply, but that requires frontend support to parse URL params and scroll to the right comment. For now we link to the discussion page and let users find their comment via the "Your activity" section.
     let cta_url = format!(
-        "{}/spaces/{}/actions/discussion/{}",
+        "{}/spaces/{}",
         crate::common::config::site_base_url(),
         space_id,
-        discussion_sk
     );
 
     // Send mention notifications
@@ -102,19 +109,18 @@ pub async fn reply_comment(
     // thread participants → emails) runs at send time, not here — the handler
     // only persists one notification row and returns.
     {
-        let notification =
-            crate::common::models::notification::Notification::new(
-                crate::common::types::NotificationData::ReplyOnComment {
-                    source:
-                        crate::common::utils::reply_notification::ReplyCommentSource::SpaceDiscussion,
-                    parent_comment_pk: parent_pk_str,
-                    parent_comment_sk: parent_sk_str,
-                    replier_pk: member.pk.to_string(),
-                    replier_name: member.display_name.clone(),
-                    reply_content: comment.content.clone(),
-                    cta_url,
-                },
-            );
+        let notification = crate::common::models::notification::Notification::new(
+            crate::common::types::NotificationData::ReplyOnComment {
+                source:
+                    crate::common::utils::reply_notification::ReplyCommentSource::SpaceDiscussion,
+                parent_comment_pk: parent_pk_str,
+                parent_comment_sk: parent_sk_str,
+                replier_pk: member.pk.to_string(),
+                replier_name: member.display_name.clone(),
+                reply_content: comment.content.clone(),
+                cta_url,
+            },
+        );
         if let Err(e) = notification.create(cli).await {
             tracing::error!("Failed to enqueue reply-on-comment notification: {}", e);
         }
