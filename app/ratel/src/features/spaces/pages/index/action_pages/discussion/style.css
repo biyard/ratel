@@ -196,24 +196,6 @@
   border-radius: 3px;
 }
 
-.discussion-main__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 720px);
-  justify-content: center;
-  gap: 32px;
-  width: 100%;
-}
-.discussion-main__grid[data-has-toc="true"] {
-  /* mobile / tablet: TOC is hidden — keep the content column centered */
-  grid-template-columns: minmax(0, 720px);
-}
-@media (min-width: 1177px) {
-  .discussion-main__grid[data-has-toc="true"] {
-    grid-template-columns: minmax(0, 720px) 200px;
-    gap: 40px;
-  }
-}
-
 .discussion-main__inner {
   max-width: 720px;
   width: 100%;
@@ -1186,81 +1168,3 @@
   margin-bottom: 4px;
 }
 
-/* ── Table of Contents (desktop only) ─────────── */
-.discussion-toc {
-  display: none;
-  position: sticky;
-  top: 0;
-  align-self: start;
-  max-height: calc(100vh - 120px);
-  overflow-y: auto;
-  padding: 4px 0 16px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--dark, rgba(255, 255, 255, 0.08))
-    var(--light, rgba(0, 0, 0, 0.06)) transparent;
-}
-.discussion-toc::-webkit-scrollbar {
-  width: 3px;
-}
-.discussion-toc::-webkit-scrollbar-track {
-  background: transparent;
-}
-.discussion-toc::-webkit-scrollbar-thumb {
-  background: var(--dark, rgba(255, 255, 255, 0.08))
-    var(--light, rgba(0, 0, 0, 0.06));
-  border-radius: 2px;
-}
-
-@media (min-width: 1177px) {
-  .discussion-main__grid[data-has-toc="true"] .discussion-toc {
-    display: block;
-  }
-}
-
-.discussion-toc__title {
-  font-family: "Orbitron", sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  padding: 0 0 8px 12px;
-  margin-bottom: 6px;
-  border-bottom: 1px solid var(--border);
-}
-
-.discussion-toc__link {
-  display: block;
-  padding: 4px 12px;
-  border-left: 2px solid transparent;
-  font-family: "Outfit", sans-serif;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--text-muted);
-  text-decoration: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition:
-    color 0.15s,
-    border-color 0.15s;
-}
-.discussion-toc__link:hover {
-  color: var(--text);
-  border-left-color: var(--discuss-border);
-}
-.discussion-toc__link[aria-current="true"] {
-  color: var(--discuss-color);
-  border-left-color: var(--discuss-color);
-  font-weight: 500;
-}
-.discussion-toc__link--l1 {
-  padding-left: 12px;
-}
-.discussion-toc__link--l2 {
-  padding-left: 24px;
-}
-.discussion-toc__link--l3 {
-  padding-left: 36px;
-  font-size: 11px;
-}

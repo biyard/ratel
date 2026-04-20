@@ -103,8 +103,4 @@ translate! {
         en: "Comment deleted.",
         ko: "댓글이 삭제되었습니다.",
     },
-    table_of_contents: {
-        en: "On this page",
-        ko: "이 페이지",
-    },
 }

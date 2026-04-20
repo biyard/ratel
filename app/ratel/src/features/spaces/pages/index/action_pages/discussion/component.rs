@@ -108,20 +108,6 @@ pub fn DiscussionArenaPage(
     let post = disc.post.clone();
     let space_action = disc.space_action.clone();
 
-    let toc_ctx = DiscussionTocContext::init();
-    let has_toc = heading_count(&post.html_contents) >= 3;
-
-    // Collect heading anchors after Dioxus applies `dangerous_inner_html`.
-    // Reactive read on `disc_loader()` re-runs the collector when the post
-    // content is refreshed (e.g. after a creator edit).
-    #[cfg(feature = "web")]
-    {
-        use_effect(move || {
-            let _ = disc_loader();
-            collect_headings(toc_ctx);
-        });
-    }
-
     let status = post.status();
     let is_in_progress = status == DiscussionStatus::InProgress;
     let can_respond = matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant);
@@ -371,97 +357,88 @@ pub fn DiscussionArenaPage(
 
                 // Left: Discussion Content
                 div { class: "discussion-main",
-                    div {
-                        class: "discussion-main__grid",
-                        "data-has-toc": has_toc,
-                        div { class: "discussion-main__inner",
+                    div { class: "discussion-main__inner",
 
-                            // Header
-                            div { class: "disc-header",
-                                span { class: "disc-header__type",
-                                    svg {
-                                        view_box: "0 0 24 24",
-                                        fill: "none",
-                                        stroke: "currentColor",
-                                        stroke_width: "2",
-                                        stroke_linecap: "round",
-                                        stroke_linejoin: "round",
-                                        path { d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" }
-                                    }
-                                    "{tr.discussion_label}"
+                        // Header
+                        div { class: "disc-header",
+                            span { class: "disc-header__type",
+                                svg {
+                                    view_box: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_width: "2",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    path { d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" }
                                 }
-                                h1 { class: "disc-header__title", "{post.title}" }
-                                div { class: "disc-header__meta",
-                                    div { class: "disc-header__author",
-                                        img {
-                                            class: "disc-header__avatar",
-                                            src: "{post.author_profile_url}",
-                                            alt: "{post.author_display_name}",
-                                        }
-                                        span { class: "disc-header__author-name",
-                                            "{post.author_display_name}"
-                                        }
+                                "{tr.discussion_label}"
+                            }
+                            h1 { class: "disc-header__title", "{post.title}" }
+                            div { class: "disc-header__meta",
+                                div { class: "disc-header__author",
+                                    img {
+                                        class: "disc-header__avatar",
+                                        src: "{post.author_profile_url}",
+                                        alt: "{post.author_display_name}",
                                     }
-                                    span { class: "disc-header__separator" }
-                                    span { class: "disc-header__date", "{created_date}" }
-                                    if !post.category_name.is_empty() {
-                                        span { class: "disc-header__type", "{post.category_name}" }
+                                    span { class: "disc-header__author-name",
+                                        "{post.author_display_name}"
                                     }
+                                }
+                                span { class: "disc-header__separator" }
+                                span { class: "disc-header__date", "{created_date}" }
+                                if !post.category_name.is_empty() {
+                                    span { class: "disc-header__type", "{post.category_name}" }
                                 }
                             }
+                        }
 
-                            // Body
-                            if !post.html_contents.is_empty() {
-                                div { class: "disc-body",
-                                    div {
-                                        class: "disc-body__content",
-                                        dangerous_inner_html: "{post.html_contents}",
-                                    }
+                        // Body
+                        if !post.html_contents.is_empty() {
+                            div { class: "disc-body",
+                                div {
+                                    class: "disc-body__content",
+                                    dangerous_inner_html: "{post.html_contents}",
                                 }
                             }
+                        }
 
-                            // Files
-                            if !post.files.is_empty() {
-                                div { class: "disc-files",
-                                    span { class: "disc-files__label", "{tr.attachments_label}" }
-                                    div { class: "disc-files__grid",
-                                        for file in post.files.iter() {
-                                            a {
-                                                class: "file-card",
-                                                key: "{file.id}",
-                                                href: file.url.clone().unwrap_or_default(),
-                                                target: "_blank",
-                                                download: "{file.name}",
-                                                div { class: "file-card__icon",
-                                                    svg {
-                                                        view_box: "0 0 24 24",
-                                                        fill: "none",
-                                                        stroke: "currentColor",
-                                                        stroke_width: "2",
-                                                        stroke_linecap: "round",
-                                                        stroke_linejoin: "round",
-                                                        path { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }
-                                                        polyline { points: "14 2 14 8 20 8" }
-                                                    }
+                        // Files
+                        if !post.files.is_empty() {
+                            div { class: "disc-files",
+                                span { class: "disc-files__label", "{tr.attachments_label}" }
+                                div { class: "disc-files__grid",
+                                    for file in post.files.iter() {
+                                        a {
+                                            class: "file-card",
+                                            key: "{file.id}",
+                                            href: file.url.clone().unwrap_or_default(),
+                                            target: "_blank",
+                                            download: "{file.name}",
+                                            div { class: "file-card__icon",
+                                                svg {
+                                                    view_box: "0 0 24 24",
+                                                    fill: "none",
+                                                    stroke: "currentColor",
+                                                    stroke_width: "2",
+                                                    stroke_linecap: "round",
+                                                    stroke_linejoin: "round",
+                                                    path { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }
+                                                    polyline { points: "14 2 14 8 20 8" }
                                                 }
-                                                div { class: "file-card__info",
-                                                    div { class: "file-card__name",
-                                                        "{file.name}"
-                                                    }
-                                                    div { class: "file-card__size",
-                                                        "{file.size}"
-                                                    }
+                                            }
+                                            div { class: "file-card__info",
+                                                div { class: "file-card__name",
+                                                    "{file.name}"
+                                                }
+                                                div { class: "file-card__size",
+                                                    "{file.size}"
                                                 }
                                             }
                                         }
                                     }
                                 }
                             }
-                        }
-
-                        // Right column (desktop, ≥ 3 headings): Table of Contents
-                        if has_toc {
-                            DiscussionToc {}
                         }
                     }
                 }
