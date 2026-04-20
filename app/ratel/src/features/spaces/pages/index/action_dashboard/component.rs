@@ -35,9 +35,13 @@ pub(super) fn derive_action_status(action: &SpaceActionSummary) -> ActionStatus 
             }
         }
         SpaceActionType::Quiz => {
-            if action.quiz_passed == Some(true) {
+            // Any attempt — passing or failing — counts as "completed" so
+            // the quiz moves into the archive where the user can review
+            // their score. The archive row itself distinguishes passed
+            // vs. failed-with-retries-left via a score badge.
+            if action.user_participated {
                 ActionStatus::Completed
-            } else if ended || action.quiz_passed == Some(false) {
+            } else if ended {
                 ActionStatus::Skipped
             } else {
                 ActionStatus::Active
@@ -431,22 +435,39 @@ fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus, space_id: Space
                     "{action.action_type.translate(&lang())} · {action.credits} CR"
                 }
             }
-            if is_completed {
-                div { class: "archive-item__check",
-                    svg {
-                        fill: "none",
-                        stroke: "currentColor",
-                        stroke_linecap: "round",
-                        stroke_linejoin: "round",
-                        stroke_width: "2",
-                        view_box: "0 0 24 24",
-                        xmlns: "http://www.w3.org/2000/svg",
-                        path { d: "M22 11.08V12a10 10 0 1 1-5.93-9.14" }
-                        polyline { points: "22 4 12 14.01 9 11.01" }
+            {
+                let is_quiz = action.action_type == SpaceActionType::Quiz;
+                let quiz_passed = action.quiz_passed == Some(true);
+                if is_quiz && is_completed && !quiz_passed {
+                    // Failed attempt — show the score (e.g. "1 / 4").
+                    let score = action.quiz_score.unwrap_or(0);
+                    let total = action.quiz_total_score.unwrap_or(0);
+                    rsx! {
+                        div { class: "archive-item__score",
+                            "{score} / {total}"
+                        }
+                    }
+                } else if is_completed {
+                    rsx! {
+                        div { class: "archive-item__check",
+                            svg {
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "2",
+                                view_box: "0 0 24 24",
+                                xmlns: "http://www.w3.org/2000/svg",
+                                path { d: "M22 11.08V12a10 10 0 1 1-5.93-9.14" }
+                                polyline { points: "22 4 12 14.01 9 11.01" }
+                            }
+                        }
+                    }
+                } else {
+                    rsx! {
+                        div { class: "archive-item__skipped", "{tr.skipped_label}" }
                     }
                 }
-            } else {
-                div { class: "archive-item__skipped", "{tr.skipped_label}" }
             }
         }
     }
