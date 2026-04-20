@@ -1,7 +1,7 @@
 use super::*;
 use crate::common::types::{InboxPayload, ListResponse};
 use crate::common::utils::inbox::create_inbox_row;
-use crate::features::notifications::types::InboxNotificationResponse;
+use crate::features::notifications::types::{InboxNotificationResponse, UnreadCountResponse};
 
 fn reply_payload(content: &str) -> InboxPayload {
     InboxPayload::ReplyOnComment {
@@ -45,4 +45,25 @@ async fn test_list_inbox_unauthenticated_fails() {
         path: "/api/inbox",
     };
     assert_ne!(status, 200);
+}
+
+#[tokio::test]
+async fn test_unread_count_reports_gsi_entries_capped_at_100() {
+    let ctx = TestContext::setup().await;
+    let user_pk = ctx.test_user.0.pk.clone();
+
+    for i in 0..3 {
+        create_inbox_row(user_pk.clone(), reply_payload(&format!("m{i}")))
+            .await
+            .unwrap();
+    }
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: "/api/inbox/unread-count",
+        headers: ctx.test_user.1.clone(),
+        response_type: UnreadCountResponse,
+    };
+    assert_eq!(status, 200, "unread-count: {:?}", body);
+    assert_eq!(body.count, 3);
 }
