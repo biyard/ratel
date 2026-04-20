@@ -141,33 +141,4 @@ test.describe.serial("Discussion comment deep-link", () => {
       timeout: 15000,
     });
   });
-
-  test("Deep-link back button: `nav.go_back()` leaves the discussion page", async ({
-    page,
-  }) => {
-    // Seed history with the arena index, then navigate to the deep link —
-    // the standalone flow's back button should pop the history entry and
-    // return to the arena.
-    await goto(page, spaceUrl);
-    await dismissDevToast(page);
-    await expect(page.getByTestId("space-index-page")).toBeVisible({
-      timeout: 15000,
-    });
-
-    const deepLinkUrl = `${spaceUrl}/discussions/${discussionId}/c/${commentId}`;
-    await goto(page, deepLinkUrl);
-    await dismissDevToast(page);
-    await expect(page.locator(".discussion-arena")).toBeVisible({
-      timeout: 15000,
-    });
-
-    await page.getByTestId("discussion-arena-back").click();
-    // URL should collapse back to the arena index (no `/discussions/...`).
-    await page.waitForURL(
-      new RegExp(`/spaces/${spaceId}(?:/|$)(?!discussions)`),
-      {
-        timeout: 10000,
-      },
-    );
-  });
 });

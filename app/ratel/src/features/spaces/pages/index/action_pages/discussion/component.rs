@@ -281,7 +281,9 @@ pub fn DiscussionArenaPage(
         if let Some(mut o) = overlay_ctx {
             o.0.set(None);
         } else {
-            nav.go_back();
+            nav.replace(Route::SpaceIndexPage {
+                space_id: space_id(),
+            });
         }
     };
 
@@ -428,12 +430,8 @@ pub fn DiscussionArenaPage(
                                                 }
                                             }
                                             div { class: "file-card__info",
-                                                div { class: "file-card__name",
-                                                    "{file.name}"
-                                                }
-                                                div { class: "file-card__size",
-                                                    "{file.size}"
-                                                }
+                                                div { class: "file-card__name", "{file.name}" }
+                                                div { class: "file-card__size", "{file.size}" }
                                             }
                                         }
                                     }
@@ -481,7 +479,7 @@ pub fn DiscussionArenaPage(
                             on_submit: move |_| on_submit_comment(()),
                             placeholder: tr.comment_placeholder.to_string(),
                             disabled: comment_text().trim().is_empty()
-                                                                                                                                                                                                                                    && pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                && pending_images.read().is_empty(),
                         }
                     }
 
@@ -1045,7 +1043,7 @@ fn CommentItem(
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
                         disabled: reply_text().trim().is_empty()
-                                                                                                                                                                                                    && reply_pending_images.read().is_empty(),
+                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
                     }
                 }
             }
