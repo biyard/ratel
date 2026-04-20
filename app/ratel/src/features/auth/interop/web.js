@@ -4,7 +4,6 @@ import {
   GoogleAuthProvider,
   getAuth,
   signInWithPopup,
-  signOut,
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
 let app;
@@ -77,12 +76,13 @@ export function detectInAppBrowser() {
 // Attempts to escape a KakaoTalk in-app webview to the user's default
 // browser. MUST be called from a user gesture (click handler) — modern
 // WebViews silently ignore custom-scheme redirects that aren't triggered
-// by user interaction.
+// by user interaction. Uses `location.replace` so the kakaotalk:// URL
+// doesn't land in history (cleaner back-navigation from the external
+// browser).
 export function escapeKakaoTalkInApp() {
   if (typeof window === "undefined") return;
   const url = window.location.href;
-  // `location.href =` is more tolerant than `.replace()` for custom
-  // schemes across KakaoTalk versions.
-  window.location.href =
-    "kakaotalk://web/openExternal?url=" + encodeURIComponent(url);
+  window.location.replace(
+    "kakaotalk://web/openExternal?url=" + encodeURIComponent(url),
+  );
 }
