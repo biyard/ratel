@@ -47,3 +47,42 @@ export async function signIn() {
     console.error(e);
   }
 }
+
+// Detects common in-app browsers that block Google OAuth. Returns one of:
+//   "kakaotalk" | "instagram" | "facebook" | "line" | "naver" |
+//   "daum" | "other-inapp" | ""
+// Empty string means a regular browser where OAuth works.
+export function detectInAppBrowser() {
+  if (typeof navigator === "undefined") return "";
+  const ua = (navigator.userAgent || "").toLowerCase();
+
+  if (ua.includes("kakaotalk")) return "kakaotalk";
+  // Facebook in-app: FBAN / FBAV / FB_IAB / FBIOS
+  if (/\bfbav\b|\bfban\b|\bfb_iab\b|\bfbios\b/.test(ua)) return "facebook";
+  if (ua.includes("instagram")) return "instagram";
+  if (/\bline\//.test(ua)) return "line";
+  if (ua.includes("naver(inapp") || ua.includes("naver(inapp;")) return "naver";
+  if (ua.includes("daumapps")) return "daum";
+
+  // Heuristic: Android WebView without Chrome UI usually means some other
+  // in-app browser. iOS detection is harder — we err on the side of not
+  // blocking unknown browsers.
+  const isAndroid = ua.includes("android");
+  const isWv = ua.includes("; wv)");
+  if (isAndroid && isWv) return "other-inapp";
+
+  return "";
+}
+
+// Attempts to escape a KakaoTalk in-app webview to the user's default
+// browser. MUST be called from a user gesture (click handler) — modern
+// WebViews silently ignore custom-scheme redirects that aren't triggered
+// by user interaction.
+export function escapeKakaoTalkInApp() {
+  if (typeof window === "undefined") return;
+  const url = window.location.href;
+  // `location.href =` is more tolerant than `.replace()` for custom
+  // schemes across KakaoTalk versions.
+  window.location.href =
+    "kakaotalk://web/openExternal?url=" + encodeURIComponent(url);
+}
