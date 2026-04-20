@@ -7,7 +7,10 @@ use crate::features::auth::controllers::login::{
 use crate::features::auth::hooks::use_user_context;
 use crate::features::auth::interop::sign_in;
 #[cfg(feature = "web")]
-use crate::features::auth::interop::{wallet_connect, wallet_open_app, wallet_sign_message};
+use crate::features::auth::interop::{
+    detect_in_app_browser, escape_kakaotalk_inapp, wallet_connect, wallet_open_app,
+    wallet_sign_message, InAppBrowser,
+};
 use crate::features::auth::views::ForgotPassword;
 use crate::features::auth::*;
 
@@ -105,6 +108,30 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
 
     let handle_google_login = move |_| async move {
         error_message.set(None);
+
+        // Intercept known in-app browsers where Google OAuth returns
+        // `disallowed_useragent` or where `signInWithPopup` can't work.
+        // This must run before `sign_in()` and inside the click handler
+        // itself so custom-scheme redirects are treated as user-gesture.
+        #[cfg(feature = "web")]
+        {
+            if let Some(kind) = detect_in_app_browser() {
+                match kind {
+                    InAppBrowser::KakaoTalk => {
+                        // Fires `kakaotalk://web/openExternal` under user
+                        // gesture → KakaoTalk intercepts and opens the
+                        // URL in the default browser.
+                        escape_kakaotalk_inapp();
+                        return;
+                    }
+                    _ => {
+                        error_message.set(Some(tr.inapp_browser_warning.to_string()));
+                        return;
+                    }
+                }
+            }
+        }
+
         loading.set(true);
 
         match sign_in().await {
@@ -558,5 +585,9 @@ translate! {
     terms_of_service: {
         en: "Terms of Service",
         ko: "서비스 이용약관",
+    },
+    inapp_browser_warning: {
+        en: "Google sign-in is blocked inside this in-app browser. Please open this page in Chrome, Safari, or another full browser.",
+        ko: "현재 앱의 인앱 브라우저에서는 Google 로그인이 차단되어 있습니다. 우측 상단 메뉴에서 '다른 브라우저로 열기'를 선택해 주세요.",
     },
 }
