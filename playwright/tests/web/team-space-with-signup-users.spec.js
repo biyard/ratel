@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import {
   click,
+  clickAndWaitForVisible,
   clickNoNav,
   createAction,
   createTeamFromHome,
@@ -540,11 +541,10 @@ test.describe.serial("Space with actions created by a team", () => {
       // Find and click the quiz card in the carousel to open the overlay
       const quizCard = page.locator('[data-type="quiz"]').first();
       await expect(quizCard).toBeVisible({ timeout: 10000 });
-      await quizCard.click();
 
       // Quiz arena overlay appears
       const overlay = page.getByTestId("quiz-arena-overlay");
-      await expect(overlay).toBeVisible({ timeout: 10000 });
+      await clickAndWaitForVisible(quizCard, overlay);
 
       // Overview page — click Begin to start
       await expect(page.getByTestId("quiz-arena-overview")).toBeVisible({
@@ -603,11 +603,10 @@ test.describe.serial("Space with actions created by a team", () => {
       // Find and click the quiz card in the carousel to open the overlay
       const quizCard = page.locator('[data-type="quiz"]').first();
       await expect(quizCard).toBeVisible({ timeout: 10000 });
-      await quizCard.click();
 
       // Quiz arena overlay appears
       const overlay = page.getByTestId("quiz-arena-overlay");
-      await expect(overlay).toBeVisible({ timeout: 10000 });
+      await clickAndWaitForVisible(quizCard, overlay);
 
       // Overview page — click Begin to start
       await expect(page.getByTestId("quiz-arena-overview")).toBeVisible({
@@ -918,10 +917,9 @@ test.describe.serial("Space with actions created by a team", () => {
       // in place (no navigation).
       const pollCard = page.locator('[data-type="poll"]').first();
       await expect(pollCard).toBeVisible({ timeout: 10000 });
-      await pollCard.click();
 
       const overlay = page.getByTestId("poll-arena-overlay");
-      await expect(overlay).toBeVisible({ timeout: 15000 });
+      await clickAndWaitForVisible(pollCard, overlay);
 
       await clickNoNav(page, { testId: "poll-arena-begin" });
 
@@ -955,10 +953,9 @@ test.describe.serial("Space with actions created by a team", () => {
       // in place (no navigation).
       const pollCard = page.locator('[data-type="poll"]').first();
       await expect(pollCard).toBeVisible({ timeout: 10000 });
-      await pollCard.click();
 
       const overlay = page.getByTestId("poll-arena-overlay");
-      await expect(overlay).toBeVisible({ timeout: 15000 });
+      await clickAndWaitForVisible(pollCard, overlay);
 
       await clickNoNav(page, { testId: "poll-arena-begin" });
 
