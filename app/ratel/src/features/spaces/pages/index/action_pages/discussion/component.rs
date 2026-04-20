@@ -592,7 +592,7 @@ fn CommentItem(
                     div { class: "comment-item__top",
                         span { class: "comment-item__name", "{comment.author_display_name}" }
                         span { class: "comment-item__time", "{time_ago}" }
-                        if is_own && !editing() {
+                        if is_own && can_comment && !editing() {
                             div { class: "comment-menu",
                                 button {
                                     class: "comment-menu__trigger",
@@ -736,6 +736,7 @@ fn CommentItem(
                             discussion_id,
                             replies,
                             comments_loader,
+                            can_comment,
                         }
                     }
                 }
@@ -829,6 +830,7 @@ fn ReplyItem(
     discussion_id: ReadSignal<SpacePostEntityType>,
     replies: Signal<Vec<DiscussionCommentResponse>>,
     comments_loader: Loader<ListResponse<DiscussionCommentResponse>>,
+    can_comment: bool,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
     let mut toast = use_toast();
@@ -963,7 +965,7 @@ fn ReplyItem(
                 div { class: "comment-item__top",
                     span { class: "comment-item__name", "{reply.author_display_name}" }
                     span { class: "comment-item__time", "{time_ago}" }
-                    if is_own && !editing() {
+                    if is_own && can_comment && !editing() {
                         div { class: "comment-menu",
                             button {
                                 class: "comment-menu__trigger",

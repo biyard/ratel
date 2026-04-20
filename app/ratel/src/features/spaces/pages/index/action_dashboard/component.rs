@@ -393,9 +393,15 @@ fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus, space_id: Space
     // revisit their entry. Skipped quizzes are also clickable in read-only
     // mode — the submit button inside the overlay stays disabled because
     // `can_submit` checks `attempt_count < total_allowed && !has_passed`.
+    // Skipped discussions are likewise clickable so users can read the
+    // thread after it ended; `can_comment` inside the overlay already
+    // disables posting for viewers or ended discussions.
     let can_reopen = is_completed
         || (status == ActionStatus::Skipped
-            && action.action_type == SpaceActionType::Quiz);
+            && matches!(
+                action.action_type,
+                SpaceActionType::Quiz | SpaceActionType::TopicDiscussion
+            ));
     let mut overlay: ActiveActionOverlaySignal = use_context();
     let action_id = action.action_id.clone();
     let space_id_for_click = space_id.clone();
@@ -424,9 +430,7 @@ fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus, space_id: Space
                         let did: SpacePostEntityType = aid.into();
                         overlay.0.set(Some(ActiveActionOverlay::Discussion(sid, did)));
                     }
-                    SpaceActionType::Follow => {
-                        // Follow has no in-overlay detail view yet; skip.
-                    }
+                    SpaceActionType::Follow => {} // Follow has no in-overlay detail view yet; skip.
                 }
             },
             div { class: "archive-item__info",
@@ -443,9 +447,7 @@ fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus, space_id: Space
                     let score = action.quiz_score.unwrap_or(0);
                     let total = action.quiz_total_score.unwrap_or(0);
                     rsx! {
-                        div { class: "archive-item__score",
-                            "{score} / {total}"
-                        }
+                        div { class: "archive-item__score", "{score} / {total}" }
                     }
                 } else if is_completed {
                     rsx! {
