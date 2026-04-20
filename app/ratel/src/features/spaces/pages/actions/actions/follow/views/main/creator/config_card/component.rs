@@ -139,6 +139,7 @@ pub fn ConfigCard(
                         space_id,
                         action_id: action_id_signal,
                         saved_credits,
+                        started_at: started_at_signal(),
                     }
                     div { class: "tile", "data-testid": "tile-prereq",
                         span { class: "tile__label", "{tr.tile_prereq}" }
