@@ -12,9 +12,7 @@ pub struct MyScoreResponse {
 }
 
 #[get("/api/spaces/:space_id/my-score", _space: crate::common::models::space::SpaceCommon, user: crate::common::models::OptionalUser)]
-pub async fn get_my_score_handler(
-    space_id: SpacePartition,
-) -> Result<MyScoreResponse> {
+pub async fn get_my_score_handler(space_id: SpacePartition) -> Result<MyScoreResponse> {
     use crate::common::models::User;
     use crate::features::activity::models::SpaceScore;
 
@@ -39,7 +37,7 @@ pub async fn get_my_score_handler(
 
     // Calculate rank by counting entries with higher score
     let space_pk: Partition = space_id.into();
-    let opts = SpaceScore::opt().limit(1000).scan_index_forward(true);
+    let opts = SpaceScore::opt_all().scan_index_forward(false);
 
     let (all_scores, _) = SpaceScore::find_by_space_rank(cli, &space_pk, opts)
         .await
