@@ -121,10 +121,14 @@ pub async fn create_mention_notifications(
     cta_url: &str,
 ) {
     let mentioned_pks = extract_mentioned_pks(content);
+    if mentioned_pks.is_empty() {
+        return;
+    }
     let author_pk_str = author_pk.to_string();
     let preview = strip_mention_markup(content);
-    let preview = if preview.len() > 100 {
-        format!("{}...", &preview[..100])
+    let preview = if preview.chars().count() > 100 {
+        let truncated: String = preview.chars().take(100).collect();
+        format!("{}...", truncated)
     } else {
         preview
     };
