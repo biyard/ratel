@@ -1,11 +1,11 @@
 use crate::common::types::{File, FileExtension};
 use crate::features::spaces::pages::apps::apps::file::{
-    CreateFileLinkRequest, DeleteFileLinkRequest, FileLinkTarget, components::FileUploadZone,
-    create_file_link, delete_file_link, get_overview_files,
+    components::FileUploadZone, create_file_link, delete_file_link, get_overview_files,
+    CreateFileLinkRequest, DeleteFileLinkRequest, FileLinkTarget,
 };
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::pages::overview::controllers::{
-    UpdateContentRequest, update_space_content,
+    update_space_content, UpdateContentRequest,
 };
 use crate::features::spaces::space_common::controllers::SpaceResponse;
 use std::collections::HashSet;
@@ -16,8 +16,6 @@ const DEFAULT_PROFILE: &str = "https://metadata.ratel.foundation/ratel/default-p
 pub fn OverviewPanel(
     open: bool,
     on_close: EventHandler<()>,
-    space: SpaceResponse,
-    participants: String,
     remaining: String,
     rewards: String,
     #[props(default)] is_admin: bool,
@@ -26,6 +24,8 @@ pub fn OverviewPanel(
     let tr: SpaceViewerTranslate = use_translate();
     let mut space_ctx = crate::features::spaces::space_common::providers::use_space_context();
     let mut toast = use_toast();
+    let space = space_ctx.space();
+    let participants = use_memo(move || format_number(space_ctx.space().participants));
 
     let author_profile = if space.author_profile_url.is_empty() {
         DEFAULT_PROFILE.to_string()
@@ -42,8 +42,7 @@ pub fn OverviewPanel(
     // Files: load from server, track original vs current for diff on Save.
     // Loader runs unconditionally (hooks can't be conditional); we only surface
     // the Files section when `is_admin`.
-    let mut file_loader =
-        use_loader(move || async move { get_overview_files(space_id()).await })?;
+    let mut file_loader = use_loader(move || async move { get_overview_files(space_id()).await })?;
     let mut files = use_signal(Vec::<File>::new);
     let mut original_files = use_signal(Vec::<File>::new);
 
