@@ -848,6 +848,95 @@ test.describe.serial("Full space lifecycle with rewards", () => {
     }
   });
 
+  // ─── 13c. User2: Edit + delete own reply via context menu ────────────────
+
+  test("User2: Edit and delete own reply", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: user2StoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, spaceUrl);
+      await pauseAnimations(page);
+
+      const discCard = page.locator('[data-type="discuss"]').first();
+      await expect(discCard).toBeVisible({ timeout: 10000 });
+      await page.waitForTimeout(500);
+      await discCard.click();
+
+      await expect(page.getByTestId("discussion-arena-overlay")).toBeVisible({
+        timeout: 10000,
+      });
+
+      // Reply to the comment User2 posted in step 13. We scope by the
+      // parent's unique text snippet because `.comment-item` is shared by
+      // both the parent and each reply below it.
+      const parentSnippet = "API improvements";
+      const parentComment = page.locator(".comment-item", {
+        hasText: parentSnippet,
+      });
+      await expect(parentComment).toBeVisible({ timeout: 10000 });
+
+      // Open the reply input on the parent comment.
+      await parentComment.locator(".comment-action--reply").click();
+
+      const replyInput = page.locator(".reply-input__field");
+      await expect(replyInput).toBeVisible({ timeout: 5000 });
+
+      const replyOriginal = "Reply from User2 — editing test.";
+      await replyInput.fill(replyOriginal);
+      await page.locator(".reply-input__send").click();
+
+      // New reply renders inside .comment-replies. Restricting the selector
+      // to that container avoids accidentally matching the parent comment.
+      const originalReply = page.locator(".comment-replies .comment-item", {
+        hasText: replyOriginal,
+      });
+      await expect(originalReply).toBeVisible({ timeout: 10000 });
+
+      // Open the context menu on the just-posted reply and click Edit.
+      // The ⋮ trigger renders only for replies whose author matches the
+      // current user, so scoping via the unique reply text is enough.
+      await originalReply.getByTestId("comment-menu-trigger").click();
+      await page.getByTestId("comment-menu-edit").click();
+
+      // Only one comment/reply is editable at a time, so page-wide testids
+      // resolve to the single edit form.
+      const editInput = page.getByTestId("comment-edit-input");
+      await expect(editInput).toBeVisible({ timeout: 5000 });
+      const replyEdited = "Edited reply via context-menu action.";
+      await editInput.fill(replyEdited);
+      await page.getByTestId("comment-edit-save").click();
+
+      // After save the parent patches its local replies signal in place;
+      // the edited text renders without needing a loader restart.
+      const editedReply = page.locator(".comment-replies .comment-item", {
+        hasText: replyEdited,
+      });
+      await expect(editedReply).toBeVisible({ timeout: 10000 });
+      await expect(
+        page.locator(".comment-replies .comment-item", {
+          hasText: replyOriginal,
+        })
+      ).toBeHidden({ timeout: 10000 });
+
+      // Delete the edited reply via the context menu.
+      await editedReply.getByTestId("comment-menu-trigger").click();
+      await page.getByTestId("comment-menu-delete").click();
+
+      await expect(
+        page.locator(".comment-replies .comment-item", {
+          hasText: replyEdited,
+        })
+      ).toBeHidden({ timeout: 10000 });
+    } finally {
+      await context.close();
+    }
+  });
+
   // ─── 14. Creator: Finish space ─────────────────────────────────────────
 
   test("Creator: Finish the space", async ({ page }) => {
