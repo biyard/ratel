@@ -6,6 +6,7 @@ pub struct UseMySpaces {
     pub my_spaces: Loader<ListResponse<HotSpaceResponse>>,
 }
 
+#[track_caller]
 pub fn use_my_spaces() -> Result<UseMySpaces, Loading> {
     let user_ctx = crate::features::auth::hooks::use_user_context();
 
