@@ -784,6 +784,51 @@ test.describe.serial("Full space lifecycle with rewards", () => {
     }
   });
 
+  // ─── 13c. Creator: Quiz is locked after responses exist ──────────────────
+  // Once participants have submitted quiz attempts, the server rejects
+  // further edits. The editor surfaces the rejection as a toast and the
+  // radio click must not change the persisted correct answer.
+
+  test("Creator: Cannot edit quiz answer after responses exist", async ({
+    page,
+  }) => {
+    await goto(page, spaceUrl);
+    await pauseAnimations(page);
+
+    // Find the quiz card on the ActionDashboard (admin view).
+    const quizCard = page.locator('[data-type="quiz"]').first();
+    await expect(quizCard).toBeVisible({ timeout: 10000 });
+
+    // Admin-only edit affordance — opens the quiz editor.
+    const editBtn = quizCard.locator('[data-testid^="quest-edit-btn-"]');
+    await expect(editBtn).toBeVisible({ timeout: 10000 });
+    await editBtn.click();
+
+    await page.waitForURL(/\/actions\/quizzes\//, { waitUntil: "load" });
+
+    // The creator editor is a horizontal pager with three pages:
+    //   data-page="0" = Content, "1" = Questions, "2" = Settings.
+    const questionsPage = page.locator('section.pager__page[data-page="1"]');
+    await questionsPage.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
+
+    // Attempt to flip the correct answer from index 0 to index 1.
+    // User1 and User2 have already submitted attempts by this point, so
+    // the server must reject the mutation.
+    const q1Options = questionsPage.locator(
+      '[data-testid="quiz-question-0"] .q-opt',
+    );
+    await expect(q1Options.first()).toBeVisible({ timeout: 10000 });
+    await q1Options.nth(1).locator(".q-opt__radio").click();
+    await page.waitForLoadState("load");
+
+    // A toast should announce that the quiz is locked. The exact wording is
+    // set by the server error variant "QuizCannotBeEditedAfterResponses".
+    await expect(
+      page.getByText(/quiz cannot be edited after responses exist/i).first(),
+    ).toBeVisible({ timeout: 10000 });
+  });
+
   // ─── 14. Creator: Finish space ─────────────────────────────────────────
 
   test("Creator: Finish the space", async ({ page }) => {
