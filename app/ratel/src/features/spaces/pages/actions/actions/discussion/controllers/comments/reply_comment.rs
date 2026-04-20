@@ -51,19 +51,11 @@ pub async fn reply_comment(
 
     let comment_sk_entity: EntityType = comment_sk.into();
 
-    // Fetch parent comment + prior replies before mutating so we can notify
-    // the original author and everyone who has participated in the thread.
-    let space_post_pk_partition: Partition = space_post_pk.clone().into();
-    let parent_comment =
-        SpacePostComment::get(cli, &space_post_pk_partition, Some(comment_sk_entity.clone()))
-            .await?;
-    let prior_replies = {
-        let opt = SpacePostComment::opt_all().scan_index_forward(false).limit(100);
-        SpacePostComment::list_by_comment(cli, comment_sk_entity.clone(), opt)
-            .await
-            .map(|(items, _)| items)
-            .unwrap_or_default()
+    let parent_pk_str: String = {
+        let p: Partition = space_post_pk.clone().into();
+        p.to_string()
     };
+    let parent_sk_str = comment_sk_entity.to_string();
 
     let comment = SpacePostComment::reply(
         cli,
@@ -106,29 +98,26 @@ pub async fn reply_comment(
     )
     .await;
 
-    // Send reply-on-comment notifications to parent author + thread participants
-    if let Some(parent) = parent_comment {
-        let mut recipient_pks: Vec<Partition> = Vec::new();
-        recipient_pks.push(parent.author_pk.clone());
-        for reply in prior_replies {
-            recipient_pks.push(reply.author_pk);
+    // Fire reply-on-comment notification. Recipient resolution (parent author +
+    // thread participants → emails) runs at send time, not here — the handler
+    // only persists one notification row and returns.
+    {
+        let notification =
+            crate::common::models::notification::Notification::new(
+                crate::common::types::NotificationData::ReplyOnComment {
+                    source:
+                        crate::common::utils::reply_notification::ReplyCommentSource::SpaceDiscussion,
+                    parent_comment_pk: parent_pk_str,
+                    parent_comment_sk: parent_sk_str,
+                    replier_pk: member.pk.to_string(),
+                    replier_name: member.display_name.clone(),
+                    reply_content: comment.content.clone(),
+                    cta_url,
+                },
+            );
+        if let Err(e) = notification.create(cli).await {
+            tracing::error!("Failed to enqueue reply-on-comment notification: {}", e);
         }
-
-        let comment_preview =
-            crate::common::utils::reply_notification::build_preview(&parent.content);
-        let reply_preview =
-            crate::common::utils::reply_notification::build_preview(&comment.content);
-
-        crate::common::utils::reply_notification::create_reply_on_comment_notifications(
-            cli,
-            recipient_pks,
-            &member.pk,
-            &member.display_name,
-            &comment_preview,
-            &reply_preview,
-            &cta_url,
-        )
-        .await;
     }
 
     Ok(comment.into())

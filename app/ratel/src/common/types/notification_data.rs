@@ -31,11 +31,18 @@ pub enum NotificationData {
         cta_url: String,
         space_title: String,
     },
+    /// Reply-on-comment notification. Only carries identifiers; the actual
+    /// recipient resolution (parent author + thread participants → emails)
+    /// happens at send time in
+    /// `crate::common::utils::reply_notification::send_reply_on_comment`
+    /// so the reply API stays fast.
     ReplyOnComment {
-        emails: Vec<String>,
+        source: crate::common::utils::reply_notification::ReplyCommentSource,
+        parent_comment_pk: String,
+        parent_comment_sk: String,
+        replier_pk: String,
         replier_name: String,
-        comment_preview: String,
-        reply_preview: String,
+        reply_content: String,
         cta_url: String,
     },
 }
@@ -131,24 +138,24 @@ impl NotificationData {
                 template.send_email(ses).await?;
             }
             NotificationData::ReplyOnComment {
-                emails,
+                source,
+                parent_comment_pk,
+                parent_comment_sk,
+                replier_pk,
                 replier_name,
-                comment_preview,
-                reply_preview,
+                reply_content,
                 cta_url,
             } => {
-                let operation = EmailOperation::ReplyOnCommentNotification {
-                    replier_name: replier_name.clone(),
-                    comment_preview: comment_preview.clone(),
-                    reply_preview: reply_preview.clone(),
-                    cta_url: cta_url.clone(),
-                };
-
-                let template = EmailTemplate {
-                    targets: emails.clone(),
-                    operation,
-                };
-                template.send_email(ses).await?;
+                crate::common::utils::reply_notification::send_reply_on_comment(
+                    source,
+                    parent_comment_pk,
+                    parent_comment_sk,
+                    replier_pk,
+                    replier_name,
+                    reply_content,
+                    cta_url,
+                )
+                .await?;
             }
             NotificationData::None => {
                 tracing::warn!("Received notification with no data, skipping");
