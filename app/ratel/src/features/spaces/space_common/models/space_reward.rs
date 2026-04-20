@@ -269,135 +269,75 @@ impl SpaceReward {
             return Err(SpaceError::RewardDistributionFailed.into());
         }
 
-        // Award points via Biyard service (best-effort, after DB tx committed).
-        // Wrap in a 5s timeout so a hung HTTPS connect (e.g. VPC-without-NAT)
-        // does not consume the whole Lambda 30s timeout and lose all logs.
+        // Award points via Biyard service (best-effort, after DB tx committed)
         let cfg = crate::common::CommonConfig::default();
         let biyard = cfg.biyard();
-        let biyard_call_timeout = std::time::Duration::from_secs(5);
 
-        let started = std::time::Instant::now();
-        let award_outcome = tokio::time::timeout(
-            biyard_call_timeout,
-            biyard.award_points(
+        match biyard
+            .award_points(
                 target_pk.clone(),
                 amount,
                 space_reward.description.clone(),
                 None,
-            ),
-        )
-        .await;
-
-        match award_outcome {
-            Ok(Ok(user_res)) => {
-                tracing::error!(
+            )
+            .await
+        {
+            Ok(user_res) => {
+                crate::info!(
                     target_pk = %target_pk,
                     amount = amount,
                     reward_key = %space_reward.sk,
-                    elapsed_ms = started.elapsed().as_millis() as u64,
-                    transaction_id = %user_res.transaction_id,
-                    "BIYARD_DEBUG: award_points OK"
+                    "Awarded points via Biyard"
                 );
 
                 if let Some(ref owner) = owner_pk {
                     if *owner == target_pk {
                         return Ok(user_reward);
                     }
-                    let owner_started = std::time::Instant::now();
-                    let owner_outcome = tokio::time::timeout(
-                        biyard_call_timeout,
-                        biyard.award_points(
+                    if let Err(e) = biyard
+                        .award_points(
                             owner.clone(),
                             amount * 10 / 100,
                             space_reward.description.clone(),
                             Some(user_res.month.clone()),
-                        ),
-                    )
-                    .await;
-                    match owner_outcome {
-                        Ok(Ok(_)) => {
-                            tracing::error!(
-                                owner_pk = %owner,
-                                amount = amount * 10 / 100,
-                                reward_key = %space_reward.sk,
-                                elapsed_ms = owner_started.elapsed().as_millis() as u64,
-                                "BIYARD_DEBUG: owner award_points OK"
-                            );
-                        }
-                        Ok(Err(e)) => {
-                            tracing::error!(
-                                owner_pk = %owner,
-                                amount = amount * 10 / 100,
-                                reward_key = %space_reward.sk,
-                                elapsed_ms = owner_started.elapsed().as_millis() as u64,
-                                error = ?e,
-                                "BIYARD_DEBUG: owner award_points HTTP_ERROR"
-                            );
-                        }
-                        Err(_) => {
-                            tracing::error!(
-                                owner_pk = %owner,
-                                amount = amount * 10 / 100,
-                                reward_key = %space_reward.sk,
-                                elapsed_ms = owner_started.elapsed().as_millis() as u64,
-                                "BIYARD_DEBUG: owner award_points TIMEOUT after 5s"
-                            );
-                        }
+                        )
+                        .await
+                    {
+                        tracing::error!(
+                            owner_pk = %owner,
+                            amount = amount * 10 / 100,
+                            reward_key = %space_reward.sk,
+                            error = %e,
+                            "Failed to award owner points via Biyard"
+                        );
+                    } else {
+                        tracing::info!(
+                            owner_pk = %owner,
+                            amount = amount * 10 / 100,
+                            reward_key = %space_reward.sk,
+                            "Awarded owner points via Biyard"
+                        );
                     }
                 }
             }
-            Ok(Err(e)) => {
+            Err(e) => {
                 tracing::error!(
                     target_pk = %target_pk,
                     amount = amount,
                     reward_key = %space_reward.sk,
-                    elapsed_ms = started.elapsed().as_millis() as u64,
-                    error = ?e,
-                    "BIYARD_DEBUG: award_points HTTP_ERROR"
+                    error = %e,
+                    "Failed to award points via Biyard"
                 );
-                if let Err(create_err) = PendingReward::new(
-                    target_pk.clone(),
-                    space_pk.clone(),
-                    space_reward.sk.clone(),
+                let _ = PendingReward::new(
+                    &target_pk,
+                    &space_pk,
+                    &space_reward.sk.to_string(),
                     amount,
                     &space_reward.description,
-                    owner_pk.clone(),
+                    owner_pk.as_ref(),
                 )
                 .create(cli)
-                .await
-                {
-                    tracing::error!(
-                        target_pk = %target_pk,
-                        error = ?create_err,
-                        "BIYARD_DEBUG: failed to persist PendingReward after HTTP_ERROR"
-                    );
-                }
-            }
-            Err(_) => {
-                tracing::error!(
-                    target_pk = %target_pk,
-                    amount = amount,
-                    reward_key = %space_reward.sk,
-                    elapsed_ms = started.elapsed().as_millis() as u64,
-                    "BIYARD_DEBUG: award_points TIMEOUT after 5s"
-                );
-                if let Err(create_err) = PendingReward::new(
-                    target_pk.clone(),
-                    space_pk.clone(),
-                    space_reward.sk.clone(),
-                    amount,
-                    &space_reward.description,
-                    owner_pk.clone(),
-                )
-                .create(cli)
-                .await
-                {
-                    tracing::error!(
-                        target_pk = %target_pk,
-                        error = ?create_err,
-                        "BIYARD_DEBUG: failed to persist PendingReward after TIMEOUT"
-                    );
-                }
+                .await;
             }
         }
 
