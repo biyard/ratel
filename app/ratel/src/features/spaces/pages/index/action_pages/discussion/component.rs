@@ -850,6 +850,45 @@ fn ReplyItem(
     let original_content = reply.content.clone();
     let time_ago = format_time_ago(reply.created_at);
 
+    let mut liked = use_signal(|| reply.liked);
+    let mut likes = use_signal(|| reply.likes as i64);
+    let mut like_processing = use_signal(|| false);
+
+    let on_like = move |_| async move {
+        if like_processing() {
+            return;
+        }
+        let next = !liked();
+        let prev_liked = liked();
+        let prev_likes = likes();
+        liked.set(next);
+        likes.set((prev_likes + if next { 1 } else { -1 }).max(0));
+        like_processing.set(true);
+
+        let target_sk: SpacePostCommentTargetEntityType = reply_sk().into();
+        let req = LikeCommentRequest { like: next };
+        match like_comment(space_id(), discussion_id(), target_sk, req).await {
+            Ok(_) => {
+                let sk = reply_sk();
+                replies.with_mut(|list| {
+                    for r in list.iter_mut() {
+                        if r.sk == sk {
+                            r.liked = next;
+                            r.likes = likes().max(0) as u64;
+                        }
+                    }
+                });
+            }
+            Err(err) => {
+                liked.set(prev_liked);
+                likes.set(prev_likes);
+                tracing::error!("Failed to toggle reply like: {:?}", err);
+                toast.error(err);
+            }
+        }
+        like_processing.set(false);
+    };
+
     let start_edit_content = original_content.clone();
     let on_edit_start = move |_| {
         edit_text.set(start_edit_content.clone());
@@ -997,6 +1036,23 @@ fn ReplyItem(
                                     span { class: "font-medium text-primary", "@{display_name}" }
                                 },
                             }
+                        }
+                    }
+                    div { class: "comment-item__actions",
+                        button {
+                            class: if liked() { "comment-action comment-action--liked" } else { "comment-action" },
+                            disabled: like_processing(),
+                            onclick: on_like,
+                            svg {
+                                view_box: "0 0 24 24",
+                                fill: if liked() { "currentColor" } else { "none" },
+                                stroke: "currentColor",
+                                stroke_width: "2",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                path { d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" }
+                            }
+                            span { "{likes()}" }
                         }
                     }
                 }
