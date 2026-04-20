@@ -400,7 +400,9 @@ fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus, space_id: Space
         || (status == ActionStatus::Skipped
             && matches!(
                 action.action_type,
-                SpaceActionType::Quiz | SpaceActionType::TopicDiscussion
+                SpaceActionType::Quiz
+                    | SpaceActionType::TopicDiscussion
+                    | SpaceActionType::Poll
             ));
     let mut overlay: ActiveActionOverlaySignal = use_context();
     let action_id = action.action_id.clone();
