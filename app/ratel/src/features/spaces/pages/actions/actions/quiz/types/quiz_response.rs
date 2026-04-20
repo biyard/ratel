@@ -23,6 +23,11 @@ pub struct QuizResponse {
     pub passed: Option<bool>,
     #[serde(default)]
     pub attempt_count: i64,
+    /// Only populated for participants once the quiz is effectively over
+    /// (passed, retries exhausted, or ended_at elapsed). Hidden while the
+    /// user can still attempt the quiz so the correct answers don't leak.
+    #[serde(default)]
+    pub correct_answers: Option<Vec<QuizCorrectAnswer>>,
     pub space_action: crate::features::spaces::pages::actions::models::SpaceAction,
 }
 
@@ -50,6 +55,7 @@ impl From<SpaceQuiz> for QuizResponse {
             my_score: None,
             passed: None,
             attempt_count: 0,
+            correct_answers: None,
             space_action: SpaceAction::default(),
         }
     }

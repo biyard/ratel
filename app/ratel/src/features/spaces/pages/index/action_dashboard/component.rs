@@ -35,9 +35,13 @@ pub(super) fn derive_action_status(action: &SpaceActionSummary) -> ActionStatus 
             }
         }
         SpaceActionType::Quiz => {
-            if action.quiz_passed == Some(true) {
+            // Any attempt — passing or failing — counts as "completed" so
+            // the quiz moves into the archive where the user can review
+            // their score. The archive row itself distinguishes passed
+            // vs. failed-with-retries-left via a score badge.
+            if action.user_participated {
                 ActionStatus::Completed
-            } else if ended || action.quiz_passed == Some(false) {
+            } else if ended {
                 ActionStatus::Skipped
             } else {
                 ActionStatus::Active
@@ -385,22 +389,44 @@ fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus, space_id: Space
     let lang = use_language();
     let tr: SpaceViewerTranslate = use_translate();
     let is_completed = status == ActionStatus::Completed;
-    let is_poll = action.action_type == SpaceActionType::Poll;
-    let can_reopen = is_completed && is_poll;
+    // Completed actions reopen their overlay on click so participants can
+    // revisit their entry. Skipped quizzes are also clickable in read-only
+    // mode — the submit button inside the overlay stays disabled because
+    // `can_submit` checks `attempt_count < total_allowed && !has_passed`.
+    let can_reopen = is_completed
+        || (status == ActionStatus::Skipped
+            && action.action_type == SpaceActionType::Quiz);
     let mut overlay: ActiveActionOverlaySignal = use_context();
     let action_id = action.action_id.clone();
     let space_id_for_click = space_id.clone();
+    let action_type = action.action_type.clone();
 
     rsx! {
         div {
             class: "archive-item",
             style: if can_reopen { "cursor: pointer;" } else { "" },
             onclick: move |_| {
-                if can_reopen {
-                    let pid: SpacePollEntityType = action_id.clone().into();
-                    overlay
-                        .0
-                        .set(Some(ActiveActionOverlay::Poll(space_id_for_click.clone(), pid)));
+                if !can_reopen {
+                    return;
+                }
+                let sid = space_id_for_click.clone();
+                let aid = action_id.clone();
+                match action_type {
+                    SpaceActionType::Poll => {
+                        let pid: SpacePollEntityType = aid.into();
+                        overlay.0.set(Some(ActiveActionOverlay::Poll(sid, pid)));
+                    }
+                    SpaceActionType::Quiz => {
+                        let qid: SpaceQuizEntityType = aid.into();
+                        overlay.0.set(Some(ActiveActionOverlay::Quiz(sid, qid)));
+                    }
+                    SpaceActionType::TopicDiscussion => {
+                        let did: SpacePostEntityType = aid.into();
+                        overlay.0.set(Some(ActiveActionOverlay::Discussion(sid, did)));
+                    }
+                    SpaceActionType::Follow => {
+                        // Follow has no in-overlay detail view yet; skip.
+                    }
                 }
             },
             div { class: "archive-item__info",
@@ -409,22 +435,39 @@ fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus, space_id: Space
                     "{action.action_type.translate(&lang())} · {action.credits} CR"
                 }
             }
-            if is_completed {
-                div { class: "archive-item__check",
-                    svg {
-                        fill: "none",
-                        stroke: "currentColor",
-                        stroke_linecap: "round",
-                        stroke_linejoin: "round",
-                        stroke_width: "2",
-                        view_box: "0 0 24 24",
-                        xmlns: "http://www.w3.org/2000/svg",
-                        path { d: "M22 11.08V12a10 10 0 1 1-5.93-9.14" }
-                        polyline { points: "22 4 12 14.01 9 11.01" }
+            {
+                let is_quiz = action.action_type == SpaceActionType::Quiz;
+                let quiz_passed = action.quiz_passed == Some(true);
+                if is_quiz && is_completed && !quiz_passed {
+                    // Failed attempt — show the score (e.g. "1 / 4").
+                    let score = action.quiz_score.unwrap_or(0);
+                    let total = action.quiz_total_score.unwrap_or(0);
+                    rsx! {
+                        div { class: "archive-item__score",
+                            "{score} / {total}"
+                        }
+                    }
+                } else if is_completed {
+                    rsx! {
+                        div { class: "archive-item__check",
+                            svg {
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "2",
+                                view_box: "0 0 24 24",
+                                xmlns: "http://www.w3.org/2000/svg",
+                                path { d: "M22 11.08V12a10 10 0 1 1-5.93-9.14" }
+                                polyline { points: "22 4 12 14.01 9 11.01" }
+                            }
+                        }
+                    }
+                } else {
+                    rsx! {
+                        div { class: "archive-item__skipped", "{tr.skipped_label}" }
                     }
                 }
-            } else {
-                div { class: "archive-item__skipped", "{tr.skipped_label}" }
             }
         }
     }

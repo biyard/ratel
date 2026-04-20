@@ -12,6 +12,7 @@ pub fn ActionRewardSetting(
     space_id: ReadSignal<SpacePartition>,
     action_id: ReadSignal<String>,
     saved_credits: u64,
+    started_at: i64,
     #[props(default)] on_change: EventHandler<u64>,
 ) -> Element {
     let tr: ActionCommonSettingsTranslate = use_translate();
@@ -22,6 +23,10 @@ pub fn ActionRewardSetting(
 
     let space = crate::features::spaces::space_common::hooks::use_space();
     let current_space = space();
+    let reward_locked = crate::features::spaces::pages::actions::is_action_locked(
+        current_space.status,
+        started_at,
+    );
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let personal_username = user_ctx
         .read()
@@ -185,8 +190,13 @@ pub fn ActionRewardSetting(
                         role: "switch",
                         tabindex: "0",
                         "aria-checked": enable_reward(),
+                        "aria-disabled": reward_locked,
                         "data-testid": "reward-setting-toggle",
                         onclick: move |_| {
+                            if reward_locked {
+                                toast.info(tr_reward.locked_started.to_string());
+                                return;
+                            }
                             let new_enabled = !enable_reward();
                             enable_reward.set(new_enabled);
                             let new_credits = if new_enabled { 1 } else { 0 };
@@ -232,9 +242,7 @@ pub fn ActionRewardSetting(
                 div { class: "arena-reward__grid",
                     // Default Reward column
                     div { class: "arena-reward__column",
-                        span { class: "arena-reward__column-label",
-                            "{tr_reward.default_reward}"
-                        }
+                        span { class: "arena-reward__column-label", "{tr_reward.default_reward}" }
                         div { class: "arena-reward__display",
                             div { class: "arena-reward__boost-badge",
                                 div { class: "arena-reward__boost-icon",
@@ -276,9 +284,7 @@ pub fn ActionRewardSetting(
 
                     // Boost Multiplier column
                     div { class: "arena-reward__column",
-                        span { class: "arena-reward__column-label",
-                            "{tr_reward.boost_multiplier}"
-                        }
+                        span { class: "arena-reward__column-label", "{tr_reward.boost_multiplier}" }
                         div { class: "arena-reward__boost-tile",
                             div { class: "arena-reward__boost-row",
                                 span { class: "arena-reward__boost-row-label",
@@ -289,8 +295,13 @@ pub fn ActionRewardSetting(
                                     r#type: "number",
                                     min: "0",
                                     "data-testid": "reward-credit-input",
+                                    readonly: reward_locked,
+                                    disabled: reward_locked,
                                     value: "{credits_value}",
                                     oninput: move |evt: FormEvent| {
+                                        if reward_locked {
+                                            return;
+                                        }
                                         let val = evt.value().parse::<u64>().unwrap_or(0);
                                         let limit = if base_max_credits > 0 {
                                             val.min(base_max_credits).min(available_credits)
@@ -398,5 +409,9 @@ translate! {
     point_boost_line_three: {
         en: "Credits are consumed when boost is applied to an action.",
         ko: "액션에 부스트를 적용하면 크레딧이 소모됩니다.",
+    },
+    locked_started: {
+        en: "Rewards cannot be changed after the action has started.",
+        ko: "액션이 시작된 이후에는 보상을 변경할 수 없습니다.",
     },
 }

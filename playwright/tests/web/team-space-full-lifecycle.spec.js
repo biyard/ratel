@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../fixtures";
 import {
   addPollQuestion,
   click,
@@ -36,6 +36,11 @@ import {
 
 const user2 = {
   email: "hi+user2@biyard.co",
+  password: "admin!234",
+};
+
+const user3 = {
+  email: "hi+user3@biyard.co",
   password: "admin!234",
 };
 
@@ -142,7 +147,7 @@ async function participateAndCompletePoll(page, pollOptionText) {
   // or ActionDashboard (space started)
 }
 
-async function loginUser2FromSpace(browser, spaceUrl) {
+async function loginFromSpace(browser, spaceUrl, { email, password }) {
   const context = await browser.newContext({
     storageState: { cookies: [], origins: [] },
     viewport: { width: 1440, height: 950 },
@@ -154,9 +159,9 @@ async function loginUser2FromSpace(browser, spaceUrl) {
   await pauseAnimations(page);
   await clickNoNav(page, { testId: "btn-signin" });
   await waitPopup(page, { visible: true });
-  await fill(page, { placeholder: "Enter your email address" }, user2.email);
+  await fill(page, { placeholder: "Enter your email address" }, email);
   await click(page, { text: "Continue" });
-  await fill(page, { placeholder: "Enter your password" }, user2.password);
+  await fill(page, { placeholder: "Enter your password" }, password);
   await click(page, { text: "Continue" });
   await waitPopup(page, { visible: false });
 
@@ -275,12 +280,86 @@ test.describe.serial("Full space lifecycle with rewards", () => {
       "Discussion: Roadmap Planning"
     );
 
-    const editor = await getEditor(page);
-    await editor.fill(
-      "Let's discuss the upcoming roadmap priorities and share ideas for the next quarter."
+    // Wait for the <tiptap-editor> web component to mount + initialize
+    // its internal editor so setContent() actually takes effect.
+    await getEditor(page);
+    await page.waitForFunction(
+      () => {
+        const el = document.querySelector("tiptap-editor");
+        return !!el && typeof el.setContent === "function" && !!el._editor;
+      },
+      null,
+      { timeout: 15000 }
     );
-    // Arena editor: no Save button, blur commits autosave.
+
+    // Build a payload that exercises every format the disc-body viewer
+    // styles — h1/h2 headings, bold/italic/inline-code/links, nested ul +
+    // ol, blockquote, table, and <hr> — so the rendered space surfaces
+    // any discussion-body styling regression at a glance. Constructed as
+    // an array of fragments so no single literal looks like an HTML doc.
+    const richHtml = [
+      "<h1>1. Roadmap Planning Overview</h1>",
+      "<p>Welcome to the <strong>roadmap planning</strong> discussion. ",
+      "We use this thread to coordinate <em>quarterly priorities</em> and ",
+      "surface blockers across teams. See the ",
+      '<a href="https://ratel.foundation">Ratel Foundation site</a> for the ',
+      "full charter.</p>",
+      "<h2>2. Top Priorities (Q1 -&gt; Q2)</h2>",
+      "<ul>",
+      "<li><p>Mobile experience parity (iOS + Android)</p></li>",
+      "<li><p>Backend hardening</p>",
+      "<ul>",
+      "<li><p>API <code>rate-limit</code> policy</p></li>",
+      "<li><p>Migration path for legacy tables</p></li>",
+      "</ul>",
+      "</li>",
+      "<li><p>New onboarding flow with reward gating</p></li>",
+      "</ul>",
+      "<h2>3. Sequencing Plan</h2>",
+      "<ol>",
+      "<li><p>Lock scope by week 2</p></li>",
+      "<li><p>Engineering kickoff in week 3</p></li>",
+      "<li><p>Internal beta by week 6</p></li>",
+      "</ol>",
+      "<blockquote><p>Decisions made in the open hold up better than ",
+      "decisions made behind closed doors. -- community guideline</p>",
+      "</blockquote>",
+      "<h2>4. Track Comparison</h2>",
+      "<table><tbody>",
+      "<tr><td><p>Track</p></td><td><p>Owner</p></td><td><p>Status</p></td></tr>",
+      "<tr><td><p>Mobile</p></td><td><p>Team A</p></td><td><p>In progress</p></td></tr>",
+      "<tr><td><p>Backend</p></td><td><p>Team B</p></td><td><p>Planning</p></td></tr>",
+      "<tr><td><p>Onboarding</p></td><td><p>Team C</p></td><td><p>Discovery</p></td></tr>",
+      "</tbody></table>",
+      "<hr>",
+      "<p>Reach out in this thread with questions, edits, or links to ",
+      "RFCs. Use <code>@team-name</code> to ping a specific group.</p>",
+    ].join("");
+
+    // The <tiptap-editor> web component exposes setContent() which runs
+    // `editor.commands.setContent` internally. We call it and then also
+    // dispatch the `change` CustomEvent the editor normally emits on
+    // user input so Dioxus's onchange handler picks up the HTML and
+    // triggers the standard 3s html_contents autosave.
+    await page.evaluate((html) => {
+      const el = document.querySelector("tiptap-editor");
+      if (!el) throw new Error("tiptap-editor not found");
+      el.setContent(html);
+      el.dispatchEvent(
+        new CustomEvent("change", {
+          detail: html,
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }, richHtml);
+
+    // Blur to commit any focused field, then wait for the html autosave
+    // (3s debounce + server roundtrip) to flip the badge to "Saved".
     await commitAutosave(page);
+    await expect(page.locator(".autosave--saved").first()).toBeVisible({
+      timeout: 15000,
+    });
 
     await setReward(page, 2);
   });
@@ -558,7 +637,7 @@ test.describe.serial("Full space lifecycle with rewards", () => {
   test("User2: Login and complete prerequisite (after start)", async ({
     browser,
   }) => {
-    const { context, page } = await loginUser2FromSpace(browser, spaceUrl);
+    const { context, page } = await loginFromSpace(browser, spaceUrl, user2);
     try {
       await participateAndCompletePoll(page, "Science");
 
@@ -782,6 +861,257 @@ test.describe.serial("Full space lifecycle with rewards", () => {
     } finally {
       await context.close();
     }
+  });
+
+  // ─── 13c. User2: Edit + delete own reply via context menu ────────────────
+
+  test("User2: Edit and delete own reply", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: user2StoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, spaceUrl);
+      await pauseAnimations(page);
+
+      const discCard = page.locator('[data-type="discuss"]').first();
+      await expect(discCard).toBeVisible({ timeout: 10000 });
+      await page.waitForTimeout(500);
+      await discCard.click();
+
+      await expect(page.getByTestId("discussion-arena-overlay")).toBeVisible({
+        timeout: 10000,
+      });
+
+      // Reply to the comment User2 posted in step 13. We scope by the
+      // parent's unique text snippet because `.comment-item` is shared by
+      // both the parent and each reply below it.
+      const parentSnippet = "API improvements";
+      const parentComment = page.locator(".comment-item", {
+        hasText: parentSnippet,
+      });
+      await expect(parentComment).toBeVisible({ timeout: 10000 });
+
+      // Open the reply input on the parent comment.
+      await parentComment.locator(".comment-action--reply").click();
+
+      const replyInput = page.locator(".reply-input__field");
+      await expect(replyInput).toBeVisible({ timeout: 5000 });
+
+      const replyOriginal = "Reply from User2 — editing test.";
+      await replyInput.fill(replyOriginal);
+      await page.locator(".reply-input__send").click();
+
+      // New reply renders inside .comment-replies. Restricting the selector
+      // to that container avoids accidentally matching the parent comment.
+      const originalReply = page.locator(".comment-replies .comment-item", {
+        hasText: replyOriginal,
+      });
+      await expect(originalReply).toBeVisible({ timeout: 10000 });
+
+      // Open the context menu on the just-posted reply and click Edit.
+      // The ⋮ trigger renders only for replies whose author matches the
+      // current user, so scoping via the unique reply text is enough.
+      await originalReply.getByTestId("comment-menu-trigger").click();
+      await page.getByTestId("comment-menu-edit").click();
+
+      // Only one comment/reply is editable at a time, so page-wide testids
+      // resolve to the single edit form.
+      const editInput = page.getByTestId("comment-edit-input");
+      await expect(editInput).toBeVisible({ timeout: 5000 });
+      const replyEdited = "Edited reply via context-menu action.";
+      await editInput.fill(replyEdited);
+      await page.getByTestId("comment-edit-save").click();
+
+      // After save the parent patches its local replies signal in place;
+      // the edited text renders without needing a loader restart.
+      const editedReply = page.locator(".comment-replies .comment-item", {
+        hasText: replyEdited,
+      });
+      await expect(editedReply).toBeVisible({ timeout: 10000 });
+      await expect(
+        page.locator(".comment-replies .comment-item", {
+          hasText: replyOriginal,
+        })
+      ).toBeHidden({ timeout: 10000 });
+
+      // Delete the edited reply via the context menu.
+      await editedReply.getByTestId("comment-menu-trigger").click();
+      await page.getByTestId("comment-menu-delete").click();
+
+      await expect(
+        page.locator(".comment-replies .comment-item", {
+          hasText: replyEdited,
+        })
+      ).toBeHidden({ timeout: 10000 });
+    } finally {
+      await context.close();
+    }
+  });
+
+  // ─── 13c. User3: Login + complete prerequisite (after start) ────────────
+
+  let user3StoragePath;
+
+  test("User3: Login and complete prerequisite (after start)", async ({
+    browser,
+  }) => {
+    const { context, page } = await loginFromSpace(browser, spaceUrl, user3);
+    try {
+      await participateAndCompletePoll(page, "Science");
+
+      user3StoragePath = `e2e-lifecycle-user3-${Date.now()}.json`;
+      await context.storageState({ path: user3StoragePath });
+    } finally {
+      await context.close();
+    }
+  });
+
+  // ─── 13d. User3: Complete quiz action ────────────────────────────────────
+  // User3 submits the correct answer — retries are exhausted after one
+  // passing attempt, so the server must reveal correct answers on re-open.
+
+  test("User3: Complete quiz action", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: user3StoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, spaceUrl);
+      await pauseAnimations(page);
+
+      const quizCard = page.locator('[data-type="quiz"]').first();
+      await expect(quizCard).toBeVisible({ timeout: 10000 });
+      await quizCard.click();
+
+      const overlay = page.getByTestId("quiz-arena-overlay");
+      await expect(overlay).toBeVisible({ timeout: 10000 });
+
+      await expect(page.getByTestId("quiz-arena-overview")).toBeVisible({
+        timeout: 10000,
+      });
+      await clickNoNav(page, { testId: "quiz-arena-begin" });
+
+      await expect(page.getByTestId("quiz-arena-questions")).toBeVisible({
+        timeout: 10000,
+      });
+
+      await expect(
+        overlay.getByText("Collective decision-making", { exact: true })
+      ).toBeVisible({ timeout: 10000 });
+      await overlay
+        .getByText("Collective decision-making", { exact: true })
+        .click();
+
+      await clickNoNav(page, { testId: "quiz-arena-submit" });
+
+      await expect(page.getByTestId("quiz-arena-overlay")).toBeHidden({
+        timeout: 30000,
+      });
+
+      await context.storageState({ path: user3StoragePath });
+    } finally {
+      await context.close();
+    }
+  });
+
+  // ─── 13e. User3: Review correct answer via archive ──────────────────────
+  // After the attempt is recorded, retries are exhausted (retry_count=0).
+  // The server now returns `correct_answers` and the overlay highlights
+  // the right option via data-correct on the option tile.
+
+  test("User3: Review correct answer via archive", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: user3StoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, spaceUrl);
+      await pauseAnimations(page);
+
+      // Open the archive panel from the bottom bar.
+      await clickNoNav(page, { testId: "btn-archive" });
+      const archivePanel = page.getByTestId("archive-panel");
+      await expect(archivePanel).toBeVisible({ timeout: 10000 });
+
+      // Completed quiz row lives in the archive with a green check.
+      const archivedQuiz = archivePanel
+        .locator(".archive-item")
+        .filter({ hasText: /Quiz/i })
+        .first();
+      await expect(archivedQuiz).toBeVisible({ timeout: 10000 });
+      await archivedQuiz.click();
+
+      const overlay = page.getByTestId("quiz-arena-overlay");
+      await expect(overlay).toBeVisible({ timeout: 10000 });
+
+      await clickNoNav(page, { testId: "quiz-arena-begin" });
+      await expect(page.getByTestId("quiz-arena-questions")).toBeVisible({
+        timeout: 10000,
+      });
+
+      // Correct option highlighted via data-correct.
+      const correctOption = overlay.locator(
+        '.option-tile[data-correct="true"]'
+      );
+      await expect(correctOption).toBeVisible({ timeout: 10000 });
+      await expect(correctOption).toContainText("Collective decision-making");
+
+      // Submit stays disabled because retries are exhausted.
+      const submitBtn = page.getByTestId("quiz-arena-submit");
+      if (await submitBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await expect(submitBtn).toBeDisabled();
+      }
+    } finally {
+      await context.close();
+    }
+  });
+
+  // ─── 13f. Creator: Quiz remains editable until the action ends ───────────
+  // The creator can still tweak questions/answers while the quiz is running,
+  // even after participants have submitted responses. Lock kicks in only
+  // once the quiz's ended_at has passed (covered by post-finish tests).
+
+  test("Creator: Can edit quiz answer while quiz is still running", async ({
+    page,
+  }) => {
+    await goto(page, spaceUrl);
+    await pauseAnimations(page);
+
+    const quizCard = page.locator('[data-type="quiz"]').first();
+    await expect(quizCard).toBeVisible({ timeout: 10000 });
+
+    const editBtn = quizCard.locator('[data-testid^="quest-edit-btn-"]');
+    await expect(editBtn).toBeVisible({ timeout: 10000 });
+    await editBtn.click();
+
+    await page.waitForURL(/\/actions\/quizzes\//, { waitUntil: "load" });
+
+    const questionsPage = page.locator('section.pager__page[data-page="1"]');
+    await questionsPage.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
+
+    const q1Options = questionsPage.locator(
+      '[data-testid="quiz-question-0"] .q-opt'
+    );
+    await expect(q1Options.first()).toBeVisible({ timeout: 10000 });
+    await q1Options.nth(1).locator(".q-opt__radio").click();
+    await page.waitForLoadState("load");
+
+    // The lock-after-responses toast should NOT appear — the edit is
+    // permitted as long as the quiz hasn't finished.
+    await expect(
+      page.getByText(/quiz cannot be edited after it has finished/i).first()
+    ).toBeHidden({ timeout: 3000 });
   });
 
   // ─── 14. Creator: Finish space ─────────────────────────────────────────
