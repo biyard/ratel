@@ -645,6 +645,7 @@
   line-height: 1.6;
   color: var(--text);
   word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .comment-item__actions {
@@ -899,6 +900,8 @@
   font-family: "Outfit", sans-serif;
   font-size: 12px;
   outline: none;
+  resize: none;
+  line-height: 1.5;
 }
 .reply-input__field::placeholder {
   color: var(--text-dim);
