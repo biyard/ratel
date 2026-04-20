@@ -164,6 +164,29 @@ export async function waitForHydrated(page, testId, timeout = 15000) {
   );
 }
 
+/**
+ * Click a locator and wait for a target element to become visible, retrying
+ * the click if the target doesn't appear. Dioxus `onclick` handlers on
+ * dynamically rendered elements (`use_loader`-backed cards, freshly mounted
+ * modals) can be bound after the DOM node is already visible, so a click
+ * fired immediately after `toBeVisible` is silently dropped. Uses the same
+ * retry cadence as `openHomeTeamsDropdown`. The pre-click visibility check
+ * keeps the retry idempotent (important for modal-triggering buttons — a
+ * second click on a full-screen backdrop would close the modal again).
+ */
+export async function clickAndWaitForVisible(
+  clickable,
+  target,
+  { timeout = 15000 } = {},
+) {
+  await expect(async () => {
+    if (!(await target.isVisible({ timeout: 100 }).catch(() => false))) {
+      await clickable.click();
+    }
+    await expect(target).toBeVisible({ timeout: 1500 });
+  }).toPass({ timeout, intervals: [300, 600, 1200, 2000] });
+}
+
 export async function getEditor(page) {
   const editor = page.locator("[contenteditable]");
   await expect(editor).toBeVisible();
@@ -345,7 +368,14 @@ export async function createAction(page, spaceUrl, typeKey, urlRegex) {
     const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
     if (fab) fab.style.display = "none";
   });
-  await click(page, { testId: "admin-add-action-card" });
+  // The admin add-action card is rendered by ActionDashboard after its
+  // action loader resolves; Dioxus may not have bound the onclick handler
+  // by the time the element becomes visible, so a bare click can be dropped.
+  // Use the retry helper to click until the TypePicker modal surfaces.
+  const addCard = page.getByTestId("admin-add-action-card");
+  await expect(addCard).toBeVisible();
+  const typeOption = page.getByTestId(`type-option-${typeKey}`);
+  await clickAndWaitForVisible(addCard, typeOption);
   await click(page, { testId: `type-option-${typeKey}` });
   await page.waitForURL(urlRegex, { waitUntil: "load", timeout: 60000 });
 }
