@@ -40,10 +40,60 @@ fn reset_composer_height() {
     reset_composer_height_js();
 }
 
+/// Routable wrapper for `DiscussionArenaPage`. Registered on
+/// `/spaces/:space_id/discussions/:discussion_id` so external deep links
+/// (e.g. notification CTAs without a target comment) land directly on the
+/// discussion viewer. Arena-internal clicks continue to open the overlay via
+/// `ActiveActionOverlaySignal`; both paths render the same component.
+#[component]
+pub fn SpaceDiscussionPage(
+    space_id: SpacePartition,
+    discussion_id: SpacePostEntityType,
+) -> Element {
+    let space_id_sig: ReadSignal<SpacePartition> = use_signal(|| space_id.clone()).into();
+    let discussion_id_sig: ReadSignal<SpacePostEntityType> =
+        use_signal(|| discussion_id.clone()).into();
+    rsx! {
+        DiscussionArenaPage {
+            space_id: space_id_sig,
+            discussion_id: discussion_id_sig,
+            target_comment_id: None,
+        }
+    }
+}
+
+/// Variant of `SpaceDiscussionPage` that carries a `comment_id` path
+/// parameter. The id flows down to `DiscussionArenaPage`, whose deep-link
+/// effect scrolls to + highlights the matching `.comment-item`. Comment id
+/// is in the path (not query/fragment) because Dioxus Router strips both
+/// during URL normalization on hydration.
+#[component]
+pub fn SpaceDiscussionCommentPage(
+    space_id: SpacePartition,
+    discussion_id: SpacePostEntityType,
+    comment_id: String,
+) -> Element {
+    let space_id_sig: ReadSignal<SpacePartition> = use_signal(|| space_id.clone()).into();
+    let discussion_id_sig: ReadSignal<SpacePostEntityType> =
+        use_signal(|| discussion_id.clone()).into();
+    rsx! {
+        DiscussionArenaPage {
+            space_id: space_id_sig,
+            discussion_id: discussion_id_sig,
+            target_comment_id: Some(comment_id),
+        }
+    }
+}
+
 #[component]
 pub fn DiscussionArenaPage(
     space_id: ReadSignal<SpacePartition>,
     discussion_id: ReadSignal<SpacePostEntityType>,
+    // When `Some`, `data-deep-link` is set on the matching `.comment-item`
+    // and the deep-link effect scrolls it into view. Sourced from the
+    // `Route::SpaceDiscussionCommentPage` path parameter; arena-overlay
+    // entries pass `None`.
+    #[props(default)] target_comment_id: Option<String>,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
     let mut toast = use_toast();
@@ -157,7 +207,50 @@ pub fn DiscussionArenaPage(
             .collect()
     };
 
-    let mut overlay: ActiveActionOverlaySignal = use_context();
+    // Overlay is provided by `SpaceIndexPage` when this renders as an arena
+    // overlay. Under the standalone `Route::SpaceDiscussionPage`, there is no
+    // provider — `on_back` falls back to `nav.go_back()` in that case.
+    let overlay_ctx: Option<ActiveActionOverlaySignal> = try_consume_context();
+    let nav = use_navigator();
+
+    // Path-based deep-link target. When set (via the
+    // `SpaceDiscussionCommentPage` route variant), the matching
+    // `.comment-item` gets `data-deep-link="true"` (drives the CSS pulse)
+    // and is scrolled into view once it appears in the DOM. Signal-driven
+    // so Dioxus's next diff doesn't clobber the attribute. Single success
+    // per mount via the `done` guard; retries on each loader tick until
+    // the target renders (handles unpolled comments).
+    let deep_link_target: Signal<Option<String>> = use_signal(|| target_comment_id.clone());
+    let mut deep_link_done: Signal<bool> = use_signal(|| target_comment_id.is_none());
+    #[cfg(feature = "web")]
+    {
+        use_effect(move || {
+            let _ = comments_loader();
+            if deep_link_done() {
+                return;
+            }
+            let Some(target_id) = deep_link_target() else {
+                deep_link_done.set(true);
+                return;
+            };
+            let Some(window) = web_sys::window() else {
+                return;
+            };
+            let Some(document) = window.document() else {
+                return;
+            };
+            let Some(el) = document.get_element_by_id(&target_id) else {
+                // Not rendered yet (unpolled, or a reply — Phase 2). Retry
+                // on next comments_loader tick.
+                return;
+            };
+            let opts = web_sys::ScrollIntoViewOptions::new();
+            opts.set_behavior(web_sys::ScrollBehavior::Smooth);
+            opts.set_block(web_sys::ScrollLogicalPosition::Center);
+            let _ = el.scroll_into_view_with_scroll_into_view_options(&opts);
+            deep_link_done.set(true);
+        });
+    }
 
     let mut comment_text = use_signal(String::new);
     let mut tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
@@ -199,7 +292,11 @@ pub fn DiscussionArenaPage(
     };
 
     let on_back = move |_| {
-        overlay.0.set(None);
+        if let Some(mut o) = overlay_ctx {
+            o.0.set(None);
+        } else {
+            nav.go_back();
+        }
     };
 
     let on_submit_comment = move |_| async move {
@@ -407,7 +504,7 @@ pub fn DiscussionArenaPage(
                             on_submit: move |_| on_submit_comment(()),
                             placeholder: tr.comment_placeholder.to_string(),
                             disabled: comment_text().trim().is_empty()
-                                                                                                                                                                                                        && pending_images.read().is_empty(),
+                                                                                                                                                                                                                                    && pending_images.read().is_empty(),
                         }
                     }
 
@@ -424,6 +521,7 @@ pub fn DiscussionArenaPage(
                                     members,
                                     comments_loader,
                                     polled_new,
+                                    deep_link_target,
                                 }
                             }
                         }
@@ -589,6 +687,7 @@ fn CommentItem(
     members: ReadSignal<Vec<MentionCandidate>>,
     comments_loader: Loader<ListResponse<DiscussionCommentResponse>>,
     polled_new: Signal<Vec<DiscussionCommentResponse>>,
+    deep_link_target: ReadSignal<Option<String>>,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
     let mut comments_loader = comments_loader;
@@ -604,6 +703,13 @@ fn CommentItem(
     let time_ago = format_time_ago(comment.created_at);
     let comment_sk = use_signal(|| comment.sk.clone());
     let reply_count = comment.replies;
+
+    // DOM id for deep-linking. Match the URL fragment format
+    // (`#<uuid>`) used by mention notification CTAs so the fragment
+    // scroller in `DiscussionArenaPage` can resolve us.
+    let comment_dom_id: String = SpacePostCommentEntityType::try_from(comment.sk.clone())
+        .map(|e| e.0)
+        .unwrap_or_else(|_| comment.sk.to_string());
 
     // Optimistic like state — mirrors the reply path. Local signals own the
     // visible state so toggling feels instant; server mutations reconcile
@@ -787,7 +893,10 @@ fn CommentItem(
 
     rsx! {
         div { class: "comment-entry",
-            div { class: "comment-item",
+            div {
+                class: "comment-item",
+                id: "{comment_dom_id}",
+                "data-deep-link": if deep_link_target().as_deref() == Some(comment_dom_id.as_str()) { "true" } else { "false" },
                 img {
                     class: "comment-item__avatar",
                     src: "{comment.author_profile_url}",
@@ -959,7 +1068,7 @@ fn CommentItem(
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
                         disabled: reply_text().trim().is_empty()
-                                                                                                                                                                            && reply_pending_images.read().is_empty(),
+                                                                                                                                                                                                    && reply_pending_images.read().is_empty(),
                     }
                 }
             }

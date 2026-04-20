@@ -630,6 +630,29 @@
 .comment-item:hover {
   background: var(--surface-raised);
 }
+
+/* Deep-link highlight: `DiscussionArenaPage` sets
+   `data-deep-link="true"` on the target `.comment-item` when the URL
+   hash matches its UUID. Signal-driven attribute so Dioxus's next diff
+   doesn't clobber it (as a raw `class` write would). One-shot pulse
+   fades out; the attribute stays but the animation only plays once. */
+.comment-item[data-deep-link="true"] {
+  animation: comment-deep-link-pulse 2.6s ease-out;
+}
+@keyframes comment-deep-link-pulse {
+  0% {
+    background: rgba(34, 211, 238, 0.22);
+    box-shadow: inset 3px 0 0 var(--discuss-color);
+  }
+  70% {
+    background: rgba(34, 211, 238, 0.06);
+    box-shadow: inset 3px 0 0 rgba(34, 211, 238, 0.5);
+  }
+  100% {
+    background: transparent;
+    box-shadow: none;
+  }
+}
 .comment-item__avatar {
   width: 28px;
   height: 28px;
