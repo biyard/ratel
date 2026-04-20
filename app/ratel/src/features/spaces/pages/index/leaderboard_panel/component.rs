@@ -1,3 +1,4 @@
+use crate::auth::use_user_context;
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::hooks::{use_my_score, use_ranking};
 
@@ -63,6 +64,7 @@ fn LeaderboardContent(space_id: ReadSignal<SpacePartition>) -> Element {
 
     let ranking_loader = use_ranking();
     let my_score_loader = use_my_score();
+    let user = use_user_context();
 
     let ranking = ranking_loader();
     let my_score = my_score_loader();
@@ -150,7 +152,7 @@ fn LeaderboardContent(space_id: ReadSignal<SpacePartition>) -> Element {
                             LeaderboardEntry {
                                 key: "{entry.rank}",
                                 entry: entry.clone(),
-                                is_me: my_score.rank > 0 && entry.rank == my_score.rank,
+                                is_me: if let Some(pk) = user().user_pk() { &entry.user_pk == &pk } else { false },
                                 you_label: tr.you.to_string(),
                             }
                         }
