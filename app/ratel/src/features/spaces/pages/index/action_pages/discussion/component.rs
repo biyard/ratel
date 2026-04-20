@@ -18,6 +18,25 @@ use crate::features::spaces::space_common::controllers::list_space_members;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
 use crate::features::spaces::space_common::providers::use_space_context;
 
+// Programmatic value changes from Dioxus's signal binding don't fire the
+// `input` event, so the autogrow listener can't reset the stretched inline
+// height after a submit clears the composer. This bridge lets the Rust
+// side trigger the reset explicitly.
+#[cfg(not(feature = "server"))]
+use crate::common::wasm_bindgen::prelude::*;
+
+#[cfg(not(feature = "server"))]
+#[wasm_bindgen(module = "/src/features/spaces/pages/index/action_pages/discussion/script.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = resetComposerHeight)]
+    fn reset_composer_height_js();
+}
+
+fn reset_composer_height() {
+    #[cfg(not(feature = "server"))]
+    reset_composer_height_js();
+}
+
 #[component]
 pub fn DiscussionArenaPage(
     space_id: ReadSignal<SpacePartition>,
@@ -192,7 +211,7 @@ pub fn DiscussionArenaPage(
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
-        document::Script { defer: true, src: asset!("./script.js") }
+        document::Script { r#type: "module", src: asset!("./script.js") }
 
         div { class: "discussion-arena",
 
@@ -413,6 +432,26 @@ fn CommentComposer(
         }
     };
 
+    use_effect(move || {
+        if text().is_empty() {
+            reset_composer_height();
+        }
+    });
+
+    // Ctrl/Cmd+Enter submits; plain Enter and Shift+Enter fall through to
+    // the textarea's default newline. MentionAutocomplete skips modifier-
+    // qualified Enter/Tab so the dropdown doesn't swallow the submit key.
+    let on_keydown = move |evt: KeyboardEvent| {
+        if evt.key() == Key::Enter
+            && (evt.modifiers().contains(Modifiers::CONTROL)
+                || evt.modifiers().contains(Modifiers::META))
+        {
+            evt.prevent_default();
+            evt.stop_propagation();
+            on_submit.call(());
+        }
+    };
+
     if compact {
         rsx! {
             div { class: "reply-input",
@@ -425,6 +464,7 @@ fn CommentComposer(
                         oninput: move |e| {
                             text.set(e.value());
                         },
+                        onkeydown: on_keydown,
                     }
                 }
                 button {
@@ -466,6 +506,7 @@ fn CommentComposer(
                                 oninput: move |e| {
                                     text.set(e.value());
                                 },
+                                onkeydown: on_keydown,
                             }
                         }
                         div { class: "comment-input__footer",
