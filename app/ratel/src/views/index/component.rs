@@ -12,6 +12,7 @@ use crate::features::spaces::pages::index::SettingsPanel;
 use crate::features::spaces::space_common::controllers::{
     list_hot_spaces_handler, list_my_home_spaces_handler, HotSpaceHeat, HotSpaceResponse,
 };
+use crate::me::use_my_spaces;
 use crate::*;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -73,13 +74,7 @@ pub fn Index() -> Element {
     let brand_logo = "https://metadata.ratel.foundation/logos/logo-symbol.png".to_string();
 
     let hot_spaces = use_loader(move || async move { list_hot_spaces_handler(None).await })?;
-    let my_spaces = use_loader(move || async move {
-        if has_user {
-            list_my_home_spaces_handler(None).await
-        } else {
-            Ok(ListResponse::default())
-        }
-    })?;
+    let my_spaces = use_my_spaces()?.my_spaces;
 
     let hot_cards = hot_spaces().items;
     let mine_cards = my_spaces().items;
@@ -352,12 +347,12 @@ pub fn Index() -> Element {
                                     // onscroll + JS so pagination triggers reliably.
                                     onscroll: move |_| {
                                         let js = r#"
-                                                                                                                                            const el = document.getElementById('home-teams-dd-list');
-                                                                                                                                            if (!el) { dioxus.send(false); return; }
-                                                                                                                                            const nearBottom =
-                                                                                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
-                                                                                                                                            dioxus.send(nearBottom);
-                                                                                                                                        "#;
+                                                                                                                                                                                                                                                                            const el = document.getElementById('home-teams-dd-list');
+                                                                                                                                                                                                                                                                            if (!el) { dioxus.send(false); return; }
+                                                                                                                                                                                                                                                                            const nearBottom =
+                                                                                                                                                                                                                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+                                                                                                                                                                                                                                                                            dioxus.send(nearBottom);
+                                                                                                                                                                                                                                                                        "#;
                                         let mut ctrl = teams_query;
                                         spawn(async move {
                                             let mut eval = document::eval(js);
