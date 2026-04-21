@@ -189,7 +189,7 @@ impl SpaceEmailVerification {
             _ => String::new(),
         };
 
-        let cta_url = format!("https://ratel.foundation/spaces/SPACE%23{}", space_id);
+        let cta_url = format!("https://ratel.foundation/spaces/{}", space_id);
 
         let notification = Notification::new(NotificationData::SendSpaceInvitation {
             emails: user_emails,
