@@ -20,12 +20,12 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
         .await?
         .ok_or(Error::NotFound("Action not found".into()))?;
 
-    // Once the action has started it is locked — creators can no
-    // longer delete it. The list UI hides the delete button past
-    // lock; defend the API surface here too.
+    // Once the action has been published (Ongoing / Finish) it is locked —
+    // creators can no longer delete it. Designing / legacy (None) actions
+    // remain deletable.
     if crate::features::spaces::pages::actions::is_action_locked(
         space.status.clone(),
-        space_action.started_at,
+        space_action.status.as_ref(),
     ) {
         return Err(Error::ActionLocked);
     }

@@ -43,11 +43,12 @@ impl From<SpaceFollowAction>
             quiz_score: None,
             quiz_total_score: None,
             quiz_passed: None,
-            started_at: None,
-            ended_at: None,
             user_participated: false,
             credits: 0,
             prerequisite: false,
+            status: None,
+            depends_on: Vec::new(),
+            dependencies_met: true,
         }
     }
 }
