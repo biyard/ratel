@@ -12,7 +12,10 @@ pub async fn list_inbox_handler(
     let cli = cfg.dynamodb();
 
     let (items, next) = if unread_only.unwrap_or(false) {
+        // Filter by the sparse GSI sort-key prefix so rows we rewrote to the
+        // read sentinel ("R") are skipped — only "U#..." unread keys match.
         let opts = UserInboxNotification::opt_with_bookmark(bookmark)
+            .sk("U".to_string())
             .scan_index_forward(false)
             .limit(30);
         UserInboxNotification::find_inbox_unread_by_user(cli, user.pk.clone(), opts)
