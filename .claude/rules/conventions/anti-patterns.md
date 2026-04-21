@@ -20,6 +20,71 @@ nav.replace(Route::PostDetailPage { post_id });
 Link { to: Route::SpaceDashboardPage { space_id }, "Dashboard" }
 ```
 
+## Direct Server-Handler Calls from Components
+
+```rust
+// BAD — component awaits a _handler directly; side effects and lifecycle
+// tracking are lost; refresh/nav logic gets duplicated at every call site.
+#[component]
+fn NotificationPanel() -> Element {
+    let mut inbox = use_infinite_query(...)?;
+    rsx! {
+        button {
+            onclick: move |_| {
+                spawn(async move {
+                    let _ = mark_all_read_handler().await;
+                    inbox.refresh();
+                });
+            },
+            "Mark all as read"
+        }
+    }
+}
+
+// GOOD — mutation lives in a UseFeature controller, component just calls the action
+#[component]
+fn NotificationPanel() -> Element {
+    let UseInbox { mut handle_mark_all, .. } = use_inbox()?;
+    rsx! {
+        button {
+            onclick: move |_| handle_mark_all.call(),
+            "Mark all as read"
+        }
+    }
+}
+```
+
+Every feature exposes a `UseFeatureName` hook that owns loaders, queries, and `use_action(...)` mutations. Components destructure from that hook and never import server `_handler` functions. See `conventions/hooks-and-actions.md`.
+
+## Use-Action Closure Without Explicit `Ok` Type
+
+```rust
+// BAD — rustc can't infer Err, reports `_: Into<CapturedError>`
+let handle_mark_all = use_action(move || async move {
+    mark_all_read_handler().await?;
+    inbox.refresh();
+    Ok(())
+});
+
+// GOOD — explicit Err type lets CapturedError conversion resolve
+let handle_mark_all = use_action(move || async move {
+    mark_all_read_handler().await?;
+    inbox.refresh();
+    Ok::<(), crate::common::Error>(())
+});
+```
+
+## Action Field Destructured Without `mut`
+
+```rust
+// BAD — Action::call takes &mut self
+let UseInbox { handle_mark_all, .. } = use_inbox()?;
+// error: cannot borrow `handle_mark_all` as mutable
+
+// GOOD
+let UseInbox { mut handle_mark_all, .. } = use_inbox()?;
+```
+
 ## Conditional Class Strings
 
 ```rust

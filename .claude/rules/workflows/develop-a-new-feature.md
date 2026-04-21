@@ -28,20 +28,26 @@
 - Test success, error, and unauthenticated cases
 - **References**: conventions/server-function-tests.md
 
-## Step 7: Design & Implement Frontend UI
+## Step 7: Build Feature Controller Hook
+- Add a `UseFeatureName` controller in `app/ratel/src/features/<feature>/hooks/use_<feature>.rs` bundling every signal, loader, query, and `use_action(...)` mutation the UI needs
+- Context-cache it with `try_use_context::<UseFeature>()` + `provide_root_context(...)` so a single instance is shared across the tree
+- **References**: conventions/hooks-and-actions.md
+
+## Step 8: Design & Implement Frontend UI
 - For new pages or major visual redesigns → follow `workflows/ui-design-implementation.md` (HTML-first approach)
 - For minor UI additions using existing components → implement directly in RSX
-- **References**: conventions/html-first-components.md, conventions/styling.md, conventions/figma-design-system.md, conventions/design-system-guide.md, conventions/dioxus-app.md, conventions/i18n.md, conventions/anti-patterns.md
+- Components consume the controller hook from Step 7 and call actions (`handle.call(input)`); they MUST NOT import server `_handler` functions or call them directly
+- **References**: conventions/html-first-components.md, conventions/styling.md, conventions/figma-design-system.md, conventions/design-system-guide.md, conventions/dioxus-app.md, conventions/hooks-and-actions.md, conventions/i18n.md, conventions/anti-patterns.md
 - **Skills**: frontend-design, figma:figma-implement-design, dioxus-knowledge-patch, rust-knowledge-patch
 
-## Step 8: Lint & Format
+## Step 9: Lint & Format
 - **References**: conventions/lint-and-format.md
 
-## Step 9: Verify Build
+## Step 10: Verify Build
 - **References**: conventions/build-commands.md
 - **Skills**: superpowers:verification-before-completion
 
-## Step 10: Test
+## Step 11: Test
 - Write and run e2e tests
 - **References**: conventions/playwright-tests.md
 - **Skills**: playwright-scenario-writer

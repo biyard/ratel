@@ -164,6 +164,12 @@ pub async fn update_space(
         UpdateSpaceRequest::Content { content } => {
             su = su.with_content(content.clone());
 
+            let post_pk = space_pk.clone().to_post_key()?;
+            let post_updater = Post::updater(post_pk, EntityType::Post)
+                .with_updated_at(now)
+                .with_html_contents(content.clone());
+            pu = Some(post_updater);
+
             updated_space.content = content;
         }
         UpdateSpaceRequest::Title { title } => {

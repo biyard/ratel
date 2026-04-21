@@ -21,7 +21,8 @@
 
 ## Step 5: Implement Changes
 - Modify existing controllers, models, components as needed
-- **References**: conventions/server-functions.md, conventions/dynamodb-patterns.md, conventions/dioxus-app.md, conventions/styling.md, conventions/error-handling.md, conventions/i18n.md, conventions/design-system-guide.md, conventions/html-first-components.md, conventions/anti-patterns.md
+- For new mutations or data fetches, extend the feature's `UseFeatureName` controller hook — don't call server `_handler`s directly from components
+- **References**: conventions/server-functions.md, conventions/dynamodb-patterns.md, conventions/dioxus-app.md, conventions/hooks-and-actions.md, conventions/styling.md, conventions/error-handling.md, conventions/i18n.md, conventions/design-system-guide.md, conventions/html-first-components.md, conventions/anti-patterns.md
 - **Skills**: dioxus-knowledge-patch, rust-knowledge-patch
 
 ## Step 6: Write/Update Server Function Tests
