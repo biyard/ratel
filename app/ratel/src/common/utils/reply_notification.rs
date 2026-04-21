@@ -94,6 +94,8 @@ pub async fn send_reply_on_comment(
     let mut seen = std::collections::HashSet::new();
     let mut emails: Vec<String> = Vec::new();
 
+    let comment_preview = build_preview(&parent_content);
+
     for pk in all_pks {
         let pk_str = pk.to_string();
         if pk_str == replier_pk {
@@ -129,6 +131,26 @@ pub async fn send_reply_on_comment(
             continue;
         }
         emails.push(user.email);
+
+        // Inbox row — idempotent per (recipient, parent_comment_sk#replier_pk).
+        let payload = crate::common::types::InboxPayload::ReplyOnComment {
+            space_id: None,
+            post_id: None,
+            comment_preview: comment_preview.clone(),
+            replier_name: replier_name.to_string(),
+            replier_profile_url: String::new(),
+            cta_url: cta_url.to_string(),
+        };
+        let dedup_source = format!("{parent_comment_sk}#{replier_pk}");
+        if let Err(e) = crate::common::utils::inbox::create_inbox_row_once(
+            pk.clone(),
+            payload,
+            &dedup_source,
+        )
+        .await
+        {
+            crate::error!("reply inbox row failed: {e}");
+        }
     }
 
     if emails.is_empty() {
@@ -136,7 +158,6 @@ pub async fn send_reply_on_comment(
         return Ok(());
     }
 
-    let comment_preview = build_preview(&parent_content);
     let reply_preview = build_preview(reply_content);
 
     let operation = EmailOperation::ReplyOnCommentNotification {
