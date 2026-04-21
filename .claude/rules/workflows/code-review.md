@@ -16,7 +16,8 @@
 - Verify primitive components (`Button`, `Input`, `Card`, `Row`, `Col` — no raw HTML)
 - Verify `translate!` macro for all user-facing strings
 - Verify `SeoMeta` on page views
-- **References**: conventions/styling.md, conventions/dioxus-app.md, conventions/i18n.md, conventions/design-system-guide.md
+- Verify components consume a `UseFeatureName` controller hook and call actions — not server `_handler`s directly or raw `spawn(async move { handler().await })` in event handlers
+- **References**: conventions/styling.md, conventions/dioxus-app.md, conventions/hooks-and-actions.md, conventions/i18n.md, conventions/design-system-guide.md
 
 ## Step 4: Check MCP Tools (if applicable)
 - Verify `#[mcp_tool]` annotation and `#[mcp(description)]` on params

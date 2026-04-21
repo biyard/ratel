@@ -12,6 +12,7 @@ pub enum ActivePanel {
     Overview,
     Leaderboard,
     Settings,
+    Notifications,
 }
 
 #[component]
@@ -21,6 +22,8 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let role = use_space_role()();
     let ctx = crate::features::spaces::space_common::providers::use_space_context();
     let real_role = (ctx.role)();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
+    let has_user = user_ctx().user.is_some();
     let mut active_panel = use_signal(|| ActivePanel::None);
     let action_overlay = use_context_provider(|| ActiveActionOverlaySignal(Signal::new(None)));
     let _completed_quiz = use_context_provider(|| CompletedActionCard(Signal::new(None)));
@@ -50,6 +53,7 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let overview_open = active_panel() == ActivePanel::Overview;
     let leaderboard_open = active_panel() == ActivePanel::Leaderboard;
     let settings_open = active_panel() == ActivePanel::Settings;
+    let notifications_open = active_panel() == ActivePanel::Notifications;
 
     rsx! {
         document::Link { rel: "preconnect", href: "https://fonts.googleapis.com" }
@@ -159,6 +163,17 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
                 },
                 is_admin,
                 space_id,
+            }
+
+            if has_user {
+                SuspenseBoundary {
+                    crate::features::notifications::components::NotificationPanel {
+                        open: notifications_open,
+                        on_close: move |_| {
+                            active_panel.set(ActivePanel::None);
+                        },
+                    }
+                }
             }
         }
         match action_overlay.0() {
