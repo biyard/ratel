@@ -3,9 +3,14 @@ use crate::common::models::notification::UserInboxNotification;
 use crate::features::auth::User;
 use crate::features::notifications::types::{InboxNotificationResponse, NotificationsError};
 
+#[mcp_tool(
+    name = "list_inbox",
+    description = "List current user's notification inbox. Returns paginated results ordered newest-first."
+)]
 #[get("/api/inbox?unread_only&bookmark", user: User)]
 pub async fn list_inbox_handler(
-    unread_only: Option<bool>,
+    #[mcp(description = "If true, return only unread notifications.")] unread_only: Option<bool>,
+    #[mcp(description = "Opaque pagination bookmark from a previous response. Omit for first page.")]
     bookmark: Option<String>,
 ) -> Result<ListResponse<InboxNotificationResponse>> {
     let cfg = crate::common::CommonConfig::default();

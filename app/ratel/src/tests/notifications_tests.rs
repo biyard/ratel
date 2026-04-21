@@ -1,4 +1,5 @@
 use super::*;
+use super::mcp_tests::{extract_tool_content, mcp_tool_call, setup_mcp_test};
 use crate::common::types::{InboxPayload, ListResponse};
 use crate::common::utils::inbox::create_inbox_row;
 use crate::features::notifications::types::{
@@ -100,6 +101,33 @@ async fn test_mark_read_flips_unread_sentinel() {
         response_type: UnreadCountResponse,
     };
     assert_eq!(body.count, 0);
+}
+
+#[tokio::test]
+async fn test_mcp_list_inbox_lists_authenticated_user_rows() {
+    let (ctx, token) = setup_mcp_test().await;
+    let user_pk = ctx.test_user.0.pk.clone();
+
+    create_inbox_row(user_pk.clone(), reply_payload("mcp-test-1"))
+        .await
+        .unwrap();
+    create_inbox_row(user_pk.clone(), reply_payload("mcp-test-2"))
+        .await
+        .unwrap();
+
+    let (status, body) =
+        mcp_tool_call(ctx.app.clone(), &token, "list_inbox", serde_json::json!({})).await;
+    assert_eq!(status, 200, "list_inbox: {:?}", body);
+    let content = extract_tool_content(&body);
+    let items = content["items"]
+        .as_array()
+        .unwrap_or_else(|| panic!("expected items array in MCP result: {:?}", content));
+    assert!(
+        items.len() >= 2,
+        "expected at least 2 inbox rows, got {}: {:?}",
+        items.len(),
+        content
+    );
 }
 
 #[tokio::test]
