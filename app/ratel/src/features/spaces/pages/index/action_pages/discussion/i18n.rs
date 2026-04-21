@@ -19,6 +19,10 @@ translate! {
         en: "Share your thoughts...",
         ko: "의견을 남겨주세요...",
     },
+    post_btn: {
+        en: "Post",
+        ko: "게시",
+    },
     reply_placeholder: {
         en: "Write a reply...",
         ko: "답글을 작성하세요...",
@@ -98,5 +102,13 @@ translate! {
     delete_success: {
         en: "Comment deleted.",
         ko: "댓글이 삭제되었습니다.",
+    },
+    replies_page_title: {
+        en: "Replies",
+        ko: "답글",
+    },
+    replies_back_aria: {
+        en: "Back",
+        ko: "뒤로",
     },
 }

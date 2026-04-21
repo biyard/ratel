@@ -489,22 +489,23 @@
 }
 
 /* ── Comment Input ─────────────────────────────── */
-/* The top-level composer reuses the `.reply-input` inline layout so its
-   textarea + send icon look identical to the per-comment reply box. This
-   outer wrapper supplies the panel-level chrome (padding + divider) that
-   the reply box (nested under a comment) doesn't need. */
-.comment-input {
+/* The top-level composer (at the top of the comments panel) always
+   gets the padded + divider chrome. The compact reply composer only
+   inherits the same chrome on mobile — on desktop it stays bare so the
+   `.reply-input` pill appears inline under the comment without an
+   extra panel frame (matching the pre-unification look). */
+.comment-input:not([data-compact="true"]) {
   padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  border-bottom: 1px solid var(--border);
 }
-/* Kill the reply-box offsets when it sits inside the panel-level wrapper —
-   those margins align replies under their parent comment, which doesn't
-   apply at the top of the panel. */
-.comment-input > .reply-input {
+/* Kill the reply-box offsets when the top-level wrapper provides its
+   own positioning — those margins only make sense for the bare inline
+   reply pill nested under a parent comment on desktop. */
+.comment-input:not([data-compact="true"]) > .reply-input {
   margin-left: 0;
   margin-right: 0;
   margin-top: 0;
@@ -998,7 +999,7 @@
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
-  .comments-panel.expanded {
+  .comments-panel[data-expanded="true"] {
     transform: translateY(0);
   }
   .comments-panel.dragging {
@@ -1058,7 +1059,7 @@
     color: var(--text-muted);
     transition: transform 0.35s ease;
   }
-  .comments-panel.expanded .sheet-handle__chevron {
+  .comments-panel[data-expanded="true"] .sheet-handle__chevron {
     transform: rotate(180deg);
   }
 
@@ -1103,6 +1104,33 @@
   .reply-input {
     margin-left: 28px;
   }
+  /* iOS Safari auto-zooms any input whose effective font-size is below
+     16px on focus. Bumping the composer textarea up to 16px on mobile
+     suppresses that zoom without forcing the whole app to disable user
+     scaling via the viewport meta tag. */
+  .reply-input__field {
+    font-size: 16px;
+  }
+  .comment-input > .reply-input {
+    margin-left: 0;
+  }
+  /* Mobile only: the compact reply composer (inside the bottom-sheet
+     thread view) gets the same padded + divider chrome as the top-level
+     composer so the sheet reads as a stack of matching sections.
+     Desktop keeps the bare inline pill — see the base rules above. */
+  .comment-input[data-compact="true"] {
+    padding: 16px 20px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .comment-input[data-compact="true"] > .reply-input {
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+  }
 }
 
 /* Mention dropdown: script.js sets data-mention-flip="up" when the
@@ -1112,5 +1140,90 @@
   bottom: 100%;
   margin-top: 0;
   margin-bottom: 4px;
+}
+
+/* ── In-sheet reply thread view ─────────────────────────────
+   Rendered inside the comments panel when a user taps a comment's
+   Reply action on mobile. Fills the panel (flex column) with a header
+   on top, scrollable parent + replies, and a pinned composer at the
+   bottom. Cards reuse `.comment-item` / `.reply-input` so styling
+   stays consistent with the inline arena view. */
+.reply-thread {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  background: var(--surface);
+  color: var(--text);
+}
+.reply-thread__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.reply-thread__title {
+  flex: 1;
+  text-align: center;
+  font-family: "Outfit", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+.reply-thread__icon-btn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  flex-shrink: 0;
+}
+.reply-thread__icon-btn:hover {
+  background: var(--hover, rgba(255, 255, 255, 0.06));
+}
+.reply-thread__icon-btn svg {
+  width: 20px;
+  height: 20px;
+}
+.reply-thread__scroll {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 0 16px;
+}
+/* The parent comment sits in its own highlighted block above the thread
+   (matches YouTube/Reddit's mobile replies view where the comment you
+   tapped stays visible as context). */
+.reply-thread__parent {
+  padding: 4px 0 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-raised);
+}
+.reply-thread__list {
+  padding: 4px 0 0;
+}
+.reply-thread__list .comment-item {
+  /* Indent replies so they visually hang off the parent, matching the
+     inline `.comment-replies` offset on the discussion page. */
+  padding-left: 20px;
+}
+/* The inner `.comment-input[data-compact="true"]` supplies the border +
+   padding for this pinned composer. This wrapper only adds the iOS home
+   indicator inset so the composer doesn't end up under the handle. */
+.reply-thread__composer {
+  flex-shrink: 0;
+  background: var(--surface);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
