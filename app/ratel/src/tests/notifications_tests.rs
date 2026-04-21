@@ -1,7 +1,9 @@
 use super::*;
 use crate::common::types::{InboxPayload, ListResponse};
 use crate::common::utils::inbox::create_inbox_row;
-use crate::features::notifications::types::{InboxNotificationResponse, UnreadCountResponse};
+use crate::features::notifications::types::{
+    InboxNotificationResponse, MarkAllReadResponse, UnreadCountResponse,
+};
 
 fn reply_payload(content: &str) -> InboxPayload {
     InboxPayload::ReplyOnComment {
@@ -90,6 +92,36 @@ async fn test_mark_read_flips_unread_sentinel() {
         headers: ctx.test_user.1.clone(),
     };
     assert_eq!(status, 200);
+
+    let (_, _, body) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: "/api/inbox/unread-count",
+        headers: ctx.test_user.1.clone(),
+        response_type: UnreadCountResponse,
+    };
+    assert_eq!(body.count, 0);
+}
+
+#[tokio::test]
+async fn test_read_all_marks_all_unread_and_reports_affected() {
+    let ctx = TestContext::setup().await;
+    let user_pk = ctx.test_user.0.pk.clone();
+
+    for i in 0..3 {
+        create_inbox_row(user_pk.clone(), reply_payload(&format!("m{i}")))
+            .await
+            .unwrap();
+    }
+
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/inbox/read-all",
+        headers: ctx.test_user.1.clone(),
+        response_type: MarkAllReadResponse,
+    };
+    assert_eq!(status, 200, "read-all: {:?}", body);
+    assert_eq!(body.affected, 3);
+    assert!(!body.has_more);
 
     let (_, _, body) = crate::test_get! {
         app: ctx.app.clone(),
