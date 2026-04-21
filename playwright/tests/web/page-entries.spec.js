@@ -292,16 +292,9 @@ test.describe.serial("Page entries accessibility", () => {
       `/spaces/${data.spaceId}/actions/quizzes/${data.quizId}`,
       { testId: "page-card-content" },
     ));
-  // Discussion at /discussions/:id still renders legacy CreatorMain (tab UI)
-  // for admins, not the arena editor. Use tablist role as the marker.
-  test("GET /spaces/:space_id/actions/discussions/:discussion_id", async ({
-    page,
-  }) =>
-    checkPage(
-      page,
-      `/spaces/${data.spaceId}/actions/discussions/${data.discussionId}`,
-      { css: "[role='tablist']" },
-    ));
+  // NOTE: discussion viewer has no standalone URL — it opens as an arena
+  // overlay (`ActiveActionOverlay::Discussion`) inside `SpaceIndexPage`. Only
+  // the admin editor route remains, covered below.
   // NOTE: discussion editor page loads discussion context via server function,
   // which can cause SSR crash (ERR_EMPTY_RESPONSE) in some environments.
   test.skip("GET /spaces/:space_id/actions/discussions/:discussion_id/edit", async ({

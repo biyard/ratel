@@ -85,20 +85,23 @@ pub async fn add_comment(
     // INSERT → handle_discussion_xp. Only the user's first contribution in a
     // discussion is rewarded (enforced by RewardPeriod::Once in the award helper).
 
-    // Send mention notifications
+    // Send mention notifications — deep-link to the newly created comment.
+    // `Route::SpaceDiscussionCommentPage` matches `/spaces/:sid/discussions/:did/comments/:cid`
+    // and `DiscussionArenaPage` scrolls + highlights the target comment on
+    // mount. Comment id is in the path (not query/fragment) because Dioxus
+    // Router strips both query strings and fragments during URL
+    // normalization on hydration.
     {
-        // let cta_url = format!(
-        //     "{}/spaces/{}/actions/discussion/{}",
-        //     crate::common::config::site_base_url(),
-        //     space_id,
-        //     discussion_sk
-        // );
-
-        // FIXME: Now, it doesn't support access to discussion/comment directly.
+        let comment_id_str = match &comment.sk {
+            EntityType::SpacePostComment(id) => id.clone(),
+            _ => String::new(),
+        };
         let cta_url = format!(
-            "{}/spaces/{}",
+            "{}/spaces/{}/discussions/{}/comments/{}",
             crate::common::config::site_base_url(),
             space_id,
+            discussion_sk,
+            comment_id_str,
         );
 
         crate::common::utils::mention::create_mention_notifications(
