@@ -280,7 +280,22 @@ pub async fn handle_discussion_xp(
         crate::features::spaces::pages::actions::types::SpaceActionType::TopicDiscussion,
         crate::features::activity::types::SpaceActivityData::Discussion {
             discussion_id: comment.pk.clone().into(),
-            comment_id: comment.sk.clone().into(),
+            // The `SubPartition`-derived `SpacePostCommentEntityType`
+            // collapses the two-field `SpacePostCommentReply` variant to
+            // an empty string via its blanket `_` arm. We build the id
+            // manually here so every reply gets a unique dedup key —
+            // otherwise `record_activity` treats every reply as a
+            // duplicate of the first and skips awarding XP. Top-level
+            // comment ids keep their original bare-uuid format so
+            // historical activity rows remain unaffected.
+            comment_id: match &comment.sk {
+                crate::common::types::EntityType::SpacePostCommentReply(parent_id, reply_id) => {
+                    crate::common::types::SpacePostCommentEntityType(
+                        format!("{parent_id}#{reply_id}")
+                    )
+                }
+                _ => comment.sk.clone().into(),
+            },
             is_first_contribution,
         },
         comment.author_display_name,
