@@ -85,24 +85,25 @@ pub async fn list_actions(
         }
     }
 
-    // Build action_id → status map for dependency evaluation
-    let status_by_id: HashMap<String, Option<SpaceActionStatus>> = actions
+    // Per-user dependency evaluation: a dependency is met when the
+    // current viewer has personally completed it (user_participated was
+    // computed above for every action in this list). Anonymous viewers
+    // never satisfy dependencies.
+    let participated_by_id: HashMap<String, bool> = actions
         .iter()
-        .map(|a| (a.action_id.clone(), a.status.clone()))
+        .map(|a| (a.action_id.clone(), a.user_participated))
         .collect();
 
-    // Compute dependencies_met for each action.
     for action in actions.iter_mut() {
         if action.depends_on.is_empty() {
             action.dependencies_met = true;
             continue;
         }
-        action.dependencies_met = action.depends_on.iter().all(|dep_id| {
-            matches!(
-                status_by_id.get(dep_id),
-                Some(Some(SpaceActionStatus::Finish))
-            )
-        });
+        action.dependencies_met = current_user.is_some()
+            && action
+                .depends_on
+                .iter()
+                .all(|dep_id| participated_by_id.get(dep_id).copied().unwrap_or(false));
     }
 
     // Visibility filter for non-creators:
