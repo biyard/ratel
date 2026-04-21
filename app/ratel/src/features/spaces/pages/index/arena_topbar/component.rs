@@ -15,6 +15,8 @@ pub fn ArenaTopbar(
     let mut popup = use_popup();
     let real_role = ctx.role();
     let is_admin = real_role.is_admin();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
+    let has_user = user_ctx().user.is_some();
     let is_published = ctx.space().publish_state == SpacePublishState::Published;
     let is_in_progress = ctx.space().status == Some(SpaceStatus::Open);
     let is_started = ctx.space().status == Some(SpaceStatus::Ongoing);
@@ -53,15 +55,17 @@ pub fn ArenaTopbar(
                 }
             }
             div { class: "arena-topbar__actions",
-                crate::features::notifications::components::NotificationBell {
-                    class: "hud-btn",
-                    onclick: move |_| {
-                        if active_panel() == ActivePanel::Notifications {
-                            active_panel.set(ActivePanel::None);
-                        } else {
-                            active_panel.set(ActivePanel::Notifications);
-                        }
-                    },
+                if has_user {
+                    crate::features::notifications::components::NotificationBell {
+                        class: "hud-btn",
+                        onclick: move |_| {
+                            if active_panel() == ActivePanel::Notifications {
+                                active_panel.set(ActivePanel::None);
+                            } else {
+                                active_panel.set(ActivePanel::Notifications);
+                            }
+                        },
+                    }
                 }
                 if is_admin {
                     if !is_published {
