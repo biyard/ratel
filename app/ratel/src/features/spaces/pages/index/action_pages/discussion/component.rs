@@ -249,23 +249,62 @@ pub fn DiscussionArenaPage(
     let mut tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
     let mut pending_images: Signal<Vec<PendingImage>> = use_signal(Vec::new);
 
-    let members_loader = use_loader(move || {
-        list_space_members(space_id(), None)
-    })?;
-    let members: Vec<MentionCandidate> = members_loader()
-        .items
-        .into_iter()
-        .map(|m| {
-            let pk: Partition = m.user_id.clone().into();
-            MentionCandidate {
-                user_pk: pk.to_string(),
-                display_name: m.display_name,
-                username: m.username,
-                profile_url: m.profile_url,
+    // Mention autocomplete uses a lazy load + server-side search pattern:
+    //  * `mention_query_raw` tracks the live query from MentionAutocomplete
+    //    (and is seeded by textarea focus so the dropdown is warm before the
+    //    user types `@`).
+    //  * `mention_query` is the debounced version that actually drives the
+    //    loader, to avoid hammering the server on every keystroke.
+    // A `None` value means no fetch has been requested yet, so we skip the
+    // network entirely for viewers who never engage the composer.
+    let mut mention_query_raw: Signal<Option<String>> = use_signal(|| None);
+    let mut mention_query: Signal<Option<String>> = use_signal(|| None);
+
+    use_effect(move || {
+        let v = mention_query_raw();
+        spawn(async move {
+            crate::common::utils::time::sleep(std::time::Duration::from_millis(150)).await;
+            if *mention_query_raw.peek() == v {
+                mention_query.set(v);
             }
-        })
-        .collect();
-    let members = use_signal(|| members);
+        });
+    });
+
+    let members_loader = use_loader(move || async move {
+        match mention_query() {
+            None => Ok(ListResponse::<
+                crate::features::spaces::space_common::controllers::SpaceMemberResponse,
+            >::default()),
+            Some(q) => list_space_members(space_id(), None, Some(q)).await,
+        }
+    })?;
+
+    let members_memo = use_memo(move || {
+        members_loader()
+            .items
+            .into_iter()
+            .map(|m| {
+                let pk: Partition = m.user_id.clone().into();
+                MentionCandidate {
+                    user_pk: pk.to_string(),
+                    display_name: m.display_name,
+                    username: m.username,
+                    profile_url: m.profile_url,
+                }
+            })
+            .collect::<Vec<_>>()
+    });
+    let members: ReadSignal<Vec<MentionCandidate>> = members_memo.into();
+
+    let on_mention_query_change = move |q: Option<String>| {
+        mention_query_raw.set(q);
+    };
+
+    let on_composer_focus = move || {
+        if mention_query_raw.peek().is_none() {
+            mention_query_raw.set(Some(String::new()));
+        }
+    };
 
     let status_text = match status {
         DiscussionStatus::InProgress => tr.status_in_progress.to_string(),
@@ -486,7 +525,9 @@ pub fn DiscussionArenaPage(
                             on_submit: move |_| on_submit_comment(()),
                             placeholder: tr.comment_placeholder.to_string(),
                             disabled: comment_text().trim().is_empty()
-                                                                                                                                                                                                                                                                && pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                                                                        && pending_images.read().is_empty(),
+                            on_mention_query_change,
+                            on_composer_focus,
                         }
                     }
 
@@ -504,6 +545,8 @@ pub fn DiscussionArenaPage(
                                     comments_loader,
                                     polled_new,
                                     deep_link_target,
+                                    on_mention_query_change,
+                                    on_composer_focus,
                                 }
                             }
                         }
@@ -532,6 +575,13 @@ fn CommentComposer(
     placeholder: String,
     #[props(default)] compact: bool,
     disabled: bool,
+    // Parent gets the active `@` query (debounced further upstream) so it
+    // can run the server-side mention search. `None` clears the dropdown.
+    #[props(default)] on_mention_query_change: EventHandler<Option<String>>,
+    // Fires when the textarea first gains focus. Parent uses this to warm
+    // the mention list before the user types `@`, so the dropdown is ready
+    // without paying a network round-trip on the first keystroke.
+    #[props(default)] on_composer_focus: EventHandler<()>,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
 
@@ -581,7 +631,11 @@ fn CommentComposer(
             div { class: "comment-composer-wrapper", onpaste: on_paste,
                 ImageUploadPreview { images: pending_images }
                 div { class: "reply-input",
-                    MentionAutocomplete { text, on_select: on_mention_select, members,
+                    MentionAutocomplete {
+                        text,
+                        on_select: on_mention_select,
+                        members,
+                        on_query_change: move |q| on_mention_query_change.call(q),
                         textarea {
                             class: "reply-input__field",
                             placeholder: "{placeholder}",
@@ -591,6 +645,7 @@ fn CommentComposer(
                                 text.set(e.value());
                             },
                             onkeydown: on_keydown,
+                            onfocus: move |_| on_composer_focus.call(()),
                             // The reply composer mounts only when the user
                             // opens it via the reply button, so auto-focusing
                             // here matches the click intent without
@@ -633,6 +688,7 @@ fn CommentComposer(
                             text,
                             on_select: on_mention_select,
                             members,
+                            on_query_change: move |q| on_mention_query_change.call(q),
                             textarea {
                                 class: "comment-input__textarea",
                                 placeholder: "{placeholder}",
@@ -642,6 +698,7 @@ fn CommentComposer(
                                     text.set(e.value());
                                 },
                                 onkeydown: on_keydown,
+                                onfocus: move |_| on_composer_focus.call(()),
                             }
                         }
                         div { class: "comment-input__footer",
@@ -670,6 +727,8 @@ fn CommentItem(
     comments_loader: Loader<ListResponse<DiscussionCommentResponse>>,
     polled_new: Signal<Vec<DiscussionCommentResponse>>,
     deep_link_target: ReadSignal<Option<String>>,
+    on_mention_query_change: EventHandler<Option<String>>,
+    on_composer_focus: EventHandler<()>,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
     let mut comments_loader = comments_loader;
@@ -1050,7 +1109,9 @@ fn CommentItem(
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
                         disabled: reply_text().trim().is_empty()
-                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
+                        on_mention_query_change,
+                        on_composer_focus,
                     }
                 }
             }
