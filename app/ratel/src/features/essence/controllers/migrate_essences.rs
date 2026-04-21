@@ -81,6 +81,7 @@ async fn migrate_posts_and_comments(
             title,
             source_path,
             word_count,
+            None,
         )
         .await
         {
@@ -118,6 +119,7 @@ async fn migrate_posts_and_comments(
                 title,
                 source_path,
                 word_count,
+                None,
             )
             .await
             {
@@ -164,10 +166,12 @@ async fn migrate_spaces_content(
     let discussion_comment_sk_prefix = EntityType::SpacePostComment(String::new()).to_string();
 
     for space in spaces {
-        if !matches!(space.pk, Partition::Space(_)) {
-            continue;
-        }
+        let space_id_str = match &space.pk {
+            Partition::Space(id) => id.clone(),
+            _ => continue,
+        };
         let space_pk = space.pk.clone();
+        let space_sub = SpacePartition(space_id_str);
         let creator_pk = space.user_pk.clone();
 
         let opts = SpacePoll::opt_all().sk(poll_sk_prefix.clone());
@@ -197,6 +201,7 @@ async fn migrate_spaces_content(
                         title,
                         source_path,
                         word_count,
+                        Some(space_pk.clone()),
                     )
                     .await
                     {
@@ -216,34 +221,25 @@ async fn migrate_spaces_content(
         let opts = SpaceQuiz::opt_all().sk(quiz_sk_prefix.clone());
         match SpaceQuiz::query(cli, space_pk.clone(), opts).await {
             Ok((quizzes, _)) => {
-                for quiz in quizzes {
-                    let first_q = quiz
-                        .questions
-                        .first()
-                        .map(|q| q.title().trim().to_string())
-                        .filter(|t| !t.is_empty());
-                    let title = first_q
-                        .clone()
-                        .unwrap_or_else(|| format!("Quiz {}", strip_prefix(&quiz.sk.to_string())));
-                    let source_path = format!(
-                        "Ratel quiz · {} / {}",
-                        strip_prefix(&quiz.pk.to_string()),
-                        strip_prefix(&quiz.sk.to_string())
-                    );
-                    let word_count = first_q
-                        .as_deref()
-                        .map(|s| s.split_whitespace().count() as i64)
-                        .unwrap_or(0);
+                use crate::features::spaces::pages::actions::models::SpaceAction;
 
-                    if let Err(e) = Essence::upsert_for_source(
+                for quiz in quizzes {
+                    let action_key =
+                        CompositePartition(space_sub.clone(), quiz.sk.to_string());
+                    let (action_title, action_description) =
+                        match SpaceAction::get(cli, &action_key, Some(EntityType::SpaceAction))
+                            .await
+                        {
+                            Ok(Some(action)) => (action.title, action.description),
+                            _ => (String::new(), String::new()),
+                        };
+
+                    if let Err(e) = crate::features::essence::services::index_quiz(
                         cli,
+                        &quiz,
                         creator_pk.clone(),
-                        quiz.pk.clone(),
-                        quiz.sk.clone(),
-                        EssenceSourceKind::Quiz,
-                        title,
-                        source_path,
-                        word_count,
+                        &action_title,
+                        &action_description,
                     )
                     .await
                     {
@@ -299,6 +295,7 @@ async fn migrate_spaces_content(
                             title,
                             source_path,
                             word_count,
+                            Some(space_pk.clone()),
                         )
                         .await
                         {

@@ -69,6 +69,16 @@ pub async fn reply_comment(
     .await?;
 
     let space_pk: Partition = space_id.clone().into();
+
+    if let Err(e) = crate::features::essence::services::index_discussion_comment(
+        cli,
+        &comment,
+        space_pk.clone(),
+    )
+    .await
+    {
+        tracing::error!("failed to index discussion comment reply essence: {e}");
+    }
     let agg_item =
         crate::features::spaces::space_common::models::aggregate::DashboardAggregate::inc_comments(
             &space_pk, 1,

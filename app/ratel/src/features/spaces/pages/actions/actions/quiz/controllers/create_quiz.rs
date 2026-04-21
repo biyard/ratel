@@ -42,6 +42,18 @@ pub async fn create_quiz(
     let answer = SpaceQuizAnswer::new(space_pk, quiz_id, answers);
     answer.create(cli).await?;
 
+    if let Err(e) = crate::features::essence::services::index_quiz(
+        cli,
+        &quiz,
+        space.user_pk.clone(),
+        &space_action.title,
+        &space_action.description,
+    )
+    .await
+    {
+        tracing::error!("failed to index quiz essence: {e}");
+    }
+
     let mut response: QuizResponse = quiz.into();
     response.title = space_action.title.clone();
     response.description = space_action.description.clone();

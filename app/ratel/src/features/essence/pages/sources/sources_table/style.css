@@ -36,6 +36,9 @@
 .essence-src-row:last-of-type {
   border-bottom: none;
 }
+.essence-src-row[data-clickable="true"] {
+  cursor: pointer;
+}
 .essence-src-row:hover {
   background: rgba(255, 255, 255, 0.02);
 }

@@ -34,6 +34,10 @@ pub async fn add_comment_handler(
 
     let comment = Post::comment(cli, post.pk.clone(), req.content, req.images, user.clone()).await?;
 
+    if let Err(e) = crate::features::essence::services::index_post_comment(cli, &comment).await {
+        tracing::error!("failed to index post comment essence: {e}");
+    }
+
     // Send mention notifications
     {
         let cta_url = format!(
