@@ -1,53 +1,72 @@
 use crate::common::*;
+use crate::features::spaces::pages::actions::types::SpaceActionStatus;
 
-/// Decides whether an action's configuration is locked (and therefore
-/// creators should be routed to the participant view rather than the
-/// creator page).
+/// Decides whether an action's configuration is locked so creators should see
+/// the participant view instead of the edit view.
 ///
 /// Rules:
-/// - **Designing / Open / None** → not locked. The space hasn't been
-///   launched yet, so creators keep seeing the configuration UI.
-/// - **Ongoing** → locked once `action.started_at` is in the past.
-///   Before the action window opens, creators can still reconfigure.
-/// - **Processing / Finished** → locked. The entire space is beyond the
-///   participation window; creators see the participant view read-only.
-pub fn is_action_locked(space_status: Option<SpaceStatus>, action_started_at: i64) -> bool {
-    let now = crate::common::utils::time::get_now_timestamp_millis();
-    match space_status {
-        Some(SpaceStatus::Ongoing | SpaceStatus::Open) => now >= action_started_at,
-        Some(SpaceStatus::Processing | SpaceStatus::Finished) => true,
-        Some(SpaceStatus::Designing) | None => false,
+/// - `None` (legacy) or `Some(Designing)` → **not locked**. Creator can still
+///   configure.
+/// - `Some(Ongoing)` or `Some(Finish)` → **locked**. The action has been
+///   published; creators see it read-only (participant mode).
+/// - Space beyond `Ongoing` (`Processing`/`Finished`) → always locked.
+pub fn is_action_locked(
+    space_status: Option<SpaceStatus>,
+    action_status: Option<&SpaceActionStatus>,
+) -> bool {
+    if matches!(
+        space_status,
+        Some(SpaceStatus::Processing | SpaceStatus::Finished)
+    ) {
+        return true;
     }
+    matches!(
+        action_status,
+        Some(SpaceActionStatus::Ongoing | SpaceActionStatus::Finish)
+    )
 }
 
+/// Decides whether a user can execute (respond / comment / follow) an action
+/// right now.
+///
+/// - `Creator`: can always interact as long as the space hasn't moved past
+///   the participation phase (`Processing`/`Finished`).
+/// - `Participant`: requires `Space.status == Ongoing`, action
+///   `status == Some(Ongoing)`, and all dependencies met.
+/// - `Candidate`: only for prerequisite actions during `Open` (or any Ongoing
+///   action when `join_anytime` is enabled), and dependencies must be met.
+/// - `Viewer`: never.
 pub fn can_execute_space_action(
     role: SpaceUserRole,
     prerequisite: bool,
-    status: Option<SpaceStatus>,
+    space_status: Option<SpaceStatus>,
+    action_status: Option<&SpaceActionStatus>,
+    dependencies_met: bool,
     join_anytime: bool,
 ) -> bool {
-    let can_execute_role = match role {
+    let role_ok = match role {
         SpaceUserRole::Creator => true,
         SpaceUserRole::Candidate => prerequisite,
         SpaceUserRole::Participant => !prerequisite,
         SpaceUserRole::Viewer => false,
     };
 
-    let can_execute_status = match role {
-        // Creators can interact at any phase except once the space
-        // has ended — at that point they behave like viewers
-        // (read-only) for polls, quizzes, discussions, follows, etc.
+    let status_ok = match role {
         SpaceUserRole::Creator => !matches!(
-            status,
+            space_status,
             Some(SpaceStatus::Processing | SpaceStatus::Finished)
         ),
         SpaceUserRole::Candidate => {
-            matches!(status, Some(SpaceStatus::Open))
-                || (join_anytime && matches!(status, Some(SpaceStatus::Ongoing)))
+            let space_ok = matches!(space_status, Some(SpaceStatus::Open))
+                || (join_anytime && matches!(space_status, Some(SpaceStatus::Ongoing)));
+            space_ok && matches!(action_status, Some(SpaceActionStatus::Ongoing))
         }
-        SpaceUserRole::Participant => matches!(status, Some(SpaceStatus::Ongoing)),
+        SpaceUserRole::Participant => {
+            matches!(space_status, Some(SpaceStatus::Ongoing))
+                && matches!(action_status, Some(SpaceActionStatus::Ongoing))
+        }
         SpaceUserRole::Viewer => false,
     };
 
-    can_execute_role && can_execute_status
+    role_ok && status_ok && dependencies_met
 }

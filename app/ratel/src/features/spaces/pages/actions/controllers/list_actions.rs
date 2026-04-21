@@ -14,11 +14,11 @@ use crate::features::spaces::pages::actions::actions::poll::SpacePollUserAnswer;
 #[cfg(feature = "server")]
 use crate::features::spaces::pages::actions::actions::quiz::{SpaceQuiz, SpaceQuizAttempt};
 #[cfg(feature = "server")]
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 #[mcp_tool(
     name = "list_actions",
-    description = "List all actions in a space (polls, quizzes, discussions, follow). Shows action type, title, and status."
+    description = "List all actions in a space (polls, quizzes, discussions, follow). Shows action type, title, status, and dependency state."
 )]
 #[get("/api/spaces/{space_pk}/actions", role: SpaceUserRole, user: OptionalUser, space: SpaceCommon)]
 pub async fn list_actions(
@@ -28,8 +28,6 @@ pub async fn list_actions(
         .common
         .dynamodb();
     let space_pk: Partition = space_pk.into();
-    let space_status = space.status.clone();
-    let join_anytime = space.join_anytime;
 
     let (space_actions, _) =
         SpaceAction::find_by_space(cli, &space_pk, SpaceAction::opt().oldest())
@@ -87,23 +85,44 @@ pub async fn list_actions(
         }
     }
 
-    // Creators can preview upcoming actions. Other roles only see actions after start time.
-    // Prerequisite actions are always visible regardless of started_at — Candidates need them
-    // during the Open phase before the individual action timer starts.
-    let now = crate::common::utils::time::get_now_timestamp_millis();
-    actions
-        .retain(|action| action.prerequisite || is_visible_for_role(&role, action.started_at, now));
+    // Build action_id → status map for dependency evaluation
+    let status_by_id: HashMap<String, Option<SpaceActionStatus>> = actions
+        .iter()
+        .map(|a| (a.action_id.clone(), a.status.clone()))
+        .collect();
 
-    if !matches!(role, SpaceUserRole::Creator) {
-        actions.retain(|action| {
-            is_visible_for_space_status(space_status.clone(), action.prerequisite)
+    // Compute dependencies_met for each action.
+    for action in actions.iter_mut() {
+        if action.depends_on.is_empty() {
+            action.dependencies_met = true;
+            continue;
+        }
+        action.dependencies_met = action.depends_on.iter().all(|dep_id| {
+            matches!(
+                status_by_id.get(dep_id),
+                Some(Some(SpaceActionStatus::Finish))
+            )
         });
     }
 
-    // Pre-action filtering for non-creators
+    // Visibility filter for non-creators:
+    // - Hide actions whose status is `None` (legacy) or `Some(Designing)`.
+    // - Show Ongoing and Finish actions; UI will render a lock overlay
+    //   when `dependencies_met == false` so participants know what to do.
+    if !matches!(role, SpaceUserRole::Creator) {
+        actions.retain(|a| {
+            matches!(
+                a.status,
+                Some(SpaceActionStatus::Ongoing | SpaceActionStatus::Finish)
+            )
+        });
+    }
+
+    // Legacy prerequisite gating: during Open / join-anytime Ongoing phase,
+    // if there are prerequisite actions that aren't all completed, hide the
+    // non-prerequisite ones.
     if !matches!(role, SpaceUserRole::Creator) {
         let has_pre_actions = actions.iter().any(|a| a.prerequisite);
-
         if has_pre_actions {
             let all_pre_actions_done = actions
                 .iter()
@@ -111,8 +130,8 @@ pub async fn list_actions(
                 .all(|a| a.user_participated);
 
             if should_only_show_prerequisite_actions(
-                space_status,
-                join_anytime,
+                space.status.clone(),
+                space.join_anytime,
                 all_pre_actions_done,
             ) {
                 actions.retain(|a| a.prerequisite);
@@ -248,21 +267,6 @@ async fn has_completed_follow_action(
     })?;
 
     Ok(follows.len() == deduped_targets.len())
-}
-
-fn is_visible_for_role(role: &SpaceUserRole, started_at: Option<i64>, now: i64) -> bool {
-    matches!(role, SpaceUserRole::Creator)
-        || started_at
-            .map(|started_at| now >= started_at)
-            .unwrap_or(false)
-}
-
-fn is_visible_for_space_status(status: Option<SpaceStatus>, prerequisite: bool) -> bool {
-    match status {
-        Some(SpaceStatus::Ongoing) | Some(SpaceStatus::Finished) => true,
-        Some(SpaceStatus::Open) => prerequisite,
-        _ => false,
-    }
 }
 
 fn should_only_show_prerequisite_actions(

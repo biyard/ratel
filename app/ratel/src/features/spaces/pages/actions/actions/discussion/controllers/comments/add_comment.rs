@@ -33,10 +33,19 @@ pub async fn add_comment(
     .await?
     .ok_or(Error::SpaceActionNotFound)?;
 
+    let deps_met = crate::features::spaces::pages::actions::services::dependency::dependencies_met(
+        cli,
+        &space_id,
+        &space_action,
+    )
+    .await?;
+
     if !crate::features::spaces::pages::actions::can_execute_space_action(
         role,
         space_action.prerequisite,
         space.status,
+        space_action.status.as_ref(),
+        deps_met,
         space.join_anytime,
     ) {
         return Err(SpaceActionDiscussionError::NotAvailableInCurrentStatus.into());
@@ -47,12 +56,9 @@ pub async fn add_comment(
         _ => return Err(SpaceActionDiscussionError::InvalidDiscussionId.into()),
     };
     let (post_pk, post_sk) = SpacePost::keys(&space_id, &space_post_id);
-    let post = SpacePost::get(cli, &post_pk, Some(post_sk))
+    let _post = SpacePost::get(cli, &post_pk, Some(post_sk))
         .await?
         .ok_or(SpaceActionDiscussionError::NotFound)?;
-    if post.status() != DiscussionStatus::InProgress {
-        return Err(Error::DiscussionNotInProgress);
-    }
 
     let comment = SpacePost::comment(
         cli,

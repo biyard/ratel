@@ -13,14 +13,12 @@ pub async fn create_poll(
     SpacePoll::can_edit(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
-    let is_published = space.is_published();
-    let poll = SpacePoll::new_with_published(space_pk.clone(), is_published)?;
+    let poll = SpacePoll::new(space_pk.clone())?;
 
-    let space_action = SpaceAction::new_with_published(
+    let space_action = SpaceAction::new(
         space_pk.clone(),
         SpacePollEntityType::from(poll.sk.clone()).to_string(),
         crate::features::spaces::pages::actions::types::SpaceActionType::Poll,
-        is_published,
     );
 
     let space_pk_partition: Partition = space_pk.into();
