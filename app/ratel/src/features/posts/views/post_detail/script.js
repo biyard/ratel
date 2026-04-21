@@ -68,13 +68,17 @@
       { passive: true }
     );
 
+    // Passive listener — the handle has `touch-action: none` in CSS, so
+    // the browser never starts a native scroll on this region and there's
+    // nothing to preventDefault. Calling preventDefault here would log
+    // "Ignored attempt to cancel a touchmove event with cancelable=false"
+    // on devices where the UA commits to scrolling before JS runs.
     handle.addEventListener(
       "touchmove",
       function (e) {
-        if (dragging) e.preventDefault();
         move(e.touches[0].clientY);
       },
-      { passive: false }
+      { passive: true }
     );
 
     handle.addEventListener("touchend", function () {

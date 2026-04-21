@@ -3,83 +3,49 @@
 //! `comment-input`, `comment-list`, `comment-item`, `comment-replies`,
 //! `reply-input`, `comment-action`) with
 //! `features/spaces/pages/index/action_pages/discussion` so the visual
-//! language is identical; the wiring just targets Post comment controllers
-//! (`add_comment_handler`, `like_comment_handler`, `reply_to_comment_handler`)
-//! instead of discussion ones. Edit/delete are intentionally omitted — the
-//! post-comment backend has no `update_comment` / `delete_comment`
-//! controllers yet; re-enable those affordances once those land.
+//! language is identical.
+//!
+//! All mutations (submit comment, submit reply, toggle comment like) go
+//! through `use_post_detail` actions — components never import the
+//! underlying `_handler` server functions. `list_comments_handler` for
+//! lazy-loading replies is a read, so it stays inline per the hook rule's
+//! non-mutating-read exception.
 
-use crate::common::components::mention_autocomplete::{
-    MentionAutocomplete, MentionCandidate, MentionInsert,
-};
-use crate::common::utils::mention::{apply_mention_markup, parse_mention_segments, ContentSegment};
-use crate::features::posts::controllers::comments::add_comment::{
-    add_comment_handler, AddPostCommentRequest,
-};
-use crate::features::posts::controllers::comments::like_comment::like_comment_handler;
-use crate::features::posts::controllers::comments::list_comments::list_comments_handler;
-use crate::features::posts::controllers::comments::reply_to_comment::{
-    reply_to_comment_handler, ReplyToPostCommentRequest,
-};
-use crate::features::posts::controllers::dto::{PostCommentResponse, PostDetailResponse};
-use crate::features::posts::types::PostCommentTargetEntityType;
+use crate::common::components::mention_autocomplete::{MentionAutocomplete, MentionInsert};
+use crate::common::utils::mention::{parse_mention_segments, ContentSegment};
+use crate::features::posts::controllers::dto::PostCommentResponse;
+use crate::features::posts::hooks::{use_post_detail, UsePostDetail};
 use crate::features::posts::*;
-use crate::PostCommentEntityType;
 
 use super::i18n::PostDetailSyndicatedTranslate;
 
 #[component]
-pub fn PostCommentsPanel(
-    detail: PostDetailResponse,
-    post_pk: FeedPartition,
-    on_refresh: EventHandler<()>,
-) -> Element {
+pub fn PostCommentsPanel(post_id: FeedPartition) -> Element {
     let tr: PostDetailSyndicatedTranslate = use_translate();
 
-    let mut comment_text = use_signal(String::new);
-    let mut tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
-    let members: Signal<Vec<MentionCandidate>> = use_signal(Vec::new);
-    let mut is_submitting = use_signal(|| false);
+    let UsePostDetail {
+        detail,
+        mut comment_text,
+        mut tracked_mentions,
+        is_submitting,
+        members,
+        mut submit_comment,
+        ..
+    } = use_post_detail(post_id.clone())?;
 
-    let total = detail.post.as_ref().map(|p| p.comments).unwrap_or(0);
+    let snapshot = detail();
+    let total = snapshot.post.as_ref().map(|p| p.comments).unwrap_or(0);
 
-    // Top-level comments only — replies are fetched lazily inside CommentItem.
+    // Top-level comments only — replies are fetched lazily inside
+    // `CommentItem` when the user expands them.
     let comments: Vec<PostCommentResponse> = {
         let mut out: Vec<PostCommentResponse> = Vec::new();
-        for c in detail.comments.iter() {
+        for c in snapshot.comments.iter() {
             if c.parent_comment_sk.is_none() && !out.iter().any(|x| x.sk == c.sk) {
                 out.push(c.clone());
             }
         }
         out
-    };
-
-    let submit_post_pk = post_pk.clone();
-    let on_submit = move |_| {
-        let submit_post_pk = submit_post_pk.clone();
-        async move {
-            let raw = comment_text().trim().to_string();
-            if raw.is_empty() || is_submitting() {
-                return;
-            }
-            is_submitting.set(true);
-            let content = apply_mention_markup(&raw, &tracked_mentions.read());
-            let req = AddPostCommentRequest {
-                content,
-                images: vec![],
-            };
-            match add_comment_handler(submit_post_pk, req).await {
-                Ok(_) => {
-                    comment_text.set(String::new());
-                    tracked_mentions.set(Vec::new());
-                    on_refresh.call(());
-                }
-                Err(e) => {
-                    tracing::error!("post comment submit failed: {e}");
-                }
-            }
-            is_submitting.set(false);
-        }
     };
 
     rsx! {
@@ -138,7 +104,7 @@ pub fn PostCommentsPanel(
                             button {
                                 class: "comment-input__submit",
                                 disabled: comment_text().trim().is_empty() || is_submitting(),
-                                onclick: on_submit,
+                                onclick: move |_| submit_comment.call(),
                                 "{tr.post_btn}"
                             }
                         }
@@ -152,8 +118,7 @@ pub fn PostCommentsPanel(
                         CommentItem {
                             key: "{comment.sk}",
                             comment: comment.clone(),
-                            post_pk: post_pk.clone(),
-                            on_refresh,
+                            post_id: post_id.clone(),
                         }
                     }
                 }
@@ -163,18 +128,27 @@ pub fn PostCommentsPanel(
 }
 
 #[component]
-fn CommentItem(
-    comment: PostCommentResponse,
-    post_pk: FeedPartition,
-    on_refresh: EventHandler<()>,
-) -> Element {
+fn CommentItem(comment: PostCommentResponse, post_id: FeedPartition) -> Element {
     let tr: PostDetailSyndicatedTranslate = use_translate();
 
+    let UsePostDetail {
+        members,
+        replies_by_comment,
+        mut toggle_comment_like,
+        mut submit_reply,
+        mut load_replies,
+        ..
+    } = use_post_detail(post_id)?;
+
+    // Per-item UI state that never crosses scope boundaries: local input
+    // (text + tracked mentions), show/hide toggle, and per-item
+    // liked/likes for optimistic heart clicks. The replies LIST itself
+    // lives in the hook's shared `replies_by_comment` map so the
+    // load_replies / submit_reply actions mutate it without pulling any
+    // child-owned signals up into their root-scope bodies.
     let mut show_replies = use_signal(|| false);
     let mut reply_text = use_signal(String::new);
-    let mut reply_tracked: Signal<Vec<(String, String)>> = use_signal(Vec::new);
-    let members: Signal<Vec<MentionCandidate>> = use_signal(Vec::new);
-    let mut replies: Signal<Vec<PostCommentResponse>> = use_signal(Vec::new);
+    let mut reply_tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
 
     let time_ago = format_time_ago(comment.updated_at);
     let mut liked = use_signal(|| comment.liked);
@@ -182,82 +156,55 @@ fn CommentItem(
     let reply_count = comment.replies;
 
     let comment_sk = comment.sk.clone();
-    let like_post_pk = post_pk.clone();
-    let like_sk = comment_sk.clone();
-    let on_like = move |_| {
-        let like_post_pk = like_post_pk.clone();
-        let like_sk = like_sk.clone();
-        async move {
-            let next = !liked();
-            let prev_likes = likes();
-            liked.set(next);
-            likes.set((prev_likes + if next { 1 } else { -1 }).max(0));
-            match like_comment_handler(like_post_pk, like_sk, next).await {
-                Ok(_) => {}
-                Err(e) => {
-                    tracing::error!("like post comment failed: {e}");
-                    liked.set(!next);
-                    likes.set(prev_likes);
-                }
-            }
-        }
-    };
+    let sk_str = comment_sk.to_string();
 
-    let reply_post_pk = post_pk.clone();
-    let reply_sk = comment_sk.clone();
-    let on_submit_reply = move |_| {
-        let reply_post_pk = reply_post_pk.clone();
-        let reply_sk = reply_sk.clone();
-        async move {
-            let raw = reply_text().trim().to_string();
-            if raw.is_empty() {
-                return;
-            }
-            let content = apply_mention_markup(&raw, &reply_tracked.read());
-            // PostCommentTargetEntityType → EntityType → PostCommentEntityType
-            // (no direct From between the two sub-partitions; go via the
-            // shared EntityType enum.)
-            let as_entity: EntityType = reply_sk.into();
-            let parent_sk: PostCommentEntityType = as_entity.into();
-            let req = ReplyToPostCommentRequest {
-                content,
-                images: vec![],
-            };
-            match reply_to_comment_handler(reply_post_pk, parent_sk, req).await {
-                Ok(new_reply_model) => {
-                    // Optimistically prepend to the local replies list so
-                    // the new reply appears without waiting for the loader
-                    // restart (which also refreshes the top-level count).
-                    let new_reply: PostCommentResponse = (new_reply_model, false, false).into();
-                    replies.with_mut(|list| list.insert(0, new_reply));
-                    reply_text.set(String::new());
-                    reply_tracked.set(Vec::new());
-                    on_refresh.call(());
-                }
-                Err(e) => tracing::error!("reply post comment failed: {e}"),
-            }
-        }
-    };
+    // Derived replies slice for THIS comment — reads from the shared map
+    // keyed by sk. Re-renders when any action writes to that key.
+    let sk_str_for_memo = sk_str.clone();
+    let replies = use_memo(move || {
+        replies_by_comment
+            .read()
+            .get(&sk_str_for_memo)
+            .cloned()
+            .unwrap_or_default()
+    });
 
-    // Lazy-load replies on first expand. The effect re-runs when
-    // `show_replies` flips to true; `replies.is_empty()` guards against a
-    // refetch loop when `replies.set(...)` fires below.
-    let eff_post_pk = post_pk.clone();
-    let eff_sk = comment_sk.clone();
+    // Lazy-load replies on first expand. `load_replies` is idempotent
+    // (skips when the sk is already in `replies_loaded`), so re-opening
+    // the same comment doesn't refetch.
+    let load_sk = comment_sk.clone();
     use_effect(move || {
-        if show_replies() && replies.read().is_empty() && reply_count > 0 {
-            let eff_post_pk = eff_post_pk.clone();
-            let eff_sk = eff_sk.clone();
-            spawn(async move {
-                let as_entity: EntityType = eff_sk.into();
-                let parent_id: PostCommentEntityType = as_entity.into();
-                match list_comments_handler(eff_post_pk, parent_id, None).await {
-                    Ok(resp) => replies.set(resp.items),
-                    Err(e) => tracing::error!("list post replies failed: {e}"),
-                }
-            });
+        if show_replies() && reply_count > 0 {
+            load_replies.call(load_sk.clone());
         }
     });
+
+    // Optimistic UI for like lives here — `liked`/`likes` are owned by
+    // this component, flipped locally, then the shared action writes to
+    // the server. Passing the signals INTO the action would cross scope
+    // boundaries (the action runs in the root hook scope).
+    let like_sk = comment_sk.clone();
+    let on_like = move |_| {
+        let next = !liked();
+        let prev = likes();
+        liked.set(next);
+        likes.set((prev + if next { 1 } else { -1 }).max(0));
+        toggle_comment_like.call(like_sk.clone(), next);
+    };
+
+    let reply_sk = comment_sk.clone();
+    let on_submit_reply = move |_| {
+        let raw = reply_text().trim().to_string();
+        if raw.is_empty() {
+            return;
+        }
+        let mentions = reply_tracked_mentions.read().clone();
+        // Local optimistic clear — these signals stay in CommentItem's
+        // scope and are not handed to the action.
+        reply_text.set(String::new());
+        reply_tracked_mentions.set(Vec::new());
+        submit_reply.call(reply_sk.clone(), raw, mentions);
+    };
 
     rsx! {
         div { class: "comment-entry",
@@ -301,10 +248,7 @@ fn CommentItem(
                         }
                         button {
                             class: "comment-action comment-action--reply",
-                            onclick: move |_| {
-                                let next = !show_replies();
-                                show_replies.set(next);
-                            },
+                            onclick: move |_| show_replies.set(!show_replies()),
                             svg {
                                 view_box: "0 0 24 24",
                                 fill: "none",
@@ -343,20 +287,25 @@ fn CommentItem(
 
             if show_replies() {
                 // Input FIRST so it's immediately visible after toggling —
-                // otherwise long reply lists push the input below the fold
-                // and the user has to scroll to type a reply.
+                // otherwise long reply lists push the input below the fold.
                 div { class: "reply-input",
                     MentionAutocomplete {
                         text: reply_text,
-                        on_select: move |insert: MentionInsert| {
-                            let mut val = reply_text();
-                            if insert.start_offset <= val.len() && insert.end_offset <= val.len() {
-                                val.replace_range(
-                                    insert.start_offset..insert.end_offset,
-                                    &insert.display_text,
-                                );
-                                reply_text.set(val);
-                                reply_tracked.write().push((insert.display_name, insert.user_pk));
+                        on_select: {
+                            let mut reply_text = reply_text;
+                            let mut reply_tracked_mentions = reply_tracked_mentions;
+                            move |insert: MentionInsert| {
+                                let mut val = reply_text();
+                                if insert.start_offset <= val.len() && insert.end_offset <= val.len() {
+                                    val.replace_range(
+                                        insert.start_offset..insert.end_offset,
+                                        &insert.display_text,
+                                    );
+                                    reply_text.set(val);
+                                    reply_tracked_mentions
+                                        .write()
+                                        .push((insert.display_name, insert.user_pk));
+                                }
                             }
                         },
                         members,
@@ -364,7 +313,10 @@ fn CommentItem(
                             class: "reply-input__field",
                             placeholder: "{tr.reply_placeholder}",
                             value: "{reply_text}",
-                            oninput: move |e| reply_text.set(e.value()),
+                            oninput: {
+                                let mut reply_text = reply_text;
+                                move |e: Event<FormData>| reply_text.set(e.value())
+                            },
                         }
                     }
                     button { class: "reply-input__send", onclick: on_submit_reply,
@@ -400,9 +352,26 @@ fn CommentItem(
 
 #[component]
 fn ReplyItem(reply: PostCommentResponse) -> Element {
+    let UsePostDetail {
+        mut toggle_comment_like,
+        ..
+    } = try_use_context::<UsePostDetail>()
+        .expect("use_post_detail must be initialized by a parent component");
+
     let time_ago = format_time_ago(reply.updated_at);
-    let liked = reply.liked;
-    let likes = reply.likes;
+    // Local per-item signals owned by THIS ReplyItem's scope so the
+    // optimistic flip doesn't cross scope boundaries.
+    let mut liked = use_signal(|| reply.liked);
+    let mut likes = use_signal(|| reply.likes as i64);
+
+    let reply_sk = reply.sk.clone();
+    let on_like = move |_| {
+        let next = !liked();
+        let prev = likes();
+        liked.set(next);
+        likes.set((prev + if next { 1 } else { -1 }).max(0));
+        toggle_comment_like.call(reply_sk.clone(), next);
+    };
 
     rsx! {
         div { class: "comment-item",
@@ -429,17 +398,19 @@ fn ReplyItem(reply: PostCommentResponse) -> Element {
                     }
                 }
                 div { class: "comment-item__actions",
-                    span { class: if liked { "comment-action comment-action--liked" } else { "comment-action" },
+                    button {
+                        class: if liked() { "comment-action comment-action--liked" } else { "comment-action" },
+                        onclick: on_like,
                         svg {
                             view_box: "0 0 24 24",
-                            fill: if liked { "currentColor" } else { "none" },
+                            fill: if liked() { "currentColor" } else { "none" },
                             stroke: "currentColor",
                             stroke_width: "2",
                             stroke_linecap: "round",
                             stroke_linejoin: "round",
                             path { d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" }
                         }
-                        span { "{likes}" }
+                        span { "{likes()}" }
                     }
                 }
             }
