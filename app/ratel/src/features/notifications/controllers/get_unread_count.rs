@@ -13,7 +13,11 @@ pub async fn get_unread_count_handler() -> Result<UnreadCountResponse> {
     let mut count: i64 = 0;
     let mut bookmark: Option<String> = None;
     for _ in 0..4 {
-        let opts = UserInboxNotification::opt_with_bookmark(bookmark).limit(30);
+        // Filter by the sparse GSI sort-key prefix so rows we rewrote to the
+        // read sentinel ("R") are skipped — only "U#..." unread keys match.
+        let opts = UserInboxNotification::opt_with_bookmark(bookmark)
+            .sk("U".to_string())
+            .limit(30);
         let (items, next) =
             UserInboxNotification::find_inbox_unread_by_user(cli, user.pk.clone(), opts)
                 .await

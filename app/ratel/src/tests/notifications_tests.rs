@@ -67,3 +67,35 @@ async fn test_unread_count_reports_gsi_entries_capped_at_100() {
     assert_eq!(status, 200, "unread-count: {:?}", body);
     assert_eq!(body.count, 3);
 }
+
+#[tokio::test]
+async fn test_mark_read_flips_unread_sentinel() {
+    let ctx = TestContext::setup().await;
+    let user_pk = ctx.test_user.0.pk.clone();
+
+    create_inbox_row(user_pk.clone(), reply_payload("hi"))
+        .await
+        .unwrap();
+    let (_, _, list_body) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: "/api/inbox",
+        headers: ctx.test_user.1.clone(),
+        response_type: ListResponse<InboxNotificationResponse>,
+    };
+    let id = &list_body.items[0].id.0;
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/inbox/{id}/read"),
+        headers: ctx.test_user.1.clone(),
+    };
+    assert_eq!(status, 200);
+
+    let (_, _, body) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: "/api/inbox/unread-count",
+        headers: ctx.test_user.1.clone(),
+        response_type: UnreadCountResponse,
+    };
+    assert_eq!(body.count, 0);
+}
