@@ -7,9 +7,9 @@ use crate::common::components::CommentImageGrid;
 use crate::common::hooks::use_interval;
 use crate::common::utils::mention::{apply_mention_markup, parse_mention_segments, ContentSegment};
 use crate::features::spaces::pages::actions::actions::discussion::controllers::{
-    add_comment, delete_comment, get_discussion_detail, like_comment, list_comments, list_replies,
-    reply_comment, update_comment, AddCommentRequest, LikeCommentRequest, ReplyCommentRequest,
-    UpdateCommentRequest,
+    add_comment, delete_comment, get_comment, get_discussion_detail, like_comment, list_comments,
+    list_replies, reply_comment, update_comment, AddCommentRequest, LikeCommentRequest,
+    ReplyCommentRequest, UpdateCommentRequest,
 };
 use crate::features::spaces::pages::actions::actions::discussion::{
     DiscussionCommentResponse, DiscussionStatus, SpacePostCommentTargetEntityType,
@@ -38,6 +38,34 @@ extern "C" {
 fn reset_composer_height() {
     #[cfg(not(feature = "server"))]
     reset_composer_height_js();
+}
+
+// Click-time breakpoint check for the mobile-only thread drill-down. The
+// discussion arena's CSS tightens at 500px, so tapping Reply below that
+// width swaps the comments panel over to the in-sheet thread view; above
+// the breakpoint desktop keeps the inline toggle. `Window::inner_width`
+// returns a `JsValue` (the only web_sys API on Window that doesn't
+// require an extra feature flag), which we coerce to an `f64` and
+// compare directly against the CSS breakpoint.
+#[cfg(not(feature = "server"))]
+fn is_arena_mobile_viewport() -> bool {
+    let width_px = web_sys::window()
+        .and_then(|w| w.inner_width().ok())
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
+    width_px > 0.0 && width_px <= 500.0
+}
+
+/// Context provided by `DiscussionArenaPage` so any `CommentItem` deep
+/// in the comments list can trigger the in-sheet thread view (mobile
+/// Reply tap) without threading a signal through every prop chain.
+/// `active = Some(comment_id)` swaps the panel content over; `None`
+/// shows the normal comments list. `sheet_expanded` lets the tap also
+/// force-open the bottom sheet so the swap is immediately visible.
+#[derive(Clone, Copy)]
+struct ActiveReplyThreadCtx {
+    active: Signal<Option<String>>,
+    sheet_expanded: Signal<bool>,
 }
 
 /// Routable wrapper for `DiscussionArenaPage`. Registered on
@@ -81,6 +109,326 @@ pub fn SpaceDiscussionCommentPage(
             space_id: space_id_sig,
             discussion_id: discussion_id_sig,
             target_comment_id: Some(comment_id),
+        }
+    }
+}
+
+/// YouTube/Reddit-style thread drill-down for a single parent comment.
+/// Mounted inside the mobile comments sheet (not a standalone route) so
+/// opening replies stays within the current bottom-sheet context — the
+/// sheet handle remains reachable and going "back" returns the user to
+/// the discussion's comments list without popping the route stack.
+/// Layout: parent pinned on top, scrollable replies below, composer at
+/// the bottom.
+#[component]
+fn ReplyThreadView(
+    space_id: ReadSignal<SpacePartition>,
+    discussion_id: ReadSignal<SpacePostEntityType>,
+    comment_id: String,
+    on_close: EventHandler<()>,
+) -> Element {
+    let tr: DiscussionArenaTranslate = use_translate();
+    let mut toast = use_toast();
+    let role = use_space_role()();
+    let space = use_space()();
+
+    let comment_id_sig: ReadSignal<String> = use_signal(|| comment_id.clone()).into();
+
+    // Fetch the parent comment (author, content, reply count). `get_comment`
+    // returns `DiscussionCommentResponse` with liked/counts already resolved
+    // for the current viewer.
+    let mut parent_loader = use_loader(move || async move {
+        let sk = SpacePostCommentEntityType(comment_id_sig());
+        get_comment(space_id(), discussion_id(), sk).await
+    })?;
+    let parent = parent_loader();
+
+    // Fetch the replies. The list is owned by this page as a Signal so
+    // optimistic insert/delete/edit from ReplyItem and the composer below
+    // can mutate it in place.
+    let mut replies_loader = use_loader(move || async move {
+        let sk = SpacePostCommentEntityType(comment_id_sig());
+        list_replies(space_id(), discussion_id(), sk, None).await
+    })?;
+    let mut replies: Signal<Vec<DiscussionCommentResponse>> =
+        use_signal(move || replies_loader().items);
+    // Keep the owned signal synced whenever the loader restarts (e.g. after
+    // a delete). `use_effect` subscribes to replies_loader() so the sync
+    // fires on every loader change.
+    use_effect(move || {
+        let fresh = replies_loader().items;
+        if replies.peek().len() != fresh.len() {
+            replies.set(fresh);
+        } else if !replies
+            .peek()
+            .iter()
+            .zip(fresh.iter())
+            .all(|(a, b)| a.sk == b.sk)
+        {
+            replies.set(fresh);
+        }
+    });
+
+    // Discussion-level gate mirrors the main arena — non-participants see
+    // the thread but cannot reply once the space has ended. Action-level
+    // gate isn't re-checked here because this view is only reachable from
+    // within the arena, which already enforced it.
+    let is_space_open = space.status != Some(SpaceStatus::Finished);
+    let can_respond = matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant);
+    let can_comment = can_respond && is_space_open;
+
+    let mut reply_text = use_signal(String::new);
+    let mut reply_tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
+    let mut reply_pending_images: Signal<Vec<PendingImage>> = use_signal(Vec::new);
+
+    // Mention autocomplete (lazy load + debounce) — same pattern as the
+    // main composer. `None` query means no network fetch until the user
+    // engages the textarea.
+    let mut mention_query_raw: Signal<Option<String>> = use_signal(|| None);
+    let mut mention_query: Signal<Option<String>> = use_signal(|| None);
+    use_effect(move || {
+        let v = mention_query_raw();
+        spawn(async move {
+            crate::common::utils::time::sleep(std::time::Duration::from_millis(150)).await;
+            if *mention_query_raw.peek() == v {
+                mention_query.set(v);
+            }
+        });
+    });
+    let members_loader = use_loader(move || async move {
+        match mention_query() {
+            None => Ok(ListResponse::<
+                crate::features::spaces::space_common::controllers::SpaceMemberResponse,
+            >::default()),
+            Some(q) => list_space_members(space_id(), None, Some(q)).await,
+        }
+    })?;
+    let members_memo = use_memo(move || {
+        members_loader()
+            .items
+            .into_iter()
+            .map(|m| {
+                let pk: Partition = m.user_id.clone().into();
+                MentionCandidate {
+                    user_pk: pk.to_string(),
+                    display_name: m.display_name,
+                    username: m.username,
+                    profile_url: m.profile_url,
+                }
+            })
+            .collect::<Vec<_>>()
+    });
+    let members: ReadSignal<Vec<MentionCandidate>> = members_memo.into();
+
+    let on_mention_query_change = move |q: Option<String>| {
+        mention_query_raw.set(q);
+    };
+    let on_composer_focus = move || {
+        if mention_query_raw.peek().is_none() {
+            mention_query_raw.set(Some(String::new()));
+        }
+    };
+
+    // Optimistic like state for the parent — mirrors `CommentItem`. The
+    // signals are seeded from the first loader result and hold local UI
+    // state from there (server confirmations don't reset them, a
+    // `parent_loader.restart()` does).
+    let mut parent_liked = use_signal(|| parent.liked);
+    let mut parent_likes = use_signal(|| parent.likes as i64);
+    let mut parent_like_processing = use_signal(|| false);
+    let parent_sk_for_like = parent.sk.clone();
+    let on_parent_like = move |_| {
+        let target_sk: SpacePostCommentTargetEntityType =
+            parent_sk_for_like.clone().into();
+        async move {
+            if parent_like_processing() {
+                return;
+            }
+            let next = !parent_liked();
+            let prev_liked = parent_liked();
+            let prev_likes = parent_likes();
+            parent_liked.set(next);
+            parent_likes.set((prev_likes + if next { 1 } else { -1 }).max(0));
+            parent_like_processing.set(true);
+
+            let req = LikeCommentRequest { like: next };
+            match like_comment(space_id(), discussion_id(), target_sk, req).await {
+                Ok(_) => {}
+                Err(err) => {
+                    parent_liked.set(prev_liked);
+                    parent_likes.set(prev_likes);
+                    tracing::error!("Failed to toggle parent like: {:?}", err);
+                    toast.error(err);
+                }
+            }
+            parent_like_processing.set(false);
+        }
+    };
+
+    // Priority: parent author first, then reply authors newest-first.
+    // Same helper the inline reply composer uses.
+    let parent_author_pk = parent.author_pk.to_string();
+    let parent_content = parent.content.clone();
+    let reply_priority = use_memo(move || {
+        let replies_vec = replies.read();
+        let tuples: Vec<(String, String)> = replies_vec
+            .iter()
+            .rev()
+            .map(|r| (r.author_pk.to_string(), r.content.clone()))
+            .collect();
+        let refs: Vec<(&str, &str)> = tuples
+            .iter()
+            .map(|(a, c)| (a.as_str(), c.as_str()))
+            .collect();
+        crate::common::utils::mention::build_mention_priority(
+            Some((parent_author_pk.as_str(), parent_content.as_str())),
+            &refs,
+        )
+    });
+    let reply_priority: ReadSignal<Vec<String>> = reply_priority.into();
+
+    let parent_for_submit = parent.clone();
+    let on_submit_reply = move |_| {
+        let parent = parent_for_submit.clone();
+        async move {
+            let raw_text = reply_text().trim().to_string();
+            let images: Vec<String> = reply_pending_images
+                .read()
+                .iter()
+                .filter_map(|img| img.remote_url.clone())
+                .collect();
+            if raw_text.is_empty() && images.is_empty() {
+                return;
+            }
+            let content = apply_mention_markup(&raw_text, &reply_tracked_mentions.read());
+            let comment_sk_entity: SpacePostCommentEntityType =
+                parent.sk.clone().try_into().unwrap_or_default();
+            let req = ReplyCommentRequest { content, images };
+            match reply_comment(space_id(), discussion_id(), comment_sk_entity, req).await {
+                Ok(new_reply) => {
+                    let mut current = replies();
+                    current.insert(0, new_reply);
+                    replies.set(current);
+                    reply_text.set(String::new());
+                    reply_tracked_mentions.set(Vec::new());
+                    reply_pending_images.set(Vec::new());
+                    parent_loader.restart();
+                    toast.info(tr.reply_success);
+                }
+                Err(err) => {
+                    tracing::error!("Failed to post reply: {:?}", err);
+                    toast.error(err);
+                }
+            }
+        }
+    };
+
+    let parent_time_ago = format_time_ago(parent.created_at);
+
+    rsx! {
+        div { class: "reply-thread", "data-testid": "reply-thread",
+            // Header: back + title
+            div { class: "reply-thread__header",
+                button {
+                    class: "reply-thread__icon-btn",
+                    "data-testid": "reply-thread-back",
+                    aria_label: "{tr.replies_back_aria}",
+                    onclick: move |_| on_close.call(()),
+                    svg {
+                        view_box: "0 0 24 24",
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_width: "2",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        polyline { points: "15 18 9 12 15 6" }
+                    }
+                }
+                span { class: "reply-thread__title", "{tr.replies_page_title}" }
+            }
+
+            // Scroll area: parent comment on top, replies below.
+            div { class: "reply-thread__scroll",
+                div { class: "reply-thread__parent",
+                    div { class: "comment-item",
+                        img {
+                            class: "comment-item__avatar",
+                            src: "{parent.author_profile_url}",
+                            alt: "{parent.author_display_name}",
+                        }
+                        div { class: "comment-item__body",
+                            div { class: "comment-item__top",
+                                span { class: "comment-item__name", "{parent.author_display_name}" }
+                                span { class: "comment-item__time", "{parent_time_ago}" }
+                            }
+                            div { class: "comment-item__text",
+                                for segment in parse_mention_segments(&parent.content) {
+                                    match segment {
+                                        ContentSegment::Text(t) => rsx! {
+                                            span { "{t}" }
+                                        },
+                                        ContentSegment::Mention { display_name, .. } => rsx! {
+                                            span { class: "font-medium text-primary", "@{display_name}" }
+                                        },
+                                    }
+                                }
+                            }
+                            CommentImageGrid { images: parent.images.clone() }
+                            div { class: "comment-item__actions",
+                                button {
+                                    class: if parent_liked() { "comment-action comment-action--liked" } else { "comment-action" },
+                                    disabled: parent_like_processing(),
+                                    onclick: on_parent_like,
+                                    svg {
+                                        view_box: "0 0 24 24",
+                                        fill: if parent_liked() { "currentColor" } else { "none" },
+                                        stroke: "currentColor",
+                                        stroke_width: "2",
+                                        stroke_linecap: "round",
+                                        stroke_linejoin: "round",
+                                        path { d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" }
+                                    }
+                                    span { "{parent_likes()}" }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                div { class: "reply-thread__list",
+                    for reply in replies().iter() {
+                        ReplyItem {
+                            key: "{reply.sk}",
+                            reply: reply.clone(),
+                            space_id,
+                            discussion_id,
+                            replies,
+                            on_parent_refresh: move |_| parent_loader.restart(),
+                            can_comment,
+                        }
+                    }
+                }
+            }
+
+            // Pinned composer at the bottom.
+            if can_comment {
+                div { class: "reply-thread__composer",
+                    CommentComposer {
+                        text: reply_text,
+                        tracked_mentions: reply_tracked_mentions,
+                        pending_images: reply_pending_images,
+                        members,
+                        on_submit: on_submit_reply,
+                        placeholder: tr.reply_placeholder.to_string(),
+                        compact: true,
+                        disabled: reply_text().trim().is_empty()
+                                                                                                                                                    && reply_pending_images.read().is_empty(),
+                        on_mention_query_change,
+                        on_composer_focus,
+                        priority_user_pks: reply_priority,
+                    }
+                }
+            }
         }
     }
 }
@@ -248,6 +596,23 @@ pub fn DiscussionArenaPage(
     let mut comment_text = use_signal(String::new);
     let mut tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
     let mut pending_images: Signal<Vec<PendingImage>> = use_signal(Vec::new);
+
+    // Mobile-only thread drill-down state. `CommentItem` consumes this
+    // via `use_context` so any comment anywhere in the list can swap the
+    // panel over to the thread view without threading a signal through
+    // every prop. Stays `None` on desktop (nothing sets it there).
+    let active_reply_thread: Signal<Option<String>> = use_signal(|| None);
+    // Sheet expanded state is owned by Dioxus (not by JS) so Dioxus
+    // re-renders don't clobber it. The signal drives a `data-expanded`
+    // attribute on `.comments-panel`, and the handle tap toggles it via
+    // a Rust onclick. Without this, tapping Reply re-rendered the panel
+    // while JS still owned the `.expanded` class, which got cleared
+    // during the diff and collapsed the sheet.
+    let mut sheet_expanded: Signal<bool> = use_signal(|| false);
+    use_context_provider(|| ActiveReplyThreadCtx {
+        active: active_reply_thread,
+        sheet_expanded,
+    });
 
     // Mention autocomplete uses a lazy load + server-side search pattern:
     //  * `mention_query_raw` tracks the live query from MentionAutocomplete
@@ -514,9 +879,18 @@ pub fn DiscussionArenaPage(
                 }
 
                 // Right: Comments Panel (bottom sheet on mobile)
-                div { class: "comments-panel", id: "discussion-comments-sheet",
-                    // Sheet handle (visible on mobile only)
-                    div { class: "sheet-handle",
+                div {
+                    class: "comments-panel",
+                    id: "discussion-comments-sheet",
+                    "data-expanded": sheet_expanded(),
+                    // Sheet handle (visible on mobile only). Owned by
+                    // Dioxus so the expand state survives re-renders that
+                    // happen when the thread drill-down swaps panel
+                    // content. Tapping toggles the signal; the `data-
+                    // expanded` attribute drives the CSS translate.
+                    div {
+                        class: "sheet-handle",
+                        onclick: move |_| sheet_expanded.toggle(),
                         div { class: "sheet-handle__bar" }
                         div { class: "sheet-handle__row",
                             div { class: "sheet-handle__left",
@@ -535,45 +909,64 @@ pub fn DiscussionArenaPage(
                             }
                         }
                     }
-                    // Desktop header
-                    div { class: "comments-panel__header",
-                        span { class: "comments-panel__title", "{tr.comments_title}" }
-                        span { class: "comments-panel__count", "{post.comments}" }
-                    }
 
-                    // Comment Input
-                    if can_comment {
-                        CommentComposer {
-                            text: comment_text,
-                            tracked_mentions,
-                            pending_images,
-                            members,
-                            on_submit: move |_| on_submit_comment(()),
-                            placeholder: tr.comment_placeholder.to_string(),
-                            disabled: comment_text().trim().is_empty()
-                                                                                                                                                                                                                                                                                                                                                                                && pending_images.read().is_empty(),
-                            on_mention_query_change,
-                            on_composer_focus,
-                            priority_user_pks: top_priority,
+                    // Mobile thread drill-down swaps the panel content over
+                    // to a single-comment thread view. Keeps the user inside
+                    // the bottom sheet (no route change) so the sheet handle
+                    // stays reachable and "Back" returns to the comments
+                    // list without popping the route stack.
+                    if let Some(thread_id) = active_reply_thread() {
+                        ReplyThreadView {
+                            key: "{thread_id}",
+                            space_id,
+                            discussion_id,
+                            comment_id: thread_id,
+                            on_close: {
+                                let mut active = active_reply_thread;
+                                move |_| active.set(None)
+                            },
                         }
-                    }
+                    } else {
+                        // Desktop header
+                        div { class: "comments-panel__header",
+                            span { class: "comments-panel__title", "{tr.comments_title}" }
+                            span { class: "comments-panel__count", "{post.comments}" }
+                        }
 
-                    // Scrollable comments
-                    div { class: "comments-scroll",
-                        div { class: "comment-list",
-                            for comment in comments.iter() {
-                                CommentItem {
-                                    key: "{comment.sk}",
-                                    comment: comment.clone(),
-                                    space_id,
-                                    discussion_id,
-                                    can_comment,
-                                    members,
-                                    comments_loader,
-                                    polled_new,
-                                    deep_link_target,
-                                    on_mention_query_change,
-                                    on_composer_focus,
+                        // Comment Input
+                        if can_comment {
+                            CommentComposer {
+                                text: comment_text,
+                                tracked_mentions,
+                                pending_images,
+                                members,
+                                on_submit: move |_| on_submit_comment(()),
+                                placeholder: tr.comment_placeholder.to_string(),
+                                disabled: comment_text().trim().is_empty()
+                                                                                                                                    && pending_images.read().is_empty(),
+                                on_mention_query_change,
+                                on_composer_focus,
+                                priority_user_pks: top_priority,
+                            }
+                        }
+
+                        // Scrollable comments
+                        div { class: "comments-scroll",
+                            div { class: "comment-list",
+                                for comment in comments.iter() {
+                                    CommentItem {
+                                        key: "{comment.sk}",
+                                        comment: comment.clone(),
+                                        space_id,
+                                        discussion_id,
+                                        can_comment,
+                                        members,
+                                        comments_loader,
+                                        polled_new,
+                                        deep_link_target,
+                                        on_mention_query_change,
+                                        on_composer_focus,
+                                    }
                                 }
                             }
                         }
@@ -656,101 +1049,76 @@ fn CommentComposer(
         }
     };
 
-    if compact {
-        rsx! {
-            div { class: "comment-composer-wrapper", onpaste: on_paste,
-                ImageUploadPreview { images: pending_images }
-                div { class: "reply-input",
-                    MentionAutocomplete {
-                        text,
-                        on_select: on_mention_select,
-                        members,
-                        on_query_change: move |q| on_mention_query_change.call(q),
-                        priority_user_pks,
-                        textarea {
-                            class: "reply-input__field",
-                            placeholder: "{placeholder}",
-                            rows: "1",
-                            value: "{text}",
-                            oninput: move |e| {
-                                text.set(e.value());
-                            },
-                            onkeydown: on_keydown,
-                            onfocus: move |_| on_composer_focus.call(()),
-                            // The reply composer mounts only when the user
-                            // opens it via the reply button, so auto-focusing
-                            // here matches the click intent without
-                            // hijacking focus on unrelated renders.
-                            onmounted: move |e: MountedEvent| async move {
+    // Single markup for both the top-level composer (at the top of the
+    // comments panel) and the reply composer (under a specific comment).
+    // `data-compact="true"` lets CSS branch on the two contexts — the reply
+    // variant picks up a top separator (it sits at the bottom of a thread)
+    // while the top-level variant keeps the bottom separator from the
+    // comments list below it. The `.comment-input__*` hook classes on the
+    // top-level textarea/button stay in place so existing Playwright
+    // selectors keep resolving.
+    let textarea_class = if compact {
+        "reply-input__field"
+    } else {
+        "reply-input__field comment-input__textarea"
+    };
+    let send_class = if compact {
+        "reply-input__send"
+    } else {
+        "reply-input__send comment-input__submit"
+    };
+    rsx! {
+        div {
+            class: "comment-input",
+            "data-compact": compact,
+            onpaste: on_paste,
+            ImageUploadPreview { images: pending_images }
+            div { class: "reply-input",
+                MentionAutocomplete {
+                    text,
+                    on_select: on_mention_select,
+                    members,
+                    on_query_change: move |q| on_mention_query_change.call(q),
+                    priority_user_pks,
+                    textarea {
+                        class: "{textarea_class}",
+                        placeholder: "{placeholder}",
+                        rows: "1",
+                        value: "{text}",
+                        oninput: move |e| {
+                            text.set(e.value());
+                        },
+                        onkeydown: on_keydown,
+                        onfocus: move |_| on_composer_focus.call(()),
+                        // Only the reply composer auto-focuses on mount —
+                        // the top-level composer is always visible and
+                        // grabbing focus on every render would steal it
+                        // from whatever the user is reading.
+                        onmounted: move |e: MountedEvent| async move {
+                            if compact {
                                 let _ = e.set_focus(true).await;
-                            },
-                        }
-                    }
-                    button {
-                        class: "reply-input__send",
-                        disabled,
-                        onclick: move |_| on_submit.call(()),
-                        svg {
-                            view_box: "0 0 24 24",
-                            fill: "none",
-                            stroke: "currentColor",
-                            stroke_width: "2",
-                            stroke_linecap: "round",
-                            stroke_linejoin: "round",
-                            line {
-                                x1: "22",
-                                y1: "2",
-                                x2: "11",
-                                y2: "13",
                             }
-                            polygon { points: "22 2 15 22 11 13 2 9 22 2" }
-                        }
+                        },
                     }
                 }
-            }
-        }
-    } else {
-        rsx! {
-            div { class: "comment-input", onpaste: on_paste,
-                ImageUploadPreview { images: pending_images }
-                div { class: "reply-input",
-                    MentionAutocomplete {
-                        text,
-                        on_select: on_mention_select,
-                        members,
-                        on_query_change: move |q| on_mention_query_change.call(q),
-                        priority_user_pks,
-                        textarea {
-                            class: "reply-input__field comment-input__textarea",
-                            placeholder: "{placeholder}",
-                            rows: "1",
-                            value: "{text}",
-                            oninput: move |e| {
-                                text.set(e.value());
-                            },
-                            onkeydown: on_keydown,
-                            onfocus: move |_| on_composer_focus.call(()),
+                button {
+                    class: "{send_class}",
+                    disabled,
+                    onclick: move |_| on_submit.call(()),
+                    svg {
+                        view_box: "0 0 24 24",
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_width: "2",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        line {
+                            x1: "22",
+                            y1: "2",
+                            x2: "11",
+                            y2: "13",
                         }
-                    }
-                    button {
-                        class: "reply-input__send comment-input__submit",
-                        disabled,
-                        onclick: move |_| on_submit.call(()),
-                        svg {
-                            view_box: "0 0 24 24",
-                            fill: "none",
-                            stroke: "currentColor",
-                            stroke_width: "2",
-                            stroke_linecap: "round",
-                            stroke_linejoin: "round",
-                            line {
-                                x1: "22",
-                                y1: "2",
-                                x2: "11",
-                                y2: "13",
-                            }
-                            polygon { points: "22 2 15 22 11 13 2 9 22 2" }
-                        }
+                        polygon { points: "22 2 15 22 11 13 2 9 22 2" }
                     }
                 }
             }
@@ -881,7 +1249,28 @@ fn CommentItem(
         like_processing.set(false);
     };
 
+    let ctx = use_context::<ActiveReplyThreadCtx>();
+    let mut active_reply_thread = ctx.active;
+    let mut sheet_expanded = ctx.sheet_expanded;
     let on_toggle_replies = move |_| async move {
+        // Mobile: swap the comments panel over to the thread view instead
+        // of expanding inline — the narrow column can't comfortably fit
+        // parent + thread + composer together. Staying inside the
+        // bottom-sheet (vs navigating to a new route) keeps the sheet
+        // handle reachable and lets "Back" return to the comments list
+        // without popping the route stack. Force-expand the sheet so the
+        // swap is visible in case the user tapped Reply before the sheet
+        // was manually opened. Breakpoint matches the CSS media query
+        // that tightens the arena layout.
+        #[cfg(not(feature = "server"))]
+        if is_arena_mobile_viewport() {
+            let comment_id = SpacePostCommentEntityType::try_from(comment_sk())
+                .map(|e| e.0)
+                .unwrap_or_default();
+            active_reply_thread.set(Some(comment_id));
+            sheet_expanded.set(true);
+            return;
+        }
         let next = !show_replies();
         show_replies.set(next);
         if next && replies().is_empty() && reply_count > 0 {
@@ -1110,6 +1499,7 @@ fn CommentItem(
                             if can_comment {
                                 button {
                                     class: "comment-action comment-action--reply",
+                                    "data-testid": "comment-action-reply",
                                     onclick: on_toggle_replies,
                                     svg {
                                         view_box: "0 0 24 24",
@@ -1158,7 +1548,7 @@ fn CommentItem(
                             space_id,
                             discussion_id,
                             replies,
-                            comments_loader,
+                            on_parent_refresh: move |_| comments_loader.restart(),
                             can_comment,
                         }
                     }
@@ -1175,7 +1565,7 @@ fn CommentItem(
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
                         disabled: reply_text().trim().is_empty()
-                                                                                                                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                                                                                                                                                                                                    && reply_pending_images.read().is_empty(),
                         on_mention_query_change,
                         on_composer_focus,
                         priority_user_pks: reply_priority,
@@ -1214,20 +1604,20 @@ fn format_time_ago(timestamp: i64) -> String {
 // ── Reply Item ──────────────────────────────────────
 // Same edit/delete affordances as CommentItem, but scoped to a single reply.
 // Replies live in a parent-owned `replies: Signal<Vec<...>>` (not the global
-// comments_loader), so mutations patch that signal locally and also kick
-// `comments_loader.restart()` to refresh the parent's `reply_count`.
+// comments_loader), so mutations patch that signal locally and also fire
+// `on_parent_refresh` so callers (discussion page, dedicated replies page)
+// can refresh whatever view holds the parent's `reply_count`.
 #[component]
 fn ReplyItem(
     reply: DiscussionCommentResponse,
     space_id: ReadSignal<SpacePartition>,
     discussion_id: ReadSignal<SpacePostEntityType>,
     replies: Signal<Vec<DiscussionCommentResponse>>,
-    comments_loader: Loader<ListResponse<DiscussionCommentResponse>>,
+    on_parent_refresh: EventHandler<()>,
     can_comment: bool,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
     let mut toast = use_toast();
-    let mut comments_loader = comments_loader;
     let mut replies = replies;
 
     let user_ctx = crate::features::auth::hooks::use_user_context();
@@ -1335,9 +1725,11 @@ fn ReplyItem(
             Ok(_) => {
                 let sk = reply_sk();
                 replies.with_mut(|list| list.retain(|r| r.sk != sk));
-                // Server decrements the parent's `replies` counter — refresh
-                // the base list so the "N replies" toggle shows the new count.
-                comments_loader.restart();
+                // Server decrements the parent's `replies` counter — let
+                // the host refresh whatever holds that count (comments
+                // loader on the discussion page, parent loader on the
+                // dedicated replies page).
+                on_parent_refresh.call(());
                 toast.info(tr.delete_success);
             }
             Err(err) => {
