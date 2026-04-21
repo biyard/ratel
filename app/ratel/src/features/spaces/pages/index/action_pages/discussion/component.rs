@@ -4,12 +4,10 @@ use crate::common::components::mention_autocomplete::{
 };
 use crate::common::components::paste_image_uploader;
 use crate::common::components::CommentImageGrid;
-use crate::common::hooks::use_interval;
 use crate::common::utils::mention::{apply_mention_markup, parse_mention_segments, ContentSegment};
 use crate::features::spaces::pages::actions::actions::discussion::controllers::{
-    add_comment, delete_comment, get_discussion_detail, like_comment, list_comments, list_replies,
-    reply_comment, update_comment, AddCommentRequest, LikeCommentRequest, ReplyCommentRequest,
-    UpdateCommentRequest,
+    add_comment, delete_comment, like_comment, list_replies, reply_comment, update_comment,
+    AddCommentRequest, LikeCommentRequest, ReplyCommentRequest, UpdateCommentRequest,
 };
 use crate::features::spaces::pages::actions::actions::discussion::{
     DiscussionCommentResponse, DiscussionStatus, SpacePostCommentTargetEntityType,
@@ -17,14 +15,11 @@ use crate::features::spaces::pages::actions::actions::discussion::{
 use crate::features::spaces::pages::index::action_pages::discussion::*;
 use crate::features::spaces::pages::index::action_pages::quiz::ActiveActionOverlaySignal;
 use crate::features::spaces::pages::index::*;
-use crate::features::spaces::space_common::controllers::list_space_members;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
 use crate::features::spaces::space_common::providers::use_space_context;
 
-// Programmatic value changes from Dioxus's signal binding don't fire the
-// `input` event, so the autogrow listener can't reset the stretched inline
-// height after a submit clears the composer. This bridge lets the Rust
-// side trigger the reset explicitly.
+// `value=""` from Rust doesn't fire `input`, so the JS autogrow listener
+// won't shrink the textarea on its own — call into JS to reset.
 #[cfg(not(feature = "server"))]
 use crate::common::wasm_bindgen::prelude::*;
 
@@ -40,13 +35,8 @@ fn reset_composer_height() {
     reset_composer_height_js();
 }
 
-// Click-time breakpoint check for the mobile-only thread drill-down. The
-// discussion arena's CSS tightens at 500px, so tapping Reply below that
-// width swaps the comments panel over to the in-sheet thread view; above
-// the breakpoint desktop keeps the inline toggle. `Window::inner_width`
-// returns a `JsValue` (the only web_sys API on Window that doesn't
-// require an extra feature flag), which we coerce to an `f64` and
-// compare directly against the CSS breakpoint.
+// Matches the 500px CSS breakpoint that switches the arena into the
+// bottom-sheet layout.
 #[cfg(not(feature = "server"))]
 fn is_arena_mobile_viewport() -> bool {
     let width_px = web_sys::window()
@@ -56,11 +46,6 @@ fn is_arena_mobile_viewport() -> bool {
     width_px > 0.0 && width_px <= 500.0
 }
 
-/// Routable wrapper for `DiscussionArenaPage`. Registered on
-/// `/spaces/:space_id/discussions/:discussion_id` so external deep links
-/// (e.g. notification CTAs without a target comment) land directly on the
-/// discussion viewer. Arena-internal clicks continue to open the overlay via
-/// `ActiveActionOverlaySignal`; both paths render the same component.
 #[component]
 pub fn SpaceDiscussionPage(
     space_id: SpacePartition,
@@ -78,11 +63,9 @@ pub fn SpaceDiscussionPage(
     }
 }
 
-/// Variant of `SpaceDiscussionPage` that carries a `comment_id` path
-/// parameter. The id flows down to `DiscussionArenaPage`, whose deep-link
-/// effect scrolls to + highlights the matching `.comment-item`. Comment id
-/// is in the path (not query/fragment) because Dioxus Router strips both
-/// during URL normalization on hydration.
+/// Deep-link variant — `comment_id` drives the scroll-to + pulse effect
+/// in `DiscussionArenaPage`. Path param (not query/fragment) because
+/// Dioxus Router strips both on hydration.
 #[component]
 pub fn SpaceDiscussionCommentPage(
     space_id: SpacePartition,
@@ -101,21 +84,10 @@ pub fn SpaceDiscussionCommentPage(
     }
 }
 
-/// YouTube/Reddit-style thread drill-down for a single parent comment.
-/// Mounted inside the mobile comments sheet (not a standalone route) so
-/// opening replies stays within the current bottom-sheet context — the
-/// sheet handle remains reachable and going "back" returns the user to
-/// the discussion's comments list without popping the route stack.
-/// Layout: parent pinned on top, scrollable replies below, composer at
-/// the bottom.
-///
-/// Loaders for the parent comment and its replies live in the
-/// `UseDiscussionArena` controller (built once at `DiscussionArenaPage`
-/// mount), not here, so that `active_reply_thread` flipping to `Some`
-/// triggers a background refresh on those loaders rather than mounting
-/// fresh ones — the mount path was suspending up to the overlay's
-/// `SuspenseBoundary` and unmounting the entire arena page during the
-/// initial fetch (the "arena index briefly visible" flash).
+/// In-sheet thread view for a single parent comment + its replies.
+/// Reads parent/replies loaders from the controller so swapping into
+/// the thread is a background refresh, not a fresh mount that would
+/// suspend up to the overlay boundary.
 #[component]
 fn ReplyThreadView(
     space_id: ReadSignal<SpacePartition>,
@@ -130,15 +102,14 @@ fn ReplyThreadView(
     let UseDiscussionArena {
         mut parent_loader,
         mut replies_loader,
+        members,
+        mut mention_query_raw,
         ..
     } = use_discussion_arena(space_id, discussion_id)?;
     let parent = parent_loader();
 
-    // Owned mutation signal seeded from the controller's reply loader.
-    // Optimistic insert/edit/delete from `ReplyItem` and the composer
-    // below mutates this signal in place; a `replies_loader` background
-    // reload (after `active_reply_thread` flips to a different comment,
-    // or after a parent refresh) re-syncs us via the effect below.
+    // Local mirror of the loader so optimistic mutations have a writable
+    // source. Re-synced when the loader's identity changes.
     let mut replies: Signal<Vec<DiscussionCommentResponse>> =
         use_signal(move || replies_loader().items);
     use_effect(move || {
@@ -155,10 +126,6 @@ fn ReplyThreadView(
         }
     });
 
-    // Discussion-level gate mirrors the main arena — non-participants see
-    // the thread but cannot reply once the space has ended. Action-level
-    // gate isn't re-checked here because this view is only reachable from
-    // within the arena, which already enforced it.
     let is_space_open = space.status != Some(SpaceStatus::Finished);
     let can_respond = matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant);
     let can_comment = can_respond && is_space_open;
@@ -166,45 +133,6 @@ fn ReplyThreadView(
     let mut reply_text = use_signal(String::new);
     let mut reply_tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
     let mut reply_pending_images: Signal<Vec<PendingImage>> = use_signal(Vec::new);
-
-    // Mention autocomplete (lazy load + debounce) — same pattern as the
-    // main composer. `None` query means no network fetch until the user
-    // engages the textarea.
-    let mut mention_query_raw: Signal<Option<String>> = use_signal(|| None);
-    let mut mention_query: Signal<Option<String>> = use_signal(|| None);
-    use_effect(move || {
-        let v = mention_query_raw();
-        spawn(async move {
-            crate::common::utils::time::sleep(std::time::Duration::from_millis(150)).await;
-            if *mention_query_raw.peek() == v {
-                mention_query.set(v);
-            }
-        });
-    });
-    let members_loader = use_loader(move || async move {
-        match mention_query() {
-            None => Ok(ListResponse::<
-                crate::features::spaces::space_common::controllers::SpaceMemberResponse,
-            >::default()),
-            Some(q) => list_space_members(space_id(), None, Some(q)).await,
-        }
-    })?;
-    let members_memo = use_memo(move || {
-        members_loader()
-            .items
-            .into_iter()
-            .map(|m| {
-                let pk: Partition = m.user_id.clone().into();
-                MentionCandidate {
-                    user_pk: pk.to_string(),
-                    display_name: m.display_name,
-                    username: m.username,
-                    profile_url: m.profile_url,
-                }
-            })
-            .collect::<Vec<_>>()
-    });
-    let members: ReadSignal<Vec<MentionCandidate>> = members_memo.into();
 
     let on_mention_query_change = move |q: Option<String>| {
         mention_query_raw.set(q);
@@ -215,13 +143,8 @@ fn ReplyThreadView(
         }
     };
 
-    // Optimistic like state for the parent — mirrors `CommentItem`. The
-    // signals seed empty and pick up the real values via the effect
-    // below once the cached loader resolves (loader may still be on the
-    // previous value at mount time because the controller-level reload
-    // is in flight). After seeding, optimistic toggles own the UI; we
-    // re-sync only when the parent's `sk` changes (e.g., user opens a
-    // different thread).
+    // Seed optimistic like state from the loader once it resolves; sk
+    // change indicates a different parent so re-seed.
     let mut parent_liked = use_signal(|| false);
     let mut parent_likes = use_signal(|| 0i64);
     let mut parent_like_processing = use_signal(|| false);
@@ -264,12 +187,8 @@ fn ReplyThreadView(
         }
     };
 
-    // Priority: parent author first, then reply authors newest-first.
-    // Same helper the inline reply composer uses. Read `parent_loader`
-    // inside the memo so the priority rebuilds once the cached loader
-    // resolves with the real parent (it may have been on the default
-    // value at mount time, since the controller-level loader refreshes
-    // in the background after `active_reply_thread` flips).
+    // Read `parent_loader` inside so the memo rebuilds when the cached
+    // loader resolves with the real parent.
     let reply_priority = use_memo(move || {
         let p = parent_loader();
         let parent_author_pk = p.author_pk.to_string();
@@ -331,7 +250,6 @@ fn ReplyThreadView(
 
     rsx! {
         div { class: "reply-thread", "data-testid": "reply-thread",
-            // Header: back + title
             div { class: "reply-thread__header",
                 button {
                     class: "reply-thread__icon-btn",
@@ -351,7 +269,6 @@ fn ReplyThreadView(
                 span { class: "reply-thread__title", "{tr.replies_page_title}" }
             }
 
-            // Scroll area: parent comment on top, replies below.
             div { class: "reply-thread__scroll",
                 div { class: "reply-thread__parent",
                     div { class: "comment-item",
@@ -414,7 +331,6 @@ fn ReplyThreadView(
                 }
             }
 
-            // Pinned composer at the bottom.
             if can_comment {
                 div { class: "reply-thread__composer",
                     CommentComposer {
@@ -426,7 +342,7 @@ fn ReplyThreadView(
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
                         disabled: reply_text().trim().is_empty()
-                                                                                                                                                                            && reply_pending_images.read().is_empty(),
+                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
                         on_mention_query_change,
                         on_composer_focus,
                         priority_user_pks: reply_priority,
@@ -441,10 +357,6 @@ fn ReplyThreadView(
 pub fn DiscussionArenaPage(
     space_id: ReadSignal<SpacePartition>,
     discussion_id: ReadSignal<SpacePostEntityType>,
-    // When `Some`, `data-deep-link` is set on the matching `.comment-item`
-    // and the deep-link effect scrolls it into view. Sourced from the
-    // `Route::SpaceDiscussionCommentPage` path parameter; arena-overlay
-    // entries pass `None`.
     #[props(default)] target_comment_id: Option<String>,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
@@ -453,12 +365,19 @@ pub fn DiscussionArenaPage(
     let role = use_space_role()();
     let space = use_space()();
 
-    let disc_loader = use_loader(move || {
-        get_discussion_detail(space_id(), discussion_id())
-    })?;
-    let disc = disc_loader();
+    let arena = use_discussion_arena(space_id, discussion_id)?;
+    let mut comments_loader = arena.comments_loader;
+    let mut polled_new = arena.polled_new;
+    let active_reply_thread = arena.active_reply_thread;
+    let mut sheet_expanded = arena.sheet_expanded;
+    let mut mention_query_raw = arena.mention_query_raw;
+    let members = arena.members;
+    let top_priority = arena.top_priority;
+
+    let disc = arena.disc_loader.clone()();
     let post = disc.post.clone();
     let space_action = disc.space_action.clone();
+    let comments_data = comments_loader();
 
     let status = post.status();
     let is_in_progress = status == DiscussionStatus::InProgress;
@@ -471,66 +390,8 @@ pub fn DiscussionArenaPage(
     );
     let can_comment = can_respond && can_execute && is_in_progress;
 
-    let mut comments_loader = use_loader(move || {
-        list_comments(space_id(), discussion_id(), None, None)
-    })?;
-    let comments_data = comments_loader();
-
-    // Short-polling: every 5s fetch comments newer than the most recent one we
-    // have already rendered and keep them in a local signal. Render appends
-    // them AFTER the loader's base page (deduped by `sk`) so existing items'
-    // positions never shift — avoids Dioxus reorder-induced DOM errors, scroll
-    // jumps, and focus loss.
-    let mut polled_new: Signal<Vec<DiscussionCommentResponse>> = use_signal(Vec::new);
-    let mut last_seen_at: Signal<i64> = use_signal(move || {
-        comments_loader()
-            .items
-            .iter()
-            .map(|c| c.created_at)
-            .max()
-            .unwrap_or_else(crate::common::utils::time::get_now_timestamp)
-    });
-    use_interval(5000, move || {
-        let since = last_seen_at();
-        tracing::info!("[arena discussion poll] tick since={}", since);
-        spawn(async move {
-            match list_comments(space_id(), discussion_id(), None, Some(since)).await {
-                Ok(resp) => {
-                    if resp.items.is_empty() {
-                        return;
-                    }
-                    let new_max = resp
-                        .items
-                        .iter()
-                        .map(|c| c.created_at)
-                        .max()
-                        .unwrap_or(since);
-                    polled_new.with_mut(|list| {
-                        // server returns newest-first; reverse so chronological
-                        // order (older → newer) is preserved when appending.
-                        for item in resp.items.into_iter().rev() {
-                            if !list.iter().any(|x| x.sk == item.sk) {
-                                list.push(item);
-                            }
-                        }
-                    });
-                    if new_max > since {
-                        last_seen_at.set(new_max);
-                    }
-                }
-                Err(e) => {
-                    tracing::debug!("arena comment poll failed: {:?}", e);
-                }
-            }
-        });
-    });
-
-    // Merge priority: the base page (returned by the loader, ordered by the
-    // server's canonical GSI) is the source of truth for content. Polled items
-    // that haven't yet been picked up by a restart are appended at the end.
-    // This way a loader restart after an edit immediately reflects the new
-    // content — the polled list may still carry the stale snapshot with the
-    // same sk, but base wins and the polled duplicate is filtered out.
+    // Base page wins over polled duplicates so a loader restart after
+    // edit/delete clobbers any stale snapshot lingering in the buffer.
     let comments: Vec<DiscussionCommentResponse> = {
         let polled = polled_new();
         let base = comments_data.items.clone();
@@ -545,24 +406,15 @@ pub fn DiscussionArenaPage(
             .collect()
     };
 
-    // Overlay is provided by `SpaceIndexPage` when this renders as an arena
-    // overlay. Under the standalone `Route::SpaceDiscussionPage`, there is no
-    // provider — `on_back` falls back to `nav.go_back()` in that case.
+    // `overlay_ctx` is only present when mounted as the arena overlay;
+    // `on_back` falls back to `nav.go_back()` for the standalone route.
     let overlay_ctx: Option<ActiveActionOverlaySignal> = try_consume_context();
     let nav = use_navigator();
 
-    // Path-based deep-link target. When set (via the
-    // `SpaceDiscussionCommentPage` route variant), the matching
-    // `.comment-item` gets `data-deep-link="true"` (drives the CSS pulse)
-    // and is scrolled into view once it appears in the DOM. Signal-driven
-    // so Dioxus's next diff doesn't clobber the attribute. Single success
-    // per mount via the `done` guard; retries on each loader tick until
-    // the target renders (handles unpolled comments).
     let deep_link_target: Signal<Option<String>> = use_signal(|| target_comment_id.clone());
     let mut deep_link_done: Signal<bool> = use_signal(|| target_comment_id.is_none());
-    // Call `use_effect` unconditionally so hook indices match between the
-    // server (SSR) and web (hydration) builds. Only the body touches
-    // browser APIs, so gate those with `#[cfg(feature = "web")]`.
+    // Hook indices must match between SSR and hydration; gate only the
+    // browser-API body, not the `use_effect` call itself.
     use_effect(move || {
         let _ = comments_loader();
         if deep_link_done() {
@@ -581,8 +433,6 @@ pub fn DiscussionArenaPage(
                 return;
             };
             let Some(el) = document.get_element_by_id(&target_id) else {
-                // Not rendered yet (unpolled, or a reply — Phase 2). Retry
-                // on next comments_loader tick.
                 return;
             };
             let opts = web_sys::ScrollIntoViewOptions::new();
@@ -601,99 +451,14 @@ pub fn DiscussionArenaPage(
     let mut tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
     let mut pending_images: Signal<Vec<PendingImage>> = use_signal(Vec::new);
 
-    // Per-discussion controller. Builds and provides `UseDiscussionArena`
-    // on first call; descendants (`CommentItem`, `ReplyThreadView`)
-    // reuse the cached instance. `active_reply_thread` and the parent /
-    // replies loaders for the in-sheet thread view live here so that
-    // tapping Reply triggers a background refresh on existing loaders
-    // rather than mounting new ones (which would suspend up to the
-    // overlay boundary and flash the arena index through).
-    let arena = use_discussion_arena(space_id, discussion_id)?;
-    let active_reply_thread = arena.active_reply_thread;
-    let mut sheet_expanded = arena.sheet_expanded;
-
-    // Mention autocomplete uses a lazy load + server-side search pattern:
-    //  * `mention_query_raw` tracks the live query from MentionAutocomplete
-    //    (and is seeded by textarea focus so the dropdown is warm before the
-    //    user types `@`).
-    //  * `mention_query` is the debounced version that actually drives the
-    //    loader, to avoid hammering the server on every keystroke.
-    // A `None` value means no fetch has been requested yet, so we skip the
-    // network entirely for viewers who never engage the composer.
-    let mut mention_query_raw: Signal<Option<String>> = use_signal(|| None);
-    let mut mention_query: Signal<Option<String>> = use_signal(|| None);
-
-    use_effect(move || {
-        let v = mention_query_raw();
-        spawn(async move {
-            crate::common::utils::time::sleep(std::time::Duration::from_millis(150)).await;
-            if *mention_query_raw.peek() == v {
-                mention_query.set(v);
-            }
-        });
-    });
-
-    let members_loader = use_loader(move || async move {
-        match mention_query() {
-            None => Ok(ListResponse::<
-                crate::features::spaces::space_common::controllers::SpaceMemberResponse,
-            >::default()),
-            Some(q) => list_space_members(space_id(), None, Some(q)).await,
-        }
-    })?;
-
-    let members_memo = use_memo(move || {
-        members_loader()
-            .items
-            .into_iter()
-            .map(|m| {
-                let pk: Partition = m.user_id.clone().into();
-                MentionCandidate {
-                    user_pk: pk.to_string(),
-                    display_name: m.display_name,
-                    username: m.username,
-                    profile_url: m.profile_url,
-                }
-            })
-            .collect::<Vec<_>>()
-    });
-    let members: ReadSignal<Vec<MentionCandidate>> = members_memo.into();
-
     let on_mention_query_change = move |q: Option<String>| {
         mention_query_raw.set(q);
     };
-
     let on_composer_focus = move || {
         if mention_query_raw.peek().is_none() {
             mention_query_raw.set(Some(String::new()));
         }
     };
-
-    // Priority roster for the top-level composer: everyone who has posted
-    // in this discussion, plus anyone they mentioned. Rebuilds whenever
-    // the loader or poll buffer changes so new comments surface the new
-    // voices right away.
-    let top_priority = use_memo(move || {
-        let base = comments_loader().items.clone();
-        let polled = polled_new();
-        let base_sks: std::collections::HashSet<String> =
-            base.iter().map(|c| c.sk.to_string()).collect();
-        let tuples: Vec<(String, String)> = base
-            .iter()
-            .chain(
-                polled
-                    .iter()
-                    .filter(|p| !base_sks.contains(&p.sk.to_string())),
-            )
-            .map(|c| (c.author_pk.to_string(), c.content.clone()))
-            .collect();
-        let refs: Vec<(&str, &str)> = tuples
-            .iter()
-            .map(|(a, c)| (a.as_str(), c.as_str()))
-            .collect();
-        crate::common::utils::mention::build_mention_priority(None, &refs)
-    });
-    let top_priority: ReadSignal<Vec<String>> = top_priority.into();
 
     let status_text = match status {
         DiscussionStatus::InProgress => tr.status_in_progress.to_string(),
@@ -755,8 +520,6 @@ pub fn DiscussionArenaPage(
         document::Script { r#type: "module", src: asset!("./script.js") }
 
         div { class: "discussion-arena",
-
-            // ── Top bar ──────────────────────────────
             div { class: "topbar",
                 div { class: "topbar__left",
                     button {
@@ -781,7 +544,6 @@ pub fn DiscussionArenaPage(
                 }
             }
 
-            // ── Banners ──────────────────────────────
             if status == DiscussionStatus::Finish {
                 div { class: "disc-banner disc-banner--warning", "{tr.discussion_ended}" }
             }
@@ -789,14 +551,9 @@ pub fn DiscussionArenaPage(
                 div { class: "disc-banner disc-banner--info", "{tr.discussion_not_started}" }
             }
 
-            // ── Split Layout ─────────────────────────
             div { class: "discussion-layout",
-
-                // Left: Discussion Content
                 div { class: "discussion-main",
                     div { class: "discussion-main__inner",
-
-                        // Header
                         div { class: "disc-header",
                             span { class: "disc-header__type",
                                 svg {
@@ -830,7 +587,6 @@ pub fn DiscussionArenaPage(
                             }
                         }
 
-                        // Body
                         if !post.html_contents.is_empty() {
                             div { class: "disc-body",
                                 div {
@@ -840,7 +596,6 @@ pub fn DiscussionArenaPage(
                             }
                         }
 
-                        // Files
                         if !post.files.is_empty() {
                             div { class: "disc-files",
                                 span { class: "disc-files__label", "{tr.attachments_label}" }
@@ -876,16 +631,13 @@ pub fn DiscussionArenaPage(
                     }
                 }
 
-                // Right: Comments Panel (bottom sheet on mobile)
+                // Sheet handle expand state is Dioxus-owned (data-expanded)
+                // because the JS-owned class was being clobbered by panel
+                // re-renders.
                 div {
                     class: "comments-panel",
                     id: "discussion-comments-sheet",
                     "data-expanded": sheet_expanded(),
-                    // Sheet handle (visible on mobile only). Owned by
-                    // Dioxus so the expand state survives re-renders that
-                    // happen when the thread drill-down swaps panel
-                    // content. Tapping toggles the signal; the `data-
-                    // expanded` attribute drives the CSS translate.
                     div {
                         class: "sheet-handle",
                         onclick: move |_| sheet_expanded.toggle(),
@@ -908,11 +660,6 @@ pub fn DiscussionArenaPage(
                         }
                     }
 
-                    // Mobile thread drill-down swaps the panel content over
-                    // to a single-comment thread view. Keeps the user inside
-                    // the bottom sheet (no route change) so the sheet handle
-                    // stays reachable and "Back" returns to the comments
-                    // list without popping the route stack.
                     if let Some(thread_id) = active_reply_thread() {
                         ReplyThreadView {
                             key: "{thread_id}",
@@ -924,13 +671,11 @@ pub fn DiscussionArenaPage(
                             },
                         }
                     } else {
-                        // Desktop header
                         div { class: "comments-panel__header",
                             span { class: "comments-panel__title", "{tr.comments_title}" }
                             span { class: "comments-panel__count", "{post.comments}" }
                         }
 
-                        // Comment Input
                         if can_comment {
                             CommentComposer {
                                 text: comment_text,
@@ -940,14 +685,13 @@ pub fn DiscussionArenaPage(
                                 on_submit: move |_| on_submit_comment(()),
                                 placeholder: tr.comment_placeholder.to_string(),
                                 disabled: comment_text().trim().is_empty()
-                                                                                                                                                                    && pending_images.read().is_empty(),
+                                                                                                                                                                                                                                    && pending_images.read().is_empty(),
                                 on_mention_query_change,
                                 on_composer_focus,
                                 priority_user_pks: top_priority,
                             }
                         }
 
-                        // Scrollable comments
                         div { class: "comments-scroll",
                             div { class: "comment-list",
                                 for comment in comments.iter() {
@@ -957,12 +701,7 @@ pub fn DiscussionArenaPage(
                                         space_id,
                                         discussion_id,
                                         can_comment,
-                                        members,
-                                        comments_loader,
-                                        polled_new,
                                         deep_link_target,
-                                        on_mention_query_change,
-                                        on_composer_focus,
                                     }
                                 }
                             }
@@ -974,14 +713,8 @@ pub fn DiscussionArenaPage(
     }
 }
 
-// ── Comment Composer ────────────────────────────────
-//
-// Shared input for the top-level comment box and the per-comment reply box.
-// Both flows need the same MentionAutocomplete, mention-insert handling and
-// submit semantics, so they live here once. DOM classes and structure are
-// intentionally left identical to the pre-refactor markup so CSS and
-// Playwright selectors (`.comment-input__*`, `.reply-input__*`) keep working
-// without changes.
+/// Shared composer for the top-level box and per-comment reply box.
+/// `compact` toggles the nested-context chrome via `data-compact`.
 #[component]
 fn CommentComposer(
     text: Signal<String>,
@@ -992,15 +725,8 @@ fn CommentComposer(
     placeholder: String,
     #[props(default)] compact: bool,
     disabled: bool,
-    // Parent gets the active `@` query (debounced further upstream) so it
-    // can run the server-side mention search. `None` clears the dropdown.
     #[props(default)] on_mention_query_change: EventHandler<Option<String>>,
-    // Fires when the textarea first gains focus. Parent uses this to warm
-    // the mention list before the user types `@`, so the dropdown is ready
-    // without paying a network round-trip on the first keystroke.
     #[props(default)] on_composer_focus: EventHandler<()>,
-    // Priority-ordered user pks for mention ranking (thread participants
-    // first). Empty = fall back to server's native order.
     #[props(default)] priority_user_pks: ReadSignal<Vec<String>>,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
@@ -1032,9 +758,7 @@ fn CommentComposer(
         }
     });
 
-    // Ctrl/Cmd+Enter submits; plain Enter and Shift+Enter fall through to
-    // the textarea's default newline. MentionAutocomplete skips modifier-
-    // qualified Enter/Tab so the dropdown doesn't swallow the submit key.
+    // Ctrl/Cmd+Enter submits; plain Enter falls through to default newline.
     let on_keydown = move |evt: KeyboardEvent| {
         if evt.key() == Key::Enter
             && (evt.modifiers().contains(Modifiers::CONTROL)
@@ -1046,14 +770,8 @@ fn CommentComposer(
         }
     };
 
-    // Single markup for both the top-level composer (at the top of the
-    // comments panel) and the reply composer (under a specific comment).
-    // `data-compact="true"` lets CSS branch on the two contexts — the reply
-    // variant picks up a top separator (it sits at the bottom of a thread)
-    // while the top-level variant keeps the bottom separator from the
-    // comments list below it. The `.comment-input__*` hook classes on the
-    // top-level textarea/button stay in place so existing Playwright
-    // selectors keep resolving.
+    // Keep `.comment-input__*` hook classes on the top-level variant so
+    // existing Playwright selectors keep resolving.
     let textarea_class = if compact {
         "reply-input__field"
     } else {
@@ -1087,10 +805,6 @@ fn CommentComposer(
                         },
                         onkeydown: on_keydown,
                         onfocus: move |_| on_composer_focus.call(()),
-                        // Only the reply composer auto-focuses on mount —
-                        // the top-level composer is always visible and
-                        // grabbing focus on every render would steal it
-                        // from whatever the user is reading.
                         onmounted: move |e: MountedEvent| async move {
                             if compact {
                                 let _ = e.set_focus(true).await;
@@ -1123,24 +837,34 @@ fn CommentComposer(
     }
 }
 
-// ── Comment Item ────────────────────────────────────
 #[component]
 fn CommentItem(
     comment: DiscussionCommentResponse,
     space_id: ReadSignal<SpacePartition>,
     discussion_id: ReadSignal<SpacePostEntityType>,
     can_comment: bool,
-    members: ReadSignal<Vec<MentionCandidate>>,
-    comments_loader: Loader<ListResponse<DiscussionCommentResponse>>,
-    polled_new: Signal<Vec<DiscussionCommentResponse>>,
     deep_link_target: ReadSignal<Option<String>>,
-    on_mention_query_change: EventHandler<Option<String>>,
-    on_composer_focus: EventHandler<()>,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
-    let mut comments_loader = comments_loader;
-    let mut polled_new = polled_new;
     let mut toast = use_toast();
+
+    let UseDiscussionArena {
+        mut comments_loader,
+        mut polled_new,
+        members,
+        mut mention_query_raw,
+        mut active_reply_thread,
+        mut sheet_expanded,
+        ..
+    } = use_discussion_arena(space_id, discussion_id)?;
+    let on_mention_query_change = move |q: Option<String>| {
+        mention_query_raw.set(q);
+    };
+    let on_composer_focus = move || {
+        if mention_query_raw.peek().is_none() {
+            mention_query_raw.set(Some(String::new()));
+        }
+    };
 
     let mut show_replies = use_signal(|| false);
     let mut reply_text = use_signal(String::new);
@@ -1152,10 +876,6 @@ fn CommentItem(
     let comment_sk = use_signal(|| comment.sk.clone());
     let reply_count = comment.replies;
 
-    // Priority roster for the reply composer under this comment. Parent
-    // author always leads (that's who the user is answering), then the
-    // loaded replies newest-first, then mentions already in the thread.
-    // Scoped to this CommentItem so different threads rank independently.
     let parent_author_pk = comment.author_pk.to_string();
     let parent_content = comment.content.clone();
     let reply_priority = use_memo(move || {
@@ -1176,24 +896,15 @@ fn CommentItem(
     });
     let reply_priority: ReadSignal<Vec<String>> = reply_priority.into();
 
-    // DOM id for deep-linking. Match the URL fragment format
-    // (`#<uuid>`) used by mention notification CTAs so the fragment
-    // scroller in `DiscussionArenaPage` can resolve us.
+    // DOM id matches the deep-link URL fragment format.
     let comment_dom_id: String = SpacePostCommentEntityType::try_from(comment.sk.clone())
         .map(|e| e.0)
         .unwrap_or_else(|_| comment.sk.to_string());
 
-    // Optimistic like state — mirrors the reply path. Local signals own the
-    // visible state so toggling feels instant; server mutations reconcile
-    // via `polled_new` patch so a subsequent `comments_loader.restart()`
-    // (post/reply/delete) doesn't flip the indicator back to a stale value.
     let mut liked = use_signal(|| comment.liked);
     let mut likes = use_signal(|| comment.likes as i64);
     let mut like_processing = use_signal(|| false);
 
-    // Ownership: only the author sees the edit/delete menu. Server-side
-    // update/delete controllers also verify `comment.author_pk == user.pk`,
-    // so the UI gate is a UX affordance, not a security boundary.
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let is_own = user_ctx
         .read()
@@ -1222,10 +933,6 @@ fn CommentItem(
         let req = LikeCommentRequest { like: next };
         match like_comment(space_id(), discussion_id(), target_sk, req).await {
             Ok(_) => {
-                // Patch any poll-cached copy so a later `comments_loader`
-                // merge doesn't fight the optimistic state. Base pages come
-                // fresh from the server after a restart, so they already
-                // reflect the new like count.
                 let sk = comment_sk();
                 polled_new.with_mut(|list| {
                     for item in list.iter_mut() {
@@ -1246,21 +953,10 @@ fn CommentItem(
         like_processing.set(false);
     };
 
-    // Pull the per-discussion controller out of context — the parent
-    // `DiscussionArenaPage` already built it, so this is a cheap lookup.
-    let arena = use_discussion_arena(space_id, discussion_id)?;
-    let mut active_reply_thread = arena.active_reply_thread;
-    let mut sheet_expanded = arena.sheet_expanded;
     let on_toggle_replies = move |_| async move {
-        // Mobile: swap the comments panel over to the thread view instead
-        // of expanding inline — the narrow column can't comfortably fit
-        // parent + thread + composer together. Staying inside the
-        // bottom-sheet (vs navigating to a new route) keeps the sheet
-        // handle reachable and lets "Back" return to the comments list
-        // without popping the route stack. Force-expand the sheet so the
-        // swap is visible in case the user tapped Reply before the sheet
-        // was manually opened. Breakpoint matches the CSS media query
-        // that tightens the arena layout.
+        // Mobile swaps the panel into the in-sheet thread view instead
+        // of expanding inline. Force-expand so the swap is visible if
+        // the user tapped Reply on a collapsed sheet.
         #[cfg(not(feature = "server"))]
         if is_arena_mobile_viewport() {
             let comment_id = SpacePostCommentEntityType::try_from(comment_sk())
@@ -1341,11 +1037,8 @@ fn CommentItem(
         };
         match update_comment(space_id(), discussion_id(), target_sk, req).await {
             Ok(_) => {
-                // Reflect the edit immediately: base (refreshed via restart)
-                // wins on content, but any stale poll-cached copy of the same
-                // sk would still override rendering for a frame if present.
-                // Patch the polled entry's content so nothing shows the old
-                // text even momentarily.
+                // Patch any polled snapshot so the old content doesn't
+                // flash for a frame after the loader restart.
                 let sk = comment_sk();
                 polled_new.with_mut(|list| {
                     for item in list.iter_mut() {
@@ -1370,10 +1063,8 @@ fn CommentItem(
         menu_open.set(false);
         match delete_comment(space_id(), discussion_id(), target_sk).await {
             Ok(_) => {
-                // Scrub the polled cache — list_comments(since=...) only
-                // returns comments by created_at, so a deleted item is never
-                // re-observed by polling; without this, the stale copy would
-                // linger in the polled tail forever.
+                // Polling only re-fetches comments by created_at, so a
+                // deleted entry would linger in the buffer otherwise.
                 let sk = comment_sk();
                 polled_new.with_mut(|list| list.retain(|c| c.sk != sk));
                 comments_loader.restart();
@@ -1517,7 +1208,6 @@ fn CommentItem(
                 }
             }
 
-            // Replies toggle
             if reply_count > 0 {
                 button { class: "reply-toggle", onclick: on_toggle_replies,
                     svg {
@@ -1537,7 +1227,6 @@ fn CommentItem(
                 }
             }
 
-            // Replies list
             if show_replies() {
                 div { class: "comment-replies",
                     for reply in replies().iter() {
@@ -1553,7 +1242,6 @@ fn CommentItem(
                     }
                 }
 
-                // Reply input
                 if can_comment {
                     CommentComposer {
                         text: reply_text,
@@ -1564,7 +1252,7 @@ fn CommentItem(
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
                         disabled: reply_text().trim().is_empty()
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
                         on_mention_query_change,
                         on_composer_focus,
                         priority_user_pks: reply_priority,
@@ -1574,8 +1262,6 @@ fn CommentItem(
         }
     }
 }
-
-// ── Helpers ──────────────────────────────────────────
 
 fn format_time_ago(timestamp: i64) -> String {
     let timestamp_millis = if timestamp.abs() < 1_000_000_000_000 {
@@ -1600,12 +1286,9 @@ fn format_time_ago(timestamp: i64) -> String {
     }
 }
 
-// ── Reply Item ──────────────────────────────────────
-// Same edit/delete affordances as CommentItem, but scoped to a single reply.
-// Replies live in a parent-owned `replies: Signal<Vec<...>>` (not the global
-// comments_loader), so mutations patch that signal locally and also fire
-// `on_parent_refresh` so callers (discussion page, dedicated replies page)
-// can refresh whatever view holds the parent's `reply_count`.
+/// Reply variant of `CommentItem`. The reply list lives in the parent's
+/// signal, so mutations patch locally and fire `on_parent_refresh` to
+/// nudge whatever view tracks the parent's reply count.
 #[component]
 fn ReplyItem(
     reply: DiscussionCommentResponse,
@@ -1696,9 +1379,6 @@ fn ReplyItem(
         };
         match update_comment(space_id(), discussion_id(), target_sk, req).await {
             Ok(_) => {
-                // Patch the local replies list optimistically — replies are
-                // held in the parent's signal (not comments_loader), so
-                // there's no "base page" to fall back to here.
                 let sk = reply_sk();
                 replies.with_mut(|list| {
                     for r in list.iter_mut() {
@@ -1724,10 +1404,8 @@ fn ReplyItem(
             Ok(_) => {
                 let sk = reply_sk();
                 replies.with_mut(|list| list.retain(|r| r.sk != sk));
-                // Server decrements the parent's `replies` counter — let
-                // the host refresh whatever holds that count (comments
-                // loader on the discussion page, parent loader on the
-                // dedicated replies page).
+                // Server decrements the parent's `replies` counter; let
+                // the host refresh whichever view tracks it.
                 on_parent_refresh.call(());
                 toast.info(tr.delete_success);
             }
