@@ -22,7 +22,7 @@ async function dismissDevToast(page) {
   });
 }
 
-// Covers the `/spaces/:sid/discussions/:did/c/:comment_id` deep-link
+// Covers the `/spaces/:sid/discussions/:did/comments/:comment_id` deep-link
 // route added for mention notification CTAs. Comment id is in the path
 // (not query/fragment) because Dioxus Router strips both query strings
 // and fragments during URL normalization on hydration. The admin
@@ -118,14 +118,14 @@ test.describe.serial("Discussion comment deep-link", () => {
   test("Deep-link URL scrolls to + highlights the target comment", async ({
     page,
   }) => {
-    const deepLinkUrl = `${spaceUrl}/discussions/${discussionId}/c/${commentId}`;
+    const deepLinkUrl = `${spaceUrl}/discussions/${discussionId}/comments/${commentId}`;
     await goto(page, deepLinkUrl);
     await dismissDevToast(page);
 
     // Path param survives Dioxus Router (unlike query/fragment) — sanity
     // check the URL didn't get rewritten away from us.
     const observedPath = await page.evaluate(() => window.location.pathname);
-    expect(observedPath).toContain(`/c/${commentId}`);
+    expect(observedPath).toContain(`/comments/${commentId}`);
 
     await expect(page.locator(".discussion-arena")).toBeVisible({
       timeout: 20000,

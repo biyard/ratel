@@ -76,7 +76,7 @@ pub async fn add_comment(
     // discussion is rewarded (enforced by RewardPeriod::Once in the award helper).
 
     // Send mention notifications — deep-link to the newly created comment.
-    // `Route::SpaceDiscussionCommentPage` matches `/spaces/:sid/discussions/:did/c/:cid`
+    // `Route::SpaceDiscussionCommentPage` matches `/spaces/:sid/discussions/:did/comments/:cid`
     // and `DiscussionArenaPage` scrolls + highlights the target comment on
     // mount. Comment id is in the path (not query/fragment) because Dioxus
     // Router strips both query strings and fragments during URL
@@ -87,7 +87,7 @@ pub async fn add_comment(
             _ => String::new(),
         };
         let cta_url = format!(
-            "{}/spaces/{}/discussions/{}/c/{}",
+            "{}/spaces/{}/discussions/{}/comments/{}",
             crate::common::config::site_base_url(),
             space_id,
             discussion_sk,
