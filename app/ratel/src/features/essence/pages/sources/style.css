@@ -1,0 +1,67 @@
+/* ── Essence Arena — shell + shared tokens ────────────────────────── */
+/* Mirrors `assets/design/essence-connector/essence-sources.html` and
+   uses the Ratel dark/light space-toggle convention for every color
+   that needs to flip between themes. */
+
+.essence-arena {
+  --bg-void: var(--dark, #06060e) var(--light, #f4f3ef);
+  --bg-glass: var(--dark, rgba(12, 12, 26, 0.65))
+    var(--light, rgba(255, 255, 255, 0.72));
+  --bg-glass-hover: var(--dark, rgba(20, 20, 40, 0.80))
+    var(--light, rgba(255, 255, 255, 0.88));
+  --bg-input: var(--dark, rgba(255, 255, 255, 0.025))
+    var(--light, rgba(0, 0, 0, 0.025));
+  --bg-input-focus: var(--dark, rgba(255, 255, 255, 0.04))
+    var(--light, rgba(0, 0, 0, 0.04));
+  --border-subtle: var(--dark, rgba(255, 255, 255, 0.06))
+    var(--light, rgba(0, 0, 0, 0.08));
+  --border-strong: var(--dark, rgba(255, 255, 255, 0.12))
+    var(--light, rgba(0, 0, 0, 0.14));
+  --text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
+  --text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+  --text-dim: var(--dark, #55556a) var(--light, #9999aa);
+  --accent-gold: #fcb300;
+  --accent-teal: #6eedd8;
+  --accent-coral: #ef4444;
+  --accent-green: #22c55e;
+  --accent-violet: #818cf8;
+  --font-display: 'Orbitron', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+.essence-arena::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 25% 10%, rgba(252, 179, 0, 0.04) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 60% at 85% 90%, rgba(129, 140, 248, 0.04) 0%, transparent 55%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Main content wrapper — matches `.page` in the mockup. */
+.essence-page {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  max-width: 1080px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 32px 28px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+@media (max-width: 500px) {
+  .essence-page { padding: 22px 14px 60px; }
+}
