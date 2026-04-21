@@ -19,10 +19,6 @@ translate! {
         en: "Share your thoughts...",
         ko: "의견을 남겨주세요...",
     },
-    post_btn: {
-        en: "Post",
-        ko: "게시",
-    },
     reply_placeholder: {
         en: "Write a reply...",
         ko: "답글을 작성하세요...",
