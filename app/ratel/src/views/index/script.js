@@ -57,6 +57,17 @@
     track.addEventListener("scroll", updateActive, { passive: true });
     window.addEventListener("resize", updateActive);
 
+    // Re-run active detection when Dioxus swaps the card list (tab change).
+    // Without this, newly mounted cards keep the default blurred style because
+    // no scroll event fires to trigger updateActive().
+    new MutationObserver(function () {
+      bindDots();
+      requestAnimationFrame(function () {
+        scrollToCard(0);
+        setTimeout(updateActive, 50);
+      });
+    }).observe(track, { childList: true });
+
     requestAnimationFrame(function () {
       scrollToCard(0);
       setTimeout(updateActive, 100);

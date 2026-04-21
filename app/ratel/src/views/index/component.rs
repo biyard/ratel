@@ -35,6 +35,7 @@ pub fn Index() -> Element {
     let has_user = user_ctx().user.is_some();
     let mut settings_open = use_signal(|| false);
     let mut teams_open = use_signal(|| false);
+    let mut notifications_open = use_signal(|| false);
 
     // Read user_ctx inside the async so the fetch reflects the current
     // login state at invocation time. Login from the home page triggers
@@ -215,6 +216,12 @@ pub fn Index() -> Element {
                     span { class: "arena-topbar__status", "{t.live_status}" }
                 }
                 div { class: "arena-topbar__actions",
+                    if has_user {
+                        crate::features::notifications::components::NotificationBell {
+                            class: "hud-btn",
+                            onclick: move |_| notifications_open.toggle(),
+                        }
+                    }
                     button {
                         class: "hud-btn hud-btn--primary",
                         aria_label: "{t.create}",
@@ -653,6 +660,15 @@ pub fn Index() -> Element {
             SettingsPanel {
                 open: settings_open(),
                 on_close: move |_| settings_open.set(false),
+            }
+        }
+
+        if has_user {
+            SuspenseBoundary {
+                crate::features::notifications::components::NotificationPanel {
+                    open: notifications_open(),
+                    on_close: move |_| notifications_open.set(false),
+                }
             }
         }
     }

@@ -320,6 +320,10 @@ pub enum Error {
     #[translate(from)]
     Activity(#[from] crate::features::activity::types::ActivityError),
 
+    #[error("{0}")]
+    #[translate(from)]
+    Notifications(#[from] crate::features::notifications::types::NotificationsError),
+
     // Unit variants for common errors
     #[error("Internal error")]
     #[translate(
@@ -493,6 +497,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::SpaceStatusChange(e) => e.status_code(),
             Error::AiModerator(e) => e.status_code(),
             Error::Activity(e) => e.status_code(),
+            Error::Notifications(e) => e.status_code(),
             Error::Auth(e) => e.status_code(),
             Error::Post(e) => e.status_code(),
             Error::Social(e) => e.status_code(),
@@ -605,6 +610,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::Member(e) => e.status_code(),
             Error::AiModerator(e) => e.status_code(),
             Error::Activity(e) => e.status_code(),
+            Error::Notifications(e) => e.status_code(),
             Error::Auth(e) => e.status_code(),
             Error::Post(e) => e.status_code(),
             Error::Social(e) => e.status_code(),

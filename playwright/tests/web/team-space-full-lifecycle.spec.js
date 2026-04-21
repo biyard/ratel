@@ -1171,4 +1171,84 @@ test.describe.serial("Full space lifecycle with rewards", () => {
       await context.close();
     }
   });
+
+  // ─── 16. User1: Notification inbox ──────────────────────────────────────
+
+  test("User1: Sees notifications in bell after participating", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      storageState: newUserStoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, "/");
+      await pauseAnimations(page);
+
+      // Bell is fixed at top-3 right-3 z-50 in the main layout.
+      const bell = page.getByTestId("notification-bell");
+      await expect(bell).toBeVisible({ timeout: 10000 });
+
+      // User1 has received at minimum one SpaceStatusChanged notification
+      // from the creator's Start + Finish actions, so the unread badge must
+      // render with a positive integer.
+      const badge = page.getByTestId("notification-bell-badge");
+      await expect(badge).toBeVisible({ timeout: 10000 });
+      await expect(badge).toHaveText(/[1-9]\d*/);
+
+      // Open the panel — this is a non-navigation toggle.
+      await clickNoNav(page, { testId: "notification-bell" });
+
+      await expect(page.getByTestId("notification-panel")).toHaveAttribute(
+        "data-open",
+        "true"
+      );
+
+      // At least one notification-item should render.
+      await expect(
+        page.getByTestId("notification-item").first()
+      ).toBeVisible({ timeout: 10000 });
+    } finally {
+      await context.close();
+    }
+  });
+
+  test("User1: Mark all as read clears badge", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: newUserStoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    try {
+      await goto(page, "/");
+      await pauseAnimations(page);
+
+      await expect(page.getByTestId("notification-bell")).toBeVisible({
+        timeout: 10000,
+      });
+
+      // Open the panel
+      await clickNoNav(page, { testId: "notification-bell" });
+      await expect(page.getByTestId("notification-panel")).toHaveAttribute(
+        "data-open",
+        "true"
+      );
+
+      // Click mark-all-read
+      await clickNoNav(page, { testId: "mark-all-read" });
+
+      // The Rust component only renders the badge when count > 0, so after
+      // mark-all-read the badge element should no longer be in the DOM.
+      await expect(page.getByTestId("notification-bell-badge")).toBeHidden({
+        timeout: 10000,
+      });
+    } finally {
+      await context.close();
+    }
+  });
 });
