@@ -85,8 +85,17 @@ pub fn PrerequisiteCard(space_id: ReadSignal<SpacePartition>) -> Element {
                                                     .set(Some(ActiveActionOverlay::Quiz(space_id(), quiz_id)));
                                             }
                                             SpaceActionType::TopicDiscussion if !is_done => {
-                                                let route = action.get_url(&space_id());
-                                                nav.push(route);
+                                                let discussion_id: SpacePostEntityType = action
+                                                    .action_id
+                                                    .clone()
+                                                    .into();
+                                                overlay
+                                                    .0
+                                                    .set(
+                                                        Some(
+                                                            ActiveActionOverlay::Discussion(space_id(), discussion_id),
+                                                        ),
+                                                    );
                                             }
                                             SpaceActionType::Follow if !is_done => {
                                                 let route = action.get_url(&space_id());

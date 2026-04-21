@@ -241,5 +241,5 @@ fn build_space_url(space_pk: &Partition) -> String {
         Partition::Space(id) => id.clone(),
         _ => String::new(),
     };
-    format!("https://ratel.foundation/spaces/SPACE%23{}", id)
+    format!("https://ratel.foundation/spaces/{}", id)
 }
