@@ -36,13 +36,17 @@ pub fn DiscussionArenaPage(
     let post = disc.post.clone();
     let space_action = disc.space_action.clone();
 
-    let status = post.status();
+    let status = crate::features::spaces::pages::actions::actions::discussion::SpacePost::status_from(
+        space_action.status.as_ref(),
+    );
     let is_in_progress = status == DiscussionStatus::InProgress;
     let can_respond = matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant);
     let can_execute = crate::features::spaces::pages::actions::can_execute_space_action(
         role,
         space_action.prerequisite,
         space.status,
+        space_action.status.as_ref(),
+        true,
         space.join_anytime,
     );
     let can_comment = can_respond && can_execute && is_in_progress;

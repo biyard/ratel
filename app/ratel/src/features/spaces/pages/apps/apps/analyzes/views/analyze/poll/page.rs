@@ -73,10 +73,10 @@ pub fn SpaceAnalyzeDetailPage(
     let tr_for_filter_group = tr.clone();
 
     rsx! {
-        div { class: "flex w-full flex-col gap-5",
-            div { class: "flex items-center justify-between gap-3 max-tablet:flex-col max-tablet:items-start",
-                div { class: "flex min-w-0 flex-col gap-2",
-                    div { class: "flex items-center gap-2 max-mobile:flex-wrap",
+        div { class: "flex flex-col gap-5 w-full",
+            div { class: "flex gap-3 justify-between items-center max-tablet:flex-col max-tablet:items-start",
+                div { class: "flex flex-col gap-2 min-w-0",
+                    div { class: "flex gap-2 items-center max-mobile:flex-wrap",
                         h3 { class: "font-bold font-raleway text-[28px]/[32px] tracking-[-0.28px] text-text-primary",
                             "{poll.title}"
                         }
@@ -85,7 +85,7 @@ pub fn SpaceAnalyzeDetailPage(
                 Button {
                     style: ButtonStyle::Primary,
                     shape: ButtonShape::Square,
-                    class: "flex flex-row w-fit justify-center items-center min-w-[140px]".to_string(),
+                    class: "flex flex-row justify-center items-center w-fit min-w-[140px]".to_string(),
                     onclick: move |_| {
                         let poll = poll_for_download.clone();
                         let panels = panels_for_download.clone();
@@ -123,16 +123,16 @@ pub fn SpaceAnalyzeDetailPage(
                 }
                 AnalyzeMetricCard {
                     label: tr.remaining_days.to_string(),
-                    value: remaining_days_label(poll.ended_at),
+                    value: "—".to_string(),
                 }
                 AnalyzeMetricCard {
                     label: tr.survey_period.to_string(),
-                    value: format_period(poll.started_at, poll.ended_at),
+                    value: "—".to_string(),
                 }
             }
 
-            div { class: "flex items-center justify-between gap-3 max-tablet:flex-col max-tablet:items-stretch",
-                div { class: "flex items-center gap-3 max-tablet:flex-col max-tablet:items-stretch",
+            div { class: "flex gap-3 justify-between items-center max-tablet:flex-col max-tablet:items-stretch",
+                div { class: "flex gap-3 items-center max-tablet:flex-col max-tablet:items-stretch",
                     crate::common::components::Select::<String> {
                         value: Some(active_group.clone()),
                         on_value_change: move |value: Option<String>| {
@@ -205,7 +205,7 @@ pub fn SpaceAnalyzeDetailPage(
                 }
             }
 
-            div { class: "flex w-full flex-col gap-4",
+            div { class: "flex flex-col gap-4 w-full",
                 for (idx , question) in poll.questions.iter().enumerate() {
                     if let Some(summary) = active_summaries.get(idx) {
                         {render_question_card(idx, question, summary, &active_filter_key, &tr)}

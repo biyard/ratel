@@ -12,7 +12,7 @@ pub fn ActionRewardSetting(
     space_id: ReadSignal<SpacePartition>,
     action_id: ReadSignal<String>,
     saved_credits: u64,
-    started_at: i64,
+    action_status: Option<SpaceActionStatus>,
     #[props(default)] on_change: EventHandler<u64>,
 ) -> Element {
     let tr: ActionCommonSettingsTranslate = use_translate();
@@ -25,7 +25,7 @@ pub fn ActionRewardSetting(
     let current_space = space();
     let reward_locked = crate::features::spaces::pages::actions::is_action_locked(
         current_space.status,
-        started_at,
+        action_status.as_ref(),
     );
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let personal_username = user_ctx

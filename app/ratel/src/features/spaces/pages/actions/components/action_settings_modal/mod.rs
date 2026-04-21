@@ -2,8 +2,8 @@ use self::action_chip::ActionSettingsActionChip;
 use self::i18n::ActionSettingsModalTranslate;
 use self::reward_cards::{RewardSummaryCard, RewardsCreditsCard, RewardsInfoCard};
 use self::utils::{
-    action_label, apply_selected_action_dates, available_actions, reward_credit_summary,
-    reward_preview_items, selected_actions, supports_action_settings,
+    action_label, available_actions, reward_credit_summary, reward_preview_items,
+    selected_actions, supports_action_settings,
 };
 use crate::features::spaces::pages::actions::*;
 
@@ -31,9 +31,7 @@ pub fn ActionSettingsModal(
 
     let selected_action_ids = use_signal(move || initial_action_ids);
     let mut is_add_menu_open = use_signal(|| false);
-    let mut is_date_enabled = use_signal(|| true);
     let mut is_rewards_enabled = use_signal(|| false);
-    let mut date_range = use_signal(|| None::<DateTimeRange>);
     let is_applying = use_signal(|| false);
 
     let current_lang = lang();
@@ -43,8 +41,8 @@ pub fn ActionSettingsModal(
     let reward_previews = reward_preview_items(&selected_actions);
     let (credit_usage, remaining_credits) = reward_credit_summary();
 
-    let select_dates_error = tr.select_dates_error.to_string();
     let applied_success = tr.applied_success.to_string();
+    let _ = space_id;
 
     let close_modal = {
         let mut layover = layover;
@@ -54,76 +52,19 @@ pub fn ActionSettingsModal(
     let apply_settings = {
         let mut layover = layover;
         let mut toast = toast;
-        let mut is_applying = is_applying;
-        let selected_actions = selected_actions.clone();
-        let space_id = space_id.clone();
         let on_applied = on_applied.clone();
+        let applied_success = applied_success.clone();
 
         move |_| {
-            if is_applying() {
-                return;
-            }
-
-            if !is_date_enabled() {
-                layover.close();
-                return;
-            }
-
-            let range = match date_range() {
-                Some(r) => r,
-                None => {
-                    toast.warn(select_dates_error.clone());
-                    return;
-                }
-            };
-
-            let (start_date, end_date) = match (range.start_date, range.end_date) {
-                (Some(s), Some(e)) => (s, e),
-                _ => {
-                    toast.warn(select_dates_error.clone());
-                    return;
-                }
-            };
-
-            let started_at = range
-                .timezone
-                .local_to_utc_millis(start_date, range.start_hour, range.start_minute);
-            let ended_at = range
-                .timezone
-                .local_to_utc_millis(end_date, range.end_hour, range.end_minute);
-
-            let selected_actions = selected_actions.clone();
-            let space_id = space_id.clone();
-            let on_applied = on_applied.clone();
-            let applied_success = applied_success.clone();
-            let mut toast = toast;
-            let mut layover = layover;
-            is_applying.set(true);
-
-            spawn(async move {
-                let result =
-                    apply_selected_action_dates(space_id, selected_actions, started_at, ended_at)
-                        .await;
-
-                match result {
-                    Ok(()) => {
-                        toast.info(applied_success);
-                        on_applied.call(());
-                        layover.close();
-                    }
-                    Err(err) => {
-                        toast.error(err);
-                    }
-                }
-
-                is_applying.set(false);
-            });
+            toast.info(applied_success.clone());
+            on_applied.call(());
+            layover.close();
         }
     };
 
     rsx! {
         div { class: "flex justify-end w-full h-full text-web-font-primary",
-            div { class: "flex flex-col gap-5 py-6 px-6 w-full h-full shrink-0 overflow-y-auto bg-background max-tablet:px-5 max-tablet:py-5 max-mobile:min-h-full max-mobile:gap-4 max-mobile:px-4 max-mobile:py-4",
+            div { class: "flex overflow-y-auto flex-col gap-5 py-6 px-6 w-full h-full shrink-0 bg-background max-tablet:px-5 max-tablet:py-5 max-mobile:min-h-full max-mobile:gap-4 max-mobile:px-4 max-mobile:py-4",
                 div { class: "flex gap-3 items-center max-mobile:gap-2.5",
                     Button {
                         size: ButtonSize::Icon,
@@ -205,32 +146,6 @@ pub fn ActionSettingsModal(
                                 }
                             }
                         }
-                    }
-                }
-
-                div { class: "w-full border-t border-separator" }
-
-                div { class: "flex flex-col gap-4",
-                    div { class: "flex gap-3 justify-between items-center",
-                        div { class: "flex gap-2.5 items-center text-web-font-primary",
-                            icons::calendar::CalendarToday {
-                                width: "20",
-                                height: "20",
-                                class: "[&>path]:stroke-current [&>path]:fill-none [&>rect]:fill-current",
-                            }
-                            span { class: "font-bold font-raleway text-[17px]/[20px] tracking-[-0.18px] max-mobile:text-[15px]/[18px]",
-                                {tr.date}
-                            }
-                        }
-
-                        Switch {
-                            active: is_date_enabled(),
-                            on_toggle: move |_| is_date_enabled.set(!is_date_enabled()),
-                        }
-                    }
-
-                    if is_date_enabled() {
-                        DateAndTimePicker { on_change: move |range| date_range.set(Some(range)) }
                     }
                 }
 

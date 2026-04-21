@@ -25,7 +25,7 @@ pub fn DiscussionActionPage(
     let space = crate::features::spaces::space_common::hooks::use_space()();
     let locked = crate::features::spaces::pages::actions::is_action_locked(
         space.status,
-        ctx.discussion().space_action.started_at,
+        ctx.discussion().space_action.status.as_ref(),
     );
 
     // Edit-mode override: creators can flip this from the settings

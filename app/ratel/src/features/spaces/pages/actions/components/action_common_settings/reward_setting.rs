@@ -8,7 +8,7 @@ pub fn RewardSetting(
     max_credits: u64,
     remaining_credits: ReadSignal<u64>,
     upgrade_route: String,
-    started_at: i64,
+    action_status: Option<SpaceActionStatus>,
     #[props(default)] on_change: EventHandler<u64>,
 ) -> Element {
     let tr: RewardSettingTranslate = use_translate();
@@ -18,8 +18,10 @@ pub fn RewardSetting(
     let available_credits = remaining_credits().saturating_add(saved_credits());
 
     let space = crate::features::spaces::space_common::hooks::use_space();
-    let reward_locked =
-        crate::features::spaces::pages::actions::is_action_locked(space().status, started_at);
+    let reward_locked = crate::features::spaces::pages::actions::is_action_locked(
+        space().status,
+        action_status.as_ref(),
+    );
 
     let boost_multiplier = credits();
     let total_reward = credits() * 10_000;

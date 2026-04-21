@@ -23,8 +23,10 @@ pub fn OverviewTab() -> Element {
         space.status,
         Some(crate::common::SpaceStatus::Ongoing | crate::common::SpaceStatus::Open)
     );
-    let can_participate =
-        is_space_active && discussion.post.status() == DiscussionStatus::InProgress;
+    let can_participate = is_space_active
+        && crate::features::spaces::pages::actions::actions::discussion::SpacePost::status_from(
+            discussion.space_action.status.as_ref(),
+        ) == DiscussionStatus::InProgress;
     let initial_title = discussion.post.title.clone();
     let initial_description = discussion.post.html_contents.clone();
     let initial_category = discussion.post.category_name.clone();
@@ -72,8 +74,6 @@ pub fn OverviewTab() -> Element {
                 } else {
                     Some(current_category.clone())
                 },
-                started_at: None,
-                ended_at: None,
                 files: None,
             };
 
@@ -100,8 +100,6 @@ pub fn OverviewTab() -> Element {
                 } else {
                     Some(category_name())
                 },
-                started_at: None,
-                ended_at: None,
                 files: None,
             };
             if let Err(err) = update_discussion(space_id(), discussion_id(), req).await {

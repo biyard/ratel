@@ -12,8 +12,10 @@ pub(super) enum ActionStatus {
 }
 
 pub(super) fn derive_action_status(action: &SpaceActionSummary) -> ActionStatus {
-    let now = crate::common::utils::time::get_now_timestamp_millis();
-    let ended = action.ended_at.map(|t| now >= t).unwrap_or(false);
+    let ended = matches!(
+        action.status,
+        Some(crate::features::spaces::pages::actions::types::SpaceActionStatus::Finish)
+    );
 
     match action.action_type {
         SpaceActionType::Poll => {

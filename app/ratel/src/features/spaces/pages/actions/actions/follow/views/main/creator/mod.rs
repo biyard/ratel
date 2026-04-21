@@ -53,10 +53,9 @@ pub fn FollowCreatorPage(
                 ConfigCard {
                     space_id,
                     follow_id,
-                    started_at: action_setting().started_at,
-                    ended_at: action_setting().ended_at,
                     credits: action_setting().credits,
                     prerequisite: action_setting().prerequisite,
+                    action_status: action_setting().status.clone(),
                 }
             }
         }
