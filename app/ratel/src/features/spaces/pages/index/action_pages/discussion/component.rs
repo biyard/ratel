@@ -306,6 +306,32 @@ pub fn DiscussionArenaPage(
         }
     };
 
+    // Priority roster for the top-level composer: everyone who has posted
+    // in this discussion, plus anyone they mentioned. Rebuilds whenever
+    // the loader or poll buffer changes so new comments surface the new
+    // voices right away.
+    let top_priority = use_memo(move || {
+        let base = comments_loader().items.clone();
+        let polled = polled_new();
+        let base_sks: std::collections::HashSet<String> =
+            base.iter().map(|c| c.sk.to_string()).collect();
+        let tuples: Vec<(String, String)> = base
+            .iter()
+            .chain(
+                polled
+                    .iter()
+                    .filter(|p| !base_sks.contains(&p.sk.to_string())),
+            )
+            .map(|c| (c.author_pk.to_string(), c.content.clone()))
+            .collect();
+        let refs: Vec<(&str, &str)> = tuples
+            .iter()
+            .map(|(a, c)| (a.as_str(), c.as_str()))
+            .collect();
+        crate::common::utils::mention::build_mention_priority(None, &refs)
+    });
+    let top_priority: ReadSignal<Vec<String>> = top_priority.into();
+
     let status_text = match status {
         DiscussionStatus::InProgress => tr.status_in_progress.to_string(),
         DiscussionStatus::NotStarted => tr.status_not_started.to_string(),
@@ -525,9 +551,10 @@ pub fn DiscussionArenaPage(
                             on_submit: move |_| on_submit_comment(()),
                             placeholder: tr.comment_placeholder.to_string(),
                             disabled: comment_text().trim().is_empty()
-                                                                                                                                                                                                                                                                                                                        && pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                                                                                                    && pending_images.read().is_empty(),
                             on_mention_query_change,
                             on_composer_focus,
+                            priority_user_pks: top_priority,
                         }
                     }
 
@@ -582,6 +609,9 @@ fn CommentComposer(
     // the mention list before the user types `@`, so the dropdown is ready
     // without paying a network round-trip on the first keystroke.
     #[props(default)] on_composer_focus: EventHandler<()>,
+    // Priority-ordered user pks for mention ranking (thread participants
+    // first). Empty = fall back to server's native order.
+    #[props(default)] priority_user_pks: ReadSignal<Vec<String>>,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
 
@@ -636,6 +666,7 @@ fn CommentComposer(
                         on_select: on_mention_select,
                         members,
                         on_query_change: move |q| on_mention_query_change.call(q),
+                        priority_user_pks,
                         textarea {
                             class: "reply-input__field",
                             placeholder: "{placeholder}",
@@ -744,6 +775,30 @@ fn CommentItem(
     let time_ago = format_time_ago(comment.created_at);
     let comment_sk = use_signal(|| comment.sk.clone());
     let reply_count = comment.replies;
+
+    // Priority roster for the reply composer under this comment. Parent
+    // author always leads (that's who the user is answering), then the
+    // loaded replies newest-first, then mentions already in the thread.
+    // Scoped to this CommentItem so different threads rank independently.
+    let parent_author_pk = comment.author_pk.to_string();
+    let parent_content = comment.content.clone();
+    let reply_priority = use_memo(move || {
+        let replies_vec = replies.read();
+        let tuples: Vec<(String, String)> = replies_vec
+            .iter()
+            .rev()
+            .map(|r| (r.author_pk.to_string(), r.content.clone()))
+            .collect();
+        let refs: Vec<(&str, &str)> = tuples
+            .iter()
+            .map(|(a, c)| (a.as_str(), c.as_str()))
+            .collect();
+        crate::common::utils::mention::build_mention_priority(
+            Some((parent_author_pk.as_str(), parent_content.as_str())),
+            &refs,
+        )
+    });
+    let reply_priority: ReadSignal<Vec<String>> = reply_priority.into();
 
     // DOM id for deep-linking. Match the URL fragment format
     // (`#<uuid>`) used by mention notification CTAs so the fragment
@@ -1109,9 +1164,10 @@ fn CommentItem(
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
                         disabled: reply_text().trim().is_empty()
-                                                                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                                                    && reply_pending_images.read().is_empty(),
                         on_mention_query_change,
                         on_composer_focus,
+                        priority_user_pks: reply_priority,
                     }
                 }
             }

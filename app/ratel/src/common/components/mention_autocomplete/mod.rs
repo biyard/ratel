@@ -27,6 +27,10 @@ pub fn MentionAutocomplete(
     // default list); `Some("foo")` means they are searching "foo"; `None`
     // means no active mention is being composed.
     #[props(default)] on_query_change: EventHandler<Option<String>>,
+    // Priority-ordered user pks (earlier = higher). Used to hoist thread
+    // participants above the raw server prefix order so replying to a
+    // thread shows the conversation's own voices first. Empty = unchanged.
+    #[props(default)] priority_user_pks: ReadSignal<Vec<String>>,
     children: Element,
 ) -> Element {
     let mut show_dropdown = use_signal(|| false);
@@ -72,13 +76,27 @@ pub fn MentionAutocomplete(
     // match behavior consistent across both surfaces.
     let filtered: Vec<MentionCandidate> = if show_dropdown() {
         let q = query().to_lowercase();
-        members()
+        let mut matches: Vec<MentionCandidate> = members()
             .into_iter()
             .filter(|m| {
                 m.display_name.to_lowercase().starts_with(&q)
                     || m.username.to_lowercase().starts_with(&q)
             })
-            .collect()
+            .collect();
+
+        // Stable-sort by priority rank so thread participants rise to the
+        // top while the server's original ordering wins all ties (including
+        // every non-priority candidate, which shares usize::MAX).
+        let priority = priority_user_pks();
+        if !priority.is_empty() {
+            let rank: std::collections::HashMap<String, usize> = priority
+                .iter()
+                .enumerate()
+                .map(|(i, pk)| (pk.clone(), i))
+                .collect();
+            matches.sort_by_key(|m| rank.get(&m.user_pk).copied().unwrap_or(usize::MAX));
+        }
+        matches
     } else {
         vec![]
     };
