@@ -5,7 +5,6 @@ pub const DEDUP_TTL_DAYS: i64 = 7;
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct InboxDedupMarker {
-    #[dynamo(prefix = "INBOX_DEDUP", pk)]
     pub pk: Partition, // User(user_id)
 
     pub sk: EntityType, // InboxDedupMarker("{kind_prefix}#{source_hash}")
