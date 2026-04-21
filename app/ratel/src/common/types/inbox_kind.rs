@@ -58,6 +58,17 @@ pub enum InboxPayload {
     },
 }
 
+impl InboxPayload {
+    pub fn url(&self) -> &str {
+        match self {
+            InboxPayload::ReplyOnComment { cta_url, .. } => cta_url,
+            InboxPayload::MentionInComment { cta_url, .. } => cta_url,
+            InboxPayload::SpaceStatusChanged { cta_url, .. } => cta_url,
+            InboxPayload::SpaceInvitation { cta_url, .. } => cta_url,
+        }
+    }
+}
+
 impl Default for InboxPayload {
     fn default() -> Self {
         Self::ReplyOnComment {
