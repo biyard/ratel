@@ -4,6 +4,8 @@ use crate::features::spaces::types::SpaceError;
 use crate::common::models::space::SpaceCommon;
 #[cfg(feature = "server")]
 use crate::common::SpaceUserRole;
+#[cfg(feature = "server")]
+use crate::features::posts::models::Post;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateContentRequest {
@@ -19,18 +21,22 @@ pub async fn update_space_content(
         return Err(Error::NoPermission);
     }
 
-    let partition = Partition::Space(space_pk.to_string());
+    let space_partition = Partition::Space(space_pk.to_string());
+    let post_partition = space_partition.clone().to_post_key()?;
     let conf = ServerConfig::default();
     let dynamo = conf.dynamodb();
 
-    SpaceCommon::updater(&partition, EntityType::SpaceCommon)
-        .with_content(req.content)
-        .execute(dynamo)
-        .await
-        .map_err(|e| {
-            crate::error!("failed to update content: {e:?}");
-            SpaceError::UpdateFailed
-        })?;
+    let update_space = SpaceCommon::updater(&space_partition, EntityType::SpaceCommon)
+        .with_content(req.content.clone())
+        .execute(dynamo);
+    let update_post = Post::updater(&post_partition, EntityType::Post)
+        .with_html_contents(req.content)
+        .execute(dynamo);
+
+    tokio::try_join!(update_space, update_post).map_err(|e| {
+        crate::error!("failed to update space/post content: {e:?}");
+        SpaceError::UpdateFailed
+    })?;
 
     Ok(())
 }

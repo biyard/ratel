@@ -61,6 +61,17 @@ Every page view should include `SeoMeta { title: "..." }` and use `translate!` f
 - `is_paid()` checks `!tier.0.contains("Free")`
 - Tiers: Free, Pro, Max, Vip, Enterprise(String)
 
+## Feature Hooks & Actions
+
+Every feature with interactive state exposes a `UseFeatureName` controller hook that bundles its signals, loaders, queries, and actions. Components consume the hook — never the server-function `_handler` directly.
+
+- Mutations must be wrapped in `use_action(...)` and placed inside the controller. Components call them via `handle.call(input)`.
+- Controller hook signature: `pub fn use_feature() -> std::result::Result<UseFeature, RenderError>` — context-cached via `try_use_context()` + `provide_root_context(...)`.
+- `Action::call(&mut self)` takes a mutable borrow, so destructure action fields as `mut handle_xxx`.
+- **See `conventions/hooks-and-actions.md` for full rules, examples, and folder layout.**
+
+Reference implementation: `app/ratel/src/features/notifications/hooks/use_inbox.rs`.
+
 ## Data Loading with `use_loader`
 
 Prefer `use_loader` over `use_server_future` for loading server data. `use_loader` returns a `Loader<T>` which requires `T: PartialEq`.

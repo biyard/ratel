@@ -24,7 +24,17 @@ export NVM_DIR="$HOME/.nvm"
 
 nvm install --lts
 
+# Pre-install JS deps before `dx build` to avoid a race condition.
+# `app/ratel/build.rs` runs `npm install` in `app/ratel/js/` on every build,
+# and Cargo runs it twice in parallel (once per target: client(wasm) + server(lambda))
+# because `app-shell` is built for two targets in a single `dx build` invocation.
+# When both processes start with an empty `node_modules`, they clobber each other
+# (e.g. ENOTEMPTY on rmdir of partially-written package dirs, missing files like
+# schema-utils/dist/index.js). Pre-installing here leaves `node_modules` in a
+# lock-consistent state, so the two parallel installs from build.rs find nothing
+# to do and exit cleanly.
 npm i
+npm install --prefix app/ratel/js
 
 cd app/ratel
 
