@@ -198,10 +198,12 @@
 
 .discussion-main__inner {
   max-width: 720px;
+  width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 28px;
+  min-width: 0;
 }
 
 /* ── Discussion Header ─────────────────────────── */
@@ -513,10 +515,12 @@
   gap: 8px;
 }
 .comment-input__textarea {
+  /* 140px leaves room for panel header + composer padding + submit button. */
   width: 100%;
   min-height: 48px;
-  max-height: 120px;
+  max-height: calc(100vh - 140px);
   resize: none;
+  overflow-y: auto;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface-raised);
@@ -608,6 +612,33 @@
 .comment-item:hover {
   background: var(--surface-raised);
 }
+
+/* Deep-link highlight: `DiscussionArenaPage` sets
+   `data-deep-link="true"` on the target `.comment-item` when the URL
+   hash matches its UUID. Signal-driven attribute so Dioxus's next diff
+   doesn't clobber it (as a raw `class` write would). One-shot pulse
+   fades out; the attribute stays but the animation only plays once. */
+.comment-item[data-deep-link="true"] {
+  animation: comment-deep-link-pulse 5s ease-out;
+}
+@keyframes comment-deep-link-pulse {
+  0% {
+    background: rgba(34, 211, 238, 0.22);
+    box-shadow: inset 3px 0 0 var(--discuss-color);
+  }
+  40% {
+    background: rgba(34, 211, 238, 0.22);
+    box-shadow: inset 3px 0 0 var(--discuss-color);
+  }
+  80% {
+    background: rgba(34, 211, 238, 0.06);
+    box-shadow: inset 3px 0 0 rgba(34, 211, 238, 0.5);
+  }
+  100% {
+    background: transparent;
+    box-shadow: none;
+  }
+}
 .comment-item__avatar {
   width: 28px;
   height: 28px;
@@ -645,6 +676,7 @@
   line-height: 1.6;
   color: var(--text);
   word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .comment-item__actions {
@@ -899,6 +931,11 @@
   font-family: "Outfit", sans-serif;
   font-size: 12px;
   outline: none;
+  resize: none;
+  line-height: 1.5;
+  /* Deeper chrome than top-level composer (parent comment + expand panel). */
+  max-height: calc(100vh - 240px);
+  overflow-y: auto;
 }
 .reply-input__field::placeholder {
   color: var(--text-dim);
@@ -1125,3 +1162,13 @@
     margin-left: 28px;
   }
 }
+
+/* Mention dropdown: script.js sets data-mention-flip="up" when the
+   anchor is near the viewport bottom; we render above instead of below. */
+.relative[data-mention-flip="up"] > [role="listbox"] {
+  top: auto;
+  bottom: 100%;
+  margin-top: 0;
+  margin-bottom: 4px;
+}
+

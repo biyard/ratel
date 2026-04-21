@@ -32,7 +32,12 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
 
     let router = use_context::<dioxus::router::RouterContext>();
     let current_route: Route = router.current();
-    let is_arena_route = matches!(current_route, Route::SpaceIndexPage { .. });
+    let is_arena_route = matches!(
+        current_route,
+        Route::SpaceIndexPage { .. }
+            | Route::SpaceDiscussionPage { .. }
+            | Route::SpaceDiscussionCommentPage { .. }
+    );
     let is_action_edit_route = matches!(
         current_route,
         Route::QuizActionPage { .. }
