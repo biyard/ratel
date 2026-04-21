@@ -30,49 +30,7 @@ pub fn NotificationItem(
     let now = crate::common::utils::time::get_now_timestamp_millis();
 
     let data = item();
-    let (title, body, avatar_url): (String, String, Option<String>) = match &data.payload {
-        InboxPayload::ReplyOnComment {
-            replier_name,
-            comment_preview,
-            replier_profile_url,
-            ..
-        } => (
-            tr.reply_title.replace("{name}", replier_name),
-            comment_preview.clone(),
-            Some(replier_profile_url.clone()),
-        ),
-        InboxPayload::MentionInComment {
-            mentioned_by_name,
-            comment_preview,
-            ..
-        } => (
-            tr.mention_title.replace("{name}", mentioned_by_name),
-            comment_preview.clone(),
-            None,
-        ),
-        InboxPayload::SpaceStatusChanged {
-            space_title,
-            new_status,
-            ..
-        } => (
-            tr.space_status_title
-                .replace("{space}", space_title)
-                .replace("{status}", &new_status.translate(&lang())),
-            String::new(),
-            None,
-        ),
-        InboxPayload::SpaceInvitation {
-            space_title,
-            inviter_name,
-            ..
-        } => (
-            tr.space_invite_title
-                .replace("{name}", inviter_name)
-                .replace("{space}", space_title),
-            String::new(),
-            None,
-        ),
-    };
+    let (title, body, avatar_url) = data.payload.get_contents(&tr, &lang());
     let is_unread = !data.is_read;
     let rel = relative_time(now, data.created_at, &tr);
 
@@ -82,10 +40,7 @@ pub fn NotificationItem(
             class: "notification-item",
             "aria-relevant": "{is_unread}",
             "data-testid": "notification-item",
-            onclick: {
-                let d = data.clone();
-                move |_| onclick.call(d.clone())
-            },
+            onclick: move |_| onclick.call(item()),
             div { class: "notification-item__avatar",
                 if let Some(url) = avatar_url.filter(|u| !u.is_empty()) {
                     img { src: "{url}", alt: "" }
