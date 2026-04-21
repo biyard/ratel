@@ -12,6 +12,7 @@ pub enum ActivePanel {
     Overview,
     Leaderboard,
     Settings,
+    Notifications,
 }
 
 #[component]
@@ -50,6 +51,7 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let overview_open = active_panel() == ActivePanel::Overview;
     let leaderboard_open = active_panel() == ActivePanel::Leaderboard;
     let settings_open = active_panel() == ActivePanel::Settings;
+    let notifications_open = active_panel() == ActivePanel::Notifications;
 
     rsx! {
         document::Link { rel: "preconnect", href: "https://fonts.googleapis.com" }
@@ -159,6 +161,15 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
                 },
                 is_admin,
                 space_id,
+            }
+
+            SuspenseBoundary {
+                crate::features::notifications::components::NotificationPanel {
+                    open: notifications_open,
+                    on_close: move |_| {
+                        active_panel.set(ActivePanel::None);
+                    },
+                }
             }
         }
         match action_overlay.0() {
