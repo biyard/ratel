@@ -10,7 +10,7 @@ fn relative_time(now_ms: i64, then_ms: i64, tr: &NotificationsTranslate) -> Stri
     let hours = mins / 60;
     let days = hours / 24;
     if secs < 60 {
-        tr.relative_now.clone()
+        tr.relative_now.to_string()
     } else if mins < 60 {
         tr.relative_minute.replace("{n}", &mins.to_string())
     } else if hours < 24 {
