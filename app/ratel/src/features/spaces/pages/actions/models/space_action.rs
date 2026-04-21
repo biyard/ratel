@@ -20,9 +20,11 @@ pub struct SpaceAction {
     pub space_action_type: SpaceActionType,
     pub prerequisite: bool,
 
+    // Internal GSI sort key — always mirrors `created_at` so the
+    // `find_by_space` GSI stays sorted by creation order. The value is
+    // never exposed through API DTOs or UI.
     #[dynamo(prefix = "TS", index = "gsi1", sk)]
     pub started_at: i64,
-    pub ended_at: i64,
 
     pub credits: u64,
     pub total_points: u64,
@@ -31,40 +33,22 @@ pub struct SpaceAction {
     pub activity_score: i64,
     #[serde(default)]
     pub additional_score: i64,
+
+    #[serde(default)]
+    pub status: Option<SpaceActionStatus>,
+
+    #[serde(default)]
+    pub depends_on: Vec<String>,
 }
 
 #[cfg(feature = "server")]
 impl SpaceAction {
-    pub fn default_schedule(now: i64) -> (i64, i64) {
-        Self::default_schedule_with_published(now, false)
-    }
-
-    pub fn default_schedule_with_published(now: i64, is_published: bool) -> (i64, i64) {
-        let started_at = if is_published {
-            now + 60 * 60 * 1000 // 1 hour after now
-        } else {
-            now
-        };
-        let ended_at = started_at + 7 * 24 * 60 * 60 * 1000;
-        (started_at, ended_at)
-    }
-
     pub fn new(
         space_id: SpacePartition,
         action_id: String,
         space_action_type: SpaceActionType,
     ) -> Self {
-        Self::new_with_published(space_id, action_id, space_action_type, false)
-    }
-
-    pub fn new_with_published(
-        space_id: SpacePartition,
-        action_id: String,
-        space_action_type: SpaceActionType,
-        is_published: bool,
-    ) -> Self {
         let now = get_now_timestamp_millis();
-        let (started_at, ended_at) = Self::default_schedule_with_published(now, is_published);
         let space_pk: Partition = space_id.clone().into();
 
         Self {
@@ -77,12 +61,13 @@ impl SpaceAction {
             prerequisite: false,
             created_at: now,
             updated_at: now,
-            started_at,
-            ended_at,
+            started_at: now,
             credits: 0,
             total_points: 0,
             activity_score: 0,
             additional_score: 0,
+            status: Some(SpaceActionStatus::Designing),
+            depends_on: Vec::new(),
         }
     }
 }
