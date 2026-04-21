@@ -33,5 +33,9 @@ pub async fn create_post_handler(team_id: Option<TeamPartition>) -> Result<Creat
     let post = Post::draft(author);
     post.create(cli).await?;
 
+    if let Err(e) = crate::features::essence::services::index_post(cli, &post).await {
+        tracing::error!("failed to index post essence: {e}");
+    }
+
     Ok(CreatePostResponse { post_pk: post.pk })
 }

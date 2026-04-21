@@ -1,3 +1,4 @@
+use crate::common::models::space::SpaceCommon;
 use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::features::spaces::pages::actions::models::SpaceAction;
 
@@ -86,6 +87,20 @@ pub async fn update_poll(
     poll_updater.execute(cli).await?;
     if update_action {
         action_updater.execute(cli).await?;
+    }
+
+    if let Ok(Some(poll)) = SpacePoll::get(cli, &space_pk, Some(poll_sk_entity.clone())).await {
+        let creator_pk = SpaceCommon::get(cli, &space_pk, Some(EntityType::SpaceCommon))
+            .await
+            .ok()
+            .flatten()
+            .map(|s| s.user_pk)
+            .unwrap_or(space_pk.clone());
+        if let Err(e) =
+            crate::features::essence::services::index_poll(cli, &poll, creator_pk).await
+        {
+            tracing::error!("failed to re-index poll essence on update: {e}");
+        }
     }
 
     Ok("success".to_string())

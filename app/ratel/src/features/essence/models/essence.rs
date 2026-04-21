@@ -45,6 +45,14 @@ pub struct Essence {
     pub source_pk: String,
     pub source_sk: String,
 
+    /// Space this essence belongs to, if any. Stored as a raw partition
+    /// string (`SPACE#{uuid}`) so the client can navigate to the space for
+    /// poll/quiz/discussion-comment rows whose `source_pk` doesn't contain
+    /// the space id directly (e.g. a DiscussionComment's source_pk is the
+    /// parent SpacePost, not the space).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub space_pk: Option<String>,
+
     /// `i64` (not `u32`) so DynamoEntity's numeric lexicographic encoder
     /// accepts it as the GSI2 sort key — same pattern as
     /// `common/models/auth/user.rs` using `updated_at: i64` as a gsi sk.
@@ -84,6 +92,7 @@ impl Essence {
         title: String,
         source_path: String,
         word_count: i64,
+        space_pk: Option<Partition>,
     ) -> Self {
         let now = chrono::Utc::now().timestamp();
         let source_pk_str = source_pk.to_string();
@@ -97,6 +106,7 @@ impl Essence {
             source_path,
             source_pk: source_pk_str,
             source_sk: source_sk_str,
+            space_pk: space_pk.map(|p| p.to_string()),
             word_count,
             created_at: now,
             updated_at: now,
@@ -124,7 +134,7 @@ impl Essence {
             }
             None => (1i64, row.word_count),
         };
-        row.create(cli).await.map_err(|e| {
+        row.upsert(cli).await.map_err(|e| {
             crate::error!("essence upsert failed: {e}");
             EssenceError::UpsertFailed
         })?;
@@ -167,6 +177,7 @@ impl Essence {
         title: String,
         source_path: String,
         word_count: i64,
+        space_pk: Option<Partition>,
     ) -> Result<()> {
         let row = Self::new(
             user_pk,
@@ -176,6 +187,7 @@ impl Essence {
             title,
             source_path,
             word_count,
+            space_pk,
         );
         row.put(cli).await
     }
@@ -263,6 +275,7 @@ impl From<Essence> for EssenceResponse {
             source_path: e.source_path,
             source_pk: e.source_pk,
             source_sk: e.source_sk,
+            space_pk: e.space_pk,
             word_count: e.word_count,
             updated_at: e.updated_at,
         }

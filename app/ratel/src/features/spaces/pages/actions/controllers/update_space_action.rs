@@ -105,7 +105,66 @@ pub async fn update_space_action(
     }
 
     space_action.updated_at = now;
+    reindex_essence_for_action(cli, &space_id, &action_id, &space_action, &space).await;
     Ok(space_action)
+}
+
+/// Re-index the Essence row backing this action's source entity (quiz /
+/// poll / discussion) so hero stats + title/word_count mirror the edited
+/// action. Credits/Prerequisite updates touch no text fields, but Title
+/// edits do — running on every branch keeps the call site uniform.
+#[cfg(feature = "server")]
+async fn reindex_essence_for_action(
+    cli: &aws_sdk_dynamodb::Client,
+    space_id: &SpacePartition,
+    action_id: &str,
+    space_action: &SpaceAction,
+    space: &SpaceCommon,
+) {
+    let space_pk: Partition = space_id.clone().into();
+    let creator_pk = space.user_pk.clone();
+
+    match space_action.space_action_type {
+        SpaceActionType::Quiz => {
+            use crate::features::spaces::pages::actions::actions::quiz::SpaceQuiz;
+            let quiz_sk: EntityType = match action_id.parse() {
+                Ok(v) => v,
+                Err(_) => return,
+            };
+            if let Ok(Some(quiz)) = SpaceQuiz::get(cli, &space_pk, Some(quiz_sk)).await {
+                if let Err(e) = crate::features::essence::services::index_quiz(
+                    cli,
+                    &quiz,
+                    creator_pk,
+                    &space_action.title,
+                    &space_action.description,
+                )
+                .await
+                {
+                    tracing::error!("failed to re-index quiz essence on action update: {e}");
+                }
+            }
+        }
+        SpaceActionType::Poll => {
+            use crate::features::spaces::pages::actions::actions::poll::SpacePoll;
+            let poll_sk: EntityType = match action_id.parse() {
+                Ok(v) => v,
+                Err(_) => return,
+            };
+            if let Ok(Some(poll)) = SpacePoll::get(cli, &space_pk, Some(poll_sk)).await {
+                if let Err(e) =
+                    crate::features::essence::services::index_poll(cli, &poll, creator_pk).await
+                {
+                    tracing::error!("failed to re-index poll essence on action update: {e}");
+                }
+            }
+        }
+        SpaceActionType::TopicDiscussion | SpaceActionType::Follow => {
+            // Discussion actions don't have their own essence row — comments
+            // do (indexed from their own create/update handlers). Follow
+            // actions aren't essence-backed.
+        }
+    }
 }
 
 #[cfg(feature = "server")]

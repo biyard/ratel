@@ -101,6 +101,7 @@ fn SourceRow(source: EssenceResponse) -> Element {
     let tr: EssenceSourcesTranslate = use_translate();
     let mut hook = use_essence_sources()?;
     let mut menu_open = use_signal(|| false);
+    let nav = use_navigator();
 
     let id_for_delete = source.id.clone();
     let kind_class = match source.source_kind {
@@ -112,8 +113,18 @@ fn SourceRow(source: EssenceResponse) -> Element {
         EssenceSourceKind::Poll | EssenceSourceKind::Quiz => "essence-src-icon--action",
     };
 
+    let target = navigation_target(&source);
+    let is_clickable = target.is_some();
+
     rsx! {
-        div { class: "essence-src-row",
+        div {
+            class: "essence-src-row",
+            "data-clickable": is_clickable,
+            onclick: move |_| {
+                if let Some(route) = target.clone() {
+                    nav.push(route);
+                }
+            },
             span { class: "essence-src-icon {kind_class}", {kind_icon(source.source_kind)} }
 
             div { class: "essence-src-title-wrap",
@@ -137,11 +148,14 @@ fn SourceRow(source: EssenceResponse) -> Element {
             span { class: "essence-src-words", "{format_thousands(source.word_count.max(0) as u64)}" }
             span { class: "essence-src-synced", "{format_relative_time(source.updated_at)}" }
 
-            div { class: "essence-src-menu-wrap",
+            div {
+                class: "essence-src-menu-wrap",
+                onclick: move |evt| evt.stop_propagation(),
                 button {
                     class: "essence-src-more",
                     aria_label: "{tr.row_more_label}",
-                    onclick: move |_| {
+                    onclick: move |evt| {
+                        evt.stop_propagation();
                         let was = menu_open();
                         menu_open.set(!was);
                     },
@@ -161,7 +175,8 @@ fn SourceRow(source: EssenceResponse) -> Element {
                     div { class: "essence-src-menu",
                         button {
                             class: "essence-src-menu__item essence-src-menu__item--danger",
-                            onclick: move |_| {
+                            onclick: move |evt| {
+                                evt.stop_propagation();
                                 let id = id_for_delete.clone();
                                 menu_open.set(false);
                                 hook.delete_essence.call(id);
@@ -172,6 +187,38 @@ fn SourceRow(source: EssenceResponse) -> Element {
                 }
             }
         }
+    }
+}
+
+/// Route to push when a row is clicked. Returns `None` when the source
+/// type has no meaningful detail page (e.g. Notion, or a discussion comment
+/// whose space was not stored at migration time).
+fn navigation_target(source: &EssenceResponse) -> Option<Route> {
+    // `source_pk` is the raw partition string (e.g. "FEED#abc", "SPACE#xyz").
+    // Strip the `PREFIX#` to get just the id.
+    let source_id = source.source_pk.split_once('#').map(|(_, id)| id.to_string());
+    let space_id = source
+        .space_pk
+        .as_ref()
+        .and_then(|s| s.split_once('#').map(|(_, id)| id.to_string()));
+
+    match source.source_kind {
+        EssenceSourceKind::Post | EssenceSourceKind::PostComment => {
+            source_id.map(|id| Route::PostDetail {
+                post_id: FeedPartition(id),
+            })
+        }
+        EssenceSourceKind::Poll | EssenceSourceKind::Quiz => {
+            source_id.map(|id| Route::SpaceIndexPage {
+                space_id: SpacePartition(id),
+            })
+        }
+        EssenceSourceKind::DiscussionComment => {
+            space_id.map(|id| Route::SpaceIndexPage {
+                space_id: SpacePartition(id),
+            })
+        }
+        EssenceSourceKind::Notion => None,
     }
 }
 

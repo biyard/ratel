@@ -20,6 +20,11 @@ pub struct EssenceResponse {
     /// build links without re-parsing partition prefixes.
     pub source_pk: String,
     pub source_sk: String,
+    /// Space partition string (`SPACE#{uuid}`) when the source lives in a
+    /// space — used by the client to route poll/quiz/discussion rows to
+    /// `Route::SpaceIndexPage`. `None` for standalone posts/comments.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub space_pk: Option<String>,
     /// `i64` to match the server model (whose GSI2 sort key needs i64); the
     /// client still treats this as a plain non-negative number.
     pub word_count: i64,
