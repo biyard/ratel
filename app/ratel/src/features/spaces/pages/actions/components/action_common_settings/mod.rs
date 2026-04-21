@@ -110,37 +110,24 @@ pub fn ActionCommonSettings(
         }
     });
 
+    let _ = on_date_change;
+    let _ = toast;
+    let action_id_str_for_deps = action_id();
+    let action_id_signal: ReadSignal<String> = use_signal(move || action_id_str_for_deps.clone()).into();
+    let initial_depends_on = setting.depends_on.clone();
+    let initial_status = setting.status.clone();
     rsx! {
         div { class: "flex flex-col gap-5 w-full",
-            div { class: "flex flex-col gap-2.5",
-                p { {tr.date} }
-                DateAndTimePicker {
-                    initial_started_at: Some(setting.started_at),
-                    initial_ended_at: Some(setting.ended_at),
-                    on_change: move |range: DateTimeRange| async move {
-                        if let (Some(start_date), Some(end_date)) = (range.start_date, range.end_date) {
-                            let started_at = range
-                                .timezone
-                                .local_to_utc_millis(start_date, range.start_hour, range.start_minute);
-                            let ended_at = range
-                                .timezone
-                                .local_to_utc_millis(end_date, range.end_hour, range.end_minute);
-                            let req = UpdateSpaceActionRequest::Time {
-                                started_at,
-                                ended_at,
-                            };
-                            match update_space_action(space_id(), action_id(), req).await {
-                                Ok(_) => {
-                                    toast.info(tr.date_updated.to_string());
-                                    on_date_change.call(range);
-                                }
-                                Err(e) => {
-                                    toast.error(e);
-                                }
-                            }
-                        }
-                    },
-                }
+            crate::features::spaces::pages::actions::components::ActionStatusControl {
+                space_id,
+                action_id: action_id_signal,
+                initial_status,
+            }
+
+            crate::features::spaces::pages::actions::components::ActionDependencySelector {
+                space_id,
+                action_id: action_id_signal,
+                initial_depends_on,
             }
 
             PrerequisiteSetting {
@@ -156,7 +143,7 @@ pub fn ActionCommonSettings(
                 max_credits: base_max_credits,
                 remaining_credits,
                 upgrade_route: upgrade_route.clone(),
-                started_at: setting.started_at,
+                action_status: setting.status.clone(),
                 on_change: move |credits: u64| async move {
                     let previous_credits = current_credits();
                     let req = UpdateSpaceActionRequest::Credits {
