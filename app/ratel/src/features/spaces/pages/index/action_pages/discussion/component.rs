@@ -208,17 +208,20 @@ pub fn DiscussionArenaPage(
     // the target renders (handles unpolled comments).
     let deep_link_target: Signal<Option<String>> = use_signal(|| target_comment_id.clone());
     let mut deep_link_done: Signal<bool> = use_signal(|| target_comment_id.is_none());
-    #[cfg(feature = "web")]
-    {
-        use_effect(move || {
-            let _ = comments_loader();
-            if deep_link_done() {
-                return;
-            }
-            let Some(target_id) = deep_link_target() else {
-                deep_link_done.set(true);
-                return;
-            };
+    // Call `use_effect` unconditionally so hook indices match between the
+    // server (SSR) and web (hydration) builds. Only the body touches
+    // browser APIs, so gate those with `#[cfg(feature = "web")]`.
+    use_effect(move || {
+        let _ = comments_loader();
+        if deep_link_done() {
+            return;
+        }
+        let Some(target_id) = deep_link_target() else {
+            deep_link_done.set(true);
+            return;
+        };
+        #[cfg(feature = "web")]
+        {
             let Some(window) = web_sys::window() else {
                 return;
             };
@@ -235,8 +238,12 @@ pub fn DiscussionArenaPage(
             opts.set_block(web_sys::ScrollLogicalPosition::Center);
             let _ = el.scroll_into_view_with_scroll_into_view_options(&opts);
             deep_link_done.set(true);
-        });
-    }
+        }
+        #[cfg(not(feature = "web"))]
+        {
+            let _ = target_id;
+        }
+    });
 
     let mut comment_text = use_signal(String::new);
     let mut tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
