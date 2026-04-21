@@ -25,8 +25,9 @@ pub async fn delete_comment(
 
     let deps_met = crate::features::spaces::pages::actions::services::dependency::dependencies_met(
         cli,
-        &space_id,
+        &space,
         &space_action,
+        &user.pk,
     )
     .await?;
 

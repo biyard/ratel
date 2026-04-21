@@ -35,8 +35,9 @@ pub async fn add_comment(
 
     let deps_met = crate::features::spaces::pages::actions::services::dependency::dependencies_met(
         cli,
-        &space_id,
+        &space,
         &space_action,
+        &member.pk,
     )
     .await?;
 
