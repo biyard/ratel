@@ -239,6 +239,7 @@ pub async fn create_mention_notifications(
         if user.email.is_empty() {
             continue;
         }
+        let user_pk = user.pk.clone();
         let notification = crate::common::models::notification::Notification::new(
             crate::common::types::NotificationData::MentionInComment {
                 email: user.email,
@@ -249,6 +250,27 @@ pub async fn create_mention_notifications(
         );
         if let Err(e) = notification.create(cli).await {
             tracing::error!("Failed to create mention notification for {}: {}", pk_str, e);
+        }
+
+        // Inbox row — idempotent per (recipient, mention source).
+        // No comment sk is passed into this function; use cta_url +
+        // author + content preview as a stable stand-in for the
+        // containing comment's identity.
+        let payload = crate::common::types::InboxPayload::MentionInComment {
+            comment_preview: preview.clone(),
+            mentioned_by_name: author_name.to_string(),
+            cta_url: cta_url.to_string(),
+        };
+        let dedup_source =
+            format!("{}#{}#{}#{}", cta_url, author_pk_str, preview, user_pk);
+        if let Err(e) = crate::common::utils::inbox::create_inbox_row_once(
+            user_pk.clone(),
+            payload,
+            &dedup_source,
+        )
+        .await
+        {
+            crate::error!("mention inbox row failed: {e}");
         }
     }
 }

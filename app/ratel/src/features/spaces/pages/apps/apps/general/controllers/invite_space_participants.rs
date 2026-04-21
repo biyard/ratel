@@ -128,8 +128,9 @@ pub async fn invite_space_participants(
     req: InviteSpaceParticipantsRequest,
 ) -> crate::common::Result<InviteSpaceParticipantsResponse> {
     use crate::common::models::space::{SpaceCommon, SpaceParticipant};
-    use crate::common::types::SpacePublishState;
+    use crate::common::types::{InboxPayload, SpacePublishState};
     use crate::features::auth::models::user::UserQueryOption;
+    use crate::features::posts::models::Post;
     use std::collections::HashSet;
 
     if role != SpaceUserRole::Creator {
@@ -187,7 +188,9 @@ pub async fn invite_space_participants(
         invite_targets.push((email, target_user));
     }
 
+    let mut invited_user_pks: Vec<Partition> = Vec::new();
     for (email, target_user) in invite_targets {
+        let invitee_pk = target_user.pk.clone();
         let mut invitation = SpaceInvitationMember::new(space_pk.clone(), target_user);
         invitation.status = if space.publish_state == SpacePublishState::Published {
             InvitationStatus::Invited
@@ -197,6 +200,52 @@ pub async fn invite_space_participants(
 
         invitation.upsert(dynamo).await?;
         invited_emails.push(email);
+        invited_user_pks.push(invitee_pk);
+    }
+
+    // Fan inbox rows per invited user (idempotent per space+invitee).
+    // SpaceCommon does not hold a title; the Feed post title is the canonical title.
+    if !invited_user_pks.is_empty() {
+        let space_id_for_inbox: SpacePartition = space.pk.clone().into();
+        let space_title = match space.pk.clone().to_post_key() {
+            Ok(post_pk) => Post::get(dynamo, &post_pk, Some(&EntityType::Post))
+                .await
+                .ok()
+                .flatten()
+                .map(|p| p.title)
+                .unwrap_or_default(),
+            Err(_) => String::new(),
+        };
+        let inviter_name = if !space.author_display_name.is_empty() {
+            space.author_display_name.clone()
+        } else {
+            space.author_username.clone()
+        };
+        let cta_url = match &space.pk {
+            Partition::Space(id) => {
+                format!("https://ratel.foundation/spaces/SPACE%23{}", id)
+            }
+            _ => String::new(),
+        };
+
+        for invitee_pk in &invited_user_pks {
+            let payload = InboxPayload::SpaceInvitation {
+                space_id: space_id_for_inbox.clone(),
+                space_title: space_title.clone(),
+                inviter_name: inviter_name.clone(),
+                cta_url: cta_url.clone(),
+            };
+            let dedup_source = format!("{}#{}", space.pk, invitee_pk);
+            if let Err(e) = crate::common::utils::inbox::create_inbox_row_once(
+                invitee_pk.clone(),
+                payload,
+                &dedup_source,
+            )
+            .await
+            {
+                crate::error!("space-invitation inbox row failed: {e}");
+            }
+        }
     }
 
     // TODO(main-api parity): send invitation emails for published spaces.

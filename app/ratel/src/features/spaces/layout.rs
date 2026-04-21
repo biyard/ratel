@@ -46,8 +46,19 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
             | Route::DiscussionActionEditorPage { .. }
     );
 
+    let seo_image = if space.logo.is_empty() {
+        "https://metadata.ratel.foundation/logos/logo-symbol.png".to_string()
+    } else {
+        space.logo.clone()
+    };
+
     if !role.is_admin() || is_arena_route || is_action_edit_route {
         return rsx! {
+            SeoMeta {
+                title: space.title.clone(),
+                description: space.description(),
+                image: seo_image.clone(),
+            }
             Outlet::<Route> {}
             Layover {}
         };
@@ -128,7 +139,7 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
         SeoMeta {
             title: space.title.clone(),
             description: space.description(),
-            image: if space.logo.is_empty() { "https://metadata.ratel.foundation/logos/logo-symbol.png".to_string() } else { space.logo.clone() },
+            image: seo_image,
         }
         div { class: "{layout_class}", "data-testid": "space-layout-container",
             if show_sidebar {

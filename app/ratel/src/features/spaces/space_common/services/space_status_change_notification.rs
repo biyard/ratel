@@ -67,7 +67,7 @@ pub async fn handle_space_status_change(event: SpaceStatusChangeEvent) -> Result
         })?;
 
     // 3. Resolve emails via batch_get + dedupe.
-    let emails = resolve_emails(cli, user_pks).await?;
+    let emails = resolve_emails(cli, user_pks.clone()).await?;
     if emails.is_empty() {
         tracing::info!("handle_space_status_change: no emails resolved, skipping");
         return Ok(());
@@ -83,7 +83,29 @@ pub async fn handle_space_status_change(event: SpaceStatusChangeEvent) -> Result
         "handle_space_status_change: fanning out notifications",
     );
 
-    // 5. Fan out into Notification rows, EMAIL_CHUNK_SIZE per row.
+    // 5. Fan inbox rows per participant. Idempotent on (user, space_pk, new_status).
+    let space_id: SpacePartition = space.pk.clone().into();
+    let space_title = post.title.clone();
+    for user_pk in &user_pks {
+        let payload = InboxPayload::SpaceStatusChanged {
+            space_id: space_id.clone(),
+            space_title: space_title.clone(),
+            new_status: event.new_status.clone(),
+            cta_url: cta_url.clone(),
+        };
+        let dedup_source = format!("{}#{:?}", event.space_pk, event.new_status);
+        if let Err(e) = crate::common::utils::inbox::create_inbox_row_once(
+            user_pk.clone(),
+            payload,
+            &dedup_source,
+        )
+        .await
+        {
+            crate::error!("space-status inbox row failed: {e}");
+        }
+    }
+
+    // 6. Fan out into Notification rows, EMAIL_CHUNK_SIZE per row.
     for chunk in emails.chunks(EMAIL_CHUNK_SIZE) {
         let notification = Notification::new(NotificationData::SendSpaceStatusUpdate {
             emails: chunk.to_vec(),
@@ -241,5 +263,5 @@ fn build_space_url(space_pk: &Partition) -> String {
         Partition::Space(id) => id.clone(),
         _ => String::new(),
     };
-    format!("https://ratel.foundation/spaces/SPACE%23{}", id)
+    format!("https://ratel.foundation/spaces/{}", id)
 }

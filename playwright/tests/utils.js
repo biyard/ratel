@@ -371,7 +371,12 @@ export async function createAction(page, spaceUrl, typeKey, urlRegex) {
   // The admin add-action card is rendered by ActionDashboard after its
   // action loader resolves; Dioxus may not have bound the onclick handler
   // by the time the element becomes visible, so a bare click can be dropped.
-  // Use the retry helper to click until the TypePicker modal surfaces.
+  // Wait for the specific element to carry `data-dioxus-id` (hydration
+  // marker) before attempting a click — the generic 1500ms wait in `goto`
+  // only guarantees that *some* Dioxus element on the page is hydrated, not
+  // this one. Release-mode WASM initialises later, so a non-hydrated click
+  // is silently dropped and TypePickerModal never mounts.
+  await waitForHydrated(page, "admin-add-action-card");
   const addCard = page.getByTestId("admin-add-action-card");
   await expect(addCard).toBeVisible();
   const typeOption = page.getByTestId(`type-option-${typeKey}`);

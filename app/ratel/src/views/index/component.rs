@@ -35,6 +35,7 @@ pub fn Index() -> Element {
     let has_user = user_ctx().user.is_some();
     let mut settings_open = use_signal(|| false);
     let mut teams_open = use_signal(|| false);
+    let mut notifications_open = use_signal(|| false);
 
     // Read user_ctx inside the async so the fetch reflects the current
     // login state at invocation time. Login from the home page triggers
@@ -163,9 +164,9 @@ pub fn Index() -> Element {
         settings_open.set(true);
     };
 
-    let go_browse_all = move |_: Event<MouseData>| {
-        nav.push(Route::PostIndex {});
-    };
+    // let go_browse_all = move |_: Event<MouseData>| {
+    //     nav.push(Route::PostIndex {});
+    // };
 
     rsx! {
         SeoMeta {
@@ -203,6 +204,12 @@ pub fn Index() -> Element {
                     span { class: "arena-topbar__status", "{t.live_status}" }
                 }
                 div { class: "arena-topbar__actions",
+                    if has_user {
+                        crate::features::notifications::components::NotificationBell {
+                            class: "hud-btn",
+                            onclick: move |_| notifications_open.toggle(),
+                        }
+                    }
                     button {
                         class: "hud-btn hud-btn--primary",
                         aria_label: "{t.create}",
@@ -347,12 +354,12 @@ pub fn Index() -> Element {
                                     // onscroll + JS so pagination triggers reliably.
                                     onscroll: move |_| {
                                         let js = r#"
-                                                                                                                                                                                                                                                                            const el = document.getElementById('home-teams-dd-list');
-                                                                                                                                                                                                                                                                            if (!el) { dioxus.send(false); return; }
-                                                                                                                                                                                                                                                                            const nearBottom =
-                                                                                                                                                                                                                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
-                                                                                                                                                                                                                                                                            dioxus.send(nearBottom);
-                                                                                                                                                                                                                                                                        "#;
+                                                                                                                                                                                                                                                                                                                                            const el = document.getElementById('home-teams-dd-list');
+                                                                                                                                                                                                                                                                                                                                            if (!el) { dioxus.send(false); return; }
+                                                                                                                                                                                                                                                                                                                                            const nearBottom =
+                                                                                                                                                                                                                                                                                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+                                                                                                                                                                                                                                                                                                                                            dioxus.send(nearBottom);
+                                                                                                                                                                                                                                                                                                                                        "#;
                                         let mut ctrl = teams_query;
                                         spawn(async move {
                                             let mut eval = document::eval(js);
@@ -595,34 +602,43 @@ pub fn Index() -> Element {
                         }
                     }
                 }
-                button {
-                    class: "browse-btn",
-                    "data-testid": "home-btn-browse",
-                    onclick: go_browse_all,
-                    svg {
-                        fill: "none",
-                        stroke: "currentColor",
-                        stroke_linecap: "round",
-                        stroke_linejoin: "round",
-                        stroke_width: "2",
-                        view_box: "0 0 24 24",
-                        xmlns: "http://www.w3.org/2000/svg",
-                        circle { cx: "11", cy: "11", r: "8" }
-                        line {
-                            x1: "21",
-                            y1: "21",
-                            x2: "16.65",
-                            y2: "16.65",
-                        }
-                    }
-                    "{t.browse_all}"
-                }
+                        // button {
+            //     class: "browse-btn",
+            //     "data-testid": "home-btn-browse",
+            //     onclick: go_browse_all,
+            //     svg {
+            //         fill: "none",
+            //         stroke: "currentColor",
+            //         stroke_linecap: "round",
+            //         stroke_linejoin: "round",
+            //         stroke_width: "2",
+            //         view_box: "0 0 24 24",
+            //         xmlns: "http://www.w3.org/2000/svg",
+            //         circle { cx: "11", cy: "11", r: "8" }
+            //         line {
+            //             x1: "21",
+            //             y1: "21",
+            //             x2: "16.65",
+            //             y2: "16.65",
+            //         }
+            //     }
+            //     "{t.browse_all}"
+            // }
             }
 
             // SETTINGS PANEL — same component as Space Arena
             SettingsPanel {
                 open: settings_open(),
                 on_close: move |_| settings_open.set(false),
+            }
+        }
+
+        if has_user {
+            SuspenseBoundary {
+                crate::features::notifications::components::NotificationPanel {
+                    open: notifications_open(),
+                    on_close: move |_| notifications_open.set(false),
+                }
             }
         }
     }
