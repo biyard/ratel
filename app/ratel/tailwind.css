@@ -96,7 +96,7 @@ html[data-theme="light"] {
    ---------------------------- */
 @theme static {
   /* Core surfaces */
-  --background: var(--dark, var(--bg-dark)) var(--light, var(--gray-50));
+  --background: var(--dark, #06060e) var(--light, #f4f3ef);
   --card: var(--dark, var(--bg-component-dark)) var(--light, var(--gray-100));
   --popover: var(--dark, #1a1a1a) var(--light, var(--gray-50));
 
@@ -256,15 +256,12 @@ html[data-theme="light"] {
   --color-input-box-bg: var(--dark, #1a1a1a) var(--light, #fafafa);
   --color-input-box-border: var(--dark, #464646) var(--light, #e5e5e5);
   --color-choice-editor-field-bg: var(--dark, #262626) var(--light, #fafafa);
-  --color-choice-editor-field-border: var(--dark, #737373)
-    var(--light, #e5e5e5);
-  --color-choice-editor-field-text: var(--dark, #d4d4d4)
-    var(--light, #262626);
+  --color-choice-editor-field-border: var(--dark, #737373) var(--light, #e5e5e5);
+  --color-choice-editor-field-text: var(--dark, #d4d4d4) var(--light, #262626);
   --color-choice-editor-field-placeholder: var(--dark, var(--gray-500))
     var(--light, var(--gray-600));
   --color-choice-editor-action: var(--dark, #737373) var(--light, #262626);
-  --color-choice-editor-selector-bg: var(--dark, #101010)
-    var(--light, #fafafa);
+  --color-choice-editor-selector-bg: var(--dark, #101010) var(--light, #fafafa);
   --color-hover: var(--dark, #282828) var(--light, #e5e5e5);
   --color-write-comment-box-bg: var(--dark, #262626) var(--light, #e5e5e5);
   --color-write-comment-box-border: var(--dark, #404040) var(--light, #d4d4d4);
@@ -803,7 +800,8 @@ a {
   /* Space Page Actions - Discussion Editor */
   --color-discussion-editor-bg: var(--dark, #262626) var(--light, #f5f5f5);
   --color-discussion-editor-border: var(--dark, #404040) var(--light, #d4d4d4);
-  --color-discussion-editor-placeholder: var(--dark, #737373) var(--light, #a3a3a3);
+  --color-discussion-editor-placeholder: var(--dark, #737373)
+    var(--light, #a3a3a3);
 
   /* Space Page Actions - Action Type Card */
   --color-action-type-card-bg: var(--dark, #262626) var(--light, #ffffff);
@@ -819,19 +817,29 @@ a {
   --color-action-type-icon-stroke: #171717;
 
   /* Space Page Actions - Action Preview */
-  --color-action-preview-inner-bg: var(--dark, rgba(10, 10, 10, 0.4)) var(--light, #f5f5f5);
-  --color-action-preview-item-bg: var(--dark, rgba(38, 38, 38, 0.5)) var(--light, #fafafa);
+  --color-action-preview-inner-bg: var(--dark, rgba(10, 10, 10, 0.4))
+    var(--light, #f5f5f5);
+  --color-action-preview-item-bg: var(--dark, rgba(38, 38, 38, 0.5))
+    var(--light, #fafafa);
   --color-action-preview-avatar-bg: var(--dark, #525252) var(--light, #d4d4d4);
   --color-action-preview-option-text: var(--dark, #d4d4d4) var(--light, #404040);
-  --color-action-preview-radio-border: var(--dark, #525252) var(--light, #a3a3a3);
+  --color-action-preview-radio-border: var(--dark, #525252)
+    var(--light, #a3a3a3);
   --color-action-preview-submit-text: var(--dark, #60a5fa) var(--light, #1d4ed8);
-  --color-action-preview-submit-bg: var(--dark, rgba(37, 99, 235, 0.2)) var(--light, rgba(37, 99, 235, 0.1));
+  --color-action-preview-submit-bg: var(--dark, rgba(37, 99, 235, 0.2))
+    var(--light, rgba(37, 99, 235, 0.1));
 }
 
 /* Poll viewer card entrance animation */
 @keyframes card-enter {
-  from { opacity: 0; transform: translateY(20px) scale(0.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* =============================================================
@@ -942,7 +950,7 @@ h3 {
 }
 
 body {
-  @apply overflow-hidden max-tablet:overflow-auto;
+  @apply overflow-hidden max-tablet:overflow-auto bg-background text-foreground;
 }
 
 /* Mobile Safari: use dynamic viewport height to account for address bar.

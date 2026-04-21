@@ -2,7 +2,7 @@ use super::*;
 use crate::common::models::McpClientSecret;
 use crate::common::types::Partition;
 
-async fn create_mcp_secret(
+pub(super) async fn create_mcp_secret(
     cli: &crate::common::aws_sdk_dynamodb::Client,
     user_pk: &Partition,
 ) -> String {
@@ -11,7 +11,7 @@ async fn create_mcp_secret(
     raw_token
 }
 
-async fn setup_mcp_test() -> (TestContext, String) {
+pub(super) async fn setup_mcp_test() -> (TestContext, String) {
     let ctx = TestContext::setup().await;
     let raw_token = create_mcp_secret(&ctx.ddb, &ctx.test_user.0.pk).await;
     (ctx, raw_token)
@@ -19,7 +19,7 @@ async fn setup_mcp_test() -> (TestContext, String) {
 
 /// Send MCP JSON-RPC request via POST /mcp/{secret}.
 /// Parses SSE response body to extract JSON-RPC response.
-async fn mcp_request(
+pub(super) async fn mcp_request(
     app: axum::Router,
     secret: &str,
     jsonrpc_body: serde_json::Value,
@@ -49,7 +49,7 @@ async fn mcp_request(
 }
 
 /// Parse SSE body → JSON-RPC response. Handles both plain JSON and SSE format.
-fn parse_sse_json(sse_body: &str) -> serde_json::Value {
+pub(super) fn parse_sse_json(sse_body: &str) -> serde_json::Value {
     if let Ok(v) = serde_json::from_str::<serde_json::Value>(sse_body) {
         return v;
     }
@@ -64,7 +64,7 @@ fn parse_sse_json(sse_body: &str) -> serde_json::Value {
 }
 
 /// Call an MCP tool via JSON-RPC (stateless mode — no session needed).
-async fn mcp_tool_call(
+pub(super) async fn mcp_tool_call(
     app: axum::Router,
     secret: &str,
     tool_name: &str,
@@ -84,7 +84,7 @@ async fn mcp_tool_call(
 }
 
 /// Extract parsed JSON from MCP tool result content.
-fn extract_tool_content(body: &serde_json::Value) -> serde_json::Value {
+pub(super) fn extract_tool_content(body: &serde_json::Value) -> serde_json::Value {
     let text = body
         .pointer("/result/content/0/text")
         .and_then(|v| v.as_str())
