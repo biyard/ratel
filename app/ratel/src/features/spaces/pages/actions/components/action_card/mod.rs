@@ -64,7 +64,15 @@ pub fn ActionCard(
         action.description.clone()
     };
     let is_closed = matches!(status, ActionStatus::Closed);
-    let card_class = if is_closed {
+    // Lock the card for non-creators when upstream dependencies are not yet
+    // met for this viewer. Creators always see a normal card (they're setting
+    // it up, not trying to participate).
+    let is_locked = !matches!(role, SpaceUserRole::Creator)
+        && !action.depends_on.is_empty()
+        && !action.dependencies_met;
+    let card_class = if is_locked {
+        "flex flex-col w-full text-left border transition-colors gap-[0.625rem] !rounded-[1rem] !bg-neutral-900 light:!bg-white !p-[0.9375rem] border-neutral-800 light:border-neutral-300 opacity-60 cursor-not-allowed"
+    } else if is_closed {
         "flex flex-col w-full text-left border transition-colors cursor-pointer gap-[0.625rem] !rounded-[1rem] !bg-neutral-900 light:!bg-white !p-[0.9375rem] border-neutral-800 light:border-neutral-300 opacity-60"
     } else {
         "flex flex-col w-full text-left border transition-colors cursor-pointer gap-[0.625rem] !rounded-[1rem] !bg-neutral-900 light:!bg-white !p-[0.9375rem] border-neutral-800 light:border-neutral-300 light:hover:!bg-neutral-50 hover:!bg-neutral-800"
@@ -125,6 +133,10 @@ pub fn ActionCard(
             class: card_class.to_string(),
             onclick: {
                 move |_| {
+                    if is_locked {
+                        toast.info(tr.dependencies_not_met.to_string());
+                        return;
+                    }
                     if role != SpaceUserRole::Creator {
                         let space_status = space().status;
                         let enable_action = action.prerequisite
@@ -172,6 +184,14 @@ pub fn ActionCard(
                             {tr.prerequisite}
                         }
                     }
+
+                    if is_locked {
+                        Badge {
+                            color: BadgeColor::Grey,
+                            variant: BadgeVariant::Rounded,
+                            {tr.locked}
+                        }
+                    }
                 }
 
                 div { class: "flex gap-2 items-center max-mobile:self-end",
@@ -207,6 +227,17 @@ pub fn ActionCard(
                 class: "flex-1 w-full min-h-0 font-medium break-words line-clamp-1 text-[0.75rem]/[1rem] text-foreground-muted",
                 class: if action.description.is_empty() { " text-text-primary" },
                 dangerous_inner_html: description,
+            }
+
+            if is_locked {
+                div { class: "flex gap-1.5 items-center font-medium text-[0.75rem]/[1rem] text-foreground-muted",
+                    icons::security::Lock1 {
+                        width: "14",
+                        height: "14",
+                        class: "[&>path]:stroke-current",
+                    }
+                    span { {tr.dependencies_not_met} }
+                }
             }
 
             if has_stats {
