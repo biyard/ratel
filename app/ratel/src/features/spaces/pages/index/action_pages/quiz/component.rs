@@ -54,8 +54,10 @@ pub fn QuizArenaPage(
     let total_allowed = quiz.retry_count.saturating_add(1);
     let remaining = total_allowed.saturating_sub(quiz.attempt_count);
     let has_passed = quiz.passed.unwrap_or(false);
-    let now = crate::common::utils::time::get_now_timestamp_millis();
-    let is_in_progress = now >= quiz.started_at && now <= quiz.ended_at;
+    let is_in_progress = matches!(
+        quiz.space_action.status,
+        Some(crate::features::spaces::pages::actions::types::SpaceActionStatus::Ongoing)
+    );
     // Candidates must be allowed through here so they can take a prerequisite
     // quiz before the space starts. The actual role+prerequisite+status gate
     // below (`can_execute`) still blocks non-prerequisite quizzes / Viewers.
@@ -67,6 +69,8 @@ pub fn QuizArenaPage(
         role,
         quiz.space_action.prerequisite,
         space.status,
+        quiz.space_action.status.as_ref(),
+        true,
         space.join_anytime,
     );
     let can_submit = can_respond
@@ -236,39 +240,35 @@ pub fn QuizArenaPage(
             }
 
             // ── Banners ──────────────────────────────
-            if !is_in_progress && now > quiz.ended_at {
-                div {
-                    class: "quiz-banner quiz-banner--warning",
-                    "{tr.quiz_ended}"
-                }
+            if matches!(
+                quiz.space_action.status,
+                Some(crate::features::spaces::pages::actions::types::SpaceActionStatus::Finish)
+            )
+            {
+                div { class: "quiz-banner quiz-banner--warning", "{tr.quiz_ended}" }
             }
-            if !is_in_progress && now < quiz.started_at {
-                div {
-                    class: "quiz-banner quiz-banner--info",
-                    "{tr.quiz_not_started}"
-                }
+            if !is_in_progress
+                && !matches!(
+                    quiz.space_action.status,
+                    Some(
+                        crate::features::spaces::pages::actions::types::SpaceActionStatus::Finish,
+                    )
+                )
+            {
+                div { class: "quiz-banner quiz-banner--info", "{tr.quiz_not_started}" }
             }
             // Viewer role, space is Processing/Finished, or prerequisite
             // missing → show the permission banner (matches poll's arena
             // behavior). `can_execute` already folds in space status +
             // prerequisite + join_anytime.
             if is_in_progress && (!can_respond || !can_execute) {
-                div {
-                    class: "quiz-banner quiz-banner--warning",
-                    "{tr.no_permission}"
-                }
+                div { class: "quiz-banner quiz-banner--warning", "{tr.no_permission}" }
             }
             if is_in_progress && has_passed {
-                div {
-                    class: "quiz-banner quiz-banner--success",
-                    "{tr.already_passed}"
-                }
+                div { class: "quiz-banner quiz-banner--success", "{tr.already_passed}" }
             }
             if is_in_progress && !has_passed && quiz.attempt_count >= total_allowed && can_respond {
-                div {
-                    class: "quiz-banner quiz-banner--warning",
-                    "{tr.no_remaining_attempts}"
-                }
+                div { class: "quiz-banner quiz-banner--warning", "{tr.no_remaining_attempts}" }
             }
 
             // ── SCREEN 1: Overview ───────────────────
@@ -391,11 +391,7 @@ pub fn QuizArenaPage(
                                     total: total_questions,
                                     question,
                                     answer: answers.read().get(idx).cloned(),
-                                    correct_answer: quiz
-                                                                            .correct_answers
-                                                                            .as_ref()
-                                                                            .and_then(|a| a.get(idx))
-                                                                            .cloned(),
+                                    correct_answer: quiz.correct_answers.as_ref().and_then(|a| a.get(idx)).cloned(),
                                     disabled: !can_submit,
                                     on_change: move |next_answer: Answer| {
                                         let mut next = answers();
@@ -536,11 +532,14 @@ fn QuestionCardView(
             }
 
             div { class: if use_single_col { "option-grid option-grid--single" } else { "option-grid" },
-                for (opt_idx, option_text) in options.iter().enumerate() {
+                for (opt_idx , option_text) in options.iter().enumerate() {
                     {
                         let is_selected = check_selected(&answer, opt_idx as i32, is_multi);
-                        let is_correct =
-                            check_correct(correct_answer.as_ref(), opt_idx as i32, is_multi);
+                        let is_correct = check_correct(
+                            correct_answer.as_ref(),
+                            opt_idx as i32,
+                            is_multi,
+                        );
                         let on_change = on_change.clone();
                         let answer_clone = answer.clone();
                         rsx! {

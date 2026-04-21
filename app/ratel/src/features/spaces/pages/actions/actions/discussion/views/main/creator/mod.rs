@@ -21,7 +21,7 @@ pub fn CreatorMain(
     let space = crate::features::spaces::space_common::hooks::use_space()();
     let locked = crate::features::spaces::pages::actions::is_action_locked(
         space.status,
-        ctx.discussion().space_action.started_at,
+        ctx.discussion().space_action.status.as_ref(),
     );
 
     rsx! {
@@ -48,27 +48,6 @@ pub fn CreatorMain(
                             space_id,
                             action_id: discussion_id().to_string(),
                             action_setting: ctx.discussion().space_action,
-                            on_date_change: move |range: DateTimeRange| async move {
-                                let space_id = space_id();
-                                let discussion_id = discussion_id();
-                                if let (Some(start_date), Some(end_date)) = (range.start_date, range.end_date) {
-                                    let started_at = range
-                                        .timezone
-                                        .local_to_utc_millis(start_date, range.start_hour, range.start_minute);
-                                    let ended_at = range
-                                        .timezone
-                                        .local_to_utc_millis(end_date, range.end_hour, range.end_minute);
-                                    let req = UpdateDiscussionRequest {
-                                        title: None,
-                                        html_contents: None,
-                                        category_name: None,
-                                        started_at: Some(started_at),
-                                        ended_at: Some(ended_at),
-                                        files: None,
-                                    };
-                                    let _ = update_discussion(space_id, discussion_id, req).await;
-                                }
-                            },
                         }
                         crate::features::ai_moderator::AiModeratorSetting {
                             space_id,

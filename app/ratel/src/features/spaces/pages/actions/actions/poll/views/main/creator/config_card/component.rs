@@ -6,8 +6,6 @@ use crate::features::spaces::pages::actions::controllers::{
     UpdateSpaceActionRequest, update_space_action,
 };
 
-use crate::common::utils::time::{datetime_local_to_epoch_ms, epoch_ms_to_datetime_local};
-
 #[component]
 pub fn ConfigCard() -> Element {
     let tr: PollCreatorTranslate = use_translate();
@@ -18,9 +16,9 @@ pub fn ConfigCard() -> Element {
     let poll_id = ctx.poll_id;
     let poll = ctx.poll.read().clone();
     let space = crate::features::spaces::space_common::hooks::use_space()();
-    let locked = crate::features::spaces::pages::actions::is_action_locked(
+    let _locked = crate::features::spaces::pages::actions::is_action_locked(
         space.status,
-        poll.space_action.started_at,
+        poll.space_action.status.as_ref(),
     );
 
     let show_encrypted_upload = Environment::default() != Environment::Production;
@@ -30,9 +28,7 @@ pub fn ConfigCard() -> Element {
     let mut encrypted_upload = use_signal(|| poll.encrypted_upload_enabled);
     let mut prereq_follow = use_signal(|| poll.space_action.prerequisite);
     let saved_credits = poll.space_action.credits;
-
-    let mut started_at_signal = use_signal(|| poll.started_at);
-    let mut ended_at_signal = use_signal(|| poll.ended_at);
+    let action_status = poll.space_action.status.clone();
 
     let action_id_for_signal = action_id_str.clone();
     let action_id_signal: ReadSignal<String> =
@@ -54,29 +50,6 @@ pub fn ConfigCard() -> Element {
                     toast.error(err);
                     prereq_follow.set(!new_val);
                 }
-            }
-        });
-    };
-
-    let started_at = epoch_ms_to_datetime_local(started_at_signal());
-    let ended_at = epoch_ms_to_datetime_local(ended_at_signal());
-
-    let save_schedule = move || {
-        let start_ms = started_at_signal();
-        let end_ms = ended_at_signal();
-        if start_ms <= 0 || end_ms <= 0 {
-            return;
-        }
-        spawn(async move {
-            let req = UpdatePollRequest::Time {
-                started_at: start_ms,
-                ended_at: end_ms,
-            };
-            if let Err(err) = update_poll(space_id(), poll_id(), req).await {
-                error!("Failed to save poll schedule: {:?}", err);
-                toast.error(err);
-            } else {
-                ctx.poll.restart();
             }
         });
     };
@@ -130,53 +103,6 @@ pub fn ConfigCard() -> Element {
                     }
                 }
 
-                // ── Schedule (TODO: not wired to backend yet) ─────
-                section { class: "section", "data-testid": "section-schedule",
-                    div { class: "section__head",
-                        span { class: "section__label", "{tr.section_schedule_label}" }
-                    }
-                    div { class: "grid-2",
-                        div { class: "field",
-                            label { class: "field__label", "{tr.schedule_starts_at}" }
-                            input {
-                                class: "input",
-                                r#type: "datetime-local",
-                                "data-testid": "schedule-start",
-                                value: "{started_at}",
-                                oninput: move |e| {
-                                    if let Some(ms) = datetime_local_to_epoch_ms(&e.value()) {
-                                        // Preserve the existing start→end gap when
-                                        // the creator shifts the start time.
-                                        let old_start = started_at_signal();
-                                        let old_end = ended_at_signal();
-                                        if old_start > 0 && old_end > old_start {
-                                            let gap = old_end - old_start;
-                                            ended_at_signal.set(ms + gap);
-                                        }
-                                        started_at_signal.set(ms);
-                                    }
-                                },
-                                onblur: move |_| save_schedule(),
-                            }
-                        }
-                        div { class: "field",
-                            label { class: "field__label", "{tr.schedule_ends_at}" }
-                            input {
-                                class: "input",
-                                r#type: "datetime-local",
-                                "data-testid": "schedule-end",
-                                value: "{ended_at}",
-                                oninput: move |e| {
-                                    if let Some(ms) = datetime_local_to_epoch_ms(&e.value()) {
-                                        ended_at_signal.set(ms);
-                                    }
-                                },
-                                onblur: move |_| save_schedule(),
-                            }
-                        }
-                    }
-                }
-
                 // ── Participation & Rewards (TODO: most fields not in model) ─────
                 section { class: "section", "data-testid": "section-participation",
                     div { class: "section__head",
@@ -187,7 +113,7 @@ pub fn ConfigCard() -> Element {
                         space_id,
                         action_id: action_id_signal,
                         saved_credits,
-                        started_at: started_at_signal(),
+                        action_status: action_status.clone(),
                     }
                     // Prerequisite — wired via update_space_action::Prerequisite
                     div { class: "tile", "data-testid": "tile-prereq",
@@ -255,7 +181,7 @@ pub fn ConfigCard() -> Element {
                 }
 
                 // ── Danger zone ─────
-                if !locked {
+                if !_locked {
                     section {
                         class: "section section--danger",
                         "data-testid": "section-danger",

@@ -1,6 +1,4 @@
 use crate::features::spaces::pages::actions::*;
-use crate::features::spaces::pages::actions::actions::discussion::controllers::{UpdateDiscussionRequest, update_discussion};
-use crate::features::spaces::pages::actions::actions::poll::controllers::{UpdatePollRequest, update_poll};
 
 use super::reward_cards::RewardPreviewData;
 
@@ -63,62 +61,4 @@ pub fn reward_credit_summary() -> (i64, i64) {
     (2, 50)
 }
 
-pub async fn apply_selected_action_dates(
-    space_id: SpacePartition,
-    actions: Vec<SpaceActionSummary>,
-    started_at: i64,
-    ended_at: i64,
-) -> Result<()> {
-    for action in actions {
-        match action.action_type {
-            SpaceActionType::Poll => {
-                let entity_type: EntityType = action
-                    .action_id
-                    .parse()
-                    .map_err(|_| SpaceActionError::ActionUpdateFailed)?;
-                let poll_id: SpacePollEntityType = entity_type
-                    .try_into()
-                    .map_err(|_| SpaceActionError::ActionUpdateFailed)?;
-
-                update_poll(
-                    space_id.clone(),
-                    poll_id,
-                    UpdatePollRequest::Time {
-                        started_at,
-                        ended_at,
-                    },
-                )
-                .await?;
-            }
-            SpaceActionType::TopicDiscussion => {
-                let entity_type: EntityType = action
-                    .action_id
-                    .parse()
-                    .map_err(|_| SpaceActionError::ActionUpdateFailed)?;
-                let discussion_id: SpacePostEntityType = entity_type
-                    .try_into()
-                    .map_err(|_| SpaceActionError::ActionUpdateFailed)?;
-
-                update_discussion(
-                    space_id.clone(),
-                    discussion_id,
-                    UpdateDiscussionRequest {
-                        title: None,
-                        html_contents: None,
-                        category_name: None,
-                        started_at: Some(started_at),
-                        ended_at: Some(ended_at),
-                        files: None,
-                    },
-                )
-                .await?;
-            }
-            SpaceActionType::Follow | SpaceActionType::Quiz => {
-                return Err(SpaceActionError::ActionUpdateFailed.into());
-            }
-        }
-    }
-
-    Ok(())
-}
 

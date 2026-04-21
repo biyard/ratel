@@ -5,8 +5,6 @@ use crate::features::spaces::pages::actions::controllers::{
     UpdateSpaceActionRequest, update_space_action,
 };
 
-use crate::common::utils::time::{datetime_local_to_epoch_ms, epoch_ms_to_datetime_local};
-
 #[component]
 pub fn ConfigCard() -> Element {
     let tr: DiscussionEditorTranslate = use_translate();
@@ -20,12 +18,10 @@ pub fn ConfigCard() -> Element {
     let action_id_str = discussion_id().to_string();
     let mut prereq_follow = use_signal(|| action.prerequisite);
     let saved_credits = action.credits;
+    let action_status = action.status.clone();
     let discussion_entity = use_memo(move || {
         crate::common::types::SpaceDiscussionEntityType(discussion_id().to_string())
     });
-
-    let mut started_at_signal = use_signal(|| action.started_at);
-    let mut ended_at_signal = use_signal(|| action.ended_at);
 
     let action_id_for_signal = action_id_str.clone();
     let action_id_signal: ReadSignal<String> =
@@ -51,33 +47,6 @@ pub fn ConfigCard() -> Element {
         });
     };
 
-    let started_at = epoch_ms_to_datetime_local(started_at_signal());
-    let ended_at = epoch_ms_to_datetime_local(ended_at_signal());
-
-    let save_schedule = move || {
-        let start_ms = started_at_signal();
-        let end_ms = ended_at_signal();
-        if start_ms <= 0 || end_ms <= 0 {
-            return;
-        }
-        spawn(async move {
-            let req = UpdateDiscussionRequest {
-                title: None,
-                html_contents: None,
-                category_name: None,
-                started_at: Some(start_ms),
-                ended_at: Some(end_ms),
-                files: None,
-            };
-            if let Err(err) = update_discussion(space_id(), discussion_id(), req).await {
-                error!("Failed to save discussion schedule: {:?}", err);
-                toast.error(err);
-            } else {
-                ctx.discussion.restart();
-            }
-        });
-    };
-
     rsx! {
         section { class: "pager__page", "data-page": "1",
             article { class: "page-card", "data-testid": "page-card-config",
@@ -87,51 +56,6 @@ pub fn ConfigCard() -> Element {
                         div {
                             h1 { class: "page-card__title", "{tr.card_config_title}" }
                             div { class: "page-card__subtitle", "{tr.card_config_subtitle}" }
-                        }
-                    }
-                }
-
-                // ── Schedule ─────
-                section { class: "section", "data-testid": "section-schedule",
-                    div { class: "section__head",
-                        span { class: "section__label", "{tr.section_schedule_label}" }
-                    }
-                    div { class: "grid-2",
-                        div { class: "field",
-                            label { class: "field__label", "{tr.schedule_starts_at}" }
-                            input {
-                                class: "input",
-                                r#type: "datetime-local",
-                                "data-testid": "schedule-start",
-                                value: "{started_at}",
-                                oninput: move |e| {
-                                    if let Some(ms) = datetime_local_to_epoch_ms(&e.value()) {
-                                        let old_start = started_at_signal();
-                                        let old_end = ended_at_signal();
-                                        if old_start > 0 && old_end > old_start {
-                                            let gap = old_end - old_start;
-                                            ended_at_signal.set(ms + gap);
-                                        }
-                                        started_at_signal.set(ms);
-                                    }
-                                },
-                                onblur: move |_| save_schedule(),
-                            }
-                        }
-                        div { class: "field",
-                            label { class: "field__label", "{tr.schedule_ends_at}" }
-                            input {
-                                class: "input",
-                                r#type: "datetime-local",
-                                "data-testid": "schedule-end",
-                                value: "{ended_at}",
-                                oninput: move |e| {
-                                    if let Some(ms) = datetime_local_to_epoch_ms(&e.value()) {
-                                        ended_at_signal.set(ms);
-                                    }
-                                },
-                                onblur: move |_| save_schedule(),
-                            }
                         }
                     }
                 }
@@ -146,7 +70,7 @@ pub fn ConfigCard() -> Element {
                         space_id,
                         action_id: action_id_signal,
                         saved_credits,
-                        started_at: started_at_signal(),
+                        action_status: action_status.clone(),
                     }
                     // Prerequisite — wired via update_space_action::Prerequisite
                     div { class: "tile", "data-testid": "tile-prereq",
