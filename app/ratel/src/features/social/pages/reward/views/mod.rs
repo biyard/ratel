@@ -600,7 +600,7 @@ fn render_combo(points: &[(String, i64, f64)]) -> String {
 
 fn render_donut(items: &[(String, i64, &str)], total: i64) -> String {
     if total <= 0 || items.is_empty() {
-        return "<svg class=\"donut\" viewBox=\"0 0 200 200\"><circle cx=\"100\" cy=\"100\" r=\"80\" fill=\"none\" stroke=\"rgba(255,255,255,0.05)\" stroke-width=\"21\"/></svg>".to_string();
+        return "<svg class=\"donut\" width=\"160\" height=\"160\" viewBox=\"0 0 200 200\"><circle cx=\"100\" cy=\"100\" r=\"80\" fill=\"none\" stroke=\"rgba(255,255,255,0.05)\" stroke-width=\"21\"/></svg>".to_string();
     }
     let cx = 100.0_f64;
     let cy = 100.0_f64;
@@ -629,7 +629,7 @@ fn render_donut(items: &[(String, i64, &str)], total: i64) -> String {
     }
 
     format!(
-        "<svg class=\"donut\" viewBox=\"0 0 200 200\"><circle cx=\"100\" cy=\"100\" r=\"80.5\" fill=\"none\" stroke=\"rgba(255,255,255,0.05)\" stroke-width=\"21\"/>{paths}<text x=\"100\" y=\"98\" text-anchor=\"middle\" font-family=\"Orbitron,sans-serif\" font-size=\"24\" font-weight=\"700\" fill=\"#f0f0f5\">{total_fmt}</text><text x=\"100\" y=\"116\" text-anchor=\"middle\" font-family=\"Orbitron,sans-serif\" font-size=\"8.5\" font-weight=\"600\" letter-spacing=\"2\" fill=\"#55556a\">POINTS</text></svg>",
+        "<svg class=\"donut\" width=\"160\" height=\"160\" viewBox=\"0 0 200 200\"><circle cx=\"100\" cy=\"100\" r=\"80.5\" fill=\"none\" stroke=\"rgba(255,255,255,0.05)\" stroke-width=\"21\"/>{paths}<text x=\"100\" y=\"98\" text-anchor=\"middle\" font-family=\"Orbitron,sans-serif\" font-size=\"24\" font-weight=\"700\" fill=\"#f0f0f5\">{total_fmt}</text><text x=\"100\" y=\"116\" text-anchor=\"middle\" font-family=\"Orbitron,sans-serif\" font-size=\"8.5\" font-weight=\"600\" letter-spacing=\"2\" fill=\"#55556a\">POINTS</text></svg>",
         paths = paths,
         total_fmt = format_points(total)
     )

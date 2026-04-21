@@ -3,7 +3,6 @@
 .home-arena .space-card {
   flex-shrink: 0;
   width: 400px;
-  min-height: 420px;
   padding: 26px 26px 22px;
   background: var(--ha-bg-glass);
   backdrop-filter: blur(16px);
@@ -374,11 +373,75 @@
 @media (max-width: 500px) {
   .home-arena .space-card {
     width: 300px;
-    min-height: 400px;
     padding: 22px 20px 18px;
     gap: 14px;
   }
   .home-arena .space-card__title { font-size: 17px; }
   .home-arena .space-card__desc { font-size: 12.5px; }
   .home-arena .space-card__logo { width: 48px; height: 48px; border-radius: 12px; }
+}
+
+/* Compact mode for short viewports (e.g. landscape phones) */
+@media (max-height: 760px) {
+  .home-arena .space-card {
+    padding: 18px 20px 16px;
+    gap: 10px;
+  }
+  .home-arena .space-card__logo { width: 44px; height: 44px; border-radius: 12px; }
+  .home-arena .space-card__title { font-size: 16px; }
+  .home-arena .space-card__desc {
+    font-size: 12px;
+    line-height: 1.45;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+  .home-arena .space-card__heat {
+    padding: 4px 9px;
+    font-size: 9px;
+  }
+  .home-arena .space-card__heat svg { width: 11px; height: 11px; }
+  .home-arena .space-card__rank { font-size: 10px; }
+  .home-arena .space-card__rank strong { font-size: 12px; }
+  .home-arena .space-card__category { font-size: 9px; }
+  .home-arena .space-stat { padding: 8px 4px; gap: 2px; }
+  .home-arena .space-stat__value { font-size: 14px; }
+  .home-arena .space-stat__label { font-size: 8px; letter-spacing: 0.08em; }
+  .home-arena .action-chip {
+    padding: 3px 8px;
+    font-size: 9px;
+  }
+  .home-arena .action-chip svg { width: 10px; height: 10px; }
+  .home-arena .space-card__footer { padding-top: 10px; }
+  .home-arena .space-card__reward { font-size: 12px; }
+  .home-arena .space-card__reward svg { width: 14px; height: 14px; }
+  .home-arena .space-card__reward small { font-size: 8px; }
+  .home-arena .space-card__cta {
+    padding: 7px 13px;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+  }
+  .home-arena .space-card__cta svg { width: 10px; height: 10px; }
+}
+
+/* Ultra-compact for very short viewports */
+@media (max-height: 620px) {
+  .home-arena .space-card {
+    padding: 14px 18px 12px;
+    gap: 8px;
+  }
+  .home-arena .space-card__logo { width: 40px; height: 40px; border-radius: 10px; }
+  .home-arena .space-card__title { font-size: 15px; }
+  .home-arena .space-card__desc {
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    font-size: 11.5px;
+  }
+  .home-arena .space-stat { padding: 6px 4px; }
+  .home-arena .space-stat__value { font-size: 13px; }
+  .home-arena .space-stat__label { font-size: 7.5px; }
+  .home-arena .space-card__footer { padding-top: 8px; }
+  .home-arena .space-card__cta {
+    padding: 6px 11px;
+    font-size: 8.5px;
+  }
 }

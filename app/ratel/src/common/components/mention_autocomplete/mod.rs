@@ -77,7 +77,15 @@ pub fn MentionAutocomplete(
                         evt.prevent_default();
                         selected_index.set(selected_index().saturating_sub(1));
                     }
-                    Key::Enter => {
+                    Key::Enter | Key::Tab => {
+                        // Leave modifier-qualified Enter/Tab for parent
+                        // shortcuts (e.g. Ctrl+Enter to submit).
+                        if evt.modifiers().contains(Modifiers::CONTROL)
+                            || evt.modifiers().contains(Modifiers::META)
+                            || evt.modifiers().contains(Modifiers::ALT)
+                        {
+                            return;
+                        }
                         if let Some(member) = filtered_for_keydown.get(selected_index()) {
                             evt.prevent_default();
                             evt.stop_propagation();
@@ -99,7 +107,7 @@ pub fn MentionAutocomplete(
                 div {
                     class: "absolute right-0 left-0 z-50 mt-1 max-h-[200px] overflow-y-auto rounded-lg shadow-lg bg-popover",
                     role: "listbox",
-                    for (i , member) in filtered.iter().enumerate() {
+                    for (i, member) in filtered.iter().enumerate() {
                         {
                             let is_selected = i == selected_index();
                             let member_for_click = member.clone();
@@ -109,6 +117,10 @@ pub fn MentionAutocomplete(
                                     class: "flex gap-2 items-center py-1 px-3 w-full text-left transition-colors text-text-primary aria-selected:bg-hover hover:bg-hover",
                                     role: "option",
                                     "aria-selected": is_selected,
+                                    // Preserve textarea focus across the click.
+                                    onmousedown: move |evt| {
+                                        evt.prevent_default();
+                                    },
                                     onclick: move |_| {
                                         let insert = build_mention_insert(&member_for_click, at_position(), &query());
                                         on_select.call(insert);
