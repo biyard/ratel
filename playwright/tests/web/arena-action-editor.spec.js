@@ -3,6 +3,7 @@ import {
   addPollQuestion,
   click,
   commitAutosave,
+  createAction as createActionShared,
   fill,
   fillPollQuestion,
   getEditor,
@@ -32,25 +33,15 @@ test.describe.serial("Arena action editor", () => {
     "enough to satisfy the minimum content length that the backend enforces " +
     "before a space can be spun up from the draft post.";
 
-  async function hideFab(page) {
-    await page.evaluate(() => {
-      const fab = document.querySelector('[class*="fixed right-4 bottom-4"]');
-      if (fab) fab.style.display = "none";
-    });
-  }
-
   /**
    * Open the TypePicker from the arena dashboard and create the requested
-   * action type. The arena auto-switches admins into the Creator role on
-   * pick and navigates to the creator page — there is no intermediate
-   * confirmation.
+   * action type. Delegates to the shared `createAction` helper which retries
+   * the add-card click until the TypePicker modal surfaces — the arena
+   * dashboard mounts the card via `use_loader`, so Dioxus can leave the
+   * onclick handler unbound briefly after the element becomes visible.
    */
   async function createAction(page, typeKey, urlRegex) {
-    await goto(page, spaceUrl);
-    await hideFab(page);
-    await click(page, { testId: "admin-add-action-card" });
-    await click(page, { testId: `type-option-${typeKey}` });
-    await page.waitForURL(urlRegex, { waitUntil: "load", timeout: 60000 });
+    await createActionShared(page, spaceUrl, typeKey, urlRegex);
   }
 
   test.beforeAll(async ({ browser }) => {
