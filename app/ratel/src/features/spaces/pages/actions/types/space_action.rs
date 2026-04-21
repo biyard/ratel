@@ -65,9 +65,12 @@ impl SpaceActionSummary {
                 space_id: space_id.clone(),
                 poll_id: self.action_id.clone().into(),
             },
-            SpaceActionType::TopicDiscussion => Route::DiscussionActionPage {
+            // Arena owns the discussion viewer. Legacy `Route::DiscussionActionPage`
+            // has been removed — callers outside the arena (e.g. the admin
+            // `/actions` list) redirect to the space index and let the user
+            // open the discussion from the quest dashboard.
+            SpaceActionType::TopicDiscussion => Route::SpaceIndexPage {
                 space_id: space_id.clone(),
-                discussion_id: self.action_id.clone().into(),
             },
             SpaceActionType::Follow => Route::FollowActionPage {
                 space_id: space_id.clone(),
