@@ -53,6 +53,16 @@ pub fn ArenaTopbar(
                 }
             }
             div { class: "arena-topbar__actions",
+                crate::features::notifications::components::NotificationBell {
+                    class: "hud-btn",
+                    onclick: move |_| {
+                        if active_panel() == ActivePanel::Notifications {
+                            active_panel.set(ActivePanel::None);
+                        } else {
+                            active_panel.set(ActivePanel::Notifications);
+                        }
+                    },
+                }
                 if is_admin {
                     if !is_published {
                         button {
