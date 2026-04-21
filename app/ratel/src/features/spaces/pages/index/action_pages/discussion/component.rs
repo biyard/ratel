@@ -551,7 +551,7 @@ pub fn DiscussionArenaPage(
                             on_submit: move |_| on_submit_comment(()),
                             placeholder: tr.comment_placeholder.to_string(),
                             disabled: comment_text().trim().is_empty()
-                                                                                                                                                                                                                                                                                                                                                    && pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                                                                                                                                && pending_images.read().is_empty(),
                             on_mention_query_change,
                             on_composer_focus,
                             priority_user_pks: top_priority,
@@ -712,33 +712,44 @@ fn CommentComposer(
     } else {
         rsx! {
             div { class: "comment-input", onpaste: on_paste,
-                div { class: "comment-input__wrapper",
-                    div { class: "comment-input__body",
-                        ImageUploadPreview { images: pending_images }
-                        MentionAutocomplete {
-                            text,
-                            on_select: on_mention_select,
-                            members,
-                            on_query_change: move |q| on_mention_query_change.call(q),
-                            textarea {
-                                class: "comment-input__textarea",
-                                placeholder: "{placeholder}",
-                                rows: "2",
-                                value: "{text}",
-                                oninput: move |e| {
-                                    text.set(e.value());
-                                },
-                                onkeydown: on_keydown,
-                                onfocus: move |_| on_composer_focus.call(()),
-                            }
+                ImageUploadPreview { images: pending_images }
+                div { class: "reply-input",
+                    MentionAutocomplete {
+                        text,
+                        on_select: on_mention_select,
+                        members,
+                        on_query_change: move |q| on_mention_query_change.call(q),
+                        priority_user_pks,
+                        textarea {
+                            class: "reply-input__field comment-input__textarea",
+                            placeholder: "{placeholder}",
+                            rows: "1",
+                            value: "{text}",
+                            oninput: move |e| {
+                                text.set(e.value());
+                            },
+                            onkeydown: on_keydown,
+                            onfocus: move |_| on_composer_focus.call(()),
                         }
-                        div { class: "comment-input__footer",
-                            button {
-                                class: "comment-input__submit",
-                                disabled,
-                                onclick: move |_| on_submit.call(()),
-                                "{tr.post_btn}"
+                    }
+                    button {
+                        class: "reply-input__send comment-input__submit",
+                        disabled,
+                        onclick: move |_| on_submit.call(()),
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            line {
+                                x1: "22",
+                                y1: "2",
+                                x2: "11",
+                                y2: "13",
                             }
+                            polygon { points: "22 2 15 22 11 13 2 9 22 2" }
                         }
                     }
                 }
@@ -1164,7 +1175,7 @@ fn CommentItem(
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
                         disabled: reply_text().trim().is_empty()
-                                                                                                                                                                                                                                                                                                    && reply_pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
                         on_mention_query_change,
                         on_composer_focus,
                         priority_user_pks: reply_priority,
