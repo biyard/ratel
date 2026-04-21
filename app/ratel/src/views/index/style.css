@@ -4,33 +4,49 @@
 
 .home-arena {
   --ha-bg-void: var(--dark, #06060e) var(--light, #f4f3ef);
-  --ha-bg-glass: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, rgba(255, 255, 255, 0.72));
-  --ha-bg-glass-hover: var(--dark, rgba(20, 20, 40, 0.80)) var(--light, rgba(255, 255, 255, 0.88));
-  --ha-border-subtle: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(0, 0, 0, 0.08));
+  --ha-bg-glass: var(--dark, rgba(12, 12, 26, 0.65))
+    var(--light, rgba(255, 255, 255, 0.72));
+  --ha-bg-glass-hover: var(--dark, rgba(20, 20, 40, 0.8))
+    var(--light, rgba(255, 255, 255, 0.88));
+  --ha-border-subtle: var(--dark, rgba(255, 255, 255, 0.06))
+    var(--light, rgba(0, 0, 0, 0.08));
   --ha-text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
   --ha-text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
   --ha-text-dim: var(--dark, #55556a) var(--light, #9999aa);
-  --ha-shadow-card: var(--dark, rgba(0, 0, 0, 0.5)) var(--light, rgba(0, 0, 0, 0.08));
+  --ha-shadow-card: var(--dark, rgba(0, 0, 0, 0.5))
+    var(--light, rgba(0, 0, 0, 0.08));
 
   position: relative;
   width: 100%;
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   background: var(--ha-bg-void);
   color: var(--ha-text-primary);
-  font-family: 'Outfit', sans-serif;
+  font-family: "Outfit", sans-serif;
 }
 
 .home-arena::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(252, 179, 0, 0.04) 0%, transparent 60%),
-    radial-gradient(ellipse 120% 100% at 50% 120%, rgba(110, 237, 216, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, var(--ha-bg-void) 0%, var(--ha-bg-void) 100%);
+    radial-gradient(
+      ellipse 80% 60% at 50% 50%,
+      rgba(252, 179, 0, 0.04) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 120% 100% at 50% 120%,
+      rgba(110, 237, 216, 0.03) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      var(--ha-bg-void) 0%,
+      var(--ha-bg-void) 100%
+    );
   z-index: 0;
 }
 
@@ -50,17 +66,18 @@
   gap: 14px;
 }
 .home-arena .arena-topbar__logo {
-  width: 40px; height: 40px;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
   object-fit: cover;
   border: 1px solid rgba(252, 179, 0, 0.15);
   box-shadow: 0 2px 12px var(--ha-shadow-card);
 }
 .home-arena .arena-topbar__title {
-  font-family: 'Orbitron', sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-weight: 800;
   font-size: 18px;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   background: linear-gradient(135deg, #fcb300, #ffd24a);
   -webkit-background-clip: text;
@@ -83,24 +100,34 @@
   margin-left: 12px;
 }
 .home-arena .arena-topbar__status::before {
-  content: '';
-  width: 5px; height: 5px;
+  content: "";
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: #6eedd8;
   box-shadow: 0 0 6px #6eedd8;
   animation: ha-pulse-dot 1.6s ease-in-out infinite;
 }
 @keyframes ha-pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
-.home-arena .arena-topbar__actions { display: flex; gap: 10px; }
+.home-arena .arena-topbar__actions {
+  display: flex;
+  gap: 10px;
+}
 
 /* ── HUD buttons ─────────────────────────────────── */
 .home-arena .hud-btn {
   position: relative;
-  width: 42px; height: 42px;
+  width: 42px;
+  height: 42px;
   border-radius: 11px;
   background: var(--ha-bg-glass);
   backdrop-filter: blur(16px);
@@ -119,34 +146,53 @@
   transform: translateY(-1px);
 }
 .home-arena .hud-btn svg {
-  width: 18px; height: 18px;
+  width: 18px;
+  height: 18px;
   color: var(--ha-text-muted);
   transition: color 0.2s;
 }
-.home-arena .hud-btn:hover svg { color: #fcb300; }
+.home-arena .hud-btn:hover svg {
+  color: #fcb300;
+}
 .home-arena .hud-btn--primary {
-  background: linear-gradient(135deg, rgba(252, 179, 0, 0.18), rgba(252, 179, 0, 0.06));
+  background: linear-gradient(
+    135deg,
+    rgba(252, 179, 0, 0.18),
+    rgba(252, 179, 0, 0.06)
+  );
   border-color: rgba(252, 179, 0, 0.3);
 }
-.home-arena .hud-btn--primary svg { color: #fcb300; }
-.home-arena .hud-btn--primary:hover { box-shadow: 0 0 20px rgba(252, 179, 0, 0.25); }
+.home-arena .hud-btn--primary svg {
+  color: #fcb300;
+}
+.home-arena .hud-btn--primary:hover {
+  box-shadow: 0 0 20px rgba(252, 179, 0, 0.25);
+}
 
 .home-arena .hud-btn--signin {
-  background: linear-gradient(135deg, rgba(110, 237, 216, 0.14), rgba(110, 237, 216, 0.04));
+  background: linear-gradient(
+    135deg,
+    rgba(110, 237, 216, 0.14),
+    rgba(110, 237, 216, 0.04)
+  );
   border-color: rgba(110, 237, 216, 0.28);
 }
-.home-arena .hud-btn--signin svg { color: #6eedd8; }
+.home-arena .hud-btn--signin svg {
+  color: #6eedd8;
+}
 .home-arena .hud-btn--signin:hover {
   border-color: rgba(110, 237, 216, 0.45);
   box-shadow: 0 0 20px rgba(110, 237, 216, 0.22);
 }
-.home-arena .hud-btn--signin:hover svg { color: #6eedd8; }
+.home-arena .hud-btn--signin:hover svg {
+  color: #6eedd8;
+}
 .home-arena .hud-btn__label {
   position: absolute;
   top: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  font-family: 'Orbitron', sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -157,11 +203,15 @@
   transition: opacity 0.2s ease;
   pointer-events: none;
 }
-.home-arena .hud-btn:hover .hud-btn__label { opacity: 1; }
+.home-arena .hud-btn:hover .hud-btn__label {
+  opacity: 1;
+}
 .home-arena .hud-btn__badge {
   position: absolute;
-  top: -4px; right: -4px;
-  min-width: 16px; height: 16px;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
   border-radius: 8px;
   background: #fcb300;
   color: #0a0a0a;
@@ -196,18 +246,24 @@
   opacity: 0;
   visibility: hidden;
   transform: translateY(-4px);
-  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    visibility 0s linear 0.18s;
   pointer-events: none;
 }
 .home-arena .hud-teams[aria-expanded="true"] .team-dd {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
-  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0s;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    visibility 0s linear 0s;
   pointer-events: auto;
 }
 .home-arena .team-dd__header {
-  font-family: 'Orbitron', sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -266,7 +322,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Orbitron', sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-size: 13px;
   font-weight: 700;
   border: 1px solid rgba(252, 179, 0, 0.18);
@@ -300,10 +356,10 @@
   padding: 10px 12px;
   flex-shrink: 0;
   border-top: 1px solid var(--ha-border-subtle);
-  font-family: 'Orbitron', sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #fcb300;
   cursor: pointer;
@@ -333,11 +389,17 @@
   gap: 10px;
 }
 .home-arena .section-label__dash {
-  width: 40px; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--ha-text-dim), transparent);
+  width: 40px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--ha-text-dim),
+    transparent
+  );
 }
 .home-arena .section-label__title {
-  font-family: 'Orbitron', sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.22em;
@@ -365,7 +427,7 @@
   padding: 6px 14px;
   border-radius: 100px;
   cursor: pointer;
-  font-family: 'Orbitron', sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -396,9 +458,10 @@
 }
 .home-arena .carousel-wrapper::before,
 .home-arena .carousel-wrapper::after {
-  content: '';
+  content: "";
   position: absolute;
-  top: 0; bottom: 0;
+  top: 0;
+  bottom: 0;
   width: 220px;
   z-index: 15;
   pointer-events: none;
@@ -423,7 +486,9 @@
   padding-left: calc(50vw - 200px);
   padding-right: calc(50vw - 200px);
 }
-.home-arena .carousel-track::-webkit-scrollbar { display: none; }
+.home-arena .carousel-track::-webkit-scrollbar {
+  display: none;
+}
 
 /* ── Dots ────────────────────────────────────────── */
 .home-arena .carousel-dots {
@@ -435,7 +500,8 @@
   padding: 12px 0 20px;
 }
 .home-arena .carousel-dot {
-  width: 8px; height: 8px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: rgba(136, 136, 168, 0.25);
   border: none;
@@ -483,18 +549,22 @@
   border-radius: 12px;
 }
 .home-arena .hud-stat__icon {
-  width: 32px; height: 32px;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: rgba(252, 179, 0, 0.10);
+  background: rgba(252, 179, 0, 0.1);
   color: #fcb300;
 }
-.home-arena .hud-stat__icon svg { width: 16px; height: 16px; }
+.home-arena .hud-stat__icon svg {
+  width: 16px;
+  height: 16px;
+}
 .home-arena .hud-stat--rising .hud-stat__icon {
-  background: rgba(110, 237, 216, 0.10);
+  background: rgba(110, 237, 216, 0.1);
   color: #6eedd8;
 }
 .home-arena .hud-stat__body {
@@ -505,15 +575,15 @@
   gap: 1px;
 }
 .home-arena .hud-stat__label {
-  font-family: 'Orbitron', sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-size: 9px;
   font-weight: 600;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ha-text-dim);
 }
 .home-arena .hud-stat__value {
-  font-family: 'Orbitron', sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-size: 15px;
   font-weight: 700;
   color: var(--ha-text-primary);
@@ -528,8 +598,12 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.home-arena .hud-stat__value strong { color: #fcb300; }
-.home-arena .hud-stat--rising .hud-stat__value strong { color: #6eedd8; }
+.home-arena .hud-stat__value strong {
+  color: #fcb300;
+}
+.home-arena .hud-stat--rising .hud-stat__value strong {
+  color: #6eedd8;
+}
 
 .home-arena .browse-btn {
   padding: 0 18px;
@@ -544,10 +618,10 @@
   gap: 8px;
   cursor: pointer;
   transition: all 0.25s ease;
-  font-family: 'Orbitron', sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ha-text-muted);
   flex-shrink: 0;
@@ -557,7 +631,10 @@
   border-color: rgba(252, 179, 0, 0.25);
   color: #fcb300;
 }
-.home-arena .browse-btn svg { width: 14px; height: 14px; }
+.home-arena .browse-btn svg {
+  width: 14px;
+  height: 14px;
+}
 
 /* ── Empty state ─────────────────────────────────── */
 .home-arena .home-arena__empty {
@@ -567,7 +644,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Orbitron', sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -582,34 +659,62 @@
     flex-wrap: wrap;
     gap: 10px;
   }
-  .home-arena .arena-topbar__brand { gap: 10px; }
-  .home-arena .arena-topbar__logo { width: 32px; height: 32px; }
-  .home-arena .arena-topbar__title { font-size: 14px; letter-spacing: 0.08em; }
-  .home-arena .arena-topbar__status { margin-left: 6px; padding: 2px 8px; font-size: 9px; }
+  .home-arena .arena-topbar__brand {
+    gap: 10px;
+  }
+  .home-arena .arena-topbar__logo {
+    width: 32px;
+    height: 32px;
+  }
+  .home-arena .arena-topbar__title {
+    font-size: 14px;
+    letter-spacing: 0.08em;
+  }
+  .home-arena .arena-topbar__status {
+    margin-left: 6px;
+    padding: 2px 8px;
+    font-size: 9px;
+  }
   .home-arena .arena-topbar__actions {
     gap: 8px;
     width: 100%;
     justify-content: space-between;
     order: 2;
   }
-  .home-arena .hud-btn { width: 46px; height: 46px; flex: 1; max-width: 64px; }
-  .home-arena .hud-btn__label { display: none; }
-  .home-arena .section-label__dash { width: 24px; }
-  .home-arena .section-label__title { font-size: 10px; letter-spacing: 0.18em; }
+  .home-arena .hud-btn {
+    width: 46px;
+    height: 46px;
+    flex: 1;
+    max-width: 64px;
+  }
+  .home-arena .hud-btn__label {
+    display: none;
+  }
+  .home-arena .section-label__dash {
+    width: 24px;
+  }
+  .home-arena .section-label__title {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+  }
   .home-arena .carousel-track {
     padding-left: calc(50vw - 150px);
     padding-right: calc(50vw - 150px);
     gap: 16px;
   }
   .home-arena .carousel-wrapper::before,
-  .home-arena .carousel-wrapper::after { width: 60px; }
+  .home-arena .carousel-wrapper::after {
+    width: 60px;
+  }
   .home-arena .bottom-bar {
     flex-direction: column;
     align-items: stretch;
     padding: 12px 16px 18px;
     gap: 8px;
   }
-  .home-arena .hud-stat { padding: 9px 12px; }
+  .home-arena .hud-stat {
+    padding: 9px 12px;
+  }
   .home-arena .browse-btn {
     justify-content: center;
     width: 100%;

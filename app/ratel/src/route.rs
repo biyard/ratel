@@ -20,12 +20,13 @@ use crate::features::spaces::pages::apps::apps::incentive_pool::SpaceIncentivePo
 use crate::features::spaces::pages::apps::apps::panels::SpacePanelsAppPage;
 use crate::features::spaces::pages::apps::Layout as SpaceAppsLayout;
 use crate::features::spaces::pages::apps::SpaceAppsPage;
+use crate::features::spaces::pages::index::action_pages::{
+    SpaceDiscussionCommentPage, SpaceDiscussionPage,
+};
 use crate::features::spaces::pages::index::SpaceIndexPage;
 
 // Space Actions
-use crate::features::spaces::pages::actions::actions::discussion::{
-    DiscussionActionEditorPage, DiscussionActionPage,
-};
+use crate::features::spaces::pages::actions::actions::discussion::DiscussionActionEditorPage;
 use crate::features::spaces::pages::actions::actions::follow::FollowActionPage;
 use crate::features::spaces::pages::actions::actions::poll::PollActionPage;
 use crate::features::spaces::pages::actions::actions::quiz::QuizActionPage;
@@ -164,12 +165,20 @@ pub enum Route {
                 #[route("/report")]
                 SpaceReportPage { space_id: SpacePartition },
 
+                // Deep link to a discussion (standalone page, no arena overlay).
+                #[route("/discussions/:discussion_id")]
+                SpaceDiscussionPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
+
+                // Deep link with a specific comment to scroll to + highlight.
+                // The comment id lives in the path (not query/fragment) because
+                // Dioxus Router strips both query strings and fragments during
+                // URL normalization on hydration.
+                #[route("/discussions/:discussion_id/comments/:comment_id")]
+                SpaceDiscussionCommentPage { space_id: SpacePartition, discussion_id: SpacePostEntityType, comment_id: String },
+
                 #[nest("/actions")]
                     #[route("/")]
                     SpaceActionsPage { space_id: SpacePartition },
-
-                    #[route("/discussions/:discussion_id")]
-                    DiscussionActionPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
 
                     #[route("/discussions/:discussion_id/edit")]
                     DiscussionActionEditorPage { space_id: SpacePartition, discussion_id: SpacePostEntityType },
