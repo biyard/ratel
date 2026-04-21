@@ -5,6 +5,10 @@ use crate::features::notifications::types::{NotificationsError, UnreadCountRespo
 
 const UNREAD_COUNT_CAP: i64 = 100;
 
+#[mcp_tool(
+    name = "get_unread_count",
+    description = "Return the count of unread notifications in the current user's inbox (capped at 100)."
+)]
 #[get("/api/inbox/unread-count", user: User)]
 pub async fn get_unread_count_handler() -> Result<UnreadCountResponse> {
     let cfg = crate::common::CommonConfig::default();
