@@ -1,5 +1,6 @@
 use crate::*;
 
+use crate::features::essence::EssenceSourcesPage;
 use crate::features::my_follower::MyFollowerPage;
 
 use crate::features::spaces::pages::dashboard::SpaceDashboardPage;
@@ -92,6 +93,9 @@ pub enum Route {
 
         #[route("/credentials")]
         CredentialsHome {  },
+
+        #[route("/essence")]
+        EssenceSourcesPage {},
 
         #[nest("/posts")]
             #[route("/")]

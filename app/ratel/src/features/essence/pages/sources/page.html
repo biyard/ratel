@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Essence Sources</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --bg-input:rgba(255,255,255,0.025);--bg-input-focus:rgba(255,255,255,0.04);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-coral:#ef4444;--accent-green:#22c55e;--accent-violet:#818cf8;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+    }
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+    body{overflow-x:hidden}
+
+    .arena{position:relative;min-height:100vh;display:flex;flex-direction:column;isolation:isolate}
+    .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 25% 10%,rgba(252,179,0,0.04) 0%,transparent 55%),radial-gradient(ellipse 60% 60% at 85% 90%,rgba(129,140,248,0.04) 0%,transparent 55%);z-index:-1;pointer-events:none}
+
+    .arena-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:18px 28px;background:rgba(6,6,14,0.80);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-subtle)}
+    .arena-topbar__left{display:flex;align-items:center;gap:14px}
+    .back-btn{width:38px;height:38px;border-radius:10px;background:var(--bg-glass);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0}
+    .back-btn:hover{border-color:rgba(252,179,0,0.25);background:var(--bg-glass-hover)}
+    .back-btn svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+    .back-btn:hover svg{color:var(--accent-gold)}
+    .topbar-title{display:flex;flex-direction:column;gap:2px}
+    .topbar-title__eyebrow{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim)}
+    .topbar-title__main{font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-primary)}
+    .topbar-btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--bg-glass);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all 0.25s ease;text-decoration:none}
+    .topbar-btn:hover{border-color:rgba(252,179,0,0.25);color:var(--accent-gold)}
+    .topbar-btn svg{width:13px;height:13px}
+    .topbar-btn--primary{background:linear-gradient(135deg,var(--accent-gold),#e5a200);color:#0a0a0a;border-color:transparent}
+    .topbar-btn--primary:hover{color:#0a0a0a}
+
+    .page{position:relative;z-index:1;flex:1;max-width:1080px;margin:0 auto;width:100%;padding:32px 28px 60px;display:flex;flex-direction:column;gap:22px}
+
+    /* ─── Hero bar ── */
+    .hero{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;padding:22px 26px;border-radius:18px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 50% 65% at 0% 40%,rgba(252,179,0,0.06) 0%,transparent 55%);pointer-events:none}
+    .hero > *{position:relative;z-index:1}
+    .hero__main{display:flex;flex-direction:column;gap:6px}
+    .hero__eyebrow{font-family:var(--font-display);font-size:9.5px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-dim)}
+    .hero__title{font-family:var(--font-display);font-size:24px;font-weight:700;letter-spacing:0.02em;color:var(--text-primary);display:flex;align-items:baseline;gap:12px}
+    .hero__title-count{background:linear-gradient(135deg,var(--accent-gold),var(--accent-teal));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-size:30px}
+    .hero__sub{font-size:13.5px;color:var(--text-muted)}
+
+    .hero__cta{display:inline-flex;align-items:center;gap:7px;padding:12px 18px;border-radius:11px;background:linear-gradient(135deg,var(--accent-gold),#e5a200);color:#0a0a0a;font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;border:none;cursor:pointer;transition:all 0.25s ease;box-shadow:0 2px 14px rgba(252,179,0,0.22);text-decoration:none}
+    .hero__cta:hover{transform:translateY(-1px);box-shadow:0 4px 22px rgba(252,179,0,0.38)}
+    .hero__cta svg{width:13px;height:13px}
+
+    /* ─── Source breakdown ── */
+    .breakdown{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+    .kind-card{padding:16px;border-radius:14px;background:var(--bg-glass);backdrop-filter:blur(14px);border:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:all 0.2s}
+    .kind-card:hover{border-color:rgba(255,255,255,0.10)}
+    .kind-card[data-selected="true"]{border-color:rgba(252,179,0,0.35);background:rgba(252,179,0,0.04);box-shadow:inset 0 0 0 1px rgba(252,179,0,0.15)}
+    .kind-card__head{display:flex;align-items:center;justify-content:space-between}
+    .kind-card__icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+    .kind-card__icon--all{background:linear-gradient(135deg,rgba(252,179,0,0.12),rgba(110,237,216,0.08));color:var(--accent-gold);border:1px solid rgba(252,179,0,0.22)}
+    .kind-card__icon--notion{background:#fff;color:#0a0a0a;font-family:var(--font-display);font-size:14px;font-weight:800}
+    .kind-card__icon--posts{background:rgba(252,179,0,0.08);color:var(--accent-gold);border:1px solid rgba(252,179,0,0.18)}
+    .kind-card__icon--comments{background:rgba(129,140,248,0.08);color:var(--accent-violet);border:1px solid rgba(129,140,248,0.18)}
+    .kind-card__icon--actions{background:rgba(110,237,216,0.06);color:var(--accent-teal);border:1px solid rgba(110,237,216,0.18)}
+    .kind-card__icon svg{width:15px;height:15px}
+    .kind-card__pct{font-family:var(--font-display);font-size:9.5px;font-weight:700;color:var(--text-dim);letter-spacing:0.06em}
+    .kind-card__value{font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--text-primary)}
+    .kind-card__label{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted)}
+
+    /* ─── Controls bar ── */
+    .controls{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}
+    .search{display:flex;align-items:center;gap:8px;padding:0 14px;height:42px;border-radius:11px;background:var(--bg-input);border:1px solid var(--border-subtle);transition:all 0.2s}
+    .search:focus-within{border-color:rgba(252,179,0,0.22);background:var(--bg-input-focus)}
+    .search svg{width:14px;height:14px;color:var(--text-dim)}
+    .search input{flex:1;background:transparent;border:none;outline:none;font-family:var(--font-body);font-size:13.5px;color:var(--text-primary)}
+    .search input::placeholder{color:var(--text-dim)}
+    .search kbd{font-family:var(--font-display);font-size:10px;padding:2px 6px;border-radius:5px;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);color:var(--text-dim);letter-spacing:0.06em}
+
+    .filter-group{display:inline-flex;padding:3px;border-radius:11px;background:var(--bg-input);border:1px solid var(--border-subtle);height:42px;align-items:center}
+    .filter-opt{padding:0 12px;height:34px;border-radius:8px;background:transparent;border:none;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
+    .filter-opt svg{width:11px;height:11px}
+    .filter-opt:hover{color:var(--text-primary)}
+    .filter-opt[aria-selected="true"]{background:rgba(252,179,0,0.10);color:var(--accent-gold)}
+
+    .sort-select{height:42px;padding:0 14px;border-radius:11px;background:var(--bg-input);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:10.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;outline:none}
+
+    /* ─── Bulk bar ── */
+    .bulk{display:none;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;background:linear-gradient(135deg,rgba(252,179,0,0.08),rgba(12,12,26,0.80));border:1px solid rgba(252,179,0,0.22)}
+    .bulk[data-open="true"]{display:flex}
+    .bulk__count{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent-gold)}
+    .bulk__count strong{color:var(--text-primary);font-size:14px}
+    .bulk__actions{display:flex;gap:6px;margin-left:auto}
+    .bulk-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-subtle);color:var(--text-muted);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+    .bulk-btn:hover{border-color:rgba(255,255,255,0.15);color:var(--text-primary)}
+    .bulk-btn--danger:hover{border-color:rgba(239,68,68,0.30);color:var(--accent-coral);background:rgba(239,68,68,0.04)}
+    .bulk-btn svg{width:11px;height:11px}
+
+    /* ─── Sources table ── */
+    .sources{display:flex;flex-direction:column;border-radius:16px;overflow:hidden;border:1px solid var(--border-subtle);background:var(--bg-glass);backdrop-filter:blur(14px)}
+    .src-head{display:grid;grid-template-columns:22px 22px 1fr 100px 120px 90px 80px 32px;gap:12px;padding:11px 18px;border-bottom:1px solid var(--border-subtle);background:rgba(0,0,0,0.20);font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);align-items:center}
+    .src-row{display:grid;grid-template-columns:22px 22px 1fr 100px 120px 90px 80px 32px;gap:12px;padding:13px 18px;align-items:center;border-bottom:1px solid var(--border-subtle);transition:all 0.2s}
+    .src-row:last-child{border-bottom:none}
+    .src-row:hover{background:rgba(255,255,255,0.02)}
+    .src-row[data-selected="true"]{background:rgba(252,179,0,0.04)}
+
+    .src-check{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border-strong);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:all 0.15s}
+    .src-check svg{width:10px;height:10px;color:#0a0a0a;opacity:0}
+    .src-row[data-selected="true"] .src-check{background:var(--accent-gold);border-color:var(--accent-gold)}
+    .src-row[data-selected="true"] .src-check svg{opacity:1}
+
+    .src-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .src-icon--notion{background:#fff;color:#0a0a0a;font-family:var(--font-display);font-size:12px;font-weight:800}
+    .src-icon--post{background:rgba(252,179,0,0.08);color:var(--accent-gold);border:1px solid rgba(252,179,0,0.18)}
+    .src-icon--comment{background:rgba(129,140,248,0.08);color:var(--accent-violet);border:1px solid rgba(129,140,248,0.18)}
+    .src-icon--action{background:rgba(110,237,216,0.06);color:var(--accent-teal);border:1px solid rgba(110,237,216,0.18)}
+    .src-icon svg{width:12px;height:12px}
+
+    .src-title-wrap{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .src-title{font-size:13.5px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .src-meta{font-size:11.5px;color:var(--text-dim);display:flex;gap:8px;align-items:center}
+    .src-meta a{color:var(--text-dim);text-decoration:none}
+    .src-meta a:hover{color:var(--accent-teal)}
+    .src-meta__dot{color:var(--border-strong)}
+
+    .src-words{font-family:var(--font-display);font-size:11.5px;font-weight:600;color:var(--text-muted);letter-spacing:0.04em}
+    .src-synced{font-size:12px;color:var(--text-muted)}
+
+    .src-quality{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:100px;font-family:var(--font-display);font-size:10px;font-weight:800;letter-spacing:0.04em;border:1px solid transparent}
+    .src-quality--high{background:rgba(34,197,94,0.06);color:var(--accent-green);border-color:rgba(34,197,94,0.20)}
+    .src-quality--med{background:rgba(252,179,0,0.06);color:var(--accent-gold);border-color:rgba(252,179,0,0.20)}
+    .src-quality--low{background:rgba(239,68,68,0.04);color:var(--accent-coral);border-color:rgba(239,68,68,0.20)}
+    .src-quality svg{width:10px;height:10px}
+
+    .switch{position:relative;width:34px;height:20px;border-radius:100px;background:rgba(255,255,255,0.06);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.25s;padding:0;justify-self:center}
+    .switch::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--text-muted);transition:all 0.25s}
+    .switch[aria-checked="true"]{background:rgba(34,197,94,0.25);border-color:rgba(34,197,94,0.40)}
+    .switch[aria-checked="true"]::after{transform:translateX(14px);background:var(--accent-green)}
+
+    .src-more{width:28px;height:28px;border-radius:7px;background:transparent;border:1px solid transparent;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:all 0.2s}
+    .src-more:hover{border-color:var(--border-subtle);color:var(--text-muted)}
+    .src-more svg{width:13px;height:13px}
+
+    /* ─── Pagination ── */
+    .pagination{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-top:1px solid var(--border-subtle);background:rgba(0,0,0,0.18)}
+    .pagination__info{font-size:12.5px;color:var(--text-muted)}
+    .pagination__info strong{color:var(--text-primary);font-weight:600}
+    .pagination__actions{display:flex;gap:6px;align-items:center}
+    .page-btn{width:32px;height:32px;border-radius:8px;background:var(--bg-glass);border:1px solid var(--border-subtle);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:11px;font-weight:700;padding:0}
+    .page-btn:hover{border-color:rgba(252,179,0,0.22);color:var(--accent-gold)}
+    .page-btn[aria-current="page"]{background:rgba(252,179,0,0.10);border-color:rgba(252,179,0,0.30);color:var(--accent-gold)}
+    .page-btn svg{width:12px;height:12px}
+
+    @media (max-width:960px){
+      .breakdown{grid-template-columns:repeat(3,1fr)}
+      .breakdown > :nth-child(n+6){display:none}
+      .controls{grid-template-columns:1fr}
+      .filter-group{overflow-x:auto;scrollbar-width:none}
+      .filter-group::-webkit-scrollbar{display:none}
+      .src-head,.src-row{grid-template-columns:22px 22px 1fr auto 32px}
+      .src-head > :nth-child(5),.src-head > :nth-child(6),.src-head > :nth-child(7),
+      .src-row > :nth-child(5),.src-row > :nth-child(6),.src-row > :nth-child(7){display:none}
+    }
+    @media (max-width:500px){
+      .arena-topbar{padding:12px 14px}
+      .topbar-title__eyebrow{display:none}
+      .hero{grid-template-columns:1fr}
+      .hero__cta{justify-self:flex-start}
+      .breakdown{grid-template-columns:1fr 1fr}
+      .page{padding:22px 14px 60px}
+    }
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <div class="arena-topbar">
+      <div class="arena-topbar__left">
+        <button class="back-btn" aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="topbar-title">
+          <span class="topbar-title__eyebrow">Essence</span>
+          <span class="topbar-title__main">Sources</span>
+        </div>
+      </div>
+      <a href="#" class="topbar-btn topbar-btn--primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add source
+      </a>
+    </div>
+
+    <main class="page">
+
+      <!-- HERO -->
+      <section class="hero">
+        <div class="hero__main">
+          <span class="hero__eyebrow">Your Essence</span>
+          <h1 class="hero__title">
+            <span class="hero__title-count">1,204</span>
+            sources · 14,238 chunks · ~3.8M tokens
+          </h1>
+          <p class="hero__sub">Everything feeding your Essence House. Toggle to include/exclude from the public inference layer.</p>
+        </div>
+        <a href="#" class="hero__cta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Open my House
+        </a>
+      </section>
+
+      <!-- SOURCE BREAKDOWN -->
+      <section class="breakdown">
+        <article class="kind-card" data-selected="true">
+          <div class="kind-card__head">
+            <span class="kind-card__icon kind-card__icon--all">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </span>
+            <span class="kind-card__pct">100%</span>
+          </div>
+          <span class="kind-card__value">1,204</span>
+          <span class="kind-card__label">All</span>
+        </article>
+
+        <article class="kind-card">
+          <div class="kind-card__head">
+            <span class="kind-card__icon kind-card__icon--notion">N</span>
+            <span class="kind-card__pct">28%</span>
+          </div>
+          <span class="kind-card__value">342</span>
+          <span class="kind-card__label">Notion</span>
+        </article>
+
+        <article class="kind-card">
+          <div class="kind-card__head">
+            <span class="kind-card__icon kind-card__icon--posts">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+            </span>
+            <span class="kind-card__pct">41%</span>
+          </div>
+          <span class="kind-card__value">498</span>
+          <span class="kind-card__label">Ratel posts</span>
+        </article>
+
+        <article class="kind-card">
+          <div class="kind-card__head">
+            <span class="kind-card__icon kind-card__icon--comments">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </span>
+            <span class="kind-card__pct">24%</span>
+          </div>
+          <span class="kind-card__value">287</span>
+          <span class="kind-card__label">Comments</span>
+        </article>
+
+        <article class="kind-card">
+          <div class="kind-card__head">
+            <span class="kind-card__icon kind-card__icon--action">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </span>
+            <span class="kind-card__pct">7%</span>
+          </div>
+          <span class="kind-card__value">77</span>
+          <span class="kind-card__label">Actions</span>
+        </article>
+      </section>
+
+      <!-- CONTROLS -->
+      <section class="controls">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Search sources by title, content, or tag…" />
+          <kbd>⌘ K</kbd>
+        </div>
+
+        <div class="filter-group">
+          <button class="filter-opt" aria-selected="true">All</button>
+          <button class="filter-opt">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Active
+          </button>
+          <button class="filter-opt">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            Paused
+          </button>
+          <button class="filter-opt">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            AI flagged
+          </button>
+        </div>
+
+        <select class="sort-select">
+          <option>Last synced ↓</option>
+          <option>Last edited ↓</option>
+          <option>Word count ↓</option>
+          <option>Quality ↓</option>
+          <option>Title A–Z</option>
+        </select>
+      </section>
+
+      <!-- BULK BAR -->
+      <div class="bulk" id="bulkBar" data-open="false">
+        <span class="bulk__count"><strong id="bulkCount">0</strong> selected</span>
+        <div class="bulk__actions">
+          <button class="bulk-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            Pause
+          </button>
+          <button class="bulk-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Re-embed
+          </button>
+          <button class="bulk-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Flag as AI
+          </button>
+          <button class="bulk-btn bulk-btn--danger">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+            Remove
+          </button>
+        </div>
+      </div>
+
+      <!-- SOURCES TABLE -->
+      <section class="sources">
+        <header class="src-head">
+          <span></span>
+          <span></span>
+          <span>Title</span>
+          <span>Words</span>
+          <span>Last sync</span>
+          <span>Quality</span>
+          <span style="text-align:center">In House</span>
+          <span></span>
+        </header>
+
+        <div class="src-row" data-selected="false">
+          <button class="src-check" data-row-check aria-label="Select">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <span class="src-icon src-icon--notion">N</span>
+          <div class="src-title-wrap">
+            <span class="src-title">Why MCP changes everything for knowledge creators</span>
+            <span class="src-meta"><a href="#">Notion · /workspace/essay/mcp</a><span class="src-meta__dot">·</span>6 chunks</span>
+          </div>
+          <span class="src-words">1,340</span>
+          <span class="src-synced">2m ago</span>
+          <span class="src-quality src-quality--high">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            4.8
+          </span>
+          <button class="switch" aria-checked="true" aria-label="In House"></button>
+          <button class="src-more" aria-label="More">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+        </div>
+
+        <div class="src-row" data-selected="false">
+          <button class="src-check" data-row-check aria-label="Select">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <span class="src-icon src-icon--post">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+          </span>
+          <div class="src-title-wrap">
+            <span class="src-title">Three years of decentralization arguments, reviewed</span>
+            <span class="src-meta"><a href="#">Ratel post · /p/decent-review</a><span class="src-meta__dot">·</span>23 chunks<span class="src-meta__dot">·</span>142 likes</span>
+          </div>
+          <span class="src-words">5,210</span>
+          <span class="src-synced">3d ago</span>
+          <span class="src-quality src-quality--high">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            4.9
+          </span>
+          <button class="switch" aria-checked="true" aria-label="In House"></button>
+          <button class="src-more" aria-label="More">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+        </div>
+
+        <div class="src-row" data-selected="false">
+          <button class="src-check" data-row-check aria-label="Select">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <span class="src-icon src-icon--notion">N</span>
+          <div class="src-title-wrap">
+            <span class="src-title">Notes on governance token design (2026 draft)</span>
+            <span class="src-meta"><a href="#">Notion · /workspace/drafts/gov-token</a><span class="src-meta__dot">·</span>12 chunks</span>
+          </div>
+          <span class="src-words">2,870</span>
+          <span class="src-synced">18m ago</span>
+          <span class="src-quality src-quality--high">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            4.6
+          </span>
+          <button class="switch" aria-checked="true" aria-label="In House"></button>
+          <button class="src-more" aria-label="More">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+        </div>
+
+        <div class="src-row" data-selected="false">
+          <button class="src-check" data-row-check aria-label="Select">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <span class="src-icon src-icon--comment">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </span>
+          <div class="src-title-wrap">
+            <span class="src-title">Reply on "Why quadratic voting fails in practice"</span>
+            <span class="src-meta"><a href="#">Ratel comment · /p/qv-fails#c42</a><span class="src-meta__dot">·</span>2 chunks</span>
+          </div>
+          <span class="src-words">420</span>
+          <span class="src-synced">yesterday</span>
+          <span class="src-quality src-quality--med">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            3.7
+          </span>
+          <button class="switch" aria-checked="true" aria-label="In House"></button>
+          <button class="src-more" aria-label="More">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+        </div>
+
+        <div class="src-row" data-selected="false">
+          <button class="src-check" data-row-check aria-label="Select">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <span class="src-icon src-icon--notion">N</span>
+          <div class="src-title-wrap">
+            <span class="src-title">Interview prep — Ratel Series A (draft)</span>
+            <span class="src-meta"><a href="#">Notion · /workspace/interview-prep</a><span class="src-meta__dot">·</span>2 chunks<span class="src-meta__dot">·</span><span style="color:var(--accent-coral)">Paused</span></span>
+          </div>
+          <span class="src-words">460</span>
+          <span class="src-synced">yesterday</span>
+          <span class="src-quality src-quality--med">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            3.4
+          </span>
+          <button class="switch" aria-checked="false" aria-label="In House"></button>
+          <button class="src-more" aria-label="More">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+        </div>
+
+        <div class="src-row" data-selected="false">
+          <button class="src-check" data-row-check aria-label="Select">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <span class="src-icon src-icon--action">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </span>
+          <div class="src-title-wrap">
+            <span class="src-title">Vote: Ratel Treasury Allocation Q2 — Yes with reasoning</span>
+            <span class="src-meta"><a href="#">Ratel action · /spaces/treasury/poll-q2</a><span class="src-meta__dot">·</span>1 chunk</span>
+          </div>
+          <span class="src-words">180</span>
+          <span class="src-synced">2d ago</span>
+          <span class="src-quality src-quality--med">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            4.1
+          </span>
+          <button class="switch" aria-checked="true" aria-label="In House"></button>
+          <button class="src-more" aria-label="More">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+        </div>
+
+        <div class="src-row" data-selected="false">
+          <button class="src-check" data-row-check aria-label="Select">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <span class="src-icon src-icon--notion">N</span>
+          <div class="src-title-wrap">
+            <span class="src-title">Weekly rituals — productivity experiments</span>
+            <span class="src-meta"><a href="#">Notion · /workspace/rituals</a><span class="src-meta__dot">·</span>4 chunks<span class="src-meta__dot">·</span><span style="color:var(--accent-violet)">AI flagged</span></span>
+          </div>
+          <span class="src-words">930</span>
+          <span class="src-synced">5d ago</span>
+          <span class="src-quality src-quality--low">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            2.3
+          </span>
+          <button class="switch" aria-checked="false" aria-label="In House"></button>
+          <button class="src-more" aria-label="More">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+        </div>
+
+        <div class="pagination">
+          <span class="pagination__info">Showing <strong>1 – 7</strong> of <strong>1,204</strong></span>
+          <div class="pagination__actions">
+            <button class="page-btn" aria-label="Previous">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button class="page-btn" aria-current="page">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">3</button>
+            <button class="page-btn">…</button>
+            <button class="page-btn">172</button>
+            <button class="page-btn" aria-label="Next">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    // Switch toggles
+    document.querySelectorAll('.switch').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        btn.setAttribute('aria-checked', btn.getAttribute('aria-checked') !== 'true');
+      });
+    });
+
+    // Row selection / bulk bar
+    const bulkBar = document.getElementById('bulkBar');
+    const bulkCount = document.getElementById('bulkCount');
+
+    function updateBulk(){
+      const selected = document.querySelectorAll('.src-row[data-selected="true"]').length;
+      bulkCount.textContent = selected;
+      bulkBar.setAttribute('data-open', selected > 0 ? 'true' : 'false');
+    }
+
+    document.querySelectorAll('[data-row-check]').forEach(function(chk){
+      chk.addEventListener('click', function(e){
+        e.stopPropagation();
+        const row = chk.closest('.src-row');
+        const next = row.getAttribute('data-selected') !== 'true';
+        row.setAttribute('data-selected', next ? 'true' : 'false');
+        updateBulk();
+      });
+    });
+
+    // Filter group
+    document.querySelectorAll('.filter-group').forEach(function(group){
+      const opts = group.querySelectorAll('.filter-opt');
+      opts.forEach(function(opt){
+        opt.addEventListener('click', function(){
+          opts.forEach(function(o){ o.setAttribute('aria-selected', 'false'); });
+          opt.setAttribute('aria-selected', 'true');
+        });
+      });
+    });
+
+    // Kind card selection (visual only)
+    document.querySelectorAll('.kind-card').forEach(function(card){
+      card.addEventListener('click', function(){
+        document.querySelectorAll('.kind-card').forEach(function(c){ c.setAttribute('data-selected', 'false'); });
+        card.setAttribute('data-selected', 'true');
+      });
+    });
+  </script>
+</body>
+</html>
