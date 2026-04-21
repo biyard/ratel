@@ -56,6 +56,12 @@ pub async fn reply_comment(
         p.to_string()
     };
     let parent_sk_str = comment_sk_entity.to_string();
+    // Preserve the parent's UUID for the mention CTA — `comment_sk_entity`
+    // is moved into `SpacePostComment::reply` below, so extract first.
+    let parent_comment_id: String = match &comment_sk_entity {
+        EntityType::SpacePostComment(id) => id.clone(),
+        _ => String::new(),
+    };
 
     let comment = SpacePostComment::reply(
         cli,
@@ -81,18 +87,18 @@ pub async fn reply_comment(
 
     // XP recording is now handled via EventBridge on SPACE_POST_COMMENT_REPLY# INSERT
 
-    // let cta_url = format!(
-    //     "{}/spaces/{}/actions/discussion/{}",
-    //     crate::common::config::site_base_url(),
-    //     space_id,
-    //     discussion_sk
-    // );
-
-    // FIXME: This is the same CTA URL as the parent comment — ideally it should deep link to the reply, but that requires frontend support to parse URL params and scroll to the right comment. For now we link to the discussion page and let users find their comment via the "Your activity" section.
+    // Deep-link to the parent comment — replies are lazy-loaded, so we
+    // can't jump to the reply itself in Phase 1. Landing on the parent
+    // still works: the recipient sees the highlighted parent with the
+    // "N replies" toggle right beneath it, one click away. Comment id is
+    // in the path (not query/fragment) because Dioxus Router strips both
+    // during URL normalization.
     let cta_url = format!(
-        "{}/spaces/{}",
+        "{}/spaces/{}/discussions/{}/comments/{}",
         crate::common::config::site_base_url(),
         space_id,
+        discussion_sk,
+        parent_comment_id,
     );
 
     // Send mention notifications
