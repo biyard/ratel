@@ -11,7 +11,7 @@
 
 .essence-src-head {
   display: grid;
-  grid-template-columns: 22px 22px 1fr 100px 120px 90px 80px 32px;
+  grid-template-columns: 22px 1fr 100px 120px 32px;
   gap: 12px;
   padding: 11px 18px;
   border-bottom: 1px solid var(--border-subtle);
@@ -26,7 +26,7 @@
 }
 .essence-src-row {
   display: grid;
-  grid-template-columns: 22px 22px 1fr 100px 120px 90px 80px 32px;
+  grid-template-columns: 22px 1fr 100px 120px 32px;
   gap: 12px;
   padding: 13px 18px;
   align-items: center;
@@ -221,6 +221,10 @@
   background: var(--accent-green);
 }
 
+.essence-src-menu-wrap {
+  position: relative;
+  justify-self: end;
+}
 .essence-src-more {
   width: 28px;
   height: 28px;
@@ -242,6 +246,43 @@
 .essence-src-more svg {
   width: 13px;
   height: 13px;
+}
+
+.essence-src-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 140px;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--dark, #12121a) var(--light, #ffffff);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 8px 24px var(--dark, rgba(0, 0, 0, 0.5)) var(--light, rgba(0, 0, 0, 0.12));
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.essence-src-menu__item {
+  background: transparent;
+  border: 0;
+  padding: 8px 12px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.essence-src-menu__item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.essence-src-menu__item--danger {
+  color: var(--accent-coral);
+}
+.essence-src-menu__item--danger:hover {
+  background: rgba(239, 68, 68, 0.08);
 }
 
 /* ── Pagination ── */
@@ -332,14 +373,10 @@
 @media (max-width: 960px) {
   .essence-src-head,
   .essence-src-row {
-    grid-template-columns: 22px 22px 1fr auto 32px;
+    grid-template-columns: 22px 1fr auto 32px;
   }
-  .essence-src-head > :nth-child(5),
-  .essence-src-head > :nth-child(6),
-  .essence-src-head > :nth-child(7),
-  .essence-src-row > :nth-child(5),
-  .essence-src-row > :nth-child(6),
-  .essence-src-row > :nth-child(7) {
+  .essence-src-head > :nth-child(4),
+  .essence-src-row > :nth-child(4) {
     display: none;
   }
 }

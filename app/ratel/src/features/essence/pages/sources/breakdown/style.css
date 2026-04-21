@@ -94,7 +94,6 @@
 
 @media (max-width: 960px) {
   .essence-breakdown { grid-template-columns: repeat(3, 1fr); }
-  .essence-breakdown > :nth-child(n+6) { display: none; }
 }
 @media (max-width: 500px) {
   .essence-breakdown { grid-template-columns: 1fr 1fr; }

@@ -8,7 +8,10 @@ use crate::*;
 #[component]
 pub fn EssenceSourcesPage() -> Element {
     let tr: EssenceSourcesTranslate = use_translate();
-    let _hook = use_essence_sources();
+    // Initialise the shared hook here so every sub-component picks it up
+    // via context. The `?` surfaces `Loader` suspension to the parent
+    // `SuspenseBoundary` rather than each individual child.
+    let _hook = use_essence_sources()?;
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
