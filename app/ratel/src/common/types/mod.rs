@@ -40,3 +40,6 @@ pub use event_bridge_envelope::*;
 
 mod file;
 pub use file::*;
+
+pub mod inbox_kind;
+pub use inbox_kind::*;
