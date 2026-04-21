@@ -141,6 +141,12 @@ fn generate_enum_impl(ident: Ident, ds: &DataEnum) -> proc_macro2::TokenStream {
                         type Err = crate::Error;
 
                         fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+                            // Normalize URL-encoded `#` so callers that pass raw URL paths
+                            // (e.g. SSR path extractors) still match the prefix. Old SES
+                            // emails linked to `/spaces/SPACE%23{uuid}` — without this,
+                            // `starts_with("SPACE#")` would miss and the prefix would leak
+                            // into the stored id.
+                            let s = s.replace("%23", "#");
                             let s = if s.starts_with(#prefix) {
                                 s.replace(#prefix, "").to_string()
                             } else {
@@ -168,6 +174,7 @@ fn generate_enum_impl(ident: Ident, ds: &DataEnum) -> proc_macro2::TokenStream {
 
                     impl From<String> for #struct_name {
                         fn from(s: String) -> Self {
+                            let s = s.replace("%23", "#");
                             let s = if s.starts_with(#prefix) {
                                 s.replace(#prefix, "").to_string()
                             } else {
