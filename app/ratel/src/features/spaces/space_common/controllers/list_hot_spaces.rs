@@ -51,7 +51,11 @@ pub async fn list_hot_spaces_handler(
     let conf = crate::common::config::ServerConfig::default();
     let cli = conf.dynamodb();
 
-    let opts = SpaceCommon::opt_with_bookmark(bookmark).limit(10);
+    // Fetch a wider window than the page size so the activity-score ranking
+    // reflects the top spaces globally rather than only the page slice. The
+    // bookmark still paginates through the scored list on the client side by
+    // echoing the raw DynamoDB bookmark.
+    let opts = SpaceCommon::opt_with_bookmark(bookmark).limit(50);
     let visibility_pk = format!(
         "{}#{}",
         SpacePublishState::Published,
@@ -83,7 +87,7 @@ pub async fn list_hot_spaces_handler(
         .collect();
 
     let mut items: Vec<HotSpaceResponse> = Vec::with_capacity(spaces.len());
-    for (idx, space) in spaces.into_iter().enumerate() {
+    for space in spaces.into_iter() {
         let post_pk = space.pk.clone().to_post_key().ok();
         let post_pk_str = post_pk.as_ref().map(|p| p.to_string()).unwrap_or_default();
 
@@ -115,12 +119,40 @@ pub async fn list_hot_spaces_handler(
             follow_count,
             total_actions,
             heat,
-            rank: idx as i64 + 1,
+            rank: 0,
             created_at: space.created_at,
         });
     }
 
+    // Rank by activity score so the carousel surfaces spaces with real
+    // engagement, not just whichever spaces DynamoDB returned first.
+    let now_ms = crate::common::utils::time::get_now_timestamp_millis();
+    items.sort_by(|a, b| {
+        activity_score(b, now_ms)
+            .partial_cmp(&activity_score(a, now_ms))
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    items.truncate(10);
+    for (idx, item) in items.iter_mut().enumerate() {
+        item.rank = idx as i64 + 1;
+    }
+
     Ok((items, next_bookmark).into())
+}
+
+/// Activity score combining cumulative participation, action richness, and a
+/// freshness bonus for recently created spaces. Tuned so a 10k-participant
+/// established space still ranks above a brand-new empty one, while a fresh
+/// space with a handful of actions can outrank a stagnant large space.
+fn activity_score(item: &HotSpaceResponse, now_ms: i64) -> f64 {
+    let participants = (item.participants.max(0) as f64).ln_1p();
+    let actions = item.total_actions.max(0) as f64;
+    let age_days = ((now_ms - item.created_at).max(0) as f64) / (1000.0 * 60.0 * 60.0 * 24.0);
+    // Half-life of ~14 days: e^(-age/14). Stays close to 1 for the first week,
+    // falls below 0.5 after two weeks, and becomes negligible after ~2 months.
+    let freshness = (-age_days / 14.0).exp();
+
+    participants * 3.0 + actions * 2.0 + freshness * 5.0
 }
 
 #[cfg(feature = "server")]
