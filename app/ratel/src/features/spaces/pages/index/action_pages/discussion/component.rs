@@ -7,9 +7,9 @@ use crate::common::components::CommentImageGrid;
 use crate::common::hooks::use_interval;
 use crate::common::utils::mention::{apply_mention_markup, parse_mention_segments, ContentSegment};
 use crate::features::spaces::pages::actions::actions::discussion::controllers::{
-    add_comment, delete_comment, get_comment, get_discussion_detail, like_comment, list_comments,
-    list_replies, reply_comment, update_comment, AddCommentRequest, LikeCommentRequest,
-    ReplyCommentRequest, UpdateCommentRequest,
+    add_comment, delete_comment, get_discussion_detail, like_comment, list_comments, list_replies,
+    reply_comment, update_comment, AddCommentRequest, LikeCommentRequest, ReplyCommentRequest,
+    UpdateCommentRequest,
 };
 use crate::features::spaces::pages::actions::actions::discussion::{
     DiscussionCommentResponse, DiscussionStatus, SpacePostCommentTargetEntityType,
@@ -54,18 +54,6 @@ fn is_arena_mobile_viewport() -> bool {
         .and_then(|v| v.as_f64())
         .unwrap_or(0.0);
     width_px > 0.0 && width_px <= 500.0
-}
-
-/// Context provided by `DiscussionArenaPage` so any `CommentItem` deep
-/// in the comments list can trigger the in-sheet thread view (mobile
-/// Reply tap) without threading a signal through every prop chain.
-/// `active = Some(comment_id)` swaps the panel content over; `None`
-/// shows the normal comments list. `sheet_expanded` lets the tap also
-/// force-open the bottom sheet so the swap is immediately visible.
-#[derive(Clone, Copy)]
-struct ActiveReplyThreadCtx {
-    active: Signal<Option<String>>,
-    sheet_expanded: Signal<bool>,
 }
 
 /// Routable wrapper for `DiscussionArenaPage`. Registered on
@@ -120,11 +108,18 @@ pub fn SpaceDiscussionCommentPage(
 /// the discussion's comments list without popping the route stack.
 /// Layout: parent pinned on top, scrollable replies below, composer at
 /// the bottom.
+///
+/// Loaders for the parent comment and its replies live in the
+/// `UseDiscussionArena` controller (built once at `DiscussionArenaPage`
+/// mount), not here, so that `active_reply_thread` flipping to `Some`
+/// triggers a background refresh on those loaders rather than mounting
+/// fresh ones — the mount path was suspending up to the overlay's
+/// `SuspenseBoundary` and unmounting the entire arena page during the
+/// initial fetch (the "arena index briefly visible" flash).
 #[component]
 fn ReplyThreadView(
     space_id: ReadSignal<SpacePartition>,
     discussion_id: ReadSignal<SpacePostEntityType>,
-    comment_id: String,
     on_close: EventHandler<()>,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
@@ -132,29 +127,20 @@ fn ReplyThreadView(
     let role = use_space_role()();
     let space = use_space()();
 
-    let comment_id_sig: ReadSignal<String> = use_signal(|| comment_id.clone()).into();
-
-    // Fetch the parent comment (author, content, reply count). `get_comment`
-    // returns `DiscussionCommentResponse` with liked/counts already resolved
-    // for the current viewer.
-    let mut parent_loader = use_loader(move || async move {
-        let sk = SpacePostCommentEntityType(comment_id_sig());
-        get_comment(space_id(), discussion_id(), sk).await
-    })?;
+    let UseDiscussionArena {
+        mut parent_loader,
+        mut replies_loader,
+        ..
+    } = use_discussion_arena(space_id, discussion_id)?;
     let parent = parent_loader();
 
-    // Fetch the replies. The list is owned by this page as a Signal so
-    // optimistic insert/delete/edit from ReplyItem and the composer below
-    // can mutate it in place.
-    let mut replies_loader = use_loader(move || async move {
-        let sk = SpacePostCommentEntityType(comment_id_sig());
-        list_replies(space_id(), discussion_id(), sk, None).await
-    })?;
+    // Owned mutation signal seeded from the controller's reply loader.
+    // Optimistic insert/edit/delete from `ReplyItem` and the composer
+    // below mutates this signal in place; a `replies_loader` background
+    // reload (after `active_reply_thread` flips to a different comment,
+    // or after a parent refresh) re-syncs us via the effect below.
     let mut replies: Signal<Vec<DiscussionCommentResponse>> =
         use_signal(move || replies_loader().items);
-    // Keep the owned signal synced whenever the loader restarts (e.g. after
-    // a delete). `use_effect` subscribes to replies_loader() so the sync
-    // fires on every loader change.
     use_effect(move || {
         let fresh = replies_loader().items;
         if replies.peek().len() != fresh.len() {
@@ -230,12 +216,25 @@ fn ReplyThreadView(
     };
 
     // Optimistic like state for the parent — mirrors `CommentItem`. The
-    // signals are seeded from the first loader result and hold local UI
-    // state from there (server confirmations don't reset them, a
-    // `parent_loader.restart()` does).
-    let mut parent_liked = use_signal(|| parent.liked);
-    let mut parent_likes = use_signal(|| parent.likes as i64);
+    // signals seed empty and pick up the real values via the effect
+    // below once the cached loader resolves (loader may still be on the
+    // previous value at mount time because the controller-level reload
+    // is in flight). After seeding, optimistic toggles own the UI; we
+    // re-sync only when the parent's `sk` changes (e.g., user opens a
+    // different thread).
+    let mut parent_liked = use_signal(|| false);
+    let mut parent_likes = use_signal(|| 0i64);
     let mut parent_like_processing = use_signal(|| false);
+    let mut last_synced_parent_sk: Signal<String> = use_signal(String::new);
+    use_effect(move || {
+        let p = parent_loader();
+        let sk = p.sk.to_string();
+        if !sk.is_empty() && sk != last_synced_parent_sk() {
+            parent_liked.set(p.liked);
+            parent_likes.set(p.likes as i64);
+            last_synced_parent_sk.set(sk);
+        }
+    });
     let parent_sk_for_like = parent.sk.clone();
     let on_parent_like = move |_| {
         let target_sk: SpacePostCommentTargetEntityType =
@@ -266,10 +265,15 @@ fn ReplyThreadView(
     };
 
     // Priority: parent author first, then reply authors newest-first.
-    // Same helper the inline reply composer uses.
-    let parent_author_pk = parent.author_pk.to_string();
-    let parent_content = parent.content.clone();
+    // Same helper the inline reply composer uses. Read `parent_loader`
+    // inside the memo so the priority rebuilds once the cached loader
+    // resolves with the real parent (it may have been on the default
+    // value at mount time, since the controller-level loader refreshes
+    // in the background after `active_reply_thread` flips).
     let reply_priority = use_memo(move || {
+        let p = parent_loader();
+        let parent_author_pk = p.author_pk.to_string();
+        let parent_content = p.content.clone();
         let replies_vec = replies.read();
         let tuples: Vec<(String, String)> = replies_vec
             .iter()
@@ -422,7 +426,7 @@ fn ReplyThreadView(
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
                         disabled: reply_text().trim().is_empty()
-                                                                                                                                                    && reply_pending_images.read().is_empty(),
+                                                                                                                                                                            && reply_pending_images.read().is_empty(),
                         on_mention_query_change,
                         on_composer_focus,
                         priority_user_pks: reply_priority,
@@ -597,22 +601,16 @@ pub fn DiscussionArenaPage(
     let mut tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
     let mut pending_images: Signal<Vec<PendingImage>> = use_signal(Vec::new);
 
-    // Mobile-only thread drill-down state. `CommentItem` consumes this
-    // via `use_context` so any comment anywhere in the list can swap the
-    // panel over to the thread view without threading a signal through
-    // every prop. Stays `None` on desktop (nothing sets it there).
-    let active_reply_thread: Signal<Option<String>> = use_signal(|| None);
-    // Sheet expanded state is owned by Dioxus (not by JS) so Dioxus
-    // re-renders don't clobber it. The signal drives a `data-expanded`
-    // attribute on `.comments-panel`, and the handle tap toggles it via
-    // a Rust onclick. Without this, tapping Reply re-rendered the panel
-    // while JS still owned the `.expanded` class, which got cleared
-    // during the diff and collapsed the sheet.
-    let mut sheet_expanded: Signal<bool> = use_signal(|| false);
-    use_context_provider(|| ActiveReplyThreadCtx {
-        active: active_reply_thread,
-        sheet_expanded,
-    });
+    // Per-discussion controller. Builds and provides `UseDiscussionArena`
+    // on first call; descendants (`CommentItem`, `ReplyThreadView`)
+    // reuse the cached instance. `active_reply_thread` and the parent /
+    // replies loaders for the in-sheet thread view live here so that
+    // tapping Reply triggers a background refresh on existing loaders
+    // rather than mounting new ones (which would suspend up to the
+    // overlay boundary and flash the arena index through).
+    let arena = use_discussion_arena(space_id, discussion_id)?;
+    let active_reply_thread = arena.active_reply_thread;
+    let mut sheet_expanded = arena.sheet_expanded;
 
     // Mention autocomplete uses a lazy load + server-side search pattern:
     //  * `mention_query_raw` tracks the live query from MentionAutocomplete
@@ -920,7 +918,6 @@ pub fn DiscussionArenaPage(
                             key: "{thread_id}",
                             space_id,
                             discussion_id,
-                            comment_id: thread_id,
                             on_close: {
                                 let mut active = active_reply_thread;
                                 move |_| active.set(None)
@@ -943,7 +940,7 @@ pub fn DiscussionArenaPage(
                                 on_submit: move |_| on_submit_comment(()),
                                 placeholder: tr.comment_placeholder.to_string(),
                                 disabled: comment_text().trim().is_empty()
-                                                                                                                                    && pending_images.read().is_empty(),
+                                                                                                                                                                    && pending_images.read().is_empty(),
                                 on_mention_query_change,
                                 on_composer_focus,
                                 priority_user_pks: top_priority,
@@ -1249,9 +1246,11 @@ fn CommentItem(
         like_processing.set(false);
     };
 
-    let ctx = use_context::<ActiveReplyThreadCtx>();
-    let mut active_reply_thread = ctx.active;
-    let mut sheet_expanded = ctx.sheet_expanded;
+    // Pull the per-discussion controller out of context — the parent
+    // `DiscussionArenaPage` already built it, so this is a cheap lookup.
+    let arena = use_discussion_arena(space_id, discussion_id)?;
+    let mut active_reply_thread = arena.active_reply_thread;
+    let mut sheet_expanded = arena.sheet_expanded;
     let on_toggle_replies = move |_| async move {
         // Mobile: swap the comments panel over to the thread view instead
         // of expanding inline — the narrow column can't comfortably fit
@@ -1565,7 +1564,7 @@ fn CommentItem(
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
                         disabled: reply_text().trim().is_empty()
-                                                                                                                                                                                                                                                                                                                                                                                                                                                    && reply_pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
                         on_mention_query_change,
                         on_composer_focus,
                         priority_user_pks: reply_priority,
