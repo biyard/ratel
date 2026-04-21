@@ -209,6 +209,14 @@ pub enum EntityType {
     // Activity
     SpaceActivity(String), // SPACE_ACTIVITY#action_id#timestamp
     SpaceScore,
+
+    // Essence — user's knowledge graph entries. Each row is a reference to
+    // something the user authored (Post, Poll, Quiz, PostComment,
+    // DiscussionComment) or imported (Notion). pk = USER#{user_id}.
+    Essence(String), // ESSENCE#{uuid}
+    /// Singleton counter row per user; atomic ADDs from `Essence::put` /
+    /// delete keep the aggregates consistent.
+    UserEssenceStats,
 }
 
 impl TryInto<Partition> for EntityType {

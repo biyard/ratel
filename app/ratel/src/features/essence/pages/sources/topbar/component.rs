@@ -31,30 +31,6 @@ pub fn EssenceTopbar() -> Element {
                     span { class: "essence-topbar__main", "{tr.topbar_main}" }
                 }
             }
-            button { class: "essence-topbar__btn essence-topbar__btn--primary",
-                // TODO: wire to the Add Source flow once the backend exists.
-                svg {
-                    view_box: "0 0 24 24",
-                    fill: "none",
-                    stroke: "currentColor",
-                    stroke_width: "2.5",
-                    stroke_linecap: "round",
-                    stroke_linejoin: "round",
-                    line {
-                        x1: "12",
-                        y1: "5",
-                        x2: "12",
-                        y2: "19",
-                    }
-                    line {
-                        x1: "5",
-                        y1: "12",
-                        x2: "19",
-                        y2: "12",
-                    }
-                }
-                "{tr.add_source}"
-            }
         }
     }
 }

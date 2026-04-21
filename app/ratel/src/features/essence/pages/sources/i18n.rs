@@ -5,63 +5,54 @@ translate! {
 
     seo_title: { en: "Ratel — Essence Sources", ko: "Ratel — Essence 소스" },
 
-    // Topbar
+    // Topbar (Add Source button removed for now)
     back_label: { en: "Back", ko: "뒤로" },
     topbar_eyebrow: { en: "Essence", ko: "Essence" },
     topbar_main: { en: "Sources", ko: "소스" },
-    add_source: { en: "Add source", ko: "소스 추가" },
 
-    // Hero
+    // Hero (Open My House button removed for now)
     hero_eyebrow: { en: "Your Essence", ko: "내 Essence" },
     hero_subtitle: {
-        en: "Everything feeding your Essence House. Toggle to include/exclude from the public inference layer.",
-        ko: "Essence House에 들어가는 모든 소스입니다. 공개 추론 레이어에 포함할지 토글로 설정하세요.",
+        en: "Everything you've authored across Ratel — posts, comments, polls, quizzes — indexed into your Essence House.",
+        ko: "내가 Ratel에 올린 모든 포스트 · 댓글 · 투표 · 퀴즈가 Essence House에 모입니다.",
     },
     hero_sources_word: { en: "sources", ko: "개 소스" },
-    hero_chunks_word: { en: "chunks", ko: "청크" },
-    hero_tokens_word: { en: "tokens", ko: "토큰" },
-    hero_cta_open_house: { en: "Open my House", ko: "내 House 열기" },
+    hero_words_word: { en: "words", ko: "단어" },
 
     // Breakdown cards
     kind_all: { en: "All", ko: "전체" },
     kind_notion: { en: "Notion", ko: "Notion" },
-    kind_ratel_posts: { en: "Ratel posts", ko: "Ratel 포스트" },
-    kind_comments: { en: "Comments", ko: "댓글" },
-    kind_actions: { en: "Actions", ko: "액션" },
+    kind_post: { en: "Posts", ko: "포스트" },
+    kind_comment: { en: "Comments", ko: "댓글" },
+    kind_poll: { en: "Polls", ko: "투표" },
+    kind_quiz: { en: "Quizzes", ko: "퀴즈" },
 
-    // Controls
+    // Controls (status chips removed along with In House)
     search_placeholder: {
         en: "Search sources by title, content, or tag…",
         ko: "제목, 내용, 태그로 소스 검색…",
     },
-    filter_all: { en: "All", ko: "전체" },
-    filter_active: { en: "Active", ko: "활성" },
-    filter_paused: { en: "Paused", ko: "일시중지" },
-    filter_ai_flagged: { en: "AI flagged", ko: "AI 표시됨" },
-    sort_last_synced: { en: "Last synced ↓", ko: "최근 동기화 ↓" },
     sort_last_edited: { en: "Last edited ↓", ko: "최근 편집 ↓" },
     sort_word_count: { en: "Word count ↓", ko: "단어 수 ↓" },
-    sort_quality: { en: "Quality ↓", ko: "품질 ↓" },
     sort_title: { en: "Title A–Z", ko: "제목순" },
 
     // Bulk bar
     bulk_selected_suffix: { en: "selected", ko: "개 선택됨" },
-    bulk_pause: { en: "Pause", ko: "일시중지" },
-    bulk_reembed: { en: "Re-embed", ko: "재임베딩" },
-    bulk_flag_ai: { en: "Flag as AI", ko: "AI로 표시" },
     bulk_remove: { en: "Remove", ko: "제거" },
 
     // Table
     col_title: { en: "Title", ko: "제목" },
     col_words: { en: "Words", ko: "단어" },
     col_last_sync: { en: "Last sync", ko: "최근 동기화" },
-    col_quality: { en: "Quality", ko: "품질" },
-    col_in_house: { en: "In House", ko: "House" },
     row_select_label: { en: "Select", ko: "선택" },
     row_more_label: { en: "More", ko: "더보기" },
-    row_in_house_label: { en: "In House", ko: "House" },
-    row_badge_paused: { en: "Paused", ko: "일시중지됨" },
-    row_badge_ai_flagged: { en: "AI flagged", ko: "AI 표시됨" },
+
+    // Row menu (`...` popover)
+    menu_delete: { en: "Delete", ko: "삭제" },
+
+    // Comment parent-kind badge
+    tag_post_comment: { en: "on post", ko: "포스트 댓글" },
+    tag_discussion_comment: { en: "on discussion", ko: "토론 댓글" },
 
     // Pagination
     pagination_prefix: { en: "Showing", ko: "" },
@@ -70,9 +61,9 @@ translate! {
     pagination_next: { en: "Next", ko: "다음" },
 
     // Empty state
-    empty_title: { en: "No sources match your filters", ko: "조건에 맞는 소스가 없습니다" },
+    empty_title: { en: "No sources yet", ko: "아직 소스가 없습니다" },
     empty_subtitle: {
-        en: "Try clearing the search box or a different filter.",
-        ko: "검색어나 필터를 변경해 보세요.",
+        en: "Posts, comments, polls, and quizzes you create will show up here.",
+        ko: "포스트 · 댓글 · 투표 · 퀴즈를 만들면 여기에 표시됩니다.",
     },
 }

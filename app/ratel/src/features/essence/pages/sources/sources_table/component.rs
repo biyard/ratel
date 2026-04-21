@@ -6,25 +6,19 @@ const PAGE_SIZE: usize = 10;
 #[component]
 pub fn EssenceSourcesTable() -> Element {
     let tr: EssenceSourcesTranslate = use_translate();
-    let hook = use_essence_sources();
+    let hook = use_essence_sources()?;
     let mut page_index = use_signal(|| 0usize);
 
-    let filtered: Memo<Vec<EssenceSourceResponse>> = use_memo(move || {
-        let list = hook.sources.read().clone();
-        let kind = hook.selected_kind.read().clone();
-        let status = hook.status_filter.read().clone();
+    // Server already returned rows in the requested sort order via the GSI
+    // matching `sort_order`. This memo only applies client-side kind +
+    // search filters — order is whatever the server gave us.
+    let filtered: Memo<Vec<EssenceResponse>> = use_memo(move || {
+        let list = hook.sources.read().items.clone();
+        let kind = *hook.selected_kind.read();
         let query = hook.search_query.read().to_lowercase();
-        let sort = *hook.sort_order.read();
 
-        let mut matched: Vec<EssenceSourceResponse> = list
-            .into_iter()
-            .filter(|s| kind.matches(s.kind))
-            .filter(|s| match status {
-                StatusFilter::All => true,
-                StatusFilter::Active => !s.is_paused(),
-                StatusFilter::Paused => s.is_paused(),
-                StatusFilter::AiFlagged => s.ai_flagged,
-            })
+        list.into_iter()
+            .filter(|s| kind.matches(s.source_kind))
             .filter(|s| {
                 if query.is_empty() {
                     return true;
@@ -32,25 +26,7 @@ pub fn EssenceSourcesTable() -> Element {
                 s.title.to_lowercase().contains(&query)
                     || s.source_path.to_lowercase().contains(&query)
             })
-            .collect();
-
-        match sort {
-            SortOrder::LastSyncedDesc | SortOrder::LastEditedDesc => {
-                // Mock data only has `last_synced_label`; keep insertion order
-                // which represents recency in the seed.
-            }
-            SortOrder::WordCountDesc => {
-                matched.sort_by(|a, b| b.word_count.cmp(&a.word_count));
-            }
-            SortOrder::QualityDesc => {
-                matched.sort_by(|a, b| b.quality_score.partial_cmp(&a.quality_score).unwrap_or(std::cmp::Ordering::Equal));
-            }
-            SortOrder::TitleAsc => {
-                matched.sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase()));
-            }
-        }
-
-        matched
+            .collect()
     });
 
     let total = use_memo(move || filtered().len());
@@ -86,12 +62,9 @@ pub fn EssenceSourcesTable() -> Element {
         section { class: "essence-sources",
             header { class: "essence-src-head",
                 span {}
-                span {}
                 span { "{tr.col_title}" }
                 span { "{tr.col_words}" }
                 span { "{tr.col_last_sync}" }
-                span { "{tr.col_quality}" }
-                span { style: "text-align: center", "{tr.col_in_house}" }
                 span {}
             }
 
@@ -124,145 +97,139 @@ pub fn EssenceSourcesTable() -> Element {
 }
 
 #[component]
-fn SourceRow(source: EssenceSourceResponse) -> Element {
+fn SourceRow(source: EssenceResponse) -> Element {
     let tr: EssenceSourcesTranslate = use_translate();
-    let mut hook = use_essence_sources();
-    let selected = use_memo({
-        let id = source.id.clone();
-        move || hook.selected_rows.read().contains(&id)
-    });
+    let mut hook = use_essence_sources()?;
+    let mut menu_open = use_signal(|| false);
 
-    let id_for_check = source.id.clone();
-    let id_for_toggle = source.id.clone();
-    let kind_class = match source.kind {
+    let id_for_delete = source.id.clone();
+    let kind_class = match source.source_kind {
         EssenceSourceKind::Notion => "essence-src-icon--notion",
-        EssenceSourceKind::RatelPost => "essence-src-icon--post",
-        EssenceSourceKind::Comment => "essence-src-icon--comment",
-        EssenceSourceKind::Action => "essence-src-icon--action",
+        EssenceSourceKind::Post => "essence-src-icon--post",
+        EssenceSourceKind::PostComment | EssenceSourceKind::DiscussionComment => {
+            "essence-src-icon--comment"
+        }
+        EssenceSourceKind::Poll | EssenceSourceKind::Quiz => "essence-src-icon--action",
     };
-    let quality = source.quality();
 
     rsx! {
-        div { class: "essence-src-row", "data-selected": selected(),
-            button {
-                class: "essence-src-check",
-                aria_label: "{tr.row_select_label}",
-                onclick: move |_| {
-                    let id = id_for_check.clone();
-                    let mut set = hook.selected_rows.write();
-                    if set.contains(&id) {
-                        set.remove(&id);
-                    } else {
-                        set.insert(id);
-                    }
-                },
-                svg {
-                    view_box: "0 0 24 24",
-                    fill: "none",
-                    stroke: "currentColor",
-                    stroke_width: "3",
-                    stroke_linecap: "round",
-                    stroke_linejoin: "round",
-                    polyline { points: "20 6 9 17 4 12" }
-                }
-            }
-
-            span { class: "essence-src-icon {kind_class}",
-                match source.kind {
-                    EssenceSourceKind::Notion => rsx! { "N" },
-                    EssenceSourceKind::RatelPost => rsx! {
-                        svg {
-                            view_box: "0 0 24 24",
-                            fill: "none",
-                            stroke: "currentColor",
-                            stroke_width: "2",
-                            stroke_linecap: "round",
-                            stroke_linejoin: "round",
-                            path { d: "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" }
-                            path { d: "M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z" }
-                        }
-                    },
-                    EssenceSourceKind::Comment => rsx! {
-                        svg {
-                            view_box: "0 0 24 24",
-                            fill: "none",
-                            stroke: "currentColor",
-                            stroke_width: "2",
-                            stroke_linecap: "round",
-                            stroke_linejoin: "round",
-                            path { d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" }
-                        }
-                    },
-                    EssenceSourceKind::Action => rsx! {
-                        svg {
-                            view_box: "0 0 24 24",
-                            fill: "none",
-                            stroke: "currentColor",
-                            stroke_width: "2",
-                            stroke_linecap: "round",
-                            stroke_linejoin: "round",
-                            polyline { points: "22 12 18 12 15 21 9 3 6 12 2 12" }
-                        }
-                    },
-                }
-            }
+        div { class: "essence-src-row",
+            span { class: "essence-src-icon {kind_class}", {kind_icon(source.source_kind)} }
 
             div { class: "essence-src-title-wrap",
                 span { class: "essence-src-title", "{source.title}" }
                 span { class: "essence-src-meta",
                     span { class: "essence-src-meta__link", "{source.source_path}" }
-                    span { class: "essence-src-meta__dot", "·" }
-                    "{source.chunks} chunks"
-                    if let Some(extra) = source.extra_meta.as_ref() {
+                    if source.source_kind == EssenceSourceKind::PostComment {
                         span { class: "essence-src-meta__dot", "·" }
-                        if source.is_paused() {
-                            span { class: "essence-src-meta__badge essence-src-meta__badge--paused",
-                                "{extra}"
-                            }
-                        } else if source.ai_flagged {
-                            span { class: "essence-src-meta__badge essence-src-meta__badge--flagged",
-                                "{extra}"
-                            }
-                        } else {
-                            "{extra}"
+                        span { class: "essence-src-meta__badge essence-src-meta__badge--comment",
+                            "{tr.tag_post_comment}"
+                        }
+                    } else if source.source_kind == EssenceSourceKind::DiscussionComment {
+                        span { class: "essence-src-meta__dot", "·" }
+                        span { class: "essence-src-meta__badge essence-src-meta__badge--discussion",
+                            "{tr.tag_discussion_comment}"
                         }
                     }
                 }
             }
 
-            span { class: "essence-src-words", "{format_thousands(source.word_count as u64)}" }
-            span { class: "essence-src-synced", "{source.last_synced_label}" }
+            span { class: "essence-src-words", "{format_thousands(source.word_count.max(0) as u64)}" }
+            span { class: "essence-src-synced", "{format_relative_time(source.updated_at)}" }
 
-            span { class: "essence-src-quality essence-src-quality--{quality.css_modifier()}",
-                svg { view_box: "0 0 24 24", fill: "currentColor",
-                    polygon { points: "12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" }
+            div { class: "essence-src-menu-wrap",
+                button {
+                    class: "essence-src-more",
+                    aria_label: "{tr.row_more_label}",
+                    onclick: move |_| {
+                        let was = menu_open();
+                        menu_open.set(!was);
+                    },
+                    svg {
+                        view_box: "0 0 24 24",
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_width: "2",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        circle { cx: "12", cy: "12", r: "1" }
+                        circle { cx: "12", cy: "5", r: "1" }
+                        circle { cx: "12", cy: "19", r: "1" }
+                    }
                 }
-                "{format_score(source.quality_score)}"
-            }
-
-            button {
-                class: "essence-switch",
-                "aria-checked": source.in_house.is_on(),
-                aria_label: "{tr.row_in_house_label}",
-                onclick: move |_| {
-                    hook.toggle_in_house.call(id_for_toggle.clone());
-                },
-            }
-
-            button { class: "essence-src-more", aria_label: "{tr.row_more_label}",
-                svg {
-                    view_box: "0 0 24 24",
-                    fill: "none",
-                    stroke: "currentColor",
-                    stroke_width: "2",
-                    stroke_linecap: "round",
-                    stroke_linejoin: "round",
-                    circle { cx: "12", cy: "12", r: "1" }
-                    circle { cx: "12", cy: "5", r: "1" }
-                    circle { cx: "12", cy: "19", r: "1" }
+                if menu_open() {
+                    div { class: "essence-src-menu",
+                        button {
+                            class: "essence-src-menu__item essence-src-menu__item--danger",
+                            onclick: move |_| {
+                                let id = id_for_delete.clone();
+                                menu_open.set(false);
+                                hook.delete_essence.call(id);
+                            },
+                            "{tr.menu_delete}"
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+fn kind_icon(kind: EssenceSourceKind) -> Element {
+    match kind {
+        EssenceSourceKind::Notion => rsx! { "N" },
+        EssenceSourceKind::Post => rsx! {
+            svg {
+                view_box: "0 0 24 24",
+                fill: "none",
+                stroke: "currentColor",
+                stroke_width: "2",
+                stroke_linecap: "round",
+                stroke_linejoin: "round",
+                path { d: "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" }
+                path { d: "M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z" }
+            }
+        },
+        EssenceSourceKind::PostComment | EssenceSourceKind::DiscussionComment => rsx! {
+            svg {
+                view_box: "0 0 24 24",
+                fill: "none",
+                stroke: "currentColor",
+                stroke_width: "2",
+                stroke_linecap: "round",
+                stroke_linejoin: "round",
+                path { d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" }
+            }
+        },
+        EssenceSourceKind::Poll => rsx! {
+            svg {
+                view_box: "0 0 24 24",
+                fill: "none",
+                stroke: "currentColor",
+                stroke_width: "2",
+                stroke_linecap: "round",
+                stroke_linejoin: "round",
+                polyline { points: "22 12 18 12 15 21 9 3 6 12 2 12" }
+            }
+        },
+        EssenceSourceKind::Quiz => rsx! {
+            svg {
+                view_box: "0 0 24 24",
+                fill: "none",
+                stroke: "currentColor",
+                stroke_width: "2",
+                stroke_linecap: "round",
+                stroke_linejoin: "round",
+                circle { cx: "12", cy: "12", r: "10" }
+                path { d: "M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" }
+                line {
+                    x1: "12",
+                    y1: "17",
+                    x2: "12.01",
+                    y2: "17",
+                }
+            }
+        },
     }
 }
 
@@ -400,6 +367,24 @@ fn format_thousands(n: u64) -> String {
     out.chars().rev().collect()
 }
 
-fn format_score(score: f32) -> String {
-    format!("{score:.1}")
+/// Render a unix timestamp as "2m ago" / "3h ago" / "yesterday" / "3d ago".
+/// Good enough for the sources table — we don't need minute-level precision
+/// past 24h.
+fn format_relative_time(ts_seconds: i64) -> String {
+    let now = chrono::Utc::now().timestamp();
+    let delta = now.saturating_sub(ts_seconds).max(0);
+
+    if delta < 60 {
+        return "just now".to_string();
+    }
+    if delta < 60 * 60 {
+        return format!("{}m ago", delta / 60);
+    }
+    if delta < 24 * 60 * 60 {
+        return format!("{}h ago", delta / 3_600);
+    }
+    if delta < 48 * 60 * 60 {
+        return "yesterday".to_string();
+    }
+    format!("{}d ago", delta / 86_400)
 }

@@ -4,16 +4,28 @@ use crate::*;
 #[component]
 pub fn EssenceBreakdown() -> Element {
     let tr: EssenceSourcesTranslate = use_translate();
-    let hook = use_essence_sources();
+    let hook = use_essence_sources()?;
 
+    let list_handle = hook.sources;
     let breakdown = use_memo(move || {
-        let list = hook.sources.read();
-        let total = list.len() as u32;
-        let notion = list.iter().filter(|s| s.kind == EssenceSourceKind::Notion).count() as u32;
-        let posts = list.iter().filter(|s| s.kind == EssenceSourceKind::RatelPost).count() as u32;
-        let comments = list.iter().filter(|s| s.kind == EssenceSourceKind::Comment).count() as u32;
-        let actions = list.iter().filter(|s| s.kind == EssenceSourceKind::Action).count() as u32;
-        BreakdownCounts { total, notion, posts, comments, actions }
+        let items = &list_handle.read().items;
+        let total = items.len() as u32;
+        let mut counts = BreakdownCounts {
+            total,
+            ..Default::default()
+        };
+        for s in items {
+            match s.source_kind {
+                EssenceSourceKind::Notion => counts.notion += 1,
+                EssenceSourceKind::Post => counts.post += 1,
+                EssenceSourceKind::PostComment | EssenceSourceKind::DiscussionComment => {
+                    counts.comment += 1
+                }
+                EssenceSourceKind::Poll => counts.poll += 1,
+                EssenceSourceKind::Quiz => counts.quiz += 1,
+            }
+        }
+        counts
     });
 
     let selected = hook.selected_kind;
@@ -65,12 +77,12 @@ pub fn EssenceBreakdown() -> Element {
                 icon: rsx! { "N" },
             }
             KindCard {
-                kind: KindFilter::RatelPost,
-                selected: selected() == KindFilter::RatelPost,
-                value: counts.posts,
+                kind: KindFilter::Post,
+                selected: selected() == KindFilter::Post,
+                value: counts.post,
                 total: counts.total,
-                label: tr.kind_ratel_posts.to_string(),
-                on_select: move |_| set_kind(KindFilter::RatelPost),
+                label: tr.kind_post.to_string(),
+                on_select: move |_| set_kind(KindFilter::Post),
                 icon_variant: "posts",
                 icon: rsx! {
                     svg {
@@ -88,9 +100,9 @@ pub fn EssenceBreakdown() -> Element {
             KindCard {
                 kind: KindFilter::Comment,
                 selected: selected() == KindFilter::Comment,
-                value: counts.comments,
+                value: counts.comment,
                 total: counts.total,
-                label: tr.kind_comments.to_string(),
+                label: tr.kind_comment.to_string(),
                 on_select: move |_| set_kind(KindFilter::Comment),
                 icon_variant: "comments",
                 icon: rsx! {
@@ -106,12 +118,12 @@ pub fn EssenceBreakdown() -> Element {
                 },
             }
             KindCard {
-                kind: KindFilter::Action,
-                selected: selected() == KindFilter::Action,
-                value: counts.actions,
+                kind: KindFilter::Poll,
+                selected: selected() == KindFilter::Poll,
+                value: counts.poll,
                 total: counts.total,
-                label: tr.kind_actions.to_string(),
-                on_select: move |_| set_kind(KindFilter::Action),
+                label: tr.kind_poll.to_string(),
+                on_select: move |_| set_kind(KindFilter::Poll),
                 icon_variant: "actions",
                 icon: rsx! {
                     svg {
@@ -126,17 +138,45 @@ pub fn EssenceBreakdown() -> Element {
                     }
                 },
             }
+            KindCard {
+                kind: KindFilter::Quiz,
+                selected: selected() == KindFilter::Quiz,
+                value: counts.quiz,
+                total: counts.total,
+                label: tr.kind_quiz.to_string(),
+                on_select: move |_| set_kind(KindFilter::Quiz),
+                icon_variant: "actions",
+                icon: rsx! {
+                    svg {
+                        view_box: "0 0 24 24",
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_width: "2",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        circle { cx: "12", cy: "12", r: "10" }
+                        path { d: "M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" }
+                        line {
+                            x1: "12",
+                            y1: "17",
+                            x2: "12.01",
+                            y2: "17",
+                        }
+                    }
+                },
+            }
         }
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Default)]
 struct BreakdownCounts {
     total: u32,
     notion: u32,
-    posts: u32,
-    comments: u32,
-    actions: u32,
+    post: u32,
+    comment: u32,
+    poll: u32,
+    quiz: u32,
 }
 
 #[component]

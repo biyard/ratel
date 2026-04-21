@@ -230,6 +230,10 @@ pub enum Error {
 
     #[error("{0}")]
     #[translate(from)]
+    Essence(#[from] crate::features::essence::types::EssenceError),
+
+    #[error("{0}")]
+    #[translate(from)]
     SpaceReward(#[from] SpaceRewardError),
 
     #[error("{0}")]
