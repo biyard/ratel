@@ -19,6 +19,8 @@ pub async fn list_my_home_spaces_handler(
     let conf = crate::common::config::ServerConfig::default();
     let cli = conf.dynamodb();
 
+    // SpaceParticipant GSI1 is sorted by created_at. Default scan_index_forward
+    // is already descending, so the most recently joined spaces come first.
     let opts = SpaceParticipant::opt_with_bookmark(bookmark).limit(10);
     let (participants, next_bookmark) =
         SpaceParticipant::find_by_user(cli, &user.pk, opts).await?;
@@ -28,14 +30,23 @@ pub async fn list_my_home_spaces_handler(
         .map(|sp| (sp.space_pk.clone(), EntityType::SpaceCommon))
         .collect();
 
-    let spaces: Vec<SpaceCommon> = if space_keys.is_empty() {
+    let fetched: Vec<SpaceCommon> = if space_keys.is_empty() {
         vec![]
     } else {
         SpaceCommon::batch_get(cli, space_keys).await?
     };
 
-    // Prefer active/published spaces; drop drafts from the home view
-    let spaces: Vec<SpaceCommon> = spaces.into_iter().filter(|s| s.is_published()).collect();
+    // DynamoDB BatchGetItem does not preserve input order, so realign the
+    // fetched spaces with the participant query order (most-recent-first).
+    let mut by_pk: HashMap<String, SpaceCommon> = fetched
+        .into_iter()
+        .map(|s| (s.pk.to_string(), s))
+        .collect();
+    let spaces: Vec<SpaceCommon> = participants
+        .iter()
+        .filter_map(|sp| by_pk.remove(&sp.space_pk.to_string()))
+        .filter(|s| s.is_published())
+        .collect();
 
     let post_keys: Vec<(Partition, EntityType)> = spaces
         .iter()
