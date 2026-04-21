@@ -14,4 +14,7 @@ pub mod components;
 #[cfg(not(feature = "server"))]
 pub mod i18n;
 
+#[cfg(not(feature = "server"))]
+pub use components::*;
+
 pub use types::*;
