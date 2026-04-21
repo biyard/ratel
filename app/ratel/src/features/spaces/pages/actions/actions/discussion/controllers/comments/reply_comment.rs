@@ -94,7 +94,7 @@ pub async fn reply_comment(
     // in the path (not query/fragment) because Dioxus Router strips both
     // during URL normalization.
     let cta_url = format!(
-        "{}/spaces/{}/discussions/{}/c/{}",
+        "{}/spaces/{}/discussions/{}/comments/{}",
         crate::common::config::site_base_url(),
         space_id,
         discussion_sk,

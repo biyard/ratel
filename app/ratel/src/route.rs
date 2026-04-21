@@ -173,7 +173,7 @@ pub enum Route {
                 // The comment id lives in the path (not query/fragment) because
                 // Dioxus Router strips both query strings and fragments during
                 // URL normalization on hydration.
-                #[route("/discussions/:discussion_id/c/:comment_id")]
+                #[route("/discussions/:discussion_id/comments/:comment_id")]
                 SpaceDiscussionCommentPage { space_id: SpacePartition, discussion_id: SpacePostEntityType, comment_id: String },
 
                 #[nest("/actions")]
