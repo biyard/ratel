@@ -898,12 +898,19 @@ test.describe.serial("Full space lifecycle with rewards", () => {
       // Open the reply input on the parent comment.
       await parentComment.locator(".comment-action--reply").click();
 
-      const replyInput = page.locator(".reply-input__field");
+      // The top-level composer now shares the `.reply-input__*` hooks with
+      // the nested reply composer. Disambiguate by the placeholder text
+      // that only the reply composer uses, then scope the send-button
+      // lookup to that same `.reply-input` container.
+      const replyComposer = page.locator(".reply-input", {
+        has: page.getByPlaceholder("Write a reply..."),
+      });
+      const replyInput = replyComposer.locator("textarea");
       await expect(replyInput).toBeVisible({ timeout: 5000 });
 
       const replyOriginal = "Reply from User2 — editing test.";
       await replyInput.fill(replyOriginal);
-      await page.locator(".reply-input__send").click();
+      await replyComposer.locator(".reply-input__send").click();
 
       // New reply renders inside .comment-replies. Restricting the selector
       // to that container avoids accidentally matching the parent comment.
