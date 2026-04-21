@@ -883,6 +883,11 @@
   }
   .comments-panel .sheet-handle {
     cursor: grab;
+    /* Stop the browser from claiming this region for native scrolling —
+       without this `touch-action: none`, the first touchmove below kicks
+       off a scroll and our `preventDefault()` call logs
+       "Ignored attempt to cancel a touchmove event with cancelable=false". */
+    touch-action: none;
   }
   .comments-panel .sheet-handle:active {
     cursor: grabbing;

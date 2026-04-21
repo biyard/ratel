@@ -1,6 +1,5 @@
 use crate::common::components::SeoMeta;
-use crate::features::posts::controllers::get_post::get_post_handler;
-use crate::features::posts::controllers::like_post::like_post_handler;
+use crate::features::posts::hooks::{use_post_detail, UsePostDetail};
 use crate::features::posts::*;
 
 use super::comments::PostCommentsPanel;
@@ -11,25 +10,18 @@ pub fn PostDetail(post_id: FeedPartition) -> Element {
     let tr: PostDetailSyndicatedTranslate = use_translate();
     let nav = use_navigator();
 
-    let p1 = post_id.clone();
-    let mut resource = use_loader(move || {
-        let post_id = p1.clone();
-        async move { get_post_handler(post_id).await }
-    })?;
+    let UsePostDetail {
+        detail,
+        liked,
+        like_count,
+        mut comments_open,
+        mut toggle_like,
+        mut share,
+        ..
+    } = use_post_detail(post_id.clone())?;
 
-    let detail = resource();
-    let post = detail.post.clone();
-
-    // Like state — signals seeded from the loader so optimistic updates on
-    // click don't wait for the next resource(). `detail.is_liked` is the
-    // viewer-specific liked flag resolved server-side in `get_post_handler`
-    // (batch-read of PostLike by user.pk); `detail.post.likes` is the
-    // aggregate counter on the Post row.
-    let initial_likes = detail.post.as_ref().map(|p| p.likes).unwrap_or(0);
-    let mut liked = use_signal(|| detail.is_liked);
-    let mut like_count = use_signal(|| initial_likes);
-
-    let mut comments_open = use_signal(|| false);
+    let snapshot = detail();
+    let post = snapshot.post.clone();
 
     let post_title = post
         .as_ref()
@@ -79,52 +71,8 @@ pub fn PostDetail(post_id: FeedPartition) -> Element {
         nav.go_back();
     };
 
-    let mut toast = use_toast();
-    let share_post_id = post_id.clone();
-    let on_share = move |_| {
-        let id = share_post_id.to_string();
-        spawn(async move {
-            // Runs in the browser — builds the absolute URL from
-            // `window.location.origin` so staging/prod/localhost all
-            // produce the right link, then asks the Clipboard API to copy
-            // it. The eval returns a bool so Rust can show the right toast.
-            let js = format!(
-                r#"(async function() {{
-                    var url = window.location.origin + '/posts/{id}';
-                    try {{
-                        await navigator.clipboard.writeText(url);
-                        dioxus.send(true);
-                    }} catch (e) {{
-                        dioxus.send(false);
-                    }}
-                }})();"#
-            );
-            let mut eval = document::eval(&js);
-            let ok = eval.recv::<bool>().await.unwrap_or(false);
-            if ok {
-                toast.info(tr.share_link_copied.to_string());
-            } else {
-                toast.warn(tr.share_link_copy_failed.to_string());
-            }
-        });
-    };
-
-    let like_post_id = post_id.clone();
-    let toggle_like = move |_| {
-        let next = !liked();
-        // Optimistic UI — flip the signals now, revert on error.
-        liked.set(next);
-        like_count.set((like_count() + if next { 1 } else { -1 }).max(0));
-        let post_id = like_post_id.clone();
-        spawn(async move {
-            if let Err(e) = like_post_handler(post_id, next).await {
-                tracing::error!("like post failed: {e}");
-                liked.set(!next);
-                like_count.set((like_count() + if next { -1 } else { 1 }).max(0));
-            }
-        });
-    };
-
+    let on_share = move |_| share.call();
+    let on_toggle_like = move |_| toggle_like.call();
     let open_comments = move |_| comments_open.set(true);
     let close_comments = move |_| comments_open.set(false);
 
@@ -237,7 +185,7 @@ pub fn PostDetail(post_id: FeedPartition) -> Element {
                         button {
                             class: "action-btn",
                             "data-active": liked(),
-                            onclick: toggle_like,
+                            onclick: on_toggle_like,
                             svg {
                                 view_box: "0 0 24 24",
                                 fill: if liked() { "currentColor" } else { "none" },
@@ -272,13 +220,7 @@ pub fn PostDetail(post_id: FeedPartition) -> Element {
             if comments_open() {
                 div { class: "pd-drawer-backdrop", onclick: close_comments }
                 div { class: "pd-drawer-wrap",
-                    PostCommentsPanel {
-                        detail: detail.clone(),
-                        post_pk: post_id.clone(),
-                        on_refresh: move |_| {
-                            resource.restart();
-                        },
-                    }
+                    PostCommentsPanel { post_id: post_id.clone() }
                 }
             }
         }
