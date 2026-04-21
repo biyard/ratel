@@ -1,0 +1,37 @@
+.notification-bell {
+    --bell-bg: var(--dark, transparent) var(--light, transparent);
+    --bell-hover: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(0, 0, 0, 0.06));
+    --badge-bg: #db2780;
+    --badge-text: #ffffff;
+
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 9999px;
+    background: var(--bell-bg);
+    transition: background 150ms ease;
+    border: 0;
+    cursor: pointer;
+}
+.notification-bell:hover {
+    background: var(--bell-hover);
+}
+
+.notification-bell__badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9999px;
+    background: var(--badge-bg);
+    color: var(--badge-text);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 18px;
+    text-align: center;
+}

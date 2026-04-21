@@ -29,6 +29,8 @@ pub enum EntityType {
     User,
     UserEvmAddress,
     UserNotification(String), //notification id
+    UserInboxNotification(String), // uuid_v7, time-ordered
+    InboxDedupMarker(String),      // "{kind}#{source_hash}"
     UserReferralCode,
     UserPrincipal,
     UserOAuth,
