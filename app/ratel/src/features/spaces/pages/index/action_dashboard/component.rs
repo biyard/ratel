@@ -74,6 +74,7 @@ pub fn ActionDashboard(
     let nav = use_navigator();
     let mut toast = use_toast();
 
+    let lookup = super::dependency_lock::build_action_lookup(&actions);
     let active: Vec<_> = actions
         .iter()
         .filter(|a| derive_action_status(a) == ActionStatus::Active)
@@ -206,6 +207,9 @@ pub fn ActionDashboard(
                         {
                             let action = action.clone();
                             let key = action.action_id.clone();
+                            let lock = super::dependency_lock::resolve_dependency_lock(
+                                &action, &lookup,
+                            );
                             match action.action_type {
                                 SpaceActionType::Poll => rsx! {
                                     PollActionCard {
@@ -213,6 +217,7 @@ pub fn ActionDashboard(
                                         action,
                                         space_id,
                                         is_admin,
+                                        lock: lock.clone(),
                                     }
                                 },
                                 SpaceActionType::TopicDiscussion => rsx! {
@@ -221,6 +226,7 @@ pub fn ActionDashboard(
                                         action,
                                         space_id,
                                         is_admin,
+                                        lock: lock.clone(),
                                     }
                                 },
                                 SpaceActionType::Quiz => rsx! {
@@ -229,6 +235,7 @@ pub fn ActionDashboard(
                                         action,
                                         space_id,
                                         is_admin,
+                                        lock: lock.clone(),
                                     }
                                 },
                                 SpaceActionType::Follow => rsx! {
@@ -237,6 +244,7 @@ pub fn ActionDashboard(
                                         action,
                                         space_id,
                                         is_admin,
+                                        lock: lock.clone(),
                                     }
                                 },
                             }

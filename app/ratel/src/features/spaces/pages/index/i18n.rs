@@ -220,6 +220,26 @@ translate! {
         ko: "필수",
     },
 
+    locked_label: {
+        en: "Locked",
+        ko: "잠김",
+    },
+
+    dependency_locked_prefix: {
+        en: "Complete first:",
+        ko: "먼저 완료:",
+    },
+
+    dependency_locked_generic: {
+        en: "required actions",
+        ko: "선행 액션",
+    },
+
+    locked_see_required: {
+        en: "See Required",
+        ko: "선행 액션 보기",
+    },
+
     start_quest: {
         en: "Start",
         ko: "시작",

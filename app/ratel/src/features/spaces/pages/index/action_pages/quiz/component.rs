@@ -17,7 +17,7 @@ pub enum ActiveActionOverlay {
 }
 
 /// Context signal wrapping the overlay state.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct ActiveActionOverlaySignal(pub Signal<Option<ActiveActionOverlay>>);
 
 /// Context signal set when an action card is completed (quiz passed, all followed, etc.).
