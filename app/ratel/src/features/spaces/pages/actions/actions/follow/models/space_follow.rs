@@ -48,6 +48,7 @@ impl From<SpaceFollowAction>
             user_participated: false,
             credits: 0,
             prerequisite: false,
+            comment_count: None,
         }
     }
 }
