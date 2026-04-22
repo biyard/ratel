@@ -41,6 +41,7 @@ urlencoding = { version = "2" }
 tokio = { workspace = true, optional = true }
 tower = { version = "0.5", features = ["util"], optional = true }
 tower-http = { version = "0.6", features = ["catch-panic"], optional = true }
+pulldown-cmark = { version = "0.12", default-features = false, features = ["html"], optional = true }
 
 web-sys = { workspace = true, features = [
   "Blob",
@@ -162,7 +163,7 @@ server = [
 
 lambda = ["lambda_http", "lambda_runtime", "server"]
 layout_test = ["web"]
-local-dev = ["beta","bypass"]
+local-dev = ["beta","bypass","dep:pulldown-cmark"]
 beta = []
 futures = ["dep:futures"]
 
