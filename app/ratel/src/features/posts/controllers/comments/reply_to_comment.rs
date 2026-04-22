@@ -37,9 +37,7 @@ pub async fn reply_to_comment_handler(
     )
     .await?;
 
-    if let Err(e) = crate::features::essence::services::index_post_comment(cli, &comment).await {
-        tracing::error!("failed to index post comment reply essence: {e}");
-    }
+    // Essence indexing happens via the DynamoDB Stream pipeline.
 
     let cta_url = format!(
         "{}/posts/{}",

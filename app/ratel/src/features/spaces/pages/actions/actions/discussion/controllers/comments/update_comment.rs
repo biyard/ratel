@@ -79,16 +79,7 @@ pub async fn update_comment(
 
     let comment = updater.execute(cli).await?;
 
-    let space_pk: Partition = space_id.clone().into();
-    if let Err(e) = crate::features::essence::services::index_discussion_comment(
-        cli,
-        &comment,
-        space_pk,
-    )
-    .await
-    {
-        tracing::error!("failed to re-index discussion comment essence on update: {e}");
-    }
+    // Essence re-indexing happens via the DynamoDB Stream pipeline.
 
     Ok(comment)
 }

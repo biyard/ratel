@@ -96,11 +96,8 @@ pub async fn update_poll(
             .flatten()
             .map(|s| s.user_pk)
             .unwrap_or(space_pk.clone());
-        if let Err(e) =
-            crate::features::essence::services::index_poll(cli, &poll, creator_pk).await
-        {
-            tracing::error!("failed to re-index poll essence on update: {e}");
-        }
+        let _ = creator_pk;
+        // Essence re-indexing happens via the DynamoDB Stream pipeline.
     }
 
     Ok("success".to_string())

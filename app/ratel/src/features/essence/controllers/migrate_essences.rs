@@ -4,6 +4,8 @@ use crate::common::models::auth::AdminUser;
 #[cfg(feature = "server")]
 use crate::features::essence::models::{Essence, UserEssenceStats};
 use crate::features::essence::types::*;
+#[cfg(feature = "server")]
+use crate::features::essence::services as essence_services;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "server")]
 use std::collections::HashMap;
@@ -62,7 +64,13 @@ async fn rebuild_user_essence_stats(
     cli: &aws_sdk_dynamodb::Client,
     out: &mut MigrateEssencesResponse,
 ) {
-    let essences = match Essence::find_all(cli, EntityType::Essence(String::new()), Essence::opt_all()).await {
+    let essences = match Essence::find_all(
+        cli,
+        EntityType::Essence(String::new()),
+        Essence::opt_all(),
+    )
+    .await
+    {
         Ok((v, _)) => v,
         Err(e) => {
             crate::error!("migrate: scan essences for stats rebuild failed: {e}");
@@ -128,28 +136,7 @@ async fn migrate_posts_and_comments(
     let comment_sk_prefix = EntityType::PostComment(String::new()).to_string();
 
     for post in posts {
-        let title = if post.title.is_empty() {
-            "(Untitled post)".to_string()
-        } else {
-            post.title.clone()
-        };
-        let source_path = format!("Ratel post · {}", strip_prefix(&post.pk.to_string()));
-        let word_count = (estimate_word_count(&post.html_contents)
-            + post.title.split_whitespace().count() as u32) as i64;
-
-        if let Err(e) = Essence::upsert_for_source(
-            cli,
-            post.user_pk.clone(),
-            post.pk.clone(),
-            EntityType::Post,
-            EssenceSourceKind::Post,
-            title,
-            source_path,
-            word_count,
-            None,
-        )
-        .await
-        {
+        if let Err(e) = essence_services::index_post(cli, &post).await {
             crate::error!("migrate: upsert post essence failed: {e}");
             out.errors += 1;
         } else {
@@ -167,27 +154,7 @@ async fn migrate_posts_and_comments(
         };
 
         for c in comments {
-            let title = summarize(&c.content, 80);
-            let source_path = format!(
-                "Ratel comment · {} / {}",
-                strip_prefix(&c.pk.to_string()),
-                strip_prefix(&c.sk.to_string())
-            );
-            let word_count = c.content.split_whitespace().count() as i64;
-
-            if let Err(e) = Essence::upsert_for_source(
-                cli,
-                c.author_pk.clone(),
-                c.pk.clone(),
-                c.sk.clone(),
-                EssenceSourceKind::PostComment,
-                title,
-                source_path,
-                word_count,
-                None,
-            )
-            .await
-            {
+            if let Err(e) = essence_services::index_post_comment(cli, &c).await {
                 crate::error!("migrate: upsert post comment essence failed: {e}");
                 out.errors += 1;
                 continue;
@@ -209,20 +176,15 @@ async fn migrate_spaces_content(
     use crate::features::spaces::pages::actions::actions::poll::SpacePoll;
     use crate::features::spaces::pages::actions::actions::quiz::SpaceQuiz;
 
-    let (spaces, _) = match SpaceCommon::find_all(
-        cli,
-        EntityType::SpaceCommon,
-        SpaceCommon::opt_all(),
-    )
-    .await
-    {
-        Ok(v) => v,
-        Err(e) => {
-            crate::error!("migrate: list spaces failed: {e}");
-            out.errors += 1;
-            return;
-        }
-    };
+    let (spaces, _) =
+        match SpaceCommon::find_all(cli, EntityType::SpaceCommon, SpaceCommon::opt_all()).await {
+            Ok(v) => v,
+            Err(e) => {
+                crate::error!("migrate: list spaces failed: {e}");
+                out.errors += 1;
+                return;
+            }
+        };
     out.spaces_scanned = spaces.len() as u32;
 
     let poll_sk_prefix = EntityType::SpacePoll(String::new()).to_string();
@@ -231,45 +193,13 @@ async fn migrate_spaces_content(
     let discussion_comment_sk_prefix = EntityType::SpacePostComment(String::new()).to_string();
 
     for space in spaces {
-        let space_id_str = match &space.pk {
-            Partition::Space(id) => id.clone(),
-            _ => continue,
-        };
         let space_pk = space.pk.clone();
-        let space_sub = SpacePartition(space_id_str);
-        let creator_pk = space.user_pk.clone();
 
         let opts = SpacePoll::opt_all().sk(poll_sk_prefix.clone());
         match SpacePoll::query(cli, space_pk.clone(), opts).await {
             Ok((polls, _)) => {
                 for poll in polls {
-                    let title = if poll.title.is_empty() {
-                        "(Untitled poll)".to_string()
-                    } else {
-                        poll.title.clone()
-                    };
-                    let source_path = format!(
-                        "Ratel poll · {} / {}",
-                        strip_prefix(&poll.pk.to_string()),
-                        strip_prefix(&poll.sk.to_string())
-                    );
-                    let word_count = (poll.title.split_whitespace().count()
-                        + poll.description.split_whitespace().count())
-                        as i64;
-
-                    if let Err(e) = Essence::upsert_for_source(
-                        cli,
-                        creator_pk.clone(),
-                        poll.pk.clone(),
-                        poll.sk.clone(),
-                        EssenceSourceKind::Poll,
-                        title,
-                        source_path,
-                        word_count,
-                        Some(space_pk.clone()),
-                    )
-                    .await
-                    {
+                    if let Err(e) = essence_services::index_poll(cli, &poll).await {
                         crate::error!("migrate: upsert poll essence failed: {e}");
                         out.errors += 1;
                         continue;
@@ -286,28 +216,8 @@ async fn migrate_spaces_content(
         let opts = SpaceQuiz::opt_all().sk(quiz_sk_prefix.clone());
         match SpaceQuiz::query(cli, space_pk.clone(), opts).await {
             Ok((quizzes, _)) => {
-                use crate::features::spaces::pages::actions::models::SpaceAction;
-
                 for quiz in quizzes {
-                    let action_key =
-                        CompositePartition(space_sub.clone(), quiz.sk.to_string());
-                    let (action_title, action_description) =
-                        match SpaceAction::get(cli, &action_key, Some(EntityType::SpaceAction))
-                            .await
-                        {
-                            Ok(Some(action)) => (action.title, action.description),
-                            _ => (String::new(), String::new()),
-                        };
-
-                    if let Err(e) = crate::features::essence::services::index_quiz(
-                        cli,
-                        &quiz,
-                        creator_pk.clone(),
-                        &action_title,
-                        &action_description,
-                    )
-                    .await
-                    {
+                    if let Err(e) = essence_services::index_quiz(cli, &quiz).await {
                         crate::error!("migrate: upsert quiz essence failed: {e}");
                         out.errors += 1;
                         continue;
@@ -342,29 +252,18 @@ async fn migrate_spaces_content(
             let opts = SpacePostComment::opt_all().sk(discussion_comment_sk_prefix.clone());
             match SpacePostComment::query(cli, discussion_pk, opts).await {
                 Ok((comments, _)) => {
-                    for c in comments {
-                        let title = summarize(&c.content, 80);
-                        let source_path = format!(
-                            "Discussion · {} / {}",
-                            strip_prefix(&c.pk.to_string()),
-                            strip_prefix(&c.sk.to_string())
-                        );
-                        let word_count = c.content.split_whitespace().count() as i64;
-
-                        if let Err(e) = Essence::upsert_for_source(
-                            cli,
-                            c.author_pk.clone(),
-                            c.pk.clone(),
-                            c.sk.clone(),
-                            EssenceSourceKind::DiscussionComment,
-                            title,
-                            source_path,
-                            word_count,
-                            Some(space_pk.clone()),
-                        )
-                        .await
+                    for mut c in comments {
+                        // Backfill space_pk if missing on legacy rows so the
+                        // essence row gets the right "open in space" link.
+                        if c.space_pk.is_none() {
+                            c.space_pk = Some(space_pk.clone());
+                        }
+                        if let Err(e) =
+                            essence_services::index_discussion_comment(cli, &c).await
                         {
-                            crate::error!("migrate: upsert discussion comment essence failed: {e}");
+                            crate::error!(
+                                "migrate: upsert discussion comment essence failed: {e}"
+                            );
                             out.errors += 1;
                             continue;
                         }
@@ -378,34 +277,4 @@ async fn migrate_spaces_content(
             }
         }
     }
-}
-
-/// Drop the `PREFIX#` that `DynamoEnum` Display emits, returning just the
-/// id portion for display. Idempotent on strings that have no `#`.
-#[cfg(feature = "server")]
-fn strip_prefix(raw: &str) -> &str {
-    raw.split_once('#').map(|(_, tail)| tail).unwrap_or(raw)
-}
-
-/// Strip HTML tags and return a rough word count — matches how the running
-/// create_post handler estimates body length so migrated rows are
-/// consistent with newly-created ones.
-#[cfg(feature = "server")]
-fn estimate_word_count(html: &str) -> u32 {
-    let re_tags = regex::Regex::new(r"<[^>]+>").unwrap();
-    let text = re_tags.replace_all(html, " ");
-    text.split_whitespace().count() as u32
-}
-
-/// First `n` characters of `s`, stopping at a word boundary. Used to build
-/// a row title from comment content that is stored as free-form text.
-#[cfg(feature = "server")]
-fn summarize(s: &str, n: usize) -> String {
-    let trimmed = s.trim();
-    if trimmed.chars().count() <= n {
-        return trimmed.to_string();
-    }
-    let mut out: String = trimmed.chars().take(n).collect();
-    out.push('…');
-    out
 }

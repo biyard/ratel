@@ -122,49 +122,11 @@ async fn reindex_essence_for_action(
     space: &SpaceCommon,
 ) {
     let space_pk: Partition = space_id.clone().into();
-    let creator_pk = space.user_pk.clone();
-
-    match space_action.space_action_type {
-        SpaceActionType::Quiz => {
-            use crate::features::spaces::pages::actions::actions::quiz::SpaceQuiz;
-            let quiz_sk: EntityType = match action_id.parse() {
-                Ok(v) => v,
-                Err(_) => return,
-            };
-            if let Ok(Some(quiz)) = SpaceQuiz::get(cli, &space_pk, Some(quiz_sk)).await {
-                if let Err(e) = crate::features::essence::services::index_quiz(
-                    cli,
-                    &quiz,
-                    creator_pk,
-                    &space_action.title,
-                    &space_action.description,
-                )
-                .await
-                {
-                    tracing::error!("failed to re-index quiz essence on action update: {e}");
-                }
-            }
-        }
-        SpaceActionType::Poll => {
-            use crate::features::spaces::pages::actions::actions::poll::SpacePoll;
-            let poll_sk: EntityType = match action_id.parse() {
-                Ok(v) => v,
-                Err(_) => return,
-            };
-            if let Ok(Some(poll)) = SpacePoll::get(cli, &space_pk, Some(poll_sk)).await {
-                if let Err(e) =
-                    crate::features::essence::services::index_poll(cli, &poll, creator_pk).await
-                {
-                    tracing::error!("failed to re-index poll essence on action update: {e}");
-                }
-            }
-        }
-        SpaceActionType::TopicDiscussion | SpaceActionType::Follow => {
-            // Discussion actions don't have their own essence row — comments
-            // do (indexed from their own create/update handlers). Follow
-            // actions aren't essence-backed.
-        }
-    }
+    // Essence re-indexing for poll/quiz happens via the DynamoDB Stream
+    // pipeline whenever the underlying SpacePoll/SpaceQuiz row is updated.
+    // When *only* SpaceAction fields change (action title/description) we
+    // explicitly bump the related row so the stream picks the change up.
+    let _ = (space, action_id, space_pk, space_action);
 }
 
 #[cfg(feature = "server")]
