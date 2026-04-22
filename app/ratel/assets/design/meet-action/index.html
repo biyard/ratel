@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Meet Action · Mockup Index</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .index-hero{
+      display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;
+      padding:32px;border-radius:22px;
+      border:1px solid var(--meet-border);background:var(--bg-glass);backdrop-filter:blur(16px);
+      position:relative;overflow:hidden;
+    }
+    .index-hero::before{
+      content:'';position:absolute;inset:0;
+      background:radial-gradient(ellipse 55% 60% at 15% 15%,var(--meet-glow) 0%,transparent 60%),radial-gradient(ellipse 45% 55% at 95% 90%,rgba(168,85,247,0.08) 0%,transparent 60%);
+      pointer-events:none;
+    }
+    .index-hero > *{position:relative;z-index:1}
+    .index-hero__eyebrow{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.20em;text-transform:uppercase;color:var(--text-dim);display:flex;align-items:center;gap:8px;margin-bottom:12px}
+    .index-hero__eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--meet-color);box-shadow:0 0 8px var(--meet-color);animation:rec-pulse 1.1s ease-in-out infinite}
+    .index-hero__title{font-family:var(--font-display);font-size:30px;font-weight:800;letter-spacing:0.02em;line-height:1.15;color:var(--text-primary);margin-bottom:12px}
+    .index-hero__title strong{background:linear-gradient(135deg,var(--meet-color),#ffa5b4);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .index-hero__sub{font-size:14px;color:var(--text-muted);line-height:1.6;max-width:640px}
+    .index-hero__badge{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--meet-color);padding:8px 14px;border-radius:10px;border:1px solid var(--meet-border);background:var(--meet-bg);white-space:nowrap}
+
+    .section{display:flex;flex-direction:column;gap:14px}
+    .section__head{display:flex;align-items:center;gap:12px;padding:0 4px}
+    .section__title{font-family:var(--font-display);font-size:12px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-muted)}
+    .section__title strong{color:var(--meet-color)}
+    .section__dash{flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0.08),transparent)}
+    .section__count{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.1em;color:var(--text-dim)}
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+    .mock-card{
+      position:relative;overflow:hidden;display:flex;flex-direction:column;gap:10px;
+      padding:18px 20px;border-radius:14px;
+      background:var(--bg-glass);backdrop-filter:blur(12px);
+      border:1px solid var(--border-subtle);
+      text-decoration:none;color:var(--text-primary);transition:all 0.25s ease;
+    }
+    .mock-card:hover{border-color:var(--meet-border);transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,0.4),0 0 24px var(--meet-glow)}
+    .mock-card__top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .mock-card__num{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;color:var(--text-dim)}
+    .mock-card__fr{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--meet-color);padding:3px 8px;border-radius:6px;border:1px solid var(--meet-border);background:var(--meet-bg)}
+    .mock-card__title{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:0.04em;color:var(--text-primary);line-height:1.3}
+    .mock-card__desc{font-size:12px;color:var(--text-muted);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .mock-card__foot{display:flex;align-items:center;justify-content:space-between;margin-top:4px;padding-top:10px;border-top:1px solid var(--border-subtle)}
+    .mock-card__arrow{color:var(--text-dim);transition:transform 0.2s,color 0.2s}
+    .mock-card__arrow svg{width:16px;height:16px}
+    .mock-card:hover .mock-card__arrow{color:var(--meet-color);transform:translateX(4px)}
+
+    /* state-color variants on cards */
+    .mock-card[data-state="live"]{background:linear-gradient(180deg,rgba(251,113,133,0.04),var(--bg-glass))}
+    .mock-card[data-state="scheduled"]{background:linear-gradient(180deg,rgba(129,140,248,0.04),var(--bg-glass))}
+    .mock-card[data-state="ended"]{background:linear-gradient(180deg,rgba(110,237,216,0.03),var(--bg-glass))}
+    .mock-card[data-state="term"]{background:linear-gradient(180deg,rgba(255,255,255,0.02),var(--bg-glass))}
+
+    .state-flow{display:flex;align-items:center;gap:10px;padding:18px 20px;border-radius:14px;background:var(--bg-glass);backdrop-filter:blur(12px);border:1px solid var(--border-subtle);flex-wrap:wrap}
+    .state-flow__node{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted)}
+    .state-flow__node--scheduled{background:rgba(129,140,248,0.08);border-color:rgba(129,140,248,0.25);color:var(--accent-violet)}
+    .state-flow__node--live{background:rgba(251,113,133,0.08);border-color:rgba(251,113,133,0.3);color:var(--meet-color)}
+    .state-flow__node--ended{background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.25);color:var(--accent-green)}
+    .state-flow__node--term{background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.22);color:var(--accent-coral)}
+    .state-flow__arrow svg{width:14px;height:14px;color:var(--text-dim)}
+
+    @media (max-width:720px){
+      .index-hero{grid-template-columns:1fr;padding:22px}
+      .index-hero__title{font-size:22px}
+      .grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home" aria-label="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo">R</div>
+      <div class="u-col">
+        <span class="arena-topbar__title">Meet Action</span>
+        <span class="arena-topbar__handle">Stage 2 · Mockup</span>
+      </div>
+      <span class="arena-topbar__status arena-topbar__status--live">Design · Live</span>
+    </div>
+    <div class="arena-topbar__actions">
+      <a class="btn btn--ghost btn--small" href="../../../../../roadmap/meet-action.md" style="text-decoration:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Spec
+      </a>
+    </div>
+  </div>
+
+  <div class="page page--wide">
+    <div class="index-hero">
+      <div>
+        <div class="index-hero__eyebrow">Stage 2 · UI Mockup</div>
+        <h1 class="index-hero__title">Meet Action <strong>— 9 screens</strong></h1>
+        <p class="index-hero__sub">
+          space admin이 일정 예약 / 즉시 시작할 수 있는 first-class 실시간 회의 액션. 녹화 · 화자 diarization transcript · chat log · moderation log가 자동으로 같은 페이지에 아카이빙됩니다. Poll · Quiz · Discussion · Follow의 패밀리에 합류합니다.
+        </p>
+      </div>
+      <div class="index-hero__badge">roadmap/meet-action.md</div>
+    </div>
+
+    <div class="state-flow">
+      <span style="font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);margin-right:4px">State machine</span>
+      <span class="state-flow__node state-flow__node--scheduled">Scheduled</span>
+      <span class="state-flow__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+      <span class="state-flow__node state-flow__node--live">Live</span>
+      <span class="state-flow__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+      <span class="state-flow__node state-flow__node--ended">Ended</span>
+      <span style="margin:0 8px;color:var(--text-dim);font-family:var(--font-display);font-size:10px">또는</span>
+      <span class="state-flow__node state-flow__node--term">Cancelled</span>
+      <span class="state-flow__node state-flow__node--term">Expired</span>
+    </div>
+
+    <section class="section">
+      <div class="section__head">
+        <h2 class="section__title">Space admin · <strong>Create</strong> & manage</h2>
+        <span class="section__dash"></span>
+        <span class="section__count">3 screens</span>
+      </div>
+      <div class="grid">
+
+        <a class="mock-card" href="action-list-with-meet.html">
+          <div class="mock-card__top"><span class="mock-card__num">01</span><span class="mock-card__fr">FR-1</span></div>
+          <h3 class="mock-card__title">Action List · Placement</h3>
+          <p class="mock-card__desc">Meet이 space action list에 Poll · Quiz · Discussion · Follow와 함께 노출되는 방식.</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--meet" style="font-size:9px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+              Family
+            </span>
+            <span class="mock-card__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+          </div>
+        </a>
+
+        <a class="mock-card" href="create-meet.html">
+          <div class="mock-card__top"><span class="mock-card__num">02</span><span class="mock-card__fr">FR-2 · 13 · 14</span></div>
+          <h3 class="mock-card__title">Create Meet</h3>
+          <p class="mock-card__desc">Scheduled vs Instant 토글 · 제목/설명/시간/지속시간 · 호스트/참석자 reward (free-tier 비활성화) · Essence toggle.</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--meet" style="font-size:9px">Interactive</span>
+            <span class="mock-card__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+          </div>
+        </a>
+
+        <a class="mock-card" href="notifications.html">
+          <div class="mock-card__top"><span class="mock-card__num">03</span><span class="mock-card__fr">FR-5</span></div>
+          <h3 class="mock-card__title">Notifications · 4 events</h3>
+          <p class="mock-card__desc">Schedule / 10-min before / Live / Recording ready — inbox + email 프리뷰.</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--meet" style="font-size:9px">Delivery</span>
+            <span class="mock-card__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section__head">
+        <h2 class="section__title">Meet <strong>states</strong> · Lifecycle pages</h2>
+        <span class="section__dash"></span>
+        <span class="section__count">4 screens</span>
+      </div>
+      <div class="grid">
+
+        <a class="mock-card" data-state="scheduled" href="scheduled.html">
+          <div class="mock-card__top"><span class="mock-card__num">04</span><span class="mock-card__fr">FR-11 · FR-4</span></div>
+          <h3 class="mock-card__title">Scheduled</h3>
+          <p class="mock-card__desc">시작 전 · Add-to-calendar · 참석자 목록 · Join 버튼 활성화 윈도우 (N분 전).</p>
+          <div class="mock-card__foot">
+            <span class="pill pill--pending">Scheduled</span>
+            <span class="mock-card__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+          </div>
+        </a>
+
+        <a class="mock-card" data-state="live" href="live.html">
+          <div class="mock-card__top"><span class="mock-card__num">05</span><span class="mock-card__fr">FR-6 · FR-7</span></div>
+          <h3 class="mock-card__title">Live Meeting</h3>
+          <p class="mock-card__desc">비디오 그리드 · 컨트롤 바 · chat · raise hand · reactions · host mute/remove/end 모달 · REC indicator.</p>
+          <div class="mock-card__foot">
+            <span class="rec-badge" style="font-size:9px">Live</span>
+            <span class="mock-card__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+          </div>
+        </a>
+
+        <a class="mock-card" data-state="ended" href="ended.html">
+          <div class="mock-card__top"><span class="mock-card__num">06</span><span class="mock-card__fr">FR-8 · 9 · 10 · 13</span></div>
+          <h3 class="mock-card__title">Ended · Archive</h3>
+          <p class="mock-card__desc">녹화 플레이어 + 화자별 transcript (클릭 → seek) + chat log + 참석자 타임 + moderation log + reward 지급 내역.</p>
+          <div class="mock-card__foot">
+            <span class="pill pill--approved">Ended</span>
+            <span class="mock-card__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+          </div>
+        </a>
+
+        <a class="mock-card" data-state="term" href="terminal-states.html">
+          <div class="mock-card__top"><span class="mock-card__num">07</span><span class="mock-card__fr">FR-12</span></div>
+          <h3 class="mock-card__title">Cancelled / Expired</h3>
+          <p class="mock-card__desc">Cancelled (admin이 취소 + 사유) / Expired (24h 내 start 안 됨) 두 terminal state variant 토글.</p>
+          <div class="mock-card__foot">
+            <span class="pill pill--rejected">Terminal</span>
+            <span class="mock-card__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section__head">
+        <h2 class="section__title">Participant · <strong>Calendar & access</strong></h2>
+        <span class="section__dash"></span>
+        <span class="section__count">2 screens</span>
+      </div>
+      <div class="grid">
+
+        <a class="mock-card" href="calendar-add.html">
+          <div class="mock-card__top"><span class="mock-card__num">08</span><span class="mock-card__fr">FR-4</span></div>
+          <h3 class="mock-card__title">Add to Calendar</h3>
+          <p class="mock-card__desc">Google Calendar OAuth 동의 (minimum scope) + ICS 파일 다운로드 · one-way Ratel → Google.</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--violet" style="font-size:9px">OAuth</span>
+            <span class="mock-card__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+          </div>
+        </a>
+
+        <a class="mock-card" href="notifications.html">
+          <div class="mock-card__top"><span class="mock-card__num">09</span><span class="mock-card__fr">FR-3 · 5</span></div>
+          <h3 class="mock-card__title">Notifications · Same as #03</h3>
+          <p class="mock-card__desc">Participant 관점에서 보는 4개의 알림 타임라인 (위 카드와 동일).</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--meet" style="font-size:9px">Cross-link</span>
+            <span class="mock-card__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+</div>
+
+<script src="shared.js" defer></script>
+</body>
+</html>
