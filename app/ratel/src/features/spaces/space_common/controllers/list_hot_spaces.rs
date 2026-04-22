@@ -52,13 +52,6 @@ pub struct HotSpaceResponse {
     pub created_at: i64,
 }
 
-#[cfg(feature = "server")]
-const PER_CATEGORY_LIMIT: i32 = 20;
-#[cfg(feature = "server")]
-const RESPONSE_PAGE_LIMIT: usize = 10;
-#[cfg(feature = "server")]
-const PUBLIC_FALLBACK_LIMIT: i32 = 50;
-
 #[get("/api/home/hot-spaces?bookmark", user: OptionalUser)]
 pub async fn list_hot_spaces_handler(
     bookmark: Option<String>,
@@ -142,7 +135,6 @@ pub async fn list_hot_spaces_handler(
             .partial_cmp(&activity_score(a, now_ms))
             .unwrap_or(std::cmp::Ordering::Equal)
     });
-    items.truncate(RESPONSE_PAGE_LIMIT);
     for (idx, item) in items.iter_mut().enumerate() {
         item.rank = idx as i64 + 1;
     }
@@ -157,11 +149,9 @@ pub async fn list_hot_spaces_handler(
 async fn collect_spaces_via_timeline(
     cli: &aws_sdk_dynamodb::Client,
     user: &crate::features::auth::User,
-    bookmark: Option<String>,
-) -> Result<(Vec<SpaceCommon>, Option<String>)> {
     // Per-category bookmarks don't compose across 4 parallel queries.
-    let _ = bookmark;
-
+    _bookmark: Option<String>,
+) -> Result<(Vec<SpaceCommon>, Option<String>)> {
     let user_id = match &user.pk {
         Partition::User(id) => id.clone(),
         _ => return Ok((vec![], None)),
@@ -174,7 +164,7 @@ async fn collect_spaces_via_timeline(
 
     let futures = category_keys.iter().map(|category_key| {
         let opt = TimelineEntry::opt()
-            .limit(PER_CATEGORY_LIMIT)
+            .limit(5)
             .scan_index_forward(false);
         let cat = category_key.clone();
         async move { TimelineEntry::find_by_category(cli, cat, opt).await }
@@ -233,7 +223,7 @@ async fn collect_public_fallback(
     cli: &aws_sdk_dynamodb::Client,
     bookmark: Option<String>,
 ) -> Result<(Vec<SpaceCommon>, Option<String>)> {
-    let opts = SpaceCommon::opt_with_bookmark(bookmark).limit(PUBLIC_FALLBACK_LIMIT);
+    let opts = SpaceCommon::opt_with_bookmark(bookmark).limit(10);
     let visibility_pk = format!(
         "{}#{}",
         SpacePublishState::Published,

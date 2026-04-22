@@ -16,13 +16,6 @@ use crate::features::spaces::pages::actions::types::SpaceActionType;
 #[cfg(feature = "server")]
 use std::collections::HashMap;
 
-// Wider than the response page so the active-only filter has room to drop
-// Designing/Finished spaces before the last-activity sort.
-#[cfg(feature = "server")]
-const PARTICIPANT_FETCH_LIMIT: i32 = 30;
-#[cfg(feature = "server")]
-const RESPONSE_PAGE_LIMIT: usize = 10;
-
 #[get("/api/home/my-spaces?bookmark", user: User)]
 pub async fn list_my_home_spaces_handler(
     bookmark: Option<String>,
@@ -30,7 +23,7 @@ pub async fn list_my_home_spaces_handler(
     let conf = crate::common::config::ServerConfig::default();
     let cli = conf.dynamodb();
 
-    let opts = SpaceParticipant::opt_with_bookmark(bookmark).limit(PARTICIPANT_FETCH_LIMIT);
+    let opts = SpaceParticipant::opt_with_bookmark(bookmark).limit(10);
     let (participants, next_bookmark) =
         SpaceParticipant::find_by_user(cli, &user.pk, opts).await?;
 
@@ -66,7 +59,6 @@ pub async fn list_my_home_spaces_handler(
         let b_act = activity_map.get(&b.pk.to_string()).copied().unwrap_or(0);
         b_act.cmp(&a_act)
     });
-    spaces.truncate(RESPONSE_PAGE_LIMIT);
 
     let post_keys: Vec<(Partition, EntityType)> = spaces
         .iter()
