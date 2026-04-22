@@ -310,17 +310,17 @@ pub fn DiscussionArenaPage(
 
     let arena = use_discussion_arena(space_id, discussion_id)?;
     let mut comments_loader = arena.comments_loader;
-    let mut polled_new = arena.polled_new;
+    let polled_new = arena.polled_new;
     let active_reply_thread = arena.active_reply_thread;
     let mut sheet_expanded = arena.sheet_expanded;
     let mut mention_query_raw = arena.mention_query_raw;
     let members = arena.members;
     let top_priority = arena.top_priority;
+    let sort_tick = arena.sort_tick;
 
     let disc = arena.disc_loader.clone()();
     let post = disc.post.clone();
     let space_action = disc.space_action.clone();
-    let comments_data = comments_loader();
 
     let status = post.status();
     let is_in_progress = status == DiscussionStatus::InProgress;
@@ -333,21 +333,35 @@ pub fn DiscussionArenaPage(
     );
     let can_comment = can_respond && can_execute && is_in_progress;
 
-    // Base page wins over polled duplicates so a loader restart after
-    // edit/delete clobbers any stale snapshot lingering in the buffer.
-    let comments: Vec<DiscussionCommentResponse> = {
+    // Merge base + polled (base wins on duplicate sks so loader restarts
+    // after edit/delete clobber stale polled snapshots), then rank by
+    // `comment_score` against the local `now`. Re-runs whenever:
+    //  - `comments_loader` resolves with new data
+    //  - `polled_new` gains a new entry
+    //  - `sort_tick` ticks (every 5s, drives time-decay reorder)
+    let comments: Memo<Vec<DiscussionCommentResponse>> = use_memo(move || {
+        // Touch sort_tick so the memo re-evaluates each tick.
+        let _ = sort_tick();
         let polled = polled_new();
-        let base = comments_data.items.clone();
+        let base = comments_loader().items;
         let base_sks: std::collections::HashSet<String> =
             base.iter().map(|c| c.sk.to_string()).collect();
-        base.into_iter()
+        let mut merged: Vec<DiscussionCommentResponse> = base
+            .into_iter()
             .chain(
                 polled
                     .into_iter()
                     .filter(|p| !base_sks.contains(&p.sk.to_string())),
             )
-            .collect()
-    };
+            .collect();
+        let now = crate::common::utils::time::get_now_timestamp();
+        merged.sort_by(|a, b| {
+            comment_score(b, now)
+                .partial_cmp(&comment_score(a, now))
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        merged
+    });
 
     // `overlay_ctx` is only present when mounted as the arena overlay;
     // `on_back` falls back to `nav.go_back()` for the standalone route.
@@ -628,7 +642,7 @@ pub fn DiscussionArenaPage(
 
                         div { class: "comments-scroll",
                             div { class: "comment-list",
-                                for comment in comments.iter().filter(|c| !arena.is_deleted(c)) {
+                                for comment in comments().iter().filter(|c| !arena.is_deleted(c)) {
                                     CommentItem {
                                         key: "{comment.sk}",
                                         comment: comment.clone(),
