@@ -24,11 +24,6 @@ fn go_to_page(index: usize) {
 /// footer's Save button bumps `flush_tick`, and any card observing it
 /// via `use_effect` should fire its pending update immediately rather
 /// than wait out the debounce.
-///
-/// Provided by each creator page at the top via
-/// [`ActionEditSaveBus::provide`]; consumed by individual cards via
-/// [`try_use_action_edit_save_bus`]. Optional so cards without
-/// debounced state can ignore it.
 #[derive(Clone, Copy)]
 pub struct ActionEditSaveBus {
     pub flush_tick: Signal<u64>,
@@ -46,27 +41,54 @@ pub fn try_use_action_edit_save_bus() -> Option<ActionEditSaveBus> {
     try_consume_context()
 }
 
-/// Sticky footer for action-editor pages — Previous / Next / Save.
+/// Sticky bottom footer for action-editor pages — Previous / counter /
+/// Next / Save in one row.
 ///
-/// Layout-wise, the editor renders a horizontal scroll-snap `.pager`
-/// holding 2-3 setting "pages" per action type. Previously the only
-/// way to switch pages was to swipe horizontally and the only save
-/// signal was a per-card autosave indicator, which left users without
-/// a clear "I'm done" affordance. This footer makes both explicit.
-///
-/// The parent owns `current_page` (Signal<usize>) and supplies
-/// `total_pages`. Previous/Next mutate `current_page` and call into JS
-/// to scroll the pager to the target page. Save bumps the
-/// [`ActionEditSaveBus`] for cards to flush.
+/// `current_page` is bidirectional: button clicks call into JS to
+/// smooth-scroll the pager AND update the signal; the JS scroll
+/// listener in `script.js` calls back via a window-attached closure
+/// (`__ratel_aef_set_page`) when the user swipes the pager manually,
+/// keeping the disabled state of Previous/Next in sync with the actual
+/// scroll position.
 #[component]
 pub fn ActionEditFooter(
     current_page: Signal<usize>,
     total_pages: usize,
+    /// Kebab-case action type — drives the per-action accent color via
+    /// `data-action-type` selectors. One of: `"poll"`, `"quiz"`,
+    /// `"discussion"`, `"follow"`.
+    #[props(default)]
+    action_type_key: String,
 ) -> Element {
     let tr: ActionEditFooterTranslate = use_translate();
     let mut toast = use_toast();
     let bus = try_use_action_edit_save_bus();
     let mut current_page = current_page;
+
+    // Register a window-attached callback so the JS scroll listener in
+    // `script.js` can push the active page index back into Rust whenever
+    // the user swipes the pager. `Closure::forget` intentionally leaks
+    // a single closure for the lifetime of the editor session — only
+    // one callback is ever live so the leak is bounded.
+    #[cfg(not(feature = "server"))]
+    use_hook(move || {
+        use wasm_bindgen::closure::Closure;
+        use wasm_bindgen::JsCast;
+        let closure = Closure::wrap(Box::new(move |idx: f64| {
+            let new_page = idx.max(0.0) as usize;
+            if new_page != *current_page.peek() {
+                current_page.set(new_page);
+            }
+        }) as Box<dyn FnMut(f64)>);
+        if let Some(window) = web_sys::window() {
+            let _ = js_sys::Reflect::set(
+                &window,
+                &JsValue::from_str("__ratel_aef_set_page"),
+                closure.as_ref().unchecked_ref(),
+            );
+        }
+        closure.forget();
+    });
 
     let mut go_prev = move |_| {
         let cur = current_page();
@@ -104,7 +126,10 @@ pub fn ActionEditFooter(
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         document::Script { defer: true, src: asset!("./script.js") }
 
-        footer { class: "action-edit-footer", role: "contentinfo",
+        footer {
+            class: "action-edit-footer",
+            role: "contentinfo",
+            "data-action-type": action_type_key,
             div {
                 class: "action-edit-footer__pages",
                 "aria-label": "{tr.pages_aria}",
@@ -112,21 +137,21 @@ pub fn ActionEditFooter(
             }
             div { class: "action-edit-footer__buttons",
                 button {
-                    class: "btn btn--ghost",
+                    class: "aef-btn aef-btn--ghost",
                     "data-testid": "footer-prev-btn",
                     disabled: prev_disabled,
                     onclick: move |e| go_prev(e),
                     "{tr.previous}"
                 }
                 button {
-                    class: "btn btn--secondary",
+                    class: "aef-btn aef-btn--secondary",
                     "data-testid": "footer-next-btn",
                     disabled: next_disabled,
                     onclick: move |e| go_next(e),
                     "{tr.next}"
                 }
                 button {
-                    class: "btn btn--primary",
+                    class: "aef-btn aef-btn--primary",
                     "data-testid": "footer-save-btn",
                     onclick: on_save,
                     "{tr.save}"

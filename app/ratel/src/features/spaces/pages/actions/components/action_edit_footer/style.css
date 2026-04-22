@@ -1,8 +1,30 @@
-/* Sticky footer pinned to the bottom of the action editor arena.
-   Holds Previous / Next / Save controls so users have an explicit
-   navigation + save affordance instead of relying on horizontal swipe
-   between pager pages and silent autosave. */
+/* Sticky bottom footer for action-editor pages — Previous / counter /
+   Next / Save in a single row.
+
+   Theme-aware via the `var(--dark, X) var(--light, Y)` space-toggle so
+   light/dark switches stay in sync with the rest of the editor chrome.
+   `--aef-accent*` defaults to gold and is overridden per
+   `data-action-type` so every interactive accent (button hover, save
+   button background) matches the action's identity color. */
 .action-edit-footer {
+  --aef-bg-glass: var(--dark, rgba(12, 12, 26, 0.85))
+    var(--light, rgba(255, 255, 255, 0.85));
+  --aef-border-subtle: var(--dark, rgba(255, 255, 255, 0.06))
+    var(--light, rgba(10, 10, 30, 0.08));
+  --aef-text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
+  --aef-text-muted: var(--dark, #8888a8) var(--light, #5b5b75);
+  --aef-text-disabled: var(--dark, #55556a) var(--light, #aeaebd);
+  --aef-surface-soft: var(--dark, rgba(255, 255, 255, 0.04))
+    var(--light, rgba(10, 10, 30, 0.04));
+  --aef-surface-hover: var(--dark, rgba(255, 255, 255, 0.08))
+    var(--light, rgba(10, 10, 30, 0.06));
+
+  /* Default accent (gold) — overridden per action type below. */
+  --aef-accent: #fcb300;
+  --aef-accent-bg: rgba(252, 179, 0, 0.12);
+  --aef-accent-bg-hover: rgba(252, 179, 0, 0.20);
+  --aef-accent-border: rgba(252, 179, 0, 0.35);
+
   position: sticky;
   bottom: 0;
   z-index: 20;
@@ -11,14 +33,38 @@
   justify-content: space-between;
   gap: 16px;
   padding: 12px 24px;
-  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.08));
-  background: var(--surface, rgba(12, 12, 26, 0.92));
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  /* Cover any inline width left by the discussion-arena resizer or
-     other sibling layout — the footer must always span the full arena
-     width regardless of inner-page geometry. */
+  border-top: 1px solid var(--aef-border-subtle);
+  background: var(--aef-bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   width: 100%;
+}
+
+/* Per-action accent palette (matches `.type-badge[data-action-type=...]`
+   in action_edit_topbar). */
+.action-edit-footer[data-action-type="poll"] {
+  --aef-accent: #818cf8;
+  --aef-accent-bg: rgba(129, 140, 248, 0.15);
+  --aef-accent-bg-hover: rgba(129, 140, 248, 0.25);
+  --aef-accent-border: rgba(129, 140, 248, 0.40);
+}
+.action-edit-footer[data-action-type="quiz"] {
+  --aef-accent: #a855f7;
+  --aef-accent-bg: rgba(168, 85, 247, 0.15);
+  --aef-accent-bg-hover: rgba(168, 85, 247, 0.25);
+  --aef-accent-border: rgba(168, 85, 247, 0.40);
+}
+.action-edit-footer[data-action-type="discussion"] {
+  --aef-accent: #22d3ee;
+  --aef-accent-bg: rgba(34, 211, 238, 0.13);
+  --aef-accent-bg-hover: rgba(34, 211, 238, 0.22);
+  --aef-accent-border: rgba(34, 211, 238, 0.36);
+}
+.action-edit-footer[data-action-type="follow"] {
+  --aef-accent: #fb923c;
+  --aef-accent-bg: rgba(251, 146, 60, 0.15);
+  --aef-accent-bg-hover: rgba(251, 146, 60, 0.25);
+  --aef-accent-border: rgba(251, 146, 60, 0.40);
 }
 
 .action-edit-footer__pages {
@@ -27,7 +73,8 @@
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-muted, rgba(136, 136, 168, 0.9));
+  color: var(--aef-text-muted);
+  user-select: none;
 }
 
 .action-edit-footer__buttons {
@@ -35,15 +82,64 @@
   gap: 8px;
 }
 
-/* Reuse the shared `.btn` modifiers from the action editor mockup CSS;
-   only add overrides specific to the footer layout (size, disabled
-   appearance) here. */
-.action-edit-footer .btn {
+/* Buttons scoped under aef-btn so global `.btn` rules from the editor
+   mockup CSS don't leak in. Flex centering ensures labels stay
+   visually centered both horizontally and vertically regardless of
+   font metrics. */
+.aef-btn {
   min-width: 96px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-family: "Outfit", "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease;
 }
-.action-edit-footer .btn:disabled {
+
+.aef-btn--ghost {
+  background: transparent;
+  border: 1px solid var(--aef-border-subtle);
+  color: var(--aef-text-muted);
+}
+.aef-btn--ghost:hover:not(:disabled) {
+  background: var(--aef-accent-bg);
+  border-color: var(--aef-accent-border);
+  color: var(--aef-accent);
+}
+
+.aef-btn--secondary {
+  background: var(--aef-surface-soft);
+  border: 1px solid var(--aef-border-subtle);
+  color: var(--aef-text-primary);
+}
+.aef-btn--secondary:hover:not(:disabled) {
+  background: var(--aef-accent-bg);
+  border-color: var(--aef-accent-border);
+  color: var(--aef-accent);
+}
+
+.aef-btn--primary {
+  background: var(--aef-accent-bg);
+  border: 1px solid var(--aef-accent-border);
+  color: var(--aef-accent);
+}
+.aef-btn--primary:hover:not(:disabled) {
+  background: var(--aef-accent-bg-hover);
+}
+
+.aef-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+  color: var(--aef-text-disabled);
 }
 
 @media (max-width: 600px) {
@@ -59,7 +155,7 @@
   .action-edit-footer__buttons {
     justify-content: space-between;
   }
-  .action-edit-footer .btn {
+  .aef-btn {
     flex: 1;
     min-width: 0;
   }

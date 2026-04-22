@@ -38,7 +38,7 @@ pub fn FollowCreatorPage(
             ActionEditTopbar {
                 space_name: space.title.clone(),
                 action_type_label: tr.type_badge_label.to_string(),
-                action_type_key: "follow".to_string(),
+                action_type_key: "follow",
                 title,
                 on_title_change: move |_v: String| {},
                 editable_title: false,
@@ -64,7 +64,7 @@ pub fn FollowCreatorPage(
                     prerequisite: action_setting().prerequisite,
                 }
             }
-            ActionEditFooter { current_page, total_pages: 2 }
+            ActionEditFooter { current_page, total_pages: 2, action_type_key: "follow" }
         }
     }
 }
