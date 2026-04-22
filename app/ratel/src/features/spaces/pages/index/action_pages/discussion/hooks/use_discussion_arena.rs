@@ -2,13 +2,16 @@ use crate::common::components::mention_autocomplete::MentionCandidate;
 use crate::common::hooks::use_interval;
 use crate::common::*;
 use crate::features::spaces::pages::actions::actions::discussion::controllers::{
-    get_comment, get_discussion_detail, list_comments, list_replies,
+    add_comment, delete_comment, get_comment, get_discussion_detail, like_comment, list_comments,
+    list_replies, reply_comment, update_comment, AddCommentRequest, LikeCommentRequest,
+    ReplyCommentRequest, UpdateCommentRequest,
 };
 use crate::features::spaces::pages::actions::actions::discussion::{
-    DiscussionCommentResponse, DiscussionResponse,
+    DiscussionCommentResponse, DiscussionResponse, SpacePostCommentTargetEntityType,
 };
 use crate::features::spaces::space_common::controllers::{list_space_members, SpaceMemberResponse};
 use dioxus::fullstack::Loader;
+use std::str::FromStr;
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct UseDiscussionArena {
@@ -25,6 +28,60 @@ pub struct UseDiscussionArena {
     pub mention_query: Signal<Option<String>>,
     pub members: ReadSignal<Vec<MentionCandidate>>,
     pub top_priority: ReadSignal<Vec<String>>,
+
+    /// Optimistic like toggles keyed by comment sk. Tuple is
+    /// `(liked_override, likes_delta)` — delta is relative to the
+    /// base `comment.likes` from the loader/polled buffer so swings
+    /// across rollbacks + repeat toggles stay consistent.
+    pub like_overlays: Signal<std::collections::HashMap<String, (bool, i64)>>,
+
+    /// Content patches written by an in-flight or just-resolved edit;
+    /// read via `effective_content` so the pre-loader-restart frame
+    /// doesn't flash the old text.
+    pub content_overlays: Signal<std::collections::HashMap<String, String>>,
+
+    /// Soft-delete set — components skip rendering sks in here until
+    /// the next `comments_loader.restart()` drops them for real.
+    pub deleted_sks: Signal<std::collections::HashSet<String>>,
+
+    pub like_comment: Action<(String, bool), ()>,
+    pub update_comment: Action<(String, String), ()>,
+    pub delete_comment: Action<(String,), ()>,
+    pub add_comment: Action<(String, Vec<String>), ()>,
+    pub reply_comment: Action<(String, String, Vec<String>), ()>,
+}
+
+impl UseDiscussionArena {
+    pub fn effective_liked(&self, comment: &DiscussionCommentResponse) -> bool {
+        self.like_overlays
+            .read()
+            .get(&comment.sk.to_string())
+            .map(|(l, _)| *l)
+            .unwrap_or(comment.liked)
+    }
+
+    pub fn effective_likes(&self, comment: &DiscussionCommentResponse) -> i64 {
+        let base = comment.likes as i64;
+        let delta = self
+            .like_overlays
+            .read()
+            .get(&comment.sk.to_string())
+            .map(|(_, d)| *d)
+            .unwrap_or(0);
+        (base + delta).max(0)
+    }
+
+    pub fn effective_content(&self, comment: &DiscussionCommentResponse) -> String {
+        self.content_overlays
+            .read()
+            .get(&comment.sk.to_string())
+            .cloned()
+            .unwrap_or_else(|| comment.content.clone())
+    }
+
+    pub fn is_deleted(&self, comment: &DiscussionCommentResponse) -> bool {
+        self.deleted_sks.read().contains(&comment.sk.to_string())
+    }
 }
 
 #[track_caller]
@@ -43,14 +100,14 @@ pub fn use_discussion_arena(
         get_discussion_detail(space_id(), discussion_id()).await
     })?;
 
-    let comments_loader = use_loader(move || async move {
+    let mut comments_loader = use_loader(move || async move {
         list_comments(space_id(), discussion_id(), None, None).await
     })?;
 
     // Default-on-None keeps the initial mount synchronous and turns
     // future flips into background refreshes, so `?` never suspends up
     // to the overlay's SuspenseBoundary mid-session.
-    let parent_loader = use_loader(move || async move {
+    let mut parent_loader = use_loader(move || async move {
         let Some(id) = active_reply_thread() else {
             return Ok::<DiscussionCommentResponse, crate::common::Error>(
                 DiscussionCommentResponse::default(),
@@ -64,7 +121,7 @@ pub fn use_discussion_arena(
         .await
     })?;
 
-    let replies_loader = use_loader(move || async move {
+    let mut replies_loader = use_loader(move || async move {
         let Some(id) = active_reply_thread() else {
             return Ok::<ListResponse<DiscussionCommentResponse>, crate::common::Error>(
                 ListResponse::<DiscussionCommentResponse>::default(),
@@ -180,6 +237,164 @@ pub fn use_discussion_arena(
     });
     let top_priority: ReadSignal<Vec<String>> = top_priority.into();
 
+    let mut like_overlays: Signal<std::collections::HashMap<String, (bool, i64)>> =
+        use_signal(std::collections::HashMap::new);
+    let mut content_overlays: Signal<std::collections::HashMap<String, String>> =
+        use_signal(std::collections::HashMap::new);
+    let mut deleted_sks: Signal<std::collections::HashSet<String>> =
+        use_signal(std::collections::HashSet::new);
+
+    let mut toast = use_toast();
+    let like_comment = use_action(move |sk_str: String, next: bool| async move {
+        let prev_overlay = like_overlays.read().get(&sk_str).cloned();
+        let prev_delta = prev_overlay.as_ref().map(|(_, d)| *d).unwrap_or(0);
+        let new_delta = prev_delta + if next { 1 } else { -1 };
+        like_overlays
+            .write()
+            .insert(sk_str.clone(), (next, new_delta));
+
+        let rollback = |sks: String, prev: Option<(bool, i64)>| {
+            let mut like_overlays = like_overlays;
+            match prev {
+                Some(p) => {
+                    like_overlays.write().insert(sks, p);
+                }
+                None => {
+                    like_overlays.write().remove(&sks);
+                }
+            }
+        };
+
+        let target_sk = match SpacePostCommentTargetEntityType::from_str(&sk_str) {
+            Ok(v) => v,
+            Err(e) => {
+                rollback(sk_str, prev_overlay);
+                tracing::error!("like: invalid sk: {:?}", e);
+                toast.error(e);
+                return Ok::<(), crate::common::Error>(());
+            }
+        };
+        let req = LikeCommentRequest { like: next };
+        if let Err(e) = like_comment(space_id(), discussion_id(), target_sk, req).await {
+            rollback(sk_str, prev_overlay);
+            tracing::error!("like failed: {:?}", e);
+            toast.error(e);
+        }
+        Ok::<(), crate::common::Error>(())
+    });
+
+    let update_comment = use_action(move |sk_str: String, new_content: String| async move {
+        let target_sk = match SpacePostCommentTargetEntityType::from_str(&sk_str) {
+            Ok(v) => v,
+            Err(e) => {
+                tracing::error!("update: invalid sk: {:?}", e);
+                toast.error(e);
+                return Ok::<(), crate::common::Error>(());
+            }
+        };
+        let prev_overlay = content_overlays.read().get(&sk_str).cloned();
+        content_overlays
+            .write()
+            .insert(sk_str.clone(), new_content.clone());
+
+        let req = UpdateCommentRequest {
+            content: new_content,
+            images: None,
+        };
+        match update_comment(space_id(), discussion_id(), target_sk, req).await {
+            Ok(_) => {
+                comments_loader.restart();
+            }
+            Err(e) => {
+                match prev_overlay {
+                    Some(p) => {
+                        content_overlays.write().insert(sk_str, p);
+                    }
+                    None => {
+                        content_overlays.write().remove(&sk_str);
+                    }
+                }
+                tracing::error!("update failed: {:?}", e);
+                toast.error(e);
+            }
+        }
+        Ok::<(), crate::common::Error>(())
+    });
+
+    let delete_comment = use_action(move |sk_str: String| async move {
+        let target_sk = match SpacePostCommentTargetEntityType::from_str(&sk_str) {
+            Ok(v) => v,
+            Err(e) => {
+                tracing::error!("delete: invalid sk: {:?}", e);
+                toast.error(e);
+                return Ok::<(), crate::common::Error>(());
+            }
+        };
+        let was_present = deleted_sks.write().insert(sk_str.clone());
+        match delete_comment(space_id(), discussion_id(), target_sk).await {
+            Ok(_) => {
+                // Drop any polled snapshot so polling (which only fires
+                // on created_at > cursor) doesn't resurrect the entry.
+                polled_new.with_mut(|list| list.retain(|c| c.sk.to_string() != sk_str));
+                comments_loader.restart();
+                // Thread view: parent's reply count lives on parent_loader.
+                parent_loader.restart();
+                deleted_sks.write().remove(&sk_str);
+            }
+            Err(e) => {
+                if was_present {
+                    deleted_sks.write().remove(&sk_str);
+                }
+                tracing::error!("delete failed: {:?}", e);
+                toast.error(e);
+            }
+        }
+        Ok::<(), crate::common::Error>(())
+    });
+
+    let add_comment_action = use_action(move |content: String, images: Vec<String>| async move {
+        let req = AddCommentRequest { content, images };
+        match add_comment(space_id(), discussion_id(), req).await {
+            Ok(_) => {
+                comments_loader.restart();
+            }
+            Err(e) => {
+                tracing::error!("add comment: {:?}", e);
+                toast.error(e);
+            }
+        }
+        Ok::<(), crate::common::Error>(())
+    });
+
+    let reply_comment_action = use_action(
+        move |parent_sk: String, content: String, images: Vec<String>| async move {
+            // Strip the `SPACE_POST_COMMENT#` prefix via Target's FromStr,
+            // then rewrap as the narrower type the reply endpoint wants.
+            let comment_sk_entity =
+                match SpacePostCommentTargetEntityType::from_str(&parent_sk) {
+                    Ok(v) => SpacePostCommentEntityType(v.0),
+                    Err(e) => {
+                        tracing::error!("reply: invalid parent sk: {:?}", e);
+                        toast.error(e);
+                        return Ok::<(), crate::common::Error>(());
+                    }
+                };
+            let req = ReplyCommentRequest { content, images };
+            match reply_comment(space_id(), discussion_id(), comment_sk_entity, req).await {
+                Ok(_) => {
+                    comments_loader.restart();
+                    replies_loader.restart();
+                    parent_loader.restart();
+                }
+                Err(e) => {
+                    tracing::error!("reply comment: {:?}", e);
+                    toast.error(e);
+                }
+            }
+            Ok(())
+        },
+    );
+
     Ok(use_context_provider(|| UseDiscussionArena {
         active_reply_thread,
         sheet_expanded,
@@ -194,5 +409,13 @@ pub fn use_discussion_arena(
         mention_query,
         members,
         top_priority,
+        like_overlays,
+        content_overlays,
+        deleted_sks,
+        like_comment,
+        update_comment,
+        delete_comment,
+        add_comment: add_comment_action,
+        reply_comment: reply_comment_action,
     }))
 }

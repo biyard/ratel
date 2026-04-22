@@ -5,10 +5,7 @@ use crate::common::components::mention_autocomplete::{
 use crate::common::components::paste_image_uploader;
 use crate::common::components::CommentImageGrid;
 use crate::common::utils::mention::{apply_mention_markup, parse_mention_segments, ContentSegment};
-use crate::features::spaces::pages::actions::actions::discussion::controllers::{
-    add_comment, delete_comment, like_comment, list_replies, reply_comment, update_comment,
-    AddCommentRequest, LikeCommentRequest, ReplyCommentRequest, UpdateCommentRequest,
-};
+use crate::features::spaces::pages::actions::actions::discussion::controllers::list_replies;
 use crate::features::spaces::pages::actions::actions::discussion::{
     DiscussionCommentResponse, DiscussionStatus, SpacePostCommentTargetEntityType,
 };
@@ -95,17 +92,18 @@ fn ReplyThreadView(
     on_close: EventHandler<()>,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
-    let mut toast = use_toast();
     let role = use_space_role()();
     let space = use_space()();
 
+    let arena = use_discussion_arena(space_id, discussion_id)?;
     let UseDiscussionArena {
         mut parent_loader,
         mut replies_loader,
         members,
         mut mention_query_raw,
+        mut like_comment,
         ..
-    } = use_discussion_arena(space_id, discussion_id)?;
+    } = arena;
     let parent = parent_loader();
 
     // Local mirror of the loader so optimistic mutations have a writable
@@ -143,48 +141,11 @@ fn ReplyThreadView(
         }
     };
 
-    // Seed optimistic like state from the loader once it resolves; sk
-    // change indicates a different parent so re-seed.
-    let mut parent_liked = use_signal(|| false);
-    let mut parent_likes = use_signal(|| 0i64);
-    let mut parent_like_processing = use_signal(|| false);
-    let mut last_synced_parent_sk: Signal<String> = use_signal(String::new);
-    use_effect(move || {
-        let p = parent_loader();
-        let sk = p.sk.to_string();
-        if !sk.is_empty() && sk != last_synced_parent_sk() {
-            parent_liked.set(p.liked);
-            parent_likes.set(p.likes as i64);
-            last_synced_parent_sk.set(sk);
-        }
-    });
     let parent_sk_for_like = parent.sk.clone();
     let on_parent_like = move |_| {
-        let target_sk: SpacePostCommentTargetEntityType =
-            parent_sk_for_like.clone().into();
-        async move {
-            if parent_like_processing() {
-                return;
-            }
-            let next = !parent_liked();
-            let prev_liked = parent_liked();
-            let prev_likes = parent_likes();
-            parent_liked.set(next);
-            parent_likes.set((prev_likes + if next { 1 } else { -1 }).max(0));
-            parent_like_processing.set(true);
-
-            let req = LikeCommentRequest { like: next };
-            match like_comment(space_id(), discussion_id(), target_sk, req).await {
-                Ok(_) => {}
-                Err(err) => {
-                    parent_liked.set(prev_liked);
-                    parent_likes.set(prev_likes);
-                    tracing::error!("Failed to toggle parent like: {:?}", err);
-                    toast.error(err);
-                }
-            }
-            parent_like_processing.set(false);
-        }
+        let sk_str = parent_sk_for_like.to_string();
+        let next = !arena.effective_liked(&parent_loader());
+        like_comment.call(sk_str, next);
     };
 
     // Read `parent_loader` inside so the memo rebuilds when the cached
@@ -210,40 +171,23 @@ fn ReplyThreadView(
     });
     let reply_priority: ReadSignal<Vec<String>> = reply_priority.into();
 
-    let parent_for_submit = parent.clone();
+    let parent_sk_for_submit = parent.sk.to_string();
+    let mut reply_comment_action = arena.reply_comment;
     let on_submit_reply = move |_| {
-        let parent = parent_for_submit.clone();
-        async move {
-            let raw_text = reply_text().trim().to_string();
-            let images: Vec<String> = reply_pending_images
-                .read()
-                .iter()
-                .filter_map(|img| img.remote_url.clone())
-                .collect();
-            if raw_text.is_empty() && images.is_empty() {
-                return;
-            }
-            let content = apply_mention_markup(&raw_text, &reply_tracked_mentions.read());
-            let comment_sk_entity: SpacePostCommentEntityType =
-                parent.sk.clone().try_into().unwrap_or_default();
-            let req = ReplyCommentRequest { content, images };
-            match reply_comment(space_id(), discussion_id(), comment_sk_entity, req).await {
-                Ok(new_reply) => {
-                    let mut current = replies();
-                    current.insert(0, new_reply);
-                    replies.set(current);
-                    reply_text.set(String::new());
-                    reply_tracked_mentions.set(Vec::new());
-                    reply_pending_images.set(Vec::new());
-                    parent_loader.restart();
-                    toast.info(tr.reply_success);
-                }
-                Err(err) => {
-                    tracing::error!("Failed to post reply: {:?}", err);
-                    toast.error(err);
-                }
-            }
+        let raw_text = reply_text().trim().to_string();
+        let images: Vec<String> = reply_pending_images
+            .read()
+            .iter()
+            .filter_map(|img| img.remote_url.clone())
+            .collect();
+        if raw_text.is_empty() && images.is_empty() {
+            return;
         }
+        let content = apply_mention_markup(&raw_text, &reply_tracked_mentions.read());
+        reply_comment_action.call(parent_sk_for_submit.clone(), content, images);
+        reply_text.set(String::new());
+        reply_tracked_mentions.set(Vec::new());
+        reply_pending_images.set(Vec::new());
     };
 
     let parent_time_ago = format_time_ago(parent.created_at);
@@ -297,19 +241,20 @@ fn ReplyThreadView(
                             CommentImageGrid { images: parent.images.clone() }
                             div { class: "comment-item__actions",
                                 button {
-                                    class: if parent_liked() { "comment-action comment-action--liked" } else { "comment-action" },
-                                    disabled: parent_like_processing(),
+                                    class: "comment-action",
+                                    "aria-pressed": arena.effective_liked(&parent),
+                                    disabled: like_comment.pending(),
                                     onclick: on_parent_like,
                                     svg {
                                         view_box: "0 0 24 24",
-                                        fill: if parent_liked() { "currentColor" } else { "none" },
+                                        fill: if arena.effective_liked(&parent) { "currentColor" } else { "none" },
                                         stroke: "currentColor",
                                         stroke_width: "2",
                                         stroke_linecap: "round",
                                         stroke_linejoin: "round",
                                         path { d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" }
                                     }
-                                    span { "{parent_likes()}" }
+                                    span { "{arena.effective_likes(&parent)}" }
                                 }
                             }
                         }
@@ -317,14 +262,13 @@ fn ReplyThreadView(
                 }
 
                 div { class: "reply-thread__list",
-                    for reply in replies().iter() {
+                    for reply in replies().iter().filter(|r| !arena.is_deleted(r)) {
                         ReplyItem {
                             key: "{reply.sk}",
                             reply: reply.clone(),
                             space_id,
                             discussion_id,
                             replies,
-                            on_parent_refresh: move |_| parent_loader.restart(),
                             can_comment,
                         }
                     }
@@ -342,7 +286,7 @@ fn ReplyThreadView(
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
                         disabled: reply_text().trim().is_empty()
-                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
                         on_mention_query_change,
                         on_composer_focus,
                         priority_user_pks: reply_priority,
@@ -360,7 +304,6 @@ pub fn DiscussionArenaPage(
     #[props(default)] target_comment_id: Option<String>,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
-    let mut toast = use_toast();
     let mut space_ctx = use_space_context();
     let role = use_space_role()();
     let space = use_space()();
@@ -487,7 +430,8 @@ pub fn DiscussionArenaPage(
         }
     };
 
-    let on_submit_comment = move |_| async move {
+    let mut add_comment_action = arena.add_comment;
+    let mut on_submit_comment = move |_| {
         let raw_text = comment_text().trim().to_string();
         let images: Vec<String> = pending_images
             .read()
@@ -498,21 +442,11 @@ pub fn DiscussionArenaPage(
             return;
         }
         let content = apply_mention_markup(&raw_text, &tracked_mentions.read());
-        let req = AddCommentRequest { content, images };
-        match add_comment(space_id(), discussion_id(), req).await {
-            Ok(_) => {
-                comments_loader.restart();
-                space_ctx.actions.restart();
-                comment_text.set(String::new());
-                tracked_mentions.set(Vec::new());
-                pending_images.set(Vec::new());
-                toast.info(tr.comment_success);
-            }
-            Err(err) => {
-                tracing::error!("Failed to post comment: {:?}", err);
-                toast.error(err);
-            }
-        }
+        add_comment_action.call(content, images);
+        space_ctx.actions.restart();
+        comment_text.set(String::new());
+        tracked_mentions.set(Vec::new());
+        pending_images.set(Vec::new());
     };
 
     rsx! {
@@ -685,7 +619,7 @@ pub fn DiscussionArenaPage(
                                 on_submit: move |_| on_submit_comment(()),
                                 placeholder: tr.comment_placeholder.to_string(),
                                 disabled: comment_text().trim().is_empty()
-                                                                                                                                                                                                                                    && pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                                                    && pending_images.read().is_empty(),
                                 on_mention_query_change,
                                 on_composer_focus,
                                 priority_user_pks: top_priority,
@@ -694,7 +628,7 @@ pub fn DiscussionArenaPage(
 
                         div { class: "comments-scroll",
                             div { class: "comment-list",
-                                for comment in comments.iter() {
+                                for comment in comments.iter().filter(|c| !arena.is_deleted(c)) {
                                     CommentItem {
                                         key: "{comment.sk}",
                                         comment: comment.clone(),
@@ -846,8 +780,8 @@ fn CommentItem(
     deep_link_target: ReadSignal<Option<String>>,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
-    let mut toast = use_toast();
 
+    let arena = use_discussion_arena(space_id, discussion_id)?;
     let UseDiscussionArena {
         mut comments_loader,
         mut polled_new,
@@ -856,7 +790,7 @@ fn CommentItem(
         mut active_reply_thread,
         mut sheet_expanded,
         ..
-    } = use_discussion_arena(space_id, discussion_id)?;
+    } = arena;
     let on_mention_query_change = move |q: Option<String>| {
         mention_query_raw.set(q);
     };
@@ -901,10 +835,7 @@ fn CommentItem(
         .map(|e| e.0)
         .unwrap_or_else(|_| comment.sk.to_string());
 
-    let mut liked = use_signal(|| comment.liked);
-    let mut likes = use_signal(|| comment.likes as i64);
-    let mut like_processing = use_signal(|| false);
-
+    let mut like_comment_action = arena.like_comment;
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let is_own = user_ctx
         .read()
@@ -918,39 +849,11 @@ fn CommentItem(
     let mut edit_text = use_signal(|| comment.content.clone());
     let original_content = comment.content.clone();
 
-    let on_like = move |_| async move {
-        if like_processing() {
-            return;
-        }
-        let next = !liked();
-        let prev_liked = liked();
-        let prev_likes = likes();
-        liked.set(next);
-        likes.set((prev_likes + if next { 1 } else { -1 }).max(0));
-        like_processing.set(true);
-
-        let target_sk: SpacePostCommentTargetEntityType = comment_sk().into();
-        let req = LikeCommentRequest { like: next };
-        match like_comment(space_id(), discussion_id(), target_sk, req).await {
-            Ok(_) => {
-                let sk = comment_sk();
-                polled_new.with_mut(|list| {
-                    for item in list.iter_mut() {
-                        if item.sk == sk {
-                            item.liked = next;
-                            item.likes = likes().max(0) as u64;
-                        }
-                    }
-                });
-            }
-            Err(err) => {
-                liked.set(prev_liked);
-                likes.set(prev_likes);
-                tracing::error!("Failed to toggle like: {:?}", err);
-                toast.error(err);
-            }
-        }
-        like_processing.set(false);
+    let comment_for_like = comment.clone();
+    let on_like = move |_| {
+        let sk_str = comment_for_like.sk.to_string();
+        let next = !arena.effective_liked(&comment_for_like);
+        like_comment_action.call(sk_str, next);
     };
 
     let on_toggle_replies = move |_| async move {
@@ -982,6 +885,7 @@ fn CommentItem(
         }
     };
 
+    let mut reply_comment_action = arena.reply_comment;
     let on_submit_reply = move |_| async move {
         let raw_text = reply_text().trim().to_string();
         let images: Vec<String> = reply_pending_images
@@ -993,24 +897,18 @@ fn CommentItem(
             return;
         }
         let content = apply_mention_markup(&raw_text, &reply_tracked_mentions.read());
+        reply_comment_action
+            .call(comment_sk().to_string(), content, images)
+            .await;
+        reply_text.set(String::new());
+        reply_tracked_mentions.set(Vec::new());
+        reply_pending_images.set(Vec::new());
+        // Inline replies are a local fetch — pull the fresh page so the
+        // new reply shows up without waiting for a full loader restart.
         let comment_sk_entity: SpacePostCommentEntityType =
             comment_sk().try_into().unwrap_or_default();
-        let req = ReplyCommentRequest { content, images };
-        match reply_comment(space_id(), discussion_id(), comment_sk_entity, req).await {
-            Ok(new_reply) => {
-                let mut current = replies();
-                current.insert(0, new_reply);
-                replies.set(current);
-                reply_text.set(String::new());
-                reply_tracked_mentions.set(Vec::new());
-                reply_pending_images.set(Vec::new());
-                comments_loader.restart();
-                toast.info(tr.reply_success);
-            }
-            Err(err) => {
-                tracing::error!("Failed to post reply: {:?}", err);
-                toast.error(err);
-            }
+        if let Ok(data) = list_replies(space_id(), discussion_id(), comment_sk_entity, None).await {
+            replies.set(data.items);
         }
     };
 
@@ -1025,57 +923,27 @@ fn CommentItem(
         editing.set(false);
     };
 
-    let on_edit_save = move |_| async move {
+    let mut update_comment_action = arena.update_comment;
+    let mut delete_comment_action = arena.delete_comment;
+    let on_edit_save = move |_| {
         let new_text = edit_text().trim().to_string();
         if new_text.is_empty() {
             return;
         }
-        let target_sk: SpacePostCommentTargetEntityType = comment_sk().into();
-        let req = UpdateCommentRequest {
-            content: new_text.clone(),
-            images: None,
-        };
-        match update_comment(space_id(), discussion_id(), target_sk, req).await {
-            Ok(_) => {
-                // Patch any polled snapshot so the old content doesn't
-                // flash for a frame after the loader restart.
-                let sk = comment_sk();
-                polled_new.with_mut(|list| {
-                    for item in list.iter_mut() {
-                        if item.sk == sk {
-                            item.content = new_text.clone();
-                        }
-                    }
-                });
-                editing.set(false);
-                comments_loader.restart();
-                toast.info(tr.edit_success);
-            }
-            Err(err) => {
-                tracing::error!("Failed to update comment: {:?}", err);
-                toast.error(err);
-            }
-        }
+        editing.set(false);
+        update_comment_action.call(comment_sk().to_string(), new_text);
     };
 
-    let on_delete = move |_| async move {
-        let target_sk: SpacePostCommentTargetEntityType = comment_sk().into();
+    let on_delete = move |_| {
         menu_open.set(false);
-        match delete_comment(space_id(), discussion_id(), target_sk).await {
-            Ok(_) => {
-                // Polling only re-fetches comments by created_at, so a
-                // deleted entry would linger in the buffer otherwise.
-                let sk = comment_sk();
-                polled_new.with_mut(|list| list.retain(|c| c.sk != sk));
-                comments_loader.restart();
-                toast.info(tr.delete_success);
-            }
-            Err(err) => {
-                tracing::error!("Failed to delete comment: {:?}", err);
-                toast.error(err);
-            }
-        }
+        delete_comment_action.call(comment_sk().to_string());
     };
+
+    // Hoist overlay reads — each render loop can hit 3+ sites per
+    // comment, and `effective_*` hashes `sk.to_string()` every call.
+    let liked = arena.effective_liked(&comment);
+    let likes_count = arena.effective_likes(&comment);
+    let effective_text = arena.effective_content(&comment);
 
     rsx! {
         div { class: "comment-entry",
@@ -1156,7 +1024,7 @@ fn CommentItem(
                         }
                     } else {
                         div { class: "comment-item__text",
-                            for segment in parse_mention_segments(&comment.content) {
+                            for segment in parse_mention_segments(&effective_text) {
                                 match segment {
                                     ContentSegment::Text(t) => rsx! {
                                         span { "{t}" }
@@ -1172,19 +1040,20 @@ fn CommentItem(
                     if !editing() {
                         div { class: "comment-item__actions",
                             button {
-                                class: if liked() { "comment-action comment-action--liked" } else { "comment-action" },
-                                disabled: like_processing(),
+                                class: "comment-action",
+                                "aria-pressed": liked,
+                                disabled: like_comment_action.pending(),
                                 onclick: on_like,
                                 svg {
                                     view_box: "0 0 24 24",
-                                    fill: if liked() { "currentColor" } else { "none" },
+                                    fill: if liked { "currentColor" } else { "none" },
                                     stroke: "currentColor",
                                     stroke_width: "2",
                                     stroke_linecap: "round",
                                     stroke_linejoin: "round",
                                     path { d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" }
                                 }
-                                span { "{likes()}" }
+                                span { "{likes_count}" }
                             }
                             if can_comment {
                                 button {
@@ -1229,14 +1098,13 @@ fn CommentItem(
 
             if show_replies() {
                 div { class: "comment-replies",
-                    for reply in replies().iter() {
+                    for reply in replies().iter().filter(|r| !arena.is_deleted(r)) {
                         ReplyItem {
                             key: "{reply.sk}",
                             reply: reply.clone(),
                             space_id,
                             discussion_id,
                             replies,
-                            on_parent_refresh: move |_| comments_loader.restart(),
                             can_comment,
                         }
                     }
@@ -1252,7 +1120,7 @@ fn CommentItem(
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
                         disabled: reply_text().trim().is_empty()
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
                         on_mention_query_change,
                         on_composer_focus,
                         priority_user_pks: reply_priority,
@@ -1286,21 +1154,21 @@ fn format_time_ago(timestamp: i64) -> String {
     }
 }
 
-/// Reply variant of `CommentItem`. The reply list lives in the parent's
-/// signal, so mutations patch locally and fire `on_parent_refresh` to
-/// nudge whatever view tracks the parent's reply count.
+/// Reply variant of `CommentItem` for per-comment inline / thread-view
+/// lists. Mutations route through the controller actions.
 #[component]
 fn ReplyItem(
     reply: DiscussionCommentResponse,
     space_id: ReadSignal<SpacePartition>,
     discussion_id: ReadSignal<SpacePostEntityType>,
     replies: Signal<Vec<DiscussionCommentResponse>>,
-    on_parent_refresh: EventHandler<()>,
     can_comment: bool,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
-    let mut toast = use_toast();
     let mut replies = replies;
+
+    let arena = use_discussion_arena(space_id, discussion_id)?;
+    let mut like_comment_action = arena.like_comment;
 
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let is_own = user_ctx
@@ -1317,43 +1185,11 @@ fn ReplyItem(
     let original_content = reply.content.clone();
     let time_ago = format_time_ago(reply.created_at);
 
-    let mut liked = use_signal(|| reply.liked);
-    let mut likes = use_signal(|| reply.likes as i64);
-    let mut like_processing = use_signal(|| false);
-
-    let on_like = move |_| async move {
-        if like_processing() {
-            return;
-        }
-        let next = !liked();
-        let prev_liked = liked();
-        let prev_likes = likes();
-        liked.set(next);
-        likes.set((prev_likes + if next { 1 } else { -1 }).max(0));
-        like_processing.set(true);
-
-        let target_sk: SpacePostCommentTargetEntityType = reply_sk().into();
-        let req = LikeCommentRequest { like: next };
-        match like_comment(space_id(), discussion_id(), target_sk, req).await {
-            Ok(_) => {
-                let sk = reply_sk();
-                replies.with_mut(|list| {
-                    for r in list.iter_mut() {
-                        if r.sk == sk {
-                            r.liked = next;
-                            r.likes = likes().max(0) as u64;
-                        }
-                    }
-                });
-            }
-            Err(err) => {
-                liked.set(prev_liked);
-                likes.set(prev_likes);
-                tracing::error!("Failed to toggle reply like: {:?}", err);
-                toast.error(err);
-            }
-        }
-        like_processing.set(false);
+    let reply_for_like = reply.clone();
+    let on_like = move |_| {
+        let sk_str = reply_for_like.sk.to_string();
+        let next = !arena.effective_liked(&reply_for_like);
+        like_comment_action.call(sk_str, next);
     };
 
     let start_edit_content = original_content.clone();
@@ -1367,54 +1203,25 @@ fn ReplyItem(
         editing.set(false);
     };
 
-    let on_edit_save = move |_| async move {
+    let mut update_comment_action = arena.update_comment;
+    let mut delete_comment_action = arena.delete_comment;
+    let on_edit_save = move |_| {
         let new_text = edit_text().trim().to_string();
         if new_text.is_empty() {
             return;
         }
-        let target_sk: SpacePostCommentTargetEntityType = reply_sk().into();
-        let req = UpdateCommentRequest {
-            content: new_text.clone(),
-            images: None,
-        };
-        match update_comment(space_id(), discussion_id(), target_sk, req).await {
-            Ok(_) => {
-                let sk = reply_sk();
-                replies.with_mut(|list| {
-                    for r in list.iter_mut() {
-                        if r.sk == sk {
-                            r.content = new_text.clone();
-                        }
-                    }
-                });
-                editing.set(false);
-                toast.info(tr.edit_success);
-            }
-            Err(err) => {
-                tracing::error!("Failed to update reply: {:?}", err);
-                toast.error(err);
-            }
-        }
+        editing.set(false);
+        update_comment_action.call(reply_sk().to_string(), new_text);
     };
 
-    let on_delete = move |_| async move {
-        let target_sk: SpacePostCommentTargetEntityType = reply_sk().into();
+    let on_delete = move |_| {
         menu_open.set(false);
-        match delete_comment(space_id(), discussion_id(), target_sk).await {
-            Ok(_) => {
-                let sk = reply_sk();
-                replies.with_mut(|list| list.retain(|r| r.sk != sk));
-                // Server decrements the parent's `replies` counter; let
-                // the host refresh whichever view tracks it.
-                on_parent_refresh.call(());
-                toast.info(tr.delete_success);
-            }
-            Err(err) => {
-                tracing::error!("Failed to delete reply: {:?}", err);
-                toast.error(err);
-            }
-        }
+        delete_comment_action.call(reply_sk().to_string());
     };
+
+    let liked = arena.effective_liked(&reply);
+    let likes_count = arena.effective_likes(&reply);
+    let effective_text = arena.effective_content(&reply);
 
     rsx! {
         div { class: "comment-item",
@@ -1491,7 +1298,7 @@ fn ReplyItem(
                     }
                 } else {
                     div { class: "comment-item__text",
-                        for segment in parse_mention_segments(&reply.content) {
+                        for segment in parse_mention_segments(&effective_text) {
                             match segment {
                                 ContentSegment::Text(t) => rsx! {
                                     span { "{t}" }
@@ -1505,19 +1312,20 @@ fn ReplyItem(
                     CommentImageGrid { images: reply.images.clone() }
                     div { class: "comment-item__actions",
                         button {
-                            class: if liked() { "comment-action comment-action--liked" } else { "comment-action" },
-                            disabled: like_processing(),
+                            class: "comment-action",
+                            "aria-pressed": liked,
+                            disabled: like_comment_action.pending(),
                             onclick: on_like,
                             svg {
                                 view_box: "0 0 24 24",
-                                fill: if liked() { "currentColor" } else { "none" },
+                                fill: if liked { "currentColor" } else { "none" },
                                 stroke: "currentColor",
                                 stroke_width: "2",
                                 stroke_linecap: "round",
                                 stroke_linejoin: "round",
                                 path { d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" }
                             }
-                            span { "{likes()}" }
+                            span { "{likes_count}" }
                         }
                     }
                 }
