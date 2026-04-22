@@ -139,10 +139,11 @@ pub async fn list_actions(
 
     if !matches!(role, SpaceUserRole::Creator) {
         actions.retain(|a| {
-            matches!(
-                a.status,
-                Some(SpaceActionStatus::Ongoing | SpaceActionStatus::Finish)
-            )
+            a.prerequisite
+                || matches!(
+                    a.status,
+                    Some(SpaceActionStatus::Ongoing | SpaceActionStatus::Finish)
+                )
         });
     }
 
