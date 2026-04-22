@@ -23,7 +23,11 @@
 .arena {
   position: relative;
   width: 100%;
+  /* Use `dvh` so the arena tracks the visible viewport on mobile browsers
+     (where URL/toolbars shrink the visible area). `100vh` falls back for
+     older user agents. */
   height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
