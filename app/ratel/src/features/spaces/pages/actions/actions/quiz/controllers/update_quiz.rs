@@ -139,6 +139,31 @@ pub async fn update_quiz(
         action_updater.execute(cli).await?;
     }
 
+    if let Ok(Some(quiz)) = SpaceQuiz::get(cli, &space_pk, Some(quiz_sk.clone())).await {
+        let (action_title, action_description) = match crate::features::spaces::pages::actions::models::SpaceAction::get(
+            cli,
+            &action_pk,
+            Some(EntityType::SpaceAction),
+        )
+        .await
+        {
+            Ok(Some(action)) => (action.title, action.description),
+            _ => (String::new(), String::new()),
+        };
+        let creator_pk = crate::common::models::space::SpaceCommon::get(
+            cli,
+            &space_pk,
+            Some(EntityType::SpaceCommon),
+        )
+        .await
+        .ok()
+        .flatten()
+        .map(|s| s.user_pk)
+        .unwrap_or(space_pk.clone());
+        let _ = (creator_pk, action_title, action_description);
+        // Essence re-indexing happens via the DynamoDB Stream pipeline.
+    }
+
     if let Some(answers) = req.answers {
         let questions = questions_for_answers.unwrap_or_else(|| existing.questions.clone());
 

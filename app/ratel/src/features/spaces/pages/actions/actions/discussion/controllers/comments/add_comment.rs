@@ -65,6 +65,8 @@ pub async fn add_comment(
     .await?;
 
     let space_pk: Partition = space_id.clone().into();
+
+    // Essence indexing happens via the DynamoDB Stream pipeline.
     let agg_item =
         crate::features::spaces::space_common::models::aggregate::DashboardAggregate::inc_comments(
             &space_pk, 1,

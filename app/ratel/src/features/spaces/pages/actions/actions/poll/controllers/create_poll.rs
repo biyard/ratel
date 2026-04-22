@@ -36,6 +36,8 @@ pub async fn create_poll(
         SpacePollError::CreateFailed
     })?;
 
+    // Essence indexing happens via the DynamoDB Stream pipeline.
+
     let mut ret: PollResponse = poll.into();
     ret.space_action = space_action;
 
