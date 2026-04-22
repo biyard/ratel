@@ -10,6 +10,12 @@ pub fn PostDetail(post_id: FeedPartition) -> Element {
     let tr: PostDetailSyndicatedTranslate = use_translate();
     let nav = use_navigator();
 
+    // Inject the route's post id as context before the hook runs — the
+    // hook itself is argument-free (per rule 2) and reads the id back out
+    // via `use_context`. This keeps the controller's public shape free
+    // of route-derived parameters.
+    use_context_provider(|| post_id.clone());
+
     let UsePostDetail {
         detail,
         liked,
@@ -18,7 +24,7 @@ pub fn PostDetail(post_id: FeedPartition) -> Element {
         mut toggle_like,
         mut share,
         ..
-    } = use_post_detail(post_id.clone())?;
+    } = use_post_detail()?;
 
     let snapshot = detail();
     let post = snapshot.post.clone();
@@ -219,9 +225,7 @@ pub fn PostDetail(post_id: FeedPartition) -> Element {
 
             if comments_open() {
                 div { class: "pd-drawer-backdrop", onclick: close_comments }
-                div { class: "pd-drawer-wrap",
-                    PostCommentsPanel { post_id: post_id.clone() }
-                }
+                div { class: "pd-drawer-wrap", PostCommentsPanel {} }
             }
         }
     }

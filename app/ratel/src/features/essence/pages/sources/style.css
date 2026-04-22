@@ -29,13 +29,30 @@
   --font-body: 'Outfit', sans-serif;
 
   position: relative;
-  min-height: 100vh;
+  /* Body has `overflow: hidden` on desktop (see tailwind.css) so every
+     route under RootLayout must own its scroll container. Locking the
+     arena to 100dvh + overflow-y:auto lets the long sources list scroll
+     naturally on desktop while the sticky topbar anchors to the top. */
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   isolation: isolate;
   background: var(--bg-void);
   color: var(--text-primary);
   font-family: var(--font-body);
+}
+
+@media (max-width: 768px) {
+  /* On mobile body uses `overflow: auto` (tailwind.css max-tablet) so the
+     document already scrolls — let the arena grow naturally instead of
+     trapping scroll inside it. */
+  .essence-arena {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
 }
 .essence-arena::before {
   content: '';

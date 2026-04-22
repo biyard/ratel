@@ -1,7 +1,6 @@
 use crate::features::essence::controllers::*;
 use crate::features::essence::types::*;
 use crate::*;
-use dioxus_core::CapturedError;
 use std::collections::HashSet;
 
 /// Shared state + mutations for the Essence Sources page. Follows the
@@ -35,7 +34,7 @@ pub struct UseEssenceSources {
 }
 
 #[track_caller]
-pub fn use_essence_sources() -> std::result::Result<UseEssenceSources, Loading> {
+pub fn use_essence_sources() -> std::result::Result<UseEssenceSources, RenderError> {
     let ctx: Option<UseEssenceSources> = try_use_context();
     if let Some(ctx) = ctx {
         return Ok(ctx);
@@ -64,12 +63,10 @@ pub fn use_essence_sources() -> std::result::Result<UseEssenceSources, Loading> 
     let mut selected_for_bulk = selected_rows;
 
     let delete_essence = use_action(move |id: String| async move {
-        delete_essence_handler(id)
-            .await
-            .map_err(CapturedError::from)?;
+        delete_essence_handler(id).await?;
         sources_for_refetch.restart();
         stats_for_refetch.restart();
-        Ok::<(), CapturedError>(())
+        Ok::<(), crate::common::Error>(())
     });
 
     let bulk_remove = use_action(move || async move {
@@ -84,10 +81,22 @@ pub fn use_essence_sources() -> std::result::Result<UseEssenceSources, Loading> 
         selected_for_bulk.write().clear();
         sources_for_refetch.restart();
         stats_for_refetch.restart();
-        Ok::<(), CapturedError>(())
+        Ok::<(), crate::common::Error>(())
     });
 
-    Ok(use_context_provider(move || UseEssenceSources {
+    // NOTE: we use `use_context_provider` (not `provide_root_context`) because
+    // the signals inside this controller are created via `use_signal` above —
+    // they're owned by the scope that first called this hook (the Essence
+    // page component). `provide_root_context` would cache the controller at
+    // the ROOT, outliving its signals: when the user navigates away and the
+    // page unmounts, the signals drop while the root cache still points at
+    // them, and the next mount would read dangling values (classic
+    // "ValueDroppedError" panic). Scoping the context to the page's subtree
+    // drops the context alongside its signals on unmount, and re-creates a
+    // fresh controller on re-entry — which is what the PR #1523 rule doc
+    // describes for the inbox hook (but that one is mounted in AppLayout and
+    // never unmounts, so `provide_root_context` is safe there).
+    Ok(use_context_provider(|| UseEssenceSources {
         sources,
         stats,
         selected_kind,

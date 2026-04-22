@@ -1,20 +1,18 @@
-//! Hook + controller for the post detail page. Mirrors the Essence hook
-//! pattern (`use_essence_sources`): one `try_use_context` early-return,
-//! `use_loader` for the server payload, and `use_action` wrappers for every
-//! mutation so components (PostDetail / PostCommentsPanel / CommentItem /
-//! ReplyItem) invoke `hook.toggle_like.call(())` etc. without ever
-//! importing the server-function handlers themselves.
+//! Hook + controller for the post detail page. Follows the Ratel hook
+//! convention: one `try_use_context` early-return, `use_loader` for server
+//! data, and `use_action` wrappers for every mutation so components
+//! (PostDetail / PostCommentsPanel / CommentItem / ReplyItem) invoke
+//! `hook.toggle_like.call(())` etc. without ever importing the
+//! server-function handlers themselves.
 //!
-//! The hook is caller-driven: `use_post_detail(post_id)` builds the
-//! controller the first time it's called in a subtree and re-exposes the
-//! cached instance on every subsequent call. `post_id` is stored as a
-//! `ReadSignal<FeedPartition>` inside the controller so per-comment
-//! actions can read the current identifier without each consumer having
-//! to thread it through props.
+//! The hook is argument-free. The caller (PostDetail component) injects
+//! the current `FeedPartition` via `use_context_provider` before calling
+//! the hook — keeps the controller's shape independent of route state
+//! (per hooks-and-actions rule 2: "do not accept args that change the
+//! shape of the controller").
 
 use crate::common::components::mention_autocomplete::MentionCandidate;
 use crate::common::utils::mention::apply_mention_markup;
-use crate::features::auth::hooks::use_user_context;
 use crate::features::posts::controllers::comments::add_comment::{
     add_comment_handler, AddPostCommentRequest,
 };
@@ -28,7 +26,6 @@ use crate::features::posts::controllers::get_post::get_post_handler;
 use crate::features::posts::controllers::like_post::like_post_handler;
 use crate::features::posts::types::PostCommentTargetEntityType;
 use crate::features::posts::*;
-use dioxus_core::CapturedError;
 use std::collections::{HashMap, HashSet};
 
 #[derive(Clone, Copy, DioxusController)]
@@ -58,30 +55,31 @@ pub struct UsePostDetail {
     /// Per-parent-comment reply lists, keyed by parent comment sk.
     /// Lives at the hook (root) scope so mutations from `load_replies` /
     /// `submit_reply` actions can read/write without pulling child-owned
-    /// Signal handles across scopes (Dioxus warns against that pattern).
-    /// Each `CommentItem` derives its local replies slice via a `memo`
-    /// over this map keyed by its own sk.
+    /// Signal handles across scopes. Each `CommentItem` derives its
+    /// local replies slice via a `memo` over this map keyed by its own sk.
     pub replies_by_comment: Signal<HashMap<String, Vec<PostCommentResponse>>>,
     /// Tracks which parent sks have already been fetched so the lazy-load
     /// effect doesn't re-run on every render.
     pub replies_loaded: Signal<HashSet<String>>,
+    /// Per-comment (and per-reply) like state keyed by sk →
+    /// `(liked, likes)`. The `toggle_comment_like` action owns the
+    /// optimistic flip, the server call, and the rollback on error — all
+    /// scoped to the hook. CommentItem/ReplyItem read this via a memo;
+    /// no per-item signals get passed into the action body.
+    pub comment_likes: Signal<HashMap<String, (bool, i64)>>,
 
     // Mutations
     pub toggle_like: Action<(), ()>,
     pub share: Action<(), bool>,
     pub submit_comment: Action<(), ()>,
     /// Server-side like toggle for one comment. Takes `(sk, new_liked)`.
-    /// Optimistic UI is the caller's responsibility — each `CommentItem`
-    /// owns its own `liked` / `likes` signals (per-item UI state),
-    /// flips them locally, then fires this action. Passing the child's
-    /// signals INTO the action would cross scope ownership (action lives
-    /// in the root hook scope, signals live in the CommentItem scope) and
-    /// Dioxus warns about exactly that pattern.
+    /// Flips the `comment_likes` map optimistically, calls the server,
+    /// rolls back on error. Everything runs in the hook (root) scope —
+    /// components just fire and observe the map via memo.
     pub toggle_comment_like: Action<(PostCommentTargetEntityType, bool), ()>,
     /// Reply submission. Arg is `(parent_sk, raw_content, mentions)`.
     /// On success, the new reply is prepended into `replies_by_comment`
-    /// at `sk` — no caller signals passed in, so the action body runs
-    /// entirely against root-scope state.
+    /// at `sk` and seeded into `comment_likes` with `(false, 0)`.
     pub submit_reply: Action<
         (
             PostCommentTargetEntityType,
@@ -91,15 +89,13 @@ pub struct UsePostDetail {
         (),
     >,
     /// Lazy-load replies for one comment. Populates `replies_by_comment`
-    /// at the given sk and marks it seen in `replies_loaded` so the
-    /// CommentItem's effect doesn't re-fire.
+    /// + seeds `comment_likes` for each reply, and marks the sk seen in
+    /// `replies_loaded` so the CommentItem's effect doesn't re-fire.
     pub load_replies: Action<(PostCommentTargetEntityType,), ()>,
 }
 
 #[track_caller]
-pub fn use_post_detail(
-    post_id: FeedPartition,
-) -> std::result::Result<UsePostDetail, Loading> {
+pub fn use_post_detail() -> std::result::Result<UsePostDetail, RenderError> {
     // 1. Cached instance wins — every consumer in this subtree shares one
     //    controller so toggling `comments_open` in the header propagates to
     //    the drawer without extra plumbing.
@@ -107,16 +103,16 @@ pub fn use_post_detail(
         return Ok(ctx);
     }
 
-    // 2. Stash the incoming `post_id` as a ReadSignal so the actions can
-    //    read the current value without each caller passing it in.
-    let post_id_signal: ReadSignal<FeedPartition> =
-        use_signal(|| post_id.clone()).into();
+    // 2. Read the route-provided post id from context. The `PostDetail`
+    //    component is responsible for calling
+    //    `use_context_provider(|| post_id)` before invoking this hook —
+    //    keeps the hook's shape argument-free per rule 2.
+    let post_id: FeedPartition = use_context();
+    let post_id_signal: ReadSignal<FeedPartition> = use_signal(|| post_id).into();
 
-    // 3. Server data — guaranteed non-`Loading` by the time we reach the
-    //    action bodies because `?` suspends the caller until `detail`
-    //    resolves. Reading `post_id_signal()` inside the closure makes the
-    //    loader reactive to future post-id changes (not used today but
-    //    keeps the hook correct if someone wires a router-driven swap).
+    // 3. Server data — guaranteed resolved (non-`RenderError`) by the
+    //    time we reach the action bodies because `?` suspends the caller
+    //    until `detail` resolves.
     let detail = use_loader(move || {
         let pid = post_id_signal();
         async move { get_post_handler(pid).await }
@@ -138,6 +134,16 @@ pub fn use_post_detail(
         use_signal(HashMap::new);
     let replies_loaded: Signal<HashSet<String>> = use_signal(HashSet::new);
 
+    // Seed per-comment like state from the loaded detail so the first
+    // render reflects server truth without an extra fetch.
+    let comment_likes: Signal<HashMap<String, (bool, i64)>> = use_signal(|| {
+        snapshot
+            .comments
+            .iter()
+            .map(|c| (c.sk.to_string(), (c.liked, c.likes as i64)))
+            .collect()
+    });
+
     // 5. Mutations — each `use_action` body owns the post-mutation side
     //    effects (refetch, signal resets, toasts). Components just call
     //    these; they never see the underlying `_handler` functions.
@@ -155,11 +161,11 @@ pub fn use_post_detail(
         liked_sig.set(next);
         like_count_sig.set((prev_count + if next { 1 } else { -1 }).max(0));
         match like_post_handler(pid, next).await {
-            Ok(_) => Ok::<(), CapturedError>(()),
+            Ok(_) => Ok::<(), crate::common::Error>(()),
             Err(e) => {
                 liked_sig.set(!next);
                 like_count_sig.set(prev_count);
-                Err(CapturedError::from(e))
+                Err(e.into())
             }
         }
     });
@@ -190,7 +196,7 @@ pub fn use_post_detail(
         } else {
             toast.warn("Failed to copy link");
         }
-        Ok::<bool, CapturedError>(ok)
+        Ok::<bool, crate::common::Error>(ok)
     });
 
     let post_id_for_submit = post_id_signal;
@@ -200,7 +206,7 @@ pub fn use_post_detail(
     let submit_comment = use_action(move || async move {
         let raw = comment_text_sig().trim().to_string();
         if raw.is_empty() || is_submitting_sig() {
-            return Ok::<(), CapturedError>(());
+            return Ok::<(), crate::common::Error>(());
         }
         is_submitting_sig.set(true);
         let content = apply_mention_markup(&raw, &tracked_mentions_sig.read());
@@ -219,20 +225,37 @@ pub fn use_post_detail(
             }
             Err(e) => {
                 is_submitting_sig.set(false);
-                Err(CapturedError::from(e))
+                Err(e.into())
             }
         }
     });
 
     let post_id_for_like_comment = post_id_signal;
+    let mut comment_likes_for_toggle = comment_likes;
     let toggle_comment_like = use_action(
-        move |target_sk: PostCommentTargetEntityType, liked: bool| async move {
+        move |target_sk: PostCommentTargetEntityType, next_liked: bool| async move {
             let pid = post_id_for_like_comment();
-            match like_comment_handler(pid, target_sk, liked).await {
-                Ok(_) => Ok::<(), CapturedError>(()),
+            let sk_str = target_sk.to_string();
+            // Capture the prior state so we can roll back on error.
+            let prev = comment_likes_for_toggle
+                .read()
+                .get(&sk_str)
+                .copied()
+                .unwrap_or((!next_liked, 0));
+            let optimistic_count = (prev.1 + if next_liked { 1 } else { -1 }).max(0);
+            comment_likes_for_toggle.with_mut(|map| {
+                map.insert(sk_str.clone(), (next_liked, optimistic_count));
+            });
+            match like_comment_handler(pid, target_sk, next_liked).await {
+                Ok(_) => Ok::<(), crate::common::Error>(()),
                 Err(e) => {
+                    // Server rejected the like — put the previous value
+                    // back so the heart reverts.
+                    comment_likes_for_toggle.with_mut(|map| {
+                        map.insert(sk_str, prev);
+                    });
                     tracing::error!("like post comment failed: {e}");
-                    Err(CapturedError::from(e))
+                    Err(e.into())
                 }
             }
         },
@@ -240,13 +263,14 @@ pub fn use_post_detail(
 
     let post_id_for_reply = post_id_signal;
     let mut replies_map_for_submit = replies_by_comment;
+    let mut comment_likes_for_submit = comment_likes;
     let submit_reply = use_action(
         move |parent_sk: PostCommentTargetEntityType,
               raw: String,
               mentions: Vec<(String, String)>| async move {
             let raw = raw.trim().to_string();
             if raw.is_empty() {
-                return Ok::<(), CapturedError>(());
+                return Ok::<(), crate::common::Error>(());
             }
             let sk_str = parent_sk.to_string();
             let content = apply_mention_markup(&raw, &mentions);
@@ -261,18 +285,22 @@ pub fn use_post_detail(
             };
             match reply_to_comment_handler(post_id_for_reply(), parent_id, req).await {
                 Ok(new_reply_model) => {
-                    // Prepend the new reply into the root-scope map —
-                    // CommentItem's memo re-derives its slice from this
-                    // map, so the UI updates without any child-owned
-                    // signal crossing scopes into this action.
+                    // Prepend the new reply into the root-scope map and
+                    // seed its like state so a subsequent click on the
+                    // reply's heart has an entry to flip. A brand-new
+                    // reply has `liked = false, likes = 0`.
                     let new_reply: PostCommentResponse =
                         (new_reply_model, false, false).into();
+                    let reply_sk_str = new_reply.sk.to_string();
                     replies_map_for_submit.with_mut(|map| {
                         map.entry(sk_str).or_default().insert(0, new_reply);
                     });
+                    comment_likes_for_submit.with_mut(|map| {
+                        map.insert(reply_sk_str, (false, 0));
+                    });
                     Ok(())
                 }
-                Err(e) => Err(CapturedError::from(e)),
+                Err(e) => Err(e.into()),
             }
         },
     );
@@ -280,15 +308,23 @@ pub fn use_post_detail(
     let post_id_for_list = post_id_signal;
     let mut replies_map_for_load = replies_by_comment;
     let mut replies_loaded_sig = replies_loaded;
+    let mut comment_likes_for_load = comment_likes;
     let load_replies = use_action(move |parent_sk: PostCommentTargetEntityType| async move {
         let sk_str = parent_sk.to_string();
         if replies_loaded_sig.read().contains(&sk_str) {
-            return Ok::<(), CapturedError>(());
+            return Ok::<(), crate::common::Error>(());
         }
         let as_entity: EntityType = parent_sk.into();
         let parent_id: crate::PostCommentEntityType = as_entity.into();
         match list_comments_handler(post_id_for_list(), parent_id, None).await {
             Ok(resp) => {
+                // Seed each loaded reply's like state in the shared map
+                // so the reply heart buttons start from server truth.
+                comment_likes_for_load.with_mut(|map| {
+                    for r in resp.items.iter() {
+                        map.insert(r.sk.to_string(), (r.liked, r.likes as i64));
+                    }
+                });
                 replies_map_for_load.with_mut(|map| {
                     map.insert(sk_str.clone(), resp.items);
                 });
@@ -297,17 +333,17 @@ pub fn use_post_detail(
                 });
                 Ok(())
             }
-            Err(e) => Err(CapturedError::from(e)),
+            Err(e) => Err(e.into()),
         }
     });
 
-    // `use_user_context` is read here so future work (e.g. showing an
-    // author-only edit affordance inside comments) has the identity
-    // handy; keeping the call at hook-scope avoids re-subscribing per
-    // comment-item render.
-    let _ = use_user_context();
-
-    Ok(use_context_provider(move || UsePostDetail {
+    // NOTE: `use_context_provider` (not `provide_root_context`) — same
+    // reason as `use_essence_sources`: signals above are owned by the
+    // page scope that first called this hook, so caching the controller
+    // at the root would outlive its signals on navigation. Scoping the
+    // context to the PostDetail subtree ensures unmount cleans up both
+    // together and re-entry rebuilds everything fresh.
+    Ok(use_context_provider(|| UsePostDetail {
         detail,
         post_id: post_id_signal,
         liked,
@@ -319,6 +355,7 @@ pub fn use_post_detail(
         members,
         replies_by_comment,
         replies_loaded,
+        comment_likes,
         toggle_like,
         share,
         submit_comment,

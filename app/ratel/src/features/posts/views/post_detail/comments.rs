@@ -5,11 +5,11 @@
 //! `features/spaces/pages/index/action_pages/discussion` so the visual
 //! language is identical.
 //!
-//! All mutations (submit comment, submit reply, toggle comment like) go
-//! through `use_post_detail` actions — components never import the
-//! underlying `_handler` server functions. `list_comments_handler` for
-//! lazy-loading replies is a read, so it stays inline per the hook rule's
-//! non-mutating-read exception.
+//! Every server call (add_comment, reply_to_comment, like_comment,
+//! list_comments for lazy replies) is wrapped in a `use_post_detail`
+//! action. Components only destructure fields from the hook and fire
+//! actions — no handler imports, no direct `spawn(async { handler().await })`
+//! patterns anywhere in this file (per hooks-and-actions rule 4).
 
 use crate::common::components::mention_autocomplete::{MentionAutocomplete, MentionInsert};
 use crate::common::utils::mention::{parse_mention_segments, ContentSegment};
@@ -20,7 +20,7 @@ use crate::features::posts::*;
 use super::i18n::PostDetailSyndicatedTranslate;
 
 #[component]
-pub fn PostCommentsPanel(post_id: FeedPartition) -> Element {
+pub fn PostCommentsPanel() -> Element {
     let tr: PostDetailSyndicatedTranslate = use_translate();
 
     let UsePostDetail {
@@ -31,7 +31,7 @@ pub fn PostCommentsPanel(post_id: FeedPartition) -> Element {
         members,
         mut submit_comment,
         ..
-    } = use_post_detail(post_id.clone())?;
+    } = use_post_detail()?;
 
     let snapshot = detail();
     let total = snapshot.post.as_ref().map(|p| p.comments).unwrap_or(0);
@@ -115,11 +115,7 @@ pub fn PostCommentsPanel(post_id: FeedPartition) -> Element {
             div { class: "comments-scroll",
                 div { class: "comment-list",
                     for comment in comments.iter() {
-                        CommentItem {
-                            key: "{comment.sk}",
-                            comment: comment.clone(),
-                            post_id: post_id.clone(),
-                        }
+                        CommentItem { key: "{comment.sk}", comment: comment.clone() }
                     }
                 }
             }
@@ -128,31 +124,28 @@ pub fn PostCommentsPanel(post_id: FeedPartition) -> Element {
 }
 
 #[component]
-fn CommentItem(comment: PostCommentResponse, post_id: FeedPartition) -> Element {
+fn CommentItem(comment: PostCommentResponse) -> Element {
     let tr: PostDetailSyndicatedTranslate = use_translate();
 
     let UsePostDetail {
         members,
         replies_by_comment,
+        comment_likes,
         mut toggle_comment_like,
         mut submit_reply,
         mut load_replies,
         ..
-    } = use_post_detail(post_id)?;
+    } = use_post_detail()?;
 
-    // Per-item UI state that never crosses scope boundaries: local input
-    // (text + tracked mentions), show/hide toggle, and per-item
-    // liked/likes for optimistic heart clicks. The replies LIST itself
-    // lives in the hook's shared `replies_by_comment` map so the
-    // load_replies / submit_reply actions mutate it without pulling any
-    // child-owned signals up into their root-scope bodies.
+    // Only transient per-item UI state stays local (reply input + toggle).
+    // liked/likes and the replies list live in the hook's shared maps so
+    // every mutation runs through an action on the root hook scope and
+    // never hands a child-owned signal up to the root-scope action body.
     let mut show_replies = use_signal(|| false);
     let mut reply_text = use_signal(String::new);
     let mut reply_tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
 
     let time_ago = format_time_ago(comment.updated_at);
-    let mut liked = use_signal(|| comment.liked);
-    let mut likes = use_signal(|| comment.likes as i64);
     let reply_count = comment.replies;
 
     let comment_sk = comment.sk.clone();
@@ -160,13 +153,35 @@ fn CommentItem(comment: PostCommentResponse, post_id: FeedPartition) -> Element 
 
     // Derived replies slice for THIS comment — reads from the shared map
     // keyed by sk. Re-renders when any action writes to that key.
-    let sk_str_for_memo = sk_str.clone();
+    let sk_str_for_replies = sk_str.clone();
     let replies = use_memo(move || {
         replies_by_comment
             .read()
-            .get(&sk_str_for_memo)
+            .get(&sk_str_for_replies)
             .cloned()
             .unwrap_or_default()
+    });
+
+    // Liked/likes are derived from the hook's shared `comment_likes` map.
+    // Fallback to the initial loaded values keeps the first render stable
+    // if the hook's seed hasn't populated yet.
+    let sk_str_for_like = sk_str.clone();
+    let initial_liked = comment.liked;
+    let initial_likes = comment.likes as i64;
+    let liked = use_memo(move || {
+        comment_likes
+            .read()
+            .get(&sk_str_for_like)
+            .map(|(l, _)| *l)
+            .unwrap_or(initial_liked)
+    });
+    let sk_str_for_count = sk_str.clone();
+    let likes = use_memo(move || {
+        comment_likes
+            .read()
+            .get(&sk_str_for_count)
+            .map(|(_, c)| *c)
+            .unwrap_or(initial_likes)
     });
 
     // Lazy-load replies on first expand. `load_replies` is idempotent
@@ -179,16 +194,9 @@ fn CommentItem(comment: PostCommentResponse, post_id: FeedPartition) -> Element 
         }
     });
 
-    // Optimistic UI for like lives here — `liked`/`likes` are owned by
-    // this component, flipped locally, then the shared action writes to
-    // the server. Passing the signals INTO the action would cross scope
-    // boundaries (the action runs in the root hook scope).
     let like_sk = comment_sk.clone();
     let on_like = move |_| {
         let next = !liked();
-        let prev = likes();
-        liked.set(next);
-        likes.set((prev + if next { 1 } else { -1 }).max(0));
         toggle_comment_like.call(like_sk.clone(), next);
     };
 
@@ -199,8 +207,6 @@ fn CommentItem(comment: PostCommentResponse, post_id: FeedPartition) -> Element 
             return;
         }
         let mentions = reply_tracked_mentions.read().clone();
-        // Local optimistic clear — these signals stay in CommentItem's
-        // scope and are not handed to the action.
         reply_text.set(String::new());
         reply_tracked_mentions.set(Vec::new());
         submit_reply.call(reply_sk.clone(), raw, mentions);
@@ -353,23 +359,40 @@ fn CommentItem(comment: PostCommentResponse, post_id: FeedPartition) -> Element 
 #[component]
 fn ReplyItem(reply: PostCommentResponse) -> Element {
     let UsePostDetail {
+        comment_likes,
         mut toggle_comment_like,
         ..
-    } = try_use_context::<UsePostDetail>()
-        .expect("use_post_detail must be initialized by a parent component");
+    } = use_post_detail()?;
 
     let time_ago = format_time_ago(reply.updated_at);
-    // Local per-item signals owned by THIS ReplyItem's scope so the
-    // optimistic flip doesn't cross scope boundaries.
-    let mut liked = use_signal(|| reply.liked);
-    let mut likes = use_signal(|| reply.likes as i64);
-
     let reply_sk = reply.sk.clone();
+    let sk_str = reply_sk.to_string();
+
+    // Liked/likes come from the hook's shared map — the `load_replies`
+    // action seeded this entry when the parent thread expanded, and
+    // `toggle_comment_like` owns the optimistic flip + server call +
+    // rollback. ReplyItem just reads via a memo and fires the action.
+    let initial_liked = reply.liked;
+    let initial_likes = reply.likes as i64;
+    let sk_for_liked = sk_str.clone();
+    let liked = use_memo(move || {
+        comment_likes
+            .read()
+            .get(&sk_for_liked)
+            .map(|(l, _)| *l)
+            .unwrap_or(initial_liked)
+    });
+    let sk_for_count = sk_str;
+    let likes = use_memo(move || {
+        comment_likes
+            .read()
+            .get(&sk_for_count)
+            .map(|(_, c)| *c)
+            .unwrap_or(initial_likes)
+    });
+
     let on_like = move |_| {
         let next = !liked();
-        let prev = likes();
-        liked.set(next);
-        likes.set((prev + if next { 1 } else { -1 }).max(0));
         toggle_comment_like.call(reply_sk.clone(), next);
     };
 
