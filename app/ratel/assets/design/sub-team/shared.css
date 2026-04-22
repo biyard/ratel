@@ -230,7 +230,7 @@ html,body{
   background:radial-gradient(ellipse 55% 60% at 15% 15%,rgba(252,179,0,0.10) 0%,transparent 60%),radial-gradient(ellipse 45% 55% at 95% 90%,rgba(110,237,216,0.08) 0%,transparent 60%);
   pointer-events:none;
 }
-.page-header > *{position:relative;z-index:1}
+.page-header > *{position:relative;z-index:1;min-width:0}
 .page-header__main{display:flex;flex-direction:column;gap:10px;min-width:0}
 .page-header__eyebrow{
   font-family:var(--font-display);font-size:10px;font-weight:600;
