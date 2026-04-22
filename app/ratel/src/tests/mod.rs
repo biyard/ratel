@@ -2,6 +2,7 @@ pub mod macros;
 pub mod setup;
 
 mod discussion_tests;
+mod home_tests;
 mod inbox_helper_tests;
 mod mcp_tests;
 mod notifications_tests;
