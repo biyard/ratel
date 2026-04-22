@@ -76,6 +76,92 @@ pub fn extract_mentioned_pks(content: &str) -> Vec<String> {
     pks
 }
 
+/// Rank user pks by how relevant they are to the current mention context.
+///
+/// Earlier entries rank higher. Order is: primary comment author, then
+/// thread authors (caller orders newest-first), then anyone mentioned in
+/// the primary, then anyone mentioned in the thread. Duplicates drop to
+/// their first occurrence so authors always outrank their own mentions.
+pub fn build_mention_priority(
+    primary: Option<(&str, &str)>,
+    thread: &[(&str, &str)],
+) -> Vec<String> {
+    let mut seen = std::collections::HashSet::new();
+    let mut out = Vec::new();
+
+    let push = |pk: &str, seen: &mut std::collections::HashSet<String>, out: &mut Vec<String>| {
+        if !pk.is_empty() && seen.insert(pk.to_string()) {
+            out.push(pk.to_string());
+        }
+    };
+
+    if let Some((author, _)) = primary {
+        push(author, &mut seen, &mut out);
+    }
+    for (author, _) in thread {
+        push(author, &mut seen, &mut out);
+    }
+    if let Some((_, content)) = primary {
+        for pk in extract_mentioned_pks(content) {
+            push(&pk, &mut seen, &mut out);
+        }
+    }
+    for (_, content) in thread {
+        for pk in extract_mentioned_pks(content) {
+            push(&pk, &mut seen, &mut out);
+        }
+    }
+
+    out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn priority_is_empty_without_any_context() {
+        assert!(build_mention_priority(None, &[]).is_empty());
+    }
+
+    #[test]
+    fn primary_author_leads_the_thread() {
+        let primary = Some(("USER#parent", "hello"));
+        let thread = [("USER#replier-a", ""), ("USER#replier-b", "")];
+        assert_eq!(
+            build_mention_priority(primary, &thread),
+            vec!["USER#parent", "USER#replier-a", "USER#replier-b"]
+        );
+    }
+
+    #[test]
+    fn author_ordering_wins_over_their_own_mention() {
+        // Parent author shows up later as a mentioned pk; first occurrence
+        // (as author) must be the one that sticks.
+        let primary = Some(("USER#alice", "hi @[bob](user:USER#bob)"));
+        let thread = [("USER#bob", "re @[alice](user:USER#alice)")];
+        let ranked = build_mention_priority(primary, &thread);
+        assert_eq!(
+            ranked,
+            vec!["USER#alice".to_string(), "USER#bob".to_string()]
+        );
+    }
+
+    #[test]
+    fn mentioned_users_rank_after_all_authors() {
+        let primary = Some(("USER#alice", "@[carol](user:USER#carol)"));
+        let thread = [("USER#bob", "")];
+        let ranked = build_mention_priority(primary, &thread);
+        assert_eq!(ranked, vec!["USER#alice", "USER#bob", "USER#carol"]);
+    }
+
+    #[test]
+    fn empty_author_pk_is_skipped() {
+        let thread = [("", "msg")];
+        assert!(build_mention_priority(None, &thread).is_empty());
+    }
+}
+
 pub fn strip_mention_markup(content: &str) -> String {
     let segments = parse_mention_segments(content);
     let mut result = String::new();
