@@ -1,0 +1,100 @@
+.essence-breakdown {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.essence-kind-card {
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.essence-kind-card:hover {
+  border-color: var(--border-strong);
+}
+.essence-kind-card[data-selected="true"] {
+  border-color: rgba(252, 179, 0, 0.35);
+  background: rgba(252, 179, 0, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(252, 179, 0, 0.15);
+}
+
+.essence-kind-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.essence-kind-card__icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.essence-kind-card__icon--all {
+  background: linear-gradient(135deg, rgba(252, 179, 0, 0.12), rgba(110, 237, 216, 0.08));
+  color: var(--accent-gold);
+  border: 1px solid rgba(252, 179, 0, 0.22);
+}
+.essence-kind-card__icon--notion {
+  background: #fff;
+  color: #0a0a0a;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+}
+.essence-kind-card__icon--posts {
+  background: rgba(252, 179, 0, 0.08);
+  color: var(--accent-gold);
+  border: 1px solid rgba(252, 179, 0, 0.18);
+}
+.essence-kind-card__icon--comments {
+  background: rgba(129, 140, 248, 0.08);
+  color: var(--accent-violet);
+  border: 1px solid rgba(129, 140, 248, 0.18);
+}
+.essence-kind-card__icon--actions {
+  background: rgba(110, 237, 216, 0.06);
+  color: var(--accent-teal);
+  border: 1px solid rgba(110, 237, 216, 0.18);
+}
+.essence-kind-card__icon svg {
+  width: 15px;
+  height: 15px;
+}
+.essence-kind-card__pct {
+  font-family: var(--font-display);
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+}
+.essence-kind-card__value {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.essence-kind-card__label {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+@media (max-width: 960px) {
+  .essence-breakdown { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 500px) {
+  .essence-breakdown { grid-template-columns: 1fr 1fr; }
+}

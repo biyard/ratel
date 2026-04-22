@@ -180,7 +180,7 @@ test.describe.serial("Page entries accessibility", () => {
     checkPage(page, "/posts/", { text: "app shell" }));
   test("GET /posts/:post_id", async ({ page }) =>
     checkPage(page, `/posts/${data.postId}`, {
-      css: ".post-detail-header, .max-w-desktop",
+      css: ".post-arena",
     }));
   test("GET /posts/:post_id/edit", async ({ page }) =>
     checkPage(page, `/posts/${data.postId}/edit`, { css: ".title-input" }));
