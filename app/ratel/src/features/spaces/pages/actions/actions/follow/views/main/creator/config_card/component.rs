@@ -1,47 +1,30 @@
 use crate::features::spaces::pages::actions::actions::follow::views::main::creator::FollowCreatorTranslate;
 use crate::features::spaces::pages::actions::actions::follow::*;
-use crate::features::spaces::pages::actions::components::{ActionDeleteButton, ActionRewardSetting};
-use crate::features::spaces::pages::actions::controllers::{
-    UpdateSpaceActionRequest, update_space_action,
+use crate::features::spaces::pages::actions::components::{
+    ActionDeleteButton, ActionDependencySelector, ActionRewardSetting, ActionStatusControl,
+    PrerequisiteTile,
 };
-use crate::features::spaces::pages::actions::types::SpaceActionStatus;
+use crate::features::spaces::pages::actions::models::SpaceAction;
 
 #[component]
 pub fn ConfigCard(
     space_id: ReadSignal<SpacePartition>,
     follow_id: ReadSignal<SpaceActionFollowEntityType>,
-    credits: u64,
-    prerequisite: bool,
-    action_status: Option<SpaceActionStatus>,
+    action_setting: ReadSignal<SpaceAction>,
 ) -> Element {
     let tr: FollowCreatorTranslate = use_translate();
-    let mut toast = use_toast();
 
+    let action = action_setting();
     let action_id_str = follow_id().to_string();
-    let saved_credits = credits;
-
-    let mut prereq_follow = use_signal(|| prerequisite);
+    let saved_credits = action.credits;
+    let action_status = action.status.clone();
+    let initial_prerequisite = action.prerequisite;
+    let initial_depends_on = action.depends_on.clone();
+    let initial_status = action.status.clone();
 
     let action_id_for_signal = action_id_str.clone();
     let action_id_signal: ReadSignal<String> =
         use_signal(move || action_id_for_signal.clone()).into();
-
-    let action_id_for_prereq = action_id_str.clone();
-    let toggle_prereq = move |_| {
-        let new_val = !prereq_follow();
-        prereq_follow.set(new_val);
-        let action_id = action_id_for_prereq.clone();
-        spawn(async move {
-            let req = UpdateSpaceActionRequest::Prerequisite {
-                prerequisite: new_val,
-            };
-            if let Err(err) = update_space_action(space_id(), action_id, req).await {
-                error!("Failed to save prerequisite: {:?}", err);
-                toast.error(err);
-                prereq_follow.set(!new_val);
-            }
-        });
-    };
 
     rsx! {
         section { class: "pager__page", "data-page": "1",
@@ -53,6 +36,18 @@ pub fn ConfigCard(
                             h1 { class: "page-card__title", "{tr.card_config_title}" }
                             div { class: "page-card__subtitle", "{tr.card_config_subtitle}" }
                         }
+                    }
+                }
+
+                // ── Dependencies (other actions a user must finish first) ─────
+                section { class: "section", "data-testid": "section-dependencies",
+                    div { class: "section__head",
+                        span { class: "section__label", "{tr.section_dependencies_label}" }
+                    }
+                    ActionDependencySelector {
+                        space_id,
+                        action_id: action_id_signal,
+                        initial_depends_on,
                     }
                 }
 
@@ -68,23 +63,22 @@ pub fn ConfigCard(
                         saved_credits,
                         action_status: action_status.clone(),
                     }
-                    div { class: "tile", "data-testid": "tile-prereq",
-                        span { class: "tile__label", "{tr.tile_prereq}" }
-                        div { class: "tile__row",
-                            span { style: "font-size:13px;color:var(--qc-text-muted)",
-                                "{tr.tile_prereq_label}"
-                            }
-                            span {
-                                class: "switch",
-                                role: "switch",
-                                tabindex: "0",
-                                "aria-checked": prereq_follow(),
-                                onclick: toggle_prereq,
-                                span { class: "switch__track",
-                                    span { class: "switch__thumb" }
-                                }
-                            }
-                        }
+                    PrerequisiteTile {
+                        space_id,
+                        action_id: action_id_signal,
+                        initial_prerequisite,
+                    }
+                }
+
+                // ── Status (publish / close lifecycle) ─────
+                section { class: "section", "data-testid": "section-status",
+                    div { class: "section__head",
+                        span { class: "section__label", "{tr.section_status_label}" }
+                    }
+                    ActionStatusControl {
+                        space_id,
+                        action_id: action_id_signal,
+                        initial_status: initial_status.clone(),
                     }
                 }
 

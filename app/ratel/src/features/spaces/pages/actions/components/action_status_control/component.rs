@@ -3,9 +3,6 @@ use crate::features::spaces::pages::actions::controllers::{
     UpdateSpaceActionRequest, update_space_action,
 };
 
-/// Status transition button for an action. Creators publish a Designing
-/// action (→ Ongoing) or close an Ongoing action (→ Finish). Finished
-/// actions show a disabled indicator.
 #[component]
 pub fn ActionStatusControl(
     space_id: ReadSignal<SpacePartition>,
@@ -50,12 +47,9 @@ pub fn ActionStatusControl(
     };
 
     rsx! {
-        div { class: "flex gap-3 justify-between items-center py-3 px-4 w-full border rounded-[12px] border-separator bg-card-bg",
-            div { class: "flex flex-col gap-1",
-                span { class: "font-semibold text-[14px]/[18px] text-text-primary", "{tr.status_title}" }
-                span { class: "font-medium text-[12px]/[16px] text-foreground-muted",
-                    "{badge_label}"
-                }
+        div { class: "flex gap-3 justify-between items-center w-full",
+            span { class: "font-medium text-[12px]/[16px] text-foreground-muted",
+                "{badge_label}"
             }
             match current.clone() {
                 None => rsx! {
@@ -98,7 +92,6 @@ pub fn ActionStatusControl(
 translate! {
     ActionStatusControlTranslate;
 
-    status_title: { en: "Status", ko: "상태" },
     status_legacy: { en: "Legacy (not visible to participants)", ko: "이전 버전 (참가자에게 보이지 않음)" },
     status_designing: { en: "Designing — not published yet", ko: "설계중 — 아직 공개되지 않음" },
     status_ongoing: { en: "Ongoing — accepting responses", ko: "진행중 — 응답 수신 중" },
