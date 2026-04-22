@@ -15,5 +15,10 @@ pub async fn get_essence_stats_handler() -> Result<EssenceStatsResponse> {
     Ok(EssenceStatsResponse {
         total_sources: stats.total_sources,
         total_words: stats.total_words,
+        total_notion: stats.total_notion,
+        total_post: stats.total_post,
+        total_comment: stats.total_comment,
+        total_poll: stats.total_poll,
+        total_quiz: stats.total_quiz,
     })
 }

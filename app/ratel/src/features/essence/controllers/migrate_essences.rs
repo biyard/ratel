@@ -2,9 +2,11 @@ use crate::common::*;
 #[cfg(feature = "server")]
 use crate::common::models::auth::AdminUser;
 #[cfg(feature = "server")]
-use crate::features::essence::models::Essence;
+use crate::features::essence::models::{Essence, UserEssenceStats};
 use crate::features::essence::types::*;
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "server")]
+use std::collections::HashMap;
 
 /// Response shape for the admin migration endpoint. Counts per source kind
 /// so the operator can spot obvious undercounts.
@@ -19,6 +21,11 @@ pub struct MigrateEssencesResponse {
     pub discussion_comments_migrated: u32,
     pub polls_migrated: u32,
     pub quizzes_migrated: u32,
+    /// Number of `UserEssenceStats` rows rebuilt from scratch. Counter drift
+    /// from earlier writes (bumps that silently failed) is reconciled here,
+    /// and the new per-kind counters are populated for users created before
+    /// they existed on the model.
+    pub stats_rebuilt: u32,
     /// Non-fatal errors during the run — logged server-side, returned here
     /// as a count so the operator can spot trouble without tailing logs.
     pub errors: u32,
@@ -39,8 +46,66 @@ pub async fn migrate_essences_handler() -> Result<MigrateEssencesResponse> {
 
     migrate_posts_and_comments(cli, &mut out).await;
     migrate_spaces_content(cli, &mut out).await;
+    rebuild_user_essence_stats(cli, &mut out).await;
 
     Ok(out)
+}
+
+/// Walk every `Essence` row, group by `user_pk`, and overwrite each user's
+/// `UserEssenceStats` with the recomputed totals. This reconciles any
+/// drift from prior `bump_stats` calls that failed silently (the bump path
+/// intentionally logs-and-continues so a stats hiccup never fails a user
+/// write). It also populates the new `total_{kind}` fields for users who
+/// predate them.
+#[cfg(feature = "server")]
+async fn rebuild_user_essence_stats(
+    cli: &aws_sdk_dynamodb::Client,
+    out: &mut MigrateEssencesResponse,
+) {
+    let essences = match Essence::find_all(cli, EntityType::Essence(String::new()), Essence::opt_all()).await {
+        Ok((v, _)) => v,
+        Err(e) => {
+            crate::error!("migrate: scan essences for stats rebuild failed: {e}");
+            out.errors += 1;
+            return;
+        }
+    };
+
+    let mut totals_by_user: HashMap<String, UserEssenceStats> = HashMap::new();
+    for row in essences {
+        let key = row.pk.to_string();
+        let entry = totals_by_user
+            .entry(key)
+            .or_insert_with(UserEssenceStats::default);
+        entry.total_sources += 1;
+        entry.total_words += row.word_count;
+        match row.source_kind {
+            EssenceSourceKind::Notion => entry.total_notion += 1,
+            EssenceSourceKind::Post => entry.total_post += 1,
+            EssenceSourceKind::PostComment | EssenceSourceKind::DiscussionComment => {
+                entry.total_comment += 1
+            }
+            EssenceSourceKind::Poll => entry.total_poll += 1,
+            EssenceSourceKind::Quiz => entry.total_quiz += 1,
+        }
+    }
+
+    for (user_pk_str, totals) in totals_by_user {
+        let user_pk: Partition = match user_pk_str.parse() {
+            Ok(p) => p,
+            Err(e) => {
+                crate::error!("migrate: skip stats rebuild — bad user pk {user_pk_str}: {e}");
+                out.errors += 1;
+                continue;
+            }
+        };
+        if let Err(e) = Essence::replace_stats(cli, &user_pk, totals).await {
+            crate::error!("migrate: replace stats failed for {user_pk_str}: {e}");
+            out.errors += 1;
+            continue;
+        }
+        out.stats_rebuilt += 1;
+    }
 }
 
 #[cfg(feature = "server")]

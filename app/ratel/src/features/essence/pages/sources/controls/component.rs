@@ -56,7 +56,7 @@ pub fn EssenceControls() -> Element {
                 class: "essence-sort",
                 value: "{sort_value(hook.sort_order())}",
                 onchange: move |e: FormEvent| {
-                    hook.sort_order.set(sort_from_value(&e.value()));
+                    hook.set_sort.call(sort_from_value(&e.value()));
                 },
                 option { value: "last-edited", "{tr.sort_last_edited}" }
                 option { value: "word-count", "{tr.sort_word_count}" }

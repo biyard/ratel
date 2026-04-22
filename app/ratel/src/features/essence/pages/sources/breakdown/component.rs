@@ -6,32 +6,58 @@ pub fn EssenceBreakdown() -> Element {
     let tr: EssenceSourcesTranslate = use_translate();
     let hook = use_essence_sources()?;
 
-    let list_handle = hook.sources;
+    // Per-kind totals come from the authoritative `UserEssenceStats`
+    // counters so the cards show true totals, not whatever the current
+    // paginated page happens to hold.
+    //
+    // Pre-migration fallback: when every per-kind counter is zero but the
+    // global `total_sources` is non-zero, the user predates the per-kind
+    // fields and hasn't been re-counted via `POST /api/admin/essences/migrate`.
+    // In that case, fall back to bucketing whatever rows the current page
+    // happens to hold so the breakdown is at least directionally useful.
+    // The numbers will become exact once the migrate endpoint runs.
+    let stats_handle = hook.stats;
+    let items_handle = hook.items;
     let breakdown = use_memo(move || {
-        let items = &list_handle.read().items;
-        let total = items.len() as u32;
-        let mut counts = BreakdownCounts {
-            total,
-            ..Default::default()
-        };
-        for s in items {
-            match s.source_kind {
-                EssenceSourceKind::Notion => counts.notion += 1,
-                EssenceSourceKind::Post => counts.post += 1,
-                EssenceSourceKind::PostComment | EssenceSourceKind::DiscussionComment => {
-                    counts.comment += 1
+        let s = stats_handle.read();
+        let total = s.total_sources.max(0) as u32;
+        let per_kind_zero = s.total_notion == 0
+            && s.total_post == 0
+            && s.total_comment == 0
+            && s.total_poll == 0
+            && s.total_quiz == 0;
+        if per_kind_zero && total > 0 {
+            let mut counts = BreakdownCounts {
+                total,
+                ..Default::default()
+            };
+            for row in items_handle.read().iter() {
+                match row.source_kind {
+                    EssenceSourceKind::Notion => counts.notion += 1,
+                    EssenceSourceKind::Post => counts.post += 1,
+                    EssenceSourceKind::PostComment | EssenceSourceKind::DiscussionComment => {
+                        counts.comment += 1
+                    }
+                    EssenceSourceKind::Poll => counts.poll += 1,
+                    EssenceSourceKind::Quiz => counts.quiz += 1,
                 }
-                EssenceSourceKind::Poll => counts.poll += 1,
-                EssenceSourceKind::Quiz => counts.quiz += 1,
             }
+            return counts;
         }
-        counts
+        BreakdownCounts {
+            total,
+            notion: s.total_notion.max(0) as u32,
+            post: s.total_post.max(0) as u32,
+            comment: s.total_comment.max(0) as u32,
+            poll: s.total_poll.max(0) as u32,
+            quiz: s.total_quiz.max(0) as u32,
+        }
     });
 
     let selected = hook.selected_kind;
-    let mut selected_writable = hook.selected_kind;
+    let mut set_kind_action = hook.set_kind;
     let mut set_kind = move |next: KindFilter| {
-        selected_writable.set(next);
+        set_kind_action.call(next);
     };
 
     let counts = breakdown();

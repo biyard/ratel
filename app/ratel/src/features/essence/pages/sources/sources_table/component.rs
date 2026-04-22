@@ -1,61 +1,66 @@
 use crate::features::essence::pages::sources::*;
 use crate::*;
 
+/// Page size — mirrors `use_essence_sources::PAGE_SIZE` / the server default
+/// on `list_essences_handler`. Keep these three in sync.
 const PAGE_SIZE: usize = 10;
 
 #[component]
 pub fn EssenceSourcesTable() -> Element {
     let tr: EssenceSourcesTranslate = use_translate();
     let hook = use_essence_sources()?;
-    let mut page_index = use_signal(|| 0usize);
 
-    // Server already returned rows in the requested sort order via the GSI
-    // matching `sort_order`. This memo only applies client-side kind +
-    // search filters — order is whatever the server gave us.
-    let filtered: Memo<Vec<EssenceResponse>> = use_memo(move || {
-        let list = hook.sources.read().items.clone();
-        let kind = *hook.selected_kind.read();
+    // Current page's rows come from the server already filtered by kind and
+    // sorted by the chosen GSI. The client-side search filter still runs
+    // (it's a free-text narrowing over the 10 rows of the current page).
+    //
+    // IMPORTANT: search only filters the current page. A match on page 3
+    // won't be found when the user is on page 1. This is a known trade-off
+    // of server-driven pagination without a search index; the chip-style
+    // filter + stats-backed total N is the authoritative navigation.
+    let page_rows: Memo<Vec<EssenceResponse>> = use_memo(move || {
+        let list = hook.items.read().clone();
         let query = hook.search_query.read().to_lowercase();
-
+        if query.is_empty() {
+            return list;
+        }
         list.into_iter()
-            .filter(|s| kind.matches(s.source_kind))
             .filter(|s| {
-                if query.is_empty() {
-                    return true;
-                }
                 s.title.to_lowercase().contains(&query)
                     || s.source_path.to_lowercase().contains(&query)
             })
             .collect()
     });
 
-    let total = use_memo(move || filtered().len());
+    // Authoritative total for the active kind chip — comes from
+    // `UserEssenceStats` not the currently-loaded page, so numbers are
+    // accurate across pagination. Falls back to the loaded-page size when
+    // stats has stale/zero per-kind counters (e.g. pre-migration users):
+    // this keeps the table usable before the admin runs the migrate
+    // endpoint that back-fills per-kind totals.
+    let total = use_memo(move || {
+        let s = hook.stats.read();
+        let kind = *hook.selected_kind.read();
+        let stats_total = match kind {
+            KindFilter::All => s.total_sources.max(0) as usize,
+            KindFilter::Notion => s.total_notion.max(0) as usize,
+            KindFilter::Post => s.total_post.max(0) as usize,
+            KindFilter::Comment => s.total_comment.max(0) as usize,
+            KindFilter::Poll => s.total_poll.max(0) as usize,
+            KindFilter::Quiz => s.total_quiz.max(0) as usize,
+        };
+        let items_total = hook.items.read().len();
+        let page_index = (hook.page_index)();
+        let min_from_pagination = page_index * PAGE_SIZE + items_total;
+        stats_total.max(min_from_pagination)
+    });
+
     let total_pages = use_memo(move || {
         let t = total();
         if t == 0 { 1 } else { t.div_ceil(PAGE_SIZE) }
     });
 
-    use_effect(move || {
-        // Reset to page 0 whenever filters shrink results below the current
-        // page. Reads are explicit so the effect only runs on those changes.
-        if page_index() >= total_pages() {
-            page_index.set(0);
-        }
-    });
-
-    let page_start = use_memo(move || page_index() * PAGE_SIZE);
-    let page_end = use_memo(move || (page_start() + PAGE_SIZE).min(total()));
-    // Clamp bounds against `list.len()` directly — `total`/`page_end` memos
-    // can hold stale values for a render tick right after `filtered`
-    // recomputes, which used to crash here with "range end N out of range
-    // for slice of length M" the moment a filter shrank the result set.
-    let page_rows = use_memo(move || {
-        let list = filtered();
-        let len = list.len();
-        let start = page_start().min(len);
-        let end = page_end().min(len).max(start);
-        list[start..end].to_vec()
-    });
+    let mut go_to_page = hook.go_to_page;
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
@@ -68,7 +73,10 @@ pub fn EssenceSourcesTable() -> Element {
                 span {}
             }
 
-            if total() == 0 {
+            // Gate the empty state on the loaded page, not the stats counter —
+            // stats can lag (or be zero pre-migration) while the server still
+            // returns real rows via the GSI scan.
+            if page_rows().is_empty() {
                 EmptyState {}
             } else {
                 for source in page_rows().iter() {
@@ -77,20 +85,22 @@ pub fn EssenceSourcesTable() -> Element {
             }
 
             Pagination {
-                page_index: page_index(),
+                page_index: (hook.page_index)(),
                 page_size: PAGE_SIZE,
                 total: total(),
                 on_prev: move |_| {
-                    if page_index() > 0 {
-                        page_index.set(page_index() - 1);
+                    let idx = (hook.page_index)();
+                    if idx > 0 {
+                        go_to_page.call(idx - 1);
                     }
                 },
                 on_next: move |_| {
-                    if page_index() + 1 < total_pages() {
-                        page_index.set(page_index() + 1);
+                    let idx = (hook.page_index)();
+                    if idx + 1 < total_pages() || (hook.has_next)() {
+                        go_to_page.call(idx + 1);
                     }
                 },
-                on_page: move |p: usize| page_index.set(p),
+                on_page: move |p: usize| go_to_page.call(p),
             }
         }
     }
@@ -364,31 +374,22 @@ enum PageEntry {
     Ellipsis(usize),
 }
 
-/// Produce a compact 1-based page strip: 0 .. current±1 .. last with
-/// ellipsis placeholders. Matches the "1, 2, 3, …, 172" layout in the
-/// mockup while scaling for any page count.
+/// Windowed page strip: shows up to `WINDOW_SIZE` consecutive numbers
+/// centered on the window the current page falls into. Page 0–9 → window
+/// `0..10`; page 10–19 → window `10..20`; etc. Clicking next/prev moves
+/// one page at a time, so crossing a window boundary (e.g. page 10 → 11)
+/// naturally slides the strip to the next chunk of numbers without an
+/// ellipsis "jump-to-end" shortcut. The ellipsis variant is retained on
+/// `PageEntry` for forward-compat but no longer emitted.
 fn compact_page_numbers(current: usize, total_pages: usize) -> Vec<PageEntry> {
-    if total_pages <= 7 {
-        return (0..total_pages).map(PageEntry::Number).collect();
+    const WINDOW_SIZE: usize = 10;
+    if total_pages == 0 {
+        return Vec::new();
     }
-
-    let mut out = Vec::with_capacity(7);
-    out.push(PageEntry::Number(0));
-
-    let window_start = current.saturating_sub(1).max(1);
-    let window_end = (current + 1).min(total_pages - 2);
-
-    if window_start > 1 {
-        out.push(PageEntry::Ellipsis(0));
-    }
-    for p in window_start..=window_end {
-        out.push(PageEntry::Number(p));
-    }
-    if window_end < total_pages - 2 {
-        out.push(PageEntry::Ellipsis(1));
-    }
-    out.push(PageEntry::Number(total_pages - 1));
-    out
+    let window_idx = current / WINDOW_SIZE;
+    let window_start = window_idx * WINDOW_SIZE;
+    let window_end = (window_start + WINDOW_SIZE).min(total_pages);
+    (window_start..window_end).map(PageEntry::Number).collect()
 }
 
 #[component]
