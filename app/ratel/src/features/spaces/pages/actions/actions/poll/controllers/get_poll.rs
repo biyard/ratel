@@ -35,9 +35,6 @@ pub async fn get_poll(
     response.status = SpacePoll::status_from(space_action.status.as_ref());
     response.space_action = space_action;
 
-    // Prerequisite polls are available as soon as the space is Open and the
-    // action is published. Override NotStarted → InProgress so the frontend
-    // allows interaction for Candidates completing prerequisites.
     if response.space_action.prerequisite && response.status == PollStatus::NotStarted {
         response.status = PollStatus::InProgress;
     }
