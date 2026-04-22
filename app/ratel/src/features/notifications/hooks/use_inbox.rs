@@ -34,11 +34,26 @@ pub struct UseInbox {
 /// the hook sequence identical on every render of this scope.
 #[track_caller]
 pub fn use_provide_inbox() -> std::result::Result<UseInbox, RenderError> {
+    // Read login state reactively — the infinite-query closure below
+    // reads `user_ctx().is_logged_in()`, so the loader re-runs when
+    // login state flips (logout → no-op, login → real fetch). This
+    // lets us install the inbox signals unconditionally in RootLayout
+    // (so signal ownership is stable across every route transition)
+    // without hitting the /api/inbox endpoint when the user is
+    // logged out.
+    let user_ctx = crate::features::auth::hooks::use_user_context();
+
     let unread_only = use_signal(|| false);
 
     let mut inbox = use_infinite_query(move |bookmark| {
         let unread_only = unread_only();
-        async move { list_inbox_handler(Some(unread_only), bookmark).await }
+        let logged_in = user_ctx().is_logged_in();
+        async move {
+            if !logged_in {
+                return Ok(ListResponse::<InboxNotificationResponse>::default());
+            }
+            list_inbox_handler(Some(unread_only), bookmark).await
+        }
     })?;
 
     let nav = use_navigator();

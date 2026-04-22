@@ -23,6 +23,11 @@ struct UnreadCountSignal(Signal<i64>);
 /// of the same scope, which Dioxus rejects with
 /// "rules of hooks" panic — see the bootstrap-panic we hit on 2026-04-22.
 pub fn use_unread_count() -> Signal<i64> {
+    // Read login state — the polling loop below checks it before each
+    // request so we avoid pointless 401s while the viewer is signed out.
+    // `use_user_context` returns a `Signal<UserContext>` that's `Copy`,
+    // so we can move it into the spawned future without cloning.
+    let user_ctx = crate::features::auth::hooks::use_user_context();
     use_hook(|| {
         // Ancestor scope already installed — reuse their signal.
         if let Some(ctx) = try_consume_context::<UnreadCountSignal>() {
@@ -37,9 +42,11 @@ pub fn use_unread_count() -> Signal<i64> {
         let mut count = Signal::new(0i64);
         spawn(async move {
             loop {
-                match get_unread_count_handler().await {
-                    Ok(resp) => count.set(resp.count),
-                    Err(e) => debug!("use_unread_count poll failed: {e}"),
+                if user_ctx().is_logged_in() {
+                    match get_unread_count_handler().await {
+                        Ok(resp) => count.set(resp.count),
+                        Err(e) => debug!("use_unread_count poll failed: {e}"),
+                    }
                 }
                 crate::common::utils::time::sleep(Duration::from_secs(POLL_INTERVAL_SECS)).await;
             }
