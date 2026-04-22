@@ -42,6 +42,8 @@ pub async fn create_quiz(
     let answer = SpaceQuizAnswer::new(space_pk, quiz_id, answers);
     answer.create(cli).await?;
 
+    // Essence indexing happens via the DynamoDB Stream pipeline.
+
     let mut response: QuizResponse = quiz.into();
     response.title = space_action.title.clone();
     response.description = space_action.description.clone();

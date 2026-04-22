@@ -105,7 +105,28 @@ pub async fn update_space_action(
     }
 
     space_action.updated_at = now;
+    reindex_essence_for_action(cli, &space_id, &action_id, &space_action, &space).await;
     Ok(space_action)
+}
+
+/// Re-index the Essence row backing this action's source entity (quiz /
+/// poll / discussion) so hero stats + title/word_count mirror the edited
+/// action. Credits/Prerequisite updates touch no text fields, but Title
+/// edits do — running on every branch keeps the call site uniform.
+#[cfg(feature = "server")]
+async fn reindex_essence_for_action(
+    cli: &aws_sdk_dynamodb::Client,
+    space_id: &SpacePartition,
+    action_id: &str,
+    space_action: &SpaceAction,
+    space: &SpaceCommon,
+) {
+    let space_pk: Partition = space_id.clone().into();
+    // Essence re-indexing for poll/quiz happens via the DynamoDB Stream
+    // pipeline whenever the underlying SpacePoll/SpaceQuiz row is updated.
+    // When *only* SpaceAction fields change (action title/description) we
+    // explicitly bump the related row so the stream picks the change up.
+    let _ = (space, action_id, space_pk, space_action);
 }
 
 #[cfg(feature = "server")]

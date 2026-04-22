@@ -34,6 +34,8 @@ pub async fn add_comment_handler(
 
     let comment = Post::comment(cli, post.pk.clone(), req.content, req.images, user.clone()).await?;
 
+    // Essence indexing happens via the DynamoDB Stream pipeline.
+
     // Send mention notifications
     {
         let cta_url = format!(
