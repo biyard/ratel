@@ -47,5 +47,10 @@ pub async fn create_discussion(
         SpaceActionDiscussionError::CreateFailed
     })?;
 
+    crate::features::spaces::space_common::services::bump_participant_activity(
+        cli, &space_pk, &member.pk,
+    )
+    .await;
+
     Ok(post)
 }

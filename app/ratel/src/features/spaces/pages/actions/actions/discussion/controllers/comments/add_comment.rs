@@ -71,6 +71,11 @@ pub async fn add_comment(
         );
     crate::transact_write_items!(cli, vec![agg_item]).ok();
 
+    crate::features::spaces::space_common::services::bump_participant_activity(
+        cli, &space_pk, &member.pk,
+    )
+    .await;
+
     // Reward payout + XP recording run on EventBridge via SPACE_POST_COMMENT#
     // INSERT → handle_discussion_xp. Only the user's first contribution in a
     // discussion is rewarded (enforced by RewardPeriod::Once in the award helper).
