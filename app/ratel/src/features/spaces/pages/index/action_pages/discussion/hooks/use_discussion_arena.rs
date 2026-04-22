@@ -62,11 +62,27 @@ impl UseDiscussionArena {
 
     pub fn effective_likes(&self, comment: &DiscussionCommentResponse) -> i64 {
         let base = comment.likes as i64;
+        // Derive the optimistic delta from `intent vs comment.liked` instead of
+        // trusting the stored `delta` field. The stored delta accumulates across
+        // toggles and stays positive after the action succeeds — so once a loader
+        // refetch lands (e.g. `replies_loader.restart()` after posting a new reply,
+        // or `parent_loader` re-running when the thread view reopens) and `base`
+        // already reflects the like, the old overlay delta gets stacked on top
+        // and the count shows +1 too high. Re-deriving from `liked` makes the
+        // overlay self-cancel as soon as the server side catches up.
         let delta = self
             .like_overlays
             .read()
             .get(&comment.sk.to_string())
-            .map(|(_, d)| *d)
+            .map(|(intent, _)| {
+                if *intent == comment.liked {
+                    0
+                } else if *intent {
+                    1
+                } else {
+                    -1
+                }
+            })
             .unwrap_or(0);
         (base + delta).max(0)
     }
