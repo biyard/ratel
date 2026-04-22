@@ -169,9 +169,7 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
 
     crate::transact_write_items!(cli, transacts)?;
 
-    if let Err(e) = crate::features::essence::services::index_post(cli, &post).await {
-        tracing::error!("failed to re-index post essence on update: {e}");
-    }
+    // Essence re-indexing happens via the DynamoDB Stream pipeline.
 
     Ok(post)
 }

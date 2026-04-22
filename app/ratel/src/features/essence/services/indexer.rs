@@ -1,10 +1,14 @@
-//! Live indexing helpers — called from create/update handlers to mirror
-//! every new source entity into an `Essence` row so the user's Essence
-//! House stays in sync without a migration roundtrip. Errors are returned
-//! but callers typically log-and-swallow, because essence is derived data
-//! and must never block the primary create.
+//! Live indexing helpers — invoked by the DynamoDB Stream pipeline (and the
+//! migrate endpoint) to mirror every source entity into an `Essence` row so
+//! the user's Essence House stays in sync without a manual roundtrip.
+//!
+//! Every function is intentionally `(cli, &entity)` shaped so the stream
+//! dispatcher can call them uniformly after deserializing the new image,
+//! without needing extra context from the original write site. Lookups for
+//! related entities (creator id, action title, etc.) happen inline.
 
 use crate::common::*;
+use crate::common::models::space::SpaceCommon;
 use crate::features::essence::models::Essence;
 use crate::features::essence::types::*;
 use crate::features::posts::models::{Post, PostComment};
@@ -36,6 +40,10 @@ pub async fn index_post(cli: &aws_sdk_dynamodb::Client, post: &Post) -> Result<(
     .await
 }
 
+pub async fn detach_post(cli: &aws_sdk_dynamodb::Client, post: &Post) -> Result<()> {
+    Essence::delete_for_source(cli, post.user_pk.clone(), &post.pk, &EntityType::Post).await
+}
+
 pub async fn index_post_comment(
     cli: &aws_sdk_dynamodb::Client,
     comment: &PostComment,
@@ -62,11 +70,18 @@ pub async fn index_post_comment(
     .await
 }
 
-pub async fn index_poll(
+pub async fn detach_post_comment(
     cli: &aws_sdk_dynamodb::Client,
-    poll: &SpacePoll,
-    creator_pk: Partition,
+    comment: &PostComment,
 ) -> Result<()> {
+    Essence::delete_for_source(cli, comment.author_pk.clone(), &comment.pk, &comment.sk).await
+}
+
+/// Looks up the parent space's `user_pk` to attribute the essence row to the
+/// space creator (polls/quizzes are creator-authored content, so attribution
+/// follows the space owner — not whoever called `update_poll`).
+pub async fn index_poll(cli: &aws_sdk_dynamodb::Client, poll: &SpacePoll) -> Result<()> {
+    let creator_pk = lookup_space_creator(cli, &poll.pk).await?;
     let title = if poll.title.is_empty() {
         "(Untitled poll)".to_string()
     } else {
@@ -94,17 +109,47 @@ pub async fn index_poll(
     .await
 }
 
-pub async fn index_quiz(
-    cli: &aws_sdk_dynamodb::Client,
-    quiz: &SpaceQuiz,
-    creator_pk: Partition,
-    action_title: &str,
-    action_description: &str,
-) -> Result<()> {
+pub async fn detach_poll(cli: &aws_sdk_dynamodb::Client, poll: &SpacePoll) -> Result<()> {
+    let creator_pk = lookup_space_creator(cli, &poll.pk).await?;
+    Essence::delete_for_source(cli, creator_pk, &poll.pk, &poll.sk).await
+}
+
+/// Quizzes carry their displayable title/description on the `SpaceAction`
+/// (the one-per-action metadata row keyed by `(space, action_id)`). When
+/// indexing, we look that row up to mirror the same text the user sees in
+/// the arena card.
+pub async fn index_quiz(cli: &aws_sdk_dynamodb::Client, quiz: &SpaceQuiz) -> Result<()> {
+    use crate::features::spaces::pages::actions::models::SpaceAction;
+
+    let creator_pk = lookup_space_creator(cli, &quiz.pk).await?;
+
+    let space_id_str = match &quiz.pk {
+        Partition::Space(id) => id.clone(),
+        _ => return Err(EssenceError::ReadFailed.into()),
+    };
+    // `SpaceAction.pk.1` stores the quiz id as a BARE uuid (no `SPACE_QUIZ#`
+    // prefix), because `create_quiz.rs` passes
+    // `SpaceQuizEntityType::from(quiz.sk).to_string()` when building the
+    // action row — and `SpaceQuizEntityType`'s `Display` strips the prefix
+    // via the `SubPartition` macro. So we must extract the bare id from
+    // `quiz.sk` here; using `quiz.sk.to_string()` directly would look up
+    // `"SPACE_QUIZ#uuid"` and miss the real row (which is why the legacy
+    // migrate code silently returned empty title/description).
+    let quiz_id = match &quiz.sk {
+        EntityType::SpaceQuiz(id) => id.clone(),
+        _ => return Err(EssenceError::ReadFailed.into()),
+    };
+    let action_key = CompositePartition(SpacePartition(space_id_str), quiz_id);
+    let (action_title, action_description) =
+        match SpaceAction::get(cli, &action_key, Some(EntityType::SpaceAction)).await {
+            Ok(Some(action)) => (action.title, action.description),
+            _ => (String::new(), String::new()),
+        };
+
     let title = if action_title.trim().is_empty() {
         format!("Quiz {}", strip_prefix(&quiz.sk.to_string()))
     } else {
-        action_title.to_string()
+        action_title.clone()
     };
     let source_path = format!(
         "Ratel quiz · {} / {}",
@@ -128,10 +173,18 @@ pub async fn index_quiz(
     .await
 }
 
+pub async fn detach_quiz(cli: &aws_sdk_dynamodb::Client, quiz: &SpaceQuiz) -> Result<()> {
+    let creator_pk = lookup_space_creator(cli, &quiz.pk).await?;
+    Essence::delete_for_source(cli, creator_pk, &quiz.pk, &quiz.sk).await
+}
+
+/// `space_pk` for the essence row comes from the comment's denormalized
+/// `space_pk` field (set by `SpacePostComment::new`). Older rows missing the
+/// field index without `space_pk`, which only degrades the "open in space"
+/// shortcut and not list/search.
 pub async fn index_discussion_comment(
     cli: &aws_sdk_dynamodb::Client,
     comment: &SpacePostComment,
-    space_pk: Partition,
 ) -> Result<()> {
     let title = summarize(&comment.content, 80);
     let source_path = format!(
@@ -150,9 +203,35 @@ pub async fn index_discussion_comment(
         title,
         source_path,
         word_count,
-        Some(space_pk),
+        comment.space_pk.clone(),
     )
     .await
+}
+
+pub async fn detach_discussion_comment(
+    cli: &aws_sdk_dynamodb::Client,
+    comment: &SpacePostComment,
+) -> Result<()> {
+    Essence::delete_for_source(cli, comment.author_pk.clone(), &comment.pk, &comment.sk).await
+}
+
+/// Resolve `space.user_pk` from a `Space` partition. Used to attribute
+/// poll/quiz essence rows to the space creator.
+async fn lookup_space_creator(
+    cli: &aws_sdk_dynamodb::Client,
+    space_pk: &Partition,
+) -> Result<Partition> {
+    let space = SpaceCommon::get(cli, space_pk, Some(&EntityType::SpaceCommon))
+        .await
+        .map_err(|e| {
+            crate::error!("essence indexer: space lookup failed: {e}");
+            EssenceError::ReadFailed
+        })?
+        .ok_or_else(|| {
+            crate::error!("essence indexer: space {space_pk} not found");
+            EssenceError::ReadFailed
+        })?;
+    Ok(space.user_pk)
 }
 
 /// Drop the `PREFIX#` that `DynamoEnum` Display emits, returning just the

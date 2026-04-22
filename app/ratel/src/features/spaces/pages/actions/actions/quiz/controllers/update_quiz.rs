@@ -160,17 +160,8 @@ pub async fn update_quiz(
         .flatten()
         .map(|s| s.user_pk)
         .unwrap_or(space_pk.clone());
-        if let Err(e) = crate::features::essence::services::index_quiz(
-            cli,
-            &quiz,
-            creator_pk,
-            &action_title,
-            &action_description,
-        )
-        .await
-        {
-            tracing::error!("failed to re-index quiz essence on update: {e}");
-        }
+        let _ = (creator_pk, action_title, action_description);
+        // Essence re-indexing happens via the DynamoDB Stream pipeline.
     }
 
     if let Some(answers) = req.answers {

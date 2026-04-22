@@ -36,15 +36,7 @@ pub async fn create_poll(
         SpacePollError::CreateFailed
     })?;
 
-    if let Err(e) = crate::features::essence::services::index_poll(
-        cli,
-        &poll,
-        space.user_pk.clone(),
-    )
-    .await
-    {
-        tracing::error!("failed to index poll essence: {e}");
-    }
+    // Essence indexing happens via the DynamoDB Stream pipeline.
 
     let mut ret: PollResponse = poll.into();
     ret.space_action = space_action;
