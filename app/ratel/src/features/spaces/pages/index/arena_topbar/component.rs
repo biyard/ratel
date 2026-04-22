@@ -13,8 +13,11 @@ pub fn ArenaTopbar(
     let tr: SpaceViewerTranslate = use_translate();
     let mut ctx = use_space_context();
     let mut popup = use_popup();
+    let nav = use_navigator();
     let real_role = ctx.role();
     let is_admin = real_role.is_admin();
+    let user_ctx = crate::features::auth::hooks::use_user_context();
+    let has_user = user_ctx().user.is_some();
     let is_published = ctx.space().publish_state == SpacePublishState::Published;
     let is_in_progress = ctx.space().status == Some(SpaceStatus::Open);
     let is_started = ctx.space().status == Some(SpaceStatus::Ongoing);
@@ -53,6 +56,38 @@ pub fn ArenaTopbar(
                 }
             }
             div { class: "arena-topbar__actions",
+                button {
+                    aria_label: "{tr.home}",
+                    class: "hud-btn",
+                    "data-testid": "btn-home",
+                    onclick: move |_| {
+                        nav.push(crate::Route::Index {});
+                    },
+                    svg {
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        stroke_width: "1.5",
+                        view_box: "0 0 24 24",
+                        xmlns: "http://www.w3.org/2000/svg",
+                        path { d: "m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" }
+                        polyline { points: "9 22 9 12 15 12 15 22" }
+                    }
+                    span { class: "tooltip", "{tr.home}" }
+                }
+                if has_user {
+                    crate::features::notifications::components::NotificationBell {
+                        class: "hud-btn",
+                        onclick: move |_| {
+                            if active_panel() == ActivePanel::Notifications {
+                                active_panel.set(ActivePanel::None);
+                            } else {
+                                active_panel.set(ActivePanel::Notifications);
+                            }
+                        },
+                    }
+                }
                 if is_admin {
                     if !is_published {
                         button {
