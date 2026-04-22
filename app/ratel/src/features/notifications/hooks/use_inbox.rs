@@ -19,6 +19,12 @@ pub struct UseInbox {
 /// `use_context_provider`. Call this **exactly once** from a long-lived
 /// ancestor (the app's `NotificationsBootstrap`).
 ///
+/// Named `use_provide_inbox` rather than `provide_inbox` because
+/// Dioxus's linter (`dx check`) requires any function that calls hooks
+/// to itself be a hook — i.e. its name must start with `use_` or it
+/// must be a `#[component]`. Dropping the `use_` prefix tripped
+/// "hook called outside component or hook" errors.
+///
 /// The earlier single-function pattern (`use_inbox` that conditionally
 /// installed on first call and early-returned on subsequent calls via
 /// `try_use_context`) violated Dioxus's rules of hooks: first render
@@ -27,7 +33,7 @@ pub struct UseInbox {
 /// initialized at this index" panic. Splitting installer/consumer keeps
 /// the hook sequence identical on every render of this scope.
 #[track_caller]
-pub fn provide_inbox() -> std::result::Result<UseInbox, RenderError> {
+pub fn use_provide_inbox() -> std::result::Result<UseInbox, RenderError> {
     let unread_only = use_signal(|| false);
 
     let mut inbox = use_infinite_query(move |bookmark| {

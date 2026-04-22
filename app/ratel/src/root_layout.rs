@@ -53,12 +53,12 @@ fn NotificationsBootstrap(children: Element) -> Element {
     // `use_unread_count` is safe to call here because it wraps its
     // initialization in `use_hook` — stable 1 hook slot per render.
     let _ = crate::features::notifications::hooks::use_unread_count();
-    // `provide_inbox` (not `use_inbox`) is the installer variant that
+    // `use_provide_inbox` (not `use_inbox`) is the installer variant that
     // always runs the full hook sequence. Calling the consumer-only
     // `use_inbox()` here would only do a context read and never create
     // the underlying signals. See the installer/consumer split in
     // `use_inbox.rs`.
-    let _ = crate::features::notifications::hooks::provide_inbox()?;
+    let _ = crate::features::notifications::hooks::use_provide_inbox()?;
     rsx! {
         {children}
     }
