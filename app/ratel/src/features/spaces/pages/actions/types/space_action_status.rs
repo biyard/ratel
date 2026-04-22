@@ -13,14 +13,6 @@ pub enum SpaceActionStatus {
 }
 
 impl SpaceActionStatus {
-    pub fn is_ongoing(status: Option<&SpaceActionStatus>) -> bool {
-        matches!(status, Some(SpaceActionStatus::Ongoing))
-    }
-
-    pub fn is_finished(status: Option<&SpaceActionStatus>) -> bool {
-        matches!(status, Some(SpaceActionStatus::Finish))
-    }
-
     pub fn allows_transition(from: Option<&SpaceActionStatus>, to: &SpaceActionStatus) -> bool {
         match (from, to) {
             (None, SpaceActionStatus::Designing) => true,
