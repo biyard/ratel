@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Meet · Live</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    html,body{height:100%;overflow:hidden}
+
+    .live-stage{
+      position:relative;width:100%;height:100vh;
+      display:grid;grid-template-rows:auto 1fr auto;
+      overflow:hidden;
+    }
+
+    /* Top status bar (compact) */
+    .live-top{
+      position:relative;z-index:20;
+      display:flex;align-items:center;justify-content:space-between;gap:16px;
+      padding:12px 20px;
+      background:rgba(6,6,14,0.85);backdrop-filter:blur(18px);
+      border-bottom:1px solid var(--border-subtle);
+      flex-wrap:wrap;
+    }
+    .live-top__left{display:flex;align-items:center;gap:14px;min-width:0}
+    .live-top__title{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:0.02em;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px}
+    .live-top__sep{color:var(--text-dim)}
+    .live-top__meta{font-family:var(--font-display);font-size:10px;color:var(--text-muted);letter-spacing:0.08em;display:flex;align-items:center;gap:6px}
+    .live-top__meta svg{width:12px;height:12px}
+    .live-top__right{display:flex;align-items:center;gap:10px}
+
+    /* Stage (video grid area) */
+    .stage-area{
+      position:relative;display:grid;grid-template-columns:1fr auto;overflow:hidden;
+    }
+    .grid-wrap{
+      position:relative;overflow:hidden;
+      padding:20px;
+      display:flex;flex-direction:column;gap:12px;
+    }
+
+    .essence-banner{
+      display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;
+      background:rgba(110,237,216,0.06);border:1px solid rgba(110,237,216,0.22);
+      color:var(--text-primary);font-size:12px;
+      flex-shrink:0;
+    }
+    .essence-banner__icon{width:26px;height:26px;border-radius:7px;background:rgba(110,237,216,0.12);display:flex;align-items:center;justify-content:center;color:var(--accent-teal);flex-shrink:0}
+    .essence-banner__icon svg{width:13px;height:13px}
+    .essence-banner__text strong{color:var(--accent-teal)}
+
+    .video-grid{
+      flex:1;display:grid;gap:10px;
+      grid-template-columns:repeat(3,1fr);
+      grid-template-rows:repeat(2,1fr);
+      min-height:0;
+    }
+    @media (max-width:900px){
+      .video-grid{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(3,1fr)}
+    }
+    @media (max-width:560px){
+      .video-grid{grid-template-columns:1fr;grid-template-rows:repeat(6,1fr)}
+    }
+
+    /* Control bar (bottom) */
+    .live-bottom{
+      position:relative;z-index:20;
+      padding:14px 20px;
+      background:rgba(6,6,14,0.85);backdrop-filter:blur(18px);
+      border-top:1px solid var(--border-subtle);
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      flex-wrap:wrap;
+    }
+    .live-bottom__label{font-family:var(--font-display);font-size:10px;color:var(--text-dim);letter-spacing:0.1em;white-space:nowrap}
+    .ctrl-wrap{position:relative;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;flex:1}
+    .reactions-wrap{position:relative;display:inline-block}
+    .reactions-flyout{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);opacity:0;visibility:hidden;transition:all 0.2s}
+    .reactions-flyout[data-open="true"]{opacity:1;visibility:visible;transform:translateX(-50%) translateY(-2px)}
+
+    /* Side panel (chat/participants) */
+    .side-panel{
+      width:340px;flex-shrink:0;
+      background:rgba(6,6,14,0.75);backdrop-filter:blur(18px);
+      border-left:1px solid var(--border-subtle);
+      display:flex;flex-direction:column;overflow:hidden;
+      transition:width 0.3s cubic-bezier(0.16,1,0.3,1);
+    }
+    .side-panel[data-closed="true"]{width:0;border-left-width:0}
+    .side-panel__tabs{display:flex;border-bottom:1px solid var(--border-subtle);flex-shrink:0}
+    .side-panel__tab{flex:1;padding:14px;background:transparent;border:none;color:var(--text-muted);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-bottom:2px solid transparent;transition:all 0.2s}
+    .side-panel__tab:hover{color:var(--text-primary)}
+    .side-panel__tab[aria-selected="true"]{color:var(--meet-color);border-bottom-color:var(--meet-color)}
+    .side-panel__tab svg{width:13px;height:13px}
+    .side-panel__tab-count{padding:2px 7px;border-radius:100px;background:rgba(255,255,255,0.06);font-size:9px;font-weight:800;color:var(--text-primary)}
+    .side-panel__tab[aria-selected="true"] .side-panel__tab-count{background:var(--meet-bg);color:var(--meet-color)}
+    .side-panel__content{flex:1;overflow:hidden;position:relative}
+    .side-panel__pane{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
+    .side-panel__pane[hidden]{display:none}
+
+    /* Chat */
+    .chat-stream{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+    .chat-msg{display:flex;gap:10px}
+    .chat-msg__body{flex:1;min-width:0}
+    .chat-msg__head{display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap}
+    .chat-msg__author{font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--text-primary);letter-spacing:0.02em}
+    .chat-msg__tag{font-family:var(--font-display);font-size:8px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:1px 6px;border-radius:5px;background:rgba(252,179,0,0.10);border:1px solid rgba(252,179,0,0.22);color:var(--accent-gold)}
+    .chat-msg__time{font-family:var(--font-display);font-size:9px;color:var(--text-dim);letter-spacing:0.06em;margin-left:auto}
+    .chat-msg__text{font-size:13px;line-height:1.5;color:var(--text-primary);word-break:break-word}
+    .chat-msg--system{padding:6px 10px;background:rgba(129,140,248,0.04);border:1px solid rgba(129,140,248,0.20);border-radius:8px;font-size:11px;color:var(--accent-violet);text-align:center;font-family:var(--font-display);letter-spacing:0.08em}
+    .chat-box{padding:12px 14px;border-top:1px solid var(--border-subtle);display:flex;gap:8px}
+    .chat-box__input{flex:1;padding:9px 12px;border-radius:9px;background:rgba(255,255,255,0.04);border:1px solid var(--border-subtle);color:var(--text-primary);font-size:13px;outline:none}
+    .chat-box__input:focus{border-color:var(--meet-border);box-shadow:0 0 10px var(--meet-glow)}
+    .chat-box__send{padding:0 14px;border-radius:9px;background:var(--meet-bg);border:1px solid var(--meet-border);color:var(--meet-color);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer}
+    .chat-box__send:hover{background:rgba(251,113,133,0.14)}
+
+    /* Participants */
+    .pp-list{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:6px}
+    .pp-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;transition:background 0.2s}
+    .pp-row:hover{background:rgba(255,255,255,0.03)}
+    .pp-row__body{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+    .pp-row__name{font-size:13px;color:var(--text-primary);font-weight:600;display:flex;align-items:center;gap:6px}
+    .pp-row__badges{display:flex;gap:4px}
+    .pp-badge{padding:1px 6px;border-radius:5px;font-family:var(--font-display);font-size:8px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase}
+    .pp-badge--host{background:rgba(252,179,0,0.1);border:1px solid rgba(252,179,0,0.22);color:var(--accent-gold)}
+    .pp-badge--you{background:rgba(251,113,133,0.1);border:1px solid var(--meet-border);color:var(--meet-color)}
+    .pp-row__state{font-family:var(--font-display);font-size:10px;color:var(--text-muted);letter-spacing:0.06em}
+    .pp-row__mic{width:22px;height:22px;border-radius:6px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.22);display:flex;align-items:center;justify-content:center;color:var(--accent-green)}
+    .pp-row__mic--muted{background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.22);color:#f87171}
+    .pp-row__mic svg{width:11px;height:11px}
+    .pp-row__hand{color:#fbbf24;font-size:16px;animation:hand-wiggle 1.2s ease-in-out infinite}
+    .pp-row__menu{width:28px;height:28px;border-radius:7px;background:transparent;border:1px solid transparent;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:all 0.2s}
+    .pp-row:hover .pp-row__menu{opacity:1}
+    .pp-row__menu:hover{background:rgba(255,255,255,0.04);border-color:var(--border-subtle);color:var(--text-primary)}
+    .pp-row__menu svg{width:13px;height:13px}
+
+    @media (max-width:960px){
+      .side-panel{position:fixed;top:0;right:0;height:100%;width:80%;max-width:340px;z-index:30;transform:translateX(100%);transition:transform 0.3s}
+      .side-panel[data-closed="false"]{transform:translateX(0)}
+      .side-panel[data-closed="true"]{width:340px;border-left-width:1px}
+    }
+
+    /* Host action menu popover */
+    .host-menu{
+      position:absolute;right:0;top:calc(100% + 6px);z-index:40;
+      min-width:180px;padding:6px;border-radius:10px;
+      background:var(--bg-panel);backdrop-filter:blur(20px);
+      border:1px solid var(--border-subtle);
+      box-shadow:0 10px 32px rgba(0,0,0,0.5);
+      opacity:0;visibility:hidden;transition:all 0.15s;
+    }
+    .host-menu[data-open="true"]{opacity:1;visibility:visible}
+    .host-menu__item{display:flex;align-items:center;gap:10px;width:100%;padding:8px 12px;border-radius:7px;background:transparent;border:none;color:var(--text-primary);font-size:13px;text-align:left;cursor:pointer;transition:background 0.15s}
+    .host-menu__item:hover{background:rgba(255,255,255,0.04)}
+    .host-menu__item svg{width:14px;height:14px;color:var(--text-muted)}
+    .host-menu__item--danger{color:var(--accent-coral)}
+    .host-menu__item--danger:hover{background:rgba(239,68,68,0.08)}
+    .host-menu__item--danger svg{color:var(--accent-coral)}
+    .host-menu__sep{height:1px;background:var(--border-subtle);margin:4px 0}
+  </style>
+</head>
+<body>
+
+<div class="live-stage">
+
+  <!-- Top -->
+  <div class="live-top">
+    <div class="live-top__left">
+      <a class="brand-home" href="action-list-with-meet.html" aria-label="Exit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
+      <span class="rec-badge">REC · Live</span>
+      <span class="live-top__sep">·</span>
+      <span class="live-top__title">Mid-semester retrospective call</span>
+      <span class="live-top__sep">·</span>
+      <span class="live-top__meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>18:42 / 60:00</span>
+    </div>
+    <div class="live-top__right">
+      <span class="live-top__meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>6 / 7 joined</span>
+      <button class="btn btn--ghost btn--small" id="panel-toggle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+        Side panel
+      </button>
+    </div>
+  </div>
+
+  <!-- Stage -->
+  <div class="stage-area">
+    <div class="grid-wrap">
+      <div class="essence-banner">
+        <div class="essence-banner__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 0-7.07 17.07A10 10 0 1 0 12 2z"/><path d="M12 6v6l4 2"/></svg></div>
+        <div class="essence-banner__text">이 회의는 녹화되며 <strong>SNU Code Club Essence</strong>에 포함됩니다. 참가자는 이 사실을 인지한 것으로 간주됩니다.</div>
+      </div>
+      <div class="video-grid">
+
+        <div class="video-tile video-tile--speaking">
+          <div class="video-tile__avatar">PJ</div>
+          <span class="video-tile__reaction">👏</span>
+          <div class="video-tile__overlay">
+            <span class="video-tile__name">
+              @park_j
+              <span class="video-tile__name-icon video-tile__name-icon--host" aria-label="Host"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>
+            </span>
+            <span class="video-tile__name-icon" aria-label="mic on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></span>
+          </div>
+        </div>
+
+        <div class="video-tile">
+          <div class="video-tile__avatar">KS</div>
+          <div class="video-tile__overlay">
+            <span class="video-tile__name">@kim_s</span>
+            <span class="video-tile__name-icon" aria-label="mic on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></span>
+          </div>
+        </div>
+
+        <div class="video-tile">
+          <div class="video-tile__avatar">LH</div>
+          <span class="video-tile__hand">✋</span>
+          <div class="video-tile__overlay">
+            <span class="video-tile__name">@lee_h · 손들었음</span>
+            <span class="video-tile__name-icon video-tile__name-icon--muted" aria-label="mic muted"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/></svg></span>
+          </div>
+        </div>
+
+        <div class="video-tile">
+          <div class="video-tile__avatar">CM</div>
+          <div class="video-tile__overlay">
+            <span class="video-tile__name">@choi_m</span>
+            <span class="video-tile__name-icon" aria-label="mic on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></span>
+          </div>
+        </div>
+
+        <div class="video-tile">
+          <div class="video-tile__avatar">JY</div>
+          <span class="video-tile__reaction">❤️</span>
+          <div class="video-tile__overlay">
+            <span class="video-tile__name">@jung_y</span>
+            <span class="video-tile__name-icon video-tile__name-icon--muted" aria-label="mic muted"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/></svg></span>
+          </div>
+        </div>
+
+        <div class="video-tile">
+          <div class="video-tile__avatar" style="background:linear-gradient(135deg,rgba(251,113,133,0.5),rgba(129,140,248,0.3))">YOU</div>
+          <div class="video-tile__overlay">
+            <span class="video-tile__name">
+              @han_d (you)
+              <span class="video-tile__name-icon" style="background:rgba(251,113,133,0.25);color:var(--meet-color)">YOU</span>
+            </span>
+            <span class="video-tile__name-icon" aria-label="mic on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Side panel -->
+    <aside class="side-panel" id="side-panel" data-closed="false">
+      <div class="side-panel__tabs">
+        <button class="side-panel__tab" aria-selected="true" data-pane="chat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Chat <span class="side-panel__tab-count">4</span>
+        </button>
+        <button class="side-panel__tab" aria-selected="false" data-pane="pp">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+          People <span class="side-panel__tab-count">6</span>
+        </button>
+      </div>
+
+      <div class="side-panel__content">
+        <!-- Chat pane -->
+        <div class="side-panel__pane" data-pane="chat">
+          <div class="chat-stream" id="chat-stream">
+            <div class="chat-msg chat-msg--system">회의 시작 · 2026-04-22 18:00 · 녹화 시작됨</div>
+            <div class="chat-msg">
+              <div class="avatar avatar--sm">PJ</div>
+              <div class="chat-msg__body">
+                <div class="chat-msg__head">
+                  <span class="chat-msg__author">@park_j</span>
+                  <span class="chat-msg__tag">Host</span>
+                  <span class="chat-msg__time">18:03</span>
+                </div>
+                <div class="chat-msg__text">모두 오느라 수고하셨어요. 팀별로 3분씩 진행하겠습니다.</div>
+              </div>
+            </div>
+            <div class="chat-msg">
+              <div class="avatar avatar--sm avatar--teal">KS</div>
+              <div class="chat-msg__body">
+                <div class="chat-msg__head">
+                  <span class="chat-msg__author">@kim_s</span>
+                  <span class="chat-msg__time">18:07</span>
+                </div>
+                <div class="chat-msg__text">저희 백엔드는 auth 리팩토링 완료했고, 다음 스프린트는 ratel-auth 마이그레이션 후속작업 계획 중입니다.</div>
+              </div>
+            </div>
+            <div class="chat-msg">
+              <div class="avatar avatar--sm avatar--violet">LH</div>
+              <div class="chat-msg__body">
+                <div class="chat-msg__head">
+                  <span class="chat-msg__author">@lee_h</span>
+                  <span class="chat-msg__time">18:14</span>
+                </div>
+                <div class="chat-msg__text">프론트 쪽에서 질문 있어요 ✋</div>
+              </div>
+            </div>
+            <div class="chat-msg">
+              <div class="avatar avatar--sm avatar--cyan">CM</div>
+              <div class="chat-msg__body">
+                <div class="chat-msg__head">
+                  <span class="chat-msg__author">@choi_m</span>
+                  <span class="chat-msg__time">18:18</span>
+                </div>
+                <div class="chat-msg__text">로드맵 문서 링크 올려드릴게요 — ratel/roadmap/meet-action.md</div>
+              </div>
+            </div>
+            <div class="chat-msg chat-msg--system">@jung_y 참가 · 18:20</div>
+          </div>
+          <div class="chat-box">
+            <input class="chat-box__input" id="chat-input" placeholder="메시지 작성… (Enter 전송)" />
+            <button class="chat-box__send" id="chat-send">Send</button>
+          </div>
+        </div>
+
+        <!-- Participants pane -->
+        <div class="side-panel__pane" data-pane="pp" hidden>
+          <div class="pp-list">
+
+            <div class="pp-row">
+              <div class="avatar avatar--sm">PJ</div>
+              <div class="pp-row__body">
+                <span class="pp-row__name">@park_j <span class="pp-badges"><span class="pp-badge pp-badge--host">Host</span></span></span>
+                <span class="pp-row__state">18:00 입장 · Speaking</span>
+              </div>
+              <span class="pp-row__mic" aria-label="mic on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></span>
+            </div>
+
+            <div class="pp-row" data-handle="@kim_s">
+              <div class="avatar avatar--sm avatar--teal">KS</div>
+              <div class="pp-row__body">
+                <span class="pp-row__name">@kim_s</span>
+                <span class="pp-row__state">18:01 입장</span>
+              </div>
+              <span class="pp-row__mic" aria-label="mic on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></span>
+              <div style="position:relative">
+                <button class="pp-row__menu" data-menu-btn><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+                <div class="host-menu" data-menu>
+                  <button class="host-menu__item" data-action="mute">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12"/></svg>
+                    마이크 음소거
+                  </button>
+                  <div class="host-menu__sep"></div>
+                  <button class="host-menu__item host-menu__item--danger" data-action="remove">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 17l5-5-5-5"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    회의에서 내보내기
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="pp-row">
+              <div class="avatar avatar--sm avatar--violet">LH</div>
+              <div class="pp-row__body">
+                <span class="pp-row__name">@lee_h <span class="pp-row__hand">✋</span></span>
+                <span class="pp-row__state">18:04 입장 · 손들었음</span>
+              </div>
+              <span class="pp-row__mic pp-row__mic--muted" aria-label="mic muted"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/></svg></span>
+            </div>
+
+            <div class="pp-row">
+              <div class="avatar avatar--sm avatar--cyan">CM</div>
+              <div class="pp-row__body">
+                <span class="pp-row__name">@choi_m</span>
+                <span class="pp-row__state">18:02 입장</span>
+              </div>
+              <span class="pp-row__mic" aria-label="mic on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/></svg></span>
+            </div>
+
+            <div class="pp-row">
+              <div class="avatar avatar--sm avatar--pink">JY</div>
+              <div class="pp-row__body">
+                <span class="pp-row__name">@jung_y</span>
+                <span class="pp-row__state">18:20 입장</span>
+              </div>
+              <span class="pp-row__mic pp-row__mic--muted" aria-label="mic muted"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/></svg></span>
+            </div>
+
+            <div class="pp-row">
+              <div class="avatar avatar--sm" style="background:linear-gradient(135deg,rgba(251,113,133,0.3),rgba(129,140,248,0.15));color:var(--meet-color)">HD</div>
+              <div class="pp-row__body">
+                <span class="pp-row__name">@han_d <span class="pp-badge pp-badge--you">You</span></span>
+                <span class="pp-row__state">18:00 입장</span>
+              </div>
+              <span class="pp-row__mic" aria-label="mic on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/></svg></span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Bottom control bar -->
+  <div class="live-bottom">
+    <span class="live-bottom__label">你 · @han_d</span>
+    <div class="ctrl-wrap">
+      <button class="ctrl-btn" id="mic-btn" aria-pressed="true" aria-label="Mic">
+        <svg id="mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        <span class="ctrl-btn__label">Mic</span>
+      </button>
+      <button class="ctrl-btn" id="cam-btn" aria-pressed="true" aria-label="Camera">
+        <svg id="cam-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+        <span class="ctrl-btn__label">Camera</span>
+      </button>
+      <button class="ctrl-btn" id="share-btn" aria-label="Share screen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><polyline points="8 12 12 8 16 12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
+        <span class="ctrl-btn__label">Share</span>
+      </button>
+      <div class="reactions-wrap">
+        <button class="ctrl-btn" id="reaction-btn" aria-label="Reactions">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          <span class="ctrl-btn__label">React</span>
+        </button>
+        <div class="reactions-flyout" id="reactions-flyout">
+          <button class="reactions-flyout__btn" data-emoji="👍">👍</button>
+          <button class="reactions-flyout__btn" data-emoji="❤️">❤️</button>
+          <button class="reactions-flyout__btn" data-emoji="👏">👏</button>
+          <button class="reactions-flyout__btn" data-emoji="🎉">🎉</button>
+          <button class="reactions-flyout__btn" data-emoji="😂">😂</button>
+          <button class="reactions-flyout__btn" data-emoji="🤔">🤔</button>
+        </div>
+      </div>
+      <button class="ctrl-btn" id="hand-btn" aria-label="Raise hand">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2 2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+        <span class="ctrl-btn__label">Hand</span>
+      </button>
+      <button class="ctrl-btn--leave ctrl-btn" id="leave-btn" onclick="window.location.href='ended.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span class="ctrl-btn__label">Leave</span>
+      </button>
+      <button class="ctrl-btn ctrl-btn--end" id="end-btn" aria-label="End for all">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        <span class="ctrl-btn__label">End for all</span>
+      </button>
+    </div>
+    <span class="live-bottom__label" style="font-family:var(--font-display);font-size:9px;color:var(--text-dim);letter-spacing:0.1em">Host: @park_j · REC</span>
+  </div>
+</div>
+
+<!-- End-for-all modal -->
+<div class="modal-backdrop" id="end-modal">
+  <div class="modal">
+    <div class="modal__head">
+      <span class="modal__title">회의를 모두에게 종료합니다</span>
+      <button class="modal__close" data-modal-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <div class="notice notice--coral">
+        <div class="notice__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+        <div class="notice__body">
+          <span class="notice__title">모두에게 End</span>
+          <span class="notice__text">• 현재 접속 중인 <strong>6명 전원</strong>이 Ended 페이지로 돌아갑니다.<br>• 녹화가 종료되고 transcript/chat log 처리가 시작됩니다 (보통 몇 분).<br>• 1분 이상 참여한 attendee에게 10 credits 자동 지급.</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn btn--ghost" data-modal-close>취소</button>
+      <button class="btn btn--danger" onclick="window.location.href='ended.html'">End for all</button>
+    </div>
+  </div>
+</div>
+
+<!-- Remove participant modal -->
+<div class="modal-backdrop" id="remove-modal">
+  <div class="modal">
+    <div class="modal__head">
+      <span class="modal__title">참가자 내보내기</span>
+      <button class="modal__close" data-modal-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <p style="font-size:14px;color:var(--text-primary)"><strong id="remove-handle">@kim_s</strong> 님을 회의에서 내보냅니다. 해당 참가자는 Meet 페이지로 돌아가며 동일 회의에 다시 참여할 수 있습니다. 이 작업은 moderation log에 기록됩니다.</p>
+    </div>
+    <div class="modal__foot">
+      <button class="btn btn--ghost" data-modal-close>취소</button>
+      <button class="btn btn--danger" id="remove-confirm">내보내기 확정</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    // Side panel tabs
+    document.querySelectorAll('.side-panel__tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.side-panel__tab').forEach(t => t.setAttribute('aria-selected', 'false'));
+        tab.setAttribute('aria-selected', 'true');
+        const name = tab.dataset.pane;
+        document.querySelectorAll('.side-panel__pane').forEach(p => p.hidden = p.dataset.pane !== name);
+      });
+    });
+    document.getElementById('panel-toggle').addEventListener('click', () => {
+      const p = document.getElementById('side-panel');
+      const closed = p.getAttribute('data-closed') === 'true';
+      p.setAttribute('data-closed', closed ? 'false' : 'true');
+    });
+
+    // Mic / cam toggles
+    const micBtn = document.getElementById('mic-btn');
+    const micIcon = document.getElementById('mic-icon');
+    const camBtn = document.getElementById('cam-btn');
+    const camIcon = document.getElementById('cam-icon');
+    micBtn.addEventListener('click', () => {
+      const on = micBtn.getAttribute('aria-pressed') === 'true';
+      if (on) {
+        micBtn.setAttribute('aria-pressed', 'false');
+        micBtn.classList.add('ctrl-btn--off');
+        SubTeam.toast('마이크 음소거');
+      } else {
+        micBtn.setAttribute('aria-pressed', 'true');
+        micBtn.classList.remove('ctrl-btn--off');
+        SubTeam.toast('마이크 on');
+      }
+    });
+    camBtn.addEventListener('click', () => {
+      const on = camBtn.getAttribute('aria-pressed') === 'true';
+      if (on) {
+        camBtn.setAttribute('aria-pressed', 'false');
+        camBtn.classList.add('ctrl-btn--off');
+        SubTeam.toast('카메라 off');
+      } else {
+        camBtn.setAttribute('aria-pressed', 'true');
+        camBtn.classList.remove('ctrl-btn--off');
+        SubTeam.toast('카메라 on');
+      }
+    });
+    document.getElementById('share-btn').addEventListener('click', () => SubTeam.toast('화면 공유 · 창 선택 프롬프트'));
+    document.getElementById('hand-btn').addEventListener('click', (e) => {
+      const btn = e.currentTarget;
+      const on = btn.getAttribute('aria-pressed') === 'true';
+      btn.setAttribute('aria-pressed', !on);
+      SubTeam.toast(on ? '손내림' : '손들었음');
+    });
+
+    // Reactions flyout
+    const reactBtn = document.getElementById('reaction-btn');
+    const flyout = document.getElementById('reactions-flyout');
+    reactBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = flyout.getAttribute('data-open') === 'true';
+      flyout.setAttribute('data-open', open ? 'false' : 'true');
+    });
+    document.addEventListener('click', () => flyout.setAttribute('data-open', 'false'));
+    flyout.addEventListener('click', (e) => e.stopPropagation());
+    flyout.querySelectorAll('.reactions-flyout__btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const emoji = btn.dataset.emoji;
+        flyout.setAttribute('data-open', 'false');
+        // Pop reaction on your tile (the last tile)
+        const tiles = document.querySelectorAll('.video-tile');
+        const yourTile = tiles[tiles.length - 1];
+        const existing = yourTile.querySelector('.video-tile__reaction');
+        if (existing) existing.remove();
+        const r = document.createElement('span');
+        r.className = 'video-tile__reaction';
+        r.textContent = emoji;
+        yourTile.appendChild(r);
+        setTimeout(() => r.remove(), 1800);
+      });
+    });
+
+    // Host menu
+    document.querySelectorAll('[data-menu-btn]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const menu = btn.nextElementSibling;
+        document.querySelectorAll('[data-menu]').forEach(m => { if (m !== menu) m.setAttribute('data-open', 'false'); });
+        const open = menu.getAttribute('data-open') === 'true';
+        menu.setAttribute('data-open', open ? 'false' : 'true');
+      });
+    });
+    document.addEventListener('click', () => {
+      document.querySelectorAll('[data-menu]').forEach(m => m.setAttribute('data-open', 'false'));
+    });
+    document.querySelectorAll('[data-action="mute"]').forEach(b => {
+      b.addEventListener('click', () => {
+        const row = b.closest('.pp-row');
+        const handle = row.dataset.handle || row.querySelector('.pp-row__name').textContent.trim().split(' ')[0];
+        const mic = row.querySelector('.pp-row__mic');
+        mic.classList.add('pp-row__mic--muted');
+        SubTeam.toast(handle + ' 마이크 음소거됨 · moderation log에 기록');
+      });
+    });
+    document.querySelectorAll('[data-action="remove"]').forEach(b => {
+      b.addEventListener('click', () => {
+        const row = b.closest('.pp-row');
+        const handle = row.dataset.handle || row.querySelector('.pp-row__name').textContent.trim().split(' ')[0];
+        document.getElementById('remove-handle').textContent = handle;
+        SubTeam.openModal('remove-modal');
+      });
+    });
+    document.getElementById('remove-confirm').addEventListener('click', () => {
+      const handle = document.getElementById('remove-handle').textContent;
+      SubTeam.closeModal('remove-modal');
+      SubTeam.toast(handle + ' 회의에서 내보냄 · moderation log에 기록');
+    });
+
+    // End-for-all
+    document.getElementById('end-btn').addEventListener('click', () => SubTeam.openModal('end-modal'));
+
+    // Chat send
+    const chatInput = document.getElementById('chat-input');
+    const chatSend = document.getElementById('chat-send');
+    const stream = document.getElementById('chat-stream');
+    function send() {
+      const t = chatInput.value.trim();
+      if (!t) return;
+      const wrap = document.createElement('div');
+      wrap.className = 'chat-msg';
+      const av = document.createElement('div');
+      av.className = 'avatar avatar--sm';
+      av.style.background = 'linear-gradient(135deg,rgba(251,113,133,0.3),rgba(129,140,248,0.15))';
+      av.style.color = 'var(--meet-color)';
+      av.textContent = 'HD';
+      const body = document.createElement('div');
+      body.className = 'chat-msg__body';
+      const head = document.createElement('div');
+      head.className = 'chat-msg__head';
+      const author = document.createElement('span');
+      author.className = 'chat-msg__author';
+      author.textContent = '@han_d (you)';
+      const time = document.createElement('span');
+      time.className = 'chat-msg__time';
+      time.textContent = 'now';
+      head.appendChild(author); head.appendChild(time);
+      const text = document.createElement('div');
+      text.className = 'chat-msg__text';
+      text.textContent = t;
+      body.appendChild(head); body.appendChild(text);
+      wrap.appendChild(av); wrap.appendChild(body);
+      stream.appendChild(wrap);
+      stream.scrollTop = stream.scrollHeight;
+      chatInput.value = '';
+    }
+    chatSend.addEventListener('click', send);
+    chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
+
+    // Initial scroll to bottom
+    stream.scrollTop = stream.scrollHeight;
+  });
+</script>
+</body>
+</html>

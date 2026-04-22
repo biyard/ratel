@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Meet · Scheduled</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    /* Countdown banner */
+    .countdown{
+      position:relative;overflow:hidden;
+      padding:28px 32px;border-radius:20px;
+      background:linear-gradient(135deg,rgba(251,113,133,0.08),rgba(129,140,248,0.06));
+      border:1px solid var(--meet-border);
+      display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;
+    }
+    .countdown::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 60% at 15% 15%,var(--meet-glow) 0%,transparent 60%),radial-gradient(ellipse 55% 60% at 95% 90%,rgba(129,140,248,0.10) 0%,transparent 60%);pointer-events:none}
+    .countdown > *{position:relative;z-index:1}
+    .countdown__eyebrow{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--meet-color);display:inline-flex;align-items:center;gap:6px;margin-bottom:10px}
+    .countdown__eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--meet-color);box-shadow:0 0 8px var(--meet-color)}
+    .countdown__title{font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:0.02em;line-height:1.25;color:var(--text-primary);margin-bottom:10px}
+    .countdown__when{font-family:var(--font-display);font-size:14px;font-weight:600;letter-spacing:0.04em;color:var(--text-primary);display:flex;gap:14px;flex-wrap:wrap}
+    .countdown__when strong{color:var(--meet-color)}
+
+    .countdown__timer{
+      display:flex;gap:10px;flex-shrink:0;
+      font-family:var(--font-display);
+    }
+    .timer-cell{
+      display:flex;flex-direction:column;align-items:center;gap:4px;
+      min-width:72px;padding:12px 8px;border-radius:12px;
+      background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);
+    }
+    .timer-cell__value{font-size:28px;font-weight:800;letter-spacing:0.02em;color:var(--meet-color);line-height:1}
+    .timer-cell__label{font-size:9px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
+
+    .countdown__foot{grid-column:1 / -1;display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}
+    .join-btn{
+      padding:14px 24px;border-radius:12px;
+      background:linear-gradient(135deg,var(--meet-color),#ef4444);
+      border:1px solid var(--meet-color);color:#fff;
+      font-family:var(--font-display);font-size:12px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;
+      cursor:pointer;transition:all 0.25s;
+      display:inline-flex;align-items:center;gap:8px;
+      box-shadow:0 0 20px var(--meet-glow);
+    }
+    .join-btn svg{width:16px;height:16px}
+    .join-btn[disabled]{opacity:0.5;cursor:not-allowed;box-shadow:none}
+    .join-btn:not([disabled]):hover{transform:translateY(-1px);box-shadow:0 4px 28px rgba(251,113,133,0.4)}
+    .join-note{font-size:11px;color:var(--text-muted);font-family:var(--font-display);letter-spacing:0.06em}
+
+    /* Add to calendar buttons */
+    .cal-row{display:flex;gap:10px;flex-wrap:wrap}
+    .cal-btn{
+      display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border-radius:11px;
+      background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);
+      color:var(--text-primary);text-decoration:none;
+      font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+      cursor:pointer;transition:all 0.2s;
+    }
+    .cal-btn:hover{background:rgba(255,255,255,0.06);border-color:var(--border-strong)}
+    .cal-btn--google{background:rgba(66,133,244,0.06);border-color:rgba(66,133,244,0.25);color:#82b5ff}
+    .cal-btn--google:hover{background:rgba(66,133,244,0.12);box-shadow:0 0 14px rgba(66,133,244,0.2)}
+    .cal-btn svg{width:14px;height:14px}
+
+    /* Participants list */
+    .participants{display:flex;flex-direction:column;gap:8px}
+    .participant{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;background:rgba(6,6,14,0.45);border:1px solid var(--border-subtle)}
+    .participant__body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+    .participant__name{font-size:13px;color:var(--text-primary);font-weight:600}
+    .participant__meta{font-size:11px;color:var(--text-muted)}
+    .participant__rsvp{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:3px 8px;border-radius:6px;border:1px solid}
+    .participant__rsvp--yes{background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.25);color:var(--accent-green)}
+    .participant__rsvp--maybe{background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.25);color:var(--accent-amber)}
+    .participant__rsvp--cal{background:rgba(66,133,244,0.08);border-color:rgba(66,133,244,0.25);color:#82b5ff}
+
+    /* Admin actions */
+    .admin-actions{display:flex;gap:8px;flex-wrap:wrap}
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo">SC</div>
+      <div class="u-col">
+        <span class="arena-topbar__title">SNU Code Club</span>
+        <span class="arena-topbar__handle">Meet · #42</span>
+      </div>
+      <span class="arena-topbar__status arena-topbar__status--scheduled">Scheduled</span>
+    </div>
+    <div class="arena-topbar__actions">
+      <button class="btn btn--ghost btn--small" id="sim-near">⏱ 10분 전으로</button>
+      <button class="btn btn--ghost btn--small" id="sim-now">▶ 지금으로</button>
+    </div>
+  </div>
+
+  <div class="page">
+    <!-- Countdown -->
+    <div class="countdown">
+      <div>
+        <div class="countdown__eyebrow">Scheduled Meet</div>
+        <h1 class="countdown__title">Mid-semester retrospective call</h1>
+        <div class="countdown__when">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:middle;margin-right:6px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><strong>2026-04-25 (금) 19:00</strong> Asia/Seoul</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:middle;margin-right:6px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>예상 60분</span>
+        </div>
+      </div>
+      <div class="countdown__timer">
+        <div class="timer-cell"><span class="timer-cell__value" id="t-days">2</span><span class="timer-cell__label">Days</span></div>
+        <div class="timer-cell"><span class="timer-cell__value" id="t-hours">14</span><span class="timer-cell__label">Hours</span></div>
+        <div class="timer-cell"><span class="timer-cell__value" id="t-mins">23</span><span class="timer-cell__label">Min</span></div>
+      </div>
+      <div class="countdown__foot">
+        <button class="join-btn" id="join-btn" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          <span id="join-label">5분 전부터 참여 가능</span>
+        </button>
+        <span class="join-note" id="join-note">Join 버튼은 시작 5분 전부터 활성화됩니다</span>
+      </div>
+    </div>
+
+    <!-- Description + Agenda -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title card__title--meet">안건 · Agenda</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta">호스트 · @park_j</span>
+      </div>
+      <p style="font-size:14px;color:var(--text-primary);line-height:1.7">스프린트 회고 + 다음 분기 계획 논의. 각 팀 리드는 지난 2주 진척과 블로커를 3분 내로 공유합니다.</p>
+      <ul style="margin-top:12px;padding-left:20px;color:var(--text-muted);font-size:13px;line-height:1.8">
+        <li>19:00 - 19:10 · 인사 + 분위기 (소셜)</li>
+        <li>19:10 - 19:40 · 팀 리드 회고 (각 3분)</li>
+        <li>19:40 - 19:55 · 다음 분기 우선순위 투표</li>
+        <li>19:55 - 20:00 · 마무리, 공지</li>
+      </ul>
+    </section>
+
+    <!-- Calendar -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title card__title--meet">달력에 추가 · Add to calendar</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta">One-way sync · FR-4</span>
+      </div>
+      <div class="cal-row">
+        <a class="cal-btn cal-btn--google" href="calendar-add.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Google Calendar
+        </a>
+        <a class="cal-btn" href="#" id="ics-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          ICS 다운로드
+        </a>
+        <span style="font-size:11px;color:var(--text-dim);font-family:var(--font-display);letter-spacing:0.06em;align-self:center;margin-left:6px">Google → 최소 권한 (events.insert) · Ratel → Calendar 단방향</span>
+      </div>
+    </section>
+
+    <!-- Participants -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title card__title--meet">참가자 · Participants</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta">7명 · RSVP 참고용</span>
+      </div>
+      <div class="participants">
+        <div class="participant">
+          <div class="avatar avatar--sm">PJ</div>
+          <div class="participant__body">
+            <span class="participant__name">@park_j</span>
+            <span class="participant__meta">Host · Space admin</span>
+          </div>
+          <span class="participant__rsvp participant__rsvp--yes">참석 예정</span>
+        </div>
+        <div class="participant">
+          <div class="avatar avatar--sm avatar--teal">KS</div>
+          <div class="participant__body">
+            <span class="participant__name">@kim_s</span>
+            <span class="participant__meta">2일 전 · Google Calendar 추가됨</span>
+          </div>
+          <span class="participant__rsvp participant__rsvp--cal">캘린더 ✓</span>
+        </div>
+        <div class="participant">
+          <div class="avatar avatar--sm avatar--violet">LH</div>
+          <div class="participant__body">
+            <span class="participant__name">@lee_h</span>
+            <span class="participant__meta">어제 · Google Calendar 추가됨</span>
+          </div>
+          <span class="participant__rsvp participant__rsvp--cal">캘린더 ✓</span>
+        </div>
+        <div class="participant">
+          <div class="avatar avatar--sm avatar--cyan">CM</div>
+          <div class="participant__body">
+            <span class="participant__name">@choi_m</span>
+            <span class="participant__meta">ICS 다운로드</span>
+          </div>
+          <span class="participant__rsvp participant__rsvp--maybe">미확인</span>
+        </div>
+        <div class="participant">
+          <div class="avatar avatar--sm avatar--pink">JY</div>
+          <div class="participant__body">
+            <span class="participant__name">@jung_y</span>
+            <span class="participant__meta">알림 수신 · 캘린더 미추가</span>
+          </div>
+          <span class="participant__rsvp participant__rsvp--maybe">미확인</span>
+        </div>
+        <div class="participant">
+          <div class="avatar avatar--sm">HD</div>
+          <div class="participant__body">
+            <span class="participant__name">@han_d</span>
+            <span class="participant__meta">알림 수신 · 캘린더 미추가</span>
+          </div>
+          <span class="participant__rsvp participant__rsvp--maybe">미확인</span>
+        </div>
+        <div class="participant">
+          <div class="avatar avatar--sm avatar--violet">SW</div>
+          <div class="participant__body">
+            <span class="participant__name">@seo_w</span>
+            <span class="participant__meta">알림 수신</span>
+          </div>
+          <span class="participant__rsvp participant__rsvp--maybe">미확인</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Host admin actions -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title card__title--meet">Host · 관리</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta">Space admin 전용</span>
+      </div>
+      <div class="admin-actions">
+        <button class="btn btn--ghost">시간 변경</button>
+        <a class="btn btn--ghost" href="create-meet.html">세부 정보 편집</a>
+        <button class="btn btn--danger" onclick="window.location.href='terminal-states.html?v=cancelled'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          회의 취소
+        </button>
+      </div>
+      <div class="notice notice--amber" style="margin-top:14px">
+        <div class="notice__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+        <div class="notice__body">
+          <span class="notice__title">자동 만료</span>
+          <span class="notice__text">예약된 시각 이후 <strong>24시간</strong> 내에 host가 시작하지 않으면 이 회의는 자동으로 <strong>Expired</strong> 상태로 전환됩니다. 녹화/transcript/chat 없음.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Rewards -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title card__title--meet">보상 · Rewards</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta">종료 시 자동 지급</span>
+      </div>
+      <div class="u-flex u-gap-10" style="flex-wrap:wrap">
+        <div class="chip chip--gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Host · 30 credits</div>
+        <div class="chip chip--gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Attendee · 10 credits (each, ≥1 min)</div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+</div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    const joinBtn = document.getElementById('join-btn');
+    const joinLabel = document.getElementById('join-label');
+    const joinNote = document.getElementById('join-note');
+    const tDays = document.getElementById('t-days');
+    const tHours = document.getElementById('t-hours');
+    const tMins = document.getElementById('t-mins');
+
+    function setCountdown(days, hours, mins, canJoin, live) {
+      tDays.textContent = days;
+      tHours.textContent = String(hours).padStart(2, '0');
+      tMins.textContent = String(mins).padStart(2, '0');
+      if (live) {
+        joinBtn.disabled = false;
+        joinLabel.textContent = 'Join live now';
+        joinNote.textContent = '회의가 진행 중입니다 · 즉시 참가할 수 있습니다';
+      } else if (canJoin) {
+        joinBtn.disabled = false;
+        joinLabel.textContent = 'Join';
+        joinNote.textContent = '5분 전 · 참가 가능';
+      } else {
+        joinBtn.disabled = true;
+        joinLabel.textContent = '5분 전부터 참여 가능';
+        joinNote.textContent = 'Join 버튼은 시작 5분 전부터 활성화됩니다';
+      }
+    }
+
+    document.getElementById('sim-near').addEventListener('click', () => {
+      setCountdown(0, 0, 5, true, false);
+      SubTeam.toast('시뮬레이션: 5분 전 · Join 활성화됨');
+    });
+    document.getElementById('sim-now').addEventListener('click', () => {
+      setCountdown(0, 0, 0, true, true);
+      SubTeam.toast('시뮬레이션: Live · 지금 참여 가능', 'success');
+    });
+
+    joinBtn.addEventListener('click', () => {
+      if (joinBtn.disabled) return;
+      window.location.href = 'live.html';
+    });
+
+    document.getElementById('ics-btn').addEventListener('click', (e) => {
+      e.preventDefault();
+      SubTeam.toast('retrospective.ics 다운로드 시작', 'success');
+    });
+  });
+</script>
+</body>
+</html>
