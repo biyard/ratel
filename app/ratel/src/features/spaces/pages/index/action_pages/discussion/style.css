@@ -778,10 +778,12 @@
   width: 13px;
   height: 13px;
 }
-.comment-action--liked {
+.comment-action--liked,
+.comment-action[aria-pressed="true"] {
   color: #f43f5e;
 }
-.comment-action--liked svg {
+.comment-action--liked svg,
+.comment-action[aria-pressed="true"] svg {
   fill: #f43f5e;
   stroke: #f43f5e;
 }
