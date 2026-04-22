@@ -1,0 +1,66 @@
+/* Sticky footer pinned to the bottom of the action editor arena.
+   Holds Previous / Next / Save controls so users have an explicit
+   navigation + save affordance instead of relying on horizontal swipe
+   between pager pages and silent autosave. */
+.action-edit-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 24px;
+  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  background: var(--surface, rgba(12, 12, 26, 0.92));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  /* Cover any inline width left by the discussion-arena resizer or
+     other sibling layout — the footer must always span the full arena
+     width regardless of inner-page geometry. */
+  width: 100%;
+}
+
+.action-edit-footer__pages {
+  font-family: "Orbitron", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted, rgba(136, 136, 168, 0.9));
+}
+
+.action-edit-footer__buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* Reuse the shared `.btn` modifiers from the action editor mockup CSS;
+   only add overrides specific to the footer layout (size, disabled
+   appearance) here. */
+.action-edit-footer .btn {
+  min-width: 96px;
+}
+.action-edit-footer .btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .action-edit-footer {
+    padding: 10px 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .action-edit-footer__pages {
+    text-align: center;
+  }
+  .action-edit-footer__buttons {
+    justify-content: space-between;
+  }
+  .action-edit-footer .btn {
+    flex: 1;
+    min-width: 0;
+  }
+}

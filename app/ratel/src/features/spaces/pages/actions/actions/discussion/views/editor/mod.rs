@@ -1,5 +1,7 @@
 use super::*;
-use crate::features::spaces::pages::actions::components::ActionEditTopbar;
+use crate::features::spaces::pages::actions::components::{
+    ActionEditFooter, ActionEditSaveBus, ActionEditTopbar,
+};
 
 mod i18n;
 pub use i18n::DiscussionEditorTranslate;
@@ -26,6 +28,9 @@ pub fn DiscussionActionEditorPage(
     let initial_title = ctx.discussion().post.title.clone();
     let title = use_signal(|| initial_title);
 
+    ActionEditSaveBus::provide();
+    let current_page = use_signal(|| 0usize);
+
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div { class: "arena",
@@ -47,6 +52,7 @@ pub fn DiscussionActionEditorPage(
                 ContentCard {}
                 ConfigCard {}
             }
+            ActionEditFooter { current_page, total_pages: 2 }
         }
     }
 }
