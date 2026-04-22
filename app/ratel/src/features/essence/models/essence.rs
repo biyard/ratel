@@ -127,18 +127,21 @@ impl Essence {
             .await
             .ok()
             .flatten();
-        let (source_delta, words_delta) = match &existing {
+        // When the row exists, only bump the word delta and skip source
+        // counters (it's the same source being overwritten). On first insert
+        // bump the global `+1` and the matching per-kind `+1`.
+        let (source_delta, words_delta, kind_delta_kind) = match &existing {
             Some(old) => {
                 row.created_at = old.created_at;
-                (0i64, row.word_count - old.word_count)
+                (0i64, row.word_count - old.word_count, None)
             }
-            None => (1i64, row.word_count),
+            None => (1i64, row.word_count, Some(row.source_kind)),
         };
         row.upsert(cli).await.map_err(|e| {
             crate::error!("essence upsert failed: {e}");
             EssenceError::UpsertFailed
         })?;
-        Self::bump_stats(cli, &row.pk, source_delta, words_delta).await;
+        Self::bump_stats(cli, &row.pk, source_delta, words_delta, kind_delta_kind).await;
         Ok(())
     }
 
@@ -147,23 +150,55 @@ impl Essence {
     /// failures (logged only) so an Essence write never fails because the
     /// counter is behind; counters can be re-computed offline if they
     /// drift.
+    ///
+    /// `kind_delta` is `Some(kind)` when the per-kind counter for that kind
+    /// should be bumped by the same `source_delta` (either +1 on insert or
+    /// -1 on delete). Pass `None` when the row is only being updated (word
+    /// count change, no source delta).
     async fn bump_stats(
         cli: &aws_sdk_dynamodb::Client,
         user_pk: &Partition,
         source_delta: i64,
         words_delta: i64,
+        kind_delta: Option<EssenceSourceKind>,
     ) {
-        if source_delta == 0 && words_delta == 0 {
+        if source_delta == 0 && words_delta == 0 && kind_delta.is_none() {
             return;
         }
-        let res = UserEssenceStats::updater(user_pk, EntityType::UserEssenceStats)
+        let mut updater = UserEssenceStats::updater(user_pk, EntityType::UserEssenceStats)
             .increase_total_sources(source_delta)
-            .increase_total_words(words_delta)
-            .execute(cli)
-            .await;
-        if let Err(e) = res {
+            .increase_total_words(words_delta);
+        if let Some(kind) = kind_delta {
+            updater = match kind {
+                EssenceSourceKind::Notion => updater.increase_total_notion(source_delta),
+                EssenceSourceKind::Post => updater.increase_total_post(source_delta),
+                EssenceSourceKind::PostComment | EssenceSourceKind::DiscussionComment => {
+                    updater.increase_total_comment(source_delta)
+                }
+                EssenceSourceKind::Poll => updater.increase_total_poll(source_delta),
+                EssenceSourceKind::Quiz => updater.increase_total_quiz(source_delta),
+            };
+        }
+        if let Err(e) = updater.execute(cli).await {
             crate::error!("essence stats bump failed: {e}");
         }
+    }
+
+    /// Overwrite the stats row with an exact snapshot. Used by the migrate
+    /// endpoint to reconcile drift that can accumulate when per-row stat
+    /// bumps silently failed during earlier writes.
+    pub async fn replace_stats(
+        cli: &aws_sdk_dynamodb::Client,
+        user_pk: &Partition,
+        totals: UserEssenceStats,
+    ) -> Result<()> {
+        let mut row = totals;
+        row.pk = user_pk.clone();
+        row.sk = EntityType::UserEssenceStats;
+        row.upsert(cli).await.map_err(|e| {
+            crate::error!("essence stats replace failed: {e}");
+            EssenceError::UpsertFailed.into()
+        })
     }
 
     /// Convenience wrapper: construct + upsert in one call so call sites in
@@ -224,13 +259,14 @@ impl Essence {
             return Ok(());
         };
         let words = row.word_count;
+        let kind = row.source_kind;
         Self::delete(cli, user_pk.clone(), Some(sk))
             .await
             .map_err(|e| {
                 crate::error!("essence cascade delete failed: {e}");
                 EssenceError::DeleteFailed
             })?;
-        Self::bump_stats(cli, &user_pk, -1, -words).await;
+        Self::bump_stats(cli, &user_pk, -1, -words, Some(kind)).await;
         Ok(())
     }
 
@@ -242,8 +278,9 @@ impl Essence {
         user_pk: Partition,
         sort: EssenceSort,
         bookmark: Option<String>,
+        limit: i32,
     ) -> Result<(Vec<Self>, Option<String>)> {
-        let opts = Self::opt_with_bookmark(bookmark).limit(50);
+        let opts = Self::opt_with_bookmark(bookmark).limit(limit);
         let result = match sort {
             EssenceSort::LastEditedDesc => {
                 Self::find_by_user_recent(cli, user_pk, opts.scan_index_forward(false)).await

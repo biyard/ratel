@@ -35,9 +35,24 @@ pub struct EssenceResponse {
 /// Aggregate counts for the hero card. Backed by the `UserEssenceStats`
 /// singleton row so a single roundtrip returns accurate totals regardless
 /// of how many Essence rows the user has.
+///
+/// `total_{kind}` counters mirror the client `KindFilter` chips — they let
+/// the table show an accurate "총 N" for the active filter without
+/// paginating through every row, and they back the breakdown card
+/// percentages.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct EssenceStatsResponse {
     pub total_sources: i64,
     pub total_words: i64,
+    #[serde(default)]
+    pub total_notion: i64,
+    #[serde(default)]
+    pub total_post: i64,
+    #[serde(default)]
+    pub total_comment: i64,
+    #[serde(default)]
+    pub total_poll: i64,
+    #[serde(default)]
+    pub total_quiz: i64,
 }
