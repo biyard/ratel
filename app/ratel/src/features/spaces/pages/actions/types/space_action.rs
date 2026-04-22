@@ -24,6 +24,10 @@ pub struct SpaceActionSummary {
     pub user_participated: bool,
     pub credits: u64,
     pub prerequisite: bool,
+
+    // Populated for Discussion actions only; mirrors `SpacePost.comments`.
+    #[serde(default)]
+    pub comment_count: Option<i64>,
 }
 
 impl From<crate::features::spaces::pages::actions::models::SpaceAction> for SpaceActionSummary {
@@ -46,6 +50,7 @@ impl From<crate::features::spaces::pages::actions::models::SpaceAction> for Spac
             user_participated: false,
             credits: action.credits,
             prerequisite: action.prerequisite,
+            comment_count: None,
         }
     }
 }
