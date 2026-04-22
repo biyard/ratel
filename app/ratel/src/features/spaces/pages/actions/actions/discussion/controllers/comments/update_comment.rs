@@ -79,5 +79,7 @@ pub async fn update_comment(
 
     let comment = updater.execute(cli).await?;
 
+    // Essence re-indexing happens via the DynamoDB Stream pipeline.
+
     Ok(comment)
 }

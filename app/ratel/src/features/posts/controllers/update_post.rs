@@ -169,5 +169,7 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
 
     crate::transact_write_items!(cli, transacts)?;
 
+    // Essence re-indexing happens via the DynamoDB Stream pipeline.
+
     Ok(post)
 }

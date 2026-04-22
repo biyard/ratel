@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Governance Hub · 서울대 컴퓨터공학과</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    /* ── KPI strip (full-width row below hero) ── */
+    .hub-hero__stats{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+    }
+    @media (max-width:720px){
+      .hub-hero__stats{grid-template-columns:1fr}
+    }
+    .hub-stat{
+      padding:14px 18px;border-radius:12px;
+      background:var(--bg-glass);backdrop-filter:blur(12px);
+      border:1px solid var(--border-subtle);
+      display:flex;flex-direction:column;gap:4px;
+      min-width:0;
+    }
+    .hub-stat__label{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
+    .hub-stat__value{font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:0.02em;color:var(--text-primary)}
+    .hub-stat__value--gold{background:linear-gradient(135deg,var(--accent-gold),#ffd24a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .hub-stat__value--teal{color:var(--accent-teal)}
+    .hub-stat__value--amber{color:var(--accent-amber)}
+    .hub-stat__delta{font-family:var(--font-display);font-size:10px;font-weight:600;color:var(--accent-green);letter-spacing:0.08em}
+
+    /* ── Parent-eligible switch ── */
+    .eligibility{
+      display:flex;align-items:center;gap:16px;padding:16px 20px;border-radius:14px;
+      background:rgba(252,179,0,0.04);border:1px solid rgba(252,179,0,0.18);
+    }
+    .eligibility__icon{
+      width:40px;height:40px;border-radius:11px;flex-shrink:0;
+      background:rgba(252,179,0,0.10);border:1px solid rgba(252,179,0,0.25);
+      display:flex;align-items:center;justify-content:center;color:var(--accent-gold);
+    }
+    .eligibility__icon svg{width:18px;height:18px}
+    .eligibility__body{flex:1;min-width:0}
+    .eligibility__title{font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-gold);margin-bottom:4px}
+    .eligibility__desc{font-size:13px;color:var(--text-muted);line-height:1.5}
+
+    /* ── Tool grid (large entry cards) ── */
+    .tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+    .tool-card{
+      position:relative;overflow:hidden;
+      display:flex;flex-direction:column;gap:10px;
+      padding:20px;border-radius:14px;
+      background:var(--bg-glass);backdrop-filter:blur(12px);
+      border:1px solid var(--border-subtle);
+      text-decoration:none;color:var(--text-primary);
+      transition:all 0.25s;cursor:pointer;
+    }
+    .tool-card::before{
+      content:'';position:absolute;top:0;right:0;width:120px;height:120px;
+      background:radial-gradient(circle, var(--tool-accent, rgba(252,179,0,0.15)), transparent 60%);
+      filter:blur(30px);pointer-events:none;
+    }
+    .tool-card:hover{transform:translateY(-2px);border-color:var(--tool-hover, rgba(252,179,0,0.30));box-shadow:0 10px 30px rgba(0,0,0,0.4)}
+    .tool-card__head{display:flex;align-items:center;justify-content:space-between;gap:10px;position:relative}
+    .tool-card__icon{
+      width:36px;height:36px;border-radius:10px;
+      background:rgba(252,179,0,0.08);border:1px solid rgba(252,179,0,0.22);
+      display:flex;align-items:center;justify-content:center;color:var(--accent-gold);
+    }
+    .tool-card__icon svg{width:16px;height:16px}
+    .tool-card__badge{
+      font-family:var(--font-display);font-size:10px;font-weight:700;
+      padding:3px 8px;border-radius:6px;letter-spacing:0.10em;
+      background:rgba(239,68,68,0.10);border:1px solid rgba(239,68,68,0.25);color:var(--accent-coral);
+    }
+    .tool-card__title{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:0.04em;color:var(--text-primary);line-height:1.3}
+    .tool-card__desc{font-size:12px;color:var(--text-muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .tool-card__foot{display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);margin-top:6px}
+    .tool-card:hover .tool-card__foot{color:var(--accent-gold)}
+    .tool-card__foot svg{width:12px;height:12px;transition:transform 0.2s}
+    .tool-card:hover .tool-card__foot svg{transform:translateX(3px)}
+
+    .tool-card[data-variant="violet"]{--tool-accent:rgba(129,140,248,0.15);--tool-hover:rgba(129,140,248,0.30)}
+    .tool-card[data-variant="violet"] .tool-card__icon{background:rgba(129,140,248,0.08);border-color:rgba(129,140,248,0.22);color:var(--accent-violet)}
+    .tool-card[data-variant="purple"]{--tool-accent:rgba(168,85,247,0.15);--tool-hover:rgba(168,85,247,0.30)}
+    .tool-card[data-variant="purple"] .tool-card__icon{background:rgba(168,85,247,0.08);border-color:rgba(168,85,247,0.22);color:var(--accent-purple)}
+    .tool-card[data-variant="cyan"]{--tool-accent:rgba(34,211,238,0.15);--tool-hover:rgba(34,211,238,0.30)}
+    .tool-card[data-variant="cyan"] .tool-card__icon{background:rgba(34,211,238,0.08);border-color:rgba(34,211,238,0.22);color:var(--accent-cyan)}
+    .tool-card[data-variant="teal"]{--tool-accent:rgba(110,237,216,0.15);--tool-hover:rgba(110,237,216,0.30)}
+    .tool-card[data-variant="teal"] .tool-card__icon{background:rgba(110,237,216,0.08);border-color:rgba(110,237,216,0.22);color:var(--accent-teal)}
+    .tool-card[data-variant="coral"]{--tool-accent:rgba(239,68,68,0.15);--tool-hover:rgba(239,68,68,0.30)}
+    .tool-card[data-variant="coral"] .tool-card__icon{background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.22);color:var(--accent-coral)}
+
+    /* ── Sub-team roster ── */
+    .roster-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+    .roster-filter__btn{
+      padding:6px 14px;border-radius:8px;
+      background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);
+      color:var(--text-muted);font-family:var(--font-display);font-size:10px;font-weight:600;
+      letter-spacing:0.10em;text-transform:uppercase;cursor:pointer;transition:all 0.25s;
+    }
+    .roster-filter__btn:hover{color:var(--text-primary);border-color:var(--border-strong)}
+    .roster-filter__btn[aria-selected="true"]{background:rgba(252,179,0,0.08);color:var(--accent-gold);border-color:rgba(252,179,0,0.25)}
+    .roster-filter__btn-count{margin-left:6px;color:var(--text-dim);font-weight:500}
+    .roster-filter__btn[aria-selected="true"] .roster-filter__btn-count{color:var(--accent-gold);opacity:0.7}
+
+    .roster{display:flex;flex-direction:column;gap:10px}
+    .roster-row{
+      display:grid;grid-template-columns:auto 1fr auto auto auto;gap:14px;align-items:center;
+      padding:14px 16px;border-radius:12px;
+      background:rgba(6,6,14,0.45);border:1px solid var(--border-subtle);
+      transition:all 0.2s;
+    }
+    .roster-row:hover{border-color:rgba(252,179,0,0.22);background:rgba(12,12,26,0.6)}
+    .roster-row__body{display:flex;flex-direction:column;gap:3px;min-width:0}
+    .roster-row__name{font-size:14px;color:var(--text-primary);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .roster-row__handle{font-family:var(--font-display);font-size:10px;color:var(--text-muted);letter-spacing:0.06em}
+    .roster-row__metric{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:58px;padding:0 8px;border-left:1px solid var(--border-subtle)}
+    .roster-row__metric-value{font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text-primary)}
+    .roster-row__metric-label{font-family:var(--font-display);font-size:8px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim)}
+    .roster-row__actions{display:flex;gap:6px}
+    .roster-row__action{
+      width:32px;height:32px;border-radius:8px;padding:0;
+      background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);
+      color:var(--text-muted);display:flex;align-items:center;justify-content:center;
+      cursor:pointer;transition:all 0.2s;
+    }
+    .roster-row__action:hover{border-color:rgba(252,179,0,0.25);color:var(--accent-gold)}
+    .roster-row__action--danger:hover{border-color:rgba(239,68,68,0.3);color:var(--accent-coral);background:rgba(239,68,68,0.06)}
+    .roster-row__action svg{width:13px;height:13px}
+
+    @media (max-width:720px){
+      .hub-hero{grid-template-columns:1fr}
+      .roster-row{grid-template-columns:auto 1fr auto;gap:10px}
+      .roster-row__metric:not(:first-of-type){display:none}
+      .roster-row__actions{grid-column:1/-1}
+    }
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <!-- Topbar -->
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home" aria-label="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo">SNU</div>
+      <div class="u-col">
+        <span class="arena-topbar__title">SNU CS Dept.</span>
+        <span class="arena-topbar__handle">@snu_cs_office</span>
+      </div>
+      <span class="arena-topbar__status arena-topbar__status--parent">Parent · Eligible</span>
+    </div>
+    <div class="arena-topbar__actions">
+      <button class="hud-btn hud-btn--active" aria-label="Governance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      <button class="hud-btn" aria-label="Members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
+    </div>
+  </div>
+
+  <div class="page page--wide">
+    <!-- HERO -->
+    <div class="page-header" style="grid-template-columns:1fr">
+      <div class="page-header__main">
+        <span class="page-header__eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Parent Governance
+        </span>
+        <h1 class="page-header__title"><strong>학과사무실</strong>의 거버넌스 홈</h1>
+        <p class="page-header__sub">학칙 게시 · 신청서 구성 · 가입 심사 · 공지 방송 · 활동 관찰 — 인증된 동아리들과의 관계를 여기서 운영합니다. 동아리의 일상 운영에는 관여하지 않습니다.</p>
+      </div>
+    </div>
+
+    <!-- KPI strip (pulled out of hero so title has full width) -->
+    <div class="hub-hero__stats">
+      <div class="hub-stat">
+        <span class="hub-stat__label">Active Sub-teams</span>
+        <span class="hub-stat__value hub-stat__value--gold">12</span>
+        <span class="hub-stat__delta">+2 이번 달</span>
+      </div>
+      <div class="hub-stat">
+        <span class="hub-stat__label">Pending Applications</span>
+        <span class="hub-stat__value hub-stat__value--amber">4</span>
+        <span class="hub-stat__delta" style="color:var(--accent-amber)">검토 필요</span>
+      </div>
+      <div class="hub-stat">
+        <span class="hub-stat__label">Active Members</span>
+        <span class="hub-stat__value hub-stat__value--teal">342</span>
+        <span class="hub-stat__delta">지난 7일</span>
+      </div>
+    </div>
+
+    <!-- Parent-eligible switch -->
+    <div class="eligibility">
+      <div class="eligibility__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg></div>
+      <div class="eligibility__body">
+        <div class="eligibility__title">Parent-eligible · 활성화됨</div>
+        <div class="eligibility__desc">이 팀은 sub-team 신청을 수락할 수 있습니다. 신청 폼을 설정하고 학칙을 게시하세요. 비활성화하면 진행 중인 신청은 유지되지만 신규 신청은 받을 수 없습니다.</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="eligibility-toggle" checked />
+        <span class="switch__track"></span>
+      </label>
+    </div>
+
+    <!-- Tool grid -->
+    <section class="u-col u-gap-12">
+      <div class="section-label">
+        <span class="section-label__dash"></span>
+        <span class="section-label__title">Governance <strong>Tools</strong></span>
+        <span class="section-label__dash"></span>
+      </div>
+      <div class="tools">
+
+        <a class="tool-card" href="bylaws-section.html">
+          <div class="tool-card__head">
+            <div class="tool-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <span class="chip chip--gold" style="font-size:9px">8 POSTS</span>
+          </div>
+          <h3 class="tool-card__title">학칙 · Bylaws</h3>
+          <p class="tool-card__desc">학과 규칙을 공개 게시합니다. 신청 동아리는 이 내용에 동의해야 제출할 수 있습니다.</p>
+          <div class="tool-card__foot">Publish & manage <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </a>
+
+        <a class="tool-card" data-variant="violet" href="parent-form-builder.html">
+          <div class="tool-card__head">
+            <div class="tool-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg></div>
+            <span class="chip chip--violet" style="font-size:9px">V3 · 6 fields</span>
+          </div>
+          <h3 class="tool-card__title">신청서 폼 · Application</h3>
+          <p class="tool-card__desc">동아리 신청 시 요구할 필드를 직접 구성합니다. 팀명, 목적, 지도교수, 최소 인원 등.</p>
+          <div class="tool-card__foot">Build form <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </a>
+
+        <a class="tool-card" href="parent-applications-queue.html">
+          <div class="tool-card__head">
+            <div class="tool-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+            <span class="tool-card__badge">4 대기</span>
+          </div>
+          <h3 class="tool-card__title">가입 심사 · Review Queue</h3>
+          <p class="tool-card__desc">승인 / 거절 (사유 포함) / 수정 반송 (코멘트 포함). 모든 신청은 제출 시점의 폼 버전에 고정됩니다.</p>
+          <div class="tool-card__foot">Review 4 pending <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </a>
+
+        <a class="tool-card" data-variant="purple" href="parent-announcements.html">
+          <div class="tool-card__head">
+            <div class="tool-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8v18l-18-8v-2z"/></svg></div>
+            <span class="chip chip--purple" style="font-size:9px">LAST · 2일 전</span>
+          </div>
+          <h3 class="tool-card__title">공지 방송 · Announcements</h3>
+          <p class="tool-card__desc">모든 인증된 동아리의 팀 스페이스에 고정 게시물로 방송합니다. Q&A 댓글 스레드 지원.</p>
+          <div class="tool-card__foot">Compose broadcast <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </a>
+
+        <a class="tool-card" data-variant="cyan" href="parent-dashboard.html">
+          <div class="tool-card__head">
+            <div class="tool-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+            <span class="chip chip--cyan" style="font-size:9px">공개 활동 ONLY</span>
+          </div>
+          <h3 class="tool-card__title">활동 대시보드 · Dashboard</h3>
+          <p class="tool-card__desc">동아리별 posts / spaces / active members. 일·주·월 창 + 멤버별 drill-down.</p>
+          <div class="tool-card__foot">View dashboard <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- Sub-team roster -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title">인증된 Sub-teams · Recognized clubs</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta">12개 · 정렬: 최근 활동순</span>
+      </div>
+
+      <div class="roster-filter">
+        <button class="roster-filter__btn" aria-selected="true">All <span class="roster-filter__btn-count">12</span></button>
+        <button class="roster-filter__btn" aria-selected="false">Highly active <span class="roster-filter__btn-count">7</span></button>
+        <button class="roster-filter__btn" aria-selected="false">Low activity <span class="roster-filter__btn-count">3</span></button>
+        <button class="roster-filter__btn" aria-selected="false">New (≤ 30d) <span class="roster-filter__btn-count">2</span></button>
+      </div>
+
+      <div class="roster">
+
+        <div class="roster-row">
+          <div class="avatar avatar--teal">SC</div>
+          <div class="roster-row__body">
+            <span class="roster-row__name">SNU Code Club</span>
+            <span class="roster-row__handle">@snu_code_club · 인증 · 2026-02-14</span>
+          </div>
+          <div class="roster-row__metric"><span class="roster-row__metric-value">48</span><span class="roster-row__metric-label">Posts · 30d</span></div>
+          <div class="roster-row__metric"><span class="roster-row__metric-value">6</span><span class="roster-row__metric-label">Spaces</span></div>
+          <div class="roster-row__actions">
+            <button class="roster-row__action" aria-label="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></button>
+            <button class="roster-row__action roster-row__action--danger" aria-label="Deregister" onclick="window.location.href='parent-deregister.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+        </div>
+
+        <div class="roster-row">
+          <div class="avatar avatar--violet">AL</div>
+          <div class="roster-row__body">
+            <span class="roster-row__name">Algorithm Lab</span>
+            <span class="roster-row__handle">@snu_algo · 인증 · 2025-11-02</span>
+          </div>
+          <div class="roster-row__metric"><span class="roster-row__metric-value">31</span><span class="roster-row__metric-label">Posts · 30d</span></div>
+          <div class="roster-row__metric"><span class="roster-row__metric-value">4</span><span class="roster-row__metric-label">Spaces</span></div>
+          <div class="roster-row__actions">
+            <button class="roster-row__action" aria-label="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></button>
+            <button class="roster-row__action roster-row__action--danger" aria-label="Deregister" onclick="window.location.href='parent-deregister.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+        </div>
+
+        <div class="roster-row">
+          <div class="avatar avatar--cyan">AI</div>
+          <div class="roster-row__body">
+            <span class="roster-row__name">AI & ML Society</span>
+            <span class="roster-row__handle">@snu_aiml · 인증 · 2026-03-08</span>
+          </div>
+          <div class="roster-row__metric"><span class="roster-row__metric-value">22</span><span class="roster-row__metric-label">Posts · 30d</span></div>
+          <div class="roster-row__metric"><span class="roster-row__metric-value">3</span><span class="roster-row__metric-label">Spaces</span></div>
+          <div class="roster-row__actions">
+            <button class="roster-row__action" aria-label="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></button>
+            <button class="roster-row__action roster-row__action--danger" aria-label="Deregister" onclick="window.location.href='parent-deregister.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+        </div>
+
+        <div class="roster-row">
+          <div class="avatar avatar--purple">SE</div>
+          <div class="roster-row__body">
+            <span class="roster-row__name">Security Enthusiasts</span>
+            <span class="roster-row__handle">@snu_sec · 인증 · 2025-09-22</span>
+          </div>
+          <div class="roster-row__metric"><span class="roster-row__metric-value">5</span><span class="roster-row__metric-label">Posts · 30d</span></div>
+          <div class="roster-row__metric"><span class="roster-row__metric-value">1</span><span class="roster-row__metric-label">Spaces</span></div>
+          <div class="roster-row__actions">
+            <button class="roster-row__action" aria-label="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></button>
+            <button class="roster-row__action roster-row__action--danger" aria-label="Deregister" onclick="window.location.href='parent-deregister.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+        </div>
+
+        <div class="roster-row">
+          <div class="avatar avatar--pink">GD</div>
+          <div class="roster-row__body">
+            <span class="roster-row__name">Game Dev Crew</span>
+            <span class="roster-row__handle">@snu_gamedev · 인증 · 2026-04-01</span>
+          </div>
+          <div class="roster-row__metric"><span class="roster-row__metric-value">18</span><span class="roster-row__metric-label">Posts · 30d</span></div>
+          <div class="roster-row__metric"><span class="roster-row__metric-value">2</span><span class="roster-row__metric-label">Spaces</span></div>
+          <div class="roster-row__actions">
+            <button class="roster-row__action" aria-label="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></button>
+            <button class="roster-row__action roster-row__action--danger" aria-label="Deregister" onclick="window.location.href='parent-deregister.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+</div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    // Eligibility toggle
+    const elig = document.getElementById('eligibility-toggle');
+    if (elig) {
+      elig.addEventListener('change', (e) => {
+        if (e.target.checked) SubTeam.toast('Parent-eligible · 활성화됨', 'success');
+        else SubTeam.toast('Parent-eligible · 비활성화됨', 'danger');
+      });
+    }
+    // Roster filter buttons
+    document.querySelectorAll('.roster-filter__btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.roster-filter__btn').forEach(b => b.setAttribute('aria-selected', 'false'));
+        btn.setAttribute('aria-selected', 'true');
+      });
+    });
+  });
+</script>
+</body>
+</html>

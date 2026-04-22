@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Sub-team Mockup Index</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .index-hero{
+      display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;
+      padding:32px 32px;border-radius:22px;
+      border:1px solid var(--border-subtle);background:var(--bg-glass);backdrop-filter:blur(16px);
+      position:relative;overflow:hidden;
+    }
+    .index-hero::before{
+      content:'';position:absolute;inset:0;
+      background:radial-gradient(ellipse 55% 60% at 15% 15%,rgba(252,179,0,0.12) 0%,transparent 60%),radial-gradient(ellipse 45% 55% at 95% 90%,rgba(110,237,216,0.10) 0%,transparent 60%);
+      pointer-events:none;
+    }
+    .index-hero > *{position:relative;z-index:1}
+    .index-hero__eyebrow{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.20em;text-transform:uppercase;color:var(--text-dim);display:flex;align-items:center;gap:8px;margin-bottom:12px}
+    .index-hero__eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent-gold);box-shadow:0 0 8px var(--accent-gold)}
+    .index-hero__title{font-family:var(--font-display);font-size:30px;font-weight:800;letter-spacing:0.02em;line-height:1.15;color:var(--text-primary);margin-bottom:12px}
+    .index-hero__title strong{background:linear-gradient(135deg,var(--accent-gold),#ffd24a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .index-hero__sub{font-size:14px;color:var(--text-muted);line-height:1.6;max-width:640px}
+    .index-hero__badge{
+      font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;
+      color:var(--accent-teal);padding:8px 14px;border-radius:10px;
+      border:1px solid rgba(110,237,216,0.25);background:rgba(110,237,216,0.06);
+      white-space:nowrap;
+    }
+
+    .section{display:flex;flex-direction:column;gap:14px}
+    .section__head{display:flex;align-items:center;gap:12px;padding:0 4px}
+    .section__title{
+      font-family:var(--font-display);font-size:12px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;
+    }
+    .section__title--parent{background:linear-gradient(135deg,var(--accent-gold),#ffd24a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .section__title--child{background:linear-gradient(135deg,var(--accent-teal),#b6f5e6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .section__title--shared{color:var(--text-muted)}
+    .section__dash{flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0.08),transparent)}
+    .section__count{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.1em;color:var(--text-dim)}
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+
+    .mock-card{
+      position:relative;overflow:hidden;
+      display:flex;flex-direction:column;gap:10px;
+      padding:18px 20px;border-radius:14px;
+      background:var(--bg-glass);backdrop-filter:blur(12px);
+      border:1px solid var(--border-subtle);
+      text-decoration:none;color:var(--text-primary);
+      transition:all 0.25s ease;
+    }
+    .mock-card:hover{border-color:rgba(252,179,0,0.25);transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,0.4),0 0 24px rgba(252,179,0,0.06)}
+    .mock-card__top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .mock-card__num{
+      font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;
+      color:var(--text-dim);
+    }
+    .mock-card__fr{
+      font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;
+      color:var(--accent-gold);padding:3px 8px;border-radius:6px;
+      border:1px solid rgba(252,179,0,0.22);background:rgba(252,179,0,0.06);
+    }
+    .mock-card__title{
+      font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:0.04em;
+      color:var(--text-primary);line-height:1.3;
+    }
+    .mock-card__desc{font-size:12px;color:var(--text-muted);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .mock-card__foot{display:flex;align-items:center;justify-content:space-between;margin-top:4px;padding-top:10px;border-top:1px solid var(--border-subtle)}
+    .mock-card__arrow{color:var(--text-dim);transition:transform 0.2s,color 0.2s}
+    .mock-card__arrow svg{width:16px;height:16px}
+    .mock-card:hover .mock-card__arrow{color:var(--accent-gold);transform:translateX(4px)}
+
+    .mock-card--child{background:linear-gradient(180deg,rgba(110,237,216,0.03),var(--bg-glass))}
+    .mock-card--child:hover{border-color:rgba(110,237,216,0.28);box-shadow:0 10px 30px rgba(0,0,0,0.4),0 0 24px rgba(110,237,216,0.08)}
+    .mock-card--child .mock-card__fr{color:var(--accent-teal);border-color:rgba(110,237,216,0.22);background:rgba(110,237,216,0.06)}
+    .mock-card--child:hover .mock-card__arrow{color:var(--accent-teal)}
+
+    .mock-card--shared{background:linear-gradient(180deg,rgba(129,140,248,0.03),var(--bg-glass))}
+    .mock-card--shared:hover{border-color:rgba(129,140,248,0.28)}
+    .mock-card--shared .mock-card__fr{color:var(--accent-violet);border-color:rgba(129,140,248,0.22);background:rgba(129,140,248,0.06)}
+    .mock-card--shared:hover .mock-card__arrow{color:var(--accent-violet)}
+
+    .legend{
+      display:flex;gap:16px;flex-wrap:wrap;padding:14px 18px;
+      background:var(--bg-glass);backdrop-filter:blur(12px);
+      border:1px solid var(--border-subtle);border-radius:12px;
+    }
+    .legend__item{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted)}
+    .legend__dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .legend__dot--parent{background:var(--accent-gold);box-shadow:0 0 8px var(--accent-gold)}
+    .legend__dot--child{background:var(--accent-teal);box-shadow:0 0 8px var(--accent-teal)}
+    .legend__dot--shared{background:var(--accent-violet);box-shadow:0 0 8px var(--accent-violet)}
+
+    @media (max-width:720px){
+      .index-hero{grid-template-columns:1fr;padding:22px}
+      .index-hero__title{font-size:22px}
+      .grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs">
+    <div class="bg-orb bg-orb--1"></div>
+    <div class="bg-orb bg-orb--2"></div>
+    <div class="bg-orb bg-orb--3"></div>
+  </div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      </button>
+      <button class="brand-home" id="brand-home" aria-label="Home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      </button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo">R</div>
+      <div class="u-col">
+        <span class="arena-topbar__title">Sub-team</span>
+        <span class="arena-topbar__handle">Stage 2 · Mockup</span>
+      </div>
+      <span class="arena-topbar__status">Design · Review</span>
+    </div>
+    <div class="arena-topbar__actions">
+      <a class="btn btn--ghost btn--small" href="/roadmap/sub-team.md" style="text-decoration:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Spec
+      </a>
+    </div>
+  </div>
+
+  <div class="page page--wide">
+    <!-- HERO -->
+    <div class="index-hero">
+      <div>
+        <div class="index-hero__eyebrow">Stage 2 · UI Mockup</div>
+        <h1 class="index-hero__title">Sub-team Governance <strong>— 13 screens</strong></h1>
+        <p class="index-hero__sub">
+          부모팀 ↔ 자식팀 관계, Bylaws, 지원 폼, 신청 검토, 공지 방송, 활동 대시보드, 이탈/해제 — 학과사무실 ↔ 학생 동아리 MVP용 UI 모크업. 기존 team-arena 미학 (arena/glass dark, Orbitron + Outfit, gold/teal) 위에 구축.
+        </p>
+      </div>
+      <div class="index-hero__badge">roadmap/sub-team.md</div>
+    </div>
+
+    <!-- LEGEND -->
+    <div class="legend">
+      <span class="legend__item"><span class="legend__dot legend__dot--parent"></span> 부모팀 admin (학과사무실) 관점</span>
+      <span class="legend__item"><span class="legend__dot legend__dot--child"></span> 자식팀 admin (동아리 창립자) 관점</span>
+      <span class="legend__item"><span class="legend__dot legend__dot--shared"></span> 공용 (양쪽 다)</span>
+    </div>
+
+    <!-- PARENT -->
+    <section class="section">
+      <div class="section__head">
+        <h2 class="section__title section__title--parent">학과사무실 (부모팀) · Parent Admin</h2>
+        <span class="section__dash"></span>
+        <span class="section__count">5 screens</span>
+      </div>
+      <div class="grid">
+
+        <a class="mock-card" href="parent-governance-hub.html">
+          <div class="mock-card__top">
+            <span class="mock-card__num">01</span>
+            <span class="mock-card__fr">FR-1 · FR-10</span>
+          </div>
+          <h3 class="mock-card__title">Governance Hub</h3>
+          <p class="mock-card__desc">관리 홈. 인증된 sub-team 로스터 + 도구 진입점 + 부모 자격 토글.</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--gold">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="10"/></svg>
+              Landing
+            </span>
+            <span class="mock-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+        <a class="mock-card" href="parent-form-builder.html">
+          <div class="mock-card__top">
+            <span class="mock-card__num">02</span>
+            <span class="mock-card__fr">FR-3</span>
+          </div>
+          <h3 class="mock-card__title">Application Form Builder</h3>
+          <p class="mock-card__desc">신청서 필드 추가/제거/순서변경, 타입/필수 옵션. 실시간 미리보기.</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--gold">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+              Interactive
+            </span>
+            <span class="mock-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+        <a class="mock-card" href="parent-applications-queue.html">
+          <div class="mock-card__top">
+            <span class="mock-card__num">03</span>
+            <span class="mock-card__fr">FR-4</span>
+          </div>
+          <h3 class="mock-card__title">Applications Queue</h3>
+          <p class="mock-card__desc">대기 신청 목록 + 상세 드로어. Approve / Reject with reason / Return for revision.</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--gold">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Review flow
+            </span>
+            <span class="mock-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+        <a class="mock-card" href="parent-announcements.html">
+          <div class="mock-card__top">
+            <span class="mock-card__num">04</span>
+            <span class="mock-card__fr">FR-5</span>
+          </div>
+          <h3 class="mock-card__title">Announcements</h3>
+          <p class="mock-card__desc">인증된 sub-team 전체 대상 공지 작성 + 발행 + 핀 미리보기 + 댓글 스레드.</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8v18l-18-8v-2z"/></svg>
+              Broadcast
+            </span>
+            <span class="mock-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+        <a class="mock-card" href="parent-dashboard.html">
+          <div class="mock-card__top">
+            <span class="mock-card__num">05</span>
+            <span class="mock-card__fr">FR-6</span>
+          </div>
+          <h3 class="mock-card__title">Activity Dashboard</h3>
+          <p class="mock-card__desc">인증 동아리별 posts/spaces/active members. 일/주/월 토글 + drill-down.</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--cyan">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              Metrics
+            </span>
+            <span class="mock-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+        <a class="mock-card" href="parent-deregister.html">
+          <div class="mock-card__top">
+            <span class="mock-card__num">06</span>
+            <span class="mock-card__fr">FR-7</span>
+          </div>
+          <h3 class="mock-card__title">Deregister Sub-team</h3>
+          <p class="mock-card__desc">sub-team 등록 해제 모달. 사유 입력 + 결과 요약 + 알림 미리보기.</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--coral">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Confirm
+            </span>
+            <span class="mock-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- CHILD -->
+    <section class="section">
+      <div class="section__head">
+        <h2 class="section__title section__title--child">동아리 창립자 (자식팀) · Child Admin</h2>
+        <span class="section__dash"></span>
+        <span class="section__count">4 screens</span>
+      </div>
+      <div class="grid">
+
+        <a class="mock-card mock-card--child" href="child-pending-setup.html">
+          <div class="mock-card__top">
+            <span class="mock-card__num">07</span>
+            <span class="mock-card__fr">FR-4</span>
+          </div>
+          <h3 class="mock-card__title">Pending Sub-team Setup</h3>
+          <p class="mock-card__desc">부모팀 지정 → 멤버 초대 (카운터) → 학칙 동의 → 신청서 작성 → 최소 인원+동의 충족 시 제출 활성화.</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--teal">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+              Setup flow
+            </span>
+            <span class="mock-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+        <a class="mock-card mock-card--child" href="child-application-status.html">
+          <div class="mock-card__top">
+            <span class="mock-card__num">08</span>
+            <span class="mock-card__fr">FR-4</span>
+          </div>
+          <h3 class="mock-card__title">Application Status</h3>
+          <p class="mock-card__desc">진행/반려/승인/거절 4가지 상태 트래커. 재제출 (no cooldown) 플로우.</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--teal">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Tracker
+            </span>
+            <span class="mock-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+        <a class="mock-card mock-card--child" href="child-leave-parent.html">
+          <div class="mock-card__top">
+            <span class="mock-card__num">09</span>
+            <span class="mock-card__fr">FR-8</span>
+          </div>
+          <h3 class="mock-card__title">Leave Parent Team</h3>
+          <p class="mock-card__desc">부모팀 일방 이탈. 선택적 사유 + 결과 안내 (콘텐츠는 유지됨).</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--coral">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Exit
+            </span>
+            <span class="mock-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+        <a class="mock-card mock-card--child" href="sub-team-join-notice.html">
+          <div class="mock-card__top">
+            <span class="mock-card__num">10</span>
+            <span class="mock-card__fr">FR-6 · #41</span>
+          </div>
+          <h3 class="mock-card__title">Member Join Notice</h3>
+          <p class="mock-card__desc">일반 멤버 가입 시점 안내: "이 팀의 공개 활동은 [부모팀]의 대시보드에 집계됩니다."</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--cyan">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              Disclosure
+            </span>
+            <span class="mock-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- SHARED -->
+    <section class="section">
+      <div class="section__head">
+        <h2 class="section__title section__title--shared">공용 · Shared surfaces</h2>
+        <span class="section__dash"></span>
+        <span class="section__count">2 screens</span>
+      </div>
+      <div class="grid">
+
+        <a class="mock-card mock-card--shared" href="sub-team-home.html">
+          <div class="mock-card__top">
+            <span class="mock-card__num">11</span>
+            <span class="mock-card__fr">FR-2 · FR-5</span>
+          </div>
+          <h3 class="mock-card__title">Sub-team Home · Member view</h3>
+          <p class="mock-card__desc">인증된 sub-team의 홈 — 기존 team-arena 피드 + 부모팀 소속 표시 + 최상단 핀 공지 + 학과 학칙 링크.</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--violet">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24z"/></svg>
+              Feed + Pin
+            </span>
+            <span class="mock-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+        <a class="mock-card mock-card--shared" href="bylaws-section.html">
+          <div class="mock-card__top">
+            <span class="mock-card__num">12</span>
+            <span class="mock-card__fr">FR-2</span>
+          </div>
+          <h3 class="mock-card__title">Bylaws Section</h3>
+          <p class="mock-card__desc">팀 페이지의 Bylaws 카테고리 섹션. 부모 뷰 + 자식 뷰 (부모 Bylaws 링크 포함).</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--violet">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Category
+            </span>
+            <span class="mock-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+</div>
+
+<script src="shared.js" defer></script>
+</body>
+</html>
