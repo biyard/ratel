@@ -3,7 +3,6 @@ use crate::common::*;
 use crate::features::notifications::controllers::list_inbox::list_inbox_handler;
 use crate::features::notifications::types::InboxNotificationResponse;
 use crate::notifications::controllers::{mark_all_read_handler, mark_read_handler};
-use dioxus::core::provide_root_context;
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct UseInbox {
@@ -15,20 +14,20 @@ pub struct UseInbox {
     pub handle_mark_all: Action<(), ()>,
 }
 
-/// Infinite-query hook for the current user's notification inbox.
+/// Installer — runs every notification hook (signals, loader, actions) in
+/// this scope and installs the resulting `UseInbox` via
+/// `use_context_provider`. Call this **exactly once** from a long-lived
+/// ancestor (the app's `NotificationsBootstrap`).
 ///
-/// Wraps [`use_infinite_query`] and calls
-/// [`list_inbox_handler`] with the supplied `unread_only` flag.
-/// Returns an [`InfiniteQuery`] that paginates through
-/// `ListResponse<InboxNotificationResponse>` pages.
+/// The earlier single-function pattern (`use_inbox` that conditionally
+/// installed on first call and early-returned on subsequent calls via
+/// `try_use_context`) violated Dioxus's rules of hooks: first render
+/// registered ~dozen hook slots, second render hit the early return and
+/// registered zero — mismatch → "Unable to retrieve the hook that was
+/// initialized at this index" panic. Splitting installer/consumer keeps
+/// the hook sequence identical on every render of this scope.
 #[track_caller]
-pub fn use_inbox() -> std::result::Result<UseInbox, RenderError> {
-    let ctx: Option<UseInbox> = try_use_context();
-
-    if let Some(ctx) = ctx {
-        return Ok(ctx);
-    }
-
+pub fn provide_inbox() -> std::result::Result<UseInbox, RenderError> {
     let unread_only = use_signal(|| false);
 
     let mut inbox = use_infinite_query(move |bookmark| {
@@ -60,11 +59,21 @@ pub fn use_inbox() -> std::result::Result<UseInbox, RenderError> {
         Ok::<(), crate::common::Error>(())
     });
 
-    Ok(provide_root_context(UseInbox {
+    Ok(use_context_provider(|| UseInbox {
         inbox,
         unread_only,
         unread_count,
         handle_item_click,
         handle_mark_all,
     }))
+}
+
+/// Consumer — reads the `UseInbox` controller that a parent scope
+/// installed via `provide_inbox`. Pure context read (1 stable hook slot),
+/// safe to call from any transient component. Panics if no ancestor has
+/// called `provide_inbox` — indicating a missing `NotificationsBootstrap`
+/// in the route tree.
+#[track_caller]
+pub fn use_inbox() -> UseInbox {
+    use_context::<UseInbox>()
 }
