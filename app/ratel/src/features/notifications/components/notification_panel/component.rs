@@ -1,21 +1,22 @@
 use crate::common::*;
 use crate::features::notifications::components::notification_panel::notification_item::NotificationItem;
-use crate::features::notifications::controllers::mark_all_read::mark_all_read_handler;
-use crate::features::notifications::controllers::mark_read::mark_read_handler;
-use crate::features::notifications::hooks::{use_inbox, use_unread_count};
+use crate::features::notifications::hooks::use_inbox;
 use crate::features::notifications::i18n::NotificationsTranslate;
-use crate::features::notifications::types::InboxNotificationResponse;
 use crate::notifications::hooks::UseInbox;
 
 #[component]
 pub fn NotificationPanel(open: bool, on_close: EventHandler<()>) -> Element {
     let tr: NotificationsTranslate = use_translate();
+    // Pure context read installed by `NotificationsBootstrap` via
+    // `provide_inbox()`. No `?` — the controller is always present when
+    // this component is rendered (logged-out users don't mount the
+    // bootstrap).
     let UseInbox {
         mut inbox,
         mut handle_item_click,
         mut handle_mark_all,
         ..
-    } = use_inbox()?;
+    } = use_inbox();
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
