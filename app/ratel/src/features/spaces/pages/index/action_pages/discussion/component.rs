@@ -579,6 +579,19 @@ pub fn DiscussionArenaPage(
                     }
                 }
 
+                // Drag handle for resizing the comments panel horizontally.
+                // Width is JS-owned (continuous mouse value) — Dioxus never
+                // sets `style` on the panel so the inline width survives
+                // re-renders. Hidden on mobile via media query (panel becomes
+                // a bottom sheet).
+                div {
+                    class: "comments-panel__resizer",
+                    id: "comments-panel-resizer",
+                    role: "separator",
+                    aria_label: "Resize comments panel",
+                    aria_orientation: "vertical",
+                }
+
                 // Sheet handle expand state is Dioxus-owned (data-expanded)
                 // because the JS-owned class was being clobbered by panel
                 // re-renders.

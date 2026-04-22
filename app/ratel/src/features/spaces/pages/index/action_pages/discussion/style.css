@@ -450,7 +450,11 @@
 
 /* ── Right: Comments Panel ─────────────────────── */
 .comments-panel {
+  /* Initial width = previous fixed 420px. JS may set a larger inline
+     `style.width` via the resizer drag; `min-width` keeps the panel
+     from shrinking below the design floor regardless. */
   width: 420px;
+  min-width: 420px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -459,6 +463,32 @@
   -webkit-backdrop-filter: blur(24px);
   border-left: 1px solid var(--border);
   overflow: hidden;
+}
+
+/* Drag handle between discussion-main and comments-panel. Visual chrome
+   is intentionally minimal — a hover/active accent strip is enough to
+   signal interactivity without competing with the comment content. */
+.comments-panel__resizer {
+  width: 6px;
+  flex-shrink: 0;
+  background: transparent;
+  cursor: col-resize;
+  position: relative;
+  z-index: 2;
+  transition: background 0.15s ease;
+  user-select: none;
+}
+.comments-panel__resizer:hover,
+.comments-panel__resizer.dragging {
+  background: var(--dark, rgba(252, 179, 0, 0.35))
+    var(--light, rgba(252, 179, 0, 0.45));
+}
+/* While dragging, suppress text selection and force the col-resize
+   cursor across the whole document so the cursor doesn't flicker when
+   the pointer leaves the 6px hit-area. */
+body.comments-panel-resizing {
+  cursor: col-resize !important;
+  user-select: none !important;
 }
 
 .comments-panel__header {
@@ -978,6 +1008,11 @@
     grid-template-columns: 1fr;
   }
 
+  /* Resizer is irrelevant in bottom-sheet layout. */
+  .comments-panel__resizer {
+    display: none;
+  }
+
   /* Convert comments-panel to bottom sheet */
   .comments-panel {
     position: fixed;
@@ -985,7 +1020,12 @@
     left: 0;
     right: 0;
     z-index: 100;
-    width: 100%;
+    /* `!important` overrides any inline `style.width` set by the
+       desktop drag-resizer when the user shrinks the viewport across
+       the breakpoint. `min-width` reset lets the sheet follow small
+       phone widths (e.g. 375px). */
+    width: 100% !important;
+    min-width: 0 !important;
     max-height: 85vh;
     border-left: none;
     border-top: 1px solid var(--border);
