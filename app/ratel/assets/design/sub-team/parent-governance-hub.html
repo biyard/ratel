@@ -9,15 +9,19 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
   <style>
-    /* ── Hero summary strip ── */
-    .hub-hero{
-      display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;
+    /* ── KPI strip (full-width row below hero) ── */
+    .hub-hero__stats{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
     }
-    .hub-hero__stats{display:flex;gap:14px;flex-wrap:wrap}
+    @media (max-width:720px){
+      .hub-hero__stats{grid-template-columns:1fr}
+    }
     .hub-stat{
-      min-width:110px;padding:12px 18px;border-radius:12px;
-      background:rgba(0,0,0,0.25);border:1px solid var(--border-subtle);
-      display:flex;flex-direction:column;gap:3px;
+      padding:14px 18px;border-radius:12px;
+      background:var(--bg-glass);backdrop-filter:blur(12px);
+      border:1px solid var(--border-subtle);
+      display:flex;flex-direction:column;gap:4px;
+      min-width:0;
     }
     .hub-stat__label{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
     .hub-stat__value{font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:0.02em;color:var(--text-primary)}
@@ -163,7 +167,7 @@
 
   <div class="page page--wide">
     <!-- HERO -->
-    <div class="page-header">
+    <div class="page-header" style="grid-template-columns:1fr">
       <div class="page-header__main">
         <span class="page-header__eyebrow">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -172,22 +176,24 @@
         <h1 class="page-header__title"><strong>학과사무실</strong>의 거버넌스 홈</h1>
         <p class="page-header__sub">학칙 게시 · 신청서 구성 · 가입 심사 · 공지 방송 · 활동 관찰 — 인증된 동아리들과의 관계를 여기서 운영합니다. 동아리의 일상 운영에는 관여하지 않습니다.</p>
       </div>
-      <div class="hub-hero__stats">
-        <div class="hub-stat">
-          <span class="hub-stat__label">Active Sub-teams</span>
-          <span class="hub-stat__value hub-stat__value--gold">12</span>
-          <span class="hub-stat__delta">+2 이번 달</span>
-        </div>
-        <div class="hub-stat">
-          <span class="hub-stat__label">Pending Applications</span>
-          <span class="hub-stat__value hub-stat__value--amber">4</span>
-          <span class="hub-stat__delta" style="color:var(--accent-amber)">검토 필요</span>
-        </div>
-        <div class="hub-stat">
-          <span class="hub-stat__label">Active Members</span>
-          <span class="hub-stat__value hub-stat__value--teal">342</span>
-          <span class="hub-stat__delta">지난 7일</span>
-        </div>
+    </div>
+
+    <!-- KPI strip (pulled out of hero so title has full width) -->
+    <div class="hub-hero__stats">
+      <div class="hub-stat">
+        <span class="hub-stat__label">Active Sub-teams</span>
+        <span class="hub-stat__value hub-stat__value--gold">12</span>
+        <span class="hub-stat__delta">+2 이번 달</span>
+      </div>
+      <div class="hub-stat">
+        <span class="hub-stat__label">Pending Applications</span>
+        <span class="hub-stat__value hub-stat__value--amber">4</span>
+        <span class="hub-stat__delta" style="color:var(--accent-amber)">검토 필요</span>
+      </div>
+      <div class="hub-stat">
+        <span class="hub-stat__label">Active Members</span>
+        <span class="hub-stat__value hub-stat__value--teal">342</span>
+        <span class="hub-stat__delta">지난 7일</span>
       </div>
     </div>
 
