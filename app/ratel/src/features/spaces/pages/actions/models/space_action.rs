@@ -20,9 +20,7 @@ pub struct SpaceAction {
     pub space_action_type: SpaceActionType,
     pub prerequisite: bool,
 
-    // Internal GSI sort key — always mirrors `created_at` so the
-    // `find_by_space` GSI stays sorted by creation order. The value is
-    // never exposed through API DTOs or UI.
+    // Internal GSI sort key; mirrors `created_at`. Not exposed in API/UI.
     #[dynamo(prefix = "TS", index = "gsi1", sk)]
     pub started_at: i64,
 

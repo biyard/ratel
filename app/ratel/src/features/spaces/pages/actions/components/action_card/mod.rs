@@ -64,9 +64,6 @@ pub fn ActionCard(
         action.description.clone()
     };
     let is_closed = matches!(status, ActionStatus::Closed);
-    // Lock the card for non-creators when upstream dependencies are not yet
-    // met for this viewer. Creators always see a normal card (they're setting
-    // it up, not trying to participate).
     let is_locked = !matches!(role, SpaceUserRole::Creator)
         && !action.depends_on.is_empty()
         && !action.dependencies_met;
@@ -195,9 +192,6 @@ pub fn ActionCard(
                 }
 
                 div { class: "flex gap-2 items-center max-mobile:self-end",
-                    // Only allow deletion while the action is not locked.
-                    // Designing / legacy (None) actions are unlocked;
-                    // once published (Ongoing/Finish) deletion is blocked.
                     if deletable
                         && !crate::features::spaces::pages::actions::is_action_locked(
                             space().status,

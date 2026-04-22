@@ -1,15 +1,6 @@
 use crate::common::*;
 use crate::features::spaces::pages::actions::types::SpaceActionStatus;
 
-/// Decides whether an action's configuration is locked so creators should see
-/// the participant view instead of the edit view.
-///
-/// Rules:
-/// - `None` (legacy) or `Some(Designing)` → **not locked**. Creator can still
-///   configure.
-/// - `Some(Ongoing)` or `Some(Finish)` → **locked**. The action has been
-///   published; creators see it read-only (participant mode).
-/// - Space beyond `Ongoing` (`Processing`/`Finished`) → always locked.
 pub fn is_action_locked(
     space_status: Option<SpaceStatus>,
     action_status: Option<&SpaceActionStatus>,
@@ -26,16 +17,6 @@ pub fn is_action_locked(
     )
 }
 
-/// Decides whether a user can execute (respond / comment / follow) an action
-/// right now.
-///
-/// - `Creator`: can always interact as long as the space hasn't moved past
-///   the participation phase (`Processing`/`Finished`).
-/// - `Participant`: requires `Space.status == Ongoing`, action
-///   `status == Some(Ongoing)`, and all dependencies met.
-/// - `Candidate`: only for prerequisite actions during `Open` (or any Ongoing
-///   action when `join_anytime` is enabled), and dependencies must be met.
-/// - `Viewer`: never.
 pub fn can_execute_space_action(
     role: SpaceUserRole,
     prerequisite: bool,

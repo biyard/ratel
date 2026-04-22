@@ -85,10 +85,6 @@ pub async fn list_actions(
         }
     }
 
-    // Per-user dependency evaluation: a dependency is met when the
-    // current viewer has personally completed it (user_participated was
-    // computed above for every action in this list). Anonymous viewers
-    // never satisfy dependencies.
     let participated_by_id: HashMap<String, bool> = actions
         .iter()
         .map(|a| (a.action_id.clone(), a.user_participated))
@@ -106,10 +102,6 @@ pub async fn list_actions(
                 .all(|dep_id| participated_by_id.get(dep_id).copied().unwrap_or(false));
     }
 
-    // Visibility filter for non-creators:
-    // - Hide actions whose status is `None` (legacy) or `Some(Designing)`.
-    // - Show Ongoing and Finish actions; UI will render a lock overlay
-    //   when `dependencies_met == false` so participants know what to do.
     if !matches!(role, SpaceUserRole::Creator) {
         actions.retain(|a| {
             matches!(
@@ -119,9 +111,6 @@ pub async fn list_actions(
         });
     }
 
-    // Legacy prerequisite gating: during Open / join-anytime Ongoing phase,
-    // if there are prerequisite actions that aren't all completed, hide the
-    // non-prerequisite ones.
     if !matches!(role, SpaceUserRole::Creator) {
         let has_pre_actions = actions.iter().any(|a| a.prerequisite);
         if has_pre_actions {
