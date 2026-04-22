@@ -4,8 +4,6 @@ use crate::*;
 #[component]
 pub fn RootLayout() -> Element {
     TeamContext::init();
-    let user_ctx = crate::features::auth::hooks::use_user_context();
-    let logged_in = user_ctx().is_logged_in();
 
     rsx! {
         ErrorBoundary {
@@ -15,26 +13,19 @@ pub fn RootLayout() -> Element {
                     ErrorPage { ctx: error }
                 }
             },
-            // `NotificationsBootstrap` wraps the Outlet so every route
-            // renders as a descendant of the scope that owns the
-            // notification signals. Previously `use_inbox` /
-            // `use_unread_count` used `provide_root_context`, caching
-            // at the root while the underlying `use_signal` storage was
-            // owned by the first transient caller (NotificationPanel on
-            // the home page). Navigating to a space then back fired
-            // `ValueDroppedError` because the cached context pointed at
-            // a signal whose owning scope had already unmounted. Wrapping
-            // the outlet in a long-lived scope that owns the signals
-            // fixes both the "not a descendant" warning and the panic.
-            //
-            // Logged-out users never see the bell/panel, so we skip the
-            // bootstrap entirely — the /api/inbox call requires auth.
-            if logged_in {
-                SuspenseBoundary {
-                    NotificationsBootstrap { Outlet::<Route> {} }
-                }
-            } else {
-                SuspenseBoundary { Outlet::<Route> {} }
+            // `NotificationsBootstrap` is the stable ancestor that owns
+            // the notification signals. It renders `Outlet::<Route>`
+            // directly (no `children: Element` prop) and is mounted
+            // unconditionally — regardless of login state — so the
+            // component tree shape doesn't churn between the two branches
+            // of an `if logged_in { ... } else { ... }`. That churn, when
+            // combined with route navigation, triggered Dioxus 0.7's
+            // "cannot reclaim ElementId" arena errors on space enter.
+            // The hooks inside Bootstrap read login state reactively and
+            // no-op on the network side when the viewer is logged out,
+            // so this is safe for anonymous traffic too.
+            SuspenseBoundary {
+                NotificationsBootstrap {}
             }
         }
         PopupZone {}
@@ -42,25 +33,27 @@ pub fn RootLayout() -> Element {
     }
 }
 
-/// Wraps the route outlet so the notification-hook signals are created
-/// in this scope. Because every route (and therefore every
+/// Mounts the route outlet under a stable ancestor scope that owns the
+/// notification-hook signals. Because every route (and therefore every
 /// `NotificationBell` / `NotificationPanel` mount) renders as a
-/// descendant of this component, the consumer scopes are always on the
-/// ancestor chain of the owning scope — which satisfies the Dioxus
+/// descendant of this component, consumer scopes always sit on the
+/// ancestor chain of the owning scope — satisfying the Dioxus
 /// signal-ownership invariant.
 #[component]
-fn NotificationsBootstrap(children: Element) -> Element {
-    // `use_unread_count` is safe to call here because it wraps its
-    // initialization in `use_hook` — stable 1 hook slot per render.
+fn NotificationsBootstrap() -> Element {
+    // `use_unread_count` is safe to call here — internally wrapped in
+    // `use_hook` (stable 1 hook slot per render). It also reads login
+    // state so the polling loop is a no-op when the viewer is signed out.
     let _ = crate::features::notifications::hooks::use_unread_count();
-    // `use_provide_inbox` (not `use_inbox`) is the installer variant that
-    // always runs the full hook sequence. Calling the consumer-only
-    // `use_inbox()` here would only do a context read and never create
-    // the underlying signals. See the installer/consumer split in
-    // `use_inbox.rs`.
+    // `use_provide_inbox` is the installer variant that always runs the
+    // full hook sequence (signals + loader + actions). Calling the
+    // consumer-only `use_inbox()` here would only do a context read and
+    // never create the underlying signals. The loader closure checks
+    // login state so logged-out users don't hit /api/inbox. See the
+    // installer/consumer split in `use_inbox.rs`.
     let _ = crate::features::notifications::hooks::use_provide_inbox()?;
     rsx! {
-        {children}
+        Outlet::<Route> {}
     }
 }
 
