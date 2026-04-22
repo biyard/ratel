@@ -103,4 +103,12 @@ translate! {
         en: "Comment deleted.",
         ko: "댓글이 삭제되었습니다.",
     },
+    replies_page_title: {
+        en: "Replies",
+        ko: "답글",
+    },
+    replies_back_aria: {
+        en: "Back",
+        ko: "뒤로",
+    },
 }
