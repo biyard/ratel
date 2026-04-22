@@ -66,9 +66,67 @@ function initMentionFlip() {
 // Dioxus re-rendered the panel content (e.g., on Reply tap → thread
 // drill-down) because the `.expanded` class lived outside the VDOM.
 
+// Drag-to-resize the comments panel. The width is JS-owned because Dioxus
+// doesn't set `style` on `.comments-panel` — the inline width survives
+// re-renders. CSS provides `min-width: 420px` (the previous fixed width);
+// here we cap the upper bound at 70% of viewport so the discussion body
+// always keeps room. Listeners are attached to `document` (not the 6px
+// handle) so the cursor doesn't fall off the hit-area mid-drag.
+var COMMENTS_PANEL_MIN = 420;
+var COMMENTS_PANEL_MAX_PCT = 0.7;
+
+function initCommentsPanelResizer() {
+  var resizer = document.getElementById("comments-panel-resizer");
+  if (!resizer || resizer.dataset.resizerBound) return;
+  var panel = document.getElementById("discussion-comments-sheet");
+  if (!panel) return;
+  resizer.dataset.resizerBound = "true";
+
+  var dragging = false;
+  var startX = 0;
+  var startWidth = 0;
+
+  function onPointerMove(e) {
+    if (!dragging) return;
+    var clientX = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
+    // Panel is on the right; dragging left (smaller clientX) widens it.
+    var deltaX = startX - clientX;
+    var newWidth = startWidth + deltaX;
+    var maxWidth = window.innerWidth * COMMENTS_PANEL_MAX_PCT;
+    if (newWidth < COMMENTS_PANEL_MIN) newWidth = COMMENTS_PANEL_MIN;
+    if (newWidth > maxWidth) newWidth = maxWidth;
+    panel.style.width = newWidth + "px";
+  }
+
+  function onPointerUp() {
+    if (!dragging) return;
+    dragging = false;
+    resizer.classList.remove("dragging");
+    document.body.classList.remove("comments-panel-resizing");
+  }
+
+  function onPointerDown(e) {
+    e.preventDefault();
+    dragging = true;
+    startX = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
+    startWidth = panel.getBoundingClientRect().width;
+    resizer.classList.add("dragging");
+    document.body.classList.add("comments-panel-resizing");
+  }
+
+  resizer.addEventListener("mousedown", onPointerDown);
+  resizer.addEventListener("touchstart", onPointerDown, { passive: false });
+  document.addEventListener("mousemove", onPointerMove);
+  document.addEventListener("touchmove", onPointerMove, { passive: false });
+  document.addEventListener("mouseup", onPointerUp);
+  document.addEventListener("touchend", onPointerUp);
+  document.addEventListener("touchcancel", onPointerUp);
+}
+
 function init() {
   initComposerAutogrow();
   initMentionFlip();
+  initCommentsPanelResizer();
 }
 
 init();
