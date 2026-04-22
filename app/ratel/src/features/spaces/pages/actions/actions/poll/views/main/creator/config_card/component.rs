@@ -1,3 +1,4 @@
+use crate::common::components::date_picker::{DateAndTimePicker, DateTimeRange};
 use crate::common::config::Environment;
 use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::features::spaces::pages::actions::actions::poll::views::main::creator::PollCreatorTranslate;
@@ -5,8 +6,6 @@ use crate::features::spaces::pages::actions::components::{ActionDeleteButton, Ac
 use crate::features::spaces::pages::actions::controllers::{
     UpdateSpaceActionRequest, update_space_action,
 };
-
-use crate::common::utils::time::{datetime_local_to_epoch_ms, epoch_ms_to_datetime_local};
 
 #[component]
 pub fn ConfigCard() -> Element {
@@ -31,8 +30,8 @@ pub fn ConfigCard() -> Element {
     let mut prereq_follow = use_signal(|| poll.space_action.prerequisite);
     let saved_credits = poll.space_action.credits;
 
-    let mut started_at_signal = use_signal(|| poll.started_at);
-    let mut ended_at_signal = use_signal(|| poll.ended_at);
+    let initial_started_at = poll.started_at;
+    let initial_ended_at = poll.ended_at;
 
     let action_id_for_signal = action_id_str.clone();
     let action_id_signal: ReadSignal<String> =
@@ -58,27 +57,29 @@ pub fn ConfigCard() -> Element {
         });
     };
 
-    let started_at = epoch_ms_to_datetime_local(started_at_signal());
-    let ended_at = epoch_ms_to_datetime_local(ended_at_signal());
-
-    let save_schedule = move || {
-        let start_ms = started_at_signal();
-        let end_ms = ended_at_signal();
+    let on_schedule_change = move |range: DateTimeRange| async move {
+        let (Some(start_date), Some(end_date)) = (range.start_date, range.end_date) else {
+            return;
+        };
+        let start_ms = range
+            .timezone
+            .local_to_utc_millis(start_date, range.start_hour, range.start_minute);
+        let end_ms = range
+            .timezone
+            .local_to_utc_millis(end_date, range.end_hour, range.end_minute);
         if start_ms <= 0 || end_ms <= 0 {
             return;
         }
-        spawn(async move {
-            let req = UpdatePollRequest::Time {
-                started_at: start_ms,
-                ended_at: end_ms,
-            };
-            if let Err(err) = update_poll(space_id(), poll_id(), req).await {
-                error!("Failed to save poll schedule: {:?}", err);
-                toast.error(err);
-            } else {
-                ctx.poll.restart();
-            }
-        });
+        let req = UpdatePollRequest::Time {
+            started_at: start_ms,
+            ended_at: end_ms,
+        };
+        if let Err(err) = update_poll(space_id(), poll_id(), req).await {
+            error!("Failed to save poll schedule: {:?}", err);
+            toast.error(err);
+        } else {
+            ctx.poll.restart();
+        }
     };
 
     let mut toggle_response_editable = move |_| {
@@ -130,50 +131,14 @@ pub fn ConfigCard() -> Element {
                     }
                 }
 
-                // ── Schedule (TODO: not wired to backend yet) ─────
                 section { class: "section", "data-testid": "section-schedule",
                     div { class: "section__head",
                         span { class: "section__label", "{tr.section_schedule_label}" }
                     }
-                    div { class: "grid-2",
-                        div { class: "field",
-                            label { class: "field__label", "{tr.schedule_starts_at}" }
-                            input {
-                                class: "input",
-                                r#type: "datetime-local",
-                                "data-testid": "schedule-start",
-                                value: "{started_at}",
-                                oninput: move |e| {
-                                    if let Some(ms) = datetime_local_to_epoch_ms(&e.value()) {
-                                        // Preserve the existing start→end gap when
-                                        // the creator shifts the start time.
-                                        let old_start = started_at_signal();
-                                        let old_end = ended_at_signal();
-                                        if old_start > 0 && old_end > old_start {
-                                            let gap = old_end - old_start;
-                                            ended_at_signal.set(ms + gap);
-                                        }
-                                        started_at_signal.set(ms);
-                                    }
-                                },
-                                onblur: move |_| save_schedule(),
-                            }
-                        }
-                        div { class: "field",
-                            label { class: "field__label", "{tr.schedule_ends_at}" }
-                            input {
-                                class: "input",
-                                r#type: "datetime-local",
-                                "data-testid": "schedule-end",
-                                value: "{ended_at}",
-                                oninput: move |e| {
-                                    if let Some(ms) = datetime_local_to_epoch_ms(&e.value()) {
-                                        ended_at_signal.set(ms);
-                                    }
-                                },
-                                onblur: move |_| save_schedule(),
-                            }
-                        }
+                    DateAndTimePicker {
+                        initial_started_at: Some(initial_started_at),
+                        initial_ended_at: Some(initial_ended_at),
+                        on_change: on_schedule_change,
                     }
                 }
 
@@ -187,7 +152,7 @@ pub fn ConfigCard() -> Element {
                         space_id,
                         action_id: action_id_signal,
                         saved_credits,
-                        started_at: started_at_signal(),
+                        started_at: initial_started_at,
                     }
                     // Prerequisite — wired via update_space_action::Prerequisite
                     div { class: "tile", "data-testid": "tile-prereq",
