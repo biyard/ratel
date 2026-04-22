@@ -66,9 +66,108 @@ function initMentionFlip() {
 // Dioxus re-rendered the panel content (e.g., on Reply tap → thread
 // drill-down) because the `.expanded` class lived outside the VDOM.
 
+// Drag-to-resize the comments panel. The width is JS-owned because Dioxus
+// doesn't set `style` on `.comments-panel` — the inline width survives
+// re-renders. CSS provides `min-width: 420px` (the previous fixed width);
+// here we cap the upper bound at 70% of viewport so the discussion body
+// always keeps room. Listeners are attached to `document` (not the 6px
+// handle) so the cursor doesn't fall off the hit-area mid-drag.
+var COMMENTS_PANEL_MIN = 420;
+var COMMENTS_PANEL_MAX_PCT = 0.7;
+
+function initCommentsPanelResizer() {
+  var resizer = document.getElementById("comments-panel-resizer");
+  if (!resizer || resizer.dataset.resizerBound) return;
+  var panel = document.getElementById("discussion-comments-sheet");
+  if (!panel) return;
+  resizer.dataset.resizerBound = "true";
+
+  var dragging = false;
+  var startX = 0;
+  var startWidth = 0;
+
+  function onPointerMove(e) {
+    if (!dragging) return;
+    var clientX = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
+    // Panel is on the right; dragging left (smaller clientX) widens it.
+    var deltaX = startX - clientX;
+    var newWidth = startWidth + deltaX;
+    var maxWidth = window.innerWidth * COMMENTS_PANEL_MAX_PCT;
+    if (newWidth < COMMENTS_PANEL_MIN) newWidth = COMMENTS_PANEL_MIN;
+    if (newWidth > maxWidth) newWidth = maxWidth;
+    panel.style.width = newWidth + "px";
+  }
+
+  function onPointerUp() {
+    if (!dragging) return;
+    dragging = false;
+    resizer.classList.remove("dragging");
+    document.body.classList.remove("comments-panel-resizing");
+  }
+
+  function onPointerDown(e) {
+    e.preventDefault();
+    dragging = true;
+    startX = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
+    startWidth = panel.getBoundingClientRect().width;
+    resizer.classList.add("dragging");
+    document.body.classList.add("comments-panel-resizing");
+  }
+
+  resizer.addEventListener("mousedown", onPointerDown);
+  resizer.addEventListener("touchstart", onPointerDown, { passive: false });
+  document.addEventListener("mousemove", onPointerMove);
+  document.addEventListener("touchmove", onPointerMove, { passive: false });
+  document.addEventListener("mouseup", onPointerUp);
+  document.addEventListener("touchend", onPointerUp);
+  document.addEventListener("touchcancel", onPointerUp);
+}
+
+// Measure each `.comment-text > .comment-item__text` against its 3-line
+// CSS clamp; flip `data-truncatable="true"` on the wrapper so the CSS
+// rule reveals the "Show more" button. ResizeObserver fires once when
+// `observe()` is called and again whenever the element's size changes
+// (line-clamp toggle on expand, viewport resize, font load). We skip
+// updates while expanded so the "접기" button stays visible.
+var commentTextResizeObserver = null;
+
+function getCommentTextObserver() {
+  if (commentTextResizeObserver) return commentTextResizeObserver;
+  commentTextResizeObserver = new ResizeObserver(function (entries) {
+    entries.forEach(function (entry) {
+      var textEl = entry.target;
+      var wrapper = textEl.parentElement;
+      if (!wrapper || !wrapper.classList.contains("comment-text")) return;
+      if (wrapper.dataset.expanded === "true") return;
+      // +1 tolerance for subpixel rounding.
+      var truncated = textEl.scrollHeight > textEl.clientHeight + 1;
+      if (truncated) {
+        wrapper.dataset.truncatable = "true";
+      } else {
+        wrapper.removeAttribute("data-truncatable");
+      }
+    });
+  });
+  return commentTextResizeObserver;
+}
+
+function bindCommentTextObservers() {
+  var nodes = document.querySelectorAll(
+    ".comment-text .comment-item__text:not([data-truncation-bound])"
+  );
+  if (nodes.length === 0) return;
+  var observer = getCommentTextObserver();
+  nodes.forEach(function (el) {
+    el.dataset.truncationBound = "true";
+    observer.observe(el);
+  });
+}
+
 function init() {
   initComposerAutogrow();
   initMentionFlip();
+  initCommentsPanelResizer();
+  bindCommentTextObservers();
 }
 
 init();
