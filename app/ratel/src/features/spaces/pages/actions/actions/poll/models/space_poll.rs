@@ -149,6 +149,7 @@ impl From<(SpacePoll, bool)>
             user_participated,
             credits: 0,
             prerequisite: false,
+            comment_count: None,
         }
     }
 }

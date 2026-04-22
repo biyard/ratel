@@ -8,15 +8,25 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    transition: background 150ms ease;
+}
+
+/* Default (non-HUD) button look — AppLayout mounts NotificationBell with
+   no extra class, so this rule paints the standalone circular bell.
+   When the bell is embedded in the space arena HUD via `class: "hud-btn"`,
+   we opt out so `.hud-btn`'s rounded-square background / border / glow
+   own the visual — otherwise this block silently overrode `hud-btn`
+   (equal specificity, later cascade) and the bell rendered borderless
+   while its siblings kept their panels. */
+.notification-bell:not(.hud-btn) {
     width: 40px;
     height: 40px;
     border-radius: 9999px;
     background: var(--bell-bg);
-    transition: background 150ms ease;
     border: 0;
-    cursor: pointer;
 }
-.notification-bell:hover {
+.notification-bell:not(.hud-btn):hover {
     background: var(--bell-hover);
 }
 

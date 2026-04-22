@@ -9,7 +9,7 @@
   display: inline-flex; align-items: center; gap: 6px;
   justify-content: center;
   width: 100%;
-  padding: 0 28px; margin-bottom: 8px;
+  padding: 0 28px; margin-top: 4px; margin-bottom: 8px;
 }
 .quest-label__title {
   font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 600;
@@ -321,9 +321,10 @@
 
 /* ── Responsive ──────────────────────────────────── */
 @media (max-width: 500px) {
+  .quest-label { margin-top: 8px; }
   .quest-card { width: 320px; min-height: 340px; padding: 22px 20px 20px; }
   .quest-card__title { font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .carousel-track { padding-left: calc(50vw - 160px); padding-right: calc(50vw - 160px); gap: 20px; }
+  .carousel-track { padding-left: calc(50vw - 160px); padding-right: calc(50vw - 160px); gap: 20px; padding-top: 40px; padding-bottom: 40px; }
   .carousel-wrapper::before, .carousel-wrapper::after { width: 60px; }
   .carousel-arrow { display: none; }
   .bottom-bar { padding: 10px 16px 16px; gap: 10px; }
