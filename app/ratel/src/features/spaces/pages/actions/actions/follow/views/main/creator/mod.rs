@@ -11,7 +11,9 @@ use targets_card::TargetsCard;
 
 use crate::features::spaces::pages::actions::actions::follow::*;
 use crate::features::spaces::pages::actions::actions::follow::controllers::get_follow;
-use crate::features::spaces::pages::actions::components::ActionEditTopbar;
+use crate::features::spaces::pages::actions::components::{
+    ActionEditFooter, ActionEditSaveBus, ActionEditTopbar,
+};
 
 #[component]
 pub fn FollowCreatorPage(
@@ -26,6 +28,9 @@ pub fn FollowCreatorPage(
 
     let initial_title = action_setting().title.clone();
     let title = use_signal(|| initial_title);
+
+    ActionEditSaveBus::provide();
+    let current_page = use_signal(|| 0usize);
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
@@ -59,6 +64,7 @@ pub fn FollowCreatorPage(
                     prerequisite: action_setting().prerequisite,
                 }
             }
+            ActionEditFooter { current_page, total_pages: 2 }
         }
     }
 }

@@ -1,5 +1,7 @@
 use crate::features::spaces::pages::actions::actions::quiz::*;
-use crate::features::spaces::pages::actions::components::ActionEditTopbar;
+use crate::features::spaces::pages::actions::components::{
+    ActionEditFooter, ActionEditSaveBus, ActionEditTopbar,
+};
 
 mod i18n;
 pub use i18n::QuizCreatorTranslate;
@@ -24,6 +26,9 @@ pub fn QuizCreatorPage(
     let initial_title = ctx.quiz.read().title.clone();
     let title = use_signal(|| initial_title);
 
+    ActionEditSaveBus::provide();
+    let current_page = use_signal(|| 0usize);
+
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div { class: "arena",
@@ -46,6 +51,7 @@ pub fn QuizCreatorPage(
                 QuestionsCard {}
                 ConfigCard {}
             }
+            ActionEditFooter { current_page, total_pages: 3 }
         }
     }
 }
