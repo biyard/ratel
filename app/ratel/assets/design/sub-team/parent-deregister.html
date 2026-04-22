@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Deregister Sub-team</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    /* Context card (dimmed) */
+    .context{
+      position:relative;padding:22px 26px;border-radius:16px;
+      background:var(--bg-glass);backdrop-filter:blur(10px);
+      border:1px solid var(--border-subtle);
+      display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;
+      opacity:0.55;filter:saturate(0.7);
+      transition:all 0.3s;
+    }
+    .context__body{display:flex;flex-direction:column;gap:4px}
+    .context__name{font-family:var(--font-display);font-size:16px;font-weight:800;letter-spacing:0.02em;color:var(--text-primary)}
+    .context__handle{font-family:var(--font-display);font-size:11px;color:var(--text-muted);letter-spacing:0.06em}
+    .context__meta{display:flex;gap:10px;margin-top:4px}
+
+    /* Deregister panel */
+    .dereg{
+      position:relative;margin-top:-40px;padding:26px 30px;border-radius:18px;
+      background:var(--bg-glass);backdrop-filter:blur(20px);
+      border:1px solid rgba(239,68,68,0.25);
+      box-shadow:0 12px 50px rgba(0,0,0,0.4),0 0 40px rgba(239,68,68,0.08);
+      display:flex;flex-direction:column;gap:18px;
+      z-index:10;
+    }
+    .dereg::before{content:'';position:absolute;inset:0;border-radius:18px;background:radial-gradient(ellipse 55% 60% at 15% 15%,rgba(239,68,68,0.10) 0%,transparent 60%);pointer-events:none}
+    .dereg > *{position:relative;z-index:1}
+    .dereg__head{display:flex;align-items:center;gap:14px}
+    .dereg__icon{width:50px;height:50px;border-radius:13px;background:rgba(239,68,68,0.10);border:1px solid rgba(239,68,68,0.30);display:flex;align-items:center;justify-content:center;color:var(--accent-coral);flex-shrink:0;box-shadow:0 0 20px rgba(239,68,68,0.1)}
+    .dereg__icon svg{width:22px;height:22px}
+    .dereg__title{font-family:var(--font-display);font-size:20px;font-weight:800;letter-spacing:0.02em;color:var(--text-primary);line-height:1.25}
+    .dereg__sub{font-size:13px;color:var(--text-muted);margin-top:4px}
+
+    /* Consequences */
+    .consequences{display:flex;flex-direction:column;gap:8px;padding:16px 18px;border-radius:12px;background:rgba(6,6,14,0.5);border:1px solid var(--border-subtle)}
+    .consequences__title{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px}
+    .consequences__item{display:flex;gap:10px;font-size:13px;color:var(--text-primary);line-height:1.55}
+    .consequences__item svg{width:14px;height:14px;color:var(--accent-teal);flex-shrink:0;margin-top:3px}
+    .consequences__item--warn svg{color:var(--accent-amber)}
+
+    /* Notification preview */
+    .notif-preview{padding:14px 16px;border-radius:12px;background:rgba(129,140,248,0.04);border:1px dashed rgba(129,140,248,0.25)}
+    .notif-preview__label{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-violet);margin-bottom:8px}
+    .notif-preview__body{display:flex;gap:10px;padding:10px 12px;border-radius:8px;background:rgba(6,6,14,0.55);border:1px solid rgba(129,140,248,0.20)}
+    .notif-preview__body .avatar{width:32px;height:32px;font-size:12px}
+    .notif-preview__content{flex:1;min-width:0}
+    .notif-preview__title{font-size:13px;color:var(--text-primary);font-weight:600;margin-bottom:2px}
+    .notif-preview__text{font-size:12px;color:var(--text-muted);line-height:1.5}
+    .notif-preview__text em{color:var(--text-primary);font-style:normal;font-weight:600}
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo">SNU</div>
+      <div class="u-col">
+        <span class="arena-topbar__title">SNU CS Dept.</span>
+        <span class="arena-topbar__handle">Deregister sub-team</span>
+      </div>
+      <span class="arena-topbar__status" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.22);color:var(--accent-coral)">Danger action</span>
+    </div>
+    <div class="arena-topbar__actions">
+      <button class="btn btn--ghost btn--small" onclick="window.location.href='parent-governance-hub.html'">취소</button>
+    </div>
+  </div>
+
+  <div class="page page--narrow">
+    <!-- Context: the sub-team being deregistered -->
+    <div class="context">
+      <div class="avatar avatar--purple avatar--lg">SE</div>
+      <div class="context__body">
+        <span class="context__name">Security Enthusiasts</span>
+        <span class="context__handle">@snu_sec · 인증 · 2025-09-22</span>
+        <div class="context__meta">
+          <span class="chip chip--amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Low activity</span>
+          <span class="chip">5 posts · 30d</span>
+          <span class="chip">8 members</span>
+        </div>
+      </div>
+      <span class="pill pill--approved">Recognized</span>
+    </div>
+
+    <!-- Deregister panel -->
+    <div class="dereg">
+      <div class="dereg__head">
+        <div class="dereg__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div>
+          <h1 class="dereg__title">Security Enthusiasts의 등록을 해제합니다</h1>
+          <p class="dereg__sub">이 동작은 <strong>부모-자식 관계</strong>만 해제합니다. 동아리 자체는 독립 팀으로 계속 운영됩니다. 학과는 이 동아리의 콘텐츠를 수정하거나 삭제할 수 없습니다.</p>
+        </div>
+      </div>
+
+      <!-- Consequences -->
+      <div class="consequences">
+        <span class="consequences__title">해제 후 어떻게 됩니까?</span>
+
+        <div class="consequences__item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Sub-team의 <strong>parent_team_id</strong>가 제거되어 독립 팀으로 전환됩니다.</span>
+        </div>
+        <div class="consequences__item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Sub-team admin은 해제 알림과 <strong>사유</strong>를 전달받습니다.</span>
+        </div>
+        <div class="consequences__item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>이전에 발송한 공지들은 <strong>일반 게시물로 강등</strong>되어 팀 스페이스에 남아 있습니다.</span>
+        </div>
+        <div class="consequences__item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>동아리의 멤버, 게시물, 스페이스는 <strong>전혀 영향을 받지 않습니다</strong>.</span>
+        </div>
+        <div class="consequences__item consequences__item--warn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>향후 이 동아리가 다시 인증을 받으려면 <strong>정식 신청 절차</strong>를 거쳐야 합니다.</span>
+        </div>
+      </div>
+
+      <!-- Reason -->
+      <div class="field">
+        <label class="field__label">해제 사유 <span class="req">*</span></label>
+        <textarea class="field__textarea" id="dereg-reason" placeholder="예: 최근 3개월 간 정기 활동이 확인되지 않았고, 지도교수 변경 사항 공지도 누락되었습니다. 동아리 활성화 후 재신청해주시면 환영합니다."></textarea>
+        <span class="field__hint">이 메시지는 동아리 admin에게 그대로 전달되며, 해제 기록에 영구 보관됩니다.</span>
+      </div>
+
+      <!-- Notification preview -->
+      <div class="notif-preview">
+        <span class="notif-preview__label">알림 미리보기 · 동아리 admin이 받을 알림</span>
+        <div class="notif-preview__body">
+          <div class="avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;color:var(--accent-gold)"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+          <div class="notif-preview__content">
+            <div class="notif-preview__title"><em>SNU CS Dept.</em>에서 팀 등록을 해제했습니다</div>
+            <div class="notif-preview__text" id="notif-reason-preview">해제 사유가 여기에 표시됩니다 — 왼쪽 텍스트 영역에 입력한 내용이 실시간으로 반영됩니다.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Confirmation -->
+      <div class="field" style="margin:0">
+        <label class="checkbox">
+          <input type="checkbox" id="confirm-check" />
+          <span class="checkbox__box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+          <span class="checkbox__label">
+            위 내용을 이해했고 <strong>Security Enthusiasts</strong>의 등록 해제를 확인합니다.
+            <small>체크해야 "해제 확정" 버튼이 활성화됩니다.</small>
+          </span>
+        </label>
+      </div>
+
+      <div class="u-flex u-gap-10 u-justify-between" style="flex-wrap:wrap;align-items:center">
+        <a class="btn btn--ghost" href="parent-governance-hub.html">취소</a>
+        <button class="btn btn--danger" id="confirm-btn" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          해제 확정
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+</div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    const reasonEl = document.getElementById('dereg-reason');
+    const previewEl = document.getElementById('notif-reason-preview');
+    const check = document.getElementById('confirm-check');
+    const btn = document.getElementById('confirm-btn');
+
+    function updatePreview() {
+      const v = reasonEl.value.trim();
+      previewEl.textContent = v || '해제 사유가 여기에 표시됩니다 — 왼쪽 텍스트 영역에 입력한 내용이 실시간으로 반영됩니다.';
+      updateState();
+    }
+    function updateState() {
+      const ready = check.checked && reasonEl.value.trim().length > 0;
+      btn.disabled = !ready;
+      btn.setAttribute('aria-disabled', !ready);
+    }
+    reasonEl.addEventListener('input', updatePreview);
+    check.addEventListener('change', updateState);
+    btn.addEventListener('click', () => {
+      if (btn.disabled) return;
+      SubTeam.toast('Security Enthusiasts · 등록 해제 완료 · 동아리 admin에게 알림 전송', 'danger');
+      setTimeout(() => { window.location.href = 'parent-governance-hub.html'; }, 1600);
+    });
+    updateState();
+  });
+</script>
+</body>
+</html>
