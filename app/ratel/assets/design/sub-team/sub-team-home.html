@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — SNU Code Club · Sub-team Home</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    /* ── Intro strip (team-arena-aligned) ─────────────────── */
+    .team-intro{
+      display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+      padding:0 4px 8px;margin-bottom:4px;
+    }
+    .team-intro__desc{
+      min-width:0;font-size:13px;line-height:1.55;color:var(--text-muted);
+      max-width:640px;
+    }
+    .team-intro__meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .team-intro__chip{
+      display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;
+      background:var(--bg-glass);backdrop-filter:blur(10px);
+      border:1px solid var(--border-subtle);
+      font-family:var(--font-display);font-size:10px;font-weight:600;
+      letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);
+    }
+    .team-intro__chip svg{width:11px;height:11px;color:var(--text-muted)}
+    .team-intro__chip strong{color:var(--text-primary);font-weight:700}
+    .team-intro__chip--parent{
+      background:rgba(252,179,0,0.06);border-color:rgba(252,179,0,0.25);color:var(--accent-gold);
+    }
+    .team-intro__chip--parent svg{color:var(--accent-gold)}
+    .team-intro__chip--parent strong{color:var(--accent-gold)}
+
+    /* ── Parent banner (explicit relationship) ────────────── */
+    .parent-banner{
+      position:relative;overflow:hidden;
+      display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;
+      padding:14px 18px;border-radius:14px;
+      background:linear-gradient(135deg,rgba(252,179,0,0.05),rgba(110,237,216,0.03));
+      border:1px solid rgba(252,179,0,0.22);
+    }
+    .parent-banner::before{
+      content:'';position:absolute;inset:0;pointer-events:none;
+      background:radial-gradient(ellipse 50% 70% at 0% 50%,rgba(252,179,0,0.10) 0%,transparent 55%);
+    }
+    .parent-banner > *{position:relative;z-index:1}
+    .parent-banner__avatar{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,rgba(252,179,0,0.35),rgba(110,237,216,0.15));border:1px solid rgba(252,179,0,0.3);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:14px;color:var(--accent-gold);flex-shrink:0}
+    .parent-banner__body{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .parent-banner__label{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
+    .parent-banner__name{font-size:13px;font-weight:700;color:var(--text-primary);font-family:var(--font-display);letter-spacing:0.02em}
+    .parent-banner__name strong{background:linear-gradient(135deg,var(--accent-gold),#ffd24a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .parent-banner__actions{display:flex;gap:8px;flex-wrap:wrap}
+    .parent-banner__link{
+      display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:9px;
+      background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);
+      color:var(--text-primary);text-decoration:none;
+      font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+      transition:all 0.2s;
+    }
+    .parent-banner__link:hover{border-color:rgba(252,179,0,0.35);color:var(--accent-gold)}
+    .parent-banner__link svg{width:11px;height:11px}
+
+    /* ── Section label (team-arena style) ──────────────────── */
+    .section-label{
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      padding:8px 0 4px;margin-bottom:10px;
+    }
+    .section-label__dash{width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--text-dim),transparent)}
+    .section-label__title{
+      font-family:var(--font-display);font-size:11px;font-weight:600;
+      letter-spacing:0.22em;text-transform:uppercase;color:var(--text-dim);
+    }
+    .section-label__title strong{color:var(--accent-gold);font-weight:700}
+
+    /* ── Carousel (team-arena ported) ─────────────────────── */
+    .carousel-wrapper{
+      position:relative;
+      display:flex;flex-direction:column;justify-content:center;overflow:hidden;
+      min-height:520px;
+    }
+    .carousel-wrapper::before,.carousel-wrapper::after{
+      content:'';position:absolute;top:0;bottom:0;width:220px;z-index:2;pointer-events:none;
+    }
+    .carousel-wrapper::before{left:0;background:linear-gradient(to right,var(--bg-void),transparent)}
+    .carousel-wrapper::after{right:0;background:linear-gradient(to left,var(--bg-void),transparent)}
+    .carousel-track{
+      display:flex;align-items:center;gap:28px;padding:40px 0;
+      scroll-snap-type:x mandatory;overflow-x:auto;overflow-y:hidden;
+      scrollbar-width:none;
+      padding-left:calc(50% - 200px);padding-right:calc(50% - 200px);
+    }
+    .carousel-track::-webkit-scrollbar{display:none}
+
+    .post-card{
+      flex-shrink:0;width:400px;min-height:440px;
+      padding:24px;
+      background:var(--bg-glass);backdrop-filter:blur(16px);
+      border:1px solid var(--border-subtle);border-radius:20px;
+      display:flex;flex-direction:column;gap:14px;
+      cursor:pointer;scroll-snap-align:center;
+      position:relative;overflow:hidden;
+      transform:scale(0.78);opacity:0.30;filter:blur(5px);
+      transition:all 0.5s cubic-bezier(0.16,1,0.3,1);
+    }
+    .post-card.active{
+      transform:scale(1.05);opacity:1;filter:blur(0);
+      box-shadow:0 12px 60px rgba(0,0,0,0.5);
+      border-color:rgba(252,179,0,0.20);
+    }
+    .post-card.active::after{
+      content:'';position:absolute;inset:0;border-radius:20px;pointer-events:none;
+      box-shadow:0 0 50px rgba(252,179,0,0.12);
+    }
+
+    /* Pinned (parent announcement) card variant */
+    .post-card--pinned{border-color:rgba(168,85,247,0.30)}
+    .post-card--pinned.active{border-color:rgba(168,85,247,0.45);box-shadow:0 12px 60px rgba(0,0,0,0.5),0 0 40px rgba(168,85,247,0.15)}
+    .post-card--pinned::before{
+      content:'';position:absolute;inset:0;border-radius:20px;pointer-events:none;
+      background:radial-gradient(ellipse 55% 60% at 20% 0%,rgba(168,85,247,0.12) 0%,transparent 55%);
+      opacity:0;transition:opacity 0.4s;
+    }
+    .post-card--pinned.active::before{opacity:1}
+    .post-card--pinned .post-card__top,
+    .post-card--pinned .post-card__identity,
+    .post-card--pinned .post-card__title,
+    .post-card--pinned .post-card__desc,
+    .post-card--pinned .post-card__stats,
+    .post-card--pinned .post-card__footer{position:relative;z-index:1}
+
+    .pinned-ribbon{
+      display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;
+      background:linear-gradient(135deg,rgba(168,85,247,0.28),rgba(168,85,247,0.14));
+      border:1px solid rgba(168,85,247,0.4);color:#e9d5ff;
+      font-family:var(--font-display);font-size:9px;font-weight:800;
+      letter-spacing:0.16em;text-transform:uppercase;
+      box-shadow:0 0 12px rgba(168,85,247,0.2);
+    }
+    .pinned-ribbon svg{width:10px;height:10px}
+
+    .post-card__top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .post-card__cat{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:5px 12px;border-radius:8px;
+      font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+      background:rgba(129,140,248,0.08);color:var(--accent-violet);
+      border:1px solid rgba(129,140,248,0.20);
+    }
+    .post-card__cat svg{width:12px;height:12px}
+    .post-card__cat--discuss{background:rgba(34,211,238,0.08);color:var(--accent-cyan);border-color:rgba(34,211,238,0.20)}
+    .post-card__cat--quiz{background:rgba(168,85,247,0.08);color:var(--accent-purple);border-color:rgba(168,85,247,0.20)}
+    .post-card__cat--bylaws{background:rgba(252,179,0,0.08);color:var(--accent-gold);border-color:rgba(252,179,0,0.22)}
+    .post-card__date{font-family:var(--font-display);font-size:10px;color:var(--text-dim);letter-spacing:0.12em;text-transform:uppercase;font-weight:600}
+
+    .post-card__identity{display:flex;align-items:center;gap:12px}
+    .post-card__logo{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(252,179,0,0.3),rgba(110,237,216,0.15));border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:14px;color:var(--accent-gold);flex-shrink:0}
+    .post-card__logo--parent{background:linear-gradient(135deg,rgba(252,179,0,0.5),rgba(168,85,247,0.2));color:var(--accent-gold)}
+    .post-card__id{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .post-card__author{font-size:11px;color:var(--text-muted);letter-spacing:0.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .post-card__author strong{color:var(--text-primary);font-weight:700}
+
+    .post-card__title{
+      font-family:var(--font-display);font-size:18px;font-weight:800;letter-spacing:0.02em;
+      line-height:1.3;color:var(--text-primary);
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+    }
+    .post-card__desc{font-size:13px;line-height:1.6;color:var(--text-muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+    .post-card__stats{display:flex;gap:0;padding-top:14px;border-top:1px solid var(--border-subtle)}
+    .post-card__stat{flex:1;display:flex;flex-direction:column;gap:3px;padding:0 12px;border-right:1px solid var(--border-subtle)}
+    .post-card__stat:first-child{padding-left:0}
+    .post-card__stat:last-child{border-right:none}
+    .post-card__stat-value{font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--text-primary)}
+    .post-card__stat-value--liked{color:#f43f5e}
+    .post-card__stat-label{font-family:var(--font-display);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;font-weight:600}
+
+    .post-card__chips{display:flex;gap:6px;flex-wrap:wrap}
+    .post-card__chip{display:inline-flex;padding:3px 10px;border-radius:6px;font-family:var(--font-display);font-size:10px;font-weight:600;background:rgba(255,255,255,0.03);color:var(--text-muted);border:1px solid var(--border-subtle)}
+
+    .post-card__footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:14px;border-top:1px solid var(--border-subtle)}
+    .post-card__reward{display:flex;align-items:center;gap:5px;font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--accent-gold);letter-spacing:0.04em}
+    .post-card__reward svg{width:14px;height:14px}
+    .post-card__reward small{font-size:9px;color:var(--text-muted);font-weight:500;letter-spacing:0.1em;text-transform:uppercase;margin-left:2px}
+    .post-card__cta{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:8px 16px;border-radius:10px;
+      background:linear-gradient(135deg,rgba(252,179,0,0.20),rgba(110,237,216,0.10));
+      border:1px solid rgba(252,179,0,0.25);color:var(--accent-gold);
+      font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+      cursor:pointer;transition:all 0.3s;
+    }
+    .post-card__cta:hover{box-shadow:0 0 20px rgba(252,179,0,0.18);transform:translateY(-1px)}
+    .post-card__cta svg{width:12px;height:12px}
+    .post-card--pinned .post-card__cta{background:linear-gradient(135deg,rgba(168,85,247,0.28),rgba(168,85,247,0.14));border-color:rgba(168,85,247,0.40);color:#e9d5ff}
+
+    /* ── Carousel dots ──────────────────────────────────── */
+    .carousel-dots{display:flex;gap:8px;justify-content:center;padding:0 0 14px}
+    .carousel-dot{
+      width:8px;height:8px;border-radius:50%;padding:0;
+      background:rgba(255,255,255,0.15);border:none;cursor:pointer;transition:all 0.3s;
+    }
+    .carousel-dot:hover{background:rgba(255,255,255,0.3)}
+    .carousel-dot.active{width:28px;border-radius:4px;background:var(--accent-gold);box-shadow:0 0 12px rgba(252,179,0,0.4)}
+
+    /* ── Bottom HUD bar ─────────────────────────────────── */
+    .bottom-bar{display:flex;flex-direction:column;gap:10px}
+    .bottom-bar__row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .hud-stat{display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:12px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle)}
+    .hud-stat__icon{width:30px;height:30px;border-radius:8px;background:rgba(252,179,0,0.08);border:1px solid rgba(252,179,0,0.18);display:flex;align-items:center;justify-content:center;color:var(--accent-gold);flex-shrink:0}
+    .hud-stat__icon svg{width:14px;height:14px}
+    .hud-stat--accent .hud-stat__icon{background:rgba(110,237,216,0.08);border-color:rgba(110,237,216,0.18);color:var(--accent-teal)}
+    .hud-stat--pinned .hud-stat__icon{background:rgba(168,85,247,0.08);border-color:rgba(168,85,247,0.22);color:var(--accent-purple)}
+    .hud-stat__body{display:flex;flex-direction:column}
+    .hud-stat__label{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim)}
+    .hud-stat__value{font-size:13px;color:var(--text-primary)}
+    .hud-stat__value strong{font-family:var(--font-display);font-weight:800;font-size:15px}
+
+    .browse-btn{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:11px 22px;border-radius:12px;
+      background:linear-gradient(135deg,rgba(252,179,0,0.18),rgba(110,237,216,0.08));
+      border:1px solid rgba(252,179,0,0.3);color:var(--accent-gold);
+      font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+      cursor:pointer;transition:all 0.3s;
+    }
+    .browse-btn:hover{box-shadow:0 0 24px rgba(252,179,0,0.2);transform:translateY(-1px)}
+    .browse-btn svg{width:14px;height:14px}
+
+    .cat-filters{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+    .cat-filter{padding:6px 14px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);color:var(--text-muted);font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+    .cat-filter:hover{color:var(--text-primary);border-color:var(--border-strong)}
+    .cat-filter[aria-selected="true"]{background:rgba(252,179,0,0.08);color:var(--accent-gold);border-color:rgba(252,179,0,0.25)}
+    .cat-filter__count{margin-left:6px;color:var(--text-dim);font-weight:500}
+    .cat-filter[aria-selected="true"] .cat-filter__count{color:var(--accent-gold);opacity:0.7}
+
+    /* Responsive ───────────────────────────────────────── */
+    @media (max-width:720px){
+      .parent-banner{grid-template-columns:auto 1fr;grid-template-rows:auto auto}
+      .parent-banner__actions{grid-column:1 / -1}
+      .carousel-wrapper::before,.carousel-wrapper::after{width:60px}
+      .carousel-track{gap:14px;padding:26px 0 30px;padding-left:calc(50% - 140px);padding-right:calc(50% - 140px)}
+      .post-card{width:280px;min-height:auto;padding:18px;gap:12px;transform:scale(0.86);filter:blur(3px)}
+      .post-card.active{transform:scale(1)}
+      .post-card__title{font-size:15px}
+      .post-card__desc{-webkit-line-clamp:2;font-size:12px}
+    }
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <!-- Topbar (team-arena aligned) -->
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home" aria-label="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo arena-topbar__logo--child">SC</div>
+      <div class="u-col">
+        <span class="arena-topbar__title arena-topbar__title--child">SNU Code Club</span>
+        <span class="arena-topbar__handle">@snu_code_club</span>
+      </div>
+      <span class="arena-topbar__status">Sub-team · Active</span>
+    </div>
+    <div class="arena-topbar__actions">
+      <button class="hud-btn" aria-label="Drafts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>
+      <button class="hud-btn" aria-label="Members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
+      <button class="hud-btn" aria-label="Rewards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg></button>
+      <button class="hud-btn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      <button class="btn btn--primary btn--small" style="background:linear-gradient(135deg,rgba(110,237,216,0.2),rgba(129,140,248,0.08));border-color:rgba(110,237,216,0.3);color:var(--accent-teal)">Following</button>
+    </div>
+  </div>
+
+  <div class="page page--wide">
+    <!-- Intro strip: description + parent chip + since chip -->
+    <div class="team-intro">
+      <p class="team-intro__desc">
+        학부생 중심의 오픈소스 · 알고리즘 · 양자컴퓨팅 스터디 동아리. 격주 수요일 저녁 모임, 분기별 학과 세미나 참여.
+      </p>
+      <div class="team-intro__meta">
+        <span class="team-intro__chip team-intro__chip--parent">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Sub-team of <strong>SNU CS Dept.</strong>
+        </span>
+        <span class="team-intro__chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          인증 <strong>2026-02-14</strong>
+        </span>
+        <span class="team-intro__chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          <strong>32</strong> members
+        </span>
+      </div>
+    </div>
+
+    <!-- Parent relationship banner (explicit, with bylaws link) -->
+    <div class="parent-banner">
+      <div class="parent-banner__avatar">SNU</div>
+      <div class="parent-banner__body">
+        <span class="parent-banner__label">Parent team</span>
+        <span class="parent-banner__name"><strong>SNU CS Dept.</strong> · @snu_cs_office</span>
+      </div>
+      <div class="parent-banner__actions">
+        <a class="parent-banner__link" href="bylaws-section.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          학과 학칙 · Bylaws
+        </a>
+        <a class="parent-banner__link" href="child-leave-parent.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Leave
+        </a>
+      </div>
+    </div>
+
+    <!-- Section label -->
+    <div class="section-label">
+      <span class="section-label__dash"></span>
+      <span class="section-label__title">Team <strong>Posts</strong></span>
+      <span class="section-label__dash"></span>
+    </div>
+
+    <!-- 3D carousel -->
+    <div class="carousel-wrapper">
+      <div class="carousel-track" id="carousel-track">
+
+        <!-- Card 1 · PINNED parent announcement -->
+        <article class="post-card post-card--pinned" data-index="0" data-cat="announcement">
+          <div class="post-card__top">
+            <span class="pinned-ribbon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24z"/></svg>
+              학과사무실 공지 · Pinned
+            </span>
+            <span class="post-card__date">2일 전</span>
+          </div>
+
+          <div class="post-card__identity">
+            <div class="post-card__logo post-card__logo--parent">SNU</div>
+            <div class="post-card__id">
+              <span class="post-card__author"><strong>SNU CS Dept.</strong> · @snu_cs_office</span>
+              <span class="post-card__author">Broadcast to 12 동아리</span>
+            </div>
+          </div>
+
+          <div class="post-card__title">📌 2026 신입생 오리엔테이션 일정 안내</div>
+          <p class="post-card__desc">2026학년도 신입생 오리엔테이션이 다음 주 월요일부터 시작됩니다. 각 동아리는 3월 8일부터 신입생 모집 포스터를 학과 게시판에 부착할 수 있으며, 오리엔테이션 주간 마지막 날(3/12)에는 학과 차원의 동아리 박람회가 진행됩니다.</p>
+
+          <div class="post-card__stats">
+            <div class="post-card__stat"><span class="post-card__stat-value post-card__stat-value--liked">24</span><span class="post-card__stat-label">Likes</span></div>
+            <div class="post-card__stat"><span class="post-card__stat-value">8</span><span class="post-card__stat-label">Comments</span></div>
+            <div class="post-card__stat"><span class="post-card__stat-value">342</span><span class="post-card__stat-label">Views</span></div>
+          </div>
+
+          <div class="post-card__footer">
+            <div class="post-card__reward" style="color:var(--accent-purple)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l18-8v18l-18-8v-2z"/></svg>
+              From parent
+            </div>
+            <button class="post-card__cta">Q&amp;A Thread <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+          </div>
+        </article>
+
+        <!-- Card 2 · Bylaws (own team) -->
+        <article class="post-card" data-index="1" data-cat="bylaws">
+          <div class="post-card__top">
+            <span class="post-card__cat post-card__cat--bylaws">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              회칙 · Bylaws
+            </span>
+            <span class="post-card__date">1개월 전</span>
+          </div>
+
+          <div class="post-card__identity">
+            <div class="post-card__logo">PJ</div>
+            <div class="post-card__id">
+              <span class="post-card__author"><strong>@park_j</strong> · Admin</span>
+              <span class="post-card__author">Club bylaws · v1</span>
+            </div>
+          </div>
+
+          <div class="post-card__title">주간 모임 및 코드 리뷰 원칙</div>
+          <p class="post-card__desc">매주 수요일 저녁 19:00, 301동 스터디룸에서 모임. 각 멤버는 월 1회 이상 PR 리뷰에 참여해야 합니다. 정회원 최소 8명, 최대 40명.</p>
+
+          <div class="post-card__stats">
+            <div class="post-card__stat"><span class="post-card__stat-value post-card__stat-value--liked">12</span><span class="post-card__stat-label">Likes</span></div>
+            <div class="post-card__stat"><span class="post-card__stat-value">4</span><span class="post-card__stat-label">Comments</span></div>
+            <div class="post-card__stat"><span class="post-card__stat-value">1</span><span class="post-card__stat-label">Shares</span></div>
+          </div>
+
+          <div class="post-card__chips">
+            <span class="post-card__chip">#bylaws</span>
+            <span class="post-card__chip">#meetings</span>
+          </div>
+
+          <div class="post-card__footer">
+            <div class="post-card__reward" style="color:var(--text-dim)">—</div>
+            <a class="post-card__cta" href="bylaws-section.html" style="text-decoration:none">회칙 전체 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></a>
+          </div>
+        </article>
+
+        <!-- Card 3 · Poll -->
+        <article class="post-card" data-index="2" data-cat="poll">
+          <div class="post-card__top">
+            <span class="post-card__cat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+              Poll
+            </span>
+            <span class="post-card__date">Apr 18, 2026</span>
+          </div>
+
+          <div class="post-card__identity">
+            <div class="post-card__logo">KS</div>
+            <div class="post-card__id">
+              <span class="post-card__author"><strong>@kim_s</strong> · Admin</span>
+              <span class="post-card__author">2일 전 · 14 참여</span>
+            </div>
+          </div>
+
+          <div class="post-card__title">다음 주 스프린트 주제 선택</div>
+          <p class="post-card__desc">4개 옵션 중 투표 · Infrastructure · Frontend · Mobile · Docs</p>
+
+          <div class="post-card__stats">
+            <div class="post-card__stat"><span class="post-card__stat-value post-card__stat-value--liked">8</span><span class="post-card__stat-label">Likes</span></div>
+            <div class="post-card__stat"><span class="post-card__stat-value">14</span><span class="post-card__stat-label">Votes</span></div>
+            <div class="post-card__stat"><span class="post-card__stat-value">2</span><span class="post-card__stat-label">Comments</span></div>
+          </div>
+
+          <div class="post-card__chips"><span class="post-card__chip">#poll</span><span class="post-card__chip">#sprint</span></div>
+
+          <div class="post-card__footer">
+            <div class="post-card__reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> 10 <small>reward</small></div>
+            <button class="post-card__cta">Vote <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+          </div>
+        </article>
+
+        <!-- Card 4 · Discussion -->
+        <article class="post-card" data-index="3" data-cat="discussion">
+          <div class="post-card__top">
+            <span class="post-card__cat post-card__cat--discuss">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Discussion
+            </span>
+            <span class="post-card__date">Apr 16, 2026</span>
+          </div>
+
+          <div class="post-card__identity">
+            <div class="post-card__logo">LH</div>
+            <div class="post-card__id">
+              <span class="post-card__author"><strong>@lee_h</strong></span>
+              <span class="post-card__author">4일 전</span>
+            </div>
+          </div>
+
+          <div class="post-card__title">오픈소스 기여 가이드라인 초안</div>
+          <p class="post-card__desc">회칙 RULE 03(오픈소스 기여 장려) 관련 구체적 실행 방안을 정리했습니다. 반기별 기여 목표, 지도교수 서명 절차, 학과 보고서 요약 양식까지 — 멤버 의견 부탁드립니다.</p>
+
+          <div class="post-card__stats">
+            <div class="post-card__stat"><span class="post-card__stat-value post-card__stat-value--liked">5</span><span class="post-card__stat-label">Likes</span></div>
+            <div class="post-card__stat"><span class="post-card__stat-value">8</span><span class="post-card__stat-label">Comments</span></div>
+            <div class="post-card__stat"><span class="post-card__stat-value">0</span><span class="post-card__stat-label">Shares</span></div>
+          </div>
+
+          <div class="post-card__chips"><span class="post-card__chip">#discussion</span><span class="post-card__chip">#opensource</span></div>
+
+          <div class="post-card__footer">
+            <div class="post-card__reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> 5 <small>per comment</small></div>
+            <button class="post-card__cta">Discuss <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+          </div>
+        </article>
+
+        <!-- Card 5 · Quiz -->
+        <article class="post-card" data-index="4" data-cat="quiz">
+          <div class="post-card__top">
+            <span class="post-card__cat post-card__cat--quiz">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Quiz
+            </span>
+            <span class="post-card__date">Apr 12, 2026</span>
+          </div>
+
+          <div class="post-card__identity">
+            <div class="post-card__logo">CM</div>
+            <div class="post-card__id">
+              <span class="post-card__author"><strong>@choi_m</strong></span>
+              <span class="post-card__author">1주 전 · 9 통과</span>
+            </div>
+          </div>
+
+          <div class="post-card__title">Rust Ownership 기본 개념</div>
+          <p class="post-card__desc">5 문항 · 합격 기준 80% · 제한시간 10분. 스터디 모임 전 준비 운동용.</p>
+
+          <div class="post-card__stats">
+            <div class="post-card__stat"><span class="post-card__stat-value">9</span><span class="post-card__stat-label">Passed</span></div>
+            <div class="post-card__stat"><span class="post-card__stat-value">3</span><span class="post-card__stat-label">Failed</span></div>
+            <div class="post-card__stat"><span class="post-card__stat-value">5</span><span class="post-card__stat-label">Questions</span></div>
+          </div>
+
+          <div class="post-card__chips"><span class="post-card__chip">#quiz</span><span class="post-card__chip">#rust</span></div>
+
+          <div class="post-card__footer">
+            <div class="post-card__reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> 20 <small>reward</small></div>
+            <button class="post-card__cta">Take <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+          </div>
+        </article>
+
+      </div>
+
+      <div class="carousel-dots" id="carousel-dots"></div>
+    </div>
+
+    <!-- Bottom HUD -->
+    <div class="bottom-bar">
+      <div class="bottom-bar__row">
+        <div class="hud-stat hud-stat--pinned">
+          <div class="hud-stat__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24z"/></svg></div>
+          <div class="hud-stat__body">
+            <span class="hud-stat__label">Parent Pinned</span>
+            <span class="hud-stat__value"><strong>1</strong> 공지</span>
+          </div>
+        </div>
+        <div class="hud-stat">
+          <div class="hud-stat__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div class="hud-stat__body">
+            <span class="hud-stat__label">Posts loaded</span>
+            <span class="hud-stat__value"><strong>5</strong></span>
+          </div>
+        </div>
+        <div class="hud-stat hud-stat--accent">
+          <div class="hud-stat__icon"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></div>
+          <div class="hud-stat__body">
+            <span class="hud-stat__label">Likes on page</span>
+            <span class="hud-stat__value"><strong>58</strong></span>
+          </div>
+        </div>
+        <div style="flex:1"></div>
+        <button class="browse-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Create Post
+        </button>
+      </div>
+      <div class="bottom-bar__row" style="border-top:1px solid var(--border-subtle);padding-top:10px">
+        <div class="cat-filters">
+          <button class="cat-filter" aria-selected="true" data-k="all">All <span class="cat-filter__count">5</span></button>
+          <button class="cat-filter" aria-selected="false" data-k="announcement">📌 announcement <span class="cat-filter__count">1</span></button>
+          <button class="cat-filter" aria-selected="false" data-k="bylaws">bylaws <span class="cat-filter__count">1</span></button>
+          <button class="cat-filter" aria-selected="false" data-k="poll">poll <span class="cat-filter__count">1</span></button>
+          <button class="cat-filter" aria-selected="false" data-k="discussion">discussion <span class="cat-filter__count">1</span></button>
+          <button class="cat-filter" aria-selected="false" data-k="quiz">quiz <span class="cat-filter__count">1</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Context notice -->
+    <div class="notice" style="margin-top:8px">
+      <div class="notice__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <div class="notice__body">
+        <span class="notice__title">Sub-team 투명성</span>
+        <span class="notice__text">이 팀의 <strong>공개 및 팀 공유 활동</strong>은 SNU CS Dept.의 활동 대시보드에 집계됩니다. 비공개 게시물과 DM은 절대 포함되지 않습니다. 학과는 이 팀의 콘텐츠를 편집/삭제할 수 없습니다 — 일상 운영은 완전히 독립입니다.</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+</div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    const track = document.getElementById('carousel-track');
+    const dotsContainer = document.getElementById('carousel-dots');
+    const cards = Array.from(track.querySelectorAll('.post-card'));
+    let activeIndex = 0;
+
+    cards.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'carousel-dot';
+      dot.addEventListener('click', () => scrollToCard(i));
+      dotsContainer.appendChild(dot);
+    });
+    const dots = Array.from(dotsContainer.querySelectorAll('.carousel-dot'));
+
+    function updateActive() {
+      const trackRect = track.getBoundingClientRect();
+      const center = trackRect.left + trackRect.width / 2;
+      let closest = 0, closestDist = Infinity;
+      cards.forEach((card, i) => {
+        if (card.hidden) return;
+        const rect = card.getBoundingClientRect();
+        const dist = Math.abs(center - (rect.left + rect.width / 2));
+        if (dist < closestDist) { closestDist = dist; closest = i; }
+      });
+      activeIndex = closest;
+      cards.forEach((c, i) => c.classList.toggle('active', i === activeIndex));
+      dots.forEach((d, i) => d.classList.toggle('active', i === activeIndex));
+    }
+    function scrollToCard(i) {
+      const card = cards[i];
+      const trackRect = track.getBoundingClientRect();
+      const cardRect = card.getBoundingClientRect();
+      const offset = cardRect.left - trackRect.left - (trackRect.width - cardRect.width) / 2;
+      track.scrollBy({ left: offset, behavior: 'smooth' });
+    }
+    track.addEventListener('scroll', updateActive, { passive: true });
+    window.addEventListener('resize', updateActive);
+    requestAnimationFrame(updateActive);
+
+    // Category filter
+    document.querySelectorAll('.cat-filter').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.cat-filter').forEach(b => b.setAttribute('aria-selected', 'false'));
+        btn.setAttribute('aria-selected', 'true');
+        const k = btn.dataset.k;
+        cards.forEach((card, i) => {
+          const show = k === 'all' || card.dataset.cat === k;
+          card.hidden = !show;
+          dots[i].hidden = !show;
+        });
+        requestAnimationFrame(updateActive);
+      });
+    });
+  });
+</script>
+</body>
+</html>

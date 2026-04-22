@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Application Form Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .builder{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:20px;align-items:start}
+    @media (max-width:960px){.builder{grid-template-columns:1fr}}
+
+    .field-list{display:flex;flex-direction:column;gap:10px}
+    .field-row{position:relative;display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:12px;background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);transition:all 0.2s}
+    .field-row[data-locked="true"]{border-color:rgba(252,179,0,0.18);background:rgba(252,179,0,0.04)}
+    .field-row[data-locked="true"] .field-row__lock{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.12em;color:var(--accent-gold)}
+    .field-row__lock svg{width:10px;height:10px}
+    .field-row:not([data-locked="true"]) .field-row__lock{display:none}
+    .field-row__top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .field-row__drag{width:26px;height:26px;border-radius:6px;padding:0;background:transparent;border:1px solid var(--border-subtle);color:var(--text-dim);display:flex;align-items:center;justify-content:center;cursor:grab;transition:all 0.2s}
+    .field-row__drag:hover{color:var(--text-primary);border-color:var(--border-strong)}
+    .field-row__drag svg{width:12px;height:12px}
+    .field-row__type{padding:6px 10px;border-radius:8px;background:rgba(129,140,248,0.08);border:1px solid rgba(129,140,248,0.22);color:var(--accent-violet);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23818cf8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 8px center;padding-right:28px}
+    .field-row__label-input{flex:1;min-width:140px;padding:8px 12px;border-radius:8px;background:transparent;border:1px solid transparent;color:var(--text-primary);font-family:var(--font-body);font-size:14px;font-weight:600;transition:all 0.2s;outline:none}
+    .field-row__label-input:hover{border-color:var(--border-subtle)}
+    .field-row__label-input:focus{border-color:rgba(252,179,0,0.3);background:rgba(6,6,14,0.6)}
+    .field-row__actions{display:flex;gap:4px;margin-left:auto}
+    .field-row__btn{width:28px;height:28px;border-radius:7px;padding:0;background:transparent;border:1px solid transparent;color:var(--text-dim);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
+    .field-row__btn:hover{background:rgba(255,255,255,0.04);border-color:var(--border-subtle);color:var(--text-primary)}
+    .field-row__btn--danger:hover{border-color:rgba(239,68,68,0.3);color:var(--accent-coral);background:rgba(239,68,68,0.06)}
+    .field-row__btn svg{width:13px;height:13px}
+    .field-row__btn[disabled]{opacity:0.3;cursor:not-allowed}
+    .field-row__meta{display:flex;gap:12px;flex-wrap:wrap;padding-left:36px;align-items:center}
+    .field-row__placeholder{flex:1;min-width:160px;padding:6px 10px;border-radius:6px;background:transparent;border:1px solid transparent;color:var(--text-muted);font-size:12px;transition:all 0.2s;outline:none}
+    .field-row__placeholder:hover{border-color:var(--border-subtle)}
+    .field-row__placeholder:focus{border-color:rgba(252,179,0,0.3);background:rgba(6,6,14,0.6)}
+
+    .add-row{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:12px;background:rgba(252,179,0,0.04);border:1px dashed rgba(252,179,0,0.25);color:var(--accent-gold);font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;transition:all 0.25s}
+    .add-row:hover{background:rgba(252,179,0,0.10);border-color:rgba(252,179,0,0.45)}
+    .add-row svg{width:14px;height:14px}
+
+    .min-member{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:rgba(110,237,216,0.05);border:1px solid rgba(110,237,216,0.20)}
+    .min-member__icon{width:36px;height:36px;border-radius:10px;background:rgba(110,237,216,0.10);border:1px solid rgba(110,237,216,0.25);display:flex;align-items:center;justify-content:center;color:var(--accent-teal);flex-shrink:0}
+    .min-member__icon svg{width:16px;height:16px}
+    .min-member__body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+    .min-member__label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent-teal)}
+    .min-member__desc{font-size:12px;color:var(--text-muted)}
+    .min-member__input-wrap{display:flex;align-items:center;gap:8px}
+    .min-member__stepper{width:32px;height:32px;border-radius:8px;padding:0;background:rgba(110,237,216,0.05);border:1px solid rgba(110,237,216,0.22);color:var(--accent-teal);display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:var(--font-display);font-size:16px;font-weight:800}
+    .min-member__stepper:hover{background:rgba(110,237,216,0.15)}
+    .min-member__value{width:52px;text-align:center;padding:8px;border-radius:8px;background:var(--bg-input);border:1px solid rgba(110,237,216,0.18);color:var(--accent-teal);font-family:var(--font-display);font-size:18px;font-weight:800;outline:none}
+
+    .preview{position:sticky;top:108px;padding:20px;border-radius:16px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:14px;max-height:calc(100vh - 130px);overflow:auto}
+    .preview__head{display:flex;align-items:center;gap:10px}
+    .preview__badge{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent-teal);padding:4px 10px;border-radius:6px;background:rgba(110,237,216,0.08);border:1px solid rgba(110,237,216,0.22)}
+    .preview__title{font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted)}
+    .preview__sample{padding:16px;border-radius:12px;background:rgba(6,6,14,0.5);border:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:14px}
+    .preview-field{display:flex;flex-direction:column;gap:6px}
+    .preview-field__label{font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.04em;display:flex;align-items:center;gap:6px}
+    .preview-field__label .req{color:var(--accent-coral)}
+    .preview-field__input{width:100%;padding:9px 12px;border-radius:8px;background:rgba(12,12,26,0.6);border:1px solid var(--border-subtle);color:var(--text-primary);font-size:12px;pointer-events:none;min-height:34px;display:flex;align-items:center}
+    .preview-field__input--ta{min-height:60px;align-items:flex-start;padding-top:10px}
+    .preview-field__input--dim{color:var(--text-dim)}
+    .preview__footer{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--border-subtle)}
+    .preview__summary{font-size:11px;color:var(--text-dim);font-family:var(--font-display);letter-spacing:0.08em}
+    .preview__submit{padding:10px 18px;border-radius:10px;background:linear-gradient(135deg,rgba(110,237,216,0.2),rgba(129,140,248,0.08));border:1px solid rgba(110,237,216,0.3);color:var(--accent-teal);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;opacity:0.6;pointer-events:none}
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home" aria-label="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo">SNU</div>
+      <div class="u-col">
+        <span class="arena-topbar__title">SNU CS Dept.</span>
+        <span class="arena-topbar__handle" id="status-line">Form Builder · v3</span>
+      </div>
+      <span class="arena-topbar__status" id="save-status">Synced · v3</span>
+    </div>
+    <div class="arena-topbar__actions">
+      <button class="btn btn--ghost btn--small" id="reset-btn">Reset</button>
+      <button class="btn btn--primary btn--small" id="save-btn">Save v4</button>
+    </div>
+  </div>
+
+  <div class="page page--wide">
+    <div class="page-header">
+      <div class="page-header__main">
+        <span class="page-header__eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+          FR-3 · Application Form
+        </span>
+        <h1 class="page-header__title">신청서를 <strong>우리 학과에 맞게</strong> 구성합니다</h1>
+        <p class="page-header__sub">동아리 신청 시 수집할 필드를 자유롭게 정의하세요. 폼 변경은 이미 제출된 신청에 소급 적용되지 않습니다 — 각 신청은 제출 시점의 폼 버전에 고정됩니다.</p>
+      </div>
+    </div>
+
+    <div class="builder">
+      <section class="card">
+        <div class="card__head">
+          <h2 class="card__title">필드 · Fields</h2>
+          <span class="card__dash"></span>
+          <span class="card__meta" id="field-summary">6 필드 · 4 필수</span>
+        </div>
+
+        <div class="field-list" id="field-list">
+          <div class="field-row" data-locked="true" data-type="text-short" data-required="true">
+            <div class="field-row__top">
+              <button class="field-row__drag" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></button>
+              <span class="field-row__lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Default</span>
+              <select class="field-row__type" disabled><option>Short text</option></select>
+              <input class="field-row__label-input" value="제안하는 팀 이름 (Club name)" readonly />
+              <div class="field-row__actions">
+                <label class="switch"><input type="checkbox" checked disabled /><span class="switch__track"></span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-row" data-locked="true" data-type="text-long" data-required="true">
+            <div class="field-row__top">
+              <button class="field-row__drag" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></button>
+              <span class="field-row__lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Default</span>
+              <select class="field-row__type" disabled><option>Long text</option></select>
+              <input class="field-row__label-input" value="설립 목적 (Purpose)" readonly />
+              <div class="field-row__actions">
+                <label class="switch"><input type="checkbox" checked disabled /><span class="switch__track"></span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-row" data-type="text-short" data-required="true">
+            <div class="field-row__top">
+              <button class="field-row__drag" aria-label="Drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></button>
+              <select class="field-row__type">
+                <option value="text-short" selected>Short text</option>
+                <option value="text-long">Long text</option>
+                <option value="number">Number</option>
+                <option value="date">Date</option>
+                <option value="single-select">Single select</option>
+                <option value="multi-select">Multi select</option>
+                <option value="url">URL</option>
+              </select>
+              <input class="field-row__label-input" value="지도교수 (Faculty advisor)" />
+              <div class="field-row__actions">
+                <label class="switch"><input type="checkbox" checked /><span class="switch__track"></span></label>
+                <button class="field-row__btn" aria-label="Up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+                <button class="field-row__btn" aria-label="Down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                <button class="field-row__btn field-row__btn--danger" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+              </div>
+            </div>
+            <div class="field-row__meta">
+              <input class="field-row__placeholder" placeholder="힌트 (예: 이름 · 학과 · 이메일)" />
+            </div>
+          </div>
+
+          <div class="field-row" data-type="single-select" data-required="true">
+            <div class="field-row__top">
+              <button class="field-row__drag" aria-label="Drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></button>
+              <select class="field-row__type">
+                <option value="text-short">Short text</option>
+                <option value="text-long">Long text</option>
+                <option value="number">Number</option>
+                <option value="date">Date</option>
+                <option value="single-select" selected>Single select</option>
+                <option value="multi-select">Multi select</option>
+                <option value="url">URL</option>
+              </select>
+              <input class="field-row__label-input" value="정기 모임 주기" />
+              <div class="field-row__actions">
+                <label class="switch"><input type="checkbox" checked /><span class="switch__track"></span></label>
+                <button class="field-row__btn" aria-label="Up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+                <button class="field-row__btn" aria-label="Down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                <button class="field-row__btn field-row__btn--danger" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+              </div>
+            </div>
+            <div class="field-row__meta">
+              <input class="field-row__placeholder" value="선택지: 매주 · 격주 · 월 1회 · 비정기" />
+            </div>
+          </div>
+
+          <div class="field-row" data-type="url" data-required="false">
+            <div class="field-row__top">
+              <button class="field-row__drag" aria-label="Drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></button>
+              <select class="field-row__type">
+                <option value="text-short">Short text</option>
+                <option value="text-long">Long text</option>
+                <option value="number">Number</option>
+                <option value="date">Date</option>
+                <option value="single-select">Single select</option>
+                <option value="multi-select">Multi select</option>
+                <option value="url" selected>URL</option>
+              </select>
+              <input class="field-row__label-input" value="회칙 문서 링크 (선택)" />
+              <div class="field-row__actions">
+                <label class="switch"><input type="checkbox" /><span class="switch__track"></span></label>
+                <button class="field-row__btn" aria-label="Up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+                <button class="field-row__btn" aria-label="Down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                <button class="field-row__btn field-row__btn--danger" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-row" data-type="number" data-required="true">
+            <div class="field-row__top">
+              <button class="field-row__drag" aria-label="Drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></button>
+              <select class="field-row__type">
+                <option value="text-short">Short text</option>
+                <option value="text-long">Long text</option>
+                <option value="number" selected>Number</option>
+                <option value="date">Date</option>
+                <option value="single-select">Single select</option>
+                <option value="multi-select">Multi select</option>
+                <option value="url">URL</option>
+              </select>
+              <input class="field-row__label-input" value="연간 활동 계획 인원" />
+              <div class="field-row__actions">
+                <label class="switch"><input type="checkbox" checked /><span class="switch__track"></span></label>
+                <button class="field-row__btn" aria-label="Up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+                <button class="field-row__btn" aria-label="Down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                <button class="field-row__btn field-row__btn--danger" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="add-row" id="add-field-btn" style="margin-top:12px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          필드 추가 · Add field
+        </button>
+
+        <div class="min-member" style="margin-top:18px">
+          <div class="min-member__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="min-member__body">
+            <span class="min-member__label">최소 멤버 수 · Minimum members</span>
+            <span class="min-member__desc">제출 버튼은 pending 팀이 이 인원을 달성해야 활성화됩니다.</span>
+          </div>
+          <div class="min-member__input-wrap">
+            <button class="min-member__stepper" id="min-dec">−</button>
+            <input class="min-member__value" id="min-value" type="number" value="5" min="1" max="99" />
+            <button class="min-member__stepper" id="min-inc">+</button>
+          </div>
+        </div>
+
+        <div class="notice" style="margin-top:14px">
+          <div class="notice__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+          <div class="notice__body">
+            <span class="notice__title">폼 버전 관리</span>
+            <span class="notice__text">Save를 누르면 <strong>v4</strong>가 생성됩니다. 진행 중인 신청은 제출 시점의 폼 버전(<strong>v3</strong>)에 고정되므로 영향을 받지 않습니다.</span>
+          </div>
+        </div>
+      </section>
+
+      <aside class="preview">
+        <div class="preview__head">
+          <span class="preview__badge">Live preview</span>
+          <span class="preview__title">동아리가 보게 될 화면</span>
+        </div>
+        <div class="preview__sample" id="preview-sample"></div>
+        <div class="preview__footer">
+          <span class="preview__summary" id="preview-summary">6 필드 · 4 필수 · 최소 5명</span>
+          <button class="preview__submit">Submit application</button>
+        </div>
+      </aside>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+  <!-- Template for added field rows -->
+  <template id="new-field-tpl">
+    <div class="field-row" data-type="text-short" data-required="false">
+      <div class="field-row__top">
+        <button class="field-row__drag" aria-label="Drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></button>
+        <select class="field-row__type">
+          <option value="text-short" selected>Short text</option>
+          <option value="text-long">Long text</option>
+          <option value="number">Number</option>
+          <option value="date">Date</option>
+          <option value="single-select">Single select</option>
+          <option value="multi-select">Multi select</option>
+          <option value="url">URL</option>
+        </select>
+        <input class="field-row__label-input" placeholder="필드명 입력…" />
+        <div class="field-row__actions">
+          <label class="switch"><input type="checkbox" /><span class="switch__track"></span></label>
+          <button class="field-row__btn" aria-label="Up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+          <button class="field-row__btn" aria-label="Down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+          <button class="field-row__btn field-row__btn--danger" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+      <div class="field-row__meta">
+        <input class="field-row__placeholder" placeholder="힌트 (선택)" />
+      </div>
+    </div>
+  </template>
+</div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    const list = document.getElementById('field-list');
+    const addBtn = document.getElementById('add-field-btn');
+    const summary = document.getElementById('field-summary');
+    const previewSummary = document.getElementById('preview-summary');
+    const previewSample = document.getElementById('preview-sample');
+    const saveBtn = document.getElementById('save-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const minValue = document.getElementById('min-value');
+    const status = document.getElementById('save-status');
+    const tpl = document.getElementById('new-field-tpl');
+    let uid = 100;
+    let dirty = false;
+
+    // Build a preview node safely — all user text is injected via textContent/setAttribute
+    function makePreviewField(type, label, required, hint) {
+      const wrap = document.createElement('div');
+      wrap.className = 'preview-field';
+
+      const labEl = document.createElement('label');
+      labEl.className = 'preview-field__label';
+      labEl.textContent = label || '(untitled)';
+      if (required) {
+        const req = document.createElement('span');
+        req.className = 'req';
+        req.textContent = '*';
+        labEl.appendChild(document.createTextNode(' '));
+        labEl.appendChild(req);
+      }
+      wrap.appendChild(labEl);
+
+      const inp = document.createElement('div');
+      inp.className = 'preview-field__input';
+      if (type === 'text-long') inp.classList.add('preview-field__input--ta');
+      if (type === 'single-select' || type === 'multi-select') inp.classList.add('preview-field__input--dim');
+
+      let placeholderText;
+      if (type === 'single-select') placeholderText = '▼ ' + (hint || '선택하세요');
+      else if (type === 'multi-select') placeholderText = '☐ ' + (hint || '여러 개 선택');
+      else if (type === 'date') placeholderText = 'YYYY-MM-DD';
+      else if (type === 'url') placeholderText = hint || 'https://…';
+      else if (type === 'number') placeholderText = hint || '0';
+      else if (type === 'text-long') placeholderText = hint || '';
+      else placeholderText = hint || '';
+
+      if (placeholderText) inp.textContent = placeholderText;
+      wrap.appendChild(inp);
+      return wrap;
+    }
+
+    function renderPreview() {
+      const rows = Array.from(list.querySelectorAll('.field-row'));
+      previewSample.replaceChildren(); // safe clear
+      rows.forEach(r => {
+        const type = r.dataset.type || 'text-short';
+        const label = r.querySelector('.field-row__label-input').value;
+        const req = r.querySelector('input[type="checkbox"]').checked;
+        const phEl = r.querySelector('.field-row__placeholder');
+        const hint = phEl ? phEl.value : '';
+        previewSample.appendChild(makePreviewField(type, label, req, hint));
+      });
+      const total = rows.length;
+      const required = rows.filter(r => r.querySelector('input[type="checkbox"]').checked).length;
+      summary.textContent = total + ' 필드 · ' + required + ' 필수';
+      previewSummary.textContent = total + ' 필드 · ' + required + ' 필수 · 최소 ' + minValue.value + '명';
+      markDirty();
+    }
+
+    function markDirty() {
+      dirty = true;
+      status.textContent = 'Unsaved';
+      status.classList.add('arena-topbar__status--pending');
+    }
+    function markSynced(v) {
+      dirty = false;
+      status.textContent = 'Synced · ' + v;
+      status.classList.remove('arena-topbar__status--pending');
+    }
+
+    function wireRow(row) {
+      const typeSel = row.querySelector('.field-row__type');
+      if (!typeSel.disabled) typeSel.addEventListener('change', () => { row.dataset.type = typeSel.value; renderPreview(); });
+      row.querySelector('.field-row__label-input').addEventListener('input', renderPreview);
+      const ph = row.querySelector('.field-row__placeholder');
+      if (ph) ph.addEventListener('input', renderPreview);
+      const cb = row.querySelector('input[type="checkbox"]');
+      if (!cb.disabled) cb.addEventListener('change', () => { row.dataset.required = cb.checked; renderPreview(); });
+      if (row.dataset.locked === 'true') return;
+      const btns = row.querySelectorAll('.field-row__btn');
+      const [upBtn, downBtn, delBtn] = btns;
+      upBtn.addEventListener('click', () => {
+        const prev = row.previousElementSibling;
+        if (prev && !prev.matches('[data-locked="true"]')) list.insertBefore(row, prev);
+        renderPreview();
+      });
+      downBtn.addEventListener('click', () => {
+        const next = row.nextElementSibling;
+        if (next) list.insertBefore(next, row);
+        renderPreview();
+      });
+      delBtn.addEventListener('click', () => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(-12px)';
+        setTimeout(() => { row.remove(); renderPreview(); }, 180);
+      });
+    }
+
+    Array.from(list.querySelectorAll('.field-row')).forEach(wireRow);
+
+    addBtn.addEventListener('click', () => {
+      const frag = tpl.content.cloneNode(true);
+      const row = frag.querySelector('.field-row');
+      row.querySelector('.field-row__label-input').value = '새 필드 ' + (++uid);
+      list.appendChild(row);
+      wireRow(row);
+      row.querySelector('.field-row__label-input').focus();
+      renderPreview();
+    });
+
+    document.getElementById('min-dec').addEventListener('click', () => { minValue.value = Math.max(1, (+minValue.value)-1); renderPreview(); });
+    document.getElementById('min-inc').addEventListener('click', () => { minValue.value = Math.min(99, (+minValue.value)+1); renderPreview(); });
+    minValue.addEventListener('input', renderPreview);
+
+    saveBtn.addEventListener('click', () => {
+      markSynced('v4');
+      SubTeam.toast('Form v4 저장 완료 · 진행 중 신청은 v3에 고정됩니다', 'success');
+    });
+    resetBtn.addEventListener('click', () => {
+      if (confirm('변경 사항을 버리고 마지막 저장된 상태로 되돌립니다. 계속할까요?')) {
+        window.location.reload();
+      }
+    });
+
+    renderPreview();
+    markSynced('v3');
+  });
+</script>
+</body>
+</html>
