@@ -578,3 +578,31 @@
   .pager__page { padding: 0 16px 24px; }
   .page-card { padding: 22px 18px 24px; border-radius: 18px; }
 }
+
+/* ── Setting row (label + sub + trailing control) ─────────────────
+   Used for voting rules, dependencies, status, etc. — any section
+   row that pairs descriptive text with a control on the right. */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--qc-separator, rgba(255, 255, 255, 0.06));
+}
+.setting-row:first-child { border-top: none; }
+.setting-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.setting-row__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--qc-text-primary, #f0f0f5);
+}
+.setting-row__sub {
+  font-size: 12px;
+  color: var(--qc-text-muted, #8888a8);
+}
