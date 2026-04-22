@@ -1,14 +1,11 @@
-// TODO(hot-spaces-ranking): The current handler fetches up to 50 public spaces
-// and sorts them by an in-request `activity_score`, then calls `count_actions`
-// for each space (N+1 DynamoDB queries). This breaks once the total number of
-// public spaces exceeds the fetch window, and latency grows linearly with it.
-//
-// Superseded design: `SpaceHotScore` entity on GSI8 with pre-computed scores
-// maintained by EventBridge, read path is one GSI query + parallel batch_gets.
-// Plan: docs/superpowers/plans/2026-04-21-hot-spaces-ranking.md
+// TODO(hot-spaces-ranking): N+1 `count_actions` and the 50-row public scan
+// disappear with the SpaceHotScore design in
+// docs/superpowers/plans/2026-04-21-hot-spaces-ranking.md.
 
 use crate::common::models::space::SpaceCommon;
 use crate::common::*;
+#[cfg(feature = "server")]
+use crate::features::auth::OptionalUser;
 #[cfg(feature = "server")]
 use crate::features::posts::models::Post;
 #[cfg(feature = "server")]
@@ -16,7 +13,9 @@ use crate::features::spaces::pages::actions::models::SpaceAction;
 #[cfg(feature = "server")]
 use crate::features::spaces::pages::actions::types::SpaceActionType;
 #[cfg(feature = "server")]
-use std::collections::HashMap;
+use crate::features::timeline::models::{TIMELINE_CATEGORIES, TimelineEntry};
+#[cfg(feature = "server")]
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -53,27 +52,31 @@ pub struct HotSpaceResponse {
     pub created_at: i64,
 }
 
-#[get("/api/home/hot-spaces?bookmark")]
+#[cfg(feature = "server")]
+const PER_CATEGORY_LIMIT: i32 = 20;
+#[cfg(feature = "server")]
+const RESPONSE_PAGE_LIMIT: usize = 10;
+#[cfg(feature = "server")]
+const PUBLIC_FALLBACK_LIMIT: i32 = 50;
+
+#[get("/api/home/hot-spaces?bookmark", user: OptionalUser)]
 pub async fn list_hot_spaces_handler(
     bookmark: Option<String>,
 ) -> Result<ListResponse<HotSpaceResponse>> {
     let conf = crate::common::config::ServerConfig::default();
     let cli = conf.dynamodb();
 
-    // Fetch a wider window than the page size so the activity-score ranking
-    // reflects the top spaces globally rather than only the page slice. The
-    // bookmark still paginates through the scored list on the client side by
-    // echoing the raw DynamoDB bookmark.
-    let opts = SpaceCommon::opt_with_bookmark(bookmark).limit(50);
-    let visibility_pk = format!(
-        "{}#{}",
-        SpacePublishState::Published,
-        SpaceVisibility::Public
-    );
-    let (spaces, next_bookmark) =
-        SpaceCommon::find_by_visibility(cli, visibility_pk, opts).await?;
+    let user_opt: Option<crate::features::auth::User> = user.into();
 
-    // Fetch post titles for spaces whose content is empty
+    let (spaces, next_bookmark) = match user_opt {
+        Some(u) => collect_spaces_via_timeline(cli, &u, bookmark).await?,
+        None => collect_public_fallback(cli, bookmark).await?,
+    };
+
+    if spaces.is_empty() {
+        return Ok((Vec::<HotSpaceResponse>::new(), next_bookmark).into());
+    }
+
     let post_keys: Vec<(Partition, EntityType)> = spaces
         .iter()
         .filter_map(|s| s.pk.clone().to_post_key().ok())
@@ -133,15 +136,13 @@ pub async fn list_hot_spaces_handler(
         });
     }
 
-    // Rank by activity score so the carousel surfaces spaces with real
-    // engagement, not just whichever spaces DynamoDB returned first.
     let now_ms = crate::common::utils::time::get_now_timestamp_millis();
     items.sort_by(|a, b| {
         activity_score(b, now_ms)
             .partial_cmp(&activity_score(a, now_ms))
             .unwrap_or(std::cmp::Ordering::Equal)
     });
-    items.truncate(10);
+    items.truncate(RESPONSE_PAGE_LIMIT);
     for (idx, item) in items.iter_mut().enumerate() {
         item.rank = idx as i64 + 1;
     }
@@ -149,16 +150,105 @@ pub async fn list_hot_spaces_handler(
     Ok((items, next_bookmark).into())
 }
 
-/// Activity score combining cumulative participation, action richness, and a
-/// freshness bonus for recently created spaces. Tuned so a 10k-participant
-/// established space still ranks above a brand-new empty one, while a fresh
-/// space with a handful of actions can outrank a stagnant large space.
+/// Gates Hot candidates on timeline eligibility — being Public alone is not
+/// enough. A space only surfaces if it matched at least one fan-out condition
+/// (Following / TeamMember / Popular / PopularSpace) for this viewer.
+#[cfg(feature = "server")]
+async fn collect_spaces_via_timeline(
+    cli: &aws_sdk_dynamodb::Client,
+    user: &crate::features::auth::User,
+    bookmark: Option<String>,
+) -> Result<(Vec<SpaceCommon>, Option<String>)> {
+    // Per-category bookmarks don't compose across 4 parallel queries.
+    let _ = bookmark;
+
+    let user_id = match &user.pk {
+        Partition::User(id) => id.clone(),
+        _ => return Ok((vec![], None)),
+    };
+
+    let category_keys: Vec<String> = TIMELINE_CATEGORIES
+        .iter()
+        .map(|reason| format!("{}#{}", user_id, reason))
+        .collect();
+
+    let futures = category_keys.iter().map(|category_key| {
+        let opt = TimelineEntry::opt()
+            .limit(PER_CATEGORY_LIMIT)
+            .scan_index_forward(false);
+        let cat = category_key.clone();
+        async move { TimelineEntry::find_by_category(cli, cat, opt).await }
+    });
+
+    let results = futures::future::join_all(futures).await;
+
+    let mut seen_post_pks: HashSet<String> = HashSet::new();
+    let mut post_keys: Vec<(Partition, EntityType)> = Vec::new();
+    for res in results {
+        let (entries, _) = match res {
+            Ok(v) => v,
+            Err(e) => {
+                crate::error!("hot-spaces: timeline category fetch failed: {e}");
+                continue;
+            }
+        };
+        for entry in entries {
+            if seen_post_pks.insert(entry.post_pk.to_string()) {
+                post_keys.push((entry.post_pk, EntityType::Post));
+            }
+        }
+    }
+
+    if post_keys.is_empty() {
+        return Ok((vec![], None));
+    }
+
+    let posts = Post::batch_get(cli, post_keys).await.unwrap_or_default();
+
+    // A space may surface across multiple categories (e.g. Following + PopularSpace).
+    let mut seen_space: HashSet<String> = HashSet::new();
+    let space_keys: Vec<(Partition, EntityType)> = posts
+        .into_iter()
+        .filter_map(|p| p.space_pk)
+        .filter(|space_pk| seen_space.insert(space_pk.to_string()))
+        .map(|space_pk| (space_pk, EntityType::SpaceCommon))
+        .collect();
+
+    if space_keys.is_empty() {
+        return Ok((vec![], None));
+    }
+
+    let spaces = SpaceCommon::batch_get(cli, space_keys).await?;
+    let spaces = spaces
+        .into_iter()
+        .filter(|s| s.is_published() && s.is_public())
+        .collect();
+    Ok((spaces, None))
+}
+
+/// Logged-out viewers have no follow/team graph, so discoverability wins
+/// over fan-out gating: surface any Public+Published space.
+#[cfg(feature = "server")]
+async fn collect_public_fallback(
+    cli: &aws_sdk_dynamodb::Client,
+    bookmark: Option<String>,
+) -> Result<(Vec<SpaceCommon>, Option<String>)> {
+    let opts = SpaceCommon::opt_with_bookmark(bookmark).limit(PUBLIC_FALLBACK_LIMIT);
+    let visibility_pk = format!(
+        "{}#{}",
+        SpacePublishState::Published,
+        SpaceVisibility::Public
+    );
+    let (spaces, next_bookmark) =
+        SpaceCommon::find_by_visibility(cli, visibility_pk, opts).await?;
+    Ok((spaces, next_bookmark))
+}
+
 fn activity_score(item: &HotSpaceResponse, now_ms: i64) -> f64 {
     let participants = (item.participants.max(0) as f64).ln_1p();
     let actions = item.total_actions.max(0) as f64;
     let age_days = ((now_ms - item.created_at).max(0) as f64) / (1000.0 * 60.0 * 60.0 * 24.0);
-    // Half-life of ~14 days: e^(-age/14). Stays close to 1 for the first week,
-    // falls below 0.5 after two weeks, and becomes negligible after ~2 months.
+    // ~14-day half-life: drops below 0.5 after two weeks.
     let freshness = (-age_days / 14.0).exp();
 
     participants * 3.0 + actions * 2.0 + freshness * 5.0
