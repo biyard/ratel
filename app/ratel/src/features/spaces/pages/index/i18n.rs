@@ -458,7 +458,11 @@ translate! {
 
     // Topbar
     admin_badge: { en: "Admin", ko: "관리자" },
+    home: { en: "Home", ko: "홈" },
     publish: { en: "Publish", ko: "게시" },
     start: { en: "Start", ko: "시작" },
     finish: { en: "Finish", ko: "종료" },
+
+    // Discussion card
+    comments_count: { en: "comments", ko: "개의 댓글" },
 }
