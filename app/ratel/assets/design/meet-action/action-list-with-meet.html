@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Space Actions · Meet placement</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    /* Space hero (small — abbreviated) */
+    .space-hero{
+      display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;
+      padding:18px 22px;border-radius:16px;
+      background:var(--bg-glass);backdrop-filter:blur(12px);
+      border:1px solid var(--border-subtle);
+    }
+    .space-hero__avatar{width:54px;height:54px;border-radius:13px;background:linear-gradient(135deg,rgba(252,179,0,0.3),rgba(110,237,216,0.15));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--accent-gold);border:1px solid rgba(252,179,0,0.2)}
+    .space-hero__title{font-family:var(--font-display);font-size:18px;font-weight:800;letter-spacing:0.02em;color:var(--text-primary)}
+    .space-hero__handle{font-family:var(--font-display);font-size:11px;color:var(--text-muted);letter-spacing:0.06em;margin-top:2px}
+    .space-hero__meta{display:flex;gap:8px;margin-top:6px}
+
+    /* Action type filter */
+    .type-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px}
+    .type-filter__btn{
+      padding:7px 14px;border-radius:10px;
+      background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);
+      color:var(--text-muted);font-family:var(--font-display);font-size:10px;font-weight:700;
+      letter-spacing:0.10em;text-transform:uppercase;cursor:pointer;transition:all 0.25s;
+      display:inline-flex;align-items:center;gap:8px;
+    }
+    .type-filter__btn:hover{color:var(--text-primary);border-color:var(--border-strong)}
+    .type-filter__btn[aria-selected="true"]{background:rgba(252,179,0,0.08);color:var(--accent-gold);border-color:rgba(252,179,0,0.25)}
+    .type-filter__dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .type-filter__dot--all{background:linear-gradient(135deg,var(--action-poll),var(--action-meet))}
+    .type-filter__dot--poll{background:var(--action-poll)}
+    .type-filter__dot--quiz{background:var(--action-quiz)}
+    .type-filter__dot--discuss{background:var(--action-discuss)}
+    .type-filter__dot--follow{background:var(--action-follow)}
+    .type-filter__dot--meet{background:var(--action-meet);box-shadow:0 0 6px var(--action-meet)}
+    .type-filter__count{color:var(--text-dim);font-size:9px;margin-left:4px}
+
+    /* Action grid */
+    .action-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+    .action-card{
+      position:relative;overflow:hidden;display:flex;flex-direction:column;gap:12px;
+      padding:18px 20px;border-radius:14px;
+      background:var(--bg-glass);backdrop-filter:blur(12px);
+      border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.25s;
+      color:var(--text-primary);text-decoration:none;
+    }
+    .action-card::before{content:'';position:absolute;top:0;right:0;width:140px;height:140px;background:radial-gradient(circle,var(--action-accent,var(--accent-gold)),transparent 55%);opacity:0.12;filter:blur(28px);pointer-events:none}
+    .action-card:hover{transform:translateY(-2px);border-color:var(--action-accent);box-shadow:0 10px 30px rgba(0,0,0,0.35)}
+    .action-card__top{display:flex;align-items:center;justify-content:space-between;gap:10px;position:relative}
+    .action-card__kind{
+      display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:7px;
+      font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+      background:var(--action-bg);color:var(--action-accent);border:1px solid var(--action-border);
+    }
+    .action-card__kind svg{width:11px;height:11px}
+    .action-card__title{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:0.02em;line-height:1.35;color:var(--text-primary);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .action-card__desc{font-size:12px;color:var(--text-muted);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .action-card__specific{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+    .action-card__stat{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:10px;letter-spacing:0.06em;color:var(--text-muted)}
+    .action-card__stat strong{color:var(--text-primary);font-weight:700}
+    .action-card__stat svg{width:11px;height:11px}
+    .action-card__foot{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border-subtle);margin-top:auto}
+    .action-card__cta{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--action-accent);display:inline-flex;align-items:center;gap:4px}
+    .action-card__cta svg{width:12px;height:12px;transition:transform 0.2s}
+    .action-card:hover .action-card__cta svg{transform:translateX(3px)}
+    .action-card__reward{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;background:rgba(252,179,0,0.08);border:1px solid rgba(252,179,0,0.22);color:var(--accent-gold);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.06em}
+    .action-card__reward svg{width:11px;height:11px}
+
+    .action-card[data-kind="poll"]{--action-accent:#818cf8;--action-bg:rgba(129,140,248,0.08);--action-border:rgba(129,140,248,0.22)}
+    .action-card[data-kind="quiz"]{--action-accent:#a855f7;--action-bg:rgba(168,85,247,0.08);--action-border:rgba(168,85,247,0.22)}
+    .action-card[data-kind="discuss"]{--action-accent:#22d3ee;--action-bg:rgba(34,211,238,0.08);--action-border:rgba(34,211,238,0.22)}
+    .action-card[data-kind="follow"]{--action-accent:#fb923c;--action-bg:rgba(251,146,60,0.08);--action-border:rgba(251,146,60,0.22)}
+    .action-card[data-kind="meet"]{--action-accent:#fb7185;--action-bg:rgba(251,113,133,0.08);--action-border:rgba(251,113,133,0.25)}
+
+    .action-card[data-kind="meet"][data-state="live"]{border-color:rgba(251,113,133,0.40);box-shadow:0 0 20px rgba(251,113,133,0.15)}
+    .action-card[data-kind="meet"][data-state="live"] .action-card__kind{animation:pulse-dot 1.6s ease-in-out infinite}
+
+    /* Add-action row for admins */
+    .add-action{
+      display:flex;align-items:center;gap:14px;padding:18px 22px;border-radius:14px;
+      background:rgba(252,179,0,0.03);border:1px dashed rgba(252,179,0,0.25);
+      color:var(--accent-gold);cursor:pointer;transition:all 0.25s;position:relative;
+    }
+    .add-action:hover{background:rgba(252,179,0,0.08);border-color:rgba(252,179,0,0.45)}
+    .add-action__icon{width:42px;height:42px;border-radius:11px;background:rgba(252,179,0,0.10);border:1px solid rgba(252,179,0,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .add-action__icon svg{width:18px;height:18px;color:var(--accent-gold)}
+    .add-action__title{font-family:var(--font-display);font-size:12px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-gold)}
+    .add-action__sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+
+    /* Type picker */
+    .type-picker{display:flex;gap:8px;flex-wrap:wrap}
+    .type-picker__btn{
+      display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;
+      background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);color:var(--text-primary);
+      font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+      cursor:pointer;transition:all 0.2s;
+    }
+    .type-picker__btn[data-kind="poll"]:hover{border-color:rgba(129,140,248,0.35);color:#818cf8}
+    .type-picker__btn[data-kind="quiz"]:hover{border-color:rgba(168,85,247,0.35);color:#a855f7}
+    .type-picker__btn[data-kind="discuss"]:hover{border-color:rgba(34,211,238,0.35);color:#22d3ee}
+    .type-picker__btn[data-kind="follow"]:hover{border-color:rgba(251,146,60,0.35);color:#fb923c}
+    .type-picker__btn[data-kind="meet"]{background:rgba(251,113,133,0.06);border-color:var(--meet-border);color:var(--meet-color)}
+    .type-picker__btn[data-kind="meet"]:hover{background:rgba(251,113,133,0.14);box-shadow:0 0 14px var(--meet-glow)}
+    .type-picker__btn--new{position:relative}
+    .type-picker__btn--new::after{content:'NEW';position:absolute;top:-7px;right:-7px;padding:1px 6px;border-radius:100px;font-size:8px;font-weight:800;letter-spacing:0.1em;background:var(--meet-color);color:#0a0a0a;box-shadow:0 0 8px var(--meet-glow)}
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo">SC</div>
+      <div class="u-col">
+        <span class="arena-topbar__title">SNU Code Club</span>
+        <span class="arena-topbar__handle">Spring 2026 Roadmap</span>
+      </div>
+      <span class="arena-topbar__status">Space · Active</span>
+    </div>
+    <div class="arena-topbar__actions">
+      <button class="hud-btn" aria-label="Members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></button>
+      <button class="hud-btn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-1.82-.33l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    </div>
+  </div>
+
+  <div class="page page--wide">
+    <div class="page-header">
+      <div class="page-header__main">
+        <span class="page-header__eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          FR-1 · Action Family
+        </span>
+        <h1 class="page-header__title page-header__title--meet">Meet, <strong>the family's fifth member</strong></h1>
+        <p class="page-header__sub">Space의 액션 목록에서 Poll · Quiz · Discussion · Follow 옆에 <strong style="color:var(--meet-color)">Meet</strong>가 자리잡습니다. 같은 permission 모델 (space admin만 생성), 같은 reward pipeline, 같은 notification 파이프라인을 공유합니다.</p>
+      </div>
+    </div>
+
+    <!-- Space hero (abbreviated) -->
+    <div class="space-hero">
+      <div class="space-hero__avatar">SC</div>
+      <div>
+        <div class="space-hero__title">Spring 2026 Roadmap</div>
+        <div class="space-hero__handle">SNU Code Club · @snu_code_club · 공개 (space active)</div>
+        <div class="space-hero__meta">
+          <span class="chip">7 participants</span>
+          <span class="chip">8 actions</span>
+          <span class="chip chip--gold">Paid tier</span>
+        </div>
+      </div>
+      <span class="pill pill--approved">Active</span>
+    </div>
+
+    <!-- Add new action -->
+    <div class="add-action">
+      <div class="add-action__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+      <div style="flex:1;min-width:0">
+        <div class="add-action__title">액션 추가 · Add action</div>
+        <div class="add-action__sub">이 space에 새 액션을 만듭니다. space admin 권한이 필요합니다.</div>
+      </div>
+      <div class="type-picker">
+        <button class="type-picker__btn" data-kind="poll">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+          Poll
+        </button>
+        <button class="type-picker__btn" data-kind="quiz">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Quiz
+        </button>
+        <button class="type-picker__btn" data-kind="discuss">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Discussion
+        </button>
+        <button class="type-picker__btn" data-kind="follow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          Follow
+        </button>
+        <a class="type-picker__btn type-picker__btn--new" data-kind="meet" href="create-meet.html" style="text-decoration:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          Meet
+        </a>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="type-filter">
+      <button class="type-filter__btn" aria-selected="true" data-k="all"><span class="type-filter__dot type-filter__dot--all"></span>All <span class="type-filter__count">8</span></button>
+      <button class="type-filter__btn" aria-selected="false" data-k="poll"><span class="type-filter__dot type-filter__dot--poll"></span>Poll <span class="type-filter__count">2</span></button>
+      <button class="type-filter__btn" aria-selected="false" data-k="quiz"><span class="type-filter__dot type-filter__dot--quiz"></span>Quiz <span class="type-filter__count">1</span></button>
+      <button class="type-filter__btn" aria-selected="false" data-k="discuss"><span class="type-filter__dot type-filter__dot--discuss"></span>Discussion <span class="type-filter__count">1</span></button>
+      <button class="type-filter__btn" aria-selected="false" data-k="follow"><span class="type-filter__dot type-filter__dot--follow"></span>Follow <span class="type-filter__count">1</span></button>
+      <button class="type-filter__btn" aria-selected="false" data-k="meet"><span class="type-filter__dot type-filter__dot--meet"></span>Meet <span class="type-filter__count">3</span></button>
+    </div>
+
+    <!-- Actions grid -->
+    <div class="action-grid" id="action-grid">
+
+      <!-- Meet · Live -->
+      <a class="action-card" data-kind="meet" data-state="live" href="live.html">
+        <div class="action-card__top">
+          <span class="action-card__kind">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            Meet · Live
+          </span>
+          <span class="rec-badge" style="font-size:9px">REC</span>
+        </div>
+        <h3 class="action-card__title">Mid-semester retrospective call</h3>
+        <p class="action-card__desc">Backend 팀 · @park_j 호스팅 중 · 스프린트 회고 + 다음 분기 계획 논의.</p>
+        <div class="action-card__specific">
+          <span class="action-card__stat"><strong>14</strong>/20 <span>joined</span></span>
+          <span class="action-card__stat">18:42 elapsed</span>
+          <span class="action-card__stat">Rec · on</span>
+        </div>
+        <div class="action-card__foot">
+          <span class="action-card__reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> 30</span>
+          <span class="action-card__cta">Join now <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </div>
+      </a>
+
+      <!-- Meet · Scheduled -->
+      <a class="action-card" data-kind="meet" data-state="scheduled" href="scheduled.html">
+        <div class="action-card__top">
+          <span class="action-card__kind">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            Meet · Scheduled
+          </span>
+          <span class="pill pill--pending" style="font-size:8px">D-3</span>
+        </div>
+        <h3 class="action-card__title">Guest lecture · Dr. Lee on Quantum Computing</h3>
+        <p class="action-card__desc">공개 세미나 · 2026-04-25 (금) 19:00 · 예상 90분 · 학과 교수 초청.</p>
+        <div class="action-card__specific">
+          <span class="action-card__stat">Apr 25 · 19:00</span>
+          <span class="action-card__stat">90 min</span>
+          <span class="action-card__stat"><strong>18</strong> interested</span>
+        </div>
+        <div class="action-card__foot">
+          <span class="action-card__reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> 50</span>
+          <span class="action-card__cta">Details <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </div>
+      </a>
+
+      <!-- Poll -->
+      <a class="action-card" data-kind="poll" href="#">
+        <div class="action-card__top">
+          <span class="action-card__kind">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+            Poll
+          </span>
+          <span class="chip" style="font-size:9px">Open</span>
+        </div>
+        <h3 class="action-card__title">다음 주 스프린트 주제 선택</h3>
+        <p class="action-card__desc">4개 옵션 · Infrastructure · Frontend · Mobile · Docs</p>
+        <div class="action-card__specific">
+          <span class="action-card__stat"><strong>12</strong>/20 <span>voted</span></span>
+          <span class="action-card__stat">2d left</span>
+        </div>
+        <div class="action-card__foot">
+          <span class="action-card__reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> 10</span>
+          <span class="action-card__cta">Vote <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </div>
+      </a>
+
+      <!-- Quiz -->
+      <a class="action-card" data-kind="quiz" href="#">
+        <div class="action-card__top">
+          <span class="action-card__kind">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Quiz
+          </span>
+          <span class="chip" style="font-size:9px">Open</span>
+        </div>
+        <h3 class="action-card__title">Rust Ownership 기본 개념</h3>
+        <p class="action-card__desc">5 문항 · 합격 기준 80% · 제한시간 10분</p>
+        <div class="action-card__specific">
+          <span class="action-card__stat"><strong>9</strong> passed · 3 failed</span>
+          <span class="action-card__stat">5 questions</span>
+        </div>
+        <div class="action-card__foot">
+          <span class="action-card__reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> 20</span>
+          <span class="action-card__cta">Take <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </div>
+      </a>
+
+      <!-- Discussion -->
+      <a class="action-card" data-kind="discuss" href="#">
+        <div class="action-card__top">
+          <span class="action-card__kind">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Discussion
+          </span>
+          <span class="chip" style="font-size:9px">8 comments</span>
+        </div>
+        <h3 class="action-card__title">오픈소스 기여 가이드라인 초안</h3>
+        <p class="action-card__desc">동아리 회칙 RULE 03 관련 구체적 실행 방안 — 멤버 의견 수렴 중.</p>
+        <div class="action-card__specific">
+          <span class="action-card__stat"><strong>8</strong> comments</span>
+          <span class="action-card__stat">5 unique authors</span>
+        </div>
+        <div class="action-card__foot">
+          <span class="action-card__reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> 5 / comment</span>
+          <span class="action-card__cta">Discuss <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </div>
+      </a>
+
+      <!-- Meet · Ended (past) -->
+      <a class="action-card" data-kind="meet" data-state="ended" href="ended.html">
+        <div class="action-card__top">
+          <span class="action-card__kind">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            Meet · Ended
+          </span>
+          <span class="chip" style="font-size:9px">Archive</span>
+        </div>
+        <h3 class="action-card__title">OpenSource Kickoff · Q1 planning</h3>
+        <p class="action-card__desc">Apr 10 · 62분 · 전사 분기 계획 회의 · 녹화 + 화자별 transcript 보관.</p>
+        <div class="action-card__specific">
+          <span class="action-card__stat">Apr 10 · 62 min</span>
+          <span class="action-card__stat"><strong>16</strong> attended</span>
+          <span class="action-card__stat">Transcript · 8.4k chars</span>
+        </div>
+        <div class="action-card__foot">
+          <span class="action-card__reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> Paid</span>
+          <span class="action-card__cta">Replay <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </div>
+      </a>
+
+      <!-- Follow -->
+      <a class="action-card" data-kind="follow" href="#">
+        <div class="action-card__top">
+          <span class="action-card__kind">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+            Follow
+          </span>
+          <span class="chip" style="font-size:9px">Open</span>
+        </div>
+        <h3 class="action-card__title">학과 교수진 팔로우</h3>
+        <p class="action-card__desc">추천 3명 · 완료 시 credits 지급</p>
+        <div class="action-card__specific">
+          <span class="action-card__stat"><strong>5</strong>/7 <span>completed</span></span>
+        </div>
+        <div class="action-card__foot">
+          <span class="action-card__reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> 3</span>
+          <span class="action-card__cta">Follow <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </div>
+      </a>
+
+      <!-- Poll 2 -->
+      <a class="action-card" data-kind="poll" href="#">
+        <div class="action-card__top">
+          <span class="action-card__kind">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+            Poll
+          </span>
+          <span class="chip" style="font-size:9px">Closed</span>
+        </div>
+        <h3 class="action-card__title">세미나 일정 선호 시간대</h3>
+        <p class="action-card__desc">수요일 저녁 vs 금요일 오후 vs 주말 오전</p>
+        <div class="action-card__specific">
+          <span class="action-card__stat"><strong>18</strong> voted</span>
+          <span class="action-card__stat">Result · 수요일 저녁</span>
+        </div>
+        <div class="action-card__foot">
+          <span class="action-card__reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> 10</span>
+          <span class="action-card__cta">View <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </div>
+      </a>
+
+    </div>
+
+    <div class="notice" style="background:var(--meet-bg);border-color:var(--meet-border)">
+      <div class="notice__icon" style="background:rgba(251,113,133,0.12);color:var(--meet-color)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>
+      <div class="notice__body">
+        <span class="notice__title" style="color:var(--meet-color)">Meet joins the action family</span>
+        <span class="notice__text">같은 permission 모델 (space admin만 생성), 같은 reward pipeline (host + attendee, 1분 이상), 같은 notification inbox/email 파이프라인을 재사용합니다. space가 종료되면 다른 action과 동일한 공개 규칙 — 로그인한 모든 Ratel 사용자가 녹화 / transcript / chat log에 접근할 수 있습니다.</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+</div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    const grid = document.getElementById('action-grid');
+    document.querySelectorAll('.type-filter__btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.type-filter__btn').forEach(b => b.setAttribute('aria-selected', 'false'));
+        btn.setAttribute('aria-selected', 'true');
+        const k = btn.dataset.k;
+        grid.querySelectorAll('.action-card').forEach(card => {
+          card.style.display = (k === 'all' || card.dataset.kind === k) ? '' : 'none';
+        });
+      });
+    });
+    document.querySelectorAll('.type-picker__btn').forEach(btn => {
+      if (btn.tagName === 'A') return; // already a link
+      btn.addEventListener('click', () => {
+        if (btn.dataset.kind === 'meet') window.location.href = 'create-meet.html';
+        else SubTeam.toast(btn.dataset.kind + ' 생성 (기존 플로우)');
+      });
+    });
+  });
+</script>
+</body>
+</html>
