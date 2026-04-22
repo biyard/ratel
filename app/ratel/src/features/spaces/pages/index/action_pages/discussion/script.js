@@ -123,10 +123,51 @@ function initCommentsPanelResizer() {
   document.addEventListener("touchcancel", onPointerUp);
 }
 
+// Measure each `.comment-text > .comment-item__text` against its 3-line
+// CSS clamp; flip `data-truncatable="true"` on the wrapper so the CSS
+// rule reveals the "Show more" button. ResizeObserver fires once when
+// `observe()` is called and again whenever the element's size changes
+// (line-clamp toggle on expand, viewport resize, font load). We skip
+// updates while expanded so the "접기" button stays visible.
+var commentTextResizeObserver = null;
+
+function getCommentTextObserver() {
+  if (commentTextResizeObserver) return commentTextResizeObserver;
+  commentTextResizeObserver = new ResizeObserver(function (entries) {
+    entries.forEach(function (entry) {
+      var textEl = entry.target;
+      var wrapper = textEl.parentElement;
+      if (!wrapper || !wrapper.classList.contains("comment-text")) return;
+      if (wrapper.dataset.expanded === "true") return;
+      // +1 tolerance for subpixel rounding.
+      var truncated = textEl.scrollHeight > textEl.clientHeight + 1;
+      if (truncated) {
+        wrapper.dataset.truncatable = "true";
+      } else {
+        wrapper.removeAttribute("data-truncatable");
+      }
+    });
+  });
+  return commentTextResizeObserver;
+}
+
+function bindCommentTextObservers() {
+  var nodes = document.querySelectorAll(
+    ".comment-text .comment-item__text:not([data-truncation-bound])"
+  );
+  if (nodes.length === 0) return;
+  var observer = getCommentTextObserver();
+  nodes.forEach(function (el) {
+    el.dataset.truncationBound = "true";
+    observer.observe(el);
+  });
+}
+
 function init() {
   initComposerAutogrow();
   initMentionFlip();
   initCommentsPanelResizer();
+  bindCommentTextObservers();
 }
 
 init();

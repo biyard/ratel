@@ -1246,11 +1246,52 @@ body.comments-panel-resizing {
 }
 /* The parent comment sits in its own highlighted block above the thread
    (matches YouTube/Reddit's mobile replies view where the comment you
-   tapped stays visible as context). */
+   tapped stays visible as context). Scrolls naturally with the replies
+   underneath; long bodies stay readable via the `더보기` toggle inside
+   `CommentText`. */
 .reply-thread__parent {
   padding: 4px 0 12px;
   border-bottom: 1px solid var(--border);
   background: var(--surface-raised);
+}
+
+/* `CommentText` wrapper. `data-expanded` is Dioxus-controlled (toggle
+   button); `data-truncatable` is JS-controlled (set after measuring
+   that the rendered text exceeds 3 lines). The expand button is hidden
+   unless `data-truncatable="true"` so short comments don't show a
+   useless toggle. */
+.comment-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+  width: 100%;
+}
+.comment-text[data-expanded="false"] .comment-item__text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.comment-item__expand {
+  margin-top: 2px;
+  padding: 2px 0;
+  background: transparent;
+  border: none;
+  color: var(--accent, #fcb300);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  align-self: flex-start;
+  display: none;
+}
+.comment-text[data-truncatable="true"] .comment-item__expand {
+  display: inline-block;
+}
+.comment-item__expand:hover {
+  text-decoration: underline;
 }
 .reply-thread__list {
   padding: 4px 0 0;

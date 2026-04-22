@@ -226,18 +226,7 @@ fn ReplyThreadView(
                                 span { class: "comment-item__name", "{parent.author_display_name}" }
                                 span { class: "comment-item__time", "{parent_time_ago}" }
                             }
-                            div { class: "comment-item__text",
-                                for segment in parse_mention_segments(&parent.content) {
-                                    match segment {
-                                        ContentSegment::Text(t) => rsx! {
-                                            span { "{t}" }
-                                        },
-                                        ContentSegment::Mention { display_name, .. } => rsx! {
-                                            span { class: "font-medium text-primary", "@{display_name}" }
-                                        },
-                                    }
-                                }
-                            }
+                            CommentText { content: parent.content.clone() }
                             CommentImageGrid { images: parent.images.clone() }
                             div { class: "comment-item__actions",
                                 button {
@@ -798,6 +787,48 @@ fn CommentComposer(
     }
 }
 
+/// Renders comment content with mention highlighting and a "Show more"
+/// toggle when the rendered text exceeds 3 visual lines. Used by the
+/// parent in `ReplyThreadView`, top-level `CommentItem`, and `ReplyItem`
+/// so the truncation behavior stays consistent everywhere.
+///
+/// Truncation is purely visual (CSS `-webkit-line-clamp: 3` when
+/// `data-expanded="false"`); JS measures `scrollHeight > clientHeight`
+/// and sets `data-truncatable="true"` to reveal the toggle button. This
+/// matches what the user actually sees regardless of viewport width or
+/// language, instead of a brittle character count.
+#[component]
+fn CommentText(content: String) -> Element {
+    let tr: DiscussionArenaTranslate = use_translate();
+    let mut expanded = use_signal(|| false);
+
+    rsx! {
+        div {
+            class: "comment-text",
+            "data-expanded": expanded(),
+            div { class: "comment-item__text",
+                for segment in parse_mention_segments(&content) {
+                    match segment {
+                        ContentSegment::Text(t) => rsx! {
+                            span { "{t}" }
+                        },
+                        ContentSegment::Mention { display_name, .. } => rsx! {
+                            span { class: "font-medium text-primary", "@{display_name}" }
+                        },
+                    }
+                }
+            }
+            // Always rendered; CSS hides it unless JS sets
+            // `data-truncatable="true"` on the wrapper after measuring.
+            button {
+                class: "comment-item__expand",
+                onclick: move |_| expanded.toggle(),
+                if expanded() { "{tr.show_less}" } else { "{tr.show_more}" }
+            }
+        }
+    }
+}
+
 #[component]
 fn CommentItem(
     comment: DiscussionCommentResponse,
@@ -1050,18 +1081,7 @@ fn CommentItem(
                             }
                         }
                     } else {
-                        div { class: "comment-item__text",
-                            for segment in parse_mention_segments(&effective_text) {
-                                match segment {
-                                    ContentSegment::Text(t) => rsx! {
-                                        span { "{t}" }
-                                    },
-                                    ContentSegment::Mention { display_name, .. } => rsx! {
-                                        span { class: "font-medium text-primary", "@{display_name}" }
-                                    },
-                                }
-                            }
-                        }
+                        CommentText { content: effective_text.clone() }
                         CommentImageGrid { images: comment.images.clone() }
                     }
                     if !editing() {
@@ -1324,18 +1344,7 @@ fn ReplyItem(
                         }
                     }
                 } else {
-                    div { class: "comment-item__text",
-                        for segment in parse_mention_segments(&effective_text) {
-                            match segment {
-                                ContentSegment::Text(t) => rsx! {
-                                    span { "{t}" }
-                                },
-                                ContentSegment::Mention { display_name, .. } => rsx! {
-                                    span { class: "font-medium text-primary", "@{display_name}" }
-                                },
-                            }
-                        }
-                    }
+                    CommentText { content: effective_text.clone() }
                     CommentImageGrid { images: reply.images.clone() }
                     div { class: "comment-item__actions",
                         button {
