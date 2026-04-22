@@ -40,7 +40,10 @@ pub fn can_execute_space_action(
         SpaceUserRole::Candidate => {
             let space_ok = matches!(space_status, Some(SpaceStatus::Open))
                 || (join_anytime && matches!(space_status, Some(SpaceStatus::Ongoing)));
-            space_ok && matches!(action_status, Some(SpaceActionStatus::Ongoing))
+            // Candidates only reach prerequisite actions (enforced by role_ok),
+            // and those must be runnable regardless of the action's Designing/
+            // Ongoing state — completing them is what clears Candidate → Participant.
+            space_ok && (prerequisite || matches!(action_status, Some(SpaceActionStatus::Ongoing)))
         }
         SpaceUserRole::Participant => {
             matches!(space_status, Some(SpaceStatus::Ongoing))

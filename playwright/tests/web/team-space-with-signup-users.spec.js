@@ -6,6 +6,7 @@ import {
   createAction,
   createTeamFromHome,
   createTeamPostFromHome,
+  dismissDevToast,
   fill,
   goto,
   getLocator,
@@ -146,6 +147,9 @@ async function participateAndCompletePoll(page, _spaceUrl, pollOptionText) {
   // Click participate button on the ArenaViewer
   await clickNoNav(page, { testId: "btn-participate" });
 
+  // Dev rebuild overlay can steal pointer events and block visibility checks.
+  await dismissDevToast(page);
+
   // PrerequisiteCard appears (no consent modal since no panels configured)
   await expect(page.getByTestId("card-prerequisite")).toBeVisible({
     timeout: 30000,
@@ -170,8 +174,11 @@ async function participateAndCompletePoll(page, _spaceUrl, pollOptionText) {
     timeout: 30000,
   });
 
-  // Select the specific poll option inside the overlay
-  await overlay.getByText(pollOptionText, { exact: true }).click();
+  // Select the specific poll option inside the overlay.
+  await overlay
+    .locator(".option-single", { hasText: pollOptionText })
+    .first()
+    .click();
 
   // Submit the poll using testId (avoids ambiguity with confirm dialog)
   await clickNoNav(page, { testId: "poll-submit" });
@@ -281,6 +288,9 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Blur the editor so the autosave debounce commits.
     await page.keyboard.press("Tab");
+
+    // Publish the discussion so it's visible to non-Creators as Ongoing.
+    await setStartDateToToday(page);
   });
 
   test("Create a poll action (prerequisite) in the space", async ({ page }) => {
@@ -302,6 +312,9 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Prerequisite is toggled via the ConfigCard tile (no more Settings tab).
     await togglePrerequisite(page);
+
+    // Publish the poll so it's visible as Ongoing.
+    await setStartDateToToday(page);
   });
 
   test("Create a quiz action in the space", async ({ page }) => {
@@ -338,6 +351,9 @@ test.describe.serial("Space with actions created by a team", () => {
       await page.waitForLoadState("load");
       await page.waitForTimeout(200);
     }
+
+    // Publish the quiz so it's visible as Ongoing.
+    await setStartDateToToday(page);
   });
 
   test("Create a follow action in the space", async ({ page }) => {
@@ -345,6 +361,9 @@ test.describe.serial("Space with actions created by a team", () => {
     // Arena follow creator: verify the ConfigCard renders (TargetsCard +
     // ConfigCard are inline, no more General tab).
     await getLocator(page, { testId: "page-card-config" });
+
+    // Publish the follow action so it's visible as Ongoing.
+    await setStartDateToToday(page);
   });
 
   // ─── 3. Creator: Publish space ────────────────────────────────────────────

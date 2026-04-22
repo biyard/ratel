@@ -172,8 +172,12 @@ impl SpacePoll {
         action_status: Option<&crate::features::spaces::pages::actions::types::SpaceActionStatus>,
         user_role: &SpaceUserRole,
     ) -> crate::features::spaces::pages::actions::actions::poll::Result<()> {
+        // Candidates must be able to respond to prerequisite polls — otherwise
+        // they cannot clear prerequisites and transition to Participant.
         match user_role {
-            SpaceUserRole::Creator | SpaceUserRole::Participant => {
+            SpaceUserRole::Creator
+            | SpaceUserRole::Participant
+            | SpaceUserRole::Candidate => {
                 if Self::status_from(action_status) == PollStatus::InProgress {
                     return Ok(());
                 }
