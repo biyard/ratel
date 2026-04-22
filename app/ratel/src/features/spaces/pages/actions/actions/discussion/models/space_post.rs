@@ -192,6 +192,7 @@ impl From<(SpacePost, SpaceUserRole)>
             quiz_passed: None,
             credits: 0,
             prerequisite: false,
+            comment_count: Some(post.comments),
             status: None,
             depends_on: Vec::new(),
             dependencies_met: true,

@@ -4,6 +4,9 @@ pub use add_comment::*;
 mod list_comments;
 pub use list_comments::*;
 
+mod get_comment;
+pub use get_comment::*;
+
 mod update_comment;
 pub use update_comment::*;
 

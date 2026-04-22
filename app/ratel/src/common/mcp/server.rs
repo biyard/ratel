@@ -527,6 +527,27 @@ impl RatelMcpServer {
     async fn list_teams(&self) -> McpResult {
         crate::features::social::controllers::get_user_teams_handler_mcp_handler(&self.mcp_secret).await
     }
+
+    // ── Notification inbox tools ────────────────────────────────────
+
+    #[rmcp::tool(
+        name = "list_inbox",
+        description = "List the current user's notification inbox, newest first. Supports optional `unread_only` filter and `bookmark` pagination."
+    )]
+    async fn list_inbox(
+        &self,
+        Parameters(req): Parameters<crate::features::notifications::controllers::list_inbox::ListInboxHandlerMcpRequest>,
+    ) -> McpResult {
+        crate::features::notifications::controllers::list_inbox::list_inbox_handler_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "get_unread_count",
+        description = "Get the count of unread notifications for the current user (capped at 100)."
+    )]
+    async fn get_unread_count(&self) -> McpResult {
+        crate::features::notifications::controllers::get_unread_count::get_unread_count_handler_mcp_handler(&self.mcp_secret).await
+    }
 }
 
 #[tool_handler]

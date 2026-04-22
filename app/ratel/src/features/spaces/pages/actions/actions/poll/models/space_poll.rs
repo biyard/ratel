@@ -133,6 +133,7 @@ impl From<(SpacePoll, bool)>
             user_participated,
             credits: 0,
             prerequisite: false,
+            comment_count: None,
             status: None,
             depends_on: Vec::new(),
             dependencies_met: true,

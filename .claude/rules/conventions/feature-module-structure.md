@@ -22,6 +22,7 @@ types/          - Custom types + error enums
 - **Shared primitives** → `app/ratel/src/common/components/<component_name>/mod.rs`
 - **Feature UI** → `app/ratel/src/features/<feature>/components/<name>/`
 - **Page-level views** → `app/ratel/src/features/<feature>/views/<page>/`
+- **Controller hook** → `app/ratel/src/features/<feature>/hooks/use_<feature>.rs` — one `UseFeatureName` struct bundling every signal, loader, query, and action. Components consume this hook, never the server `_handler` directly. See `conventions/hooks-and-actions.md`.
 
 ## HTML-First Pages with Sub-Components
 

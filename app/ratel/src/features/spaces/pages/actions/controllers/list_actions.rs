@@ -6,7 +6,7 @@ use crate::common::models::space::SpaceCommon;
 #[cfg(feature = "server")]
 use crate::features::auth::models::user::OptionalUser;
 #[cfg(feature = "server")]
-use crate::features::spaces::pages::actions::actions::discussion::SpacePostComment;
+use crate::features::spaces::pages::actions::actions::discussion::{SpacePost, SpacePostComment};
 #[cfg(feature = "server")]
 use crate::features::spaces::pages::actions::actions::follow::SpaceFollowUser;
 #[cfg(feature = "server")]
@@ -38,6 +38,41 @@ pub async fn list_actions(
             })?;
 
     let mut actions: Vec<SpaceActionSummary> = space_actions.into_iter().map(Into::into).collect();
+
+    // Enrich discussion actions with their current comment count.
+    let discussion_keys: Vec<(Partition, EntityType)> = actions
+        .iter()
+        .filter(|a| a.action_type == SpaceActionType::TopicDiscussion)
+        .map(|a| {
+            (
+                space_pk.clone(),
+                EntityType::SpacePost(a.action_id.clone()),
+            )
+        })
+        .collect();
+    if !discussion_keys.is_empty() {
+        let posts = SpacePost::batch_get(cli, discussion_keys).await.map_err(|e| {
+            crate::error!("failed to batch_get discussion posts: {e:?}");
+            SpaceActionError::ActionLoadFailed
+        })?;
+        let count_by_id: std::collections::HashMap<String, i64> = posts
+            .into_iter()
+            .filter_map(|p| match &p.sk {
+                EntityType::SpacePost(id) => Some((id.clone(), p.comments)),
+                _ => None,
+            })
+            .collect();
+        for action in actions.iter_mut() {
+            if action.action_type == SpaceActionType::TopicDiscussion {
+                action.comment_count = Some(
+                    count_by_id
+                        .get(&action.action_id)
+                        .copied()
+                        .unwrap_or(0),
+                );
+            }
+        }
+    }
 
     let current_user = user.0;
     for action in actions.iter_mut() {

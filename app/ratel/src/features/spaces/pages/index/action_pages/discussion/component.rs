@@ -4,27 +4,19 @@ use crate::common::components::mention_autocomplete::{
 };
 use crate::common::components::paste_image_uploader;
 use crate::common::components::CommentImageGrid;
-use crate::common::hooks::use_interval;
 use crate::common::utils::mention::{apply_mention_markup, parse_mention_segments, ContentSegment};
-use crate::features::spaces::pages::actions::actions::discussion::controllers::{
-    add_comment, delete_comment, get_discussion_detail, like_comment, list_comments, list_replies,
-    reply_comment, update_comment, AddCommentRequest, LikeCommentRequest, ReplyCommentRequest,
-    UpdateCommentRequest,
-};
+use crate::features::spaces::pages::actions::actions::discussion::controllers::list_replies;
 use crate::features::spaces::pages::actions::actions::discussion::{
     DiscussionCommentResponse, DiscussionStatus, SpacePostCommentTargetEntityType,
 };
 use crate::features::spaces::pages::index::action_pages::discussion::*;
 use crate::features::spaces::pages::index::action_pages::quiz::ActiveActionOverlaySignal;
 use crate::features::spaces::pages::index::*;
-use crate::features::spaces::space_common::controllers::list_space_members;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
 use crate::features::spaces::space_common::providers::use_space_context;
 
-// Programmatic value changes from Dioxus's signal binding don't fire the
-// `input` event, so the autogrow listener can't reset the stretched inline
-// height after a submit clears the composer. This bridge lets the Rust
-// side trigger the reset explicitly.
+// `value=""` from Rust doesn't fire `input`, so the JS autogrow listener
+// won't shrink the textarea on its own — call into JS to reset.
 #[cfg(not(feature = "server"))]
 use crate::common::wasm_bindgen::prelude::*;
 
@@ -40,11 +32,17 @@ fn reset_composer_height() {
     reset_composer_height_js();
 }
 
-/// Routable wrapper for `DiscussionArenaPage`. Registered on
-/// `/spaces/:space_id/discussions/:discussion_id` so external deep links
-/// (e.g. notification CTAs without a target comment) land directly on the
-/// discussion viewer. Arena-internal clicks continue to open the overlay via
-/// `ActiveActionOverlaySignal`; both paths render the same component.
+// Matches the 500px CSS breakpoint that switches the arena into the
+// bottom-sheet layout.
+#[cfg(not(feature = "server"))]
+fn is_arena_mobile_viewport() -> bool {
+    let width_px = web_sys::window()
+        .and_then(|w| w.inner_width().ok())
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
+    width_px > 0.0 && width_px <= 500.0
+}
+
 #[component]
 pub fn SpaceDiscussionPage(
     space_id: SpacePartition,
@@ -62,11 +60,9 @@ pub fn SpaceDiscussionPage(
     }
 }
 
-/// Variant of `SpaceDiscussionPage` that carries a `comment_id` path
-/// parameter. The id flows down to `DiscussionArenaPage`, whose deep-link
-/// effect scrolls to + highlights the matching `.comment-item`. Comment id
-/// is in the path (not query/fragment) because Dioxus Router strips both
-/// during URL normalization on hydration.
+/// Deep-link variant — `comment_id` drives the scroll-to + pulse effect
+/// in `DiscussionArenaPage`. Path param (not query/fragment) because
+/// Dioxus Router strips both on hydration.
 #[component]
 pub fn SpaceDiscussionCommentPage(
     space_id: SpacePartition,
@@ -85,28 +81,246 @@ pub fn SpaceDiscussionCommentPage(
     }
 }
 
+/// In-sheet thread view for a single parent comment + its replies.
+/// Reads parent/replies loaders from the controller so swapping into
+/// the thread is a background refresh, not a fresh mount that would
+/// suspend up to the overlay boundary.
+#[component]
+fn ReplyThreadView(
+    space_id: ReadSignal<SpacePartition>,
+    discussion_id: ReadSignal<SpacePostEntityType>,
+    on_close: EventHandler<()>,
+) -> Element {
+    let tr: DiscussionArenaTranslate = use_translate();
+    let role = use_space_role()();
+    let space = use_space()();
+
+    let arena = use_discussion_arena(space_id, discussion_id)?;
+    let UseDiscussionArena {
+        mut parent_loader,
+        mut replies_loader,
+        members,
+        mut mention_query_raw,
+        mut like_comment,
+        ..
+    } = arena;
+    let parent = parent_loader();
+
+    // Local mirror of the loader so optimistic mutations have a writable
+    // source. Re-synced when the loader's identity changes.
+    let mut replies: Signal<Vec<DiscussionCommentResponse>> =
+        use_signal(move || replies_loader().items);
+    use_effect(move || {
+        let fresh = replies_loader().items;
+        if replies.peek().len() != fresh.len() {
+            replies.set(fresh);
+        } else if !replies
+            .peek()
+            .iter()
+            .zip(fresh.iter())
+            .all(|(a, b)| a.sk == b.sk)
+        {
+            replies.set(fresh);
+        }
+    });
+
+    let is_space_open = space.status != Some(SpaceStatus::Finished);
+    let can_respond = matches!(role, SpaceUserRole::Creator | SpaceUserRole::Participant);
+    let can_comment = can_respond && is_space_open;
+
+    let mut reply_text = use_signal(String::new);
+    let mut reply_tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
+    let mut reply_pending_images: Signal<Vec<PendingImage>> = use_signal(Vec::new);
+
+    let on_mention_query_change = move |q: Option<String>| {
+        mention_query_raw.set(q);
+    };
+    let on_composer_focus = move || {
+        if mention_query_raw.peek().is_none() {
+            mention_query_raw.set(Some(String::new()));
+        }
+    };
+
+    let parent_sk_for_like = parent.sk.clone();
+    let on_parent_like = move |_| {
+        let sk_str = parent_sk_for_like.to_string();
+        let next = !arena.effective_liked(&parent_loader());
+        like_comment.call(sk_str, next);
+    };
+
+    // Read `parent_loader` inside so the memo rebuilds when the cached
+    // loader resolves with the real parent.
+    let reply_priority = use_memo(move || {
+        let p = parent_loader();
+        let parent_author_pk = p.author_pk.to_string();
+        let parent_content = p.content.clone();
+        let replies_vec = replies.read();
+        let tuples: Vec<(String, String)> = replies_vec
+            .iter()
+            .rev()
+            .map(|r| (r.author_pk.to_string(), r.content.clone()))
+            .collect();
+        let refs: Vec<(&str, &str)> = tuples
+            .iter()
+            .map(|(a, c)| (a.as_str(), c.as_str()))
+            .collect();
+        crate::common::utils::mention::build_mention_priority(
+            Some((parent_author_pk.as_str(), parent_content.as_str())),
+            &refs,
+        )
+    });
+    let reply_priority: ReadSignal<Vec<String>> = reply_priority.into();
+
+    let parent_sk_for_submit = parent.sk.to_string();
+    let mut reply_comment_action = arena.reply_comment;
+    let on_submit_reply = move |_| {
+        let raw_text = reply_text().trim().to_string();
+        let images: Vec<String> = reply_pending_images
+            .read()
+            .iter()
+            .filter_map(|img| img.remote_url.clone())
+            .collect();
+        if raw_text.is_empty() && images.is_empty() {
+            return;
+        }
+        let content = apply_mention_markup(&raw_text, &reply_tracked_mentions.read());
+        reply_comment_action.call(parent_sk_for_submit.clone(), content, images);
+        reply_text.set(String::new());
+        reply_tracked_mentions.set(Vec::new());
+        reply_pending_images.set(Vec::new());
+    };
+
+    let parent_time_ago = format_time_ago(parent.created_at);
+
+    rsx! {
+        div { class: "reply-thread", "data-testid": "reply-thread",
+            div { class: "reply-thread__header",
+                button {
+                    class: "reply-thread__icon-btn",
+                    "data-testid": "reply-thread-back",
+                    aria_label: "{tr.replies_back_aria}",
+                    onclick: move |_| on_close.call(()),
+                    svg {
+                        view_box: "0 0 24 24",
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_width: "2",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        polyline { points: "15 18 9 12 15 6" }
+                    }
+                }
+                span { class: "reply-thread__title", "{tr.replies_page_title}" }
+            }
+
+            div { class: "reply-thread__scroll",
+                div { class: "reply-thread__parent",
+                    div { class: "comment-item",
+                        img {
+                            class: "comment-item__avatar",
+                            src: "{parent.author_profile_url}",
+                            alt: "{parent.author_display_name}",
+                        }
+                        div { class: "comment-item__body",
+                            div { class: "comment-item__top",
+                                span { class: "comment-item__name", "{parent.author_display_name}" }
+                                span { class: "comment-item__time", "{parent_time_ago}" }
+                            }
+                            div { class: "comment-item__text",
+                                for segment in parse_mention_segments(&parent.content) {
+                                    match segment {
+                                        ContentSegment::Text(t) => rsx! {
+                                            span { "{t}" }
+                                        },
+                                        ContentSegment::Mention { display_name, .. } => rsx! {
+                                            span { class: "font-medium text-primary", "@{display_name}" }
+                                        },
+                                    }
+                                }
+                            }
+                            CommentImageGrid { images: parent.images.clone() }
+                            div { class: "comment-item__actions",
+                                button {
+                                    class: "comment-action",
+                                    "aria-pressed": arena.effective_liked(&parent),
+                                    disabled: like_comment.pending(),
+                                    onclick: on_parent_like,
+                                    svg {
+                                        view_box: "0 0 24 24",
+                                        fill: if arena.effective_liked(&parent) { "currentColor" } else { "none" },
+                                        stroke: "currentColor",
+                                        stroke_width: "2",
+                                        stroke_linecap: "round",
+                                        stroke_linejoin: "round",
+                                        path { d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" }
+                                    }
+                                    span { "{arena.effective_likes(&parent)}" }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                div { class: "reply-thread__list",
+                    for reply in replies().iter().filter(|r| !arena.is_deleted(r)) {
+                        ReplyItem {
+                            key: "{reply.sk}",
+                            reply: reply.clone(),
+                            space_id,
+                            discussion_id,
+                            replies,
+                            can_comment,
+                        }
+                    }
+                }
+            }
+
+            if can_comment {
+                div { class: "reply-thread__composer",
+                    CommentComposer {
+                        text: reply_text,
+                        tracked_mentions: reply_tracked_mentions,
+                        pending_images: reply_pending_images,
+                        members,
+                        on_submit: on_submit_reply,
+                        placeholder: tr.reply_placeholder.to_string(),
+                        compact: true,
+                        disabled: reply_text().trim().is_empty()
+                                                                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
+                        on_mention_query_change,
+                        on_composer_focus,
+                        priority_user_pks: reply_priority,
+                    }
+                }
+            }
+        }
+    }
+}
+
 #[component]
 pub fn DiscussionArenaPage(
     space_id: ReadSignal<SpacePartition>,
     discussion_id: ReadSignal<SpacePostEntityType>,
-    // When `Some`, `data-deep-link` is set on the matching `.comment-item`
-    // and the deep-link effect scrolls it into view. Sourced from the
-    // `Route::SpaceDiscussionCommentPage` path parameter; arena-overlay
-    // entries pass `None`.
     #[props(default)] target_comment_id: Option<String>,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
-    let mut toast = use_toast();
     let mut space_ctx = use_space_context();
     let role = use_space_role()();
     let space = use_space()();
 
-    let disc_loader = use_loader(move || {
-        get_discussion_detail(space_id(), discussion_id())
-    })?;
-    let disc = disc_loader();
+    let arena = use_discussion_arena(space_id, discussion_id)?;
+    let mut comments_loader = arena.comments_loader;
+    let mut polled_new = arena.polled_new;
+    let active_reply_thread = arena.active_reply_thread;
+    let mut sheet_expanded = arena.sheet_expanded;
+    let mut mention_query_raw = arena.mention_query_raw;
+    let members = arena.members;
+    let top_priority = arena.top_priority;
+
+    let disc = arena.disc_loader.clone()();
     let post = disc.post.clone();
     let space_action = disc.space_action.clone();
+    let comments_data = comments_loader();
 
     let status = crate::features::spaces::pages::actions::actions::discussion::SpacePost::status_from(
         space_action.status.as_ref(),
@@ -123,66 +337,8 @@ pub fn DiscussionArenaPage(
     );
     let can_comment = can_respond && can_execute && is_in_progress;
 
-    let mut comments_loader = use_loader(move || {
-        list_comments(space_id(), discussion_id(), None, None)
-    })?;
-    let comments_data = comments_loader();
-
-    // Short-polling: every 5s fetch comments newer than the most recent one we
-    // have already rendered and keep them in a local signal. Render appends
-    // them AFTER the loader's base page (deduped by `sk`) so existing items'
-    // positions never shift — avoids Dioxus reorder-induced DOM errors, scroll
-    // jumps, and focus loss.
-    let mut polled_new: Signal<Vec<DiscussionCommentResponse>> = use_signal(Vec::new);
-    let mut last_seen_at: Signal<i64> = use_signal(move || {
-        comments_loader()
-            .items
-            .iter()
-            .map(|c| c.created_at)
-            .max()
-            .unwrap_or_else(crate::common::utils::time::get_now_timestamp)
-    });
-    use_interval(5000, move || {
-        let since = last_seen_at();
-        tracing::info!("[arena discussion poll] tick since={}", since);
-        spawn(async move {
-            match list_comments(space_id(), discussion_id(), None, Some(since)).await {
-                Ok(resp) => {
-                    if resp.items.is_empty() {
-                        return;
-                    }
-                    let new_max = resp
-                        .items
-                        .iter()
-                        .map(|c| c.created_at)
-                        .max()
-                        .unwrap_or(since);
-                    polled_new.with_mut(|list| {
-                        // server returns newest-first; reverse so chronological
-                        // order (older → newer) is preserved when appending.
-                        for item in resp.items.into_iter().rev() {
-                            if !list.iter().any(|x| x.sk == item.sk) {
-                                list.push(item);
-                            }
-                        }
-                    });
-                    if new_max > since {
-                        last_seen_at.set(new_max);
-                    }
-                }
-                Err(e) => {
-                    tracing::debug!("arena comment poll failed: {:?}", e);
-                }
-            }
-        });
-    });
-
-    // Merge priority: the base page (returned by the loader, ordered by the
-    // server's canonical GSI) is the source of truth for content. Polled items
-    // that haven't yet been picked up by a restart are appended at the end.
-    // This way a loader restart after an edit immediately reflects the new
-    // content — the polled list may still carry the stale snapshot with the
-    // same sk, but base wins and the polled duplicate is filtered out.
+    // Base page wins over polled duplicates so a loader restart after
+    // edit/delete clobbers any stale snapshot lingering in the buffer.
     let comments: Vec<DiscussionCommentResponse> = {
         let polled = polled_new();
         let base = comments_data.items.clone();
@@ -197,24 +353,15 @@ pub fn DiscussionArenaPage(
             .collect()
     };
 
-    // Overlay is provided by `SpaceIndexPage` when this renders as an arena
-    // overlay. Under the standalone `Route::SpaceDiscussionPage`, there is no
-    // provider — `on_back` falls back to `nav.go_back()` in that case.
+    // `overlay_ctx` is only present when mounted as the arena overlay;
+    // `on_back` falls back to `nav.go_back()` for the standalone route.
     let overlay_ctx: Option<ActiveActionOverlaySignal> = try_consume_context();
     let nav = use_navigator();
 
-    // Path-based deep-link target. When set (via the
-    // `SpaceDiscussionCommentPage` route variant), the matching
-    // `.comment-item` gets `data-deep-link="true"` (drives the CSS pulse)
-    // and is scrolled into view once it appears in the DOM. Signal-driven
-    // so Dioxus's next diff doesn't clobber the attribute. Single success
-    // per mount via the `done` guard; retries on each loader tick until
-    // the target renders (handles unpolled comments).
     let deep_link_target: Signal<Option<String>> = use_signal(|| target_comment_id.clone());
     let mut deep_link_done: Signal<bool> = use_signal(|| target_comment_id.is_none());
-    // Call `use_effect` unconditionally so hook indices match between the
-    // server (SSR) and web (hydration) builds. Only the body touches
-    // browser APIs, so gate those with `#[cfg(feature = "web")]`.
+    // Hook indices must match between SSR and hydration; gate only the
+    // browser-API body, not the `use_effect` call itself.
     use_effect(move || {
         let _ = comments_loader();
         if deep_link_done() {
@@ -233,8 +380,6 @@ pub fn DiscussionArenaPage(
                 return;
             };
             let Some(el) = document.get_element_by_id(&target_id) else {
-                // Not rendered yet (unpolled, or a reply — Phase 2). Retry
-                // on next comments_loader tick.
                 return;
             };
             let opts = web_sys::ScrollIntoViewOptions::new();
@@ -253,23 +398,14 @@ pub fn DiscussionArenaPage(
     let mut tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
     let mut pending_images: Signal<Vec<PendingImage>> = use_signal(Vec::new);
 
-    let members_loader = use_loader(move || {
-        list_space_members(space_id(), None)
-    })?;
-    let members: Vec<MentionCandidate> = members_loader()
-        .items
-        .into_iter()
-        .map(|m| {
-            let pk: Partition = m.user_id.clone().into();
-            MentionCandidate {
-                user_pk: pk.to_string(),
-                display_name: m.display_name,
-                username: m.username,
-                profile_url: m.profile_url,
-            }
-        })
-        .collect();
-    let members = use_signal(|| members);
+    let on_mention_query_change = move |q: Option<String>| {
+        mention_query_raw.set(q);
+    };
+    let on_composer_focus = move || {
+        if mention_query_raw.peek().is_none() {
+            mention_query_raw.set(Some(String::new()));
+        }
+    };
 
     let status_text = match status {
         DiscussionStatus::InProgress => tr.status_in_progress.to_string(),
@@ -298,7 +434,8 @@ pub fn DiscussionArenaPage(
         }
     };
 
-    let on_submit_comment = move |_| async move {
+    let mut add_comment_action = arena.add_comment;
+    let mut on_submit_comment = move |_| {
         let raw_text = comment_text().trim().to_string();
         let images: Vec<String> = pending_images
             .read()
@@ -309,21 +446,11 @@ pub fn DiscussionArenaPage(
             return;
         }
         let content = apply_mention_markup(&raw_text, &tracked_mentions.read());
-        let req = AddCommentRequest { content, images };
-        match add_comment(space_id(), discussion_id(), req).await {
-            Ok(_) => {
-                comments_loader.restart();
-                space_ctx.actions.restart();
-                comment_text.set(String::new());
-                tracked_mentions.set(Vec::new());
-                pending_images.set(Vec::new());
-                toast.info(tr.comment_success);
-            }
-            Err(err) => {
-                tracing::error!("Failed to post comment: {:?}", err);
-                toast.error(err);
-            }
-        }
+        add_comment_action.call(content, images);
+        space_ctx.actions.restart();
+        comment_text.set(String::new());
+        tracked_mentions.set(Vec::new());
+        pending_images.set(Vec::new());
     };
 
     rsx! {
@@ -331,8 +458,6 @@ pub fn DiscussionArenaPage(
         document::Script { r#type: "module", src: asset!("./script.js") }
 
         div { class: "discussion-arena",
-
-            // ── Top bar ──────────────────────────────
             div { class: "topbar",
                 div { class: "topbar__left",
                     button {
@@ -357,7 +482,6 @@ pub fn DiscussionArenaPage(
                 }
             }
 
-            // ── Banners ──────────────────────────────
             if status == DiscussionStatus::Finish {
                 div { class: "disc-banner disc-banner--warning", "{tr.discussion_ended}" }
             }
@@ -365,14 +489,9 @@ pub fn DiscussionArenaPage(
                 div { class: "disc-banner disc-banner--info", "{tr.discussion_not_started}" }
             }
 
-            // ── Split Layout ─────────────────────────
             div { class: "discussion-layout",
-
-                // Left: Discussion Content
                 div { class: "discussion-main",
                     div { class: "discussion-main__inner",
-
-                        // Header
                         div { class: "disc-header",
                             span { class: "disc-header__type",
                                 svg {
@@ -406,7 +525,6 @@ pub fn DiscussionArenaPage(
                             }
                         }
 
-                        // Body
                         if !post.html_contents.is_empty() {
                             div { class: "disc-body",
                                 div {
@@ -416,7 +534,6 @@ pub fn DiscussionArenaPage(
                             }
                         }
 
-                        // Files
                         if !post.files.is_empty() {
                             div { class: "disc-files",
                                 span { class: "disc-files__label", "{tr.attachments_label}" }
@@ -452,10 +569,16 @@ pub fn DiscussionArenaPage(
                     }
                 }
 
-                // Right: Comments Panel (bottom sheet on mobile)
-                div { class: "comments-panel", id: "discussion-comments-sheet",
-                    // Sheet handle (visible on mobile only)
-                    div { class: "sheet-handle",
+                // Sheet handle expand state is Dioxus-owned (data-expanded)
+                // because the JS-owned class was being clobbered by panel
+                // re-renders.
+                div {
+                    class: "comments-panel",
+                    id: "discussion-comments-sheet",
+                    "data-expanded": sheet_expanded(),
+                    div {
+                        class: "sheet-handle",
+                        onclick: move |_| sheet_expanded.toggle(),
                         div { class: "sheet-handle__bar" }
                         div { class: "sheet-handle__row",
                             div { class: "sheet-handle__left",
@@ -474,40 +597,50 @@ pub fn DiscussionArenaPage(
                             }
                         }
                     }
-                    // Desktop header
-                    div { class: "comments-panel__header",
-                        span { class: "comments-panel__title", "{tr.comments_title}" }
-                        span { class: "comments-panel__count", "{post.comments}" }
-                    }
 
-                    // Comment Input
-                    if can_comment {
-                        CommentComposer {
-                            text: comment_text,
-                            tracked_mentions,
-                            pending_images,
-                            members,
-                            on_submit: move |_| on_submit_comment(()),
-                            placeholder: tr.comment_placeholder.to_string(),
-                            disabled: comment_text().trim().is_empty()
-                                                                                                                                                                                                                                                                && pending_images.read().is_empty(),
+                    if let Some(thread_id) = active_reply_thread() {
+                        ReplyThreadView {
+                            key: "{thread_id}",
+                            space_id,
+                            discussion_id,
+                            on_close: {
+                                let mut active = active_reply_thread;
+                                move |_| active.set(None)
+                            },
                         }
-                    }
+                    } else {
+                        div { class: "comments-panel__header",
+                            span { class: "comments-panel__title", "{tr.comments_title}" }
+                            span { class: "comments-panel__count", "{post.comments}" }
+                        }
 
-                    // Scrollable comments
-                    div { class: "comments-scroll",
-                        div { class: "comment-list",
-                            for comment in comments.iter() {
-                                CommentItem {
-                                    key: "{comment.sk}",
-                                    comment: comment.clone(),
-                                    space_id,
-                                    discussion_id,
-                                    can_comment,
-                                    members,
-                                    comments_loader,
-                                    polled_new,
-                                    deep_link_target,
+                        if can_comment {
+                            CommentComposer {
+                                text: comment_text,
+                                tracked_mentions,
+                                pending_images,
+                                members,
+                                on_submit: move |_| on_submit_comment(()),
+                                placeholder: tr.comment_placeholder.to_string(),
+                                disabled: comment_text().trim().is_empty()
+                                                                                                                                                                                                                                                                                                    && pending_images.read().is_empty(),
+                                on_mention_query_change,
+                                on_composer_focus,
+                                priority_user_pks: top_priority,
+                            }
+                        }
+
+                        div { class: "comments-scroll",
+                            div { class: "comment-list",
+                                for comment in comments.iter().filter(|c| !arena.is_deleted(c)) {
+                                    CommentItem {
+                                        key: "{comment.sk}",
+                                        comment: comment.clone(),
+                                        space_id,
+                                        discussion_id,
+                                        can_comment,
+                                        deep_link_target,
+                                    }
                                 }
                             }
                         }
@@ -518,14 +651,8 @@ pub fn DiscussionArenaPage(
     }
 }
 
-// ── Comment Composer ────────────────────────────────
-//
-// Shared input for the top-level comment box and the per-comment reply box.
-// Both flows need the same MentionAutocomplete, mention-insert handling and
-// submit semantics, so they live here once. DOM classes and structure are
-// intentionally left identical to the pre-refactor markup so CSS and
-// Playwright selectors (`.comment-input__*`, `.reply-input__*`) keep working
-// without changes.
+/// Shared composer for the top-level box and per-comment reply box.
+/// `compact` toggles the nested-context chrome via `data-compact`.
 #[component]
 fn CommentComposer(
     text: Signal<String>,
@@ -536,6 +663,9 @@ fn CommentComposer(
     placeholder: String,
     #[props(default)] compact: bool,
     disabled: bool,
+    #[props(default)] on_mention_query_change: EventHandler<Option<String>>,
+    #[props(default)] on_composer_focus: EventHandler<()>,
+    #[props(default)] priority_user_pks: ReadSignal<Vec<String>>,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
 
@@ -566,9 +696,7 @@ fn CommentComposer(
         }
     });
 
-    // Ctrl/Cmd+Enter submits; plain Enter and Shift+Enter fall through to
-    // the textarea's default newline. MentionAutocomplete skips modifier-
-    // qualified Enter/Tab so the dropdown doesn't swallow the submit key.
+    // Ctrl/Cmd+Enter submits; plain Enter falls through to default newline.
     let on_keydown = move |evt: KeyboardEvent| {
         if evt.key() == Key::Enter
             && (evt.modifiers().contains(Modifiers::CONTROL)
@@ -580,82 +708,66 @@ fn CommentComposer(
         }
     };
 
-    if compact {
-        rsx! {
-            div { class: "comment-composer-wrapper", onpaste: on_paste,
-                ImageUploadPreview { images: pending_images }
-                div { class: "reply-input",
-                    MentionAutocomplete { text, on_select: on_mention_select, members,
-                        textarea {
-                            class: "reply-input__field",
-                            placeholder: "{placeholder}",
-                            rows: "1",
-                            value: "{text}",
-                            oninput: move |e| {
-                                text.set(e.value());
-                            },
-                            onkeydown: on_keydown,
-                            // The reply composer mounts only when the user
-                            // opens it via the reply button, so auto-focusing
-                            // here matches the click intent without
-                            // hijacking focus on unrelated renders.
-                            onmounted: move |e: MountedEvent| async move {
+    // Keep `.comment-input__*` hook classes on the top-level variant so
+    // existing Playwright selectors keep resolving.
+    let textarea_class = if compact {
+        "reply-input__field"
+    } else {
+        "reply-input__field comment-input__textarea"
+    };
+    let send_class = if compact {
+        "reply-input__send"
+    } else {
+        "reply-input__send comment-input__submit"
+    };
+    rsx! {
+        div {
+            class: "comment-input",
+            "data-compact": compact,
+            onpaste: on_paste,
+            ImageUploadPreview { images: pending_images }
+            div { class: "reply-input",
+                MentionAutocomplete {
+                    text,
+                    on_select: on_mention_select,
+                    members,
+                    on_query_change: move |q| on_mention_query_change.call(q),
+                    priority_user_pks,
+                    textarea {
+                        class: "{textarea_class}",
+                        placeholder: "{placeholder}",
+                        rows: "1",
+                        value: "{text}",
+                        oninput: move |e| {
+                            text.set(e.value());
+                        },
+                        onkeydown: on_keydown,
+                        onfocus: move |_| on_composer_focus.call(()),
+                        onmounted: move |e: MountedEvent| async move {
+                            if compact {
                                 let _ = e.set_focus(true).await;
-                            },
-                        }
-                    }
-                    button {
-                        class: "reply-input__send",
-                        disabled,
-                        onclick: move |_| on_submit.call(()),
-                        svg {
-                            view_box: "0 0 24 24",
-                            fill: "none",
-                            stroke: "currentColor",
-                            stroke_width: "2",
-                            stroke_linecap: "round",
-                            stroke_linejoin: "round",
-                            line {
-                                x1: "22",
-                                y1: "2",
-                                x2: "11",
-                                y2: "13",
                             }
-                            polygon { points: "22 2 15 22 11 13 2 9 22 2" }
-                        }
+                        },
                     }
                 }
-            }
-        }
-    } else {
-        rsx! {
-            div { class: "comment-input", onpaste: on_paste,
-                div { class: "comment-input__wrapper",
-                    div { class: "comment-input__body",
-                        ImageUploadPreview { images: pending_images }
-                        MentionAutocomplete {
-                            text,
-                            on_select: on_mention_select,
-                            members,
-                            textarea {
-                                class: "comment-input__textarea",
-                                placeholder: "{placeholder}",
-                                rows: "2",
-                                value: "{text}",
-                                oninput: move |e| {
-                                    text.set(e.value());
-                                },
-                                onkeydown: on_keydown,
-                            }
+                button {
+                    class: "{send_class}",
+                    disabled,
+                    onclick: move |_| on_submit.call(()),
+                    svg {
+                        view_box: "0 0 24 24",
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_width: "2",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        line {
+                            x1: "22",
+                            y1: "2",
+                            x2: "11",
+                            y2: "13",
                         }
-                        div { class: "comment-input__footer",
-                            button {
-                                class: "comment-input__submit",
-                                disabled,
-                                onclick: move |_| on_submit.call(()),
-                                "{tr.post_btn}"
-                            }
-                        }
+                        polygon { points: "22 2 15 22 11 13 2 9 22 2" }
                     }
                 }
             }
@@ -663,22 +775,34 @@ fn CommentComposer(
     }
 }
 
-// ── Comment Item ────────────────────────────────────
 #[component]
 fn CommentItem(
     comment: DiscussionCommentResponse,
     space_id: ReadSignal<SpacePartition>,
     discussion_id: ReadSignal<SpacePostEntityType>,
     can_comment: bool,
-    members: ReadSignal<Vec<MentionCandidate>>,
-    comments_loader: Loader<ListResponse<DiscussionCommentResponse>>,
-    polled_new: Signal<Vec<DiscussionCommentResponse>>,
     deep_link_target: ReadSignal<Option<String>>,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
-    let mut comments_loader = comments_loader;
-    let mut polled_new = polled_new;
-    let mut toast = use_toast();
+
+    let arena = use_discussion_arena(space_id, discussion_id)?;
+    let UseDiscussionArena {
+        mut comments_loader,
+        mut polled_new,
+        members,
+        mut mention_query_raw,
+        mut active_reply_thread,
+        mut sheet_expanded,
+        ..
+    } = arena;
+    let on_mention_query_change = move |q: Option<String>| {
+        mention_query_raw.set(q);
+    };
+    let on_composer_focus = move || {
+        if mention_query_raw.peek().is_none() {
+            mention_query_raw.set(Some(String::new()));
+        }
+    };
 
     let mut show_replies = use_signal(|| false);
     let mut reply_text = use_signal(String::new);
@@ -690,24 +814,32 @@ fn CommentItem(
     let comment_sk = use_signal(|| comment.sk.clone());
     let reply_count = comment.replies;
 
-    // DOM id for deep-linking. Match the URL fragment format
-    // (`#<uuid>`) used by mention notification CTAs so the fragment
-    // scroller in `DiscussionArenaPage` can resolve us.
+    let parent_author_pk = comment.author_pk.to_string();
+    let parent_content = comment.content.clone();
+    let reply_priority = use_memo(move || {
+        let replies_vec = replies.read();
+        let tuples: Vec<(String, String)> = replies_vec
+            .iter()
+            .rev()
+            .map(|r| (r.author_pk.to_string(), r.content.clone()))
+            .collect();
+        let refs: Vec<(&str, &str)> = tuples
+            .iter()
+            .map(|(a, c)| (a.as_str(), c.as_str()))
+            .collect();
+        crate::common::utils::mention::build_mention_priority(
+            Some((parent_author_pk.as_str(), parent_content.as_str())),
+            &refs,
+        )
+    });
+    let reply_priority: ReadSignal<Vec<String>> = reply_priority.into();
+
+    // DOM id matches the deep-link URL fragment format.
     let comment_dom_id: String = SpacePostCommentEntityType::try_from(comment.sk.clone())
         .map(|e| e.0)
         .unwrap_or_else(|_| comment.sk.to_string());
 
-    // Optimistic like state — mirrors the reply path. Local signals own the
-    // visible state so toggling feels instant; server mutations reconcile
-    // via `polled_new` patch so a subsequent `comments_loader.restart()`
-    // (post/reply/delete) doesn't flip the indicator back to a stale value.
-    let mut liked = use_signal(|| comment.liked);
-    let mut likes = use_signal(|| comment.likes as i64);
-    let mut like_processing = use_signal(|| false);
-
-    // Ownership: only the author sees the edit/delete menu. Server-side
-    // update/delete controllers also verify `comment.author_pk == user.pk`,
-    // so the UI gate is a UX affordance, not a security boundary.
+    let mut like_comment_action = arena.like_comment;
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let is_own = user_ctx
         .read()
@@ -721,46 +853,26 @@ fn CommentItem(
     let mut edit_text = use_signal(|| comment.content.clone());
     let original_content = comment.content.clone();
 
-    let on_like = move |_| async move {
-        if like_processing() {
-            return;
-        }
-        let next = !liked();
-        let prev_liked = liked();
-        let prev_likes = likes();
-        liked.set(next);
-        likes.set((prev_likes + if next { 1 } else { -1 }).max(0));
-        like_processing.set(true);
-
-        let target_sk: SpacePostCommentTargetEntityType = comment_sk().into();
-        let req = LikeCommentRequest { like: next };
-        match like_comment(space_id(), discussion_id(), target_sk, req).await {
-            Ok(_) => {
-                // Patch any poll-cached copy so a later `comments_loader`
-                // merge doesn't fight the optimistic state. Base pages come
-                // fresh from the server after a restart, so they already
-                // reflect the new like count.
-                let sk = comment_sk();
-                polled_new.with_mut(|list| {
-                    for item in list.iter_mut() {
-                        if item.sk == sk {
-                            item.liked = next;
-                            item.likes = likes().max(0) as u64;
-                        }
-                    }
-                });
-            }
-            Err(err) => {
-                liked.set(prev_liked);
-                likes.set(prev_likes);
-                tracing::error!("Failed to toggle like: {:?}", err);
-                toast.error(err);
-            }
-        }
-        like_processing.set(false);
+    let comment_for_like = comment.clone();
+    let on_like = move |_| {
+        let sk_str = comment_for_like.sk.to_string();
+        let next = !arena.effective_liked(&comment_for_like);
+        like_comment_action.call(sk_str, next);
     };
 
     let on_toggle_replies = move |_| async move {
+        // Mobile swaps the panel into the in-sheet thread view instead
+        // of expanding inline. Force-expand so the swap is visible if
+        // the user tapped Reply on a collapsed sheet.
+        #[cfg(not(feature = "server"))]
+        if is_arena_mobile_viewport() {
+            let comment_id = SpacePostCommentEntityType::try_from(comment_sk())
+                .map(|e| e.0)
+                .unwrap_or_default();
+            active_reply_thread.set(Some(comment_id));
+            sheet_expanded.set(true);
+            return;
+        }
         let next = !show_replies();
         show_replies.set(next);
         if next && replies().is_empty() && reply_count > 0 {
@@ -777,6 +889,7 @@ fn CommentItem(
         }
     };
 
+    let mut reply_comment_action = arena.reply_comment;
     let on_submit_reply = move |_| async move {
         let raw_text = reply_text().trim().to_string();
         let images: Vec<String> = reply_pending_images
@@ -788,24 +901,18 @@ fn CommentItem(
             return;
         }
         let content = apply_mention_markup(&raw_text, &reply_tracked_mentions.read());
+        reply_comment_action
+            .call(comment_sk().to_string(), content, images)
+            .await;
+        reply_text.set(String::new());
+        reply_tracked_mentions.set(Vec::new());
+        reply_pending_images.set(Vec::new());
+        // Inline replies are a local fetch — pull the fresh page so the
+        // new reply shows up without waiting for a full loader restart.
         let comment_sk_entity: SpacePostCommentEntityType =
             comment_sk().try_into().unwrap_or_default();
-        let req = ReplyCommentRequest { content, images };
-        match reply_comment(space_id(), discussion_id(), comment_sk_entity, req).await {
-            Ok(new_reply) => {
-                let mut current = replies();
-                current.insert(0, new_reply);
-                replies.set(current);
-                reply_text.set(String::new());
-                reply_tracked_mentions.set(Vec::new());
-                reply_pending_images.set(Vec::new());
-                comments_loader.restart();
-                toast.info(tr.reply_success);
-            }
-            Err(err) => {
-                tracing::error!("Failed to post reply: {:?}", err);
-                toast.error(err);
-            }
+        if let Ok(data) = list_replies(space_id(), discussion_id(), comment_sk_entity, None).await {
+            replies.set(data.items);
         }
     };
 
@@ -820,62 +927,27 @@ fn CommentItem(
         editing.set(false);
     };
 
-    let on_edit_save = move |_| async move {
+    let mut update_comment_action = arena.update_comment;
+    let mut delete_comment_action = arena.delete_comment;
+    let on_edit_save = move |_| {
         let new_text = edit_text().trim().to_string();
         if new_text.is_empty() {
             return;
         }
-        let target_sk: SpacePostCommentTargetEntityType = comment_sk().into();
-        let req = UpdateCommentRequest {
-            content: new_text.clone(),
-            images: None,
-        };
-        match update_comment(space_id(), discussion_id(), target_sk, req).await {
-            Ok(_) => {
-                // Reflect the edit immediately: base (refreshed via restart)
-                // wins on content, but any stale poll-cached copy of the same
-                // sk would still override rendering for a frame if present.
-                // Patch the polled entry's content so nothing shows the old
-                // text even momentarily.
-                let sk = comment_sk();
-                polled_new.with_mut(|list| {
-                    for item in list.iter_mut() {
-                        if item.sk == sk {
-                            item.content = new_text.clone();
-                        }
-                    }
-                });
-                editing.set(false);
-                comments_loader.restart();
-                toast.info(tr.edit_success);
-            }
-            Err(err) => {
-                tracing::error!("Failed to update comment: {:?}", err);
-                toast.error(err);
-            }
-        }
+        editing.set(false);
+        update_comment_action.call(comment_sk().to_string(), new_text);
     };
 
-    let on_delete = move |_| async move {
-        let target_sk: SpacePostCommentTargetEntityType = comment_sk().into();
+    let on_delete = move |_| {
         menu_open.set(false);
-        match delete_comment(space_id(), discussion_id(), target_sk).await {
-            Ok(_) => {
-                // Scrub the polled cache — list_comments(since=...) only
-                // returns comments by created_at, so a deleted item is never
-                // re-observed by polling; without this, the stale copy would
-                // linger in the polled tail forever.
-                let sk = comment_sk();
-                polled_new.with_mut(|list| list.retain(|c| c.sk != sk));
-                comments_loader.restart();
-                toast.info(tr.delete_success);
-            }
-            Err(err) => {
-                tracing::error!("Failed to delete comment: {:?}", err);
-                toast.error(err);
-            }
-        }
+        delete_comment_action.call(comment_sk().to_string());
     };
+
+    // Hoist overlay reads — each render loop can hit 3+ sites per
+    // comment, and `effective_*` hashes `sk.to_string()` every call.
+    let liked = arena.effective_liked(&comment);
+    let likes_count = arena.effective_likes(&comment);
+    let effective_text = arena.effective_content(&comment);
 
     rsx! {
         div { class: "comment-entry",
@@ -956,7 +1028,7 @@ fn CommentItem(
                         }
                     } else {
                         div { class: "comment-item__text",
-                            for segment in parse_mention_segments(&comment.content) {
+                            for segment in parse_mention_segments(&effective_text) {
                                 match segment {
                                     ContentSegment::Text(t) => rsx! {
                                         span { "{t}" }
@@ -972,23 +1044,25 @@ fn CommentItem(
                     if !editing() {
                         div { class: "comment-item__actions",
                             button {
-                                class: if liked() { "comment-action comment-action--liked" } else { "comment-action" },
-                                disabled: like_processing(),
+                                class: "comment-action",
+                                "aria-pressed": liked,
+                                disabled: like_comment_action.pending(),
                                 onclick: on_like,
                                 svg {
                                     view_box: "0 0 24 24",
-                                    fill: if liked() { "currentColor" } else { "none" },
+                                    fill: if liked { "currentColor" } else { "none" },
                                     stroke: "currentColor",
                                     stroke_width: "2",
                                     stroke_linecap: "round",
                                     stroke_linejoin: "round",
                                     path { d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" }
                                 }
-                                span { "{likes()}" }
+                                span { "{likes_count}" }
                             }
                             if can_comment {
                                 button {
                                     class: "comment-action comment-action--reply",
+                                    "data-testid": "comment-action-reply",
                                     onclick: on_toggle_replies,
                                     svg {
                                         view_box: "0 0 24 24",
@@ -1007,7 +1081,6 @@ fn CommentItem(
                 }
             }
 
-            // Replies toggle
             if reply_count > 0 {
                 button { class: "reply-toggle", onclick: on_toggle_replies,
                     svg {
@@ -1027,23 +1100,20 @@ fn CommentItem(
                 }
             }
 
-            // Replies list
             if show_replies() {
                 div { class: "comment-replies",
-                    for reply in replies().iter() {
+                    for reply in replies().iter().filter(|r| !arena.is_deleted(r)) {
                         ReplyItem {
                             key: "{reply.sk}",
                             reply: reply.clone(),
                             space_id,
                             discussion_id,
                             replies,
-                            comments_loader,
                             can_comment,
                         }
                     }
                 }
 
-                // Reply input
                 if can_comment {
                     CommentComposer {
                         text: reply_text,
@@ -1054,15 +1124,16 @@ fn CommentItem(
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
                         disabled: reply_text().trim().is_empty()
-                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
+                        on_mention_query_change,
+                        on_composer_focus,
+                        priority_user_pks: reply_priority,
                     }
                 }
             }
         }
     }
 }
-
-// ── Helpers ──────────────────────────────────────────
 
 fn format_time_ago(timestamp: i64) -> String {
     let timestamp_millis = if timestamp.abs() < 1_000_000_000_000 {
@@ -1087,24 +1158,21 @@ fn format_time_ago(timestamp: i64) -> String {
     }
 }
 
-// ── Reply Item ──────────────────────────────────────
-// Same edit/delete affordances as CommentItem, but scoped to a single reply.
-// Replies live in a parent-owned `replies: Signal<Vec<...>>` (not the global
-// comments_loader), so mutations patch that signal locally and also kick
-// `comments_loader.restart()` to refresh the parent's `reply_count`.
+/// Reply variant of `CommentItem` for per-comment inline / thread-view
+/// lists. Mutations route through the controller actions.
 #[component]
 fn ReplyItem(
     reply: DiscussionCommentResponse,
     space_id: ReadSignal<SpacePartition>,
     discussion_id: ReadSignal<SpacePostEntityType>,
     replies: Signal<Vec<DiscussionCommentResponse>>,
-    comments_loader: Loader<ListResponse<DiscussionCommentResponse>>,
     can_comment: bool,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
-    let mut toast = use_toast();
-    let mut comments_loader = comments_loader;
     let mut replies = replies;
+
+    let arena = use_discussion_arena(space_id, discussion_id)?;
+    let mut like_comment_action = arena.like_comment;
 
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let is_own = user_ctx
@@ -1121,43 +1189,11 @@ fn ReplyItem(
     let original_content = reply.content.clone();
     let time_ago = format_time_ago(reply.created_at);
 
-    let mut liked = use_signal(|| reply.liked);
-    let mut likes = use_signal(|| reply.likes as i64);
-    let mut like_processing = use_signal(|| false);
-
-    let on_like = move |_| async move {
-        if like_processing() {
-            return;
-        }
-        let next = !liked();
-        let prev_liked = liked();
-        let prev_likes = likes();
-        liked.set(next);
-        likes.set((prev_likes + if next { 1 } else { -1 }).max(0));
-        like_processing.set(true);
-
-        let target_sk: SpacePostCommentTargetEntityType = reply_sk().into();
-        let req = LikeCommentRequest { like: next };
-        match like_comment(space_id(), discussion_id(), target_sk, req).await {
-            Ok(_) => {
-                let sk = reply_sk();
-                replies.with_mut(|list| {
-                    for r in list.iter_mut() {
-                        if r.sk == sk {
-                            r.liked = next;
-                            r.likes = likes().max(0) as u64;
-                        }
-                    }
-                });
-            }
-            Err(err) => {
-                liked.set(prev_liked);
-                likes.set(prev_likes);
-                tracing::error!("Failed to toggle reply like: {:?}", err);
-                toast.error(err);
-            }
-        }
-        like_processing.set(false);
+    let reply_for_like = reply.clone();
+    let on_like = move |_| {
+        let sk_str = reply_for_like.sk.to_string();
+        let next = !arena.effective_liked(&reply_for_like);
+        like_comment_action.call(sk_str, next);
     };
 
     let start_edit_content = original_content.clone();
@@ -1171,57 +1207,25 @@ fn ReplyItem(
         editing.set(false);
     };
 
-    let on_edit_save = move |_| async move {
+    let mut update_comment_action = arena.update_comment;
+    let mut delete_comment_action = arena.delete_comment;
+    let on_edit_save = move |_| {
         let new_text = edit_text().trim().to_string();
         if new_text.is_empty() {
             return;
         }
-        let target_sk: SpacePostCommentTargetEntityType = reply_sk().into();
-        let req = UpdateCommentRequest {
-            content: new_text.clone(),
-            images: None,
-        };
-        match update_comment(space_id(), discussion_id(), target_sk, req).await {
-            Ok(_) => {
-                // Patch the local replies list optimistically — replies are
-                // held in the parent's signal (not comments_loader), so
-                // there's no "base page" to fall back to here.
-                let sk = reply_sk();
-                replies.with_mut(|list| {
-                    for r in list.iter_mut() {
-                        if r.sk == sk {
-                            r.content = new_text.clone();
-                        }
-                    }
-                });
-                editing.set(false);
-                toast.info(tr.edit_success);
-            }
-            Err(err) => {
-                tracing::error!("Failed to update reply: {:?}", err);
-                toast.error(err);
-            }
-        }
+        editing.set(false);
+        update_comment_action.call(reply_sk().to_string(), new_text);
     };
 
-    let on_delete = move |_| async move {
-        let target_sk: SpacePostCommentTargetEntityType = reply_sk().into();
+    let on_delete = move |_| {
         menu_open.set(false);
-        match delete_comment(space_id(), discussion_id(), target_sk).await {
-            Ok(_) => {
-                let sk = reply_sk();
-                replies.with_mut(|list| list.retain(|r| r.sk != sk));
-                // Server decrements the parent's `replies` counter — refresh
-                // the base list so the "N replies" toggle shows the new count.
-                comments_loader.restart();
-                toast.info(tr.delete_success);
-            }
-            Err(err) => {
-                tracing::error!("Failed to delete reply: {:?}", err);
-                toast.error(err);
-            }
-        }
+        delete_comment_action.call(reply_sk().to_string());
     };
+
+    let liked = arena.effective_liked(&reply);
+    let likes_count = arena.effective_likes(&reply);
+    let effective_text = arena.effective_content(&reply);
 
     rsx! {
         div { class: "comment-item",
@@ -1298,7 +1302,7 @@ fn ReplyItem(
                     }
                 } else {
                     div { class: "comment-item__text",
-                        for segment in parse_mention_segments(&reply.content) {
+                        for segment in parse_mention_segments(&effective_text) {
                             match segment {
                                 ContentSegment::Text(t) => rsx! {
                                     span { "{t}" }
@@ -1312,19 +1316,20 @@ fn ReplyItem(
                     CommentImageGrid { images: reply.images.clone() }
                     div { class: "comment-item__actions",
                         button {
-                            class: if liked() { "comment-action comment-action--liked" } else { "comment-action" },
-                            disabled: like_processing(),
+                            class: "comment-action",
+                            "aria-pressed": liked,
+                            disabled: like_comment_action.pending(),
                             onclick: on_like,
                             svg {
                                 view_box: "0 0 24 24",
-                                fill: if liked() { "currentColor" } else { "none" },
+                                fill: if liked { "currentColor" } else { "none" },
                                 stroke: "currentColor",
                                 stroke_width: "2",
                                 stroke_linecap: "round",
                                 stroke_linejoin: "round",
                                 path { d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" }
                             }
-                            span { "{likes()}" }
+                            span { "{likes_count}" }
                         }
                     }
                 }
