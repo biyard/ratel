@@ -16,6 +16,13 @@ use crate::features::spaces::pages::actions::types::SpaceActionType;
 #[cfg(feature = "server")]
 use std::collections::HashMap;
 
+// Wider than the response page so the active-only filter has room to drop
+// Designing/Finished spaces before the last-activity sort.
+#[cfg(feature = "server")]
+const PARTICIPANT_FETCH_LIMIT: i32 = 30;
+#[cfg(feature = "server")]
+const RESPONSE_PAGE_LIMIT: usize = 10;
+
 #[get("/api/home/my-spaces?bookmark", user: User)]
 pub async fn list_my_home_spaces_handler(
     bookmark: Option<String>,
@@ -23,11 +30,19 @@ pub async fn list_my_home_spaces_handler(
     let conf = crate::common::config::ServerConfig::default();
     let cli = conf.dynamodb();
 
-    // SpaceParticipant GSI1 is sorted by created_at. Default scan_index_forward
-    // is already descending, so the most recently joined spaces come first.
-    let opts = SpaceParticipant::opt_with_bookmark(bookmark).limit(10);
+    let opts = SpaceParticipant::opt_with_bookmark(bookmark).limit(PARTICIPANT_FETCH_LIMIT);
     let (participants, next_bookmark) =
         SpaceParticipant::find_by_user(cli, &user.pk, opts).await?;
+
+    let activity_map: HashMap<String, i64> = participants
+        .iter()
+        .map(|sp| {
+            (
+                sp.space_pk.to_string(),
+                sp.last_activity_at.unwrap_or(sp.created_at),
+            )
+        })
+        .collect();
 
     let space_keys: Vec<(Partition, EntityType)> = participants
         .iter()
@@ -40,17 +55,18 @@ pub async fn list_my_home_spaces_handler(
         SpaceCommon::batch_get(cli, space_keys).await?
     };
 
-    // DynamoDB BatchGetItem does not preserve input order, so realign the
-    // fetched spaces with the participant query order (most-recent-first).
-    let mut by_pk: HashMap<String, SpaceCommon> = fetched
+    // BatchGetItem does not preserve input order, so resort explicitly
+    // by participant activity (with a join-time fallback for legacy rows).
+    let mut spaces: Vec<SpaceCommon> = fetched
         .into_iter()
-        .map(|s| (s.pk.to_string(), s))
+        .filter(|s| s.is_published() && s.is_active())
         .collect();
-    let spaces: Vec<SpaceCommon> = participants
-        .iter()
-        .filter_map(|sp| by_pk.remove(&sp.space_pk.to_string()))
-        .filter(|s| s.is_published())
-        .collect();
+    spaces.sort_by(|a, b| {
+        let a_act = activity_map.get(&a.pk.to_string()).copied().unwrap_or(0);
+        let b_act = activity_map.get(&b.pk.to_string()).copied().unwrap_or(0);
+        b_act.cmp(&a_act)
+    });
+    spaces.truncate(RESPONSE_PAGE_LIMIT);
 
     let post_keys: Vec<(Partition, EntityType)> = spaces
         .iter()
