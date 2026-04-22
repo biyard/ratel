@@ -1,6 +1,10 @@
 use crate::features::spaces::pages::actions::actions::poll::controllers::get_poll;
 use crate::features::spaces::pages::actions::actions::poll::types::Question;
 use crate::features::spaces::pages::actions::types::SpaceActionSummary;
+use crate::features::spaces::pages::index::action_dashboard::dependency_lock::{
+    resolve_outstanding_actions, DependencyLock,
+};
+use crate::features::spaces::pages::index::action_dashboard::LockedDependenciesPopup;
 use crate::features::spaces::pages::index::action_pages::quiz::{
     ActiveActionOverlay, ActiveActionOverlaySignal,
 };
@@ -12,12 +16,17 @@ pub fn PollActionCard(
     action: SpaceActionSummary,
     space_id: ReadSignal<SpacePartition>,
     #[props(default)] is_admin: bool,
+    #[props(default = DependencyLock::none())] lock: DependencyLock,
 ) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
     let lang = use_language();
     let nav = use_navigator();
     let mut overlay: ActiveActionOverlaySignal = use_context();
     let mut space_ctx = use_space_context();
+    let mut popup = use_popup();
+    let locked = lock.locked;
+    let all_actions = space_ctx.actions();
+    let outstanding = resolve_outstanding_actions(&action, &all_actions);
 
     let poll_id: SpacePollEntityType = action.action_id.clone().into();
     let poll_id = use_signal(move || poll_id);
@@ -43,10 +52,18 @@ pub fn PollActionCard(
             class: "quest-card quest-card--poll",
             "data-type": "poll",
             "data-prerequisite": action.prerequisite,
+            "data-locked": locked,
             "data-testid": "quest-card-{action.action_id}",
-            onclick: move |_| {
-                let pid: SpacePollEntityType = action.action_id.clone().into();
-                overlay.0.set(Some(ActiveActionOverlay::Poll(space_id(), pid)));
+            onclick: {
+                let outstanding = outstanding.clone();
+                move |_| {
+                    if locked {
+                        open_locked_popup(&mut popup, space_id(), outstanding.clone());
+                        return;
+                    }
+                    let pid: SpacePollEntityType = action.action_id.clone().into();
+                    overlay.0.set(Some(ActiveActionOverlay::Poll(space_id(), pid)));
+                }
             },
 
             svg {
@@ -78,6 +95,11 @@ pub fn PollActionCard(
                     "{action.action_type.translate(&lang())}"
                 }
                 div { class: "quest-card__top-actions",
+                    if locked {
+                        span { class: "quest-card__badge quest-card__badge--locked",
+                            "{tr.locked_label}"
+                        }
+                    }
                     if action.prerequisite {
                         span { class: "quest-card__badge quest-card__badge--prerequisite",
                             "{tr.required_label}"
@@ -139,7 +161,14 @@ pub fn PollActionCard(
                     }
                     "{action.credits} CR"
                 }
-                button { class: "quest-card__cta quest-card__cta--start", "{tr.vote_label}" }
+                if locked {
+                    button {
+                        class: "quest-card__cta quest-card__cta--locked",
+                        "{tr.locked_see_required}"
+                    }
+                } else {
+                    button { class: "quest-card__cta quest-card__cta--start", "{tr.vote_label}" }
+                }
             }
         }
     }
