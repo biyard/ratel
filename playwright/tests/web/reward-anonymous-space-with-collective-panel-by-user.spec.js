@@ -14,6 +14,7 @@ import {
   togglePrerequisite,
   setReward,
   commitAutosave,
+  setActionSchedule,
 } from "../utils";
 
 // This test requires the backend to be built with --features bypass
@@ -204,31 +205,13 @@ test.describe
       options: ["Yes", "No"],
     });
 
-    // Arena Schedule: native datetime-local inputs (schedule-start /
-    // schedule-end). Set start = tomorrow, end = day after tomorrow.
-    const fmt = (d) => {
-      const y = d.getFullYear();
-      const mo = String(d.getMonth() + 1).padStart(2, "0");
-      const da = String(d.getDate()).padStart(2, "0");
-      const h = String(d.getHours()).padStart(2, "0");
-      const mi = String(d.getMinutes()).padStart(2, "0");
-      return `${y}-${mo}-${da}T${h}:${mi}`;
-    };
-    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    const dayAfter = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
-
-    const startInput = page.getByTestId("schedule-start");
-    await expect(startInput).toBeVisible();
-    await startInput.fill(fmt(tomorrow));
-    await startInput.blur();
-    await page.waitForLoadState("load");
-
-    const endInput = page.getByTestId("schedule-end");
-    await expect(endInput).toBeVisible();
-    await endInput.fill(fmt(dayAfter));
-    await endInput.blur();
-    await page.waitForLoadState("load");
-    await page.waitForTimeout(500);
+    // Schedule: start = tomorrow, end = day after tomorrow. Driven via
+    // the server's update endpoint (the picker UI is no longer a native
+    // input — see `setActionSchedule` in utils.js).
+    await setActionSchedule(page, {
+      startedAt: Date.now() + 24 * 60 * 60 * 1000,
+      endedAt: Date.now() + 2 * 24 * 60 * 60 * 1000,
+    });
   });
 
   test("Configure Panel app with Age and Gender attributes", async ({

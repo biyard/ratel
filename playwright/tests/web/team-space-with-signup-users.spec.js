@@ -15,6 +15,7 @@ import {
   fillPollQuestion,
   togglePrerequisite,
   commitAutosave,
+  setActionSchedule,
 } from "../utils";
 
 // This test covers the full space lifecycle with three users:
@@ -48,48 +49,20 @@ const user2 = {
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 /**
- * Set the action start date+time to now via the Settings tab.
- * Clicks today in the date picker, then sets the hour to the current
- * hour (or one hour earlier) so the action is immediately In Progress.
- * Assumes the Settings tab is already active.
+ * Set the action start date to now and end date a week out. Drives the
+ * server's update endpoint directly (`setActionSchedule` in utils.js)
+ * instead of the picker UI — the arena editor migrated from native
+ * `<input type="datetime-local">` to a popover-based DateAndTimePicker
+ * that can't be filled with `.fill('YYYY-MM-DDTHH:MM')`. This helper's
+ * intent is to put the action In Progress so downstream tests can
+ * exercise it; the picker UI itself is not under test here.
  */
 async function setStartDateToToday(page) {
-  // Arena editor uses native datetime-local inputs for schedule. Fill both
-  // start and end — the server-side save (UpdatePollRequest::Time) early-
-  // returns unless both values are > 0, so filling start alone is a no-op.
-  //
-  // NOTE: the backend's `datetime_local_to_epoch_ms` parses the string with
-  // `and_utc()`, i.e. treats the datetime-local value as UTC. JS local
-  // getters (getFullYear/…/getHours) would produce a local-time string that
-  // the backend would then re-interpret as UTC — on a non-UTC machine
-  // (e.g. KST) this stores `started_at` hours in the future and the poll
-  // becomes invisible to non-Creator roles. Use UTC getters so the string
-  // matches the backend's UTC interpretation on any host timezone.
-  const fmt = (date) => {
-    const y = date.getUTCFullYear();
-    const m = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const d = String(date.getUTCDate()).padStart(2, "0");
-    const h = String(date.getUTCHours()).padStart(2, "0");
-    const mm = String(date.getUTCMinutes()).padStart(2, "0");
-    return `${y}-${m}-${d}T${h}:${mm}`;
-  };
-  const now = new Date();
-  const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-  const startInput = page.getByTestId("schedule-start");
-  await expect(startInput).toBeVisible();
-  await startInput.fill(fmt(now));
-  await startInput.blur();
-  await page.waitForLoadState("load");
-
-  const endInput = page.getByTestId("schedule-end");
-  await expect(endInput).toBeVisible();
-  await endInput.fill(fmt(endDate));
-  await endInput.blur();
-  await page.waitForLoadState("load");
-  // Small settle so the onblur server round-trip finishes before the caller
-  // navigates away.
-  await page.waitForTimeout(500);
+  const now = Date.now();
+  await setActionSchedule(page, {
+    startedAt: now,
+    endedAt: now + 7 * 24 * 60 * 60 * 1000,
+  });
 }
 
 /** Hide the floating action button that may overlap modal buttons. */
