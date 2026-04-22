@@ -35,7 +35,7 @@ pub fn QuizCreatorPage(
             ActionEditTopbar {
                 space_name: space.title.clone(),
                 action_type_label: tr.type_badge_label.to_string(),
-                action_type_key: "quiz".to_string(),
+                action_type_key: "quiz",
                 title,
                 on_title_change: move |_v: String| {},
                 editable_title: false,
@@ -51,7 +51,7 @@ pub fn QuizCreatorPage(
                 QuestionsCard {}
                 ConfigCard {}
             }
-            ActionEditFooter { current_page, total_pages: 3 }
+            ActionEditFooter { current_page, total_pages: 3, action_type_key: "quiz" }
         }
     }
 }

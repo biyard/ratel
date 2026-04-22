@@ -37,7 +37,7 @@ pub fn DiscussionActionEditorPage(
             ActionEditTopbar {
                 space_name: space.title.clone(),
                 action_type_label: tr.type_badge_label.to_string(),
-                action_type_key: "discussion".to_string(),
+                action_type_key: "discussion",
                 title,
                 on_title_change: move |_v: String| {},
                 editable_title: false,
@@ -52,7 +52,11 @@ pub fn DiscussionActionEditorPage(
                 ContentCard {}
                 ConfigCard {}
             }
-            ActionEditFooter { current_page, total_pages: 2 }
+            ActionEditFooter {
+                current_page,
+                total_pages: 2,
+                action_type_key: "discussion",
+            }
         }
     }
 }
