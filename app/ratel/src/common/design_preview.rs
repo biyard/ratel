@@ -1,11 +1,34 @@
 use crate::axum::{
     extract::Path as AxumPath,
-    http::StatusCode,
+    http::{header, StatusCode},
     native_routing::get,
     response::{Html, IntoResponse, Response},
     AxumRouter,
 };
 use std::path::{Path, PathBuf};
+
+/// Map a file extension to a Content-Type suitable for design-preview static assets.
+/// Returns `None` for unknown extensions (which the caller will reject).
+fn content_type_for(ext: &str) -> Option<&'static str> {
+    match ext {
+        "html" | "htm" => Some("text/html; charset=utf-8"),
+        "css" => Some("text/css; charset=utf-8"),
+        "js" | "mjs" => Some("application/javascript; charset=utf-8"),
+        "json" => Some("application/json; charset=utf-8"),
+        "svg" => Some("image/svg+xml"),
+        "png" => Some("image/png"),
+        "jpg" | "jpeg" => Some("image/jpeg"),
+        "gif" => Some("image/gif"),
+        "webp" => Some("image/webp"),
+        "ico" => Some("image/x-icon"),
+        "woff" => Some("font/woff"),
+        "woff2" => Some("font/woff2"),
+        "ttf" => Some("font/ttf"),
+        "otf" => Some("font/otf"),
+        "txt" | "md" => Some("text/plain; charset=utf-8"),
+        _ => None,
+    }
+}
 
 /// Merge design preview routes into the app router.
 /// - `GET /designs`             — lists top-level directories + root HTML files
@@ -61,20 +84,54 @@ async fn resolve_path(root: &Path, relative: &str) -> Response {
     }
 
     if canonical_target.is_dir() {
-        list_path(&canonical_target, &canonical_root).into_response()
-    } else if canonical_target.extension().and_then(|e| e.to_str()) == Some("html") {
+        return list_path(&canonical_target, &canonical_root).into_response();
+    }
+
+    let ext = canonical_target
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+
+    let Some(mime) = content_type_for(&ext) else {
+        return (
+            StatusCode::BAD_REQUEST,
+            Html(format!("Unsupported file type: .{ext}")),
+        )
+            .into_response();
+    };
+
+    // Text-based assets go through read_to_string so they serve as UTF-8 strings;
+    // binary assets (images, fonts) go through read() and are served as bytes.
+    let is_text = matches!(
+        ext.as_str(),
+        "html" | "htm" | "css" | "js" | "mjs" | "json" | "svg" | "txt" | "md"
+    );
+
+    if is_text {
         match tokio::fs::read_to_string(&canonical_target).await {
-            Ok(content) => (StatusCode::OK, Html(content)).into_response(),
+            Ok(content) => (
+                StatusCode::OK,
+                [(header::CONTENT_TYPE, mime)],
+                content,
+            )
+                .into_response(),
             Err(_) => {
                 (StatusCode::NOT_FOUND, Html("File not found".to_string())).into_response()
             }
         }
     } else {
-        (
-            StatusCode::BAD_REQUEST,
-            Html("Only HTML files are served".to_string()),
-        )
-            .into_response()
+        match tokio::fs::read(&canonical_target).await {
+            Ok(bytes) => (
+                StatusCode::OK,
+                [(header::CONTENT_TYPE, mime)],
+                bytes,
+            )
+                .into_response(),
+            Err(_) => {
+                (StatusCode::NOT_FOUND, Html("File not found".to_string())).into_response()
+            }
+        }
     }
 }
 
