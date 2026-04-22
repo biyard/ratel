@@ -88,6 +88,12 @@ pub async fn respond_quiz(
     // INSERT → handle_quiz_xp. See features/activity/services/handle_xp_event.rs.
     let _ = attempts; // kept above for aggregate side-effects only
     let _ = score;
+
+    crate::features::spaces::space_common::services::bump_participant_activity(
+        cli, &space_pk, &member.pk,
+    )
+    .await;
+
     Ok(())
 }
 
