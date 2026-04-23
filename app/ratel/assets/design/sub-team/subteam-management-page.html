@@ -175,40 +175,85 @@
     .queue-row__action--reject{background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.22);color:var(--accent-coral)}
     .queue-row__action--reject:hover{background:rgba(239,68,68,0.14)}
 
-    /* ── Broadcast composer ── */
-    .broadcast-grid{display:grid;grid-template-columns:minmax(0,1.25fr) 1fr;gap:14px;align-items:start}
-    @media (max-width:1000px){.broadcast-grid{grid-template-columns:1fr}}
-    .bc-composer{display:flex;flex-direction:column;gap:12px}
-    .bc-composer__title{width:100%;padding:14px 16px;border-radius:12px;background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);color:var(--text-primary);font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:0.02em;outline:none;transition:all 0.2s}
-    .bc-composer__title:focus{border-color:rgba(168,85,247,0.35);box-shadow:0 0 14px rgba(168,85,247,0.12)}
-    .bc-composer__body{width:100%;min-height:140px;padding:14px 16px;border-radius:12px;background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);color:var(--text-primary);font-family:var(--font-body);font-size:13px;line-height:1.7;outline:none;resize:vertical;transition:all 0.2s}
-    .bc-composer__body:focus{border-color:rgba(168,85,247,0.35);box-shadow:0 0 14px rgba(168,85,247,0.12)}
-    .bc-composer__kind{display:flex;gap:6px;padding:4px;border-radius:10px;background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);width:fit-content}
-    .bc-composer__kind-btn{padding:7px 14px;border-radius:7px;background:transparent;border:1px solid transparent;color:var(--text-muted);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
-    .bc-composer__kind-btn svg{width:12px;height:12px}
-    .bc-composer__kind-btn[aria-selected="true"]{background:rgba(168,85,247,0.10);color:var(--accent-purple);border-color:rgba(168,85,247,0.28)}
-    .bc-target{padding:14px 16px;border-radius:12px;background:rgba(168,85,247,0.04);border:1px solid rgba(168,85,247,0.22);display:flex;flex-direction:column;gap:8px}
-    .bc-target__title{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-purple);display:flex;justify-content:space-between;align-items:center}
-    .bc-target__count{font-family:var(--font-display);font-size:14px;font-weight:800;color:var(--accent-purple);letter-spacing:0.02em}
-    .bc-target__count small{font-size:10px;color:var(--text-muted);font-weight:500;letter-spacing:0.06em;text-transform:uppercase;margin-left:4px}
-    .bc-target__chips{display:flex;gap:6px;flex-wrap:wrap}
-    .bc-target__chip{display:inline-flex;padding:4px 10px;border-radius:100px;background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.22);color:var(--accent-purple);font-family:var(--font-display);font-size:10px;letter-spacing:0.04em}
-    .bc-composer__foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-    .bc-composer__chars{font-family:var(--font-display);font-size:10px;color:var(--text-dim);letter-spacing:0.08em}
+    /* ── Broadcast CTA (big prominent button) ── */
+    .bc-cta{
+      display:flex;align-items:center;gap:18px;
+      padding:22px 26px;border-radius:16px;
+      background:linear-gradient(135deg,rgba(168,85,247,0.15),rgba(168,85,247,0.04));
+      border:1px solid rgba(168,85,247,0.35);
+      color:var(--text-primary);text-decoration:none;
+      transition:all 0.25s;position:relative;overflow:hidden;
+      box-shadow:0 0 22px rgba(168,85,247,0.12);
+    }
+    .bc-cta::before{
+      content:'';position:absolute;top:0;right:0;width:220px;height:220px;
+      background:radial-gradient(circle,rgba(168,85,247,0.25),transparent 60%);
+      filter:blur(30px);pointer-events:none;
+    }
+    .bc-cta:hover{transform:translateY(-2px);border-color:rgba(168,85,247,0.55);box-shadow:0 10px 34px rgba(168,85,247,0.20)}
+    .bc-cta > *{position:relative;z-index:1}
+    .bc-cta__icon{
+      width:52px;height:52px;border-radius:13px;flex-shrink:0;
+      background:rgba(168,85,247,0.18);border:1px solid rgba(168,85,247,0.38);
+      color:#e9d5ff;display:flex;align-items:center;justify-content:center;
+      box-shadow:0 0 18px rgba(168,85,247,0.18);
+    }
+    .bc-cta__icon svg{width:22px;height:22px}
+    .bc-cta__body{flex:1;min-width:0}
+    .bc-cta__label{font-family:var(--font-display);font-size:15px;font-weight:800;color:#e9d5ff;letter-spacing:0.04em;margin-bottom:3px}
+    .bc-cta__sub{font-size:12px;color:var(--text-muted);line-height:1.55}
+    .bc-cta__sub strong{color:var(--accent-purple)}
+    .bc-cta__arrow{width:20px;height:20px;color:var(--accent-purple);flex-shrink:0;transition:transform 0.2s}
+    .bc-cta:hover .bc-cta__arrow{transform:translateX(4px)}
 
-    /* Broadcast history */
-    .bc-history{display:flex;flex-direction:column;gap:10px}
-    .bc-history__title{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px}
-    .bc-item{padding:12px 14px;border-radius:11px;background:rgba(6,6,14,0.45);border:1px solid var(--border-subtle);transition:all 0.2s}
-    .bc-item:hover{border-color:rgba(168,85,247,0.25)}
-    .bc-item__top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
-    .bc-item__kind{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;background:rgba(168,85,247,0.08);color:var(--accent-purple);border:1px solid rgba(168,85,247,0.20);font-family:var(--font-display);font-size:8px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase}
-    .bc-item__kind svg{width:10px;height:10px}
-    .bc-item__kind--space{background:rgba(110,237,216,0.08);color:var(--accent-teal);border-color:rgba(110,237,216,0.22)}
+    /* ── Draft row ── */
+    .draft-row{
+      display:grid;grid-template-columns:auto 1fr auto auto;gap:14px;align-items:center;
+      padding:14px 16px;border-radius:12px;
+      background:rgba(252,179,0,0.03);border:1px solid rgba(252,179,0,0.22);
+      transition:all 0.2s;
+    }
+    .draft-row:hover{border-color:rgba(252,179,0,0.38);background:rgba(252,179,0,0.06)}
+    .draft-row__dot{
+      width:8px;height:8px;border-radius:50%;background:var(--accent-gold);
+      box-shadow:0 0 8px var(--accent-gold);
+      animation:pulse-dot 1.8s ease-in-out infinite;
+    }
+    .draft-row__body{min-width:0}
+    .draft-row__title{font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:0.02em;margin-bottom:4px}
+    .draft-row__meta{display:flex;gap:12px;flex-wrap:wrap;font-family:var(--font-display);font-size:10px;color:var(--text-dim);letter-spacing:0.06em}
+    .draft-row__meta svg{width:11px;height:11px;vertical-align:-1px;margin-right:3px}
+    .draft-row__meta strong{color:var(--accent-gold);font-weight:700}
+    .draft-row__edit{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:8px 14px;border-radius:9px;text-decoration:none;
+      background:linear-gradient(135deg,rgba(252,179,0,0.22),rgba(252,179,0,0.10));
+      border:1px solid rgba(252,179,0,0.35);color:var(--accent-gold);
+      font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;
+      cursor:pointer;transition:all 0.2s;
+    }
+    .draft-row__edit:hover{background:linear-gradient(135deg,rgba(252,179,0,0.32),rgba(252,179,0,0.16));box-shadow:0 0 14px rgba(252,179,0,0.22);transform:translateY(-1px)}
+    .draft-row__edit svg{width:12px;height:12px}
+    .draft-row__del{
+      width:32px;height:32px;border-radius:8px;padding:0;
+      background:transparent;border:1px solid var(--border-subtle);
+      color:var(--text-dim);display:flex;align-items:center;justify-content:center;
+      cursor:pointer;transition:all 0.2s;
+    }
+    .draft-row__del:hover{border-color:rgba(239,68,68,0.30);color:var(--accent-coral);background:rgba(239,68,68,0.06)}
+    .draft-row__del svg{width:13px;height:13px}
+    @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+
+    /* ── Published broadcast item (read-only list) ── */
+    .bc-item{padding:14px 16px;border-radius:12px;background:rgba(6,6,14,0.45);border:1px solid var(--border-subtle);transition:all 0.2s}
+    .bc-item:hover{border-color:rgba(168,85,247,0.22)}
+    .bc-item__top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+    .bc-item__kind{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:6px;background:rgba(168,85,247,0.08);color:var(--accent-purple);border:1px solid rgba(168,85,247,0.22);font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase}
+    .bc-item__kind svg{width:11px;height:11px}
     .bc-item__time{font-family:var(--font-display);font-size:10px;color:var(--text-dim);letter-spacing:0.08em}
-    .bc-item__title-text{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--text-primary);line-height:1.35;margin-bottom:6px}
-    .bc-item__meta{display:flex;gap:10px;font-family:var(--font-display);font-size:9px;color:var(--text-dim);letter-spacing:0.08em}
-    .bc-item__meta svg{width:10px;height:10px;vertical-align:-1px;margin-right:3px}
+    .bc-item__title-text{font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text-primary);line-height:1.35;margin-bottom:8px;letter-spacing:0.02em}
+    .bc-item__meta{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--font-display);font-size:9.5px;color:var(--text-dim);letter-spacing:0.08em}
+    .bc-item__meta svg{width:11px;height:11px;vertical-align:-2px;margin-right:3px}
 
     /* ── Info note under roster ── */
     .inline-note{font-size:11px;color:var(--text-dim);padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle)}
@@ -630,119 +675,131 @@
     </div>
 
     <!-- ====== TAB: 전체 공지 관리 ====== -->
-    <div class="tab-panel" data-tab="broadcast">
+    <div class="tab-panel" data-tab="broadcast" id="broadcast">
+
+      <!-- CTA to compose a new broadcast -->
+      <a class="bc-cta" href="subteam-broadcast-compose.html">
+        <div class="bc-cta__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8v18l-18-8v-2z"/></svg>
+        </div>
+        <div class="bc-cta__body">
+          <div class="bc-cta__label">새 공지 작성 · Compose broadcast</div>
+          <div class="bc-cta__sub">SNU CS Dept.로 발행 · 12 동아리 × 342명에게 인앱 + 이메일 알림. 실제 구현은 <strong>new-post 컴포넌트 재활용</strong> (POSTING AS + VISIBILITY lock).</div>
+        </div>
+        <svg class="bc-cta__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+
+      <!-- Drafts -->
       <section class="card">
         <div class="card__head">
-          <h2 class="card__title" style="background:linear-gradient(135deg,#c084fc,#e9d5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">전체 공지 · Broadcast to all sub-teams</h2>
+          <h2 class="card__title" style="background:linear-gradient(135deg,#fcd34d,#facc15);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">작성 중 · Drafts</h2>
           <span class="card__dash"></span>
-          <span class="card__meta">Post / Space · 핀 고정</span>
+          <span class="card__meta" id="drafts-meta">2 drafts</span>
         </div>
 
-        <div class="broadcast-grid">
-          <!-- Composer -->
-          <div class="bc-composer">
-            <div class="bc-composer__kind" role="tablist">
-              <button class="bc-composer__kind-btn" role="tab" aria-selected="true" data-kind="post">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                포스트 공지
-              </button>
-              <button class="bc-composer__kind-btn" role="tab" aria-selected="false" data-kind="space">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
-                스페이스 링크
-              </button>
+        <div class="u-col u-gap-10" id="drafts-list">
+          <div class="draft-row">
+            <div class="draft-row__dot"></div>
+            <div class="draft-row__body">
+              <div class="draft-row__title">학과 세미나 참여 공고 (미공개)</div>
+              <div class="draft-row__meta">
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  3분 전 자동 저장 · 324자
+                </span>
+                <span>Posting as <strong>SNU CS Dept.</strong></span>
+                <span>Broadcast · 12팀</span>
+              </div>
             </div>
+            <a class="draft-row__edit" href="subteam-broadcast-compose.html">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+              수정하기
+            </a>
+            <button class="draft-row__del" aria-label="Delete">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
+          </div>
 
-            <input class="bc-composer__title" id="bc-title" placeholder="공지 제목" value="2026-1학기 동아리실 배정 안내" />
-            <textarea class="bc-composer__body" id="bc-body">안녕하세요, 학과사무실입니다.
-
-2026-1학기 동아리실 배정이 확정되었습니다. 각 동아리는 2026-04-28까지 대표자 서명을 제출해주세요.
-
-• 배정표: 첨부 링크 참조
-• 제출처: 학과사무실 (301동 102호) 또는 office@snu_cs.ac.kr
-• 문의: 김조교 (학과 조교, ext. 1234)</textarea>
-
-            <div class="bc-target">
-              <div class="bc-target__title">
-                <span>대상 · Target</span>
-                <span class="bc-target__count" id="bc-count">12 <small>동아리</small> · 342 <small>명</small></span>
+          <div class="draft-row">
+            <div class="draft-row__dot"></div>
+            <div class="draft-row__body">
+              <div class="draft-row__title">2026-1학기 동아리실 배정 안내 (최종 검토 중)</div>
+              <div class="draft-row__meta">
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  어제 · 628자 · 첨부 1
+                </span>
+                <span>Posting as <strong>SNU CS Dept.</strong></span>
+                <span>Broadcast · 12팀</span>
               </div>
-              <div class="bc-target__chips">
-                <span class="bc-target__chip">SNU Code Club</span>
-                <span class="bc-target__chip">Algorithm Lab</span>
-                <span class="bc-target__chip">AI &amp; ML Society</span>
-                <span class="bc-target__chip">Security Enthusiasts</span>
-                <span class="bc-target__chip">Game Dev Crew</span>
-                <span class="bc-target__chip">Data Engineering</span>
-                <span class="bc-target__chip">Web3 Circle</span>
-                <span class="bc-target__chip">+5</span>
-              </div>
-              <span class="inline-note" style="background:transparent;border:none;padding:0;font-size:11px">발행 시 각 하위팀 스페이스 최상단에 <strong style="color:var(--accent-purple)">핀 고정</strong>되고, 이전 공지는 자동으로 핀 해제됩니다.</span>
             </div>
+            <a class="draft-row__edit" href="subteam-broadcast-compose.html">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+              수정하기
+            </a>
+            <button class="draft-row__del" aria-label="Delete">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </section>
 
-            <div class="bc-composer__foot">
-              <span class="bc-composer__chars" id="bc-chars">0 chars</span>
-              <div class="u-flex u-gap-8">
-                <button class="btn btn--ghost btn--small">초안 저장</button>
-                <button class="btn btn--primary btn--small" id="bc-publish" style="background:linear-gradient(135deg,rgba(168,85,247,0.3),rgba(168,85,247,0.14));border-color:rgba(168,85,247,0.4);color:#e9d5ff">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                  12 동아리에 발행
-                </button>
-              </div>
+      <!-- Published -->
+      <section class="card">
+        <div class="card__head">
+          <h2 class="card__title" style="background:linear-gradient(135deg,#c084fc,#e9d5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">발행된 공지 · Published</h2>
+          <span class="card__dash"></span>
+          <span class="card__meta">최근 30일 · 3건</span>
+        </div>
+
+        <div class="u-col u-gap-10">
+          <div class="bc-item">
+            <div class="bc-item__top">
+              <span class="bc-item__kind">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24z"/></svg>
+                Pinned
+              </span>
+              <span class="bc-item__time">2일 전 · 2026-04-20</span>
+            </div>
+            <div class="bc-item__title-text">2026 신입생 오리엔테이션 일정 안내</div>
+            <div class="bc-item__meta">
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>12 동아리 · 342명 알림</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>8 댓글</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/></svg>342 views</span>
             </div>
           </div>
 
-          <!-- History -->
-          <aside class="bc-history">
-            <h3 class="bc-history__title">최근 발행 · Recent</h3>
-
-            <div class="bc-item">
-              <div class="bc-item__top">
-                <span class="bc-item__kind">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                  Post
-                </span>
-                <span class="bc-item__time">2일 전</span>
-              </div>
-              <div class="bc-item__title-text">📌 2026 신입생 오리엔테이션 일정 안내</div>
-              <div class="bc-item__meta">
-                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>12 동아리</span>
-                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>8 댓글</span>
-                <span>핀 고정</span>
-              </div>
+          <div class="bc-item">
+            <div class="bc-item__top">
+              <span class="bc-item__kind" style="background:rgba(255,255,255,0.04);color:var(--text-muted);border-color:var(--border-subtle)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+                Unpinned
+              </span>
+              <span class="bc-item__time">1주 전 · 2026-04-13</span>
             </div>
-
-            <div class="bc-item">
-              <div class="bc-item__top">
-                <span class="bc-item__kind bc-item__kind--space">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
-                  Space
-                </span>
-                <span class="bc-item__time">1주 전</span>
-              </div>
-              <div class="bc-item__title-text">📊 학과 공동 프로젝트 스페이스 · 상반기</div>
-              <div class="bc-item__meta">
-                <span>12 동아리</span>
-                <span>4 참여 공동 포스트</span>
-                <span>진행중</span>
-              </div>
+            <div class="bc-item__title-text">학술활동 지원금 신청 마감 D-7</div>
+            <div class="bc-item__meta">
+              <span>12 동아리 · 342명 알림</span>
+              <span>3 댓글</span>
+              <span>다음 공지 시 자동 unpin</span>
             </div>
+          </div>
 
-            <div class="bc-item">
-              <div class="bc-item__top">
-                <span class="bc-item__kind">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                  Post
-                </span>
-                <span class="bc-item__time">3주 전</span>
-              </div>
-              <div class="bc-item__title-text">학칙 v2 개정안 공지</div>
-              <div class="bc-item__meta">
-                <span>11 동아리</span>
-                <span>14 댓글</span>
-                <span>핀 해제됨</span>
-              </div>
+          <div class="bc-item">
+            <div class="bc-item__top">
+              <span class="bc-item__kind" style="background:rgba(255,255,255,0.04);color:var(--text-muted);border-color:var(--border-subtle)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+                Unpinned
+              </span>
+              <span class="bc-item__time">3주 전 · 2026-04-01</span>
             </div>
-          </aside>
+            <div class="bc-item__title-text">학칙 v2 개정안 공지</div>
+            <div class="bc-item__meta">
+              <span>11 동아리 · 318명 알림</span>
+              <span>14 댓글</span>
+              <span>Archived</span>
+            </div>
+          </div>
         </div>
       </section>
     </div>
@@ -1011,26 +1068,32 @@
       else SubTeam.toast(name + ' 반송됨 · 재제출 대기');
     });
 
-    // ── Broadcast composer
-    const bcTitle = document.getElementById('bc-title');
-    const bcBody = document.getElementById('bc-body');
-    const bcChars = document.getElementById('bc-chars');
-    function updateBcChars() { bcChars.textContent = (bcBody.value || '').length + ' chars'; }
-    bcBody.addEventListener('input', updateBcChars);
-    updateBcChars();
-    document.querySelectorAll('.bc-composer__kind-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.bc-composer__kind-btn').forEach(b => b.setAttribute('aria-selected','false'));
-        btn.setAttribute('aria-selected','true');
-        const kind = btn.dataset.kind;
-        bcBody.placeholder = kind === 'space' ? '스페이스 설명 · 참여 가이드…' : '공지 내용…';
-      });
+    // ── Broadcast drafts (delete)
+    const draftsList = document.getElementById('drafts-list');
+    const draftsMeta = document.getElementById('drafts-meta');
+    function refreshDraftsMeta() {
+      const count = draftsList.querySelectorAll('.draft-row').length;
+      draftsMeta.textContent = count + ' draft' + (count === 1 ? '' : 's');
+    }
+    draftsList.addEventListener('click', (e) => {
+      const del = e.target.closest('.draft-row__del');
+      if (!del) return;
+      const row = del.closest('.draft-row');
+      const title = row.querySelector('.draft-row__title').textContent;
+      row.style.opacity = '0';
+      setTimeout(() => { row.remove(); refreshDraftsMeta(); }, 180);
+      SubTeam.toast('초안 "' + title + '" 삭제됨', 'danger');
     });
-    document.getElementById('bc-publish').addEventListener('click', () => {
-      if (!bcTitle.value.trim()) { SubTeam.toast('공지 제목을 입력해주세요', 'danger'); return; }
-      if (!bcBody.value.trim()) { SubTeam.toast('공지 내용을 입력해주세요', 'danger'); return; }
-      SubTeam.toast('공지 발행 · 12 동아리 × 342명 알림 전송', 'success');
-    });
+    refreshDraftsMeta();
+
+    // ── Deep-link support: opening with #broadcast selects that tab
+    if (window.location.hash === '#broadcast') {
+      setTab('broadcast');
+      setTimeout(() => {
+        const el = document.querySelector('.tab-panel[data-tab="broadcast"]');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
 
     // ── Save settings
     document.getElementById('save-btn').addEventListener('click', () => {
