@@ -89,7 +89,6 @@ pub fn SpaceDiscussionCommentPage(
 fn ReplyThreadView(
     space_id: ReadSignal<SpacePartition>,
     discussion_id: ReadSignal<SpacePostEntityType>,
-    on_close: EventHandler<()>,
 ) -> Element {
     let tr: DiscussionArenaTranslate = use_translate();
     let role = use_space_role()();
@@ -194,25 +193,6 @@ fn ReplyThreadView(
 
     rsx! {
         div { class: "reply-thread", "data-testid": "reply-thread",
-            div { class: "reply-thread__header",
-                button {
-                    class: "reply-thread__icon-btn",
-                    "data-testid": "reply-thread-back",
-                    aria_label: "{tr.replies_back_aria}",
-                    onclick: move |_| on_close.call(()),
-                    svg {
-                        view_box: "0 0 24 24",
-                        fill: "none",
-                        stroke: "currentColor",
-                        stroke_width: "2",
-                        stroke_linecap: "round",
-                        stroke_linejoin: "round",
-                        polyline { points: "15 18 9 12 15 6" }
-                    }
-                }
-                span { class: "reply-thread__title", "{tr.replies_page_title}" }
-            }
-
             div { class: "reply-thread__scroll",
                 div { class: "reply-thread__parent",
                     div { class: "comment-item",
@@ -300,7 +280,7 @@ pub fn DiscussionArenaPage(
     let arena = use_discussion_arena(space_id, discussion_id)?;
     let mut comments_query = arena.comments_query;
     let polled_new = arena.polled_new;
-    let active_reply_thread = arena.active_reply_thread;
+    let mut active_reply_thread = arena.active_reply_thread;
     let mut sheet_expanded = arena.sheet_expanded;
     let mut mention_query_raw = arena.mention_query_raw;
     let members = arena.members;
@@ -583,19 +563,40 @@ pub fn DiscussionArenaPage(
                         onclick: move |_| sheet_expanded.toggle(),
                         div { class: "sheet-handle__bar" }
                         div { class: "sheet-handle__row",
-                            div { class: "sheet-handle__left",
-                                span { class: "sheet-handle__title", "{tr.comments_title}" }
-                                span { class: "sheet-handle__count", "{post.comments}" }
-                            }
-                            svg {
-                                class: "sheet-handle__chevron",
-                                view_box: "0 0 24 24",
-                                fill: "none",
-                                stroke: "currentColor",
-                                stroke_width: "2",
-                                stroke_linecap: "round",
-                                stroke_linejoin: "round",
-                                polyline { points: "6 9 12 15 18 9" }
+                            if active_reply_thread().is_some() {
+                                button {
+                                    class: "sheet-handle__back",
+                                    "data-testid": "reply-thread-back",
+                                    aria_label: "{tr.replies_back_aria}",
+                                    onclick: move |e| {
+                                        e.stop_propagation();
+                                        active_reply_thread.set(None);
+                                    },
+                                    svg {
+                                        view_box: "0 0 24 24",
+                                        fill: "none",
+                                        stroke: "currentColor",
+                                        stroke_width: "2",
+                                        stroke_linecap: "round",
+                                        stroke_linejoin: "round",
+                                        polyline { points: "15 18 9 12 15 6" }
+                                    }
+                                }
+                            } else {
+                                div { class: "sheet-handle__left",
+                                    span { class: "sheet-handle__title", "{tr.comments_title}" }
+                                    span { class: "sheet-handle__count", "{post.comments}" }
+                                }
+                                svg {
+                                    class: "sheet-handle__chevron",
+                                    view_box: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_width: "2",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    polyline { points: "6 9 12 15 18 9" }
+                                }
                             }
                         }
                     }
@@ -605,46 +606,44 @@ pub fn DiscussionArenaPage(
                             key: "{thread_id}",
                             space_id,
                             discussion_id,
-                            on_close: {
-                                let mut active = active_reply_thread;
-                                move |_| active.set(None)
-                            },
                         }
                     } else {
-                        div { class: "comments-panel__header",
-                            span { class: "comments-panel__title", "{tr.comments_title}" }
-                            span { class: "comments-panel__count", "{post.comments}" }
-                        }
-
-                        if can_comment {
-                            CommentComposer {
-                                text: comment_text,
-                                tracked_mentions,
-                                pending_images,
-                                members,
-                                on_submit: move |_| on_submit_comment(()),
-                                placeholder: tr.comment_placeholder.to_string(),
-                                disabled: comment_text().trim().is_empty()
-                                                                                                                                                                                                                                                                                                                                                                                                    && pending_images.read().is_empty(),
-                                on_mention_query_change,
-                                on_composer_focus,
-                                priority_user_pks: top_priority,
+                        div { class: "comments-panel__body",
+                            div { class: "comments-panel__header",
+                                span { class: "comments-panel__title", "{tr.comments_title}" }
+                                span { class: "comments-panel__count", "{post.comments}" }
                             }
-                        }
 
-                        div { class: "comments-scroll",
-                            div { class: "comment-list",
-                                for comment in comments().iter().filter(|c| !arena.is_deleted(c)) {
-                                    CommentItem {
-                                        key: "{comment.sk}",
-                                        comment: comment.clone(),
-                                        space_id,
-                                        discussion_id,
-                                        can_comment,
-                                        deep_link_target,
-                                    }
+                            if can_comment {
+                                CommentComposer {
+                                    text: comment_text,
+                                    tracked_mentions,
+                                    pending_images,
+                                    members,
+                                    on_submit: move |_| on_submit_comment(()),
+                                    placeholder: tr.comment_placeholder.to_string(),
+                                    disabled: comment_text().trim().is_empty()
+                                                                                                                                                                                                                                                                                                                                                                                                        && pending_images.read().is_empty(),
+                                    on_mention_query_change,
+                                    on_composer_focus,
+                                    priority_user_pks: top_priority,
                                 }
-                                {comments_query.more_element()}
+                            }
+
+                            div { class: "comments-scroll",
+                                div { class: "comment-list",
+                                    for comment in comments().iter().filter(|c| !arena.is_deleted(c)) {
+                                        CommentItem {
+                                            key: "{comment.sk}",
+                                            comment: comment.clone(),
+                                            space_id,
+                                            discussion_id,
+                                            can_comment,
+                                            deep_link_target,
+                                        }
+                                    }
+                                    {comments_query.more_element()}
+                                }
                             }
                         }
                     }
