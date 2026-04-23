@@ -30,7 +30,7 @@ translate! {
 
     price_chart_title: { en: "Price · last 30 days", ko: "가격 · 최근 30일" },
 
-    chart_points_tokens: { en: "Points & Token Conversion", ko: "포인트 & 토큰 환전" },
+    chart_points_tokens: { en: "Points", ko: "포인트" },
     chart_subtitle: { en: "Last 6 cycles · Monthly", ko: "최근 6 사이클 · 월별" },
     chart_legend_points: { en: "Points", ko: "포인트" },
     chart_legend_tokens: { en: "Tokens", ko: "토큰" },

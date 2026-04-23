@@ -9,6 +9,8 @@ pub struct SpaceAction {
     pub pk: CompositePartition<SpacePartition, String>,
     pub sk: EntityType,
 
+    // Internal GSI sort key; mirrors `created_at`. Not exposed in API/UI.
+    #[dynamo(prefix = "TS", index = "gsi1", sk)]
     pub created_at: i64,
     pub updated_at: i64,
 
@@ -19,10 +21,6 @@ pub struct SpaceAction {
     pub description: String,
     pub space_action_type: SpaceActionType,
     pub prerequisite: bool,
-
-    // Internal GSI sort key; mirrors `created_at`. Not exposed in API/UI.
-    #[dynamo(prefix = "TS", index = "gsi1", sk)]
-    pub started_at: i64,
 
     pub credits: u64,
     pub total_points: u64,
@@ -59,7 +57,6 @@ impl SpaceAction {
             prerequisite: false,
             created_at: now,
             updated_at: now,
-            started_at: now,
             credits: 0,
             total_points: 0,
             activity_score: 0,
