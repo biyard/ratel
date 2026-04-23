@@ -713,12 +713,18 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                             }
                             "{tr.tags}"
                         }
-                        div { class: "tag-input",
+                        div { class: "tag-input", "data-testid": "tag-input",
                             for tag in categories().iter().cloned() {
-                                span { class: "tag", key: "{tag}",
+                                span {
+                                    class: "tag",
+                                    key: "{tag}",
+                                    "data-testid": "post-tag",
+                                    "data-tag-value": "{tag}",
                                     "{tag}"
                                     button {
                                         class: "tag__x",
+                                        "data-testid": "post-tag-remove",
+                                        "data-tag-value": "{tag}",
                                         "aria-label": tr.remove_tag,
                                         onclick: {
                                             let t = tag.clone();
