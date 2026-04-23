@@ -84,6 +84,26 @@ impl InboxPayload {
                 comment.clone(),
                 None,
             ),
+            InboxPayload::SubTeamAnnouncementReceived {
+                parent_team_name,
+                title,
+                ..
+            } => (
+                tr.sub_team_ann_received_title
+                    .replace("{parent}", parent_team_name),
+                title.clone(),
+                None,
+            ),
+            InboxPayload::SubTeamAnnouncementComment {
+                commenter_name,
+                comment_preview,
+                ..
+            } => (
+                tr.sub_team_ann_comment_title
+                    .replace("{name}", commenter_name),
+                comment_preview.clone(),
+                None,
+            ),
         }
     }
 }

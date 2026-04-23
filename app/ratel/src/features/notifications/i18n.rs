@@ -29,4 +29,12 @@ translate! {
         en: "{parent} returned your sub-team application for revision",
         ko: "{parent}팀이 수정 요청과 함께 신청을 반송했습니다",
     },
+    sub_team_ann_received_title: {
+        en: "{parent} published an announcement",
+        ko: "{parent}팀이 공지를 게시했습니다",
+    },
+    sub_team_ann_comment_title: {
+        en: "{name} commented on your announcement",
+        ko: "{name}님이 공지에 댓글을 남겼습니다",
+    },
 }
