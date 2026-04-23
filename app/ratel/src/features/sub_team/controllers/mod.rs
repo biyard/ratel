@@ -1,3 +1,4 @@
+pub mod activity;
 pub mod announcements;
 pub mod applications_child;
 pub mod applications_parent;
@@ -6,6 +7,7 @@ pub mod docs;
 pub mod form_fields;
 pub mod settings;
 
+pub use activity::*;
 pub use announcements::*;
 pub use applications_child::*;
 pub use applications_parent::*;
