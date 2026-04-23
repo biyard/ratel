@@ -8,10 +8,6 @@ pub struct UpdateQuizRequest {
     #[serde(default)]
     pub description: Option<String>,
     #[serde(default)]
-    pub started_at: Option<i64>,
-    #[serde(default)]
-    pub ended_at: Option<i64>,
-    #[serde(default)]
     pub retry_count: Option<i64>,
     #[serde(default)]
     pub pass_score: Option<i64>,
@@ -25,14 +21,14 @@ pub struct UpdateQuizRequest {
 
 #[mcp_tool(
     name = "update_quiz",
-    description = "Update a quiz (title, description, time, questions, answers, pass_score, retry_count, files). Requires creator role."
+    description = "Update a quiz (title, description, questions, answers, pass_score, retry_count, files). Requires creator role."
 )]
 #[post("/api/spaces/{space_pk}/quizzes/{quiz_id}", role: SpaceUserRole)]
 pub async fn update_quiz(
     #[mcp(description = "Space partition key")] space_pk: SpacePartition,
     #[mcp(description = "Quiz sort key (e.g. 'SpaceQuiz#<uuid>')")] quiz_id: SpaceQuizEntityType,
     #[mcp(
-        description = "Quiz update data as JSON. Fields: title, description, started_at, ended_at, retry_count, pass_score, questions, answers, files (all optional)"
+        description = "Quiz update data as JSON. Fields: title, description, retry_count, pass_score, questions, answers, files (all optional)"
     )]
     req: UpdateQuizRequest,
 ) -> Result<String> {
@@ -46,9 +42,7 @@ pub async fn update_quiz(
     let existing = SpaceQuiz::get(cli, &space_pk, Some(quiz_sk.clone()))
         .await?
         .ok_or(Error::NotFound("Quiz not found".into()))?;
-    let updates_locked_fields = req.started_at.is_some()
-        || req.ended_at.is_some()
-        || req.retry_count.is_some()
+    let _updates_locked_fields = req.retry_count.is_some()
         || req.pass_score.is_some()
         || req.questions.is_some()
         || req.answers.is_some();
@@ -70,22 +64,6 @@ pub async fn update_quiz(
 
     if let Some(description) = req.description {
         action_updater = action_updater.with_description(description);
-        should_update_action = true;
-    }
-
-    if req.started_at.is_some() || req.ended_at.is_some() {
-        let started_at = req.started_at.ok_or(Error::SpaceActionQuiz(
-            SpaceActionQuizError::StartedAtRequired,
-        ))?;
-        let ended_at = req.ended_at.ok_or(Error::SpaceActionQuiz(
-            SpaceActionQuizError::EndedAtRequired,
-        ))?;
-        if started_at >= ended_at {
-            return Err(SpaceActionQuizError::InvalidTimeRange.into());
-        }
-        action_updater = action_updater
-            .with_started_at(started_at)
-            .with_ended_at(ended_at);
         should_update_action = true;
     }
 

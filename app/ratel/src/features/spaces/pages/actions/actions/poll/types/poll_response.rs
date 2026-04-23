@@ -5,8 +5,6 @@ pub struct PollResponse {
     pub sk: EntityType,
     pub created_at: i64,
     pub updated_at: i64,
-    pub started_at: i64,
-    pub ended_at: i64,
     #[serde(alias = "topic")]
     pub title: String,
     pub description: String,
@@ -27,8 +25,6 @@ impl From<SpacePoll> for PollResponse {
     fn from(poll: SpacePoll) -> Self {
         Self {
             sk: poll.sk.clone(),
-            started_at: poll.started_at,
-            ended_at: poll.ended_at,
             title: poll.title.clone(),
             description: poll.description.clone(),
             response_editable: poll.response_editable,
@@ -36,7 +32,7 @@ impl From<SpacePoll> for PollResponse {
             created_at: poll.created_at,
             updated_at: poll.updated_at,
             questions: poll.questions.clone(),
-            status: poll.status(),
+            status: PollStatus::NotStarted,
             default: poll.is_default_poll(),
             my_response: None,
             space_action: SpaceAction::default(),

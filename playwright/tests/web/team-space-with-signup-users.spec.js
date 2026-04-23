@@ -6,6 +6,7 @@ import {
   createAction,
   createTeamFromHome,
   createTeamPostFromHome,
+  dismissDevToast,
   fill,
   goto,
   getLocator,
@@ -48,48 +49,17 @@ const user2 = {
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 /**
- * Set the action start date+time to now via the Settings tab.
- * Clicks today in the date picker, then sets the hour to the current
- * hour (or one hour earlier) so the action is immediately In Progress.
- * Assumes the Settings tab is already active.
+ * Publish the action so it's immediately available to participants.
+ * Replaces the old "set started_at to now" flow — actions now flip
+ * Designing → Ongoing via the creator's explicit Publish button.
  */
 async function setStartDateToToday(page) {
-  // Arena editor uses native datetime-local inputs for schedule. Fill both
-  // start and end — the server-side save (UpdatePollRequest::Time) early-
-  // returns unless both values are > 0, so filling start alone is a no-op.
-  //
-  // NOTE: the backend's `datetime_local_to_epoch_ms` parses the string with
-  // `and_utc()`, i.e. treats the datetime-local value as UTC. JS local
-  // getters (getFullYear/…/getHours) would produce a local-time string that
-  // the backend would then re-interpret as UTC — on a non-UTC machine
-  // (e.g. KST) this stores `started_at` hours in the future and the poll
-  // becomes invisible to non-Creator roles. Use UTC getters so the string
-  // matches the backend's UTC interpretation on any host timezone.
-  const fmt = (date) => {
-    const y = date.getUTCFullYear();
-    const m = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const d = String(date.getUTCDate()).padStart(2, "0");
-    const h = String(date.getUTCHours()).padStart(2, "0");
-    const mm = String(date.getUTCMinutes()).padStart(2, "0");
-    return `${y}-${m}-${d}T${h}:${mm}`;
-  };
-  const now = new Date();
-  const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-  const startInput = page.getByTestId("schedule-start");
-  await expect(startInput).toBeVisible();
-  await startInput.fill(fmt(now));
-  await startInput.blur();
-  await page.waitForLoadState("load");
-
-  const endInput = page.getByTestId("schedule-end");
-  await expect(endInput).toBeVisible();
-  await endInput.fill(fmt(endDate));
-  await endInput.blur();
-  await page.waitForLoadState("load");
-  // Small settle so the onblur server round-trip finishes before the caller
-  // navigates away.
-  await page.waitForTimeout(500);
+  const publishBtn = page.getByTestId("action-publish");
+  if (await publishBtn.isVisible().catch(() => false)) {
+    await publishBtn.click();
+    await page.waitForLoadState("load");
+    await page.waitForTimeout(500);
+  }
 }
 
 /** Hide the floating action button that may overlap modal buttons. */
@@ -177,6 +147,9 @@ async function participateAndCompletePoll(page, _spaceUrl, pollOptionText) {
   // Click participate button on the ArenaViewer
   await clickNoNav(page, { testId: "btn-participate" });
 
+  // Dev rebuild overlay can steal pointer events and block visibility checks.
+  await dismissDevToast(page);
+
   // PrerequisiteCard appears (no consent modal since no panels configured)
   await expect(page.getByTestId("card-prerequisite")).toBeVisible({
     timeout: 30000,
@@ -201,8 +174,11 @@ async function participateAndCompletePoll(page, _spaceUrl, pollOptionText) {
     timeout: 30000,
   });
 
-  // Select the specific poll option inside the overlay
-  await overlay.getByText(pollOptionText, { exact: true }).click();
+  // Select the specific poll option inside the overlay.
+  await overlay
+    .locator(".option-single", { hasText: pollOptionText })
+    .first()
+    .click();
 
   // Submit the poll using testId (avoids ambiguity with confirm dialog)
   await clickNoNav(page, { testId: "poll-submit" });
@@ -312,6 +288,9 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Blur the editor so the autosave debounce commits.
     await page.keyboard.press("Tab");
+
+    // Publish the discussion so it's visible to non-Creators as Ongoing.
+    await setStartDateToToday(page);
   });
 
   test("Create a poll action (prerequisite) in the space", async ({ page }) => {
@@ -333,6 +312,9 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Prerequisite is toggled via the ConfigCard tile (no more Settings tab).
     await togglePrerequisite(page);
+
+    // Publish the poll so it's visible as Ongoing.
+    await setStartDateToToday(page);
   });
 
   test("Create a quiz action in the space", async ({ page }) => {
@@ -369,6 +351,9 @@ test.describe.serial("Space with actions created by a team", () => {
       await page.waitForLoadState("load");
       await page.waitForTimeout(200);
     }
+
+    // Publish the quiz so it's visible as Ongoing.
+    await setStartDateToToday(page);
   });
 
   test("Create a follow action in the space", async ({ page }) => {
@@ -376,6 +361,9 @@ test.describe.serial("Space with actions created by a team", () => {
     // Arena follow creator: verify the ConfigCard renders (TargetsCard +
     // ConfigCard are inline, no more General tab).
     await getLocator(page, { testId: "page-card-config" });
+
+    // Publish the follow action so it's visible as Ongoing.
+    await setStartDateToToday(page);
   });
 
   // ─── 3. Creator: Publish space ────────────────────────────────────────────

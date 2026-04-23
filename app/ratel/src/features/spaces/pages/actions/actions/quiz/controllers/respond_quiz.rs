@@ -41,18 +41,23 @@ pub async fn respond_quiz(
     .await?
     .ok_or(Error::SpaceActionNotFound)?;
 
+    let deps_met = crate::features::spaces::pages::actions::services::dependency::dependencies_met(
+        cli,
+        &space,
+        &space_action,
+        &member.pk,
+    )
+    .await?;
+
     if !crate::features::spaces::pages::actions::can_execute_space_action(
         role,
         space_action.prerequisite,
         space.status,
+        space_action.status.as_ref(),
+        deps_met,
         space.join_anytime,
     ) {
         return Err(SpaceActionQuizError::NotAvailableInCurrentStatus.into());
-    }
-
-    let now = crate::common::utils::time::get_now_timestamp_millis();
-    if now < space_action.started_at || now > space_action.ended_at {
-        return Err(SpaceActionQuizError::NotInProgress.into());
     }
 
     let answer_sk = EntityType::SpaceQuizAnswer(quiz_id.to_string());
