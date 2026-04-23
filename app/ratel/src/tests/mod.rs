@@ -4,6 +4,7 @@ pub mod setup;
 mod discussion_tests;
 mod inbox_helper_tests;
 mod mcp_tests;
+mod meet_action_tests;
 mod notifications_tests;
 mod post_tests;
 mod space_member_tests;
