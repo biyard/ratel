@@ -25,6 +25,9 @@ pub use settings_switch_button::{ActionEditMode, SettingsSwitchButton, use_actio
 mod action_edit_topbar;
 pub use action_edit_topbar::*;
 
+mod action_edit_footer;
+pub use action_edit_footer::*;
+
 mod action_status_control;
 pub use action_status_control::ActionStatusControl;
 
