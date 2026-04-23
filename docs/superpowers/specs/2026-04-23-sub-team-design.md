@@ -107,9 +107,10 @@ Captured at application submit; immutable.
 ```rust
 #[derive(DynamoEntity)]
 pub struct SubTeamDocAgreement {
-    pub pk: Partition,             // Partition::SubTeamApplication(application_id)
-    pub sk: EntityType,            // EntityType::SubTeamDocAgreement(doc_id)
-                                   //   — `#[dynamo(prefix = "STDAG")]`
+    pub pk: Partition,             // Partition::Team(parent_team_id)
+    pub sk: EntityType,            // EntityType::SubTeamDocAgreement(application_id, doc_id)
+                                   //   — serializes "SUB_TEAM_DOC_AGREEMENT#{app}#{doc}"
+                                   //   — PostCommentReply(String, String) precedent
     pub doc_id: String,
     pub doc_title_snapshot: String,
     pub body_hash_snapshot: String,
@@ -117,6 +118,8 @@ pub struct SubTeamDocAgreement {
     pub agreed_by: String,         // submitter user_pk
 }
 ```
+
+Using a composite-string sk avoids a new `Partition` variant; listing all agreements for one application is `find_by_pk(parent_team_pk, sk_prefix = "SUB_TEAM_DOC_AGREEMENT#{app_id}#")`.
 
 ### SubTeamFormField — parent's application form schema
 
