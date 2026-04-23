@@ -335,7 +335,10 @@ pub fn DiscussionArenaPage(
         true,
         space.join_anytime,
     );
-    let can_comment = can_respond && can_execute && is_in_progress;
+    // Creators can comment on their own discussion regardless of publish state
+    // (preview / authoring). Non-Creators require in-progress status.
+    let is_creator = matches!(role, SpaceUserRole::Creator);
+    let can_comment = can_respond && can_execute && (is_creator || is_in_progress);
 
     // Base page wins over polled duplicates so a loader restart after
     // edit/delete clobbers any stale snapshot lingering in the buffer.
