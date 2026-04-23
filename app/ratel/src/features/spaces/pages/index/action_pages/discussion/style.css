@@ -450,7 +450,11 @@
 
 /* ── Right: Comments Panel ─────────────────────── */
 .comments-panel {
+  /* Initial width = previous fixed 420px. JS may set a larger inline
+     `style.width` via the resizer drag; `min-width` keeps the panel
+     from shrinking below the design floor regardless. */
   width: 420px;
+  min-width: 420px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -459,6 +463,32 @@
   -webkit-backdrop-filter: blur(24px);
   border-left: 1px solid var(--border);
   overflow: hidden;
+}
+
+/* Drag handle between discussion-main and comments-panel. Visual chrome
+   is intentionally minimal — a hover/active accent strip is enough to
+   signal interactivity without competing with the comment content. */
+.comments-panel__resizer {
+  width: 6px;
+  flex-shrink: 0;
+  background: transparent;
+  cursor: col-resize;
+  position: relative;
+  z-index: 2;
+  transition: background 0.15s ease;
+  user-select: none;
+}
+.comments-panel__resizer:hover,
+.comments-panel__resizer.dragging {
+  background: var(--dark, rgba(252, 179, 0, 0.35))
+    var(--light, rgba(252, 179, 0, 0.45));
+}
+/* While dragging, suppress text selection and force the col-resize
+   cursor across the whole document so the cursor doesn't flicker when
+   the pointer leaves the 6px hit-area. */
+body.comments-panel-resizing {
+  cursor: col-resize !important;
+  user-select: none !important;
 }
 
 .comments-panel__header {
@@ -489,83 +519,26 @@
 }
 
 /* ── Comment Input ─────────────────────────────── */
-.comment-input {
+/* The top-level composer (at the top of the comments panel) always
+   gets the padded + divider chrome. The compact reply composer only
+   inherits the same chrome on mobile — on desktop it stays bare so the
+   `.reply-input` pill appears inline under the comment without an
+   extra panel frame (matching the pre-unification look). */
+.comment-input:not([data-compact="true"]) {
   padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-}
-.comment-input__wrapper {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-}
-.comment-input__avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid var(--border);
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-.comment-input__body {
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  border-bottom: 1px solid var(--border);
 }
-.comment-input__textarea {
-  /* 140px leaves room for panel header + composer padding + submit button. */
-  width: 100%;
-  min-height: 48px;
-  max-height: calc(100vh - 140px);
-  resize: none;
-  overflow-y: auto;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface-raised);
-  color: var(--text);
-  font-family: "Outfit", sans-serif;
-  font-size: 13px;
-  line-height: 1.5;
-  padding: 10px 12px;
-  outline: none;
-  transition: border-color 0.25s;
-}
-.comment-input__textarea:focus {
-  border-color: var(--discuss-border);
-}
-.comment-input__textarea::placeholder {
-  color: var(--text-dim);
-}
-.comment-input__footer {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-}
-.comment-input__submit {
-  padding: 6px 14px;
-  border-radius: 8px;
-  border: none;
-  background: linear-gradient(135deg, var(--discuss-color), #06b6d4);
-  color: #0a0a0a;
-  font-family: "Orbitron", sans-serif;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-.comment-input__submit:hover {
-  box-shadow: 0 2px 16px var(--discuss-glow);
-  transform: translateY(-1px);
-}
-.comment-input__submit:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+/* Kill the reply-box offsets when the top-level wrapper provides its
+   own positioning — those margins only make sense for the bare inline
+   reply pill nested under a parent comment on desktop. */
+.comment-input:not([data-compact="true"]) > .reply-input {
+  margin-left: 0;
+  margin-right: 0;
+  margin-top: 0;
 }
 
 /* ── Comments Scroll Area ──────────────────────── */
@@ -835,10 +808,12 @@
   width: 13px;
   height: 13px;
 }
-.comment-action--liked {
+.comment-action--liked,
+.comment-action[aria-pressed="true"] {
   color: #f43f5e;
 }
-.comment-action--liked svg {
+.comment-action--liked svg,
+.comment-action[aria-pressed="true"] svg {
   fill: #f43f5e;
   stroke: #f43f5e;
 }
@@ -1033,6 +1008,11 @@
     grid-template-columns: 1fr;
   }
 
+  /* Resizer is irrelevant in bottom-sheet layout. */
+  .comments-panel__resizer {
+    display: none;
+  }
+
   /* Convert comments-panel to bottom sheet */
   .comments-panel {
     position: fixed;
@@ -1040,7 +1020,12 @@
     left: 0;
     right: 0;
     z-index: 100;
-    width: 100%;
+    /* `!important` overrides any inline `style.width` set by the
+       desktop drag-resizer when the user shrinks the viewport across
+       the breakpoint. `min-width` reset lets the sheet follow small
+       phone widths (e.g. 375px). */
+    width: 100% !important;
+    min-width: 0 !important;
     max-height: 85vh;
     border-left: none;
     border-top: 1px solid var(--border);
@@ -1056,7 +1041,7 @@
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
-  .comments-panel.expanded {
+  .comments-panel[data-expanded="true"] {
     transform: translateY(0);
   }
   .comments-panel.dragging {
@@ -1116,7 +1101,7 @@
     color: var(--text-muted);
     transition: transform 0.35s ease;
   }
-  .comments-panel.expanded .sheet-handle__chevron {
+  .comments-panel[data-expanded="true"] .sheet-handle__chevron {
     transform: rotate(180deg);
   }
 
@@ -1161,6 +1146,33 @@
   .reply-input {
     margin-left: 28px;
   }
+  /* iOS Safari auto-zooms any input whose effective font-size is below
+     16px on focus. Bumping the composer textarea up to 16px on mobile
+     suppresses that zoom without forcing the whole app to disable user
+     scaling via the viewport meta tag. */
+  .reply-input__field {
+    font-size: 16px;
+  }
+  .comment-input > .reply-input {
+    margin-left: 0;
+  }
+  /* Mobile only: the compact reply composer (inside the bottom-sheet
+     thread view) gets the same padded + divider chrome as the top-level
+     composer so the sheet reads as a stack of matching sections.
+     Desktop keeps the bare inline pill — see the base rules above. */
+  .comment-input[data-compact="true"] {
+    padding: 16px 20px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .comment-input[data-compact="true"] > .reply-input {
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+  }
 }
 
 /* Mention dropdown: script.js sets data-mention-flip="up" when the
@@ -1170,5 +1182,131 @@
   bottom: 100%;
   margin-top: 0;
   margin-bottom: 4px;
+}
+
+/* ── In-sheet reply thread view ─────────────────────────────
+   Rendered inside the comments panel when a user taps a comment's
+   Reply action on mobile. Fills the panel (flex column) with a header
+   on top, scrollable parent + replies, and a pinned composer at the
+   bottom. Cards reuse `.comment-item` / `.reply-input` so styling
+   stays consistent with the inline arena view. */
+.reply-thread {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  background: var(--surface);
+  color: var(--text);
+}
+.reply-thread__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.reply-thread__title {
+  flex: 1;
+  text-align: center;
+  font-family: "Outfit", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+.reply-thread__icon-btn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  flex-shrink: 0;
+}
+.reply-thread__icon-btn:hover {
+  background: var(--hover, rgba(255, 255, 255, 0.06));
+}
+.reply-thread__icon-btn svg {
+  width: 20px;
+  height: 20px;
+}
+.reply-thread__scroll {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 0 16px;
+}
+/* The parent comment sits in its own highlighted block above the thread
+   (matches YouTube/Reddit's mobile replies view where the comment you
+   tapped stays visible as context). Scrolls naturally with the replies
+   underneath; long bodies stay readable via the `더보기` toggle inside
+   `CommentText`. */
+.reply-thread__parent {
+  padding: 4px 0 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-raised);
+}
+
+/* `CommentText` wrapper. `data-expanded` is Dioxus-controlled (toggle
+   button); `data-truncatable` is JS-controlled (set after measuring
+   that the rendered text exceeds 3 lines). The expand button is hidden
+   unless `data-truncatable="true"` so short comments don't show a
+   useless toggle. */
+.comment-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+  width: 100%;
+}
+.comment-text[data-expanded="false"] .comment-item__text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.comment-item__expand {
+  margin-top: 2px;
+  padding: 2px 0;
+  background: transparent;
+  border: none;
+  color: var(--accent, #fcb300);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  align-self: flex-start;
+  display: none;
+}
+.comment-text[data-truncatable="true"] .comment-item__expand {
+  display: inline-block;
+}
+.comment-item__expand:hover {
+  text-decoration: underline;
+}
+.reply-thread__list {
+  padding: 4px 0 0;
+}
+.reply-thread__list .comment-item {
+  /* Indent replies so they visually hang off the parent, matching the
+     inline `.comment-replies` offset on the discussion page. */
+  padding-left: 20px;
+}
+/* The inner `.comment-input[data-compact="true"]` supplies the border +
+   padding for this pinned composer. This wrapper only adds the iOS home
+   indicator inset so the composer doesn't end up under the handle. */
+.reply-thread__composer {
+  flex-shrink: 0;
+  background: var(--surface);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 

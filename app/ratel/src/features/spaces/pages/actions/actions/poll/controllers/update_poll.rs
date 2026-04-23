@@ -1,3 +1,4 @@
+use crate::common::models::space::SpaceCommon;
 use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::features::spaces::pages::actions::models::SpaceAction;
 
@@ -6,20 +7,19 @@ use crate::features::spaces::pages::actions::models::SpaceAction;
 #[serde(untagged)]
 pub enum UpdatePollRequest {
     Title { title: String },
-    Time { started_at: i64, ended_at: i64 },
     Question { questions: Vec<Question> },
     ResponseEditable { response_editable: bool },
     CanisterUploadEnabled { canister_upload_enabled: bool },
 }
 
-#[mcp_tool(name = "update_poll", description = "Update a poll (title, time range, questions, response_editable). Requires creator role.")]
+#[mcp_tool(name = "update_poll", description = "Update a poll (title, questions, response_editable). Requires creator role.")]
 #[post("/api/spaces/{space_pk}/polls/{poll_sk}", role: SpaceUserRole)]
 pub async fn update_poll(
     #[mcp(description = "Space partition key")]
     space_pk: SpacePartition,
     #[mcp(description = "Poll sort key (e.g. 'SpacePoll#<uuid>')")]
     poll_sk: SpacePollEntityType,
-    #[mcp(description = "Poll update data as JSON. Supported variants: {\"title\": \"...\"}, {\"started_at\": <ms>, \"ended_at\": <ms>}, {\"questions\": [...]}, {\"response_editable\": true}")]
+    #[mcp(description = "Poll update data as JSON. Supported variants: {\"title\": \"...\"}, {\"questions\": [...]}, {\"response_editable\": true}")]
     req: UpdatePollRequest,
 ) -> Result<String> {
     SpacePoll::can_edit(&role)?;
@@ -41,21 +41,6 @@ pub async fn update_poll(
         UpdatePollRequest::Title { title } => {
             poll_updater = poll_updater.with_title(title.clone());
             action_updater = action_updater.with_title(title);
-            update_action = true;
-        }
-        UpdatePollRequest::Time {
-            started_at,
-            ended_at,
-        } => {
-            if started_at >= ended_at {
-                return Err(SpacePollError::InvalidTimeRange.into());
-            }
-            poll_updater = poll_updater
-                .with_started_at(started_at)
-                .with_ended_at(ended_at);
-            action_updater = action_updater
-                .with_started_at(started_at)
-                .with_ended_at(ended_at);
             update_action = true;
         }
         UpdatePollRequest::Question { questions } => {
@@ -86,6 +71,17 @@ pub async fn update_poll(
     poll_updater.execute(cli).await?;
     if update_action {
         action_updater.execute(cli).await?;
+    }
+
+    if let Ok(Some(poll)) = SpacePoll::get(cli, &space_pk, Some(poll_sk_entity.clone())).await {
+        let creator_pk = SpaceCommon::get(cli, &space_pk, Some(EntityType::SpaceCommon))
+            .await
+            .ok()
+            .flatten()
+            .map(|s| s.user_pk)
+            .unwrap_or(space_pk.clone());
+        let _ = creator_pk;
+        // Essence re-indexing happens via the DynamoDB Stream pipeline.
     }
 
     Ok("success".to_string())

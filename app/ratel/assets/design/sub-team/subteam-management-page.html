@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Sub-team Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    /* ── Activation hero ── */
+    .activation{position:relative;overflow:hidden;padding:22px 26px;border-radius:18px;background:var(--bg-glass);backdrop-filter:blur(14px);border:1px solid var(--border-subtle);display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center}
+    .activation::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 60% at 15% 15%,var(--act-glow,rgba(255,255,255,0.04)) 0%,transparent 60%);pointer-events:none;transition:all 0.3s}
+    .activation[data-on="true"]::before{--act-glow:rgba(252,179,0,0.12)}
+    .activation[data-on="true"]{border-color:rgba(252,179,0,0.28)}
+    .activation > *{position:relative;z-index:1}
+    .activation__icon{width:54px;height:54px;border-radius:14px;flex-shrink:0;background:rgba(255,255,255,0.04);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all 0.3s}
+    .activation[data-on="true"] .activation__icon{background:rgba(252,179,0,0.10);border-color:rgba(252,179,0,0.28);color:var(--accent-gold);box-shadow:0 0 18px rgba(252,179,0,0.15)}
+    .activation__icon svg{width:24px;height:24px}
+    .activation__label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px}
+    .activation[data-on="true"] .activation__label{color:var(--accent-gold)}
+    .activation__title{font-family:var(--font-display);font-size:18px;font-weight:800;letter-spacing:0.02em;color:var(--text-primary);margin-bottom:4px}
+    .activation__desc{font-size:13px;color:var(--text-muted);line-height:1.55}
+    .activation__switch{transform:scale(1.3);transform-origin:right center}
+
+    /* ── Autosave indicator (replaces the old manual Save button) ── */
+    .autosave-chip{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:6px 12px;border-radius:100px;
+      background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.22);
+      color:var(--accent-green,#22c55e);
+      font-family:var(--font-display);font-size:10px;font-weight:700;
+      letter-spacing:0.12em;text-transform:uppercase;
+      white-space:nowrap;
+    }
+    .autosave-chip svg{width:11px;height:11px}
+
+    /* ── KPI row (always visible, on top) ── */
+    .kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    @media (max-width:720px){.kpi-row{grid-template-columns:1fr}}
+    .kpi{padding:14px 18px;border-radius:12px;background:var(--bg-glass);backdrop-filter:blur(12px);border:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:4px;min-width:0}
+    .kpi__label{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
+    .kpi__value{font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:0.02em;color:var(--text-primary)}
+    .kpi__value--gold{background:linear-gradient(135deg,var(--accent-gold),#ffd24a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .kpi__value--amber{color:var(--accent-amber)}
+    .kpi__value--teal{color:var(--accent-teal)}
+    .kpi__value--purple{color:var(--accent-purple)}
+    .kpi__delta{font-family:var(--font-display);font-size:10px;color:var(--accent-green);letter-spacing:0.08em}
+
+    /* ── Tabs ── */
+    .tabs-nav{
+      position:sticky;top:100px;z-index:5;
+      display:flex;gap:4px;padding:4px;border-radius:13px;
+      background:rgba(6,6,14,0.78);backdrop-filter:blur(18px);
+      border:1px solid var(--border-subtle);overflow-x:auto;scrollbar-width:none;
+    }
+    .tabs-nav::-webkit-scrollbar{display:none}
+    .tabs-nav__btn{
+      flex:1;min-width:max-content;
+      padding:11px 16px;border-radius:10px;
+      background:transparent;border:1px solid transparent;
+      color:var(--text-muted);
+      font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+      cursor:pointer;white-space:nowrap;transition:all 0.2s;
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    }
+    .tabs-nav__btn:hover{color:var(--text-primary)}
+    .tabs-nav__btn[aria-selected="true"]{background:rgba(252,179,0,0.08);color:var(--accent-gold);border-color:rgba(252,179,0,0.25);box-shadow:0 0 14px rgba(252,179,0,0.1)}
+    .tabs-nav__btn svg{width:14px;height:14px;opacity:0.7}
+    .tabs-nav__btn[aria-selected="true"] svg{opacity:1}
+    .tabs-nav__badge{padding:2px 8px;border-radius:100px;font-size:10px;font-weight:800;background:rgba(255,255,255,0.06);color:var(--text-primary)}
+    .tabs-nav__btn[aria-selected="true"] .tabs-nav__badge{background:rgba(252,179,0,0.18);color:var(--accent-gold)}
+    .tabs-nav__badge--amber{background:rgba(245,158,11,0.12);color:var(--accent-amber)}
+
+    .tab-panel{display:none;flex-direction:column;gap:16px}
+    .tab-panel[data-active="true"]{display:flex;animation:fadeIn 0.25s ease}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+    /* ── Requirements (simplified) ── */
+    .req-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:720px){.req-grid{grid-template-columns:1fr}}
+    .req-card{padding:14px 16px;border-radius:12px;background:rgba(6,6,14,0.5);border:1px solid var(--border-subtle);display:flex;align-items:center;gap:14px}
+    .req-card__icon{width:38px;height:38px;border-radius:10px;background:rgba(252,179,0,0.08);border:1px solid rgba(252,179,0,0.22);color:var(--accent-gold);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .req-card__icon svg{width:16px;height:16px}
+    .req-card__body{flex:1;min-width:0}
+    .req-card__title{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--accent-gold)}
+    .req-card__desc{font-size:12px;color:var(--text-muted);margin-top:2px}
+    .req-card__input-wrap{display:flex;align-items:center;gap:6px}
+    .req-card__stepper{width:28px;height:28px;border-radius:7px;padding:0;background:transparent;border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:var(--font-display);font-size:14px;font-weight:800}
+    .req-card__stepper:hover{color:var(--accent-gold);border-color:rgba(252,179,0,0.3)}
+    .req-card__value{width:48px;text-align:center;padding:6px;border-radius:7px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--text-primary);font-family:var(--font-display);font-size:14px;font-weight:700;outline:none}
+
+    /* ── Collapsible card ── */
+    .card--collapsible .card__head{cursor:pointer;user-select:none}
+    .card__toggle{width:28px;height:28px;border-radius:8px;padding:0;flex-shrink:0;background:transparent;border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.25s,color 0.2s,border-color 0.2s}
+    .card__toggle svg{width:14px;height:14px}
+    .card--collapsible[data-collapsed="true"] .card__toggle{transform:rotate(-90deg)}
+    .card--collapsible[data-collapsed="false"] .card__toggle:hover{color:var(--accent-gold);border-color:rgba(252,179,0,0.25)}
+    .card__body{display:flex;flex-direction:column;gap:10px;transition:all 0.35s cubic-bezier(0.16,1,0.3,1);overflow:hidden}
+    .card--collapsible[data-collapsed="true"] .card__body{max-height:0;opacity:0;margin-top:-18px}
+    .card--collapsible[data-collapsed="false"] .card__body{max-height:4000px;opacity:1}
+    .card__head-toolbar{display:flex;gap:8px;align-items:center;margin-left:auto}
+    .card__head-toolbar .btn{padding:6px 12px;font-size:9px;letter-spacing:0.1em}
+
+    /* ── Form builder ── */
+    .field-list{display:flex;flex-direction:column;gap:8px}
+    .field-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:rgba(6,6,14,0.5);border:1px solid var(--border-subtle)}
+    .field-row[data-locked="true"]{border-color:rgba(252,179,0,0.18);background:rgba(252,179,0,0.04)}
+    .field-row__drag{color:var(--text-dim);cursor:grab;display:flex;align-items:center}
+    .field-row__drag svg{width:14px;height:14px}
+    .field-row__type{padding:4px 8px;border-radius:6px;background:rgba(129,140,248,0.08);border:1px solid rgba(129,140,248,0.22);color:var(--accent-violet);font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;appearance:none;cursor:pointer;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23818cf8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 6px center;padding-right:22px}
+    .field-row__label{flex:1;min-width:0;padding:6px 10px;border-radius:7px;background:transparent;border:1px solid transparent;color:var(--text-primary);font-size:13px;font-weight:600;outline:none;transition:all 0.2s}
+    .field-row__label:hover{border-color:var(--border-subtle)}
+    .field-row__label:focus{border-color:rgba(252,179,0,0.3);background:rgba(6,6,14,0.6)}
+    .field-row__req{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim)}
+    .field-row__req input{accent-color:var(--accent-gold)}
+    .field-row__del{width:24px;height:24px;border-radius:6px;padding:0;background:transparent;border:1px solid transparent;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+    .field-row__del:hover{border-color:rgba(239,68,68,0.3);color:var(--accent-coral)}
+    .field-row__del svg{width:12px;height:12px}
+    .field-row__lock-badge{font-family:var(--font-display);font-size:8px;font-weight:700;letter-spacing:0.12em;color:var(--accent-gold);padding:2px 6px;border-radius:5px;background:rgba(252,179,0,0.08);border:1px solid rgba(252,179,0,0.22)}
+    .field-row__link-wrap{position:relative}
+    .field-row__link-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:6px;background:rgba(110,237,216,0.06);border:1px solid rgba(110,237,216,0.22);color:var(--accent-teal);font-family:var(--font-display);font-size:8px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.15s}
+    .field-row__link-btn:hover{background:rgba(110,237,216,0.14)}
+    .field-row__link-btn[data-linked="none"]{background:transparent;border-color:var(--border-subtle);color:var(--text-dim)}
+    .field-row__link-btn[data-linked="none"]:hover{color:var(--text-muted);border-color:var(--border-strong)}
+    .field-row__link-btn svg{width:10px;height:10px}
+    .field-row__link-menu{position:absolute;top:calc(100% + 6px);right:0;z-index:25;min-width:200px;padding:4px;border-radius:10px;background:var(--bg-panel);backdrop-filter:blur(22px);border:1px solid var(--border-subtle);box-shadow:0 14px 38px rgba(0,0,0,0.55);opacity:0;visibility:hidden;transform:translateY(-3px);transition:all 0.15s}
+    .field-row__link-menu[data-open="true"]{opacity:1;visibility:visible;transform:translateY(0)}
+    .field-row__link-option{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:8px 10px;border-radius:7px;background:transparent;border:none;color:var(--text-primary);font-size:12px;cursor:pointer;text-align:left;transition:background 0.15s}
+    .field-row__link-option:hover{background:rgba(255,255,255,0.04)}
+    .field-row__link-option[aria-selected="true"]{background:rgba(110,237,216,0.08);color:var(--accent-teal)}
+    .field-row__link-option-key{font-family:var(--font-display);font-size:9px;color:var(--text-dim);letter-spacing:0.06em}
+    .field-row__link-option[aria-selected="true"] .field-row__link-option-key{color:var(--accent-teal);opacity:0.8}
+    .field-row__link-option svg{width:12px;height:12px;color:var(--accent-teal);opacity:0;flex-shrink:0}
+    .field-row__link-option[aria-selected="true"] svg{opacity:1}
+    .add-field-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;border-radius:10px;background:rgba(252,179,0,0.03);border:1px dashed rgba(252,179,0,0.25);color:var(--accent-gold);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;margin-top:10px;transition:all 0.2s}
+    .add-field-btn:hover{background:rgba(252,179,0,0.08);border-color:rgba(252,179,0,0.45)}
+    .add-field-btn svg{width:13px;height:13px}
+
+    /* ── Documents (tab: 문서) ── */
+    .doc-list{display:flex;flex-direction:column;gap:10px}
+    .doc-item{padding:14px 16px;border-radius:12px;background:rgba(129,140,248,0.04);border:1px solid rgba(129,140,248,0.22);display:flex;flex-direction:column;gap:10px;transition:all 0.2s}
+    .doc-item[data-required="true"]{background:rgba(168,85,247,0.06);border-color:rgba(168,85,247,0.28)}
+    .doc-item__head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .doc-item__icon{width:30px;height:30px;border-radius:8px;background:rgba(129,140,248,0.10);border:1px solid rgba(129,140,248,0.25);color:var(--accent-violet);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .doc-item[data-required="true"] .doc-item__icon{background:rgba(168,85,247,0.12);border-color:rgba(168,85,247,0.32);color:var(--accent-purple)}
+    .doc-item__icon svg{width:14px;height:14px}
+    .doc-item__title{flex:1;min-width:200px;padding:8px 12px;border-radius:8px;background:rgba(6,6,14,0.5);border:1px solid var(--border-subtle);color:var(--text-primary);font-family:var(--font-body);font-size:14px;font-weight:700;outline:none;transition:all 0.2s}
+    .doc-item__title:focus{border-color:rgba(129,140,248,0.35);box-shadow:0 0 12px rgba(129,140,248,0.10)}
+    .doc-item__updated{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.08em;color:var(--text-dim);white-space:nowrap}
+    .doc-item__req{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+    .doc-item__req input{position:absolute;opacity:0;pointer-events:none}
+    .doc-item__req-pill{
+      display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;
+      font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+      background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);color:var(--text-dim);
+      transition:all 0.2s;
+    }
+    .doc-item__req-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;opacity:0.5}
+    .doc-item__req input:checked ~ .doc-item__req-pill{background:rgba(168,85,247,0.12);border-color:rgba(168,85,247,0.40);color:var(--accent-purple);box-shadow:0 0 10px rgba(168,85,247,0.15)}
+    .doc-item__req input:checked ~ .doc-item__req-pill::before{opacity:1;box-shadow:0 0 6px var(--accent-purple)}
+    .doc-item__actions{display:flex;gap:4px}
+    .doc-item__btn{width:28px;height:28px;border-radius:7px;padding:0;background:transparent;border:1px solid var(--border-subtle);color:var(--text-dim);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
+    .doc-item__btn:hover{color:var(--text-primary);border-color:var(--border-strong)}
+    .doc-item__btn--danger:hover{border-color:rgba(239,68,68,0.3);color:var(--accent-coral);background:rgba(239,68,68,0.06)}
+    .doc-item__btn svg{width:13px;height:13px}
+    /* Preview line (read-only; actual editing happens in subteam-doc-compose.html) */
+    .doc-item__preview{
+      padding:10px 14px;border-radius:8px;
+      background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);
+      color:var(--text-muted);font-size:12.5px;line-height:1.6;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+    }
+    .doc-item__foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .doc-item__stats{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--text-dim);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .doc-item__stats svg{width:11px;height:11px;vertical-align:-1px;margin-right:3px}
+    .doc-item__hint{font-size:11px;color:var(--text-dim);font-family:var(--font-display);letter-spacing:0.04em}
+    .doc-item[data-required="true"] .doc-item__hint{color:var(--accent-purple)}
+    .doc-item__edit{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:7px 14px;border-radius:9px;text-decoration:none;
+      background:linear-gradient(135deg,rgba(168,85,247,0.22),rgba(168,85,247,0.10));
+      border:1px solid rgba(168,85,247,0.35);color:#e9d5ff;
+      font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;
+      transition:all 0.2s;
+    }
+    .doc-item__edit:hover{background:linear-gradient(135deg,rgba(168,85,247,0.32),rgba(168,85,247,0.16));box-shadow:0 0 14px rgba(168,85,247,0.22);transform:translateY(-1px)}
+    .doc-item__edit svg{width:12px;height:12px}
+    .add-doc-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:10px;background:rgba(129,140,248,0.03);border:1px dashed rgba(129,140,248,0.30);color:var(--accent-violet);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+    .add-doc-btn:hover{background:rgba(129,140,248,0.08);border-color:rgba(129,140,248,0.5)}
+    .add-doc-btn svg{width:13px;height:13px}
+
+    /* ── Roster ── */
+    .roster{display:flex;flex-direction:column;gap:8px}
+    .roster-row{display:grid;grid-template-columns:auto 1fr auto auto;gap:14px;align-items:center;padding:12px 14px;border-radius:11px;background:rgba(6,6,14,0.45);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.2s;text-decoration:none;color:var(--text-primary)}
+    .roster-row:hover{border-color:rgba(252,179,0,0.25);transform:translateY(-1px)}
+    .roster-row__body{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .roster-row__name{font-size:14px;font-weight:700;font-family:var(--font-display);letter-spacing:0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .roster-row__handle{font-family:var(--font-display);font-size:10px;color:var(--text-muted);letter-spacing:0.04em}
+    .roster-row__metrics{display:flex;gap:8px}
+    .roster-row__metric{font-family:var(--font-display);font-size:11px;color:var(--text-muted);padding:3px 9px;border-radius:7px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle)}
+    .roster-row__metric strong{color:var(--text-primary);font-weight:700}
+    .roster-row__chev svg{width:16px;height:16px;color:var(--text-dim);transition:all 0.2s}
+    .roster-row:hover .roster-row__chev svg{color:var(--accent-gold);transform:translateX(3px)}
+
+    /* ── Queue ── */
+    .queue-row{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:14px 16px;border-radius:12px;background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.22);transition:all 0.25s}
+    .queue-row:hover{border-color:rgba(245,158,11,0.35)}
+    .queue-row__body{min-width:0}
+    .queue-row__name{font-size:14px;font-weight:700;font-family:var(--font-display);letter-spacing:0.02em;color:var(--text-primary)}
+    .queue-row__meta{font-size:11px;color:var(--text-muted);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap}
+    .queue-row__actions{display:flex;gap:6px}
+    .queue-row__action{padding:7px 12px;border-radius:8px;font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;border:1px solid}
+    .queue-row__action--approve{background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.25);color:var(--accent-green)}
+    .queue-row__action--approve:hover{background:rgba(34,197,94,0.18)}
+    .queue-row__action--return{background:rgba(129,140,248,0.06);border-color:rgba(129,140,248,0.25);color:var(--accent-violet)}
+    .queue-row__action--return:hover{background:rgba(129,140,248,0.14)}
+    .queue-row__action--reject{background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.22);color:var(--accent-coral)}
+    .queue-row__action--reject:hover{background:rgba(239,68,68,0.14)}
+
+    /* ── Broadcast CTA (big prominent button) ── */
+    .bc-cta{
+      display:flex;align-items:center;gap:18px;
+      padding:22px 26px;border-radius:16px;
+      background:linear-gradient(135deg,rgba(168,85,247,0.15),rgba(168,85,247,0.04));
+      border:1px solid rgba(168,85,247,0.35);
+      color:var(--text-primary);text-decoration:none;
+      transition:all 0.25s;position:relative;overflow:hidden;
+      box-shadow:0 0 22px rgba(168,85,247,0.12);
+    }
+    .bc-cta::before{
+      content:'';position:absolute;top:0;right:0;width:220px;height:220px;
+      background:radial-gradient(circle,rgba(168,85,247,0.25),transparent 60%);
+      filter:blur(30px);pointer-events:none;
+    }
+    .bc-cta:hover{transform:translateY(-2px);border-color:rgba(168,85,247,0.55);box-shadow:0 10px 34px rgba(168,85,247,0.20)}
+    .bc-cta > *{position:relative;z-index:1}
+    .bc-cta__icon{
+      width:52px;height:52px;border-radius:13px;flex-shrink:0;
+      background:rgba(168,85,247,0.18);border:1px solid rgba(168,85,247,0.38);
+      color:#e9d5ff;display:flex;align-items:center;justify-content:center;
+      box-shadow:0 0 18px rgba(168,85,247,0.18);
+    }
+    .bc-cta__icon svg{width:22px;height:22px}
+    .bc-cta__body{flex:1;min-width:0}
+    .bc-cta__label{font-family:var(--font-display);font-size:15px;font-weight:800;color:#e9d5ff;letter-spacing:0.04em;margin-bottom:3px}
+    .bc-cta__sub{font-size:12px;color:var(--text-muted);line-height:1.55}
+    .bc-cta__sub strong{color:var(--accent-purple)}
+    .bc-cta__arrow{width:20px;height:20px;color:var(--accent-purple);flex-shrink:0;transition:transform 0.2s}
+    .bc-cta:hover .bc-cta__arrow{transform:translateX(4px)}
+
+    /* ── Draft row ── */
+    .draft-row{
+      display:grid;grid-template-columns:auto 1fr auto auto;gap:14px;align-items:center;
+      padding:14px 16px;border-radius:12px;
+      background:rgba(252,179,0,0.03);border:1px solid rgba(252,179,0,0.22);
+      transition:all 0.2s;
+    }
+    .draft-row:hover{border-color:rgba(252,179,0,0.38);background:rgba(252,179,0,0.06)}
+    .draft-row__dot{
+      width:8px;height:8px;border-radius:50%;background:var(--accent-gold);
+      box-shadow:0 0 8px var(--accent-gold);
+      animation:pulse-dot 1.8s ease-in-out infinite;
+    }
+    .draft-row__body{min-width:0}
+    .draft-row__title{font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:0.02em;margin-bottom:4px}
+    .draft-row__meta{display:flex;gap:12px;flex-wrap:wrap;font-family:var(--font-display);font-size:10px;color:var(--text-dim);letter-spacing:0.06em}
+    .draft-row__meta svg{width:11px;height:11px;vertical-align:-1px;margin-right:3px}
+    .draft-row__meta strong{color:var(--accent-gold);font-weight:700}
+    .draft-row__edit{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:8px 14px;border-radius:9px;text-decoration:none;
+      background:linear-gradient(135deg,rgba(252,179,0,0.22),rgba(252,179,0,0.10));
+      border:1px solid rgba(252,179,0,0.35);color:var(--accent-gold);
+      font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;
+      cursor:pointer;transition:all 0.2s;
+    }
+    .draft-row__edit:hover{background:linear-gradient(135deg,rgba(252,179,0,0.32),rgba(252,179,0,0.16));box-shadow:0 0 14px rgba(252,179,0,0.22);transform:translateY(-1px)}
+    .draft-row__edit svg{width:12px;height:12px}
+    .draft-row__del{
+      width:32px;height:32px;border-radius:8px;padding:0;
+      background:transparent;border:1px solid var(--border-subtle);
+      color:var(--text-dim);display:flex;align-items:center;justify-content:center;
+      cursor:pointer;transition:all 0.2s;
+    }
+    .draft-row__del:hover{border-color:rgba(239,68,68,0.30);color:var(--accent-coral);background:rgba(239,68,68,0.06)}
+    .draft-row__del svg{width:13px;height:13px}
+    @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+
+    /* ── Published broadcast item (read-only list) ── */
+    .bc-item{padding:14px 16px;border-radius:12px;background:rgba(6,6,14,0.45);border:1px solid var(--border-subtle);transition:all 0.2s}
+    .bc-item:hover{border-color:rgba(168,85,247,0.22)}
+    .bc-item__top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+    .bc-item__kind{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:6px;background:rgba(168,85,247,0.08);color:var(--accent-purple);border:1px solid rgba(168,85,247,0.22);font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase}
+    .bc-item__kind svg{width:11px;height:11px}
+    .bc-item__time{font-family:var(--font-display);font-size:10px;color:var(--text-dim);letter-spacing:0.08em}
+    .bc-item__title-text{font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text-primary);line-height:1.35;margin-bottom:8px;letter-spacing:0.02em}
+    .bc-item__meta{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--font-display);font-size:9.5px;color:var(--text-dim);letter-spacing:0.08em}
+    .bc-item__meta svg{width:11px;height:11px;vertical-align:-2px;margin-right:3px}
+
+    /* ── Info note under roster ── */
+    .inline-note{font-size:11px;color:var(--text-dim);padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle)}
+    .inline-note svg{width:11px;height:11px;vertical-align:-1px;margin-right:4px}
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo">SNU</div>
+      <div class="u-col">
+        <span class="arena-topbar__title">SNU CS Dept.</span>
+        <span class="arena-topbar__handle">하위팀 관리 · Management</span>
+      </div>
+      <span class="arena-topbar__status arena-topbar__status--parent" id="top-status">Active · 12 sub-teams</span>
+    </div>
+    <div class="arena-topbar__actions">
+      <span class="autosave-chip" title="모든 변경은 자동으로 반영됩니다">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Auto-saved
+      </span>
+    </div>
+  </div>
+
+  <div class="page page--wide" id="page-root" data-activated="true">
+
+    <!-- 1. Activation switch — always visible -->
+    <section class="activation" id="activation" data-on="true">
+      <div class="activation__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.09 4.23 4.66.68-3.38 3.29.8 4.64L12 12.67l-4.17 2.17.8-4.64L5.25 6.91l4.66-.68L12 2z"/><circle cx="6" cy="19" r="3"/><circle cx="18" cy="19" r="3"/><path d="M9 19h6"/></svg></div>
+      <div>
+        <div class="activation__label" id="activation-label">Parent-eligible · ON</div>
+        <div class="activation__title">하위팀 가입 신청을 받고 있습니다</div>
+        <p class="activation__desc">이 팀 홈페이지의 HUD에 "하위팀" 아이콘이 노출되어 누구나 가입 신청 페이지로 진입할 수 있습니다. OFF해도 기존 하위팀 관계와 공지/대시보드는 계속 작동합니다.</p>
+      </div>
+      <label class="switch activation__switch">
+        <input type="checkbox" id="activation-toggle" checked />
+        <span class="switch__track"></span>
+      </label>
+    </section>
+
+    <!-- 2. KPI row — always visible, above tabs -->
+    <div class="kpi-row">
+      <div class="kpi"><span class="kpi__label">Recognized sub-teams</span><span class="kpi__value kpi__value--gold">12</span><span class="kpi__delta">+2 이번 달</span></div>
+      <div class="kpi"><span class="kpi__label">Pending applications</span><span class="kpi__value kpi__value--amber">4</span><span class="kpi__delta" style="color:var(--accent-amber)">검토 필요</span></div>
+      <div class="kpi"><span class="kpi__label">Last broadcast</span><span class="kpi__value kpi__value--purple">2일 전</span><span class="kpi__delta" style="color:var(--accent-purple)">12팀 × 342명</span></div>
+    </div>
+
+    <!-- 3. Tabs -->
+    <nav class="tabs-nav" role="tablist">
+      <button class="tabs-nav__btn" role="tab" aria-selected="true" data-tab="requirements">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        가입 요건
+      </button>
+      <button class="tabs-nav__btn" role="tab" aria-selected="false" data-tab="documents">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+        문서
+        <span class="tabs-nav__badge" id="docs-badge">3</span>
+      </button>
+      <button class="tabs-nav__btn" role="tab" aria-selected="false" data-tab="roster">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+        하위팀 목록
+        <span class="tabs-nav__badge">12</span>
+      </button>
+      <button class="tabs-nav__btn" role="tab" aria-selected="false" data-tab="queue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        신청 대기
+        <span class="tabs-nav__badge tabs-nav__badge--amber">4</span>
+      </button>
+      <button class="tabs-nav__btn" role="tab" aria-selected="false" data-tab="broadcast">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8v18l-18-8v-2z"/></svg>
+        전체 공지 관리
+      </button>
+    </nav>
+
+    <!-- ====== TAB: 가입 요건 (요건 + 신청폼) ====== -->
+    <div class="tab-panel" data-tab="requirements" data-active="true">
+
+      <!-- Activation-gated wrapper — only the configuration blocks dim, roster/queue/broadcast stay live -->
+      <div class="gated" style="display:flex;flex-direction:column;gap:16px;transition:all 0.35s">
+
+        <!-- 3a. 가입 요건 (simplified — only objective team-level checks) -->
+        <section class="card" id="requirements">
+          <div class="card__head">
+            <h2 class="card__title">가입 요건 · Team-level checks</h2>
+            <span class="card__dash"></span>
+            <span class="card__meta">객관적 팀 지표만</span>
+          </div>
+
+          <div class="req-grid">
+            <div class="req-card">
+              <div class="req-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+              <div class="req-card__body">
+                <div class="req-card__title">최소 멤버 수</div>
+                <div class="req-card__desc">팀이 이 인원을 달성해야 제출 가능</div>
+              </div>
+              <div class="req-card__input-wrap">
+                <button class="req-card__stepper" data-step="min-members" data-dir="-">−</button>
+                <input class="req-card__value" type="number" id="min-members" value="5" min="1" max="99" />
+                <button class="req-card__stepper" data-step="min-members" data-dir="+">+</button>
+              </div>
+            </div>
+
+            <div class="req-card">
+              <div class="req-card__icon" style="background:rgba(110,237,216,0.06);border-color:rgba(110,237,216,0.22);color:var(--accent-teal)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+              <div class="req-card__body">
+                <div class="req-card__title" style="color:var(--accent-teal)">팀 생성 최소 기간</div>
+                <div class="req-card__desc">팀이 만들어진 후 최소 일수 후에 신청 가능</div>
+              </div>
+              <div class="req-card__input-wrap">
+                <button class="req-card__stepper" data-step="min-days" data-dir="-">−</button>
+                <input class="req-card__value" type="number" id="min-days" value="14" min="0" max="365" />
+                <button class="req-card__stepper" data-step="min-days" data-dir="+">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="inline-note" style="margin-top:12px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            지도교수·담당자 같은 팀별 정보는 신청폼에서 "필수" 체크로 받으세요. 학칙·규정 같은 문서는 <strong>문서 탭</strong>에서 만들고 "필독"으로 지정하면 가입 신청 때 반드시 읽고 동의해야 제출됩니다.
+          </div>
+        </section>
+
+        <!-- 3b. 신청폼 (collapsible, with per-field linking) -->
+        <section class="card card--collapsible" id="form" data-collapsed="false">
+          <div class="card__head" id="form-head">
+            <h2 class="card__title">신청폼 · Application form</h2>
+            <span class="card__dash"></span>
+            <span class="card__meta" id="form-meta">6 필드 · 4 필수 · Form v3</span>
+            <div class="card__head-toolbar">
+              <button class="card__toggle" id="form-toggle" aria-label="Toggle form builder">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="card__body">
+            <div class="notice" style="margin-bottom:10px">
+              <div class="notice__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+              <div class="notice__body">
+                <span class="notice__title">Linked field</span>
+                <span class="notice__text">각 필드 옆의 <strong style="color:var(--accent-teal)">🔗 Link</strong> 버튼을 클릭하면 신청자 팀 프로필의 어떤 속성에서 자동으로 값을 가져올지 지정할 수 있습니다.</span>
+              </div>
+            </div>
+
+            <div class="field-list" id="field-list">
+              <div class="field-row" data-locked="true" data-linked="team.name">
+                <span class="field-row__drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+                <select class="field-row__type" disabled><option>Short text</option></select>
+                <input class="field-row__label" value="제안하는 팀 이름" readonly />
+                <span class="field-row__lock-badge">Default</span>
+                <label class="field-row__req"><input type="checkbox" checked disabled /> 필수</label>
+              </div>
+              <div class="field-row" data-locked="true" data-linked="team.bio">
+                <span class="field-row__drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+                <select class="field-row__type" disabled><option>Long text</option></select>
+                <input class="field-row__label" value="설립 목적" readonly />
+                <span class="field-row__lock-badge">Default</span>
+                <label class="field-row__req"><input type="checkbox" checked disabled /> 필수</label>
+              </div>
+              <div class="field-row" data-linked="none">
+                <span class="field-row__drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+                <select class="field-row__type"><option>Short text</option><option>Long text</option><option>Number</option><option>Date</option><option>URL</option></select>
+                <input class="field-row__label" value="지도교수 (이름 · 소속 · 이메일)" />
+                <label class="field-row__req"><input type="checkbox" checked /> 필수</label>
+                <button class="field-row__del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+              </div>
+              <div class="field-row" data-linked="none">
+                <span class="field-row__drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+                <select class="field-row__type"><option selected>Single select</option><option>Short text</option><option>Number</option></select>
+                <input class="field-row__label" value="정기 모임 주기" />
+                <label class="field-row__req"><input type="checkbox" checked /> 필수</label>
+                <button class="field-row__del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+              </div>
+              <div class="field-row" data-linked="team.website">
+                <span class="field-row__drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+                <select class="field-row__type"><option selected>URL</option><option>Short text</option></select>
+                <input class="field-row__label" value="회칙 문서 링크 (선택)" />
+                <label class="field-row__req"><input type="checkbox" /> 필수</label>
+                <button class="field-row__del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+              </div>
+              <div class="field-row" data-linked="none">
+                <span class="field-row__drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+                <select class="field-row__type"><option selected>Number</option><option>Short text</option></select>
+                <input class="field-row__label" value="연간 활동 계획 인원" />
+                <label class="field-row__req"><input type="checkbox" checked /> 필수</label>
+                <button class="field-row__del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+              </div>
+            </div>
+
+            <button class="add-field-btn" id="add-field">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              필드 추가
+            </button>
+          </div>
+        </section>
+
+        <template id="new-field-tpl">
+          <div class="field-row" data-linked="none">
+            <span class="field-row__drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+            <select class="field-row__type"><option>Short text</option><option>Long text</option><option>Number</option><option>Date</option><option>URL</option><option>Single select</option></select>
+            <input class="field-row__label" placeholder="필드명 입력…" />
+            <label class="field-row__req"><input type="checkbox" /> 필수</label>
+            <button class="field-row__del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+          </div>
+        </template>
+
+      </div><!-- /.gated -->
+    </div>
+
+    <!-- ====== TAB: 문서 (규정 · 학칙) ====== -->
+    <div class="tab-panel" data-tab="documents">
+      <section class="card">
+        <div class="card__head">
+          <h2 class="card__title">문서 · Documents</h2>
+          <span class="card__dash"></span>
+          <span class="card__meta" id="docs-meta">3 documents · 2 필독</span>
+        </div>
+
+        <div class="notice" style="margin-bottom:10px">
+          <div class="notice__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div class="notice__body">
+            <span class="notice__title">가입 신청에서 보이는 문서</span>
+            <span class="notice__text">학칙·운영 가이드·기타 규정을 여기서 관리하세요. <strong style="color:var(--accent-violet)">가입 신청 필독</strong>으로 지정한 문서는 하위팀이 신청할 때 반드시 읽고 동의해야 제출됩니다. 문서 내용을 나중에 수정해도 기존 신청의 동의 기록은 당시 문구로 고정됩니다.</span>
+          </div>
+        </div>
+
+        <div class="doc-list" id="doc-list">
+
+          <div class="doc-item" data-required="true">
+            <div class="doc-item__head">
+              <span class="doc-item__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+              <input class="doc-item__title" value="SNU CS Dept. 학칙 v2" />
+              <span class="doc-item__updated">2026-02-01 수정</span>
+              <label class="doc-item__req">
+                <input type="checkbox" checked />
+                <span class="doc-item__req-pill">필독</span>
+              </label>
+              <a class="doc-item__edit" href="subteam-doc-compose.html">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+                편집
+              </a>
+              <div class="doc-item__actions">
+                <button class="doc-item__btn" aria-label="Move up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+                <button class="doc-item__btn" aria-label="Move down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                <button class="doc-item__btn doc-item__btn--danger" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+              </div>
+            </div>
+            <div class="doc-item__preview">제1조 (목적) 본 학칙은 SNU CS Dept. 소속 학생 동아리의 설립·활동·해체에 관한 사항을 규정함을 목적으로 한다. 제2조 (설립 요건) 최소 5인 이상의 학부·대학원생 구성…</div>
+            <div class="doc-item__foot">
+              <span class="doc-item__stats">
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>5 조항 · 628자</span>
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>2 파일 · 330 KB</span>
+              </span>
+              <span class="doc-item__hint">필독으로 지정됨 · 신청 시 동의 필수</span>
+            </div>
+          </div>
+
+          <div class="doc-item" data-required="true">
+            <div class="doc-item__head">
+              <span class="doc-item__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+              <input class="doc-item__title" value="개인정보 처리 방침" />
+              <span class="doc-item__updated">2026-01-15 수정</span>
+              <label class="doc-item__req">
+                <input type="checkbox" checked />
+                <span class="doc-item__req-pill">필독</span>
+              </label>
+              <a class="doc-item__edit" href="subteam-doc-compose.html">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+                편집
+              </a>
+              <div class="doc-item__actions">
+                <button class="doc-item__btn" aria-label="Move up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+                <button class="doc-item__btn" aria-label="Move down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                <button class="doc-item__btn doc-item__btn--danger" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+              </div>
+            </div>
+            <div class="doc-item__preview">신청 시 제출한 대표자 연락처·지도교수 정보는 하위팀 심사 목적 외에는 사용되지 않습니다. 수집 항목, 보관 기간, 제3자 제공 여부, 열람·수정 요청 경로…</div>
+            <div class="doc-item__foot">
+              <span class="doc-item__stats">
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>4 항목 · 312자</span>
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19"/></svg>0 파일</span>
+              </span>
+              <span class="doc-item__hint">필독으로 지정됨</span>
+            </div>
+          </div>
+
+          <div class="doc-item" data-required="false">
+            <div class="doc-item__head">
+              <span class="doc-item__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
+              <input class="doc-item__title" value="동아리 운영 가이드 (참고용)" />
+              <span class="doc-item__updated">2025-12-20 수정</span>
+              <label class="doc-item__req">
+                <input type="checkbox" />
+                <span class="doc-item__req-pill">필독</span>
+              </label>
+              <a class="doc-item__edit" href="subteam-doc-compose.html">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+                편집
+              </a>
+              <div class="doc-item__actions">
+                <button class="doc-item__btn" aria-label="Move up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+                <button class="doc-item__btn" aria-label="Move down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                <button class="doc-item__btn doc-item__btn--danger" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+              </div>
+            </div>
+            <div class="doc-item__preview">학과가 권장하는 동아리 운영 방식에 대한 참고 자료입니다. 필수가 아닌 가이드로, 동아리 특성에 맞게 참고하시면 됩니다. 연간 계획 수립 · 회비 관리 · 공간 사용 절차…</div>
+            <div class="doc-item__foot">
+              <span class="doc-item__stats">
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>4 항목 · 248자</span>
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19"/></svg>1 파일 · 1.2 MB</span>
+              </span>
+              <span class="doc-item__hint">필독 아님 · 참고 자료로만 노출</span>
+            </div>
+          </div>
+
+        </div>
+
+        <a class="add-doc-btn" id="add-doc" href="subteam-doc-compose.html" style="margin-top:12px;text-decoration:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          새 문서 작성
+        </a>
+      </section>
+    </div>
+
+    <!-- ====== TAB: 하위팀 목록 ====== -->
+    <div class="tab-panel" data-tab="roster">
+      <section class="card">
+        <div class="card__head">
+          <h2 class="card__title">인증된 하위팀 · Active roster</h2>
+          <span class="card__dash"></span>
+          <span class="card__meta">12개 · 클릭하면 상세 보기 (metric · member · 공지 · 해제)</span>
+        </div>
+
+        <div id="roster-note" style="display:none" class="inline-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          신규 신청은 차단됐지만 <strong>기존 하위팀과의 관계는 유지됩니다</strong>. 대시보드·공지·상세 관리는 계속 쓸 수 있습니다.
+        </div>
+
+        <div class="roster" style="margin-top:10px">
+          <a class="roster-row" href="subteam-management-detail-page.html">
+            <div class="avatar avatar--teal">SC</div>
+            <div class="roster-row__body"><span class="roster-row__name">SNU Code Club</span><span class="roster-row__handle">@snu_code_club · 인증 2026-02-14</span></div>
+            <div class="roster-row__metrics"><span class="roster-row__metric"><strong>48</strong> posts</span><span class="roster-row__metric"><strong>32</strong> members</span></div>
+            <span class="roster-row__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+          </a>
+          <a class="roster-row" href="subteam-management-detail-page.html">
+            <div class="avatar avatar--violet">AL</div>
+            <div class="roster-row__body"><span class="roster-row__name">Algorithm Lab</span><span class="roster-row__handle">@snu_algo · 인증 2025-11-02</span></div>
+            <div class="roster-row__metrics"><span class="roster-row__metric"><strong>31</strong> posts</span><span class="roster-row__metric"><strong>25</strong> members</span></div>
+            <span class="roster-row__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+          </a>
+          <a class="roster-row" href="subteam-management-detail-page.html">
+            <div class="avatar avatar--cyan">AI</div>
+            <div class="roster-row__body"><span class="roster-row__name">AI &amp; ML Society</span><span class="roster-row__handle">@snu_aiml · 인증 2026-03-08</span></div>
+            <div class="roster-row__metrics"><span class="roster-row__metric"><strong>22</strong> posts</span><span class="roster-row__metric"><strong>18</strong> members</span></div>
+            <span class="roster-row__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+          </a>
+          <a class="roster-row" href="subteam-management-detail-page.html">
+            <div class="avatar avatar--pink">GD</div>
+            <div class="roster-row__body"><span class="roster-row__name">Game Dev Crew</span><span class="roster-row__handle">@snu_gamedev · 인증 2026-04-01</span></div>
+            <div class="roster-row__metrics"><span class="roster-row__metric"><strong>18</strong> posts</span><span class="roster-row__metric"><strong>14</strong> members</span></div>
+            <span class="roster-row__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+          </a>
+          <a class="roster-row" href="subteam-management-detail-page.html">
+            <div class="avatar avatar--purple">SE</div>
+            <div class="roster-row__body"><span class="roster-row__name">Security Enthusiasts</span><span class="roster-row__handle">@snu_sec · 인증 2025-09-22</span></div>
+            <div class="roster-row__metrics"><span class="roster-row__metric"><strong>5</strong> posts</span><span class="roster-row__metric"><strong>8</strong> members</span></div>
+            <span class="roster-row__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <!-- ====== TAB: 신청 대기 ====== -->
+    <div class="tab-panel" data-tab="queue">
+      <section class="card">
+        <div class="card__head">
+          <h2 class="card__title">신청 대기 · Pending applications</h2>
+          <span class="card__dash"></span>
+          <span class="card__meta">4건 · 오래된 순</span>
+        </div>
+
+        <div id="queue-inactive-note" style="display:none" class="inline-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          신청 받기가 꺼져있습니다. 현재 대기 중인 신청은 그대로 검토할 수 있지만, 새 신청은 들어오지 않습니다.
+        </div>
+
+        <div class="u-col u-gap-10" id="queue-list" style="margin-top:10px">
+          <div class="queue-row">
+            <div class="avatar avatar--teal">QC</div>
+            <div class="queue-row__body">
+              <span class="queue-row__name">Quantum Computing Club</span>
+              <div class="queue-row__meta"><span>7 members</span><span>동의 3/3</span><span>2일 전</span><span>v3 form</span></div>
+            </div>
+            <div class="queue-row__actions">
+              <button class="queue-row__action queue-row__action--approve">Approve</button>
+              <button class="queue-row__action queue-row__action--return">Return</button>
+              <button class="queue-row__action queue-row__action--reject">Reject</button>
+            </div>
+          </div>
+          <div class="queue-row">
+            <div class="avatar avatar--violet">RV</div>
+            <div class="queue-row__body">
+              <span class="queue-row__name">Robotics &amp; Vision Lab</span>
+              <div class="queue-row__meta"><span>12 members</span><span>동의 2/3</span><span>어제</span><span>v3 form</span></div>
+            </div>
+            <div class="queue-row__actions">
+              <button class="queue-row__action queue-row__action--approve">Approve</button>
+              <button class="queue-row__action queue-row__action--return">Return</button>
+              <button class="queue-row__action queue-row__action--reject">Reject</button>
+            </div>
+          </div>
+          <div class="queue-row">
+            <div class="avatar avatar--purple">DE</div>
+            <div class="queue-row__body">
+              <span class="queue-row__name">Data Engineering Society</span>
+              <div class="queue-row__meta"><span>5 members</span><span>동의 3/3</span><span>오늘</span><span>v3 form</span></div>
+            </div>
+            <div class="queue-row__actions">
+              <button class="queue-row__action queue-row__action--approve">Approve</button>
+              <button class="queue-row__action queue-row__action--return">Return</button>
+              <button class="queue-row__action queue-row__action--reject">Reject</button>
+            </div>
+          </div>
+          <div class="queue-row">
+            <div class="avatar avatar--cyan">BC</div>
+            <div class="queue-row__body">
+              <span class="queue-row__name">Blockchain &amp; Web3 Circle</span>
+              <div class="queue-row__meta"><span>8 members</span><span>동의 3/3</span><span>오늘</span><span>v3 form</span></div>
+            </div>
+            <div class="queue-row__actions">
+              <button class="queue-row__action queue-row__action--approve">Approve</button>
+              <button class="queue-row__action queue-row__action--return">Return</button>
+              <button class="queue-row__action queue-row__action--reject">Reject</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ====== TAB: 전체 공지 관리 ====== -->
+    <div class="tab-panel" data-tab="broadcast" id="broadcast">
+
+      <!-- CTA to compose a new broadcast -->
+      <a class="bc-cta" href="subteam-broadcast-compose.html">
+        <div class="bc-cta__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8v18l-18-8v-2z"/></svg>
+        </div>
+        <div class="bc-cta__body">
+          <div class="bc-cta__label">새 공지 작성 · Compose broadcast</div>
+          <div class="bc-cta__sub">SNU CS Dept.로 발행 · 12 동아리 × 342명에게 인앱 + 이메일 알림. 실제 구현은 <strong>new-post 컴포넌트 재활용</strong> (POSTING AS + VISIBILITY lock).</div>
+        </div>
+        <svg class="bc-cta__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+
+      <!-- Drafts -->
+      <section class="card">
+        <div class="card__head">
+          <h2 class="card__title" style="background:linear-gradient(135deg,#fcd34d,#facc15);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">작성 중 · Drafts</h2>
+          <span class="card__dash"></span>
+          <span class="card__meta" id="drafts-meta">2 drafts</span>
+        </div>
+
+        <div class="u-col u-gap-10" id="drafts-list">
+          <div class="draft-row">
+            <div class="draft-row__dot"></div>
+            <div class="draft-row__body">
+              <div class="draft-row__title">학과 세미나 참여 공고 (미공개)</div>
+              <div class="draft-row__meta">
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  3분 전 자동 저장 · 324자
+                </span>
+                <span>Posting as <strong>SNU CS Dept.</strong></span>
+                <span>Broadcast · 12팀</span>
+              </div>
+            </div>
+            <a class="draft-row__edit" href="subteam-broadcast-compose.html">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+              수정하기
+            </a>
+            <button class="draft-row__del" aria-label="Delete">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
+          </div>
+
+          <div class="draft-row">
+            <div class="draft-row__dot"></div>
+            <div class="draft-row__body">
+              <div class="draft-row__title">2026-1학기 동아리실 배정 안내 (최종 검토 중)</div>
+              <div class="draft-row__meta">
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  어제 · 628자 · 첨부 1
+                </span>
+                <span>Posting as <strong>SNU CS Dept.</strong></span>
+                <span>Broadcast · 12팀</span>
+              </div>
+            </div>
+            <a class="draft-row__edit" href="subteam-broadcast-compose.html">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+              수정하기
+            </a>
+            <button class="draft-row__del" aria-label="Delete">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Published -->
+      <section class="card">
+        <div class="card__head">
+          <h2 class="card__title" style="background:linear-gradient(135deg,#c084fc,#e9d5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">발행된 공지 · Published</h2>
+          <span class="card__dash"></span>
+          <span class="card__meta">최근 30일 · 3건</span>
+        </div>
+
+        <div class="u-col u-gap-10">
+          <div class="bc-item">
+            <div class="bc-item__top">
+              <span class="bc-item__kind">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24z"/></svg>
+                Pinned
+              </span>
+              <span class="bc-item__time">2일 전 · 2026-04-20</span>
+            </div>
+            <div class="bc-item__title-text">2026 신입생 오리엔테이션 일정 안내</div>
+            <div class="bc-item__meta">
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>12 동아리 · 342명 알림</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>8 댓글</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/></svg>342 views</span>
+            </div>
+          </div>
+
+          <div class="bc-item">
+            <div class="bc-item__top">
+              <span class="bc-item__kind" style="background:rgba(255,255,255,0.04);color:var(--text-muted);border-color:var(--border-subtle)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+                Unpinned
+              </span>
+              <span class="bc-item__time">1주 전 · 2026-04-13</span>
+            </div>
+            <div class="bc-item__title-text">학술활동 지원금 신청 마감 D-7</div>
+            <div class="bc-item__meta">
+              <span>12 동아리 · 342명 알림</span>
+              <span>3 댓글</span>
+              <span>다음 공지 시 자동 unpin</span>
+            </div>
+          </div>
+
+          <div class="bc-item">
+            <div class="bc-item__top">
+              <span class="bc-item__kind" style="background:rgba(255,255,255,0.04);color:var(--text-muted);border-color:var(--border-subtle)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+                Unpinned
+              </span>
+              <span class="bc-item__time">3주 전 · 2026-04-01</span>
+            </div>
+            <div class="bc-item__title-text">학칙 v2 개정안 공지</div>
+            <div class="bc-item__meta">
+              <span>11 동아리 · 318명 알림</span>
+              <span>14 댓글</span>
+              <span>Archived</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+</div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    // ── Activation toggle (only dims the eligibility tab content)
+    const root = document.getElementById('page-root');
+    const activation = document.getElementById('activation');
+    const activationToggle = document.getElementById('activation-toggle');
+    const activationLabel = document.getElementById('activation-label');
+    const topStatus = document.getElementById('top-status');
+    const rosterNote = document.getElementById('roster-note');
+    const queueInactiveNote = document.getElementById('queue-inactive-note');
+
+    function applyActivation(on) {
+      root.setAttribute('data-activated', on);
+      activation.setAttribute('data-on', on);
+      activationLabel.textContent = on ? 'Parent-eligible · ON' : 'Parent-eligible · OFF';
+      topStatus.textContent = on ? 'Active · 12 sub-teams' : 'Inactive · 신규 신청만 차단';
+      rosterNote.style.display = on ? 'none' : 'block';
+      queueInactiveNote.style.display = on ? 'none' : 'block';
+    }
+    activationToggle.addEventListener('change', (e) => {
+      applyActivation(e.target.checked);
+      SubTeam.toast(
+        e.target.checked
+          ? '가입 신청 활성화됨 · 하위팀 아이콘이 팀 홈에 노출됩니다'
+          : '신규 신청 차단됨 · 기존 하위팀 관계 · 공지 · 대시보드는 계속 작동',
+        e.target.checked ? 'success' : 'danger'
+      );
+    });
+    applyActivation(true);
+
+    // ── Gate only eligibility content when OFF
+    const style = document.createElement('style');
+    style.textContent = '[data-activated="false"] .tab-panel[data-tab="requirements"] .gated{opacity:0.30;pointer-events:none;filter:saturate(0.4)}';
+    document.head.appendChild(style);
+
+    // ── Tabs
+    const tabButtons = document.querySelectorAll('.tabs-nav__btn');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+    function setTab(name) {
+      tabButtons.forEach(b => b.setAttribute('aria-selected', b.dataset.tab === name));
+      tabPanels.forEach(p => p.setAttribute('data-active', p.dataset.tab === name));
+    }
+    tabButtons.forEach(btn => btn.addEventListener('click', () => setTab(btn.dataset.tab)));
+
+    // ── Steppers
+    document.querySelectorAll('.req-card__stepper').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.step;
+        const dir = btn.dataset.dir;
+        const input = document.getElementById(id);
+        const cur = +input.value;
+        input.value = dir === '+' ? cur + 1 : Math.max(0, cur - 1);
+      });
+    });
+
+    // ── Collapsible cards (form + consent)
+    function bindCollapse(cardId) {
+      const card = document.getElementById(cardId);
+      const head = card.querySelector('.card__head');
+      head.addEventListener('click', (e) => {
+        if (e.target.closest('.btn') && !e.target.closest('.card__toggle')) return;
+        const collapsed = card.getAttribute('data-collapsed') === 'true';
+        card.setAttribute('data-collapsed', !collapsed);
+      });
+    }
+    bindCollapse('form');
+
+    // ── Linked source catalogue (per-field link menu)
+    const linkSources = [
+      { key:'none',           label:'자동 채우지 않음',      hint:'No auto-fill'     },
+      { key:'team.name',      label:'팀 이름',              hint:'team.name'         },
+      { key:'team.handle',    label:'팀 핸들',              hint:'team.handle'       },
+      { key:'team.bio',       label:'팀 소개 / Bio',        hint:'team.bio'          },
+      { key:'team.website',   label:'팀 웹사이트',          hint:'team.website'      },
+      { key:'admin.name',     label:'대표자 이름',          hint:'admin.name'        },
+      { key:'admin.email',    label:'대표자 이메일',        hint:'admin.email'       },
+      { key:'admin.handle',   label:'대표자 핸들',          hint:'admin.handle'      },
+    ];
+    const linkLabelFor = (key) => (linkSources.find(s => s.key === key) || { label:'자동 채우지 않음' }).label;
+
+    function renderLinkBadge(row) {
+      let wrap = row.querySelector('.field-row__link-wrap');
+      const key = row.dataset.linked || 'none';
+      if (!wrap) {
+        wrap = document.createElement('span');
+        wrap.className = 'field-row__link-wrap';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'field-row__link-btn';
+        wrap.appendChild(btn);
+        const req = row.querySelector('.field-row__req');
+        if (req) row.insertBefore(wrap, req);
+        else row.appendChild(wrap);
+      }
+      const btn = wrap.querySelector('.field-row__link-btn');
+      btn.dataset.linked = key === 'none' ? 'none' : 'set';
+      btn.replaceChildren();
+      const chain = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      chain.setAttribute('viewBox','0 0 24 24');
+      chain.setAttribute('fill','none');
+      chain.setAttribute('stroke','currentColor');
+      chain.setAttribute('stroke-width','2.5');
+      chain.setAttribute('stroke-linecap','round');
+      chain.setAttribute('stroke-linejoin','round');
+      ['M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71',
+       'M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'].forEach(d => {
+        const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+        p.setAttribute('d', d);
+        chain.appendChild(p);
+      });
+      btn.appendChild(chain);
+      const label = document.createElement('span');
+      label.textContent = key === 'none' ? 'Link' : linkLabelFor(key);
+      btn.appendChild(label);
+    }
+
+    function openLinkMenu(row) {
+      document.querySelectorAll('.field-row__link-menu[data-open="true"]').forEach(m => m.setAttribute('data-open','false'));
+      let menu = row.querySelector('.field-row__link-menu');
+      if (menu) menu.remove();
+      menu = document.createElement('div');
+      menu.className = 'field-row__link-menu';
+      menu.setAttribute('data-open','false');
+      const current = row.dataset.linked || 'none';
+      linkSources.forEach(src => {
+        const opt = document.createElement('button');
+        opt.type = 'button';
+        opt.className = 'field-row__link-option';
+        opt.setAttribute('aria-selected', src.key === current);
+        const left = document.createElement('span');
+        left.textContent = src.label;
+        const right = document.createElement('span');
+        right.className = 'field-row__link-option-key';
+        right.textContent = src.hint;
+        const check = document.createElementNS('http://www.w3.org/2000/svg','svg');
+        check.setAttribute('viewBox','0 0 24 24');
+        check.setAttribute('fill','none');
+        check.setAttribute('stroke','currentColor');
+        check.setAttribute('stroke-width','3');
+        const poly = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+        poly.setAttribute('points','20 6 9 17 4 12');
+        check.appendChild(poly);
+        opt.appendChild(left);
+        opt.appendChild(right);
+        opt.appendChild(check);
+        opt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          row.dataset.linked = src.key;
+          renderLinkBadge(row);
+          menu.setAttribute('data-open','false');
+          if (row.dataset.locked !== 'true') {
+            SubTeam.toast((row.querySelector('.field-row__label').value || '필드') + ' → ' + src.label);
+          }
+          updateFormMeta();
+        });
+        menu.appendChild(opt);
+      });
+      row.querySelector('.field-row__link-wrap').appendChild(menu);
+      requestAnimationFrame(() => menu.setAttribute('data-open','true'));
+    }
+
+    function initFieldRow(row) {
+      if (!row.dataset.linked) row.dataset.linked = 'none';
+      renderLinkBadge(row);
+    }
+
+    function updateFormMeta() {
+      const rows = document.querySelectorAll('#field-list .field-row');
+      const reqs = Array.from(rows).filter(r => {
+        const cb = r.querySelector('.field-row__req input');
+        return cb && cb.checked;
+      }).length;
+      const linked = Array.from(rows).filter(r => r.dataset.linked && r.dataset.linked !== 'none').length;
+      document.getElementById('form-meta').textContent = rows.length + ' 필드 · ' + reqs + ' 필수 · ' + linked + ' linked · Form v3 (draft)';
+    }
+    document.getElementById('field-list').addEventListener('change', updateFormMeta);
+    document.getElementById('field-list').addEventListener('click', (e) => {
+      const del = e.target.closest('.field-row__del');
+      if (del) { del.closest('.field-row').remove(); updateFormMeta(); return; }
+      const linkBtn = e.target.closest('.field-row__link-btn');
+      if (linkBtn) {
+        e.stopPropagation();
+        const row = linkBtn.closest('.field-row');
+        const wrap = row.querySelector('.field-row__link-wrap');
+        const existing = wrap.querySelector('.field-row__link-menu');
+        if (existing && existing.getAttribute('data-open') === 'true') existing.setAttribute('data-open','false');
+        else openLinkMenu(row);
+      }
+    });
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.field-row__link-menu[data-open="true"]').forEach(m => m.setAttribute('data-open','false'));
+    });
+    document.getElementById('add-field').addEventListener('click', () => {
+      const tpl = document.getElementById('new-field-tpl');
+      const frag = tpl.content.cloneNode(true);
+      const row = frag.querySelector('.field-row');
+      document.getElementById('field-list').appendChild(row);
+      initFieldRow(row);
+      row.querySelector('.field-row__label').focus();
+      updateFormMeta();
+    });
+    document.querySelectorAll('#field-list .field-row').forEach(initFieldRow);
+    updateFormMeta();
+
+    // ── Documents (문서 탭)
+    function refreshDocsMeta() {
+      const items = document.querySelectorAll('#doc-list .doc-item');
+      items.forEach(it => it.setAttribute('data-required', it.querySelector('.doc-item__req input').checked));
+      const required = Array.from(items).filter(it => it.querySelector('.doc-item__req input').checked).length;
+      document.getElementById('docs-meta').textContent = items.length + ' documents · ' + required + ' 필독';
+      const badge = document.getElementById('docs-badge');
+      if (badge) badge.textContent = items.length;
+    }
+    document.getElementById('doc-list').addEventListener('click', (e) => {
+      const btn = e.target.closest('.doc-item__btn');
+      if (!btn) return;
+      const item = btn.closest('.doc-item');
+      const label = btn.getAttribute('aria-label');
+      if (label === 'Delete') {
+        item.style.opacity = '0';
+        setTimeout(() => { item.remove(); refreshDocsMeta(); }, 180);
+        SubTeam.toast('문서 삭제됨', 'danger');
+      } else if (label === 'Move up') {
+        const prev = item.previousElementSibling;
+        if (prev && prev.classList.contains('doc-item')) item.parentElement.insertBefore(item, prev);
+      } else if (label === 'Move down') {
+        const next = item.nextElementSibling;
+        if (next && next.classList.contains('doc-item')) item.parentElement.insertBefore(next, item);
+      }
+    });
+    document.getElementById('doc-list').addEventListener('change', refreshDocsMeta);
+    refreshDocsMeta();
+
+    // ── Queue actions
+    document.getElementById('queue-list').addEventListener('click', (e) => {
+      const btn = e.target.closest('.queue-row__action');
+      if (!btn) return;
+      const row = btn.closest('.queue-row');
+      const name = row.querySelector('.queue-row__name').textContent;
+      row.style.opacity = '0';
+      setTimeout(() => row.remove(), 180);
+      if (btn.classList.contains('queue-row__action--approve')) SubTeam.toast(name + ' 승인됨 · 알림 전송', 'success');
+      else if (btn.classList.contains('queue-row__action--reject')) SubTeam.toast(name + ' 거절됨 · 사유 요청', 'danger');
+      else SubTeam.toast(name + ' 반송됨 · 재제출 대기');
+    });
+
+    // ── Broadcast drafts (delete)
+    const draftsList = document.getElementById('drafts-list');
+    const draftsMeta = document.getElementById('drafts-meta');
+    function refreshDraftsMeta() {
+      const count = draftsList.querySelectorAll('.draft-row').length;
+      draftsMeta.textContent = count + ' draft' + (count === 1 ? '' : 's');
+    }
+    draftsList.addEventListener('click', (e) => {
+      const del = e.target.closest('.draft-row__del');
+      if (!del) return;
+      const row = del.closest('.draft-row');
+      const title = row.querySelector('.draft-row__title').textContent;
+      row.style.opacity = '0';
+      setTimeout(() => { row.remove(); refreshDraftsMeta(); }, 180);
+      SubTeam.toast('초안 "' + title + '" 삭제됨', 'danger');
+    });
+    refreshDraftsMeta();
+
+    // ── Deep-link support: opening with #broadcast selects that tab
+    if (window.location.hash === '#broadcast') {
+      setTab('broadcast');
+      setTimeout(() => {
+        const el = document.querySelector('.tab-panel[data-tab="broadcast"]');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+
+    // ── Autosave toast: flash any change so the user knows it persisted.
+    // In production the real save happens on the debounced change handler;
+    // in this mockup we just acknowledge the common inputs.
+    let autosaveTimer = null;
+    function flashAutosaved() {
+      if (autosaveTimer) clearTimeout(autosaveTimer);
+      autosaveTimer = setTimeout(() => {
+        SubTeam.toast('자동 저장됨', 'success');
+      }, 450);
+    }
+    // Settings inputs: requirements, form builder, consent items, activation
+    document.querySelectorAll('#requirements input, #form input, #form select, #doc-list input, #doc-list textarea')
+      .forEach(el => el.addEventListener('change', flashAutosaved));
+  });
+</script>
+</body>
+</html>

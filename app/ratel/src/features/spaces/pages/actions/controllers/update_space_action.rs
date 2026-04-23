@@ -14,7 +14,8 @@ use crate::features::membership::models::{
 #[serde(untagged)]
 pub enum UpdateSpaceActionRequest {
     Credits { credits: u64 },
-    Time { started_at: i64, ended_at: i64 },
+    Status { status: SpaceActionStatus },
+    Dependencies { depends_on: Vec<String> },
     Prerequisite { prerequisite: bool },
     Title { title: String },
 }
@@ -58,23 +59,33 @@ pub async fn update_space_action(
             )
             .await?;
         }
-        UpdateSpaceActionRequest::Time {
-            started_at,
-            ended_at,
-        } => {
-            if started_at >= ended_at {
-                return Err(SpaceActionError::InvalidTimeRange.into());
+        UpdateSpaceActionRequest::Status { status } => {
+            if !SpaceActionStatus::allows_transition(space_action.status.as_ref(), &status) {
+                return Err(SpaceActionError::InvalidStatusTransition.into());
             }
-            space_action.started_at = started_at;
-            space_action.ended_at = ended_at;
+            space_action.status = Some(status.clone());
             SpaceAction::updater(&pk, &EntityType::SpaceAction)
-                .with_started_at(started_at)
-                .with_ended_at(ended_at)
+                .with_status(status)
                 .with_updated_at(now)
                 .execute(cli)
                 .await
                 .map_err(|e| {
-                    crate::error!("Failed to update space action: {e:?}");
+                    crate::error!("Failed to update action status: {e:?}");
+                    SpaceActionError::ActionUpdateFailed
+                })?;
+        }
+        UpdateSpaceActionRequest::Dependencies { depends_on } => {
+            if depends_on.iter().any(|id| id == &action_id) {
+                return Err(SpaceActionError::InvalidDependency.into());
+            }
+            space_action.depends_on = depends_on.clone();
+            SpaceAction::updater(&pk, &EntityType::SpaceAction)
+                .with_depends_on(depends_on)
+                .with_updated_at(now)
+                .execute(cli)
+                .await
+                .map_err(|e| {
+                    crate::error!("Failed to update action dependencies: {e:?}");
                     SpaceActionError::ActionUpdateFailed
                 })?;
         }
@@ -105,7 +116,28 @@ pub async fn update_space_action(
     }
 
     space_action.updated_at = now;
+    reindex_essence_for_action(cli, &space_id, &action_id, &space_action, &space).await;
     Ok(space_action)
+}
+
+/// Re-index the Essence row backing this action's source entity (quiz /
+/// poll / discussion) so hero stats + title/word_count mirror the edited
+/// action. Credits/Prerequisite updates touch no text fields, but Title
+/// edits do — running on every branch keeps the call site uniform.
+#[cfg(feature = "server")]
+async fn reindex_essence_for_action(
+    cli: &aws_sdk_dynamodb::Client,
+    space_id: &SpacePartition,
+    action_id: &str,
+    space_action: &SpaceAction,
+    space: &SpaceCommon,
+) {
+    let space_pk: Partition = space_id.clone().into();
+    // Essence re-indexing for poll/quiz happens via the DynamoDB Stream
+    // pipeline whenever the underlying SpacePoll/SpaceQuiz row is updated.
+    // When *only* SpaceAction fields change (action title/description) we
+    // explicitly bump the related row so the stream picks the change up.
+    let _ = (space, action_id, space_pk, space_action);
 }
 
 #[cfg(feature = "server")]

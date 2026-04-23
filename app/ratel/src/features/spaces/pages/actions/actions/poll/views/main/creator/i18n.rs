@@ -58,6 +58,14 @@ translate! {
         en: "Participation & Rewards",
         ko: "참여 및 보상",
     },
+    section_dependencies_label: {
+        en: "Dependency Actions",
+        ko: "선행 액션",
+    },
+    section_status_label: {
+        en: "Status",
+        ko: "상태",
+    },
     section_danger_label: {
         en: "Danger zone",
         ko: "위험 영역",
@@ -153,14 +161,6 @@ translate! {
     tile_reward: {
         en: "Reward (CR)",
         ko: "보상 (CR)",
-    },
-    tile_prereq: {
-        en: "Prerequisite",
-        ko: "선행 조건",
-    },
-    tile_prereq_label: {
-        en: "Require Follow action first",
-        ko: "Follow 액션 먼저 필요",
     },
     delete_poll_title: {
         en: "Delete this poll",

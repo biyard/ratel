@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Add to Calendar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .cal-split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media (max-width:720px){.cal-split{grid-template-columns:1fr}}
+
+    .cal-option{
+      position:relative;overflow:hidden;
+      padding:26px 28px;border-radius:18px;
+      background:var(--bg-glass);backdrop-filter:blur(12px);
+      border:1px solid var(--border-subtle);
+      display:flex;flex-direction:column;gap:14px;
+    }
+    .cal-option::before{content:'';position:absolute;top:0;right:0;width:160px;height:160px;background:radial-gradient(circle,var(--opt-accent),transparent 60%);filter:blur(40px);opacity:0.25;pointer-events:none}
+    .cal-option[data-kind="google"]{--opt-accent:rgba(66,133,244,0.4);border-color:rgba(66,133,244,0.25)}
+    .cal-option[data-kind="ics"]{--opt-accent:rgba(129,140,248,0.35);border-color:rgba(129,140,248,0.25)}
+    .cal-option > *{position:relative;z-index:1}
+
+    .cal-option__head{display:flex;align-items:center;gap:14px}
+    .cal-option__icon{width:54px;height:54px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-size:14px;font-weight:800}
+    .cal-option[data-kind="google"] .cal-option__icon{background:rgba(66,133,244,0.12);border:1px solid rgba(66,133,244,0.30);color:#82b5ff}
+    .cal-option[data-kind="ics"] .cal-option__icon{background:rgba(129,140,248,0.10);border:1px solid rgba(129,140,248,0.28);color:var(--accent-violet)}
+    .cal-option__icon svg{width:26px;height:26px}
+    .cal-option__title{font-family:var(--font-display);font-size:16px;font-weight:800;letter-spacing:0.02em;color:var(--text-primary)}
+    .cal-option__sub{font-size:12px;color:var(--text-muted);margin-top:3px}
+
+    .cal-option__features{display:flex;flex-direction:column;gap:7px}
+    .cal-option__feature{display:flex;gap:8px;font-size:13px;color:var(--text-primary);line-height:1.5}
+    .cal-option__feature svg{width:14px;height:14px;color:var(--accent-green);flex-shrink:0;margin-top:3px}
+
+    .cal-option__cta{
+      padding:12px 20px;border-radius:11px;
+      font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;
+      cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;
+      border:1px solid;transition:all 0.2s;
+    }
+    .cal-option[data-kind="google"] .cal-option__cta{background:rgba(66,133,244,0.10);border-color:rgba(66,133,244,0.35);color:#82b5ff}
+    .cal-option[data-kind="google"] .cal-option__cta:hover{background:rgba(66,133,244,0.20);box-shadow:0 0 16px rgba(66,133,244,0.2)}
+    .cal-option[data-kind="ics"] .cal-option__cta{background:rgba(129,140,248,0.08);border-color:rgba(129,140,248,0.30);color:var(--accent-violet)}
+    .cal-option[data-kind="ics"] .cal-option__cta:hover{background:rgba(129,140,248,0.14);box-shadow:0 0 16px rgba(129,140,248,0.15)}
+
+    /* OAuth consent modal body */
+    .oauth-consent{display:flex;flex-direction:column;gap:14px}
+    .oauth-consent__header{display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--border-subtle)}
+    .oauth-consent__google{width:36px;height:36px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.25);font-family:var(--font-display);font-weight:800;font-size:16px;color:#4285f4}
+    .oauth-consent__title{font-family:var(--font-display);font-size:12px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-primary)}
+    .oauth-consent__sub{font-size:12px;color:var(--text-muted);margin-top:3px}
+
+    .oauth-consent__body{font-size:13px;line-height:1.7;color:var(--text-primary)}
+    .oauth-consent__body strong{color:var(--accent-gold)}
+
+    .scope-list{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:11px;background:rgba(66,133,244,0.05);border:1px solid rgba(66,133,244,0.22)}
+    .scope-list__title{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#82b5ff}
+    .scope-row{display:flex;gap:10px;align-items:flex-start;font-size:12px}
+    .scope-row__icon{width:22px;height:22px;border-radius:6px;background:rgba(66,133,244,0.12);border:1px solid rgba(66,133,244,0.25);color:#82b5ff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .scope-row__icon svg{width:11px;height:11px}
+    .scope-row--denied .scope-row__icon{background:rgba(255,255,255,0.04);border-color:var(--border-subtle);color:var(--text-dim)}
+    .scope-row__body{flex:1}
+    .scope-row__title{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.04em;color:var(--text-primary)}
+    .scope-row__desc{font-size:11px;color:var(--text-muted);margin-top:2px;line-height:1.5}
+    .scope-row--denied .scope-row__title{color:var(--text-dim);text-decoration:line-through}
+    .scope-row--denied .scope-row__desc{color:var(--text-dim)}
+
+    /* ICS preview */
+    .ics-preview{
+      padding:14px 16px;border-radius:10px;
+      background:rgba(6,6,14,0.6);border:1px solid var(--border-subtle);
+      font-family:'SF Mono','Menlo',monospace;font-size:11px;line-height:1.65;color:var(--text-muted);
+      white-space:pre-wrap;word-break:break-all;max-height:220px;overflow:auto;
+    }
+    .ics-preview__key{color:var(--accent-violet);font-weight:600}
+
+    /* Connected state (post-oauth) */
+    .connected-card{
+      display:none;align-items:center;gap:14px;padding:16px 18px;border-radius:14px;
+      background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.25);
+    }
+    .connected-card[data-shown="true"]{display:flex}
+    .connected-card__icon{width:40px;height:40px;border-radius:11px;background:rgba(34,197,94,0.10);border:1px solid rgba(34,197,94,0.28);display:flex;align-items:center;justify-content:center;color:var(--accent-green);flex-shrink:0}
+    .connected-card__icon svg{width:18px;height:18px}
+    .connected-card__body{flex:1}
+    .connected-card__title{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent-green)}
+    .connected-card__desc{font-size:12px;color:var(--text-muted);margin-top:2px;line-height:1.5}
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo">SC</div>
+      <div class="u-col">
+        <span class="arena-topbar__title">SNU Code Club</span>
+        <span class="arena-topbar__handle">Meet · Add to calendar</span>
+      </div>
+      <span class="arena-topbar__status arena-topbar__status--scheduled">Scheduled</span>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="page-header">
+      <div class="page-header__main">
+        <span class="page-header__eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          FR-4 · Calendar
+        </span>
+        <h1 class="page-header__title page-header__title--meet">달력에 <strong>추가</strong>하세요</h1>
+        <p class="page-header__sub">Google Calendar 원클릭 또는 ICS 파일 다운로드. Ratel → Google 단방향 sync — 달력에서 변경해도 Ratel에 반영되지 않습니다.</p>
+      </div>
+    </div>
+
+    <!-- Meeting summary chip -->
+    <div class="detail-row card" style="padding:14px 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <span class="chip chip--meet" style="font-size:10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg> Meet</span>
+      <span class="u-text-primary" style="font-family:var(--font-display);font-weight:700">Mid-semester retrospective call</span>
+      <span class="u-text-muted">· 2026-04-25 (금) 19:00 → 20:00 · Asia/Seoul</span>
+    </div>
+
+    <div class="connected-card" id="connected-card">
+      <div class="connected-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="connected-card__body">
+        <div class="connected-card__title">Google Calendar · 연결됨</div>
+        <div class="connected-card__desc">회의 이벤트가 <strong>miner@biyard.co</strong>의 기본 캘린더에 추가되었습니다. 10분 전 팝업 리마인더 설정됨.</div>
+      </div>
+      <a class="btn btn--ghost btn--small" href="scheduled.html">완료</a>
+    </div>
+
+    <div class="cal-split">
+      <!-- Google -->
+      <section class="cal-option" data-kind="google">
+        <div class="cal-option__head">
+          <div class="cal-option__icon">G</div>
+          <div>
+            <div class="cal-option__title">Google Calendar</div>
+            <div class="cal-option__sub">One-click · OAuth (최소 권한)</div>
+          </div>
+        </div>
+        <ul class="cal-option__features">
+          <li class="cal-option__feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>이벤트가 기본 캘린더에 자동 추가됩니다</li>
+          <li class="cal-option__feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>10분 전 팝업 리마인더 자동 설정</li>
+          <li class="cal-option__feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Ratel 참가 링크가 설명에 포함됩니다</li>
+          <li class="cal-option__feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Ratel → Google 단방향 · Google에서 수정해도 Ratel에 영향 없음</li>
+        </ul>
+        <button class="cal-option__cta" id="google-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Google 계정으로 연결
+        </button>
+      </section>
+
+      <!-- ICS -->
+      <section class="cal-option" data-kind="ics">
+        <div class="cal-option__head">
+          <div class="cal-option__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div>
+            <div class="cal-option__title">ICS 파일</div>
+            <div class="cal-option__sub">모든 캘린더 앱 호환 · Outlook · Apple · Fastmail · ProtonMail</div>
+          </div>
+        </div>
+        <ul class="cal-option__features">
+          <li class="cal-option__feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>OAuth 없이 즉시 다운로드 — 권한 부여 불필요</li>
+          <li class="cal-option__feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>파일 포맷: RFC 5545 iCalendar (.ics)</li>
+          <li class="cal-option__feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>더블클릭 시 기본 캘린더 앱이 열립니다</li>
+          <li class="cal-option__feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>회의 시각이 변경되면 ICS 다시 받아야 함 (sync 없음)</li>
+        </ul>
+        <button class="cal-option__cta" id="ics-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          retrospective.ics 다운로드
+        </button>
+        <div class="ics-preview">
+<span class="ics-preview__key">BEGIN</span>:VCALENDAR
+<span class="ics-preview__key">VERSION</span>:2.0
+<span class="ics-preview__key">PRODID</span>:-//Ratel//Meet 1.0//EN
+<span class="ics-preview__key">BEGIN</span>:VEVENT
+<span class="ics-preview__key">UID</span>:meet-42@ratel.foundation
+<span class="ics-preview__key">SUMMARY</span>:Mid-semester retrospective call · Ratel
+<span class="ics-preview__key">DTSTART</span>;TZID=Asia/Seoul:20260425T190000
+<span class="ics-preview__key">DTEND</span>;TZID=Asia/Seoul:20260425T200000
+<span class="ics-preview__key">URL</span>:https://ratel.foundation/spaces/snu-code-club/meet-42
+<span class="ics-preview__key">DESCRIPTION</span>:스프린트 회고 + 다음 분기 계획 논의…
+<span class="ics-preview__key">END</span>:VEVENT
+<span class="ics-preview__key">END</span>:VCALENDAR
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Google OAuth consent modal -->
+  <div class="modal-backdrop" id="oauth-modal">
+    <div class="modal modal--wide">
+      <div class="modal__head">
+        <span class="modal__title">Google 계정 연결</span>
+        <button class="modal__close" data-modal-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="modal__body">
+        <div class="oauth-consent">
+          <div class="oauth-consent__header">
+            <div class="oauth-consent__google">G</div>
+            <div>
+              <div class="oauth-consent__title">Google OAuth 2.0 · 권한 동의</div>
+              <div class="oauth-consent__sub">ratel.foundation이 <strong>miner@biyard.co</strong>의 Google 계정에 요청하는 권한</div>
+            </div>
+          </div>
+          <p class="oauth-consent__body">Ratel은 이 회의를 당신의 Google Calendar에 추가하기 위해 <strong>최소한의 권한</strong>만 요청합니다. 아래 범위 외에는 어떤 데이터에도 접근할 수 없습니다.</p>
+
+          <div class="scope-list">
+            <div class="scope-list__title">요청 권한 · Requested scopes</div>
+            <div class="scope-row">
+              <div class="scope-row__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="scope-row__body">
+                <div class="scope-row__title">calendar.events.insert</div>
+                <div class="scope-row__desc">당신의 달력에 <strong>새 이벤트를 추가</strong>할 수 있는 권한만 부여됩니다. 기존 이벤트 수정/삭제는 불가.</div>
+              </div>
+            </div>
+            <div class="scope-row scope-row--denied">
+              <div class="scope-row__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+              <div class="scope-row__body">
+                <div class="scope-row__title">calendar.readonly</div>
+                <div class="scope-row__desc">요청하지 않음 — Ratel은 당신의 다른 일정을 읽지 않습니다.</div>
+              </div>
+            </div>
+            <div class="scope-row scope-row--denied">
+              <div class="scope-row__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+              <div class="scope-row__body">
+                <div class="scope-row__title">gmail · drive · contacts</div>
+                <div class="scope-row__desc">전혀 요청하지 않습니다.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="notice notice--teal">
+            <div class="notice__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+            <div class="notice__body">
+              <span class="notice__title">권한 철회 가능</span>
+              <span class="notice__text">언제든지 <strong>myaccount.google.com/permissions</strong>에서 Ratel의 액세스를 철회할 수 있습니다. 철회 후에도 이미 추가된 이벤트는 당신의 달력에 남아 있습니다 (Ratel은 이벤트를 삭제할 수 없음).</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal__foot">
+        <button class="btn btn--ghost" data-modal-close>취소</button>
+        <button class="btn btn--primary" id="oauth-allow" style="background:rgba(66,133,244,0.12);border-color:rgba(66,133,244,0.35);color:#82b5ff;box-shadow:0 0 16px rgba(66,133,244,0.12)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          허용
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+</div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    document.getElementById('google-btn').addEventListener('click', () => SubTeam.openModal('oauth-modal'));
+    document.getElementById('oauth-allow').addEventListener('click', () => {
+      SubTeam.closeModal('oauth-modal');
+      document.getElementById('connected-card').setAttribute('data-shown', 'true');
+      SubTeam.toast('Google Calendar에 이벤트 추가됨 · 10분 전 리마인더 설정', 'success');
+      document.getElementById('connected-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    document.getElementById('ics-btn').addEventListener('click', () => {
+      SubTeam.toast('retrospective.ics · 다운로드 시작', 'success');
+    });
+  });
+</script>
+</body>
+</html>

@@ -49,6 +49,25 @@ pub async fn handle_stream_record(
             })
     }
 
+    // Dispatch essence indexing in addition to the entity-specific handlers
+    // below. Runs unconditionally so a Post (existing PostVectorIndex branch)
+    // also gets mirrored into the Essence list.
+    if matches!(event_name, "INSERT" | "MODIFY") {
+        if let Some(image) = new_image {
+            let sk = get_sk(image).unwrap_or_default();
+            if let Err(e) = essence_index_dispatch(&sk, image).await {
+                tracing::error!(error = %e, sk = %sk, "stream: essence index dispatch failed");
+            }
+        }
+    } else if event_name == "REMOVE" {
+        if let Some(image) = old_image {
+            let sk = get_sk(image).unwrap_or_default();
+            if let Err(e) = essence_remove_dispatch(&sk, image).await {
+                tracing::error!(error = %e, sk = %sk, "stream: essence remove dispatch failed");
+            }
+        }
+    }
+
     match event_name {
         "INSERT" => {
             let image = new_image.ok_or(Error::from(InfraError::StreamMissingImage))?;
@@ -200,5 +219,125 @@ pub async fn handle_stream_record(
         _ => {}
     }
 
+    Ok(())
+}
+
+/// Mirror an INSERT/MODIFY of any essence-indexable entity into the user's
+/// Essence list. Each branch deserializes the image into the matching
+/// model and delegates to the shared `essence::services` indexer (the same
+/// helper the migrate endpoint uses), so behaviour stays identical between
+/// stream-driven indexing and explicit backfills.
+#[cfg(feature = "server")]
+async fn essence_index_dispatch(
+    sk: &str,
+    image: &std::collections::HashMap<String, serde_dynamo::AttributeValue>,
+) -> crate::common::Result<()> {
+    use crate::common::Error;
+    use crate::common::utils::InfraError;
+
+    fn deserialize<T: serde::de::DeserializeOwned>(
+        image: &std::collections::HashMap<String, serde_dynamo::AttributeValue>,
+    ) -> crate::common::Result<T> {
+        serde_dynamo::from_item(image.clone()).map_err(|e| {
+            tracing::error!("essence dispatch deserialize: {e}");
+            Error::from(InfraError::StreamDeserializeFailed)
+        })
+    }
+
+    let cfg = crate::common::CommonConfig::default();
+    let cli = cfg.dynamodb();
+
+    if sk == "POST" {
+        let post: crate::features::posts::models::Post = deserialize(image)?;
+        crate::features::essence::services::index_post(cli, &post).await?;
+    } else if sk == "SPACE_ACTION" {
+        // Quiz essence rows pull their `title`/`description` from the matching
+        // `SpaceAction` row (quizzes themselves only carry questions). The
+        // initial `create_quiz` transact writes SpaceAction with empty copy,
+        // then `update_space_action` fills it in later — so we re-index the
+        // underlying quiz whenever the action metadata changes to pick up
+        // the new title/description. Polls/Discussions/Follows carry their
+        // own copy and don't need this follow-up.
+        use crate::features::spaces::pages::actions::actions::quiz::SpaceQuiz;
+        use crate::features::spaces::pages::actions::models::SpaceAction;
+        use crate::features::spaces::pages::actions::types::SpaceActionType;
+        let action: SpaceAction = deserialize(image)?;
+        if matches!(action.space_action_type, SpaceActionType::Quiz) {
+            let space_pk: crate::common::types::Partition = action.pk.0.clone().into();
+            let quiz_sk = crate::common::types::EntityType::SpaceQuiz(action.pk.1.clone());
+            if let Ok(Some(quiz)) = SpaceQuiz::get(cli, &space_pk, Some(quiz_sk)).await {
+                crate::features::essence::services::index_quiz(cli, &quiz).await?;
+            }
+        }
+    } else if sk.starts_with("POST_COMMENT#") || sk.starts_with("POST_COMMENT_REPLY#") {
+        // Both top-level comments and replies use the `PostComment` model
+        // but differ by sk. `POST_COMMENT_LIKE#` is intentionally excluded —
+        // it deserializes to a different shape and isn't essence-indexed.
+        let comment: crate::features::posts::models::PostComment = deserialize(image)?;
+        crate::features::essence::services::index_post_comment(cli, &comment).await?;
+    } else if sk.starts_with("SPACE_POST_COMMENT#") || sk.starts_with("SPACE_POST_COMMENT_REPLY#")
+    {
+        // Same pattern for discussion comments. `SPACE_POST_COMMENT_LIKE#` is
+        // a different entity (SpacePostCommentLike) and not essence-indexed.
+        let comment: crate::features::spaces::pages::actions::actions::discussion::SpacePostComment = deserialize(image)?;
+        crate::features::essence::services::index_discussion_comment(cli, &comment).await?;
+    } else if sk.starts_with("SPACE_POLL#") {
+        // `SPACE_POLL_USER_ANSWER#` (SpacePollUserAnswer) starts with
+        // "SPACE_POLL_" not "SPACE_POLL#" so it's excluded by this prefix.
+        let poll: crate::features::spaces::pages::actions::actions::poll::SpacePoll =
+            deserialize(image)?;
+        crate::features::essence::services::index_poll(cli, &poll).await?;
+    } else if sk.starts_with("SPACE_QUIZ#") {
+        // `SPACE_QUIZ_ANSWER#` and `SPACE_QUIZ_ATTEMPT#` start with
+        // "SPACE_QUIZ_" not "SPACE_QUIZ#" so they're excluded.
+        let quiz: crate::features::spaces::pages::actions::actions::quiz::SpaceQuiz =
+            deserialize(image)?;
+        crate::features::essence::services::index_quiz(cli, &quiz).await?;
+    }
+    Ok(())
+}
+
+/// Mirror a REMOVE of any essence-indexable entity by detaching its row
+/// from the user's Essence list. Replaces the per-controller cascade that
+/// was missing in the previous synchronous design.
+#[cfg(feature = "server")]
+async fn essence_remove_dispatch(
+    sk: &str,
+    image: &std::collections::HashMap<String, serde_dynamo::AttributeValue>,
+) -> crate::common::Result<()> {
+    use crate::common::Error;
+    use crate::common::utils::InfraError;
+
+    fn deserialize<T: serde::de::DeserializeOwned>(
+        image: &std::collections::HashMap<String, serde_dynamo::AttributeValue>,
+    ) -> crate::common::Result<T> {
+        serde_dynamo::from_item(image.clone()).map_err(|e| {
+            tracing::error!("essence remove deserialize: {e}");
+            Error::from(InfraError::StreamDeserializeFailed)
+        })
+    }
+
+    let cfg = crate::common::CommonConfig::default();
+    let cli = cfg.dynamodb();
+
+    if sk == "POST" {
+        let post: crate::features::posts::models::Post = deserialize(image)?;
+        crate::features::essence::services::detach_post(cli, &post).await?;
+    } else if sk.starts_with("POST_COMMENT#") || sk.starts_with("POST_COMMENT_REPLY#") {
+        let comment: crate::features::posts::models::PostComment = deserialize(image)?;
+        crate::features::essence::services::detach_post_comment(cli, &comment).await?;
+    } else if sk.starts_with("SPACE_POST_COMMENT#") || sk.starts_with("SPACE_POST_COMMENT_REPLY#")
+    {
+        let comment: crate::features::spaces::pages::actions::actions::discussion::SpacePostComment = deserialize(image)?;
+        crate::features::essence::services::detach_discussion_comment(cli, &comment).await?;
+    } else if sk.starts_with("SPACE_POLL#") {
+        let poll: crate::features::spaces::pages::actions::actions::poll::SpacePoll =
+            deserialize(image)?;
+        crate::features::essence::services::detach_poll(cli, &poll).await?;
+    } else if sk.starts_with("SPACE_QUIZ#") {
+        let quiz: crate::features::spaces::pages::actions::actions::quiz::SpaceQuiz =
+            deserialize(image)?;
+        crate::features::essence::services::detach_quiz(cli, &quiz).await?;
+    }
     Ok(())
 }

@@ -4,23 +4,20 @@ use crate::features::spaces::pages::actions::actions::quiz::*;
     name = "create_quiz",
     description = "Create a new quiz action in a space. Requires creator role."
 )]
-#[post("/api/spaces/{space_pk}/quizzes", role: SpaceUserRole, space: crate::common::models::space::SpaceCommon)]
+#[post("/api/spaces/{space_pk}/quizzes", role: SpaceUserRole, _space: crate::common::models::space::SpaceCommon)]
 pub async fn create_quiz(
     #[mcp(description = "Space partition key")] space_pk: SpacePartition,
 ) -> Result<QuizResponse> {
     SpaceQuiz::can_edit(&role)?;
     let common_config = crate::common::CommonConfig::default();
     let cli = common_config.dynamodb();
-    let is_published = space.is_published();
     let quiz = SpaceQuiz::new(space_pk.clone())?;
 
-    let space_action =
-        crate::features::spaces::pages::actions::models::SpaceAction::new_with_published(
-            space_pk.clone(),
-            SpaceQuizEntityType::from(quiz.sk.clone()).to_string(),
-            crate::features::spaces::pages::actions::types::SpaceActionType::Quiz,
-            is_published,
-        );
+    let space_action = crate::features::spaces::pages::actions::models::SpaceAction::new(
+        space_pk.clone(),
+        SpaceQuizEntityType::from(quiz.sk.clone()).to_string(),
+        crate::features::spaces::pages::actions::types::SpaceActionType::Quiz,
+    );
     let items = vec![
         quiz.create_transact_write_item(),
         space_action.create_transact_write_item(),
@@ -42,11 +39,11 @@ pub async fn create_quiz(
     let answer = SpaceQuizAnswer::new(space_pk, quiz_id, answers);
     answer.create(cli).await?;
 
+    // Essence indexing happens via the DynamoDB Stream pipeline.
+
     let mut response: QuizResponse = quiz.into();
     response.title = space_action.title.clone();
     response.description = space_action.description.clone();
-    response.started_at = space_action.started_at;
-    response.ended_at = space_action.ended_at;
     response.space_action = space_action;
 
     Ok(response)

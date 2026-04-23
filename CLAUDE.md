@@ -24,8 +24,13 @@ Ratel is a decentralized legislative platform. Monorepo: Dioxus 0.7 fullstack ap
 
 ## Task Workflows
 
-- **Feature development**: `.claude/rules/workflows/feature-development.md`
-- **UI design/redesign**: `.claude/rules/workflows/ui-design-implementation.md`
+Feature work flows through three ordered stages — PO → Design → Development. Each has its own workflow file; `feature-development.md` is the master index / decision doc.
+
+- **Feature development (master)**: `.claude/rules/workflows/feature-development.md`
+- **Stage 1 · Roadmap elaboration (PO)**: `.claude/rules/workflows/roadmap-elaboration.md`
+- **Stage 2 · UI design**: `.claude/rules/workflows/ui-design-implementation.md`
+- **Stage 3 · New feature implementation**: `.claude/rules/workflows/develop-a-new-feature.md`
+- **Stage 3 · Feature enhancement**: `.claude/rules/workflows/improve-feature.md`
 - **Bugfix**: `.claude/rules/workflows/bugfix.md`
 - **MCP tools**: `.claude/rules/workflows/implement-mcp-tools.md`
 - **Code review**: `.claude/rules/workflows/code-review.md`

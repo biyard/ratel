@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Bylaws Section</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    /* View switch */
+    .view-switch{display:inline-flex;padding:4px;border-radius:12px;background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle)}
+    .view-switch__btn{
+      padding:8px 16px;border-radius:9px;background:transparent;border:1px solid transparent;
+      color:var(--text-muted);font-family:var(--font-display);font-size:10px;font-weight:700;
+      letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;
+      display:inline-flex;align-items:center;gap:8px;
+    }
+    .view-switch__btn[aria-selected="true"][data-v="parent"]{background:rgba(252,179,0,0.08);color:var(--accent-gold);border-color:rgba(252,179,0,0.25)}
+    .view-switch__btn[aria-selected="true"][data-v="child"]{background:rgba(110,237,216,0.08);color:var(--accent-teal);border-color:rgba(110,237,216,0.25)}
+
+    /* Parent link card (only in child view) */
+    .parent-link{
+      display:flex;align-items:center;gap:14px;padding:18px 20px;border-radius:14px;
+      background:rgba(252,179,0,0.04);border:1px solid rgba(252,179,0,0.22);
+      text-decoration:none;color:var(--text-primary);transition:all 0.2s;
+    }
+    .parent-link:hover{background:rgba(252,179,0,0.08);border-color:rgba(252,179,0,0.35)}
+    .parent-link__icon{width:44px;height:44px;border-radius:11px;background:rgba(252,179,0,0.10);border:1px solid rgba(252,179,0,0.30);display:flex;align-items:center;justify-content:center;color:var(--accent-gold);flex-shrink:0}
+    .parent-link__icon svg{width:20px;height:20px}
+    .parent-link__body{flex:1;min-width:0}
+    .parent-link__eyebrow{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-gold)}
+    .parent-link__title{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:0.02em;color:var(--text-primary);margin:3px 0 3px}
+    .parent-link__sub{font-size:12px;color:var(--text-muted)}
+    .parent-link__chev svg{width:18px;height:18px;color:var(--accent-gold)}
+
+    /* Bylaws list */
+    .bylaws-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+    .bylaw-card{
+      position:relative;overflow:hidden;display:flex;flex-direction:column;gap:10px;
+      padding:18px 20px;border-radius:14px;
+      background:var(--bg-glass);backdrop-filter:blur(12px);
+      border:1px solid var(--border-subtle);
+      cursor:pointer;transition:all 0.25s;
+    }
+    .bylaw-card:hover{border-color:rgba(129,140,248,0.28);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.3)}
+    .bylaw-card__top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .bylaw-card__num{
+      display:inline-flex;align-items:center;gap:4px;
+      font-family:var(--font-display);font-size:9px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;
+      padding:3px 8px;border-radius:6px;background:rgba(129,140,248,0.08);color:var(--accent-violet);border:1px solid rgba(129,140,248,0.22);
+    }
+    .bylaw-card--parent .bylaw-card__num{background:rgba(252,179,0,0.08);color:var(--accent-gold);border-color:rgba(252,179,0,0.22)}
+    .bylaw-card__meta{font-family:var(--font-display);font-size:9px;font-weight:500;letter-spacing:0.08em;color:var(--text-dim)}
+    .bylaw-card__title{font-family:var(--font-display);font-size:15px;font-weight:800;letter-spacing:0.02em;line-height:1.35;color:var(--text-primary);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .bylaw-card__excerpt{font-size:12px;color:var(--text-muted);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+    .bylaw-card__foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;padding-top:10px;border-top:1px solid var(--border-subtle)}
+    .bylaw-card__stats{display:flex;gap:10px}
+    .bylaw-card__stat{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-display);font-size:9px;letter-spacing:0.08em;color:var(--text-dim)}
+    .bylaw-card__stat svg{width:11px;height:11px}
+    .bylaw-card__actions{display:flex;gap:4px}
+    .bylaw-card__btn{width:26px;height:26px;border-radius:7px;padding:0;background:transparent;border:1px solid var(--border-subtle);color:var(--text-dim);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
+    .bylaw-card__btn:hover{border-color:rgba(252,179,0,0.28);color:var(--accent-gold)}
+    .bylaw-card__btn svg{width:12px;height:12px}
+
+    /* Add bylaw card */
+    .bylaw-add{
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      padding:20px;border-radius:14px;
+      background:rgba(252,179,0,0.03);border:1px dashed rgba(252,179,0,0.25);
+      color:var(--accent-gold);font-family:var(--font-display);font-size:11px;font-weight:700;
+      letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;transition:all 0.25s;min-height:180px;
+    }
+    .bylaw-add:hover{background:rgba(252,179,0,0.08);border-color:rgba(252,179,0,0.45)}
+    .bylaw-add svg{width:18px;height:18px}
+
+    /* Section grouping header */
+    .group-header{display:flex;align-items:center;gap:14px;margin-bottom:4px;padding:0 4px}
+    .group-header__icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .group-header__icon svg{width:14px;height:14px}
+    .group-header__icon--parent{background:rgba(252,179,0,0.08);border:1px solid rgba(252,179,0,0.25);color:var(--accent-gold)}
+    .group-header__icon--child{background:rgba(110,237,216,0.08);border:1px solid rgba(110,237,216,0.25);color:var(--accent-teal)}
+    .group-header__title{font-family:var(--font-display);font-size:12px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-primary)}
+    .group-header__count{font-family:var(--font-display);font-size:10px;font-weight:500;letter-spacing:0.10em;color:var(--text-dim);margin-left:auto}
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo" id="topbar-logo">SNU</div>
+      <div class="u-col">
+        <span class="arena-topbar__title" id="topbar-title">SNU CS Dept.</span>
+        <span class="arena-topbar__handle" id="topbar-handle">Bylaws · v2</span>
+      </div>
+      <span class="arena-topbar__status arena-topbar__status--parent" id="top-status">Parent view</span>
+    </div>
+    <div class="arena-topbar__actions">
+      <button class="hud-btn" aria-label="History"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></button>
+    </div>
+  </div>
+
+  <div class="page page--wide">
+    <div class="page-header">
+      <div class="page-header__main">
+        <span class="page-header__eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          FR-2 · Bylaws
+        </span>
+        <h1 class="page-header__title"><strong>학칙</strong>을 공개 게시하여 모두가 같은 규칙을 따르게 합니다</h1>
+        <p class="page-header__sub">Bylaws는 일반 게시물과 동일하게 동작하지만, 팀 페이지에서 <strong>전용 섹션</strong>으로 묶여 보입니다. 자식 팀은 부모 팀의 Bylaws를 바로 확인할 수 있습니다.</p>
+      </div>
+      <div class="page-header__actions">
+        <div class="view-switch" role="tablist">
+          <button class="view-switch__btn" role="tab" aria-selected="true" data-v="parent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 10v6m-11-11h6m10 0h6"/></svg> Parent view</button>
+          <button class="view-switch__btn" role="tab" aria-selected="false" data-v="child"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Sub-team view</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PARENT LINK (shown only in child view) -->
+    <a class="parent-link" id="parent-link" href="#" hidden>
+      <div class="parent-link__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      <div class="parent-link__body">
+        <div class="parent-link__eyebrow">Parent team bylaws</div>
+        <div class="parent-link__title">SNU CS Dept. 학칙 (v2)</div>
+        <div class="parent-link__sub">8개 항목 · 최종 업데이트 2026-02-01 · 부모팀이 관리</div>
+      </div>
+      <span class="parent-link__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+    </a>
+
+    <!-- PARENT BYLAWS SECTION -->
+    <section class="u-col u-gap-12" id="parent-section">
+      <div class="group-header">
+        <div class="group-header__icon group-header__icon--parent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+        <h2 class="group-header__title" id="parent-section-title">학과 학칙 · Bylaws</h2>
+        <span class="group-header__count" id="parent-section-count">v2 · 8개 항목</span>
+      </div>
+
+      <div class="bylaws-grid">
+
+        <article class="bylaw-card bylaw-card--parent">
+          <div class="bylaw-card__top">
+            <span class="bylaw-card__num">BYLAW 01</span>
+            <span class="bylaw-card__meta">v2 · 2026-02-01</span>
+          </div>
+          <h3 class="bylaw-card__title">동아리 설립 요건 · Eligibility</h3>
+          <p class="bylaw-card__excerpt">최소 5명 이상의 학부 또는 대학원 재학생으로 구성되어야 하며, 지도교수 1인을 사전에 섭외해야 합니다. 학과는 학술적 · 사회적 공익에 부합하는 활동 목적을 가진 동아리만 인증합니다.</p>
+          <div class="bylaw-card__foot">
+            <div class="bylaw-card__stats">
+              <span class="bylaw-card__stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg> 42</span>
+              <span class="bylaw-card__stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 3</span>
+            </div>
+            <div class="bylaw-card__actions">
+              <button class="bylaw-card__btn" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+            </div>
+          </div>
+        </article>
+
+        <article class="bylaw-card bylaw-card--parent">
+          <div class="bylaw-card__top">
+            <span class="bylaw-card__num">BYLAW 02</span>
+            <span class="bylaw-card__meta">v2 · 2026-02-01</span>
+          </div>
+          <h3 class="bylaw-card__title">등록 및 인증 절차 · Registration process</h3>
+          <p class="bylaw-card__excerpt">프로스펙티브 동아리는 pending 팀을 먼저 생성하고 학과가 정한 신청서를 작성한 뒤 제출합니다. 학과는 영업일 기준 3–5일 내로 승인 · 거절 · 수정 반송 중 하나를 선택합니다.</p>
+          <div class="bylaw-card__foot">
+            <div class="bylaw-card__stats">
+              <span class="bylaw-card__stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg> 38</span>
+              <span class="bylaw-card__stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 7</span>
+            </div>
+            <div class="bylaw-card__actions">
+              <button class="bylaw-card__btn" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+            </div>
+          </div>
+        </article>
+
+        <article class="bylaw-card bylaw-card--parent">
+          <div class="bylaw-card__top">
+            <span class="bylaw-card__num">BYLAW 03</span>
+            <span class="bylaw-card__meta">v2 · 2026-02-01</span>
+          </div>
+          <h3 class="bylaw-card__title">정기 활동 보고 · Activity reporting</h3>
+          <p class="bylaw-card__excerpt">인증된 동아리는 학기말에 정기 활동 보고서를 학과에 제출합니다. 보고서는 주요 행사, 참여자 수, 학술적 산출물을 포함합니다. 공개 활동은 학과 대시보드에 자동 반영됩니다.</p>
+          <div class="bylaw-card__foot">
+            <div class="bylaw-card__stats">
+              <span class="bylaw-card__stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg> 28</span>
+              <span class="bylaw-card__stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 12</span>
+            </div>
+            <div class="bylaw-card__actions">
+              <button class="bylaw-card__btn" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+            </div>
+          </div>
+        </article>
+
+        <article class="bylaw-card bylaw-card--parent">
+          <div class="bylaw-card__top">
+            <span class="bylaw-card__num">BYLAW 04</span>
+            <span class="bylaw-card__meta">v2 · 2026-02-01</span>
+          </div>
+          <h3 class="bylaw-card__title">학과 공지 수신 의무</h3>
+          <p class="bylaw-card__excerpt">인증된 동아리의 admin은 학과가 방송하는 공지에 대해 합리적 기한 내에 확인 및 전달 책임이 있습니다. 필요한 경우 공지의 댓글 스레드에서 질문할 수 있습니다.</p>
+          <div class="bylaw-card__foot">
+            <div class="bylaw-card__stats">
+              <span class="bylaw-card__stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg> 15</span>
+              <span class="bylaw-card__stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 2</span>
+            </div>
+            <div class="bylaw-card__actions">
+              <button class="bylaw-card__btn" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+            </div>
+          </div>
+        </article>
+
+        <button class="bylaw-add" id="add-bylaw-btn" data-role="parent">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          학칙 항목 추가
+        </button>
+
+      </div>
+    </section>
+
+    <!-- CHILD BYLAWS SECTION -->
+    <section class="u-col u-gap-12" id="child-section" hidden>
+      <div class="group-header">
+        <div class="group-header__icon group-header__icon--child"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <h2 class="group-header__title">동아리 회칙 · Club bylaws</h2>
+        <span class="group-header__count">SNU Code Club · v1 · 3개 항목</span>
+      </div>
+
+      <div class="bylaws-grid">
+
+        <article class="bylaw-card">
+          <div class="bylaw-card__top">
+            <span class="bylaw-card__num">RULE 01</span>
+            <span class="bylaw-card__meta">v1 · 2026-03-02</span>
+          </div>
+          <h3 class="bylaw-card__title">주간 모임 및 코드 리뷰 원칙</h3>
+          <p class="bylaw-card__excerpt">매주 수요일 저녁 19:00, 301동 스터디룸에서 모임. 각 멤버는 월 1회 이상 PR 리뷰에 참여해야 합니다.</p>
+          <div class="bylaw-card__foot">
+            <div class="bylaw-card__stats">
+              <span class="bylaw-card__stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg> 12</span>
+              <span class="bylaw-card__stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 4</span>
+            </div>
+            <div class="bylaw-card__actions">
+              <button class="bylaw-card__btn" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+            </div>
+          </div>
+        </article>
+
+        <article class="bylaw-card">
+          <div class="bylaw-card__top">
+            <span class="bylaw-card__num">RULE 02</span>
+            <span class="bylaw-card__meta">v1 · 2026-03-02</span>
+          </div>
+          <h3 class="bylaw-card__title">멤버 구성 및 운영진 선출</h3>
+          <p class="bylaw-card__excerpt">정회원 최소 8명, 최대 40명. 운영진(회장, 부회장, 총무)은 매년 3월 선출하며 정회원 과반 찬성으로 선임됩니다.</p>
+          <div class="bylaw-card__foot">
+            <div class="bylaw-card__stats">
+              <span class="bylaw-card__stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg> 8</span>
+              <span class="bylaw-card__stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 2</span>
+            </div>
+            <div class="bylaw-card__actions">
+              <button class="bylaw-card__btn" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+            </div>
+          </div>
+        </article>
+
+        <article class="bylaw-card">
+          <div class="bylaw-card__top">
+            <span class="bylaw-card__num">RULE 03</span>
+            <span class="bylaw-card__meta">v1 · 2026-03-02</span>
+          </div>
+          <h3 class="bylaw-card__title">오픈소스 기여 장려</h3>
+          <p class="bylaw-card__excerpt">정회원은 반기별로 최소 1건의 오픈소스 기여를 목표로 하며, 클럽은 기여 활동을 학과 보고서에 요약해 게시합니다.</p>
+          <div class="bylaw-card__foot">
+            <div class="bylaw-card__stats">
+              <span class="bylaw-card__stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg> 6</span>
+              <span class="bylaw-card__stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 1</span>
+            </div>
+            <div class="bylaw-card__actions">
+              <button class="bylaw-card__btn" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+            </div>
+          </div>
+        </article>
+
+        <button class="bylaw-add" data-role="child">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          회칙 항목 추가
+        </button>
+
+      </div>
+    </section>
+
+    <div class="notice">
+      <div class="notice__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+      <div class="notice__body">
+        <span class="notice__title">Bylaws = Post Category</span>
+        <span class="notice__text">Bylaws는 별도 엔티티가 아니라 게시물에 붙는 카테고리 태그입니다. 편집/삭제/버전 추적 등 기존 게시물 라이프사이클을 그대로 따릅니다. 학칙 업데이트는 <strong>이미 승인된 자식 팀에 소급 재동의를 요구하지 않습니다</strong> — 공지로 안내됩니다.</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+</div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    const parentSection = document.getElementById('parent-section');
+    const childSection = document.getElementById('child-section');
+    const parentLink = document.getElementById('parent-link');
+    const topStatus = document.getElementById('top-status');
+    const topbarLogo = document.getElementById('topbar-logo');
+    const topbarTitle = document.getElementById('topbar-title');
+    const topbarHandle = document.getElementById('topbar-handle');
+    const parentSectionTitle = document.getElementById('parent-section-title');
+    const parentSectionCount = document.getElementById('parent-section-count');
+
+    function setView(v) {
+      document.querySelectorAll('.view-switch__btn').forEach(b => b.setAttribute('aria-selected', b.dataset.v === v));
+
+      if (v === 'parent') {
+        topbarLogo.textContent = 'SNU';
+        topbarLogo.classList.remove('arena-topbar__logo--child');
+        topbarTitle.textContent = 'SNU CS Dept.';
+        topbarTitle.classList.remove('arena-topbar__title--child');
+        topbarHandle.textContent = 'Bylaws · v2';
+        topStatus.className = 'arena-topbar__status arena-topbar__status--parent';
+        topStatus.textContent = 'Parent view';
+
+        parentLink.hidden = true;
+        parentSection.hidden = false;
+        childSection.hidden = true;
+        parentSectionTitle.textContent = '학과 학칙 · Bylaws';
+        parentSectionCount.textContent = 'v2 · 8개 항목';
+        document.querySelectorAll('.bylaw-card__btn').forEach(b => b.hidden = false);
+        document.querySelector('[data-role="parent"]').hidden = false;
+      } else {
+        topbarLogo.textContent = 'SC';
+        topbarLogo.classList.add('arena-topbar__logo--child');
+        topbarTitle.textContent = 'SNU Code Club';
+        topbarTitle.classList.add('arena-topbar__title--child');
+        topbarHandle.textContent = 'Bylaws (parent + own)';
+        topStatus.className = 'arena-topbar__status';
+        topStatus.textContent = 'Sub-team view';
+
+        parentLink.hidden = false;
+        parentSection.hidden = false;
+        childSection.hidden = false;
+        parentSectionTitle.textContent = 'SNU CS Dept. 학칙 · 읽기 전용';
+        parentSectionCount.textContent = 'v2 · 부모팀이 관리';
+        // In child view, disable edit on parent bylaws
+        parentSection.querySelectorAll('.bylaw-card__btn').forEach(b => b.hidden = true);
+        parentSection.querySelector('[data-role="parent"]').hidden = true;
+      }
+    }
+
+    document.querySelectorAll('.view-switch__btn').forEach(btn => {
+      btn.addEventListener('click', () => setView(btn.dataset.v));
+    });
+
+    // Add bylaw
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.bylaw-add')) {
+        SubTeam.toast('편집기가 새 게시물을 열고 "Bylaws" 카테고리가 자동 선택됩니다', 'success');
+      }
+      if (e.target.closest('.bylaw-card__btn')) {
+        SubTeam.toast('게시물 편집기로 이동 · 기존 버전 기록 유지');
+      }
+    });
+
+    setView('parent');
+  });
+</script>
+</body>
+</html>
