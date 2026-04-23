@@ -8,6 +8,10 @@ pub enum InboxKind {
     MentionInComment,
     SpaceStatusChanged,
     SpaceInvitation,
+    SubTeamApplicationSubmitted,
+    SubTeamApplicationApproved,
+    SubTeamApplicationRejected,
+    SubTeamApplicationReturned,
 }
 
 impl Default for InboxKind {
@@ -23,6 +27,10 @@ impl InboxKind {
             InboxKind::MentionInComment => "MENTION",
             InboxKind::SpaceStatusChanged => "SPACE_STATUS",
             InboxKind::SpaceInvitation => "SPACE_INV",
+            InboxKind::SubTeamApplicationSubmitted => "STAPP_SUB",
+            InboxKind::SubTeamApplicationApproved => "STAPP_APR",
+            InboxKind::SubTeamApplicationRejected => "STAPP_REJ",
+            InboxKind::SubTeamApplicationReturned => "STAPP_RET",
         }
     }
 }
@@ -56,6 +64,33 @@ pub enum InboxPayload {
         inviter_name: String,
         cta_url: String,
     },
+    SubTeamApplicationSubmitted {
+        parent_team_id: String,
+        application_id: String,
+        sub_team_id: String,
+        sub_team_name: String,
+        cta_url: String,
+    },
+    SubTeamApplicationApproved {
+        parent_team_id: String,
+        parent_team_name: String,
+        sub_team_id: String,
+        cta_url: String,
+    },
+    SubTeamApplicationRejected {
+        parent_team_id: String,
+        parent_team_name: String,
+        sub_team_id: String,
+        reason: String,
+        cta_url: String,
+    },
+    SubTeamApplicationReturned {
+        parent_team_id: String,
+        parent_team_name: String,
+        sub_team_id: String,
+        comment: String,
+        cta_url: String,
+    },
 }
 
 impl InboxPayload {
@@ -65,6 +100,10 @@ impl InboxPayload {
             InboxPayload::MentionInComment { cta_url, .. } => cta_url,
             InboxPayload::SpaceStatusChanged { cta_url, .. } => cta_url,
             InboxPayload::SpaceInvitation { cta_url, .. } => cta_url,
+            InboxPayload::SubTeamApplicationSubmitted { cta_url, .. } => cta_url,
+            InboxPayload::SubTeamApplicationApproved { cta_url, .. } => cta_url,
+            InboxPayload::SubTeamApplicationRejected { cta_url, .. } => cta_url,
+            InboxPayload::SubTeamApplicationReturned { cta_url, .. } => cta_url,
         }
     }
 }
@@ -89,6 +128,18 @@ impl InboxPayload {
             InboxPayload::MentionInComment { .. } => InboxKind::MentionInComment,
             InboxPayload::SpaceStatusChanged { .. } => InboxKind::SpaceStatusChanged,
             InboxPayload::SpaceInvitation { .. } => InboxKind::SpaceInvitation,
+            InboxPayload::SubTeamApplicationSubmitted { .. } => {
+                InboxKind::SubTeamApplicationSubmitted
+            }
+            InboxPayload::SubTeamApplicationApproved { .. } => {
+                InboxKind::SubTeamApplicationApproved
+            }
+            InboxPayload::SubTeamApplicationRejected { .. } => {
+                InboxKind::SubTeamApplicationRejected
+            }
+            InboxPayload::SubTeamApplicationReturned { .. } => {
+                InboxKind::SubTeamApplicationReturned
+            }
         }
     }
 }
