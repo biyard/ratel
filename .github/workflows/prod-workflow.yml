@@ -58,6 +58,8 @@ jobs:
           DEPLOY_STORYBOOK: false
           DEPLOY_STATIC: false
           HIGH_TRAFFIC_REGION: ap-northeast-2
+          BIYARD_PUBLIC_API_URL: https://api.biyard.co
+          BIYARD_PRIVATE_API_URL: http://api.biyard-prod-svc.local:8080
         run: |
           npm i -g aws-cdk
           make cdk-deploy-v2
