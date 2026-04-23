@@ -820,6 +820,11 @@ body.comments-panel-resizing {
 .comment-action--reply:hover {
   color: var(--discuss-color);
 }
+.comment-action__reply-count {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
 
 /* ── Replies ───────────────────────────────────── */
 .comment-replies {
@@ -1184,12 +1189,50 @@ body.comments-panel-resizing {
   margin-bottom: 4px;
 }
 
+/* ── Panel body (comments view) ─────────────────────────────
+   Wrapper for the comments list, header, and composer. Animates
+   in from the left when returning from the reply thread view. */
+.comments-panel__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@keyframes comments-panel-body-enter {
+  from {
+    transform: translateX(-24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 500px) {
+  .comments-panel__body {
+    animation: comments-panel-body-enter 0.28s ease-out;
+  }
+}
+
 /* ── In-sheet reply thread view ─────────────────────────────
    Rendered inside the comments panel when a user taps a comment's
    Reply action on mobile. Fills the panel (flex column) with a header
    on top, scrollable parent + replies, and a pinned composer at the
    bottom. Cards reuse `.comment-item` / `.reply-input` so styling
    stays consistent with the inline arena view. */
+
+@keyframes reply-thread-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 .reply-thread {
   display: flex;
   flex-direction: column;
@@ -1197,45 +1240,30 @@ body.comments-panel-resizing {
   min-height: 0;
   background: var(--surface);
   color: var(--text);
+  animation: reply-thread-slide-in 0.32s cubic-bezier(0.32, 0.72, 0, 1);
 }
-.reply-thread__header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 12px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  flex-shrink: 0;
-}
-.reply-thread__title {
-  flex: 1;
-  text-align: center;
-  font-family: "Outfit", sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--text);
-}
-.reply-thread__icon-btn {
-  width: 36px;
-  height: 36px;
+.sheet-handle__back {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   border: none;
   background: transparent;
-  color: var(--text);
+  color: var(--text-muted);
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background 0.15s, color 0.15s;
+  padding: 0;
   flex-shrink: 0;
 }
-.reply-thread__icon-btn:hover {
-  background: var(--hover, rgba(255, 255, 255, 0.06));
+.sheet-handle__back:hover {
+  background: var(--surface-raised);
+  color: var(--text);
 }
-.reply-thread__icon-btn svg {
-  width: 20px;
-  height: 20px;
+.sheet-handle__back svg {
+  width: 18px;
+  height: 18px;
 }
 .reply-thread__scroll {
   flex: 1;
