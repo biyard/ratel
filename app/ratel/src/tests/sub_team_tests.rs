@@ -9,9 +9,10 @@ use crate::features::sub_team::models::{
     SubTeamFormFieldType, SubTeamLink,
 };
 use crate::features::sub_team::types::{
-    ApplyContextResponse, ParentRelationshipResponse, ParentRelationshipStatus,
-    SubTeamApplicationDetailResponse, SubTeamApplicationResponse, SubTeamDocumentResponse,
-    SubTeamFormFieldResponse, SubTeamSettingsResponse,
+    ActivityCountsResponse, ActivityWindow, ApplyContextResponse, MemberActivityResponse,
+    ParentRelationshipResponse, ParentRelationshipStatus, SubTeamApplicationDetailResponse,
+    SubTeamApplicationResponse, SubTeamDetailResponse, SubTeamDocumentResponse,
+    SubTeamFormFieldResponse, SubTeamListResponse, SubTeamSettingsResponse,
 };
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -1847,6 +1848,508 @@ async fn test_announcement_list_supports_pagination() {
     };
     assert_eq!(status, 200);
     assert!(listed.items.len() >= 3);
+}
+
+// ── PR #5: Activity dashboard tests ─────────────────────────────
+
+/// Insert a Post directly under a team's user_pk to seed dashboard counts.
+/// `ts_offset_ms` is subtracted from "now" so tests can place posts inside
+/// or outside the aggregation window at will.
+async fn seed_team_post(
+    ctx: &TestContext,
+    team_pk: &Partition,
+    author_pk: &Partition,
+    ts_offset_ms: i64,
+    visibility: crate::features::posts::types::Visibility,
+    status: crate::features::posts::types::PostStatus,
+) -> crate::features::posts::models::Post {
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    let created = now - ts_offset_ms;
+    let post_id = uuid::Uuid::now_v7().to_string();
+    let mut post = crate::features::posts::models::Post {
+        pk: Partition::Feed(post_id),
+        sk: EntityType::Post,
+        title: "T".to_string(),
+        html_contents: "B".to_string(),
+        created_at: created,
+        updated_at: created,
+        status,
+        visibility: Some(visibility),
+        user_pk: author_pk.clone(),
+        ..Default::default()
+    };
+    // Attribute the post to the team's feed space via user_pk (the GSI1
+    // `find_by_user_pk` indexes on user_pk — a team-authored post sets this
+    // to the team pk).
+    post.user_pk = team_pk.clone();
+    post.create(&ctx.ddb).await.unwrap();
+    post
+}
+
+/// Approve a freshly-created child team against the given parent, producing
+/// a SubTeamLink. Returns (child_pk, child_id).
+async fn approve_child_for(
+    ctx: &TestContext,
+    parent_id: &str,
+) -> (Partition, String) {
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+
+    let (_, _, app) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers.clone(),
+        body: {
+            "body": {
+                "parent_team_id": parent_id,
+                "form_values": {},
+                "doc_agreements": []
+            }
+        },
+        response_type: SubTeamApplicationResponse,
+    };
+    let (s, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/applications/{}/approve",
+            parent_id, app.id
+        ),
+        headers: ctx.test_user.1.clone(),
+        body: {}
+    };
+    assert_eq!(s, 200);
+    (child_pk, child_id)
+}
+
+#[tokio::test]
+async fn test_list_sub_teams_returns_recognized_from_link_rows() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+
+    let (_child_pk_a, child_id_a) = approve_child_for(&ctx, &parent_id).await;
+    let (_child_pk_b, child_id_b) = approve_child_for(&ctx, &parent_id).await;
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams", parent_id),
+        headers: ctx.test_user.1.clone(),
+        response_type: SubTeamListResponse,
+    };
+    assert_eq!(status, 200, "list_sub_teams: {:?}", body);
+    assert_eq!(body.items.len(), 2);
+    assert!(!body.truncated);
+    let ids: Vec<&str> = body.items.iter().map(|r| r.sub_team_id.as_str()).collect();
+    assert!(ids.contains(&child_id_a.as_str()));
+    assert!(ids.contains(&child_id_b.as_str()));
+}
+
+#[tokio::test]
+async fn test_list_sub_teams_truncates_at_50() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+
+    // Seed 51 SubTeamLink rows directly — bypass the apply flow for speed.
+    // This exercises only the truncation path in list_sub_team_links.
+    for i in 0..51 {
+        let child_id = format!("child-trunc-{:03}-{}", i, uuid::Uuid::new_v4().simple());
+        let mut link = SubTeamLink::new(
+            parent_pk.clone(),
+            child_id.clone(),
+            ctx.test_user.0.pk.to_string(),
+            "app-xxxx".to_string(),
+        );
+        // Stagger approved_at so sort order is stable.
+        link.approved_at += i as i64;
+        // A child team row must exist so build_sub_team_summary can load it;
+        // insert a minimal Team entity.
+        let team = crate::features::posts::models::Team {
+            pk: Partition::Team(child_id.clone()),
+            sk: EntityType::Team,
+            display_name: format!("Child {i}"),
+            profile_url: String::new(),
+            username: format!("chld{i}"),
+            description: String::new(),
+            ..Default::default()
+        };
+        team.create(&ctx.ddb).await.unwrap();
+        link.create(&ctx.ddb).await.unwrap();
+    }
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams", parent_id),
+        headers: ctx.test_user.1.clone(),
+        response_type: SubTeamListResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(body.truncated, "expected truncated=true");
+    assert!(
+        body.items.len() <= 50,
+        "expected ≤50 items, got {}",
+        body.items.len()
+    );
+}
+
+#[tokio::test]
+async fn test_activity_weekly_counts_posts_within_range_only() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+    let (child_pk, child_id) = approve_child_for(&ctx, &parent_id).await;
+
+    // Three posts: two in the last 7d, one 10 days ago (outside weekly).
+    seed_team_post(
+        &ctx,
+        &child_pk,
+        &ctx.test_user.0.pk,
+        60 * 60 * 1000, // 1h ago
+        crate::features::posts::types::Visibility::Public,
+        crate::features::posts::types::PostStatus::Published,
+    )
+    .await;
+    seed_team_post(
+        &ctx,
+        &child_pk,
+        &ctx.test_user.0.pk,
+        2 * 86_400 * 1000, // 2d ago
+        crate::features::posts::types::Visibility::Public,
+        crate::features::posts::types::PostStatus::Published,
+    )
+    .await;
+    seed_team_post(
+        &ctx,
+        &child_pk,
+        &ctx.test_user.0.pk,
+        10 * 86_400 * 1000, // 10d ago — OUTSIDE weekly
+        crate::features::posts::types::Visibility::Public,
+        crate::features::posts::types::PostStatus::Published,
+    )
+    .await;
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/{}/activity?window=Weekly",
+            parent_id, child_id
+        ),
+        headers: ctx.test_user.1.clone(),
+        response_type: ActivityCountsResponse,
+    };
+    assert_eq!(status, 200, "weekly activity: {:?}", body);
+    assert!(matches!(body.window, ActivityWindow::Weekly));
+    assert_eq!(body.post_count, 2, "weekly should count only 2 recent posts");
+}
+
+#[tokio::test]
+async fn test_activity_monthly_counts_posts_within_range_only() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+    let (child_pk, child_id) = approve_child_for(&ctx, &parent_id).await;
+
+    seed_team_post(
+        &ctx,
+        &child_pk,
+        &ctx.test_user.0.pk,
+        2 * 86_400 * 1000, // 2d ago
+        crate::features::posts::types::Visibility::Public,
+        crate::features::posts::types::PostStatus::Published,
+    )
+    .await;
+    seed_team_post(
+        &ctx,
+        &child_pk,
+        &ctx.test_user.0.pk,
+        20 * 86_400 * 1000, // 20d ago (still within 30d monthly)
+        crate::features::posts::types::Visibility::Public,
+        crate::features::posts::types::PostStatus::Published,
+    )
+    .await;
+    seed_team_post(
+        &ctx,
+        &child_pk,
+        &ctx.test_user.0.pk,
+        40 * 86_400 * 1000, // 40d ago — OUTSIDE monthly
+        crate::features::posts::types::Visibility::Public,
+        crate::features::posts::types::PostStatus::Published,
+    )
+    .await;
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/{}/activity?window=Monthly",
+            parent_id, child_id
+        ),
+        headers: ctx.test_user.1.clone(),
+        response_type: ActivityCountsResponse,
+    };
+    assert_eq!(status, 200, "monthly activity: {:?}", body);
+    assert!(matches!(body.window, ActivityWindow::Monthly));
+    assert_eq!(body.post_count, 2);
+}
+
+#[tokio::test]
+async fn test_activity_excludes_private_posts() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+    let (child_pk, child_id) = approve_child_for(&ctx, &parent_id).await;
+
+    // 1 public (should count) + 1 private (must NOT count, AC-15).
+    seed_team_post(
+        &ctx,
+        &child_pk,
+        &ctx.test_user.0.pk,
+        60 * 60 * 1000,
+        crate::features::posts::types::Visibility::Public,
+        crate::features::posts::types::PostStatus::Published,
+    )
+    .await;
+    seed_team_post(
+        &ctx,
+        &child_pk,
+        &ctx.test_user.0.pk,
+        60 * 60 * 1000,
+        crate::features::posts::types::Visibility::Private,
+        crate::features::posts::types::PostStatus::Published,
+    )
+    .await;
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/{}/activity?window=Monthly",
+            parent_id, child_id
+        ),
+        headers: ctx.test_user.1.clone(),
+        response_type: ActivityCountsResponse,
+    };
+    assert_eq!(status, 200);
+    assert_eq!(body.post_count, 1, "private post must be excluded (AC-15)");
+}
+
+#[tokio::test]
+async fn test_activity_returns_privacy_notice() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+    let (_, child_id) = approve_child_for(&ctx, &parent_id).await;
+
+    // /activity
+    let (_, _, body) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/{}/activity",
+            parent_id, child_id
+        ),
+        headers: ctx.test_user.1.clone(),
+        response_type: ActivityCountsResponse,
+    };
+    assert!(
+        !body.privacy_notice.en.is_empty() && !body.privacy_notice.ko.is_empty(),
+        "activity privacy_notice must be populated (AC-20)"
+    );
+    assert!(body.privacy_notice.en.contains("public"));
+
+    // /<sub_team_id>
+    let (_, _, detail) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/{}", parent_id, child_id),
+        headers: ctx.test_user.1.clone(),
+        response_type: SubTeamDetailResponse,
+    };
+    assert!(
+        !detail.privacy_notice.en.is_empty() && !detail.privacy_notice.ko.is_empty(),
+        "detail privacy_notice must be populated (AC-20)"
+    );
+}
+
+#[tokio::test]
+async fn test_member_activity_drilldown_sorts_by_post_count_desc() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+    let (child_pk, child_id) = approve_child_for(&ctx, &parent_id).await;
+
+    // Add two members.
+    let (m1, _) = ctx.create_another_user().await;
+    let (m2, _) = ctx.create_another_user().await;
+    for m in [&m1, &m2] {
+        let ut = UserTeam::new(
+            m.pk.clone(),
+            child_pk.clone(),
+            "child".to_string(),
+            String::new(),
+            "c".to_string(),
+            None,
+            TeamRole::Member,
+        );
+        ut.create(&ctx.ddb).await.unwrap();
+    }
+
+    // m1 authors 3 personal posts within window; m2 authors 1.
+    for _ in 0..3 {
+        seed_team_post(
+            &ctx,
+            &m1.pk,
+            &m1.pk,
+            60 * 60 * 1000,
+            crate::features::posts::types::Visibility::Public,
+            crate::features::posts::types::PostStatus::Published,
+        )
+        .await;
+    }
+    seed_team_post(
+        &ctx,
+        &m2.pk,
+        &m2.pk,
+        60 * 60 * 1000,
+        crate::features::posts::types::Visibility::Public,
+        crate::features::posts::types::PostStatus::Published,
+    )
+    .await;
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/{}/member-activity?window=Monthly",
+            parent_id, child_id
+        ),
+        headers: ctx.test_user.1.clone(),
+        response_type: ListResponse<MemberActivityResponse>,
+    };
+    assert_eq!(status, 200, "member-activity: {:?}", body);
+    assert!(!body.items.is_empty());
+
+    // Find rows for m1 and m2; m1 must appear before m2 (post_count DESC).
+    let m1_id = match &m1.pk {
+        Partition::User(id) => id.clone(),
+        _ => panic!(),
+    };
+    let m2_id = match &m2.pk {
+        Partition::User(id) => id.clone(),
+        _ => panic!(),
+    };
+    let m1_idx = body.items.iter().position(|r| r.user_id == m1_id);
+    let m2_idx = body.items.iter().position(|r| r.user_id == m2_id);
+    assert!(m1_idx.is_some(), "m1 row present");
+    assert!(m2_idx.is_some(), "m2 row present");
+    assert!(
+        m1_idx.unwrap() < m2_idx.unwrap(),
+        "m1 (3 posts) must sort before m2 (1 post)"
+    );
+    let m1_row = &body.items[m1_idx.unwrap()];
+    assert_eq!(m1_row.post_count, 3);
+}
+
+#[tokio::test]
+async fn test_member_activity_returns_last_active_per_member() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+    let (child_pk, child_id) = approve_child_for(&ctx, &parent_id).await;
+
+    let (m, _) = ctx.create_another_user().await;
+    let ut = UserTeam::new(
+        m.pk.clone(),
+        child_pk.clone(),
+        "child".to_string(),
+        String::new(),
+        "c".to_string(),
+        None,
+        TeamRole::Member,
+    );
+    ut.create(&ctx.ddb).await.unwrap();
+
+    seed_team_post(
+        &ctx,
+        &m.pk,
+        &m.pk,
+        60 * 60 * 1000,
+        crate::features::posts::types::Visibility::Public,
+        crate::features::posts::types::PostStatus::Published,
+    )
+    .await;
+
+    let (_, _, body) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/{}/member-activity",
+            parent_id, child_id
+        ),
+        headers: ctx.test_user.1.clone(),
+        response_type: ListResponse<MemberActivityResponse>,
+    };
+    let m_id = match &m.pk {
+        Partition::User(id) => id.clone(),
+        _ => panic!(),
+    };
+    let row = body
+        .items
+        .iter()
+        .find(|r| r.user_id == m_id)
+        .expect("member row present");
+    assert!(row.last_active_at.is_some(), "last_active_at populated");
+    assert!(row.post_count >= 1);
+}
+
+#[tokio::test]
+async fn test_activity_requires_admin_role() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+    let (_, child_id) = approve_child_for(&ctx, &parent_id).await;
+
+    let (_, other_headers) = ctx.create_another_user().await;
+
+    // /activity
+    let (status, _, _) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/{}/activity",
+            parent_id, child_id
+        ),
+        headers: other_headers.clone(),
+    };
+    assert_ne!(status, 200, "non-admin must be rejected from /activity");
+
+    // /member-activity
+    let (status, _, _) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/{}/member-activity",
+            parent_id, child_id
+        ),
+        headers: other_headers.clone(),
+    };
+    assert_ne!(status, 200, "non-admin must be rejected from /member-activity");
+
+    // /<sub_team_id>
+    let (status, _, _) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/{}", parent_id, child_id),
+        headers: other_headers.clone(),
+    };
+    assert_ne!(status, 200, "non-admin must be rejected from /:sub_team_id");
+
+    // /sub-teams
+    let (status, _, _) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams", parent_id),
+        headers: other_headers,
+    };
+    assert_ne!(status, 200, "non-admin must be rejected from /sub-teams");
 }
 
 // ── Compile-time silence (unused-import guard) ───────────────────

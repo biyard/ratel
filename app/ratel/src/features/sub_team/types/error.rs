@@ -115,6 +115,14 @@ pub enum SubTeamError {
     )]
     BroadcastTooManySubTeams,
 
+    // ── Activity dashboard ────────────────────────────────────────────
+    #[error("failed to compute activity metrics")]
+    #[translate(
+        en = "Failed to compute activity metrics",
+        ko = "활동 통계를 계산하지 못했습니다."
+    )]
+    ActivityAggregationFailed,
+
     // ── Leave / deregister ────────────────────────────────────────────
     #[error("team is not a recognized sub-team")]
     #[translate(

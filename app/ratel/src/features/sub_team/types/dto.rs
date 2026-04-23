@@ -393,3 +393,119 @@ impl From<crate::features::sub_team::models::SubTeamDocAgreement> for SubTeamDoc
         }
     }
 }
+
+// ── Activity dashboard ─────────────────────────────────────────────
+
+/// Time window for activity aggregation. Phase 1 only supports weekly and
+/// monthly; daily is deferred to Phase 2 (per design doc Scope section).
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+pub enum ActivityWindow {
+    Weekly,
+    #[default]
+    Monthly,
+}
+
+impl ActivityWindow {
+    /// Milliseconds in the window — 7 days for weekly, 30 days for monthly.
+    pub fn duration_ms(&self) -> i64 {
+        match self {
+            ActivityWindow::Weekly => 7 * 86_400 * 1000,
+            ActivityWindow::Monthly => 30 * 86_400 * 1000,
+        }
+    }
+}
+
+/// Fixed privacy notice rendered on the dashboard. FR-6 / AC-20 requires
+/// the UI to display this at all times — we return it inline so the UI does
+/// not have to make a second request.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct PrivacyNotice {
+    pub en: String,
+    pub ko: String,
+}
+
+impl PrivacyNotice {
+    pub fn default_notice() -> Self {
+        Self {
+            en: "This dashboard reflects public and team-shared activity only. Private posts and messages are never included."
+                .to_string(),
+            ko: "이 대시보드는 공개 및 팀 공유 활동만 반영합니다. 비공개 게시물과 메시지는 포함되지 않습니다."
+                .to_string(),
+        }
+    }
+}
+
+/// Item returned by GET /sub-teams — one row per recognized sub-team.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct SubTeamSummaryResponse {
+    pub sub_team_id: String,
+    pub display_name: String,
+    pub profile_url: String,
+    pub username: String,
+    pub recognized_at: i64,
+    pub member_count: i64,
+    /// Max(Post.updated_at) across posts within the last 30 days, if any.
+    pub last_activity_at: Option<i64>,
+}
+
+/// Envelope for the sub-teams list. Uses `ListResponse` conventions (items +
+/// bookmark) plus a `truncated` flag indicating the Phase 1 50-sub-team cap
+/// has been hit.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct SubTeamListResponse {
+    pub items: Vec<SubTeamSummaryResponse>,
+    pub bookmark: Option<String>,
+    /// True when the parent has > 50 recognized sub-teams. The list is
+    /// truncated at 50 ordered by approved_at DESC (Phase 1).
+    pub truncated: bool,
+}
+
+/// Numeric-only counts for the activity dashboard.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct ActivityCountsResponse {
+    pub window: ActivityWindow,
+    pub range_start_ms: i64,
+    pub range_end_ms: i64,
+    pub post_count: i64,
+    pub space_count: i64,
+    pub active_member_count: i64,
+    pub total_member_count: i64,
+    pub privacy_notice: PrivacyNotice,
+}
+
+/// Sub-team detail response for the overview page.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct SubTeamDetailResponse {
+    pub sub_team_id: String,
+    pub display_name: String,
+    pub profile_url: String,
+    pub username: String,
+    pub recognized_at: i64,
+    pub window: ActivityWindow,
+    pub post_count: i64,
+    pub space_count: i64,
+    pub active_member_count: i64,
+    pub total_member_count: i64,
+    pub privacy_notice: PrivacyNotice,
+}
+
+/// Per-member drill-down row. FR-6 #38: `@handle | posts | spaces participated
+/// | last active date`. `space_count_participated` counts public/team-shared
+/// spaces authored by the user within the window.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct MemberActivityResponse {
+    pub user_id: String,
+    pub handle: String,
+    pub display_name: String,
+    pub profile_url: String,
+    pub post_count: i64,
+    pub space_count_participated: i64,
+    pub last_active_at: Option<i64>,
+}
