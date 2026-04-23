@@ -49,8 +49,12 @@ pub fn PollCreatorPage(
                 },
             }
             main { class: "pager",
-                ContentCard {}
-                ConfigCard {}
+                div {
+                    class: "pager__track",
+                    style: "transform: translateX(-{current_page() * 100}%);",
+                    ContentCard {}
+                    ConfigCard {}
+                }
             }
             ActionEditFooter { current_page, total_pages: 2, action_type_key: "poll" }
         }

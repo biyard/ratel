@@ -55,15 +55,19 @@ pub fn FollowCreatorPage(
                 },
             }
             main { class: "pager",
-                TargetsCard {
-                    space_id,
-                    follow_id,
-                    initial_title: action_setting().title.clone(),
-                }
-                ConfigCard {
-                    space_id,
-                    follow_id,
-                    action_setting: action_setting_signal,
+                div {
+                    class: "pager__track",
+                    style: "transform: translateX(-{current_page() * 100}%);",
+                    TargetsCard {
+                        space_id,
+                        follow_id,
+                        initial_title: action_setting().title.clone(),
+                    }
+                    ConfigCard {
+                        space_id,
+                        follow_id,
+                        action_setting: action_setting_signal,
+                    }
                 }
             }
             ActionEditFooter { current_page, total_pages: 2, action_type_key: "follow" }

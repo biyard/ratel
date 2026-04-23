@@ -47,9 +47,13 @@ pub fn QuizCreatorPage(
                 },
             }
             main { class: "pager",
-                ContentCard {}
-                QuestionsCard {}
-                ConfigCard {}
+                div {
+                    class: "pager__track",
+                    style: "transform: translateX(-{current_page() * 100}%);",
+                    ContentCard {}
+                    QuestionsCard {}
+                    ConfigCard {}
+                }
             }
             ActionEditFooter { current_page, total_pages: 3, action_type_key: "quiz" }
         }
