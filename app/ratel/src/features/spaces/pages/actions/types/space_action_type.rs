@@ -63,9 +63,13 @@ impl SpaceActionType {
                     quiz_id: response.quiz_id.clone(),
                 })
             }
-            SpaceActionType::Meet => Err(crate::common::Error::NotFound(
-                "meet routing not wired yet".into(),
-            )),
+            SpaceActionType::Meet => {
+                let response = crate::features::spaces::pages::actions::actions::meet::create_meet(space_id.clone()).await?;
+                Ok(Route::MeetActionPage {
+                    space_id: space_id.clone(),
+                    meet_id: response.sk,
+                })
+            }
         }
     }
 }
