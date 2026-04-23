@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Team Home · Sub-team button</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    /* ── Sub-team HUD button (the focus of this annotation page) ── */
+    .hud-btn--subteam{
+      position:relative;
+      background:linear-gradient(135deg,rgba(252,179,0,0.18),rgba(110,237,216,0.08)) !important;
+      border-color:rgba(252,179,0,0.35) !important;
+    }
+    .hud-btn--subteam svg{color:var(--accent-gold) !important}
+    .hud-btn--subteam::after{
+      content:'';position:absolute;inset:-4px;border-radius:14px;
+      border:2px solid var(--accent-gold);
+      animation:pulse-ring 1.6s ease-in-out infinite;
+      pointer-events:none;
+    }
+    @keyframes pulse-ring{
+      0%{opacity:0.9;transform:scale(1)}
+      100%{opacity:0;transform:scale(1.3)}
+    }
+    .hud-btn__callout{
+      position:absolute;top:calc(100% + 12px);right:-6px;
+      padding:10px 14px;border-radius:10px;min-width:220px;z-index:30;
+      background:linear-gradient(135deg,rgba(252,179,0,0.12),rgba(110,237,216,0.06));
+      border:1px solid rgba(252,179,0,0.30);
+      box-shadow:0 8px 24px rgba(0,0,0,0.45),0 0 16px rgba(252,179,0,0.1);
+      font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent-gold);
+      white-space:nowrap;
+    }
+    .hud-btn__callout::before{
+      content:'';position:absolute;top:-6px;right:18px;width:12px;height:12px;
+      background:rgba(252,179,0,0.30);transform:rotate(45deg);
+      border-left:1px solid rgba(252,179,0,0.30);border-top:1px solid rgba(252,179,0,0.30);
+    }
+
+    /* ── Annotation panel ── */
+    .annotation-panel{
+      position:relative;overflow:hidden;
+      padding:26px 30px;border-radius:18px;
+      background:var(--bg-glass);backdrop-filter:blur(14px);
+      border:1px solid var(--border-subtle);
+      display:flex;flex-direction:column;gap:14px;
+    }
+    .annotation-panel__eyebrow{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim);display:flex;align-items:center;gap:8px}
+    .annotation-panel__eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent-gold);box-shadow:0 0 8px var(--accent-gold)}
+    .annotation-panel__title{font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:0.02em;line-height:1.3;color:var(--text-primary)}
+    .annotation-panel__title strong{background:linear-gradient(135deg,var(--accent-gold),#ffd24a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .annotation-panel__sub{font-size:14px;color:var(--text-muted);line-height:1.6;max-width:640px}
+
+    /* ── Branching cards (Management vs Apply) ── */
+    .branch-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media (max-width:720px){.branch-grid{grid-template-columns:1fr}}
+    .branch-card{
+      position:relative;overflow:hidden;
+      padding:22px;border-radius:14px;
+      background:rgba(6,6,14,0.5);border:1px solid var(--border-subtle);
+      display:flex;flex-direction:column;gap:12px;
+      text-decoration:none;color:var(--text-primary);transition:all 0.25s;
+    }
+    .branch-card::before{content:'';position:absolute;top:0;right:0;width:160px;height:160px;background:radial-gradient(circle,var(--branch-accent,rgba(252,179,0,0.15)),transparent 60%);filter:blur(30px);opacity:0.35;pointer-events:none}
+    .branch-card:hover{transform:translateY(-2px);border-color:var(--branch-border,rgba(252,179,0,0.30));box-shadow:0 10px 30px rgba(0,0,0,0.35)}
+    .branch-card[data-v="manage"]{--branch-accent:rgba(252,179,0,0.18);--branch-border:rgba(252,179,0,0.35)}
+    .branch-card[data-v="apply"]{--branch-accent:rgba(110,237,216,0.18);--branch-border:rgba(110,237,216,0.35)}
+    .branch-card__head{display:flex;align-items:center;gap:12px;position:relative}
+    .branch-card__icon{width:42px;height:42px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+    .branch-card[data-v="manage"] .branch-card__icon{background:rgba(252,179,0,0.10);border:1px solid rgba(252,179,0,0.28);color:var(--accent-gold)}
+    .branch-card[data-v="apply"] .branch-card__icon{background:rgba(110,237,216,0.08);border:1px solid rgba(110,237,216,0.28);color:var(--accent-teal)}
+    .branch-card__icon svg{width:18px;height:18px}
+    .branch-card__role{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px}
+    .branch-card__title{font-family:var(--font-display);font-size:14px;font-weight:800;letter-spacing:0.02em;color:var(--text-primary)}
+    .branch-card__desc{font-size:13px;color:var(--text-muted);line-height:1.55;position:relative}
+    .branch-card__cta{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent-gold);margin-top:auto;padding-top:8px}
+    .branch-card[data-v="apply"] .branch-card__cta{color:var(--accent-teal)}
+    .branch-card__cta svg{width:12px;height:12px;transition:transform 0.2s}
+    .branch-card:hover .branch-card__cta svg{transform:translateX(3px)}
+
+    /* ── Shadow feed (dim, illustrative) ── */
+    .shadow-feed{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+      opacity:0.45;filter:saturate(0.6);pointer-events:none;
+    }
+    @media (max-width:960px){.shadow-feed{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:600px){.shadow-feed{grid-template-columns:1fr}}
+    .shadow-card{
+      padding:18px;border-radius:14px;
+      background:var(--bg-glass);backdrop-filter:blur(10px);
+      border:1px solid var(--border-subtle);
+      display:flex;flex-direction:column;gap:10px;min-height:180px;
+    }
+    .shadow-card__top{display:flex;align-items:center;gap:8px}
+    .shadow-card__cat{padding:4px 10px;border-radius:6px;background:rgba(129,140,248,0.08);color:var(--accent-violet);border:1px solid rgba(129,140,248,0.18);font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase}
+    .shadow-card__cat--quiz{background:rgba(168,85,247,0.08);color:var(--accent-purple);border-color:rgba(168,85,247,0.18)}
+    .shadow-card__cat--discuss{background:rgba(34,211,238,0.08);color:var(--accent-cyan);border-color:rgba(34,211,238,0.18)}
+    .shadow-card__title{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--text-primary);line-height:1.35}
+    .shadow-card__body{height:40px;background:rgba(255,255,255,0.04);border-radius:6px}
+    .shadow-card__footer{display:flex;gap:8px;margin-top:auto}
+    .shadow-card__stat{flex:1;height:22px;background:rgba(255,255,255,0.03);border-radius:5px}
+
+    .faded-label{display:flex;align-items:center;gap:10px;padding:8px 0;font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim);opacity:0.7}
+    .faded-label::before,.faded-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent)}
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <!-- Topbar with the NEW 하위팀 button highlighted -->
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo">SNU</div>
+      <div class="u-col">
+        <span class="arena-topbar__title">SNU CS Dept.</span>
+        <span class="arena-topbar__handle">@snu_cs_office</span>
+      </div>
+      <span class="arena-topbar__status arena-topbar__status--parent">Team · Active</span>
+    </div>
+    <div class="arena-topbar__actions">
+      <button class="hud-btn" aria-label="Drafts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>
+      <button class="hud-btn" aria-label="Members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></button>
+      <button class="hud-btn" aria-label="Rewards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg></button>
+
+      <!-- NEW 하위팀 button (focus) -->
+      <button class="hud-btn hud-btn--subteam" id="subteam-btn" aria-label="Sub-teams">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.09 4.23 4.66.68-3.38 3.29.8 4.64L12 12.67l-4.17 2.17.8-4.64L5.25 6.91l4.66-.68L12 2z"/><circle cx="6" cy="19" r="3"/><circle cx="18" cy="19" r="3"/><path d="M9 19h6"/></svg>
+        <span class="hud-btn__callout">하위팀 · Sub-team</span>
+      </button>
+
+      <button class="hud-btn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    </div>
+  </div>
+
+  <div class="page page--wide">
+    <!-- Annotation: what clicking the button does -->
+    <div class="annotation-panel">
+      <span class="annotation-panel__eyebrow">New · Top-right HUD</span>
+      <h1 class="annotation-panel__title">기존 팀 홈에 <strong>하위팀</strong> 아이콘이 추가됩니다</h1>
+      <p class="annotation-panel__sub">
+        team-arena UI는 그대로. HUD 버튼에 sub-team 아이콘 하나만 얹힙니다. 클릭하면 보는 사용자의 역할에 따라 <strong style="color:var(--accent-gold)">2가지</strong> 경로로 분기됩니다.
+      </p>
+
+      <div class="branch-grid">
+        <a class="branch-card" data-v="manage" href="subteam-management-page.html">
+          <div class="branch-card__head">
+            <div class="branch-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+            <div>
+              <div class="branch-card__role">보는 사용자가 <strong>이 팀의 admin</strong>이면</div>
+              <div class="branch-card__title">하위팀 관리 페이지로</div>
+            </div>
+          </div>
+          <p class="branch-card__desc">가입 신청 수락 활성화 toggle, 가입 요건 & 신청폼 설정, 인증된 하위팀 roster, 대기 중인 신청 queue를 한 페이지에서 관리합니다.</p>
+          <span class="branch-card__cta">Open management <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </a>
+
+        <a class="branch-card" data-v="apply" href="subteam-apply.html">
+          <div class="branch-card__head">
+            <div class="branch-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg></div>
+            <div>
+              <div class="branch-card__role">이 팀의 admin이 <strong>아닌</strong> 경우</div>
+              <div class="branch-card__title">하위팀으로 가입 신청</div>
+            </div>
+          </div>
+          <p class="branch-card__desc">내가 관리자인 다른 팀 중 하나를 선택해 이 팀의 sub-team으로 신청합니다. 가입 요건 체크가 실시간으로 보이고, 모두 충족해야 제출할 수 있습니다.</p>
+          <span class="branch-card__cta">Apply my team <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Shadow feed (illustrative "team-arena unchanged") -->
+    <div class="faded-label">기존 Team feed · unchanged</div>
+    <div class="shadow-feed">
+      <div class="shadow-card">
+        <div class="shadow-card__top"><span class="shadow-card__cat">Poll</span></div>
+        <div class="shadow-card__title">다음 학과 세미나 주제 투표</div>
+        <div class="shadow-card__body"></div>
+        <div class="shadow-card__footer"><span class="shadow-card__stat"></span><span class="shadow-card__stat"></span><span class="shadow-card__stat"></span></div>
+      </div>
+      <div class="shadow-card">
+        <div class="shadow-card__top"><span class="shadow-card__cat shadow-card__cat--discuss">Discussion</span></div>
+        <div class="shadow-card__title">학칙 v2 개정안 · 의견 수렴</div>
+        <div class="shadow-card__body"></div>
+        <div class="shadow-card__footer"><span class="shadow-card__stat"></span><span class="shadow-card__stat"></span><span class="shadow-card__stat"></span></div>
+      </div>
+      <div class="shadow-card">
+        <div class="shadow-card__top"><span class="shadow-card__cat shadow-card__cat--quiz">Quiz</span></div>
+        <div class="shadow-card__title">학과 규정 10문항 퀴즈</div>
+        <div class="shadow-card__body"></div>
+        <div class="shadow-card__footer"><span class="shadow-card__stat"></span><span class="shadow-card__stat"></span><span class="shadow-card__stat"></span></div>
+      </div>
+    </div>
+
+    <div class="notice" style="margin-top:8px">
+      <div class="notice__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+      <div class="notice__body">
+        <span class="notice__title">Icon 노출 규칙</span>
+        <span class="notice__text">• 팀이 <strong>parent-eligible</strong>이어야 아이콘이 노출됩니다 (기본은 OFF).<br>• admin이 management 페이지에서 직접 활성화해야 이 버튼이 모든 방문자에게 보입니다.<br>• 비활성화 상태면 아이콘 자체가 숨겨져 일반 팀과 구분되지 않습니다.</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+</div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    // 하위팀 button → prompts user to pick role
+    document.getElementById('subteam-btn').addEventListener('click', () => {
+      SubTeam.toast('역할별 분기 — 아래 카드 중 하나를 선택하세요');
+    });
+  });
+</script>
+</body>
+</html>
