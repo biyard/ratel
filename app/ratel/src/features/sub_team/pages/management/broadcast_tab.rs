@@ -40,6 +40,7 @@ pub fn BroadcastTab(username: String) -> Element {
         // Compose CTA
         a {
             class: "bc-cta",
+            "data-testid": "sub-team-broadcast-compose-cta",
             onclick: move |_| {
                 nav.push(Route::TeamSubTeamBroadcastComposePage {
                     username: username_for_cta.clone(),
@@ -141,6 +142,7 @@ fn DraftRow(
             }
             a {
                 class: "draft-row__edit",
+                "data-testid": "sub-team-broadcast-draft-edit",
                 onclick: move |_| {
                     nav.push(Route::TeamSubTeamBroadcastEditPage {
                         username: edit_username.clone(),
@@ -152,6 +154,7 @@ fn DraftRow(
             }
             button {
                 class: "draft-row__edit",
+                "data-testid": "sub-team-broadcast-draft-publish",
                 onclick: move |_| on_publish.call(publish_id.clone()),
                 lucide_dioxus::Send { class: "w-3 h-3 [&>path]:stroke-current" }
                 "{tr.broadcast_publish}"

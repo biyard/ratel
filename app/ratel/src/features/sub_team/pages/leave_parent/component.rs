@@ -152,6 +152,7 @@ fn LeaveParentForm(username: String, team_display: String) -> Element {
                         textarea {
                             class: "field__textarea",
                             id: "leave-reason",
+                            "data-testid": "sub-team-leave-reason-input",
                             placeholder: "{tr.leave_parent_reason_placeholder}",
                             value: "{reason()}",
                             oninput: move |e| reason.set(e.value()),
@@ -164,6 +165,7 @@ fn LeaveParentForm(username: String, team_display: String) -> Element {
                             input {
                                 r#type: "checkbox",
                                 id: "confirm-check",
+                                "data-testid": "sub-team-leave-confirm-check",
                                 checked: confirmed(),
                                 onchange: move |e| confirmed.set(e.checked()),
                             }
@@ -187,6 +189,7 @@ fn LeaveParentForm(username: String, team_display: String) -> Element {
                         button {
                             class: "btn btn--danger",
                             id: "confirm-btn",
+                            "data-testid": "sub-team-leave-confirm-btn",
                             disabled: !ready,
                             onclick: move |_| {
                                 if !ready {

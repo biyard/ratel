@@ -103,26 +103,43 @@ fn DetailView(username: String, sub_team_id: String) -> Element {
                             lucide_dioxus::FileText { class: "w-3 h-3 [&>path]:stroke-current" }
                             "{tr.post_count}"
                         }
-                        div { class: "metric__value", id: "m-posts", "{post_count}" }
+                        div {
+                            class: "metric__value",
+                            id: "m-posts",
+                            "data-testid": "sub-team-detail-post-count",
+                            "{post_count}"
+                        }
                     }
                     div { class: "metric metric--spaces",
                         div { class: "metric__label",
                             lucide_dioxus::Hash { class: "w-3 h-3 [&>path]:stroke-current" }
                             "{tr.space_count}"
                         }
-                        div { class: "metric__value", id: "m-spaces", "{space_count}" }
+                        div {
+                            class: "metric__value",
+                            id: "m-spaces",
+                            "data-testid": "sub-team-detail-space-count",
+                            "{space_count}"
+                        }
                     }
                     div { class: "metric metric--members",
                         div { class: "metric__label",
                             lucide_dioxus::Users { class: "w-3 h-3 [&>path]:stroke-current" }
                             "{tr.active_member_count}"
                         }
-                        div { class: "metric__value", id: "m-members", "{active_members}" }
+                        div {
+                            class: "metric__value",
+                            id: "m-members",
+                            "data-testid": "sub-team-detail-active-members",
+                            "{active_members}"
+                        }
                     }
                 }
 
                 // Privacy notice
-                div { class: "notice notice--teal",
+                div {
+                    class: "notice notice--teal",
+                    "data-testid": "sub-team-detail-privacy-notice",
                     div { class: "notice__icon",
                         lucide_dioxus::Lock { class: "w-4 h-4 [&>path]:stroke-current" }
                     }

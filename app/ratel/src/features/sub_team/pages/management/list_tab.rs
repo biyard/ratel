@@ -66,6 +66,7 @@ fn SubTeamRow(row: SubTeamSummaryResponse, username: String) -> Element {
     rsx! {
         a {
             class: "roster-row",
+            "data-testid": "sub-team-roster-row",
             onclick: move |_| {
                 nav.push(Route::TeamSubTeamDetailPage {
                     username: username_for_click.clone(),

@@ -161,6 +161,7 @@ fn ApplyForm(username: String, team_display: String, team_handle: String) -> Ele
                         r#type: "text",
                         class: "team-picker__input",
                         id: "parent-team-input",
+                        "data-testid": "sub-team-apply-parent-input",
                         placeholder: "team-pk",
                         value: "{parent_team_id()}",
                         oninput: move |e| parent_team_id.set(e.value()),
@@ -202,6 +203,7 @@ fn ApplyForm(username: String, team_display: String, team_handle: String) -> Ele
                                                 class: "req-doc",
                                                 "data-agreed": "{agreed}",
                                                 "data-id": "{doc.id}",
+                                                "data-testid": "sub-team-apply-req-doc",
                                                 onclick: move |_| {
                                                     active_doc_idx.set(Some(idx));
                                                 },
@@ -287,6 +289,7 @@ fn ApplyForm(username: String, team_display: String, team_handle: String) -> Ele
                                 button {
                                     class: "btn btn--primary",
                                     id: "submit-btn",
+                                    "data-testid": "sub-team-apply-submit-btn",
                                     disabled: !eligibility_met,
                                     onclick: move |_| {
                                         if !eligibility_met {
@@ -379,7 +382,9 @@ fn FieldRow(
     let id_for_date = id.clone();
 
     rsx! {
-        div { class: "field",
+        div {
+            class: "field",
+            "data-testid": "sub-team-apply-field",
             label { class: "field__label",
                 "{label}"
                 if required {

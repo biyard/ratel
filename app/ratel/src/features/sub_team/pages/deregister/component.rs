@@ -68,6 +68,7 @@ fn DeregisterForm() -> Element {
                         textarea {
                             class: "field__textarea",
                             id: "dereg-reason",
+                            "data-testid": "sub-team-deregister-reason-input",
                             value: "{reason()}",
                             oninput: move |e| reason.set(e.value()),
                         }
@@ -79,6 +80,7 @@ fn DeregisterForm() -> Element {
                             input {
                                 r#type: "checkbox",
                                 id: "confirm-check",
+                                "data-testid": "sub-team-deregister-confirm-check",
                                 checked: confirmed(),
                                 onchange: move |e| confirmed.set(e.checked()),
                             }
@@ -100,6 +102,7 @@ fn DeregisterForm() -> Element {
                         button {
                             class: "btn btn--danger",
                             id: "confirm-btn",
+                            "data-testid": "sub-team-deregister-confirm-btn",
                             disabled: !ready,
                             onclick: move |_| {
                                 if !ready {

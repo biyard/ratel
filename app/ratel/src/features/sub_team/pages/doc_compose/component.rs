@@ -155,6 +155,7 @@ fn DocComposeForm(username: String) -> Element {
                     button {
                         class: "topbar-btn topbar-btn--primary",
                         id: "publish-btn",
+                        "data-testid": "sub-team-doc-save-btn",
                         onclick: save_action,
                         lucide_dioxus::Check { class: "w-3 h-3 [&>path]:stroke-current" }
                         "{tr.save}"
@@ -168,6 +169,7 @@ fn DocComposeForm(username: String) -> Element {
                         input {
                             class: "title-input",
                             r#type: "text",
+                            "data-testid": "sub-team-doc-title-input",
                             placeholder: "{tr.doc_compose_title_placeholder}",
                             value: "{title()}",
                             oninput: move |e| title.set(e.value()),
@@ -177,6 +179,7 @@ fn DocComposeForm(username: String) -> Element {
                     textarea {
                         class: "body-editor",
                         id: "body-editor",
+                        "data-testid": "sub-team-doc-body-input",
                         placeholder: "{tr.doc_compose_body_placeholder}",
                         value: "{body()}",
                         oninput: move |e| body.set(e.value()),
@@ -207,6 +210,7 @@ fn DocComposeForm(username: String) -> Element {
                             input {
                                 r#type: "checkbox",
                                 class: "required-row__input",
+                                "data-testid": "sub-team-doc-required-toggle",
                                 checked: required(),
                                 onchange: move |e| required.set(e.checked()),
                             }

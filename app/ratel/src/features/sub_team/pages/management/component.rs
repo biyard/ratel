@@ -59,26 +59,31 @@ pub fn TeamSubTeamManagementPage(username: String) -> Element {
                     TabButton {
                         label: tr.tab_requirements.to_string(),
                         active: active_tab() == ManagementTab::Requirements,
+                        testid: "sub-team-tab-requirements".to_string(),
                         onclick: move |_| active_tab.set(ManagementTab::Requirements),
                     }
                     TabButton {
                         label: tr.tab_documents.to_string(),
                         active: active_tab() == ManagementTab::Documents,
+                        testid: "sub-team-tab-documents".to_string(),
                         onclick: move |_| active_tab.set(ManagementTab::Documents),
                     }
                     TabButton {
                         label: tr.tab_sub_teams.to_string(),
                         active: active_tab() == ManagementTab::Roster,
+                        testid: "sub-team-tab-roster".to_string(),
                         onclick: move |_| active_tab.set(ManagementTab::Roster),
                     }
                     TabButton {
                         label: tr.tab_queue.to_string(),
                         active: active_tab() == ManagementTab::Queue,
+                        testid: "sub-team-tab-queue".to_string(),
                         onclick: move |_| active_tab.set(ManagementTab::Queue),
                     }
                     TabButton {
                         label: tr.tab_broadcast.to_string(),
                         active: active_tab() == ManagementTab::Broadcast,
+                        testid: "sub-team-tab-broadcast".to_string(),
                         onclick: move |_| active_tab.set(ManagementTab::Broadcast),
                     }
                 }
@@ -131,12 +136,18 @@ pub fn TeamSubTeamManagementPage(username: String) -> Element {
 }
 
 #[component]
-fn TabButton(label: String, active: bool, onclick: EventHandler<MouseEvent>) -> Element {
+fn TabButton(
+    label: String,
+    active: bool,
+    #[props(default)] testid: String,
+    onclick: EventHandler<MouseEvent>,
+) -> Element {
     rsx! {
         button {
             class: "tabs-nav__btn",
             role: "tab",
             "aria-selected": "{active}",
+            "data-testid": "{testid}",
             onclick: move |e| onclick.call(e),
             "{label}"
         }

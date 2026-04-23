@@ -68,6 +68,7 @@ pub fn DocAgreementModal(
                             r#type: "button",
                             class: "doc-modal__agree-btn",
                             "data-agreed": "{already_agreed}",
+                            "data-testid": "doc-agreement-agree-btn",
                             disabled: already_agreed,
                             onclick: move |_| on_agree.call(()),
                             lucide_dioxus::Check { class: "w-3 h-3 [&>path]:stroke-current" }

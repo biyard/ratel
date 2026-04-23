@@ -62,6 +62,7 @@ pub fn DocsTab(username: String) -> Element {
             button {
                 class: "add-doc-btn",
                 id: "add-doc",
+                "data-testid": "sub-team-doc-add-btn",
                 onclick: move |_| {
                     nav.push(Route::TeamSubTeamDocComposePage {
                         username: username_for_new.clone(),
@@ -126,7 +127,10 @@ fn DocItem(
     };
 
     rsx! {
-        div { class: "doc-item", "data-required": "{required}",
+        div {
+            class: "doc-item",
+            "data-required": "{required}",
+            "data-testid": "sub-team-doc-item",
             div { class: "doc-item__head",
                 span { class: "doc-item__icon",
                     lucide_dioxus::FileText { class: "w-4 h-4 [&>path]:stroke-current" }
@@ -135,6 +139,7 @@ fn DocItem(
                 label { class: "doc-item__req",
                     input {
                         r#type: "checkbox",
+                        "data-testid": "sub-team-doc-required-check",
                         checked: required,
                         onchange: move |e| {
                             on_update

@@ -142,13 +142,17 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                     }
                 }
                 div { class: "arena-topbar__right",
-                    button { class: "topbar-btn", onclick: save_draft,
+                    button {
+                        class: "topbar-btn",
+                        "data-testid": "sub-team-broadcast-save-draft-btn",
+                        onclick: save_draft,
                         lucide_dioxus::Save { class: "w-3 h-3 [&>path]:stroke-current" }
                         "{tr.broadcast_draft}"
                     }
                     button {
                         class: "topbar-btn topbar-btn--primary",
                         id: "publish-btn",
+                        "data-testid": "sub-team-broadcast-publish-btn",
                         onclick: publish,
                         disabled: current_id().is_none(),
                         lucide_dioxus::Send { class: "w-3 h-3 [&>path]:stroke-current" }
@@ -180,6 +184,7 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                         input {
                             class: "title-input",
                             r#type: "text",
+                            "data-testid": "sub-team-broadcast-title-input",
                             placeholder: "{tr.broadcast_title}",
                             value: "{title()}",
                             oninput: move |e| title.set(e.value()),
@@ -191,6 +196,7 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                     textarea {
                         class: "body-editor",
                         id: "body-editor",
+                        "data-testid": "sub-team-broadcast-body-input",
                         placeholder: "{tr.broadcast_body}",
                         value: "{body()}",
                         oninput: move |e| body.set(e.value()),
