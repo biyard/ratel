@@ -19,7 +19,17 @@
     .target-summary__handle{font-family:var(--font-display);font-size:11px;color:var(--text-muted);letter-spacing:0.04em}
 
     /* ── Team dropdown ─────────────────────────────────── */
-    .team-picker{padding:18px 20px;border-radius:14px;background:var(--bg-glass);backdrop-filter:blur(12px);border:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:10px}
+    /* position:relative + high z-index lifts the picker above its sibling
+       composer card (which creates its own stacking context via
+       backdrop-filter), so the open menu is never obscured. */
+    .team-picker{
+      position:relative;z-index:30;
+      padding:18px 20px;border-radius:14px;
+      background:var(--bg-glass);backdrop-filter:blur(12px);
+      border:1px solid var(--border-subtle);
+      display:flex;flex-direction:column;gap:10px;
+    }
+    .team-picker:has(.team-dropdown__trigger[aria-expanded="true"]){z-index:100}
     .team-picker__label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted)}
     .team-dropdown{position:relative}
     .team-dropdown__trigger{
@@ -38,11 +48,11 @@
     .team-dropdown__trigger[aria-expanded="true"] .team-dropdown__chev{transform:rotate(180deg);color:var(--accent-teal)}
 
     .team-dropdown__menu{
-      position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:20;
+      position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:200;
       padding:6px;border-radius:12px;
       background:var(--bg-panel);backdrop-filter:blur(22px);
       border:1px solid var(--border-subtle);
-      box-shadow:0 16px 40px rgba(0,0,0,0.55);
+      box-shadow:0 16px 40px rgba(0,0,0,0.65),0 0 0 1px rgba(110,237,216,0.08);
       opacity:0;visibility:hidden;transform:translateY(-4px);
       transition:all 0.18s ease;
       max-height:320px;overflow-y:auto;

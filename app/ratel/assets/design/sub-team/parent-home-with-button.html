@@ -41,6 +41,42 @@
       border-left:1px solid rgba(252,179,0,0.30);border-top:1px solid rgba(252,179,0,0.30);
     }
 
+    /* ── Parent team tag (clickable chip in topbar) ── */
+    .parent-tag{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:4px 10px 4px 6px;margin-left:10px;
+      border-radius:100px;
+      background:rgba(252,179,0,0.06);border:1px solid rgba(252,179,0,0.22);
+      color:var(--accent-gold);text-decoration:none;
+      font-family:var(--font-display);font-size:9px;font-weight:700;
+      letter-spacing:0.10em;text-transform:uppercase;
+      transition:all 0.2s;white-space:nowrap;
+    }
+    .parent-tag:hover{
+      background:rgba(252,179,0,0.14);
+      border-color:rgba(252,179,0,0.40);
+      transform:translateY(-1px);
+      box-shadow:0 0 12px rgba(252,179,0,0.18);
+    }
+    .parent-tag__icon{
+      display:inline-flex;align-items:center;justify-content:center;
+      width:18px;height:18px;border-radius:50%;
+      background:rgba(252,179,0,0.18);color:var(--accent-gold);
+      flex-shrink:0;
+    }
+    .parent-tag__icon svg{width:10px;height:10px}
+    .parent-tag__label{opacity:0.7}
+    .parent-tag__name{color:var(--text-primary)}
+    .parent-tag:hover .parent-tag__name{color:var(--accent-gold)}
+    @media (max-width:720px){
+      .parent-tag{margin-left:4px;padding:3px 8px 3px 4px}
+      .parent-tag__label{display:none}
+      .parent-tag__icon{width:16px;height:16px}
+    }
+    @media (max-width:500px){
+      .parent-tag__name{max-width:70px;overflow:hidden;text-overflow:ellipsis}
+    }
+
     /* ── Annotation panel ── */
     .annotation-panel{
       position:relative;overflow:hidden;
@@ -128,6 +164,14 @@
         <span class="arena-topbar__handle">@snu_cs_office</span>
       </div>
       <span class="arena-topbar__status arena-topbar__status--parent">Team · Active</span>
+      <!-- Parent-team chip · clickable · navigates to parent team home -->
+      <a class="parent-tag" id="parent-tag" href="parent-home-with-button.html" title="상위팀 홈으로 이동">
+        <span class="parent-tag__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L3 7v3h18V7l-9-5z"/><path d="M5 10v7a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-7"/></svg>
+        </span>
+        <span class="parent-tag__label">Sub-team of</span>
+        <span class="parent-tag__name">서울대학교</span>
+      </a>
     </div>
     <div class="arena-topbar__actions">
       <button class="hud-btn" aria-label="Drafts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>
@@ -223,6 +267,18 @@
     document.getElementById('subteam-btn').addEventListener('click', () => {
       window.location.href = 'subteam-management-page.html';
     });
+
+    // Parent-team chip → navigate to parent team's home
+    // (Demo uses the same page to represent the parent's home; in a real app
+    //  this would be e.g. /teams/snu-main/home)
+    const parentTag = document.getElementById('parent-tag');
+    if (parentTag) {
+      parentTag.addEventListener('click', (e) => {
+        e.preventDefault();
+        SubTeam.toast('서울대학교 홈으로 이동 · (demo에서는 같은 페이지로 리로드)', 'success');
+        setTimeout(() => { window.location.href = parentTag.getAttribute('href'); }, 800);
+      });
+    }
   });
 </script>
 </body>
