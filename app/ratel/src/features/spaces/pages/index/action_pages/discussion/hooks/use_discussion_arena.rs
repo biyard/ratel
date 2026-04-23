@@ -1,5 +1,5 @@
 use crate::common::components::mention_autocomplete::MentionCandidate;
-use crate::common::hooks::use_interval;
+use crate::common::hooks::{use_infinite_query, use_interval, InfiniteQuery};
 use crate::common::*;
 use crate::features::spaces::pages::actions::actions::discussion::controllers::{
     add_comment, delete_comment, get_comment, get_discussion_detail, like_comment, list_comments,
@@ -41,12 +41,45 @@ pub fn comment_score(comment: &DiscussionCommentResponse, now_seconds: i64) -> f
     likes_term + replies_term + time_term + fresh_term
 }
 
+/// Merge the paginated base set (from `comments_query.items()`) with the
+/// poll-driven `polled_new` buffer and rank the union by `comment_score`.
+///
+/// Extracted from the `comments` memo in `DiscussionArenaPage` so the full
+/// pipeline — base accumulation across pages, polled-new dedup, score-based
+/// re-rank — is unit-testable without a Dioxus runtime. Base wins on sk
+/// collision so loader refetches after edit/delete clobber stale polled
+/// snapshots; the extra `.filter` avoids reshuffling the base order just
+/// to drop a duplicate.
+pub fn merge_and_rank_comments(
+    base: Vec<DiscussionCommentResponse>,
+    polled: Vec<DiscussionCommentResponse>,
+    now_seconds: i64,
+) -> Vec<DiscussionCommentResponse> {
+    let base_sks: std::collections::HashSet<String> =
+        base.iter().map(|c| c.sk.to_string()).collect();
+    let mut merged: Vec<DiscussionCommentResponse> = base
+        .into_iter()
+        .chain(
+            polled
+                .into_iter()
+                .filter(|p| !base_sks.contains(&p.sk.to_string())),
+        )
+        .collect();
+    merged.sort_by(|a, b| {
+        comment_score(b, now_seconds)
+            .partial_cmp(&comment_score(a, now_seconds))
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    merged
+}
+
 #[derive(Clone, Copy, DioxusController)]
 pub struct UseDiscussionArena {
     pub active_reply_thread: Signal<Option<String>>,
     pub sheet_expanded: Signal<bool>,
     pub disc_loader: Loader<DiscussionResponse>,
-    pub comments_loader: Loader<ListResponse<DiscussionCommentResponse>>,
+    pub comments_query:
+        InfiniteQuery<String, DiscussionCommentResponse, ListResponse<DiscussionCommentResponse>>,
     pub parent_loader: Loader<DiscussionCommentResponse>,
     pub replies_loader: Loader<ListResponse<DiscussionCommentResponse>>,
     pub members_loader: Loader<ListResponse<SpaceMemberResponse>>,
@@ -73,7 +106,7 @@ pub struct UseDiscussionArena {
     pub content_overlays: Signal<std::collections::HashMap<String, String>>,
 
     /// Soft-delete set — components skip rendering sks in here until
-    /// the next `comments_loader.restart()` drops them for real.
+    /// the next `comments_query.refresh()` drops them for real.
     pub deleted_sks: Signal<std::collections::HashSet<String>>,
 
     pub like_comment: Action<(String, bool), ()>,
@@ -148,8 +181,8 @@ pub fn use_discussion_arena(
         get_discussion_detail(space_id(), discussion_id()).await
     })?;
 
-    let mut comments_loader = use_loader(move || async move {
-        list_comments(space_id(), discussion_id(), None, None).await
+    let mut comments_query = use_infinite_query(move |bookmark: Option<String>| async move {
+        list_comments(space_id(), discussion_id(), bookmark, None).await
     })?;
 
     // Default-on-None keeps the initial mount synchronous and turns
@@ -186,8 +219,8 @@ pub fn use_discussion_arena(
 
     let mut polled_new: Signal<Vec<DiscussionCommentResponse>> = use_signal(Vec::new);
     let mut last_seen_at: Signal<i64> = use_signal(move || {
-        comments_loader()
-            .items
+        comments_query
+            .items()
             .iter()
             .map(|c| c.created_at)
             .max()
@@ -269,7 +302,7 @@ pub fn use_discussion_arena(
     let members: ReadSignal<Vec<MentionCandidate>> = members_memo.into();
 
     let top_priority = use_memo(move || {
-        let base = comments_loader().items.clone();
+        let base = comments_query.items();
         let polled = polled_new();
         let base_sks: std::collections::HashSet<String> =
             base.iter().map(|c| c.sk.to_string()).collect();
@@ -356,7 +389,7 @@ pub fn use_discussion_arena(
         };
         match update_comment(space_id(), discussion_id(), target_sk, req).await {
             Ok(_) => {
-                comments_loader.restart();
+                comments_query.refresh();
             }
             Err(e) => {
                 match prev_overlay {
@@ -389,7 +422,7 @@ pub fn use_discussion_arena(
                 // Drop any polled snapshot so polling (which only fires
                 // on created_at > cursor) doesn't resurrect the entry.
                 polled_new.with_mut(|list| list.retain(|c| c.sk.to_string() != sk_str));
-                comments_loader.restart();
+                comments_query.refresh();
                 // Thread view: parent's reply count lives on parent_loader.
                 parent_loader.restart();
                 deleted_sks.write().remove(&sk_str);
@@ -409,7 +442,7 @@ pub fn use_discussion_arena(
         let req = AddCommentRequest { content, images };
         match add_comment(space_id(), discussion_id(), req).await {
             Ok(_) => {
-                comments_loader.restart();
+                comments_query.refresh();
             }
             Err(e) => {
                 tracing::error!("add comment: {:?}", e);
@@ -435,7 +468,7 @@ pub fn use_discussion_arena(
             let req = ReplyCommentRequest { content, images };
             match reply_comment(space_id(), discussion_id(), comment_sk_entity, req).await {
                 Ok(_) => {
-                    comments_loader.restart();
+                    comments_query.refresh();
                     replies_loader.restart();
                     parent_loader.restart();
                 }
@@ -452,7 +485,7 @@ pub fn use_discussion_arena(
         active_reply_thread,
         sheet_expanded,
         disc_loader,
-        comments_loader,
+        comments_query,
         parent_loader,
         replies_loader,
         members_loader,
@@ -645,5 +678,139 @@ mod tests {
         assert!(pos("just_now") < pos("1h_silent"));
         // 1h-old with 5 likes outranks 1h-old silent.
         assert!(pos("1h_5_likes") < pos("1h_silent"));
+    }
+
+    // ── merge_and_rank_comments: pagination accumulation + polling ────
+
+    /// Fixture that lets each test produce distinct sks so the dedup
+    /// filter in `merge_and_rank_comments` isn't short-circuited.
+    fn fixture_with_sk(
+        sk_id: &str,
+        created_at: i64,
+        likes: u64,
+        replies: u64,
+    ) -> DiscussionCommentResponse {
+        DiscussionCommentResponse {
+            sk: EntityType::SpacePostComment(sk_id.to_string()),
+            created_at,
+            likes,
+            replies,
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn merge_preserves_all_items_from_base_and_polled() {
+        let now = 1_000_000;
+        let base = vec![
+            fixture_with_sk("a", now - 3600, 10, 0),
+            fixture_with_sk("b", now - 3600, 5, 0),
+        ];
+        let polled = vec![fixture_with_sk("c", now - 60, 0, 0)];
+
+        let merged = merge_and_rank_comments(base, polled, now);
+        assert_eq!(merged.len(), 3);
+    }
+
+    #[test]
+    fn merge_dedupes_polled_against_base() {
+        // Polling fires after a refresh — the same comment may appear in
+        // both the base page and the polled buffer. Base must win (latest
+        // server truth) and the polled copy is dropped.
+        let now = 1_000_000;
+        let base = vec![fixture_with_sk("shared", now - 3600, 10, 0)];
+        let polled = vec![
+            fixture_with_sk("shared", now - 3600, 999, 999), // stale counters
+            fixture_with_sk("new_only", now - 60, 0, 0),
+        ];
+
+        let merged = merge_and_rank_comments(base, polled, now);
+        assert_eq!(merged.len(), 2, "shared comment must not appear twice");
+        // The surviving `shared` entry must be base's copy (likes=10), not
+        // polled's stale likes=999.
+        let shared = merged
+            .iter()
+            .find(|c| c.sk.to_string().contains("shared"))
+            .expect("shared comment missing");
+        assert_eq!(shared.likes, 10);
+    }
+
+    #[test]
+    fn paginated_pages_re_sort_across_page_boundary() {
+        // Simulate what use_infinite_query produces after the user scrolls
+        // past page 1: `comments_query.items()` returns the union of page 1
+        // and page 2, concatenated in server fetch order (likes DESC). The
+        // client must re-rank the whole accumulated set — a page-2 item
+        // with a higher `comment_score` must end up ABOVE page-1 items even
+        // though the server returned it later.
+        let now = 1_000_000;
+        // Page 1 — server order: older items with modest likes.
+        let page1 = vec![
+            fixture_with_sk("p1-stale-likes", now - 172800, 50, 0), // 2d old, 50 likes
+            fixture_with_sk("p1-tail", now - 172800, 20, 0),
+        ];
+        // Page 2 — appears later in server order but carries a 1h-old
+        // comment with heavy reply engagement. `replies_term` + recency
+        // push its score above page 1.
+        let page2 = vec![
+            fixture_with_sk("p2-discussion", now - 3600, 0, 20), // 1h old, 20 replies
+        ];
+        let accumulated: Vec<_> = page1.into_iter().chain(page2).collect();
+
+        let merged = merge_and_rank_comments(accumulated, vec![], now);
+        let order: Vec<String> = merged.iter().map(|c| c.sk.to_string()).collect();
+
+        // Page 2's discussion-heavy comment must float above the concat
+        // order and reach index 0 — confirms the re-sort crosses the page
+        // boundary.
+        assert_eq!(
+            merged[0].sk.to_string(),
+            EntityType::SpacePostComment("p2-discussion".into()).to_string(),
+            "re-sort should lift page-2 engagement above older page-1 likes: {order:?}"
+        );
+    }
+
+    #[test]
+    fn polled_engaged_comment_surfaces_above_paginated_base() {
+        // The 5s poll buffer is meant to bring in freshly-created comments
+        // without waiting for the user to scroll to the relevant page. When
+        // the polled comment has enough engagement that its `comment_score`
+        // beats every accumulated item, merge_and_rank must place it first.
+        let now = 1_000_000;
+        let accumulated_base = vec![
+            fixture_with_sk("old_medium", now - 86400, 20, 2),
+            fixture_with_sk("old_silent", now - 172800, 0, 0),
+        ];
+        // Polled item: 1 min old with non-trivial engagement — strong
+        // fresh_term + some likes + replies → clearly highest score.
+        let polled_fresh = vec![fixture_with_sk("viral_new", now - 60, 10, 3)];
+
+        let merged = merge_and_rank_comments(accumulated_base, polled_fresh, now);
+        assert_eq!(
+            merged[0].sk.to_string(),
+            EntityType::SpacePostComment("viral_new".into()).to_string(),
+            "engaged polled comment must rank first; got={:?}",
+            merged.iter().map(|c| c.sk.to_string()).collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn merge_is_stable_across_repeated_calls_with_same_inputs() {
+        // Guard against ordering drift caused by an unstable comparator.
+        // Two invocations with identical inputs must yield the same order.
+        let now = 1_000_000;
+        let base = vec![
+            fixture_with_sk("a", now - 3600, 10, 2),
+            fixture_with_sk("b", now - 7200, 20, 1),
+            fixture_with_sk("c", now - 86400, 100, 5),
+        ];
+        let polled = vec![fixture_with_sk("d", now - 120, 0, 0)];
+
+        let first = merge_and_rank_comments(base.clone(), polled.clone(), now);
+        let second = merge_and_rank_comments(base, polled, now);
+        let sks = |v: &[DiscussionCommentResponse]| {
+            v.iter().map(|c| c.sk.to_string()).collect::<Vec<_>>()
+        };
+        assert_eq!(sks(&first), sks(&second));
     }
 }
