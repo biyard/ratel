@@ -820,6 +820,11 @@ body.comments-panel-resizing {
 .comment-action--reply:hover {
   color: var(--discuss-color);
 }
+.comment-action__reply-count {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
 
 /* ── Replies ───────────────────────────────────── */
 .comment-replies {
