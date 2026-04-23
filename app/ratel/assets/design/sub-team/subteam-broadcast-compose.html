@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Broadcast Compose</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --bg-input:rgba(255,255,255,0.025);--bg-input-focus:rgba(255,255,255,0.04);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-coral:#ef4444;
+      --accent-purple:#a855f7;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+    }
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+    body{overflow-x:hidden}
+
+    .arena{position:relative;min-height:100vh;display:flex;flex-direction:column}
+    .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 30%,rgba(168,85,247,0.05) 0%,transparent 60%),radial-gradient(ellipse 120% 100% at 50% 120%,rgba(252,179,0,0.03) 0%,transparent 50%);z-index:0;pointer-events:none}
+
+    /* ─── Top bar ─── */
+    .arena-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:18px 28px;background:rgba(6,6,14,0.80);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-subtle)}
+    .arena-topbar__left{display:flex;align-items:center;gap:14px}
+    .back-btn{width:38px;height:38px;border-radius:10px;background:var(--bg-glass);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0;color:var(--text-muted);text-decoration:none}
+    .back-btn:hover{border-color:rgba(168,85,247,0.30);background:var(--bg-glass-hover);color:var(--accent-purple)}
+    .back-btn svg{width:18px;height:18px;transition:color 0.2s}
+
+    .topbar-title{display:flex;flex-direction:column;gap:2px}
+    .topbar-title__eyebrow{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim)}
+    .topbar-title__main{font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-primary)}
+
+    .arena-topbar__right{display:flex;align-items:center;gap:10px}
+    .autosave{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:100px;background:rgba(168,85,247,0.06);border:1px solid rgba(168,85,247,0.18);font-size:11px;font-weight:600;letter-spacing:0.04em;color:var(--accent-purple);margin-right:4px}
+    .autosave::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent-purple);box-shadow:0 0 6px var(--accent-purple);animation:pulse-dot 2s ease-in-out infinite}
+    @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+
+    .topbar-btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--bg-glass);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all 0.25s ease}
+    .topbar-btn:hover{border-color:rgba(168,85,247,0.30);color:var(--accent-purple);background:var(--bg-glass-hover)}
+    .topbar-btn svg{width:13px;height:13px}
+    .topbar-btn--primary{background:linear-gradient(135deg,var(--accent-purple),#7e22ce);color:#fff;border-color:transparent;box-shadow:0 2px 14px rgba(168,85,247,0.30)}
+    .topbar-btn--primary:hover{background:linear-gradient(135deg,#c084fc,var(--accent-purple));border-color:transparent;color:#fff;box-shadow:0 4px 22px rgba(168,85,247,0.50);transform:translateY(-1px)}
+
+    /* ─── Broadcast banner under topbar ─── */
+    .broadcast-banner{
+      max-width:1280px;margin:0 auto;width:100%;
+      padding:14px 28px 0;position:relative;z-index:1;
+    }
+    .broadcast-banner__inner{
+      display:flex;align-items:center;gap:12px;
+      padding:12px 18px;border-radius:12px;
+      background:linear-gradient(135deg,rgba(168,85,247,0.08),rgba(168,85,247,0.02));
+      border:1px solid rgba(168,85,247,0.25);
+    }
+    .broadcast-banner__icon{
+      width:32px;height:32px;border-radius:9px;flex-shrink:0;
+      background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.28);
+      color:var(--accent-purple);display:flex;align-items:center;justify-content:center;
+    }
+    .broadcast-banner__icon svg{width:15px;height:15px}
+    .broadcast-banner__body{flex:1;min-width:0}
+    .broadcast-banner__label{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-purple)}
+    .broadcast-banner__text{font-size:12.5px;color:var(--text-muted);line-height:1.5;margin-top:2px}
+    .broadcast-banner__text strong{color:var(--text-primary)}
+
+    /* ─── Layout ─── */
+    .composer-page{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:28px;padding:22px 28px 100px;max-width:1280px;margin:0 auto;width:100%}
+    .composer{display:flex;flex-direction:column;gap:20px;min-width:0}
+
+    /* Title input */
+    .title-input{width:100%;padding:14px 0;background:transparent;border:none;outline:none;font-family:var(--font-body);font-size:34px;font-weight:700;color:var(--text-primary);line-height:1.2;letter-spacing:-0.01em}
+    .title-input::placeholder{color:var(--text-dim);font-weight:600}
+    .title-divider{height:1px;background:linear-gradient(90deg,var(--border-subtle),transparent);margin:0 0 4px}
+
+    /* Toolbar */
+    .toolbar{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:12px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);position:sticky;top:84px;z-index:10}
+    .toolbar__group{display:flex;gap:2px}
+    .toolbar__divider{width:1px;height:18px;background:var(--border-subtle);margin:0 4px}
+    .tool-btn{width:32px;height:32px;border-radius:7px;background:transparent;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted);transition:all 0.2s ease;padding:0}
+    .tool-btn svg{width:15px;height:15px}
+    .tool-btn:hover{background:rgba(255,255,255,0.04);color:var(--text-primary)}
+    .tool-btn[aria-pressed="true"]{background:rgba(168,85,247,0.12);color:var(--accent-purple)}
+    .toolbar__spacer{flex:1}
+    .toolbar__count{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--text-dim);padding:0 8px}
+
+    /* Body editor */
+    .body-editor{min-height:340px;padding:22px;border-radius:14px;background:var(--bg-input);border:1px solid var(--border-subtle);font-size:15.5px;line-height:1.75;color:var(--text-primary);outline:none;transition:all 0.25s ease}
+    .body-editor:focus,.body-editor:hover{background:var(--bg-input-focus);border-color:rgba(168,85,247,0.22)}
+    .body-editor[contenteditable="true"]:empty::before{content:attr(data-placeholder);color:var(--text-dim);font-style:italic}
+
+    /* Attachments */
+    .attachments{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .attachment{position:relative;width:84px;height:84px;border-radius:10px;overflow:hidden;border:1px solid var(--border-subtle);background:rgba(255,255,255,0.02)}
+    .attachment img{width:100%;height:100%;object-fit:cover}
+    .attachment__remove{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(6,6,14,0.85);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-primary);padding:0;opacity:0;transition:opacity 0.2s}
+    .attachment:hover .attachment__remove{opacity:1}
+    .attachment__remove svg{width:10px;height:10px}
+    .attachment-add{width:84px;height:84px;border-radius:10px;border:1px dashed var(--border-strong);background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--text-dim);cursor:pointer;transition:all 0.2s ease}
+    .attachment-add:hover{border-color:rgba(168,85,247,0.30);color:var(--accent-purple)}
+    .attachment-add svg{width:18px;height:18px}
+    .attachment-add span{font-family:var(--font-display);font-size:8px;font-weight:600;letter-spacing:0.10em;text-transform:uppercase}
+
+    /* ─── Side panel ─── */
+    .side-panel{display:flex;flex-direction:column;gap:14px;align-self:start;position:sticky;top:84px}
+    .side-card{position:relative;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px}
+    .side-card__title{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);display:flex;align-items:center;gap:8px}
+    .side-card__title svg{width:13px;height:13px;color:var(--accent-purple)}
+
+    /* Locked "Posting as" card (read-only, shows parent team) */
+    .locked-row{
+      display:flex;align-items:center;gap:11px;
+      padding:12px 14px;border-radius:11px;
+      background:rgba(252,179,0,0.04);border:1px solid rgba(252,179,0,0.22);
+      position:relative;
+    }
+    .locked-row__avatar{
+      width:38px;height:38px;border-radius:10px;
+      background:linear-gradient(135deg,rgba(252,179,0,0.32),rgba(110,237,216,0.12));
+      border:1px solid rgba(252,179,0,0.28);
+      display:flex;align-items:center;justify-content:center;
+      font-family:var(--font-display);font-weight:800;font-size:13px;color:var(--accent-gold);
+      flex-shrink:0;
+    }
+    .locked-row__body{flex:1;min-width:0}
+    .locked-row__name{font-size:13px;font-weight:700;color:var(--text-primary);font-family:var(--font-display);letter-spacing:0.02em}
+    .locked-row__meta{font-size:11px;color:var(--text-muted);margin-top:2px}
+    .locked-row__lock{
+      width:22px;height:22px;border-radius:7px;flex-shrink:0;
+      background:rgba(252,179,0,0.08);border:1px solid rgba(252,179,0,0.22);
+      color:var(--accent-gold);display:flex;align-items:center;justify-content:center;
+    }
+    .locked-row__lock svg{width:11px;height:11px}
+
+    /* Locked "Visibility = Broadcast" card */
+    .broadcast-target{
+      display:flex;flex-direction:column;gap:10px;
+      padding:14px 16px;border-radius:11px;
+      background:rgba(168,85,247,0.05);border:1px solid rgba(168,85,247,0.22);
+    }
+    .broadcast-target__row{display:flex;align-items:center;gap:10px}
+    .broadcast-target__badge{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:5px 12px;border-radius:100px;
+      background:rgba(168,85,247,0.10);border:1px solid rgba(168,85,247,0.30);
+      color:var(--accent-purple);
+      font-family:var(--font-display);font-size:10px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;
+    }
+    .broadcast-target__badge svg{width:11px;height:11px}
+    .broadcast-target__lock{margin-left:auto;font-family:var(--font-display);font-size:9px;letter-spacing:0.10em;color:var(--text-dim);display:inline-flex;align-items:center;gap:4px}
+    .broadcast-target__lock svg{width:10px;height:10px}
+    .broadcast-target__count{font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--accent-purple);letter-spacing:0.02em}
+    .broadcast-target__count small{font-size:11px;color:var(--text-muted);font-weight:500;letter-spacing:0.06em;text-transform:uppercase;margin-left:6px}
+    .broadcast-target__chips{display:flex;gap:5px;flex-wrap:wrap}
+    .broadcast-target__chip{display:inline-flex;padding:3px 9px;border-radius:100px;background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.22);color:var(--accent-purple);font-family:var(--font-display);font-size:10px;letter-spacing:0.04em}
+    .broadcast-target__note{font-size:11px;color:var(--text-dim);line-height:1.5}
+
+    /* Tag input */
+    .tag-input{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border-subtle);min-height:42px;align-items:center;cursor:text;transition:all 0.2s ease}
+    .tag-input:focus-within{border-color:rgba(168,85,247,0.25);background:var(--bg-input-focus)}
+    .tag{display:inline-flex;align-items:center;gap:5px;padding:3px 8px 3px 10px;border-radius:6px;background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.18);font-size:11px;font-weight:600;color:var(--accent-purple);letter-spacing:0.02em}
+    .tag__x{display:flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:4px;background:transparent;border:none;color:var(--accent-purple);cursor:pointer;padding:0;opacity:0.6;transition:all 0.15s}
+    .tag__x:hover{opacity:1;background:rgba(168,85,247,0.15)}
+    .tag__x svg{width:9px;height:9px}
+    .tag-input__field{flex:1;min-width:80px;background:transparent;border:none;outline:none;font-family:var(--font-body);font-size:12.5px;color:var(--text-primary);padding:4px 0}
+    .tag-input__field::placeholder{color:var(--text-dim)}
+
+    /* Danger row */
+    .danger-row{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.12);color:var(--accent-coral);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;cursor:pointer;transition:all 0.2s ease;text-decoration:none;justify-content:center}
+    .danger-row:hover{background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.22)}
+    .danger-row svg{width:13px;height:13px}
+
+    /* Bottom bar */
+    .bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:25;display:flex;align-items:center;justify-content:space-between;padding:12px 28px;background:rgba(6,6,14,0.86);backdrop-filter:blur(20px);border-top:1px solid var(--border-subtle)}
+    .bottom-bar__left{display:flex;align-items:center;gap:18px;font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--text-dim)}
+    .bottom-bar__stat{display:inline-flex;align-items:center;gap:6px}
+    .bottom-bar__stat svg{width:13px;height:13px}
+    .bottom-bar__stat strong{color:var(--text-primary);font-weight:700;letter-spacing:0.04em}
+    .bottom-bar__right{display:flex;align-items:center;gap:8px}
+
+    /* Responsive */
+    @media (max-width:980px){
+      .composer-page{grid-template-columns:1fr;padding:20px 16px 110px;gap:18px}
+      .toolbar{position:static}
+      .side-panel{position:static;top:auto}
+      .autosave{display:none}
+      .broadcast-banner{padding:12px 16px 0}
+    }
+    @media (max-width:500px){
+      .arena-topbar{padding:12px 14px}
+      .topbar-title__eyebrow{display:none}
+      .topbar-title__main{font-size:13px}
+      .title-input{font-size:24px;padding:10px 0}
+      .body-editor{padding:16px;font-size:14.5px;min-height:260px;line-height:1.65}
+      .toolbar{flex-wrap:wrap;gap:4px;padding:6px}
+      .tool-btn{width:30px;height:30px}
+      .toolbar__count{font-size:9px;padding:0 4px;margin-left:auto}
+      .composer{gap:16px}
+      .side-card{padding:14px}
+      .bottom-bar{padding:10px 14px}
+      .bottom-bar__left .bottom-bar__stat:nth-child(3){display:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <!-- TOP BAR -->
+    <div class="arena-topbar">
+      <div class="arena-topbar__left">
+        <a class="back-btn" href="subteam-management-page.html#broadcast" aria-label="Back to broadcast list">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <div class="topbar-title">
+          <span class="topbar-title__eyebrow">Sub-team · Broadcast</span>
+          <span class="topbar-title__main">전체 공지 작성</span>
+        </div>
+      </div>
+      <div class="arena-topbar__right">
+        <span class="autosave">Autosaved 2s ago</span>
+        <button class="topbar-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          초안 저장
+        </button>
+        <button class="topbar-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          미리보기
+        </button>
+        <button class="topbar-btn topbar-btn--primary" id="publish-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          12 동아리에 발행
+        </button>
+      </div>
+    </div>
+
+    <!-- BROADCAST BANNER -->
+    <div class="broadcast-banner">
+      <div class="broadcast-banner__inner">
+        <div class="broadcast-banner__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8v18l-18-8v-2z"/></svg>
+        </div>
+        <div class="broadcast-banner__body">
+          <div class="broadcast-banner__label">Broadcast mode · Sub-team</div>
+          <div class="broadcast-banner__text"><strong>SNU CS Dept.</strong>로 발행되며 인증된 12개 하위팀 스페이스에 자동으로 핀 고정됩니다. 이 화면은 실제 구현에서는 <strong>new-post 컴포넌트를 재활용</strong>하되 · posting-as · visibility 두 필드만 lock 해서 사용합니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPOSER PAGE -->
+    <div class="composer-page">
+
+      <!-- LEFT: composer -->
+      <main class="composer">
+        <!-- Title -->
+        <div>
+          <input class="title-input" type="text" placeholder="공지 제목을 입력하세요…" value="2026-1학기 동아리실 배정 안내" />
+          <div class="title-divider"></div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+          <div class="toolbar__group">
+            <button class="tool-btn" aria-label="Heading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M6 12h12"/></svg></button>
+            <button class="tool-btn" aria-label="Bold" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg></button>
+            <button class="tool-btn" aria-label="Italic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg></button>
+            <button class="tool-btn" aria-label="Underline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"/><line x1="4" y1="21" x2="20" y2="21"/></svg></button>
+            <button class="tool-btn" aria-label="Strikethrough"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4H9a3 3 0 0 0-2.83 4M14 12a4 4 0 0 1 0 8H6"/><line x1="4" y1="12" x2="20" y2="12"/></svg></button>
+          </div>
+          <div class="toolbar__divider"></div>
+          <div class="toolbar__group">
+            <button class="tool-btn" aria-label="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
+            <button class="tool-btn" aria-label="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></button>
+            <button class="tool-btn" aria-label="Quote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg></button>
+            <button class="tool-btn" aria-label="Code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></button>
+          </div>
+          <div class="toolbar__divider"></div>
+          <div class="toolbar__group">
+            <button class="tool-btn" aria-label="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+            <button class="tool-btn" aria-label="Image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>
+            <button class="tool-btn" aria-label="Mention"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg></button>
+          </div>
+          <div class="toolbar__spacer"></div>
+          <span class="toolbar__count" id="body-count">248 / 5000</span>
+        </div>
+
+        <!-- Body -->
+        <div class="body-editor" id="body-editor" contenteditable="true" data-placeholder="공지 내용을 작성하세요… 툴바로 포맷·링크·이미지 추가.">
+          <p>안녕하세요, 학과사무실입니다.</p>
+          <p>2026-1학기 동아리실 배정이 확정되었습니다. 각 동아리는 <strong>2026-04-28까지</strong> 대표자 서명을 제출해주세요.</p>
+          <p>· 배정표: 첨부 링크 참조<br>· 제출처: 학과사무실 (301동 102호) 또는 office@snu_cs.ac.kr<br>· 문의: 김조교 (학과 조교, ext. 1234)</p>
+          <p>모두에게 알찬 한 학기가 되기를 바랍니다.</p>
+        </div>
+
+        <!-- Attachments -->
+        <div class="attachments">
+          <div class="attachment">
+            <img src="https://images.unsplash.com/photo-1568992687947-868a62a9f521?w=200&q=80" alt="Attachment" />
+            <button class="attachment__remove" aria-label="Remove">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <button class="attachment-add">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>추가</span>
+          </button>
+        </div>
+      </main>
+
+      <!-- RIGHT: side panel -->
+      <aside class="side-panel">
+
+        <!-- POSTING AS (locked to parent team) -->
+        <div class="side-card">
+          <div class="side-card__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Posting as
+          </div>
+          <div class="locked-row" title="상위팀 고정 · 변경 불가">
+            <div class="locked-row__avatar">SNU</div>
+            <div class="locked-row__body">
+              <div class="locked-row__name">SNU CS Dept.</div>
+              <div class="locked-row__meta">@snu_cs_office · 상위팀 고정</div>
+            </div>
+            <span class="locked-row__lock" aria-label="Locked">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <!-- VISIBILITY (locked to Broadcast) -->
+        <div class="side-card">
+          <div class="side-card__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Visibility
+          </div>
+          <div class="broadcast-target">
+            <div class="broadcast-target__row">
+              <span class="broadcast-target__badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8v18l-18-8v-2z"/></svg>
+                Broadcast
+              </span>
+              <span class="broadcast-target__lock">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                고정
+              </span>
+            </div>
+            <div class="broadcast-target__count">12 <small>동아리</small> · 342 <small>멤버</small></div>
+            <div class="broadcast-target__chips">
+              <span class="broadcast-target__chip">SNU Code Club</span>
+              <span class="broadcast-target__chip">Algorithm Lab</span>
+              <span class="broadcast-target__chip">AI &amp; ML Society</span>
+              <span class="broadcast-target__chip">Security Enthusiasts</span>
+              <span class="broadcast-target__chip">Game Dev Crew</span>
+              <span class="broadcast-target__chip">+7</span>
+            </div>
+            <div class="broadcast-target__note">각 하위팀의 팀 스페이스 최상단에 <strong style="color:var(--accent-purple)">핀 고정</strong> · 이전 공지는 자동 핀 해제. 모든 멤버에게 인앱 + 이메일 알림 전송.</div>
+          </div>
+        </div>
+
+        <!-- TAGS -->
+        <div class="side-card">
+          <div class="side-card__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+            Tags
+          </div>
+          <div class="tag-input">
+            <span class="tag">동아리실
+              <button class="tag__x" aria-label="Remove tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </span>
+            <span class="tag">2026-1학기
+              <button class="tag__x" aria-label="Remove tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </span>
+            <input class="tag-input__field" type="text" placeholder="태그 추가…" />
+          </div>
+        </div>
+
+        <!-- Discard → back to broadcast tab -->
+        <a class="danger-row" href="subteam-management-page.html#broadcast">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          초안 폐기
+        </a>
+
+      </aside>
+    </div>
+
+    <!-- BOTTOM BAR -->
+    <div class="bottom-bar">
+      <div class="bottom-bar__left">
+        <span class="bottom-bar__stat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <strong id="word-count">96</strong> 단어 · <strong>1 min</strong> read
+        </span>
+        <span class="bottom-bar__stat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          12 팀 · <strong>342</strong> 멤버에게 전달
+        </span>
+        <span class="bottom-bar__stat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          저장됨 · <strong>2초 전</strong>
+        </span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Body character/word counter
+    const body = document.getElementById('body-editor');
+    const bodyCount = document.getElementById('body-count');
+    const wordCount = document.getElementById('word-count');
+    function updateCounts() {
+      const text = body.innerText || '';
+      bodyCount.textContent = text.length + ' / 5000';
+      wordCount.textContent = text.trim().split(/\s+/).filter(Boolean).length;
+    }
+    body.addEventListener('input', updateCounts);
+    updateCounts();
+
+    // Publish
+    document.getElementById('publish-btn').addEventListener('click', () => {
+      alert('공지 발행 완료 · 12 동아리 × 342명 알림 전송');
+      window.location.href = 'subteam-management-page.html#broadcast';
+    });
+  </script>
+</body>
+</html>
