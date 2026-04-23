@@ -247,35 +247,120 @@
     .section-head__link:hover { color: var(--accent-gold); }
 
     /* ── Badges preview strip ──────────────────────── */
+    /* Compact hex medallions — same design language as the full Trophy
+       Vault (badges.html), sized down for a 6-up summary strip. */
     .badges-strip {
-      display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px;
+      display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px;
+      padding: 4px 0;
     }
     @media (max-width: 860px) { .badges-strip { grid-template-columns: repeat(3, 1fr); } }
-    .badge-pill {
+
+    .badge-mini {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      cursor: pointer; transition: transform .25s ease;
+    }
+    .badge-mini:hover { transform: translateY(-3px); }
+
+    .badge-mini__emblem {
       position: relative;
-      aspect-ratio: 1/1;
-      border-radius: 14px;
-      background: var(--bg-glass); border: 1px solid var(--border-subtle);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 6px; padding: 12px; cursor: pointer; transition: all .25s ease;
+      width: 64px; height: 72px;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+      transition: filter .25s ease;
     }
-    .badge-pill:hover { border-color: rgba(252,179,0,0.25); background: var(--bg-glass-hover); transform: translateY(-2px); box-shadow: 0 6px 22px rgba(0,0,0,0.28); }
-    .badge-pill[data-rarity="legendary"] { border-color: rgba(252,179,0,0.35); box-shadow: inset 0 0 20px rgba(252,179,0,0.06); }
-    .badge-pill[data-rarity="rare"] { border-color: rgba(129,140,248,0.28); box-shadow: inset 0 0 20px rgba(129,140,248,0.06); }
-    .badge-pill[data-rarity="common"] { border-color: rgba(110,237,216,0.22); }
-    .badge-pill[data-locked="true"] { opacity: 0.4; filter: grayscale(0.7); }
-    .badge-pill__icon {
-      width: 40px; height: 40px; border-radius: 10px;
+    .badge-mini:hover .badge-mini__emblem {
+      filter: drop-shadow(0 8px 18px var(--rarity-glow, rgba(0,0,0,0.5)));
+    }
+
+    .badge-mini__frame {
+      position: absolute; inset: 0;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      background:
+        conic-gradient(from 45deg,
+          var(--rarity-bright) 0deg,
+          var(--rarity-dim) 60deg,
+          var(--rarity-bright) 120deg,
+          var(--rarity-dim) 200deg,
+          var(--rarity-bright) 280deg,
+          var(--rarity-dim) 340deg,
+          var(--rarity-bright) 360deg
+        );
+    }
+    .badge-mini__frame::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.32) 0%, transparent 25%, transparent 70%, rgba(255,255,255,0.14) 100%);
+      clip-path: inherit;
+      mix-blend-mode: overlay;
+      pointer-events: none;
+    }
+
+    .badge-mini__inner {
+      position: absolute; inset: 3px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      background:
+        radial-gradient(circle at 50% 40%, rgba(255,255,255,0.06) 0%, transparent 55%),
+        linear-gradient(165deg, #1a1a2a 0%, #0c0c18 60%, #06060e 100%);
       display: flex; align-items: center; justify-content: center;
-      font-family: var(--font-display); font-size: 18px; font-weight: 800;
-      background: rgba(252,179,0,0.08); border: 1px solid rgba(252,179,0,0.2); color: var(--accent-gold);
+      overflow: hidden;
     }
-    .badge-pill[data-rarity="rare"] .badge-pill__icon { background: rgba(129,140,248,0.10); border-color: rgba(129,140,248,0.25); color: var(--accent-violet); }
-    .badge-pill[data-rarity="common"] .badge-pill__icon { background: rgba(110,237,216,0.08); border-color: rgba(110,237,216,0.25); color: var(--accent-teal); }
-    .badge-pill__icon svg { width: 18px; height: 18px; }
-    .badge-pill__label {
-      font-size: 10px; font-weight: 700; color: var(--text-muted);
-      letter-spacing: 0.08em; text-transform: uppercase; text-align: center; line-height: 1.2;
+    .badge-mini__inner::before {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(circle at 50% 45%, var(--rarity-glow, transparent) 0%, transparent 55%);
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    .badge-mini__icon {
+      position: relative;
+      width: 26px; height: 26px;
+      color: var(--rarity-bright);
+      filter:
+        drop-shadow(0 0 4px var(--rarity-glow, transparent))
+        drop-shadow(0 0 10px var(--rarity-glow, transparent));
+    }
+    .badge-mini__icon svg { width: 100%; height: 100%; }
+
+    .badge-mini__lock {
+      position: absolute; inset: 3px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(6, 6, 14, 0.72);
+      color: var(--text-dim);
+      pointer-events: none;
+    }
+    .badge-mini__lock svg { width: 14px; height: 14px; }
+
+    .badge-mini__label {
+      font-family: var(--font-display); font-size: 9px; font-weight: 800;
+      color: var(--text-primary); letter-spacing: 0.06em;
+      text-transform: uppercase; text-align: center; line-height: 1.2;
+      min-height: 22px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Rarity theming — matches badges.html */
+    .badge-mini[data-rarity="legendary"] {
+      --rarity-bright: #f7cf4a;
+      --rarity-dim: #8a5f00;
+      --rarity-glow: rgba(252,179,0,0.55);
+    }
+    .badge-mini[data-rarity="rare"] {
+      --rarity-bright: #c8d2ff;
+      --rarity-dim: #4551a0;
+      --rarity-glow: rgba(129,140,248,0.45);
+    }
+    .badge-mini[data-rarity="common"] {
+      --rarity-bright: #c9a77a;
+      --rarity-dim: #6a4a2a;
+      --rarity-glow: rgba(201,167,122,0.35);
+    }
+    .badge-mini[data-locked="true"] .badge-mini__emblem {
+      filter: grayscale(0.75) brightness(0.8);
+    }
+    .badge-mini[data-locked="true"]:hover .badge-mini__emblem {
+      filter: grayscale(0.4) brightness(0.95);
+    }
+    .badge-mini[data-locked="true"] .badge-mini__label {
+      color: var(--text-muted);
     }
 
     /* ── Activity feed ─────────────────────────────── */
@@ -471,41 +556,74 @@
         </a>
       </div>
       <section class="badges-strip">
-        <div class="badge-pill" data-rarity="legendary">
-          <div class="badge-pill__icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+        <div class="badge-mini" data-rarity="legendary">
+          <div class="badge-mini__emblem">
+            <div class="badge-mini__frame"></div>
+            <div class="badge-mini__inner">
+              <div class="badge-mini__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+              </div>
+            </div>
           </div>
-          <div class="badge-pill__label">Founding<br/>Voice</div>
+          <div class="badge-mini__label">Founding<br/>Voice</div>
         </div>
-        <div class="badge-pill" data-rarity="legendary">
-          <div class="badge-pill__icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+        <div class="badge-mini" data-rarity="legendary">
+          <div class="badge-mini__emblem">
+            <div class="badge-mini__frame"></div>
+            <div class="badge-mini__inner">
+              <div class="badge-mini__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+              </div>
+            </div>
           </div>
-          <div class="badge-pill__label">Legislator</div>
+          <div class="badge-mini__label">Legislator</div>
         </div>
-        <div class="badge-pill" data-rarity="rare">
-          <div class="badge-pill__icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <div class="badge-mini" data-rarity="rare">
+          <div class="badge-mini__emblem">
+            <div class="badge-mini__frame"></div>
+            <div class="badge-mini__inner">
+              <div class="badge-mini__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
+            </div>
           </div>
-          <div class="badge-pill__label">Mind<br/>Meld</div>
+          <div class="badge-mini__label">Mind<br/>Meld</div>
         </div>
-        <div class="badge-pill" data-rarity="rare">
-          <div class="badge-pill__icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <div class="badge-mini" data-rarity="rare">
+          <div class="badge-mini__emblem">
+            <div class="badge-mini__frame"></div>
+            <div class="badge-mini__inner">
+              <div class="badge-mini__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+            </div>
           </div>
-          <div class="badge-pill__label">Kingmaker</div>
+          <div class="badge-mini__label">Kingmaker</div>
         </div>
-        <div class="badge-pill" data-rarity="common">
-          <div class="badge-pill__icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div class="badge-mini" data-rarity="common">
+          <div class="badge-mini__emblem">
+            <div class="badge-mini__frame"></div>
+            <div class="badge-mini__inner">
+              <div class="badge-mini__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </div>
+            </div>
           </div>
-          <div class="badge-pill__label">Scholar</div>
+          <div class="badge-mini__label">Scholar</div>
         </div>
-        <div class="badge-pill" data-rarity="common" data-locked="true">
-          <div class="badge-pill__icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <div class="badge-mini" data-rarity="common" data-locked="true">
+          <div class="badge-mini__emblem">
+            <div class="badge-mini__frame"></div>
+            <div class="badge-mini__inner">
+              <div class="badge-mini__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </div>
+            </div>
+            <div class="badge-mini__lock">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
           </div>
-          <div class="badge-pill__label">Marathoner</div>
+          <div class="badge-mini__label">Marathoner</div>
         </div>
       </section>
 

@@ -153,113 +153,263 @@
       letter-spacing: 0.14em; color: var(--accent-gold);
     }
 
-    /* ── Badge grid ── */
-    .badge-grid {
+    /* ── Badge vault grid ── */
+    .badge-vault {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+      gap: 32px 14px;
+      padding: 8px 0 4px;
     }
 
-    .badge-card {
+    /* ── Medallion ── */
+    .badge-medal {
       position: relative;
-      border-radius: 16px;
-      border: 1px solid var(--border-subtle);
-      background: var(--bg-glass);
-      padding: 18px;
-      display: flex; flex-direction: column; gap: 12px;
-      transition: all .25s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
       cursor: pointer;
-      overflow: hidden;
+      transition: transform .25s ease;
     }
-    .badge-card:hover {
-      background: var(--bg-glass-hover);
-      transform: translateY(-3px);
-      box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+    .badge-medal:hover { transform: translateY(-4px); }
+
+    .badge-medal__emblem {
+      position: relative;
+      width: 104px;
+      height: 118px;
+      filter: drop-shadow(0 6px 16px rgba(0,0,0,0.45));
+      transition: filter .25s ease;
     }
-    .badge-card::after {
+    .badge-medal:hover .badge-medal__emblem {
+      filter: drop-shadow(0 10px 22px var(--rarity-glow, rgba(0,0,0,0.5)));
+    }
+
+    /* Outer metallic frame — hexagonal */
+    .badge-medal__frame {
+      position: absolute; inset: 0;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      background:
+        conic-gradient(from 45deg,
+          var(--rarity-bright) 0deg,
+          var(--rarity-dim) 60deg,
+          var(--rarity-bright) 120deg,
+          var(--rarity-dim) 200deg,
+          var(--rarity-bright) 280deg,
+          var(--rarity-dim) 340deg,
+          var(--rarity-bright) 360deg
+        );
+    }
+    /* Subtle highlight sheen across the frame */
+    .badge-medal__frame::after {
       content: ""; position: absolute; inset: 0;
-      background: linear-gradient(160deg, rgba(255,255,255,0.02) 0%, transparent 40%);
+      background: linear-gradient(135deg, rgba(255,255,255,0.35) 0%, transparent 22%, transparent 68%, rgba(255,255,255,0.18) 100%);
+      clip-path: inherit;
+      mix-blend-mode: overlay;
       pointer-events: none;
     }
-    .badge-card[data-rarity="legendary"] { border-color: rgba(252,179,0,0.35); box-shadow: inset 0 0 30px rgba(252,179,0,0.04); }
-    .badge-card[data-rarity="legendary"]:hover { border-color: rgba(252,179,0,0.55); box-shadow: 0 10px 28px rgba(252,179,0,0.20), inset 0 0 30px rgba(252,179,0,0.08); }
-    .badge-card[data-rarity="rare"] { border-color: rgba(129,140,248,0.28); }
-    .badge-card[data-rarity="rare"]:hover { border-color: rgba(129,140,248,0.45); box-shadow: 0 10px 28px rgba(129,140,248,0.20); }
-    .badge-card[data-rarity="common"] { border-color: rgba(110,237,216,0.22); }
-    .badge-card[data-rarity="common"]:hover { border-color: rgba(110,237,216,0.40); box-shadow: 0 10px 28px rgba(110,237,216,0.15); }
-    .badge-card[data-locked="true"] { filter: grayscale(0.75); opacity: 0.58; }
-    .badge-card[data-locked="true"]:hover { filter: grayscale(0.4); opacity: 0.8; }
 
-    .badge-card__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-    .badge-card__icon {
-      width: 52px; height: 52px; border-radius: 13px;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(252,179,0,0.10);
-      border: 1px solid rgba(252,179,0,0.25);
-      color: var(--accent-gold);
-      flex-shrink: 0; position: relative;
+    /* Inner chamber */
+    .badge-medal__inner {
+      position: absolute; inset: 5px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      background:
+        radial-gradient(circle at 50% 40%, rgba(255,255,255,0.06) 0%, transparent 55%),
+        linear-gradient(165deg, #1a1a2a 0%, #0c0c18 60%, #06060e 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
     }
-    .badge-card[data-rarity="rare"] .badge-card__icon { background: rgba(129,140,248,0.10); border-color: rgba(129,140,248,0.28); color: var(--accent-violet); }
-    .badge-card[data-rarity="common"] .badge-card__icon { background: rgba(110,237,216,0.08); border-color: rgba(110,237,216,0.28); color: var(--accent-teal); }
-    .badge-card__icon svg { width: 22px; height: 22px; }
-    .badge-card[data-locked="true"] .badge-card__icon { background: rgba(255,255,255,0.03); border-color: var(--border-subtle); color: var(--text-dim); }
+    /* Inner soft rarity halo */
+    .badge-medal__inner::before {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(circle at 50% 45%, var(--rarity-glow, transparent) 0%, transparent 55%);
+      opacity: 0.55;
+      pointer-events: none;
+    }
 
-    .badge-card__lock {
-      position: absolute; bottom: -4px; right: -4px;
-      width: 20px; height: 20px; border-radius: 50%;
-      background: var(--bg-void); border: 1px solid var(--border-strong);
+    .badge-medal__icon {
+      position: relative;
+      width: 44px; height: 44px;
+      color: var(--rarity-bright);
+      filter:
+        drop-shadow(0 0 6px var(--rarity-glow, transparent))
+        drop-shadow(0 0 14px var(--rarity-glow, transparent));
+    }
+    .badge-medal__icon svg { width: 100%; height: 100%; }
+
+    /* Lock veil for locked badges — covers the inner, keeps the frame shiny */
+    .badge-medal__lock {
+      position: absolute; inset: 5px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
       display: flex; align-items: center; justify-content: center;
+      background: rgba(6, 6, 14, 0.72);
       color: var(--text-dim);
+      pointer-events: none;
     }
-    .badge-card__lock svg { width: 10px; height: 10px; }
+    .badge-medal__lock svg { width: 22px; height: 22px; }
 
-    .badge-card__rarity {
-      font-family: var(--font-display); font-size: 9px; font-weight: 700;
-      padding: 4px 9px; border-radius: 100px;
-      letter-spacing: 0.12em; text-transform: uppercase;
-      background: rgba(252,179,0,0.10); color: var(--accent-gold); border: 1px solid rgba(252,179,0,0.28);
+    /* Rarity corner chip */
+    .badge-medal__chip {
+      position: absolute;
+      top: 2px; left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font-display);
+      font-size: 7px; font-weight: 800;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      color: #0a0a14;
+      background: var(--rarity-bright);
+      border-radius: 2px;
+      pointer-events: none;
+      box-shadow: 0 0 8px var(--rarity-glow, transparent);
     }
-    .badge-card[data-rarity="rare"] .badge-card__rarity { background: rgba(129,140,248,0.10); color: var(--accent-violet); border-color: rgba(129,140,248,0.28); }
-    .badge-card[data-rarity="common"] .badge-card__rarity { background: rgba(110,237,216,0.08); color: var(--accent-teal); border-color: rgba(110,237,216,0.28); }
-    .badge-card[data-locked="true"] .badge-card__rarity { background: rgba(255,255,255,0.04); color: var(--text-dim); border-color: var(--border-subtle); }
 
-    .badge-card__title {
-      font-family: var(--font-display); font-size: 14px; font-weight: 800;
-      color: var(--text-primary); letter-spacing: 0.03em; line-height: 1.2;
+    /* Banner scroll beneath the emblem */
+    .badge-medal__banner {
+      position: relative;
+      min-width: 96px; max-width: 140px;
+      padding: 4px 16px;
+      text-align: center;
+      font-family: var(--font-display);
+      font-size: 10px; font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+      background: linear-gradient(180deg, #14141e 0%, #07070d 100%);
+      clip-path: polygon(
+        6px 0%,
+        calc(100% - 6px) 0%,
+        100% 50%,
+        calc(100% - 6px) 100%,
+        6px 100%,
+        0% 50%
+      );
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .badge-card__desc {
-      font-size: 12.5px; color: var(--text-muted); line-height: 1.5;
+    .badge-medal__banner::before {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(180deg, var(--rarity-bright), var(--rarity-dim));
+      clip-path: inherit;
+      z-index: -1;
+      margin: -1px;
+      opacity: 0.85;
+    }
+    .badge-medal__banner::after {
+      content: ""; position: absolute; inset: 1px;
+      background: linear-gradient(180deg, #14141e 0%, #07070d 100%);
+      clip-path: polygon(
+        5px 0%,
+        calc(100% - 5px) 0%,
+        100% 50%,
+        calc(100% - 5px) 100%,
+        5px 100%,
+        0% 50%
+      );
+      z-index: -1;
     }
 
-    .badge-card__progress {
-      display: flex; flex-direction: column; gap: 6px; margin-top: 2px;
+    /* Meta line under the banner: earned date or progress text */
+    .badge-medal__meta {
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      display: inline-flex; align-items: center; gap: 5px;
+      text-align: center;
     }
-    .badge-card__progress-bar {
-      height: 5px; border-radius: 4px; overflow: hidden;
-      background: rgba(255,255,255,0.05);
-    }
-    .badge-card__progress-fill {
-      height: 100%; background: linear-gradient(90deg, var(--accent-gold), #e5a200);
-      border-radius: 4px;
-    }
-    .badge-card[data-rarity="rare"] .badge-card__progress-fill { background: linear-gradient(90deg, var(--accent-violet), #6d78e0); }
-    .badge-card[data-rarity="common"] .badge-card__progress-fill { background: linear-gradient(90deg, var(--accent-teal), #55d0bc); }
-    .badge-card__progress-label {
-      display: flex; justify-content: space-between;
-      font-size: 11px; color: var(--text-dim);
-    }
-    .badge-card__progress-label strong { color: var(--text-muted); font-weight: 600; }
+    .badge-medal__meta--earned { color: var(--accent-green); }
+    .badge-medal__meta svg { width: 10px; height: 10px; }
 
-    .badge-card__footer {
-      display: flex; align-items: center; justify-content: space-between;
-      padding-top: 10px; margin-top: 4px;
-      border-top: 1px solid var(--border-subtle);
-      font-size: 11px; color: var(--text-dim);
+    /* Mini progress bar for in-progress locked badges */
+    .badge-medal__progress {
+      width: 92px;
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.06);
+      overflow: hidden;
+      margin-top: -2px;
     }
-    .badge-card__footer-earned { display: inline-flex; align-items: center; gap: 6px; color: var(--accent-green); }
-    .badge-card__footer-earned svg { width: 11px; height: 11px; }
-    .badge-card__footer-reward { display: inline-flex; align-items: center; gap: 4px; color: var(--accent-gold); font-family: var(--font-display); font-weight: 700; letter-spacing: 0.06em; }
+    .badge-medal__progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--rarity-bright), var(--rarity-dim));
+      border-radius: 2px;
+      box-shadow: 0 0 6px var(--rarity-glow, transparent);
+    }
 
+    /* Rarity theming */
+    .badge-medal[data-rarity="legendary"] {
+      --rarity-bright: #f7cf4a;
+      --rarity-dim: #8a5f00;
+      --rarity-glow: rgba(252,179,0,0.55);
+    }
+    .badge-medal[data-rarity="rare"] {
+      --rarity-bright: #c8d2ff;
+      --rarity-dim: #4551a0;
+      --rarity-glow: rgba(129,140,248,0.45);
+    }
+    .badge-medal[data-rarity="common"] {
+      --rarity-bright: #c9a77a;
+      --rarity-dim: #6a4a2a;
+      --rarity-glow: rgba(201,167,122,0.35);
+    }
+
+    /* Locked — desaturated everything, lock overlay on top */
+    .badge-medal[data-locked="true"] .badge-medal__emblem {
+      filter: grayscale(0.75) brightness(0.8);
+    }
+    .badge-medal[data-locked="true"]:hover .badge-medal__emblem {
+      filter: grayscale(0.4) brightness(0.95);
+    }
+    .badge-medal[data-locked="true"] .badge-medal__banner {
+      opacity: 0.65;
+    }
+
+    /* Name label body */
+    .badge-medal__info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-align: center;
+      max-width: 140px;
+    }
+
+    /* Tooltip — shows description on hover */
+    .badge-medal__tip {
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      min-width: 220px; max-width: 260px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(14, 14, 26, 0.96);
+      border: 1px solid var(--border-strong);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.45;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      z-index: 10;
+      text-align: left;
+    }
+    .badge-medal__tip::after {
+      content: ""; position: absolute;
+      left: 50%; bottom: -5px; transform: translateX(-50%) rotate(45deg);
+      width: 10px; height: 10px;
+      background: rgba(14, 14, 26, 0.96);
+      border-right: 1px solid var(--border-strong);
+      border-bottom: 1px solid var(--border-strong);
+    }
+    .badge-medal:hover .badge-medal__tip {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
   </style>
 </head>
 <body>
@@ -322,120 +472,122 @@
         </div>
         <span class="category-head__earned">4 / 9 earned</span>
       </header>
-      <section class="badge-grid">
-        <article class="badge-card" data-rarity="common">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <section class="badge-vault">
+        <article class="badge-medal" data-rarity="common">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
             </div>
           </div>
-          <h3 class="badge-card__title">First Steps</h3>
-          <p class="badge-card__desc">Join your first space and complete a prerequisite.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:100%"></div></div>
-            <div class="badge-card__progress-label"><strong>1 / 1</strong><span>Completed</span></div>
-          </div>
-          <div class="badge-card__footer">
-            <span class="badge-card__footer-earned">
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">First Steps</span>
+            <span class="badge-medal__meta badge-medal__meta--earned">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Earned Mar 15
+              Mar 15
             </span>
           </div>
+          <div class="badge-medal__tip">Join your first space and complete a prerequisite.</div>
         </article>
 
-        <article class="badge-card" data-rarity="common">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <article class="badge-medal" data-rarity="common">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
             </div>
           </div>
-          <h3 class="badge-card__title">Active Voice</h3>
-          <p class="badge-card__desc">Participate in 5 different spaces.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:100%"></div></div>
-            <div class="badge-card__progress-label"><strong>5 / 5</strong><span>Completed</span></div>
-          </div>
-          <div class="badge-card__footer">
-            <span class="badge-card__footer-earned">
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Active Voice</span>
+            <span class="badge-medal__meta badge-medal__meta--earned">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Earned Apr 02
+              Apr 02
             </span>
           </div>
+          <div class="badge-medal__tip">Participate in 5 different spaces.</div>
         </article>
 
-        <article class="badge-card" data-rarity="rare">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <article class="badge-medal" data-rarity="rare">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
             </div>
           </div>
-          <h3 class="badge-card__title">Kingmaker</h3>
-          <p class="badge-card__desc">Cast 100 poll votes across any spaces.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:100%"></div></div>
-            <div class="badge-card__progress-label"><strong>112 / 100</strong><span>Completed</span></div>
-          </div>
-          <div class="badge-card__footer">
-            <span class="badge-card__footer-earned">
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Kingmaker</span>
+            <span class="badge-medal__meta badge-medal__meta--earned">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Earned 2h ago
+              2h ago
             </span>
           </div>
+          <div class="badge-medal__tip">Cast 100 poll votes across any spaces. 112 / 100.</div>
         </article>
 
-        <article class="badge-card" data-rarity="legendary">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+        <article class="badge-medal" data-rarity="legendary">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+              </div>
             </div>
+            <span class="badge-medal__chip">Legendary</span>
           </div>
-          <h3 class="badge-card__title">Legislator</h3>
-          <p class="badge-card__desc">Participate in 100 spaces and pass the prerequisite in each.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:100%"></div></div>
-            <div class="badge-card__progress-label"><strong>103 / 100</strong><span>Completed</span></div>
-          </div>
-          <div class="badge-card__footer">
-            <span class="badge-card__footer-earned">
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Legislator</span>
+            <span class="badge-medal__meta badge-medal__meta--earned">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Earned Apr 20
+              Apr 20
             </span>
           </div>
+          <div class="badge-medal__tip">Participate in 100 spaces and pass the prerequisite in each.</div>
         </article>
 
-        <article class="badge-card" data-rarity="rare" data-locked="true">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+        <article class="badge-medal" data-rarity="rare" data-locked="true">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+              </div>
+            </div>
+            <div class="badge-medal__lock">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
           </div>
-          <h3 class="badge-card__title">Prerequisite Master</h3>
-          <p class="badge-card__desc">Pass 10 space prerequisites within 1 hour of joining.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:70%"></div></div>
-            <div class="badge-card__progress-label"><strong>7 / 10</strong><span>70%</span></div>
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Prereq Master</span>
+            <div class="badge-medal__progress"><div class="badge-medal__progress-fill" style="width:70%"></div></div>
+            <span class="badge-medal__meta">7 / 10 · 3 to go</span>
           </div>
-          <div class="badge-card__footer">
-            <span>3 more to unlock</span>
-          </div>
+          <div class="badge-medal__tip">Pass 10 space prerequisites within 1 hour of joining.</div>
         </article>
 
-        <article class="badge-card" data-rarity="common" data-locked="true">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              <span class="badge-card__lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+        <article class="badge-medal" data-rarity="common" data-locked="true">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </div>
+            </div>
+            <div class="badge-medal__lock">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
           </div>
-          <h3 class="badge-card__title">Deliberator</h3>
-          <p class="badge-card__desc">Participate in 20 different spaces.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:42%"></div></div>
-            <div class="badge-card__progress-label"><strong>8 / 20</strong><span>42%</span></div>
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Deliberator</span>
+            <div class="badge-medal__progress"><div class="badge-medal__progress-fill" style="width:42%"></div></div>
+            <span class="badge-medal__meta">8 / 20 · 12 to go</span>
           </div>
-          <div class="badge-card__footer">
-            <span>12 more to unlock</span>
-          </div>
+          <div class="badge-medal__tip">Participate in 20 different spaces.</div>
         </article>
       </section>
 
@@ -447,81 +599,84 @@
         </div>
         <span class="category-head__earned">2 / 6 earned</span>
       </header>
-      <section class="badge-grid">
-        <article class="badge-card" data-rarity="common">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <section class="badge-vault">
+        <article class="badge-medal" data-rarity="common">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </div>
             </div>
           </div>
-          <h3 class="badge-card__title">Curator</h3>
-          <p class="badge-card__desc">Create your first space with at least 1 action.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:100%"></div></div>
-            <div class="badge-card__progress-label"><strong>1 / 1</strong><span>Completed</span></div>
-          </div>
-          <div class="badge-card__footer">
-            <span class="badge-card__footer-earned">
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Curator</span>
+            <span class="badge-medal__meta badge-medal__meta--earned">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Earned Mar 22
+              Mar 22
             </span>
           </div>
+          <div class="badge-medal__tip">Create your first space with at least 1 action.</div>
         </article>
 
-        <article class="badge-card" data-rarity="rare">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        <article class="badge-medal" data-rarity="rare">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              </div>
             </div>
           </div>
-          <h3 class="badge-card__title">Architect</h3>
-          <p class="badge-card__desc">Create 5 spaces that reach "Ongoing" status.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:100%"></div></div>
-            <div class="badge-card__progress-label"><strong>6 / 5</strong><span>Completed</span></div>
-          </div>
-          <div class="badge-card__footer">
-            <span class="badge-card__footer-earned">
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Architect</span>
+            <span class="badge-medal__meta badge-medal__meta--earned">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Earned 4d ago
+              4d ago
             </span>
           </div>
+          <div class="badge-medal__tip">Create 5 spaces that reach "Ongoing" status. 6 / 5.</div>
         </article>
 
-        <article class="badge-card" data-rarity="rare" data-locked="true">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
-              <span class="badge-card__lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+        <article class="badge-medal" data-rarity="rare" data-locked="true">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
+              </div>
+            </div>
+            <div class="badge-medal__lock">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
           </div>
-          <h3 class="badge-card__title">Quest Designer</h3>
-          <p class="badge-card__desc">Publish a space with all 4 action types (poll, discussion, quiz, follow).</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:75%"></div></div>
-            <div class="badge-card__progress-label"><strong>3 / 4</strong><span>75%</span></div>
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Quest Designer</span>
+            <div class="badge-medal__progress"><div class="badge-medal__progress-fill" style="width:75%"></div></div>
+            <span class="badge-medal__meta">3 / 4 · 1 to go</span>
           </div>
-          <div class="badge-card__footer">
-            <span>1 more action type</span>
-          </div>
+          <div class="badge-medal__tip">Publish a space with all 4 action types (poll, discussion, quiz, follow).</div>
         </article>
 
-        <article class="badge-card" data-rarity="legendary" data-locked="true">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-              <span class="badge-card__lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+        <article class="badge-medal" data-rarity="legendary" data-locked="true">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+              </div>
             </div>
+            <div class="badge-medal__lock">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <span class="badge-medal__chip">Legendary</span>
           </div>
-          <h3 class="badge-card__title">Foundation</h3>
-          <p class="badge-card__desc">Have a space finish with 500+ participants.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:23%"></div></div>
-            <div class="badge-card__progress-label"><strong>117 / 500</strong><span>23%</span></div>
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Foundation</span>
+            <div class="badge-medal__progress"><div class="badge-medal__progress-fill" style="width:23%"></div></div>
+            <span class="badge-medal__meta">117 / 500 · 383 to go</span>
           </div>
-          <div class="badge-card__footer">
-            <span>383 more to unlock</span>
-          </div>
+          <div class="badge-medal__tip">Have a space finish with 500+ participants.</div>
         </article>
       </section>
 
@@ -533,83 +688,82 @@
         </div>
         <span class="category-head__earned">2 / 5 earned</span>
       </header>
-      <section class="badge-grid">
-        <article class="badge-card" data-rarity="common">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+      <section class="badge-vault">
+        <article class="badge-medal" data-rarity="common">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+              </div>
             </div>
           </div>
-          <h3 class="badge-card__title">Connector</h3>
-          <p class="badge-card__desc">Follow 10 other citizens on Ratel.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:100%"></div></div>
-            <div class="badge-card__progress-label"><strong>24 / 10</strong><span>Completed</span></div>
-          </div>
-          <div class="badge-card__footer">
-            <span class="badge-card__footer-earned">
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Connector</span>
+            <span class="badge-medal__meta badge-medal__meta--earned">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Earned Mar 18
+              Mar 18
             </span>
           </div>
+          <div class="badge-medal__tip">Follow 10 other citizens on Ratel. 24 / 10.</div>
         </article>
 
-        <article class="badge-card" data-rarity="rare" data-locked="true">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-              <span class="badge-card__lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+        <article class="badge-medal" data-rarity="rare" data-locked="true">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </div>
+            </div>
+            <div class="badge-medal__lock">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
           </div>
-          <h3 class="badge-card__title">Community Pillar</h3>
-          <p class="badge-card__desc">Reach 1,000 followers.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:100%"></div></div>
-            <div class="badge-card__progress-label"><strong>1,240 / 1,000</strong><span>Completed</span></div>
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Community Pillar</span>
+            <div class="badge-medal__progress"><div class="badge-medal__progress-fill" style="width:100%"></div></div>
+            <span class="badge-medal__meta">Unlock pending</span>
           </div>
-          <div class="badge-card__footer">
-            <span>Unlock pending</span>
-          </div>
+          <div class="badge-medal__tip">Reach 1,000 followers. 1,240 / 1,000.</div>
         </article>
 
-        <article class="badge-card" data-rarity="common">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <article class="badge-medal" data-rarity="common">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
             </div>
           </div>
-          <h3 class="badge-card__title">Voice of Reason</h3>
-          <p class="badge-card__desc">Leave 10 substantive comments in discussion actions.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:100%"></div></div>
-            <div class="badge-card__progress-label"><strong>48 / 10</strong><span>Completed</span></div>
-          </div>
-          <div class="badge-card__footer">
-            <span class="badge-card__footer-earned">
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Voice of Reason</span>
+            <span class="badge-medal__meta badge-medal__meta--earned">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Earned Mar 28
+              Mar 28
             </span>
           </div>
+          <div class="badge-medal__tip">Leave 10 substantive comments in discussion actions. 48 / 10.</div>
         </article>
 
-        <article class="badge-card" data-rarity="rare">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+        <article class="badge-medal" data-rarity="rare">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+              </div>
             </div>
           </div>
-          <h3 class="badge-card__title">Mind Meld</h3>
-          <p class="badge-card__desc">Reach 100 discussion comments across any spaces.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:100%"></div></div>
-            <div class="badge-card__progress-label"><strong>142 / 100</strong><span>Completed</span></div>
-          </div>
-          <div class="badge-card__footer">
-            <span class="badge-card__footer-earned">
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Mind Meld</span>
+            <span class="badge-medal__meta badge-medal__meta--earned">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Earned Apr 12
+              Apr 12
             </span>
           </div>
+          <div class="badge-medal__tip">Reach 100 discussion comments across any spaces. 142 / 100.</div>
         </article>
       </section>
 
@@ -621,79 +775,85 @@
         </div>
         <span class="category-head__earned">2 / 9 earned</span>
       </header>
-      <section class="badge-grid">
-        <article class="badge-card" data-rarity="common">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <section class="badge-vault">
+        <article class="badge-medal" data-rarity="common">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </div>
             </div>
           </div>
-          <h3 class="badge-card__title">Scholar</h3>
-          <p class="badge-card__desc">Score 100% on 10 quiz actions.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:100%"></div></div>
-            <div class="badge-card__progress-label"><strong>14 / 10</strong><span>Completed</span></div>
-          </div>
-          <div class="badge-card__footer">
-            <span class="badge-card__footer-earned">
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Scholar</span>
+            <span class="badge-medal__meta badge-medal__meta--earned">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Earned Apr 08
+              Apr 08
             </span>
           </div>
+          <div class="badge-medal__tip">Score 100% on 10 quiz actions. 14 / 10.</div>
         </article>
 
-        <article class="badge-card" data-rarity="rare" data-locked="true">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <span class="badge-card__lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+        <article class="badge-medal" data-rarity="rare" data-locked="true">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+            </div>
+            <div class="badge-medal__lock">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
           </div>
-          <h3 class="badge-card__title">Reward Hunter</h3>
-          <p class="badge-card__desc">Accumulate 50,000 CR across space rewards.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:49%"></div></div>
-            <div class="badge-card__progress-label"><strong>24,680 / 50,000</strong><span>49%</span></div>
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Reward Hunter</span>
+            <div class="badge-medal__progress"><div class="badge-medal__progress-fill" style="width:49%"></div></div>
+            <span class="badge-medal__meta">24.7K / 50K CR</span>
           </div>
-          <div class="badge-card__footer">
-            <span>25,320 CR to go</span>
-          </div>
+          <div class="badge-medal__tip">Accumulate 50,000 CR across space rewards.</div>
         </article>
 
-        <article class="badge-card" data-rarity="common" data-locked="true">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-              <span class="badge-card__lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+        <article class="badge-medal" data-rarity="common" data-locked="true">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+              </div>
+            </div>
+            <div class="badge-medal__lock">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
           </div>
-          <h3 class="badge-card__title">Trail Blazer</h3>
-          <p class="badge-card__desc">Complete 10 follow quest actions.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:60%"></div></div>
-            <div class="badge-card__progress-label"><strong>6 / 10</strong><span>60%</span></div>
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Trail Blazer</span>
+            <div class="badge-medal__progress"><div class="badge-medal__progress-fill" style="width:60%"></div></div>
+            <span class="badge-medal__meta">6 / 10 · 4 to go</span>
           </div>
-          <div class="badge-card__footer">
-            <span>4 more to unlock</span>
-          </div>
+          <div class="badge-medal__tip">Complete 10 follow quest actions.</div>
         </article>
 
-        <article class="badge-card" data-rarity="legendary" data-locked="true">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              <span class="badge-card__lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+        <article class="badge-medal" data-rarity="legendary" data-locked="true">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </div>
             </div>
+            <div class="badge-medal__lock">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <span class="badge-medal__chip">Legendary</span>
           </div>
-          <h3 class="badge-card__title">Marathoner</h3>
-          <p class="badge-card__desc">Participate in at least one space every day for 30 days.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:40%"></div></div>
-            <div class="badge-card__progress-label"><strong>12 / 30</strong><span>40%</span></div>
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Marathoner</span>
+            <div class="badge-medal__progress"><div class="badge-medal__progress-fill" style="width:40%"></div></div>
+            <span class="badge-medal__meta">12 / 30 · 18-day streak</span>
           </div>
-          <div class="badge-card__footer">
-            <span>18-day streak to go</span>
-          </div>
+          <div class="badge-medal__tip">Participate in at least one space every day for 30 days.</div>
         </article>
       </section>
 
@@ -705,81 +865,85 @@
         </div>
         <span class="category-head__earned">2 / 5 earned</span>
       </header>
-      <section class="badge-grid">
-        <article class="badge-card" data-rarity="legendary">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+      <section class="badge-vault">
+        <article class="badge-medal" data-rarity="legendary">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+              </div>
             </div>
+            <span class="badge-medal__chip">Founder</span>
           </div>
-          <h3 class="badge-card__title">Founding Voice</h3>
-          <p class="badge-card__desc">Joined Ratel within the first 30 days of mainnet launch.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:100%"></div></div>
-            <div class="badge-card__progress-label"><strong>Earned</strong><span>Non-repeatable</span></div>
-          </div>
-          <div class="badge-card__footer">
-            <span class="badge-card__footer-earned">
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Founding Voice</span>
+            <span class="badge-medal__meta badge-medal__meta--earned">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Earned Mar 14
+              Mar 14
             </span>
           </div>
+          <div class="badge-medal__tip">Joined Ratel within the first 30 days of mainnet launch. Non-repeatable.</div>
         </article>
 
-        <article class="badge-card" data-rarity="rare">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <article class="badge-medal" data-rarity="rare">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
             </div>
           </div>
-          <h3 class="badge-card__title">Early Bird</h3>
-          <p class="badge-card__desc">Join a space within 1 hour of its publication.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:100%"></div></div>
-            <div class="badge-card__progress-label"><strong>18 / 1</strong><span>Completed</span></div>
-          </div>
-          <div class="badge-card__footer">
-            <span class="badge-card__footer-earned">
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Early Bird</span>
+            <span class="badge-medal__meta badge-medal__meta--earned">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Earned Mar 25
+              Mar 25
             </span>
           </div>
+          <div class="badge-medal__tip">Join a space within 1 hour of its publication. 18 / 1.</div>
         </article>
 
-        <article class="badge-card" data-rarity="legendary" data-locked="true">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
-              <span class="badge-card__lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+        <article class="badge-medal" data-rarity="legendary" data-locked="true">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+              </div>
             </div>
+            <div class="badge-medal__lock">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <span class="badge-medal__chip">Legendary</span>
           </div>
-          <h3 class="badge-card__title">Signal Boost</h3>
-          <p class="badge-card__desc">Have one of your posts featured on the home arena Hot list.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:0%"></div></div>
-            <div class="badge-card__progress-label"><strong>0 / 1</strong><span>Not yet</span></div>
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Signal Boost</span>
+            <div class="badge-medal__progress"><div class="badge-medal__progress-fill" style="width:0%"></div></div>
+            <span class="badge-medal__meta">0 / 1 · pending</span>
           </div>
-          <div class="badge-card__footer">
-            <span>Post visibility pending</span>
-          </div>
+          <div class="badge-medal__tip">Have one of your posts featured on the home arena Hot list.</div>
         </article>
 
-        <article class="badge-card" data-rarity="rare" data-locked="true">
-          <div class="badge-card__head">
-            <div class="badge-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              <span class="badge-card__lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+        <article class="badge-medal" data-rarity="rare" data-locked="true">
+          <div class="badge-medal__emblem">
+            <div class="badge-medal__frame"></div>
+            <div class="badge-medal__inner">
+              <div class="badge-medal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+            </div>
+            <div class="badge-medal__lock">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
           </div>
-          <h3 class="badge-card__title">Beta Pilot</h3>
-          <p class="badge-card__desc">Submit 3 bug reports or feedback items during mainnet beta.</p>
-          <div class="badge-card__progress">
-            <div class="badge-card__progress-bar"><div class="badge-card__progress-fill" style="width:66%"></div></div>
-            <div class="badge-card__progress-label"><strong>2 / 3</strong><span>66%</span></div>
+          <div class="badge-medal__info">
+            <span class="badge-medal__banner">Beta Pilot</span>
+            <div class="badge-medal__progress"><div class="badge-medal__progress-fill" style="width:66%"></div></div>
+            <span class="badge-medal__meta">2 / 3 · 1 to go</span>
           </div>
-          <div class="badge-card__footer">
-            <span>1 more to unlock</span>
-          </div>
+          <div class="badge-medal__tip">Submit 3 bug reports or feedback items during mainnet beta.</div>
         </article>
       </section>
     </main>
