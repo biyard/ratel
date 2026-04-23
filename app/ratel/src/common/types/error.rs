@@ -423,6 +423,13 @@ pub enum Error {
 
     #[error("{0}")]
     #[translate(from)]
+    MeetAction(
+        #[from]
+        crate::features::spaces::pages::actions::actions::meet::MeetActionError,
+    ),
+
+    #[error("{0}")]
+    #[translate(from)]
     SpaceFollow(
         #[from]
         crate::features::spaces::pages::actions::actions::follow::types::SpaceFollowError,
@@ -514,6 +521,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::FileUpload(e) => e.status_code(),
             Error::SpaceAction(e) => e.status_code(),
             Error::SpacePoll(e) => e.status_code(),
+            Error::MeetAction(e) => e.status_code(),
             Error::SpaceFollow(e) => e.status_code(),
             Error::SpaceApp(e) => e.status_code(),
             Error::SpaceReport(e) => e.status_code(),
@@ -628,6 +636,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::FileUpload(e) => e.status_code(),
             Error::SpaceAction(e) => e.status_code(),
             Error::SpacePoll(e) => e.status_code(),
+            Error::MeetAction(e) => e.status_code(),
             Error::SpaceFollow(e) => e.status_code(),
             Error::SpaceApp(e) => e.status_code(),
             Error::SpaceReport(e) => e.status_code(),
