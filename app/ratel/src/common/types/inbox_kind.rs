@@ -14,6 +14,9 @@ pub enum InboxKind {
     SubTeamApplicationReturned,
     SubTeamAnnouncementReceived,
     SubTeamAnnouncementComment,
+    SubTeamDeregistered,
+    SubTeamLeftParent,
+    SubTeamParentDeleted,
 }
 
 impl Default for InboxKind {
@@ -35,6 +38,9 @@ impl InboxKind {
             InboxKind::SubTeamApplicationReturned => "STAPP_RET",
             InboxKind::SubTeamAnnouncementReceived => "STANN_RCV",
             InboxKind::SubTeamAnnouncementComment => "STANN_CMT",
+            InboxKind::SubTeamDeregistered => "STTERM_DREG",
+            InboxKind::SubTeamLeftParent => "STTERM_LEAVE",
+            InboxKind::SubTeamParentDeleted => "STTERM_PDEL",
         }
     }
 }
@@ -113,6 +119,25 @@ pub enum InboxPayload {
         comment_preview: String,
         cta_url: String,
     },
+    SubTeamDeregistered {
+        former_parent_team_id: String,
+        former_parent_team_name: String,
+        sub_team_id: String,
+        reason: String,
+        cta_url: String,
+    },
+    SubTeamLeftParent {
+        former_parent_team_id: String,
+        former_sub_team_id: String,
+        former_sub_team_name: String,
+        reason: Option<String>,
+        cta_url: String,
+    },
+    SubTeamParentDeleted {
+        former_parent_team_id: String,
+        former_parent_team_name: String,
+        cta_url: String,
+    },
 }
 
 impl InboxPayload {
@@ -128,6 +153,9 @@ impl InboxPayload {
             InboxPayload::SubTeamApplicationReturned { cta_url, .. } => cta_url,
             InboxPayload::SubTeamAnnouncementReceived { cta_url, .. } => cta_url,
             InboxPayload::SubTeamAnnouncementComment { cta_url, .. } => cta_url,
+            InboxPayload::SubTeamDeregistered { cta_url, .. } => cta_url,
+            InboxPayload::SubTeamLeftParent { cta_url, .. } => cta_url,
+            InboxPayload::SubTeamParentDeleted { cta_url, .. } => cta_url,
         }
     }
 }
@@ -170,6 +198,9 @@ impl InboxPayload {
             InboxPayload::SubTeamAnnouncementComment { .. } => {
                 InboxKind::SubTeamAnnouncementComment
             }
+            InboxPayload::SubTeamDeregistered { .. } => InboxKind::SubTeamDeregistered,
+            InboxPayload::SubTeamLeftParent { .. } => InboxKind::SubTeamLeftParent,
+            InboxPayload::SubTeamParentDeleted { .. } => InboxKind::SubTeamParentDeleted,
         }
     }
 }

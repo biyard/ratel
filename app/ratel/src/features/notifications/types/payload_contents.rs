@@ -104,6 +104,35 @@ impl InboxPayload {
                 comment_preview.clone(),
                 None,
             ),
+            InboxPayload::SubTeamDeregistered {
+                former_parent_team_name,
+                reason,
+                ..
+            } => (
+                tr.sub_team_deregistered_title
+                    .replace("{parent}", former_parent_team_name),
+                reason.clone(),
+                None,
+            ),
+            InboxPayload::SubTeamLeftParent {
+                former_sub_team_name,
+                reason,
+                ..
+            } => (
+                tr.sub_team_left_parent_title
+                    .replace("{team}", former_sub_team_name),
+                reason.clone().unwrap_or_default(),
+                None,
+            ),
+            InboxPayload::SubTeamParentDeleted {
+                former_parent_team_name,
+                ..
+            } => (
+                tr.sub_team_parent_deleted_title
+                    .replace("{parent}", former_parent_team_name),
+                String::new(),
+                None,
+            ),
         }
     }
 }

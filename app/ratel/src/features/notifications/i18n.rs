@@ -37,4 +37,16 @@ translate! {
         en: "{name} commented on your announcement",
         ko: "{name}님이 공지에 댓글을 남겼습니다",
     },
+    sub_team_deregistered_title: {
+        en: "{parent} removed your team as a sub-team",
+        ko: "{parent}팀이 하위팀 관계를 해제했습니다",
+    },
+    sub_team_left_parent_title: {
+        en: "{team} left as a sub-team",
+        ko: "{team}팀이 하위팀에서 탈퇴했습니다",
+    },
+    sub_team_parent_deleted_title: {
+        en: "{parent} was deleted — your team is no longer a sub-team",
+        ko: "{parent}팀이 삭제되어 더 이상 하위팀이 아닙니다",
+    },
 }

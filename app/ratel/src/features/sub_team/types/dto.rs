@@ -294,6 +294,27 @@ pub struct ApplicationReturnCommentRequest {
     pub comment: String,
 }
 
+// ── Leave / deregister ──────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct DeregisterRequest {
+    pub reason: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct LeaveParentRequest {
+    #[serde(default)]
+    pub reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct TerminationAck {
+    pub ok: bool,
+}
+
 // ── Announcements ──────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
