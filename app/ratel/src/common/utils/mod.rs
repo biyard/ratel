@@ -1,5 +1,6 @@
 mod error;
 pub mod format;
+pub mod html;
 pub mod mention;
 pub mod reply_notification;
 pub mod storage;
