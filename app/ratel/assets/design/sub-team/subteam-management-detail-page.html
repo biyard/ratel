@@ -472,6 +472,20 @@
     document.getElementById('msg-send').addEventListener('click', () => {
       SubTeam.toast('SNU Code Club에 공지 전송 · 32명 알림', 'success');
     });
+
+    // Member action buttons (view / message per member)
+    document.getElementById('member-rows').addEventListener('click', (e) => {
+      const btn = e.target.closest('.member-action');
+      if (!btn) return;
+      const row = btn.closest('tr');
+      const handle = row.querySelector('.member-handle__name').textContent;
+      const label = btn.getAttribute('aria-label') || '';
+      if (label === 'View') {
+        SubTeam.toast(handle + ' 프로필 열기 (공개 활동만)');
+      } else if (label === 'Message') {
+        SubTeam.toast(handle + ' 에게 DM 준비 · 학과 admin 권한');
+      }
+    });
   });
 </script>
 </body>

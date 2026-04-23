@@ -219,9 +219,9 @@
 <script src="shared.js" defer></script>
 <script defer>
   document.addEventListener('DOMContentLoaded', function(){
-    // 하위팀 button → prompts user to pick role
+    // 하위팀 button → admin 시나리오 (이 데모 페이지는 admin 관점)
     document.getElementById('subteam-btn').addEventListener('click', () => {
-      SubTeam.toast('역할별 분기 — 아래 카드 중 하나를 선택하세요');
+      window.location.href = 'subteam-management-page.html';
     });
   });
 </script>
