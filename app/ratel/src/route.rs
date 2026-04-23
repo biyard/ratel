@@ -35,6 +35,16 @@ use crate::features::spaces::pages::actions::SpaceActionsPage;
 
 use crate::features::admin::{AdminLayout, AdminMainPage};
 
+// Sub-team governance pages — placeholders wired up now; content lives
+// under `features::sub_team::pages::*` and will be fleshed out by the
+// UI-implementation dispatches.
+use crate::features::sub_team::pages::{
+    TeamBylawsPage, TeamLeaveParentPage, TeamSubTeamApplicationStatusPage,
+    TeamSubTeamApplyPage, TeamSubTeamBroadcastComposePage, TeamSubTeamBroadcastEditPage,
+    TeamSubTeamDeregisterPage, TeamSubTeamDetailPage, TeamSubTeamDocComposePage,
+    TeamSubTeamDocEditPage, TeamSubTeamManagementPage,
+};
+
 use crate::features::posts::{Index as PostIndex, PostDetail, PostEdit};
 
 use crate::views::{Index, PrivacyPolicyPage, TermsOfServicePage};
@@ -155,6 +165,35 @@ pub enum Route {
                 TeamSettingMember { username: String },
                 #[route("/team-settings/subscription")]
                 TeamSettingSubscription { username: String },
+
+                // Sub-team governance — path param inherited from the
+                // parent `/:username` nest, so the field is `username`
+                // (the team's handle, which identifies the team). The
+                // placeholder components map it to `team_id` internally.
+                // Follow-up dispatches wire in the design mockups and
+                // controller hooks.
+                #[route("/sub-teams/manage")]
+                TeamSubTeamManagementPage { username: String },
+                #[route("/sub-teams/apply")]
+                TeamSubTeamApplyPage { username: String },
+                #[route("/sub-teams/application")]
+                TeamSubTeamApplicationStatusPage { username: String },
+                #[route("/sub-teams/docs/compose")]
+                TeamSubTeamDocComposePage { username: String },
+                #[route("/sub-teams/docs/:doc_id/edit")]
+                TeamSubTeamDocEditPage { username: String, doc_id: String },
+                #[route("/sub-teams/announcements/compose")]
+                TeamSubTeamBroadcastComposePage { username: String },
+                #[route("/sub-teams/announcements/:announcement_id/edit")]
+                TeamSubTeamBroadcastEditPage { username: String, announcement_id: String },
+                #[route("/sub-teams/:sub_team_id")]
+                TeamSubTeamDetailPage { username: String, sub_team_id: String },
+                #[route("/sub-teams/:sub_team_id/deregister")]
+                TeamSubTeamDeregisterPage { username: String, sub_team_id: String },
+                #[route("/parent/leave")]
+                TeamLeaveParentPage { username: String },
+                #[route("/bylaws")]
+                TeamBylawsPage { username: String },
             #[end_layout]
         #[end_nest]
 
