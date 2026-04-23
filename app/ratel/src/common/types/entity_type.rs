@@ -93,6 +93,9 @@ pub enum EntityType {
     SpaceQuizAnswer(String),  // SpaceQuizAnswer#{quiz_id}
     SpaceQuizAttempt(String), // SpaceQuizAttempt#{quiz_id}#{attempt_id}
 
+    // Meet action entity types
+    SpaceMeet(String),        // SpaceMeet#{uuid}
+
     // Survery space entity types
     SurveySpace,
 
