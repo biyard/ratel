@@ -52,6 +52,27 @@ pub struct Team {
     pub allow_invite: bool,
     #[serde(default)]
     pub allow_create_space: bool,
+
+    // Sub-team governance — per-team flag that opts this team into the
+    // parent-eligible program (advertises itself as accepting sub-team
+    // applications). Existing rows deserialize as `false` via serde(default).
+    #[serde(default)]
+    pub is_parent_eligible: bool,
+
+    // Minimum member count an applicant team must have before its Submit
+    // button is enabled. `0` means no minimum.
+    #[serde(default)]
+    pub min_sub_team_members: i32,
+
+    // Parent-child scalars. Invariants:
+    //   recognized sub-team ⇔ parent_team_id.is_some()
+    //   pending sub-team    ⇔ pending_parent_team_id.is_some() && parent_team_id.is_none()
+    //   standalone team     ⇔ both None
+    // Stored as the raw team UUID, not the SPACE#-prefixed Partition string.
+    #[serde(default)]
+    pub parent_team_id: Option<String>,
+    #[serde(default)]
+    pub pending_parent_team_id: Option<String>,
 }
 
 #[cfg(feature = "server")]
@@ -82,6 +103,10 @@ impl Team {
             thumbnail_url: None,
             allow_invite: false,
             allow_create_space: false,
+            is_parent_eligible: false,
+            min_sub_team_members: 0,
+            parent_team_id: None,
+            pending_parent_team_id: None,
         }
     }
 

@@ -324,6 +324,10 @@ pub enum Error {
     #[translate(from)]
     Notifications(#[from] crate::features::notifications::types::NotificationsError),
 
+    #[error("{0}")]
+    #[translate(from)]
+    SubTeam(#[from] crate::features::sub_team::types::SubTeamError),
+
     // Unit variants for common errors
     #[error("Internal error")]
     #[translate(
