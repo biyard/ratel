@@ -76,14 +76,133 @@
     .team-picker__hint{font-size:11px;color:var(--text-dim);font-family:var(--font-display);letter-spacing:0.06em;display:flex;align-items:center;gap:6px}
     .team-picker__hint svg{width:11px;height:11px}
 
-    /* ── Bylaws ack ── */
-    .bylaws-link{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;background:rgba(129,140,248,0.04);border:1px solid rgba(129,140,248,0.22);color:var(--text-primary);text-decoration:none;transition:all 0.2s}
-    .bylaws-link:hover{background:rgba(129,140,248,0.08)}
-    .bylaws-link__icon{width:28px;height:28px;border-radius:8px;background:rgba(129,140,248,0.10);border:1px solid rgba(129,140,248,0.25);color:var(--accent-violet);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .bylaws-link__icon svg{width:13px;height:13px}
-    .bylaws-link__body{flex:1;min-width:0}
-    .bylaws-link__title{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--accent-violet)}
-    .bylaws-link__sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+    /* ── Required documents (필독 문서) ── */
+    .req-docs{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:12px;background:rgba(168,85,247,0.04);border:1px solid rgba(168,85,247,0.22)}
+    .req-docs__head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:2px}
+    .req-docs__title{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:10px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-purple)}
+    .req-docs__title svg{width:13px;height:13px}
+    .req-docs__progress{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.08em;color:var(--text-muted);padding:3px 10px;border-radius:100px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle)}
+    .req-docs__progress[data-all-read="true"]{color:var(--accent-green,#22c55e);border-color:rgba(34,197,94,0.28);background:rgba(34,197,94,0.06)}
+
+    .req-doc{
+      display:flex;align-items:center;gap:10px;width:100%;
+      padding:12px 14px;border-radius:10px;
+      background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);
+      color:var(--text-primary);text-align:left;font-family:var(--font-body);
+      cursor:pointer;transition:all 0.2s;
+    }
+    .req-doc:hover{background:rgba(255,255,255,0.03);border-color:var(--border-strong);transform:translateY(-1px)}
+    .req-doc[data-agreed="true"]{border-color:rgba(34,197,94,0.35);background:rgba(34,197,94,0.04)}
+    .req-doc[data-agreed="true"]:hover{background:rgba(34,197,94,0.07)}
+    .req-doc__badge{
+      display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;
+      font-family:var(--font-display);font-size:8px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;
+      background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.35);color:var(--accent-purple);
+      flex-shrink:0;
+    }
+    .req-doc[data-agreed="true"] .req-doc__badge{background:rgba(34,197,94,0.10);border-color:rgba(34,197,94,0.30);color:var(--accent-green,#22c55e)}
+    .req-doc__badge svg{width:10px;height:10px}
+    .req-doc__title{flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .req-doc__meta{font-family:var(--font-display);font-size:10px;color:var(--text-dim);letter-spacing:0.04em;white-space:nowrap;flex-shrink:0}
+    .req-doc__status{
+      display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:100px;
+      font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+      background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);color:var(--text-muted);
+      flex-shrink:0;
+    }
+    .req-doc[data-agreed="true"] .req-doc__status{
+      background:rgba(34,197,94,0.10);border-color:rgba(34,197,94,0.30);color:var(--accent-green,#22c55e);
+    }
+    .req-doc__status svg{width:10px;height:10px}
+    .req-doc__chev{width:14px;height:14px;color:var(--text-dim);flex-shrink:0;transition:transform 0.2s}
+    .req-doc__chev svg{width:14px;height:14px}
+    .req-doc:hover .req-doc__chev{color:var(--accent-purple);transform:translateX(2px)}
+
+    @media (max-width:720px){
+      .req-doc__meta{display:none}
+    }
+
+    /* ── Required document modal overlay ── */
+    .doc-modal{max-width:760px;max-height:calc(100vh - 48px)}
+    .doc-modal__head{
+      padding:22px 26px;border-bottom:1px solid var(--border-subtle);
+      display:flex;align-items:flex-start;gap:14px;
+    }
+    .doc-modal__icon{
+      width:40px;height:40px;border-radius:10px;flex-shrink:0;
+      background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.35);color:var(--accent-purple);
+      display:flex;align-items:center;justify-content:center;
+    }
+    .doc-modal__icon svg{width:18px;height:18px}
+    .doc-modal__title-wrap{flex:1;min-width:0}
+    .doc-modal__kicker{
+      font-family:var(--font-display);font-size:9px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;
+      color:var(--accent-purple);margin-bottom:4px;
+    }
+    .doc-modal__title{font-family:var(--font-display);font-size:17px;font-weight:800;letter-spacing:0.02em;color:var(--text-primary);margin-bottom:4px}
+    .doc-modal__meta{font-family:var(--font-display);font-size:10px;color:var(--text-dim);letter-spacing:0.06em}
+    .doc-modal__close-x{
+      width:32px;height:32px;border-radius:8px;padding:0;flex-shrink:0;
+      background:transparent;border:1px solid var(--border-subtle);
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;color:var(--text-muted);transition:all 0.2s;
+    }
+    .doc-modal__close-x:hover{background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.25);color:var(--accent-coral)}
+    .doc-modal__close-x svg{width:16px;height:16px}
+
+    .doc-modal__body{
+      padding:22px 26px;overflow:auto;flex:1;
+      display:flex;flex-direction:column;gap:14px;
+    }
+    .doc-modal__content{
+      padding:20px 22px;border-radius:12px;
+      background:rgba(12,12,26,0.6);border:1px solid var(--border-subtle);
+      font-size:13.5px;line-height:1.85;color:var(--text-primary);white-space:pre-wrap;
+    }
+    .doc-modal__notice{
+      display:flex;gap:10px;padding:12px 14px;border-radius:10px;
+      background:rgba(252,179,0,0.04);border:1px solid rgba(252,179,0,0.22);
+    }
+    .doc-modal__notice svg{width:14px;height:14px;color:var(--accent-gold);flex-shrink:0;margin-top:2px}
+    .doc-modal__notice-text{font-size:12px;color:var(--text-muted);line-height:1.6}
+    .doc-modal__notice-text strong{color:var(--accent-gold);font-weight:700}
+
+    .doc-modal__foot{
+      padding:18px 26px;border-top:1px solid var(--border-subtle);
+      display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+      background:rgba(6,6,14,0.40);
+    }
+    .doc-modal__foot-left{
+      font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+      color:var(--text-muted);
+    }
+    .doc-modal__foot-left strong{color:var(--accent-purple)}
+    .doc-modal__foot-actions{display:flex;gap:10px}
+    .doc-modal__cancel{
+      padding:10px 18px;border-radius:10px;
+      background:transparent;border:1px solid var(--border-subtle);color:var(--text-muted);
+      font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+      cursor:pointer;transition:all 0.2s;
+    }
+    .doc-modal__cancel:hover{border-color:var(--border-strong);color:var(--text-primary)}
+    .doc-modal__agree-btn{
+      padding:10px 22px;border-radius:10px;
+      background:linear-gradient(135deg,rgba(168,85,247,0.28),rgba(129,140,248,0.18));
+      border:1px solid rgba(168,85,247,0.50);color:#f3e8ff;
+      font-family:var(--font-display);font-size:10px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;
+      display:inline-flex;align-items:center;gap:7px;
+      cursor:pointer;transition:all 0.2s;
+    }
+    .doc-modal__agree-btn:hover{
+      background:linear-gradient(135deg,rgba(168,85,247,0.42),rgba(129,140,248,0.28));
+      box-shadow:0 0 20px rgba(168,85,247,0.30);transform:translateY(-1px);
+    }
+    .doc-modal__agree-btn[data-agreed="true"]{
+      background:linear-gradient(135deg,rgba(34,197,94,0.28),rgba(16,185,129,0.18));
+      border-color:rgba(34,197,94,0.50);color:#d1fae5;cursor:default;
+    }
+    .doc-modal__agree-btn[data-agreed="true"]:hover{transform:none;box-shadow:none}
+    .doc-modal__agree-btn svg{width:12px;height:12px}
 
     /* Composer */
     .composer-card{padding:22px 24px;border-radius:16px;background:var(--bg-glass);backdrop-filter:blur(14px);border:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:16px}
@@ -272,20 +391,38 @@
             </div>
           </div>
 
-          <!-- Bylaws ack -->
-          <a class="bylaws-link" href="bylaws-section.html">
-            <div class="bylaws-link__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-            <div class="bylaws-link__body">
-              <span class="bylaws-link__title">SNU CS Dept. 학칙 (v2)</span>
-              <div class="bylaws-link__sub">8개 항목 · 최종 업데이트 2026-02-01 · 읽고 동의해주세요</div>
+          <!-- Required documents (configured by parent admin in 문서 tab) -->
+          <div class="req-docs" id="req-docs">
+            <div class="req-docs__head">
+              <span class="req-docs__title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                필독 문서 · Required reading
+              </span>
+              <span class="req-docs__progress" id="req-docs-progress">0 / 2 동의</span>
             </div>
-            <svg style="width:14px;height:14px;color:var(--text-dim)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-          </a>
-          <label class="checkbox">
-            <input type="checkbox" id="bylaws-check" />
-            <span class="checkbox__box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-            <span class="checkbox__label">위 학칙을 읽고 동의합니다.<small>학칙 업데이트는 기존 승인 신청에 소급 적용되지 않습니다.</small></span>
-          </label>
+
+            <button type="button" class="req-doc" data-id="bylaws" data-agreed="false">
+              <span class="req-doc__badge">필독</span>
+              <span class="req-doc__title">SNU CS Dept. 학칙 v2</span>
+              <span class="req-doc__meta">2026-02-01 수정 · 5 조항 · 628자</span>
+              <span class="req-doc__status">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span class="req-doc__status-label">열어서 검토</span>
+              </span>
+              <span class="req-doc__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+            </button>
+
+            <button type="button" class="req-doc" data-id="privacy" data-agreed="false">
+              <span class="req-doc__badge">필독</span>
+              <span class="req-doc__title">개인정보 처리 방침</span>
+              <span class="req-doc__meta">2026-01-15 수정 · 4 항목 · 312자</span>
+              <span class="req-doc__status">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span class="req-doc__status-label">열어서 검토</span>
+              </span>
+              <span class="req-doc__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+            </button>
+          </div>
 
           <!-- Form fields (linked fields auto-populate from selected team) -->
           <div class="field" data-field="name" data-linked-to="team.name">
@@ -415,12 +552,12 @@
                 <div class="elig-item__status" id="elig-status-days">현재 24일 · ✓ 충족</div>
               </div>
             </div>
-            <div class="elig-item" data-met="false" data-key="bylaws">
+            <div class="elig-item" data-met="false" data-key="docs">
               <div class="elig-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
               <div class="elig-item__body">
-                <div class="elig-item__title">학칙 동의</div>
-                <div class="elig-item__desc">학과 학칙 v2 체크박스 필수</div>
-                <div class="elig-item__status" id="elig-status-bylaws">↔ 체크 대기</div>
+                <div class="elig-item__title">필독 문서 동의</div>
+                <div class="elig-item__desc">학과가 지정한 필독 문서를 모두 읽고 동의</div>
+                <div class="elig-item__status" id="elig-status-docs">0 / 2 · 동의 대기</div>
               </div>
             </div>
             <div class="elig-item" data-met="false" data-key="form">
@@ -447,6 +584,44 @@
   </div>
 
   <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+</div>
+
+<!-- Required document overlay modal (body-level so position:fixed escapes composer-card's backdrop-filter stacking context) -->
+<div class="modal-backdrop" id="doc-modal-backdrop" data-open="false" role="dialog" aria-modal="true" aria-labelledby="doc-modal-title">
+  <div class="modal doc-modal">
+    <div class="doc-modal__head">
+      <span class="doc-modal__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </span>
+      <div class="doc-modal__title-wrap">
+        <div class="doc-modal__kicker">필독 문서</div>
+        <div class="doc-modal__title" id="doc-modal-title">—</div>
+        <div class="doc-modal__meta" id="doc-modal-meta">—</div>
+      </div>
+      <button type="button" class="doc-modal__close-x" id="doc-modal-close" aria-label="닫기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="doc-modal__body">
+      <div class="doc-modal__content" id="doc-modal-content">—</div>
+      <div class="doc-modal__notice">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div class="doc-modal__notice-text"><strong>동의하기</strong>를 누르면 제출 기록에 이 문서의 현재 버전과 동의 시점이 영구 보관됩니다. 취소하면 동의 상태가 저장되지 않습니다.</div>
+      </div>
+    </div>
+    <div class="doc-modal__foot">
+      <div class="doc-modal__foot-left">
+        <span id="doc-modal-count">1</span> / <span id="doc-modal-total">2</span> · 모든 문서에 <strong>개별 동의</strong>가 필요합니다
+      </div>
+      <div class="doc-modal__foot-actions">
+        <button type="button" class="doc-modal__cancel" id="doc-modal-cancel">취소</button>
+        <button type="button" class="doc-modal__agree-btn" id="doc-modal-agree">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="doc-modal-agree-label">동의하기</span>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="shared.js" defer></script>
@@ -506,7 +681,37 @@
     const ddMeta = document.getElementById('dd-meta');
     const selectedAvatar = document.getElementById('selected-avatar');
     const selectedName = document.getElementById('selected-name');
-    const bylawsCheck = document.getElementById('bylaws-check');
+    const reqDocRows = document.querySelectorAll('.req-doc');
+    const reqDocsProgress = document.getElementById('req-docs-progress');
+
+    // Required documents — full content for each doc, keyed by data-id.
+    // In production these would be fetched from the parent admin's 문서 탭 config.
+    const REQ_DOC_CONTENT = {
+      bylaws: {
+        title: 'SNU CS Dept. 학칙 v2',
+        meta: '2026-02-01 수정 · 5 조항 · 628자',
+        body: '제1조 (목적) 본 학칙은 SNU CS Dept. 소속 학생 동아리의 설립, 활동, 해체에 관한 사항을 규정함을 목적으로 한다.\n\n제2조 (설립 요건)\n  1. 최소 5인 이상의 학부·대학원생 구성\n  2. 지도교수 1인 사전 섭외\n  3. 학술적 또는 사회적 공익에 부합하는 활동 목적\n\n제3조 (등록 및 인증)\n  프로스펙티브 동아리는 pending 팀을 먼저 생성하고 학과가 정한 신청서를 제출해야 한다. 학과는 영업일 3–5일 내 승인 · 거절 · 수정 반송 중 하나를 결정한다.\n\n제4조 (활동 보고)\n  인증된 동아리는 학기말에 정기 활동 보고서를 학과에 제출한다. 공개 활동은 학과 대시보드에 자동 반영된다.\n\n제5조 (학과 공지 수신 의무)\n  인증된 동아리의 admin은 학과 공지를 합리적 기한 내에 확인·전달할 책임이 있다.',
+      },
+      privacy: {
+        title: '개인정보 처리 방침',
+        meta: '2026-01-15 수정 · 4 항목 · 312자',
+        body: '신청 시 제출한 대표자 연락처·지도교수 정보는 하위팀 심사 목적 외에는 사용되지 않으며, 학과 내부 기록으로만 보관됩니다. 승인 후에는 학과-동아리 커뮤니케이션 채널 구축에만 사용됩니다.\n\n- 수집 항목: 이름, 이메일, 학번, 지도교수 정보\n- 보관 기간: 동아리 인증 종료 후 3년\n- 제3자 제공: 없음\n- 열람·수정 요청: office@snu_cs.ac.kr',
+      },
+    };
+
+    // Modal DOM refs
+    const docModalBackdrop = document.getElementById('doc-modal-backdrop');
+    const docModalTitle = document.getElementById('doc-modal-title');
+    const docModalMeta = document.getElementById('doc-modal-meta');
+    const docModalContent = document.getElementById('doc-modal-content');
+    const docModalCount = document.getElementById('doc-modal-count');
+    const docModalTotal = document.getElementById('doc-modal-total');
+    const docModalAgreeBtn = document.getElementById('doc-modal-agree');
+    const docModalAgreeLabel = document.getElementById('doc-modal-agree-label');
+    const docModalCloseX = document.getElementById('doc-modal-close');
+    const docModalCancel = document.getElementById('doc-modal-cancel');
+
+    let activeDocRow = null;
     const submitBtn = document.getElementById('submit-btn');
     const submitTitle = document.getElementById('submit-title');
     const submitSub = document.getElementById('submit-sub');
@@ -583,15 +788,27 @@
       // Admin (always met for pickable teams)
       setMetStatus('admin', true, '✓ 권한 확인됨');
 
-      // Bylaws
-      const bylawsMet = bylawsCheck.checked;
-      setMetStatus('bylaws', bylawsMet, bylawsMet ? '✓ 동의함' : '↔ 체크 대기');
+      // Required documents — each doc must be opened and explicitly agreed to via the overlay modal
+      const totalDocs = reqDocRows.length;
+      const agreedDocs = Array.from(reqDocRows).filter(r => r.getAttribute('data-agreed') === 'true').length;
+      const docsMet = totalDocs > 0 && agreedDocs === totalDocs;
+      setMetStatus('docs', docsMet, agreedDocs + ' / ' + totalDocs + ' · ' + (docsMet ? '✓ 모두 동의' : '동의 대기'));
+      if (reqDocsProgress) {
+        reqDocsProgress.textContent = agreedDocs + ' / ' + totalDocs + ' 동의';
+        reqDocsProgress.setAttribute('data-all-read', docsMet);
+      }
+      // Mirror agreed state on the row's status chip text
+      reqDocRows.forEach(row => {
+        const label = row.querySelector('.req-doc__status-label');
+        if (!label) return;
+        label.textContent = row.getAttribute('data-agreed') === 'true' ? '✓ 동의 완료' : '열어서 검토';
+      });
 
       // Form
       const formMet = checkForm();
 
       // Aggregate
-      const metCount = [true, membersMet, daysMet, bylawsMet, formMet].filter(Boolean).length;
+      const metCount = [true, membersMet, daysMet, docsMet, formMet].filter(Boolean).length;
       const allMet = metCount === 5;
 
       eligFraction.textContent = metCount + ' / 5';
@@ -671,8 +888,57 @@
       }
     });
 
-    // Bylaws
-    bylawsCheck.addEventListener('change', renderAll);
+    // ── Required document modal overlay ──────────────────────
+    // Clicking a row opens the modal with the full doc content.
+    // User must click 동의하기 inside the modal to mark the row as agreed.
+    // Cancel / close / backdrop click dismisses without saving agreement.
+    function openDocModal(row) {
+      const id = row.getAttribute('data-id');
+      const doc = REQ_DOC_CONTENT[id];
+      if (!doc) return;
+      activeDocRow = row;
+      const index = Array.from(reqDocRows).indexOf(row) + 1;
+      docModalTitle.textContent = doc.title;
+      docModalMeta.textContent = doc.meta;
+      docModalContent.textContent = doc.body;
+      docModalCount.textContent = index;
+      docModalTotal.textContent = reqDocRows.length;
+
+      const agreed = row.getAttribute('data-agreed') === 'true';
+      docModalAgreeBtn.setAttribute('data-agreed', agreed);
+      docModalAgreeLabel.textContent = agreed ? '동의 완료' : '동의하기';
+      docModalAgreeBtn.disabled = agreed;
+
+      docModalBackdrop.setAttribute('data-open', 'true');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeDocModal() {
+      docModalBackdrop.setAttribute('data-open', 'false');
+      document.body.style.overflow = '';
+      activeDocRow = null;
+    }
+
+    reqDocRows.forEach(row => {
+      row.addEventListener('click', () => openDocModal(row));
+    });
+    docModalCloseX.addEventListener('click', closeDocModal);
+    docModalCancel.addEventListener('click', closeDocModal);
+    docModalBackdrop.addEventListener('click', (e) => {
+      if (e.target === docModalBackdrop) closeDocModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && docModalBackdrop.getAttribute('data-open') === 'true') closeDocModal();
+    });
+
+    docModalAgreeBtn.addEventListener('click', () => {
+      if (!activeDocRow) return;
+      if (activeDocRow.getAttribute('data-agreed') === 'true') { closeDocModal(); return; }
+      activeDocRow.setAttribute('data-agreed', 'true');
+      const title = activeDocRow.querySelector('.req-doc__title').textContent;
+      SubTeam.toast('"' + title + '" 동의 완료', 'success');
+      closeDocModal();
+      renderAll();
+    });
 
     // Non-linked form inputs
     document.querySelectorAll('.field:not([data-linked-to]) .field__input, .field:not([data-linked-to]) .field__textarea, .field:not([data-linked-to]) .field__select').forEach(el => {
