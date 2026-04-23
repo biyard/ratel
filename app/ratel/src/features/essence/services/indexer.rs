@@ -249,14 +249,11 @@ fn estimate_word_count(html: &str) -> u32 {
     text.split_whitespace().count() as u32
 }
 
-/// First `n` characters of `s`, stopping at a word boundary. Used to build
-/// a row title from comment content that is stored as free-form text.
+/// First `n` characters of `s` after HTML-tag strip + whitespace collapse.
+/// Comment content is often rich-text HTML (discussion comments etc.);
+/// delegates to the shared `common::utils::html` helpers so the same
+/// cleanup logic runs on both the server (this indexer) and the client
+/// (essence sources table).
 fn summarize(s: &str, n: usize) -> String {
-    let trimmed = s.trim();
-    if trimmed.chars().count() <= n {
-        return trimmed.to_string();
-    }
-    let mut out: String = trimmed.chars().take(n).collect();
-    out.push('…');
-    out
+    crate::common::utils::html::summarize_plain(s, n)
 }
