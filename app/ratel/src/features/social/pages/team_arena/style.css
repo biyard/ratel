@@ -25,15 +25,16 @@
      Use `clip` (no scroll context) for x and explicit `visible` for y. */
   overflow-x: clip;
   overflow-y: visible;
+  /* Solid background only. A radial gradient here (or on `::before`)
+     structurally creates a header/body two-tone: `at 50% 50%` puts the
+     glow in the middle of the viewport while the edges stay transparent,
+     so topbar is flat and body is tinted. The golden/teal arena "glow"
+     now comes entirely from the `.team-arena__bg-orbs` blur layer
+     (viewport-fixed), which distributes color evenly between header
+     and body. */
   background: var(--bg-void);
   color: var(--text-primary);
   font-family: 'Outfit', sans-serif;
-  /* Reserve room for the fixed topbar so the first content section isn't
-     hidden underneath. */
-  padding-top: 110px;
-}
-@media (max-width: 540px) {
-  .team-arena { padding-top: 84px; }
 }
 
 /* ── Light theme override (scoped to arena) ── */
@@ -51,30 +52,18 @@ html[data-theme="light"] .team-arena,
   --accent-poll: #4f46e5;
   --accent-quiz: #7e22ce;
   --accent-discuss: #0891b2;
+  background: var(--bg-void);
 }
 
 .team-arena * {
   box-sizing: border-box;
 }
 
-.team-arena::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(252, 179, 0, 0.04) 0%, transparent 60%),
-    radial-gradient(ellipse 120% 100% at 50% 120%, rgba(110, 237, 216, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, var(--bg-void) 0%, var(--bg-void) 100%);
-}
-html[data-theme="light"] .team-arena::before,
-[data-theme="light"] .team-arena::before {
-  background:
-    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(252, 179, 0, 0.09) 0%, transparent 60%),
-    radial-gradient(ellipse 120% 100% at 50% 120%, rgba(110, 237, 216, 0.06) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, var(--bg-void) 0%, var(--bg-void) 100%);
-}
+/* `.team-arena::before` is intentionally removed — the decorative radial
+   fade it used to draw is now on the element background (above) with
+   `background-attachment: fixed`, so topbar and body always share the
+   same viewport-anchored gradient instead of the ::before's container-
+   relative one. */
 
 /* Make the SidebarInset parent follow the arena bg so no light seam bleeds through. */
 .sidebar-inset:has(.team-arena) {
@@ -119,9 +108,15 @@ body:has(.team-arena) [data-slot="sidebar-wrapper"] {
 
 /* ── Star field ── */
 .team-arena__bg-stars {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 0;
+  /* `z-index: 50` puts the stars above `.team-arena__content`
+     (z-index: 10). Without it, the content layer's stacking context
+     intercepted the star layer visually even though content itself
+     was transparent, so stars only showed through in the topbar area
+     (above the content). `pointer-events: none` keeps clicks passing
+     through to the content below. */
+  z-index: 50;
   pointer-events: none;
   overflow: hidden;
 }
@@ -133,11 +128,18 @@ body:has(.team-arena) [data-slot="sidebar-wrapper"] {
 }
 html[data-theme="light"] .team-arena .team-arena__star,
 [data-theme="light"] .team-arena .team-arena__star {
-  background: rgba(20, 20, 40, 0.45);
+  /* Darker / more opaque than the previous 0.45 alpha — stars rendered
+     on a cream body with a twinkle-to-0.08 animation were effectively
+     invisible across most of the viewport, leaving only a few sparkles
+     visible near the header. */
+  background: rgba(20, 20, 40, 0.85);
 }
 @keyframes team-arena-twinkle {
-  0%, 100% { opacity: 0.08; transform: scale(0.9); }
-  50% { opacity: 0.9; transform: scale(1.3); }
+  /* Raised the dim phase from 0.08 → 0.35 so stars stay readable across
+     the whole viewport instead of fading to near-transparent in their
+     trough cycle. */
+  0%, 100% { opacity: 0.35; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.3); }
 }
 .team-arena__shooting {
   position: absolute;
@@ -161,7 +163,10 @@ html[data-theme="light"] .team-arena .team-arena__shooting,
 
 /* ── Grid plane ── */
 .team-arena__bg-grid {
-  position: absolute;
+  /* Viewport-anchored for the same reason as `__bg-stars` above — this
+     keeps the HUD grid aligned across topbar and body regardless of
+     arena height. */
+  position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
@@ -194,12 +199,15 @@ html[data-theme="light"] .team-arena .team-arena__bg-grid-plane,
 }
 
 /* ── Floating orbs ── */
+/* Hidden: the three large blurred orbs (gold / teal / violet) are
+   anchored at fixed viewport positions (top-right / bottom-left /
+   center-right), so one part of the viewport gets a warm glow and
+   another part gets a cool one — which is structurally a header/body
+   two-tone by design. Suppressing the orb layer keeps the arena
+   feeling (stars, grid, scanline) while giving topbar and body a
+   single continuous tone. */
 .team-arena__bg-orbs {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
+  display: none;
 }
 .team-arena__bg-orb {
   position: absolute;
@@ -237,9 +245,13 @@ html[data-theme="light"] .team-arena .team-arena__bg-orb,
   75% { transform: translate(30px, 40px) scale(1.05); }
 }
 
-/* ── Scanline ── */
+/* ── Scanline (disabled) ── */
+/* The CRT-style scanline texture read as faint horizontal lines across
+   the header in the live UI, which looked like a rendering artefact
+   rather than a stylistic choice. Hidden to keep the background clean. */
 .team-arena__bg-scanline {
-  position: absolute;
+  display: none;
+  position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
@@ -270,6 +282,13 @@ html[data-theme="light"] .team-arena .team-arena__bg-scanline,
   display: flex;
   flex-direction: column;
   min-height: 0;
+  /* Reserve room for the fixed topbar here (not on `.team-arena`) so
+     the arena's ::before fade and decorative layers extend under the
+     topbar — eliminates the header/body two-tone. */
+  padding-top: 110px;
+}
+@media (max-width: 540px) {
+  .team-arena__content { padding-top: 84px; }
 }
 
 @media (max-width: 1024px) {

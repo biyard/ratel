@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Announcements</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .ann-grid{display:grid;grid-template-columns:minmax(0,1.2fr) 1fr;gap:20px;align-items:start}
+    @media (max-width:960px){.ann-grid{grid-template-columns:1fr}}
+
+    /* Composer */
+    .composer{display:flex;flex-direction:column;gap:14px}
+    .composer__title{width:100%;padding:14px 16px;border-radius:12px;background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);color:var(--text-primary);font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:0.02em;outline:none;transition:all 0.2s}
+    .composer__title:focus{border-color:rgba(168,85,247,0.35);box-shadow:0 0 16px rgba(168,85,247,0.08)}
+    .composer__body{width:100%;min-height:180px;padding:14px 16px;border-radius:12px;background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);color:var(--text-primary);font-family:var(--font-body);font-size:14px;line-height:1.6;outline:none;resize:vertical;transition:all 0.2s}
+    .composer__body:focus{border-color:rgba(168,85,247,0.35);box-shadow:0 0 16px rgba(168,85,247,0.08)}
+    .composer__foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .composer__count{font-family:var(--font-display);font-size:10px;color:var(--text-dim);letter-spacing:0.1em}
+    .composer__actions{display:flex;gap:8px}
+
+    /* Target list */
+    .target-box{padding:16px;border-radius:12px;background:rgba(168,85,247,0.04);border:1px solid rgba(168,85,247,0.20)}
+    .target-box__head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .target-box__title{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-purple)}
+    .target-box__count{font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--accent-purple);letter-spacing:0.02em}
+    .target-box__count small{font-size:11px;color:var(--text-muted);font-weight:500;letter-spacing:0.06em;text-transform:uppercase;margin-left:6px}
+    .target-list{display:flex;gap:6px;flex-wrap:wrap}
+    .target-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:100px;background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.22);color:var(--accent-purple);font-size:11px;font-family:var(--font-display);letter-spacing:0.04em}
+
+    /* Published list */
+    .ann-list{display:flex;flex-direction:column;gap:10px}
+    .ann-item{
+      padding:14px 16px;border-radius:12px;
+      background:rgba(6,6,14,0.45);border:1px solid var(--border-subtle);
+      cursor:pointer;transition:all 0.25s;
+    }
+    .ann-item:hover{border-color:rgba(168,85,247,0.25);background:rgba(12,12,26,0.6)}
+    .ann-item[data-selected="true"]{border-color:rgba(168,85,247,0.4);background:rgba(168,85,247,0.04)}
+    .ann-item__top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+    .ann-item__title{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:0.03em;color:var(--text-primary);line-height:1.3;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ann-item__time{font-family:var(--font-display);font-size:10px;font-weight:500;color:var(--text-dim);letter-spacing:0.08em;white-space:nowrap}
+    .ann-item__body{font-size:12px;color:var(--text-muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px}
+    .ann-item__meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .ann-item__meta-chip{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.1em;color:var(--text-dim)}
+    .ann-item__meta-chip svg{width:10px;height:10px}
+
+    /* Pinned preview (sub-team space view) */
+    .preview-panel{position:sticky;top:108px;display:flex;flex-direction:column;gap:14px;max-height:calc(100vh - 130px);overflow:auto}
+    .preview-header{
+      display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:12px;
+      background:rgba(110,237,216,0.05);border:1px solid rgba(110,237,216,0.22);
+    }
+    .preview-header__title{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-teal)}
+    .preview-header__subject{font-size:12px;color:var(--text-muted)}
+
+    .pinned-post{
+      position:relative;padding:20px;border-radius:16px;
+      background:var(--bg-glass);backdrop-filter:blur(16px);
+      border:1px solid rgba(168,85,247,0.25);
+      box-shadow:0 8px 32px rgba(0,0,0,0.35),0 0 28px rgba(168,85,247,0.08);
+    }
+    .pinned-post::before{content:'';position:absolute;inset:0;border-radius:16px;background:radial-gradient(ellipse 55% 60% at 20% 0%,rgba(168,85,247,0.15) 0%,transparent 55%);pointer-events:none}
+    .pinned-post > *{position:relative;z-index:1}
+    .pinned-post__ribbon{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;background:linear-gradient(135deg,rgba(168,85,247,0.28),rgba(168,85,247,0.14));border:1px solid rgba(168,85,247,0.4);color:#e9d5ff;font-family:var(--font-display);font-size:9px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;margin-bottom:14px;box-shadow:0 0 12px rgba(168,85,247,0.2)}
+    .pinned-post__ribbon svg{width:10px;height:10px}
+    .pinned-post__author-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+    .pinned-post__author{display:flex;flex-direction:column;gap:2px}
+    .pinned-post__author-name{font-size:12px;color:var(--text-primary);font-weight:700;font-family:var(--font-display);letter-spacing:0.02em}
+    .pinned-post__author-handle{font-family:var(--font-display);font-size:10px;color:var(--text-muted);letter-spacing:0.06em}
+    .pinned-post__title{font-family:var(--font-display);font-size:18px;font-weight:800;letter-spacing:0.02em;line-height:1.3;color:var(--text-primary);margin-bottom:12px}
+    .pinned-post__body{font-size:14px;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;margin-bottom:14px}
+    .pinned-post__stats{display:flex;gap:14px;padding:12px 0;border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle);margin-bottom:14px}
+    .pinned-post__stat{display:flex;align-items:center;gap:5px;font-family:var(--font-display);font-size:10px;color:var(--text-muted);letter-spacing:0.08em}
+    .pinned-post__stat svg{width:12px;height:12px}
+
+    /* Comment thread */
+    .thread-label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px}
+    .comment{display:flex;gap:10px;margin-bottom:12px}
+    .comment__body{flex:1;min-width:0;padding:10px 12px;border-radius:10px;background:rgba(6,6,14,0.4);border:1px solid var(--border-subtle)}
+    .comment__head{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+    .comment__author{font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--text-primary);letter-spacing:0.02em}
+    .comment__role{font-family:var(--font-display);font-size:8px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:2px 7px;border-radius:6px}
+    .comment__role--parent{background:rgba(252,179,0,0.08);border:1px solid rgba(252,179,0,0.22);color:var(--accent-gold)}
+    .comment__role--member{background:rgba(110,237,216,0.08);border:1px solid rgba(110,237,216,0.22);color:var(--accent-teal)}
+    .comment__time{font-family:var(--font-display);font-size:9px;color:var(--text-dim);letter-spacing:0.08em;margin-left:auto}
+    .comment__text{font-size:13px;line-height:1.55;color:var(--text-primary)}
+    .comment-box{display:flex;gap:10px;margin-top:8px}
+    .comment-box__input{flex:1;min-width:0;padding:10px 12px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--text-primary);font-size:13px;outline:none;transition:all 0.2s}
+    .comment-box__input:focus{border-color:rgba(252,179,0,0.3);box-shadow:0 0 12px rgba(252,179,0,0.08)}
+    .comment-box__send{padding:0 16px;border-radius:10px;background:linear-gradient(135deg,rgba(252,179,0,0.22),rgba(110,237,216,0.08));border:1px solid rgba(252,179,0,0.3);color:var(--accent-gold);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+    .comment-box__send:hover{box-shadow:0 0 16px rgba(252,179,0,0.15)}
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo">SNU</div>
+      <div class="u-col">
+        <span class="arena-topbar__title">SNU CS Dept.</span>
+        <span class="arena-topbar__handle">Announcements</span>
+      </div>
+      <span class="arena-topbar__status arena-topbar__status--parent">Broadcast · Active</span>
+    </div>
+    <div class="arena-topbar__actions">
+      <button class="hud-btn" aria-label="History"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></button>
+    </div>
+  </div>
+
+  <div class="page page--wide">
+    <div class="page-header">
+      <div class="page-header__main">
+        <span class="page-header__eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8v18l-18-8v-2z"/></svg>
+          FR-5 · Announcements
+        </span>
+        <h1 class="page-header__title"><strong>한 번에</strong> 모든 공인 동아리에게 알립니다</h1>
+        <p class="page-header__sub">발행 시 각 동아리의 팀 스페이스에 핀 고정 게시물로 등록됩니다. 이전 공지는 자동으로 핀 해제되어 일반 게시물로 강등됩니다. 모든 멤버는 인앱 알림을 받습니다.</p>
+      </div>
+    </div>
+
+    <div class="ann-grid">
+      <!-- LEFT: composer + list -->
+      <div class="u-col u-gap-16">
+        <section class="card">
+          <div class="card__head">
+            <h2 class="card__title" style="background:linear-gradient(135deg,#c084fc,#e9d5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">새 공지 · Compose</h2>
+            <span class="card__dash"></span>
+            <span class="card__meta">자동 핀 · 댓글 ON</span>
+          </div>
+
+          <div class="composer">
+            <input class="composer__title" id="ann-title" placeholder="공지 제목 (예: 2026-1학기 동아리실 배정 안내)" value="2026-1학기 동아리실 배정 안내" />
+            <textarea class="composer__body" id="ann-body" placeholder="공지 내용을 작성하세요…">안녕하세요, 학과사무실입니다.
+
+2026-1학기 동아리실 배정이 확정되었습니다. 각 동아리는 아래 공지를 참고하여 2026-04-28까지 대표자 서명을 제출해주세요.
+
+• 배정표: 첨부된 링크 참조
+• 제출처: 학과사무실 (301동 102호) 또는 office@snu_cs.ac.kr
+• 문의: 김조교 (학과 조교, ext. 1234)
+
+모두에게 알찬 한 학기가 되기를 바랍니다.</textarea>
+            <div class="target-box">
+              <div class="target-box__head">
+                <span class="target-box__title">대상 · Target (기본: 모든 공인 동아리)</span>
+                <span class="target-box__count" id="target-count">12 <small>동아리</small></span>
+              </div>
+              <div class="target-list">
+                <span class="target-chip">SNU Code Club</span>
+                <span class="target-chip">Algorithm Lab</span>
+                <span class="target-chip">AI & ML Society</span>
+                <span class="target-chip">Security Enthusiasts</span>
+                <span class="target-chip">Game Dev Crew</span>
+                <span class="target-chip">Data Engineering</span>
+                <span class="target-chip">Web3 Circle</span>
+                <span class="target-chip">Robotics Lab</span>
+                <span class="target-chip">Quantum Club</span>
+                <span class="target-chip">GraphQL Guild</span>
+                <span class="target-chip">HCI Lab</span>
+                <span class="target-chip">+1</span>
+              </div>
+              <div class="u-flex u-align-center u-justify-between u-gap-10" style="margin-top:10px;flex-wrap:wrap">
+                <span class="u-text-dim" style="font-size:11px">총 <strong style="color:var(--accent-purple)">342명</strong>의 멤버가 인앱 알림을 받습니다 (v1.5에서 대상 선택 가능 예정)</span>
+              </div>
+            </div>
+            <div class="composer__foot">
+              <span class="composer__count" id="char-count">0 chars</span>
+              <div class="composer__actions">
+                <button class="btn btn--ghost btn--small">초안 저장</button>
+                <button class="btn btn--primary btn--small" id="publish-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  발행 · Publish to 12
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card__head">
+            <h2 class="card__title">발행된 공지 · Published</h2>
+            <span class="card__dash"></span>
+            <span class="card__meta">최근 30일 · 3건</span>
+          </div>
+
+          <div class="ann-list" id="ann-list">
+            <div class="ann-item" data-selected="true" data-id="p1">
+              <div class="ann-item__top">
+                <span class="ann-item__title">📌 2026 신입생 오리엔테이션 일정 안내</span>
+                <span class="ann-item__time">2일 전</span>
+              </div>
+              <p class="ann-item__body">2026학년도 신입생 오리엔테이션이 다음 주 월요일부터 시작됩니다. 각 동아리는 3월 8일부터 신입생 모집 포스터를 학과 게시판에 부착할 수 있으며...</p>
+              <div class="ann-item__meta">
+                <span class="ann-item__meta-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> 12 동아리</span>
+                <span class="ann-item__meta-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 8 댓글</span>
+                <span class="ann-item__meta-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 핀 고정</span>
+              </div>
+            </div>
+
+            <div class="ann-item" data-id="p2">
+              <div class="ann-item__top">
+                <span class="ann-item__title">학술활동 지원금 신청 마감 D-7</span>
+                <span class="ann-item__time">1주 전</span>
+              </div>
+              <p class="ann-item__body">2026-1학기 학술활동 지원금 신청이 다음 주 금요일(3/15)에 마감됩니다. 아직 제출하지 않은 동아리는 부담 없이 사무실로 문의해주세요...</p>
+              <div class="ann-item__meta">
+                <span class="ann-item__meta-chip">12 동아리</span>
+                <span class="ann-item__meta-chip">3 댓글</span>
+                <span class="ann-item__meta-chip">핀 해제됨</span>
+              </div>
+            </div>
+
+            <div class="ann-item" data-id="p3">
+              <div class="ann-item__top">
+                <span class="ann-item__title">학칙 v2 개정안 공지</span>
+                <span class="ann-item__time">3주 전</span>
+              </div>
+              <p class="ann-item__body">학칙 v2 개정안이 학과 교수회의에서 가결되었습니다. 주요 변경: (1) 정기 활동 보고서 분기 → 반기, (2) 최소 멤버 수 3명 → 5명...</p>
+              <div class="ann-item__meta">
+                <span class="ann-item__meta-chip">11 동아리</span>
+                <span class="ann-item__meta-chip">14 댓글</span>
+                <span class="ann-item__meta-chip">핀 해제됨</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- RIGHT: pinned preview -->
+      <aside class="preview-panel">
+        <div class="preview-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;color:var(--accent-teal)"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          <div class="u-col u-flex-1">
+            <span class="preview-header__title">Preview · As seen in</span>
+            <span class="preview-header__subject">SNU Code Club · 팀 스페이스</span>
+          </div>
+        </div>
+
+        <article class="pinned-post">
+          <div class="pinned-post__ribbon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24z"/></svg>
+            학과사무실 공지 · Pinned
+          </div>
+          <div class="pinned-post__author-row">
+            <div class="avatar">SNU</div>
+            <div class="pinned-post__author">
+              <span class="pinned-post__author-name">SNU CS Dept.</span>
+              <span class="pinned-post__author-handle">@snu_cs_office · 2일 전</span>
+            </div>
+          </div>
+          <h2 class="pinned-post__title">📌 2026 신입생 오리엔테이션 일정 안내</h2>
+          <div class="pinned-post__body">2026학년도 신입생 오리엔테이션이 다음 주 월요일부터 시작됩니다. 각 동아리는 3월 8일부터 신입생 모집 포스터를 학과 게시판에 부착할 수 있으며, 오리엔테이션 주간 마지막 날(3/12)에는 학과 차원의 동아리 박람회가 진행됩니다.
+
+참여 원하시는 동아리는 3/5까지 대표자 1명을 지정해서 office@snu_cs.ac.kr 로 회신 부탁드립니다.
+
+감사합니다.</div>
+          <div class="pinned-post__stats">
+            <span class="pinned-post__stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg> 24 Likes</span>
+            <span class="pinned-post__stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 8 Comments</span>
+            <span class="pinned-post__stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> 342 Views</span>
+          </div>
+
+          <div>
+            <div class="thread-label">Q&A 스레드</div>
+
+            <div class="comment">
+              <div class="avatar avatar--sm avatar--teal">KS</div>
+              <div class="comment__body">
+                <div class="comment__head">
+                  <span class="comment__author">kim_s</span>
+                  <span class="comment__role comment__role--member">Club Admin</span>
+                  <span class="comment__time">1일 전</span>
+                </div>
+                <div class="comment__text">박람회 때 부스 크기 제한이 있나요? 저희 동아리는 VR 장비를 전시하려고 합니다.</div>
+              </div>
+            </div>
+
+            <div class="comment">
+              <div class="avatar avatar--sm">SN</div>
+              <div class="comment__body">
+                <div class="comment__head">
+                  <span class="comment__author">snu_cs_office</span>
+                  <span class="comment__role comment__role--parent">Parent</span>
+                  <span class="comment__time">1일 전</span>
+                </div>
+                <div class="comment__text">기본 부스는 2.4m × 1.8m이고 전시 품목 사전 신고 시 1.5배 공간까지 확장 가능합니다. 장비 리스트만 회신 주세요.</div>
+              </div>
+            </div>
+
+            <div class="comment">
+              <div class="avatar avatar--sm avatar--violet">LH</div>
+              <div class="comment__body">
+                <div class="comment__head">
+                  <span class="comment__author">lee_h</span>
+                  <span class="comment__role comment__role--member">Member</span>
+                  <span class="comment__time">14시간 전</span>
+                </div>
+                <div class="comment__text">포스터 템플릿이 있으면 공유 부탁드립니다!</div>
+              </div>
+            </div>
+
+            <div class="comment-box">
+              <input class="comment-box__input" id="comment-input" placeholder="댓글 작성… (작성자 · Parent)" />
+              <button class="comment-box__send" id="comment-send">Send</button>
+            </div>
+          </div>
+        </article>
+      </aside>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+
+  <template id="comment-tpl">
+    <div class="comment">
+      <div class="avatar avatar--sm"></div>
+      <div class="comment__body">
+        <div class="comment__head">
+          <span class="comment__author"></span>
+          <span class="comment__role comment__role--parent"></span>
+          <span class="comment__time"></span>
+        </div>
+        <div class="comment__text"></div>
+      </div>
+    </div>
+  </template>
+</div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    const title = document.getElementById('ann-title');
+    const body = document.getElementById('ann-body');
+    const charCount = document.getElementById('char-count');
+    const publishBtn = document.getElementById('publish-btn');
+
+    function updateCount() {
+      charCount.textContent = (body.value || '').length + ' chars';
+    }
+    body.addEventListener('input', updateCount);
+    updateCount();
+
+    publishBtn.addEventListener('click', () => {
+      if (!title.value.trim()) { SubTeam.toast('공지 제목을 입력해주세요', 'danger'); return; }
+      if (!body.value.trim()) { SubTeam.toast('공지 내용을 입력해주세요', 'danger'); return; }
+      SubTeam.toast('공지 발행 완료 · 12 동아리 · 342명 알림 전송', 'success');
+    });
+
+    // Announcement list click → update preview (simplified: only update title+time)
+    const annList = document.getElementById('ann-list');
+    annList.addEventListener('click', (e) => {
+      const item = e.target.closest('.ann-item');
+      if (!item) return;
+      document.querySelectorAll('.ann-item').forEach(i => i.setAttribute('data-selected', 'false'));
+      item.setAttribute('data-selected', 'true');
+      const t = item.querySelector('.ann-item__title').textContent;
+      const when = item.querySelector('.ann-item__time').textContent;
+      document.querySelector('.pinned-post__title').textContent = t;
+      document.querySelector('.pinned-post__author-handle').textContent = '@snu_cs_office · ' + when;
+    });
+
+    // Comment thread — append as parent admin
+    const commentInput = document.getElementById('comment-input');
+    const commentSend = document.getElementById('comment-send');
+    const tpl = document.getElementById('comment-tpl');
+
+    function appendComment() {
+      const text = commentInput.value.trim();
+      if (!text) return;
+      const frag = tpl.content.cloneNode(true);
+      frag.querySelector('.avatar').textContent = 'SN';
+      frag.querySelector('.comment__author').textContent = 'snu_cs_office';
+      frag.querySelector('.comment__role').textContent = 'Parent';
+      frag.querySelector('.comment__time').textContent = '지금';
+      frag.querySelector('.comment__text').textContent = text;
+      const threadLabel = document.querySelector('.thread-label');
+      const commentBox = document.querySelector('.comment-box');
+      commentBox.parentElement.insertBefore(frag, commentBox);
+      commentInput.value = '';
+      SubTeam.toast('댓글 게시 · sub-team admin에게 알림 전송', 'success');
+    }
+    commentSend.addEventListener('click', appendComment);
+    commentInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') appendComment(); });
+  });
+</script>
+</body>
+</html>

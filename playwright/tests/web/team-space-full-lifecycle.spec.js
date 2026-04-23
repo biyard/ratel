@@ -12,6 +12,7 @@ import {
   getEditor,
   getLocator,
   goto,
+  publishAction,
   setReward,
   togglePrerequisite,
   waitPopup,
@@ -240,6 +241,7 @@ test.describe.serial("Full space lifecycle with rewards", () => {
     // Prerequisite + reward live inline on the ConfigCard — no more Settings tab.
     await togglePrerequisite(page);
     await setReward(page, 1);
+    await publishAction(page);
   });
 
   // ─── 3. Create poll (normal) + reward ────────────────────────────────────
@@ -261,6 +263,7 @@ test.describe.serial("Full space lifecycle with rewards", () => {
     });
 
     await setReward(page, 2);
+    await publishAction(page);
   });
 
   // ─── 4. Create discussion + reward ───────────────────────────────────────
@@ -362,6 +365,7 @@ test.describe.serial("Full space lifecycle with rewards", () => {
     });
 
     await setReward(page, 2);
+    await publishAction(page);
   });
 
   // ─── 5. Create quiz + reward ─────────────────────────────────────────────
@@ -405,6 +409,7 @@ test.describe.serial("Full space lifecycle with rewards", () => {
     await page.waitForLoadState("load");
 
     await setReward(page, 2);
+    await publishAction(page);
   });
 
   // ─── 6. Create follow + reward ───────────────────────────────────────────
@@ -415,6 +420,7 @@ test.describe.serial("Full space lifecycle with rewards", () => {
     await getLocator(page, { testId: "page-card-config" });
 
     await setReward(page, 2);
+    await publishAction(page);
   });
 
   // ─── 7. Enable anonymous + join anytime via UI ───────────────────────────
@@ -1254,6 +1260,124 @@ test.describe.serial("Full space lifecycle with rewards", () => {
       await expect(page.getByTestId("notification-bell-badge")).toBeHidden({
         timeout: 10000,
       });
+    } finally {
+      await context.close();
+    }
+  });
+
+  // ─── 17. User1: Home ↔ Space navigation regression ──────────────────────
+  // Intentionally runs AFTER the notification inbox tests: visiting the
+  // home page mounts `NotificationsBootstrap`, which kicks `use_inbox`'s
+  // `list_inbox_handler` call. If the server marks inbox rows as
+  // "viewed" on read, this test would zero out User1's unread count and
+  // break `User1: Sees notifications in bell` when placed before it.
+  //
+  // This test guards against the notification-hook panics that surfaced
+  // on 2026-04-22 when `use_inbox` / `use_unread_count` were installed
+  // via `provide_root_context` in the first transient caller's scope:
+  //   - `ValueDroppedError` when returning to home after entering a space
+  //   - `Unable to retrieve the hook that was initialized at this index`
+  //     (rules-of-hooks mismatch from a `try_use_context` early-return)
+  //   - `cannot reclaim ElementId(...)` VDOM arena errors triggered by a
+  //     `if logged_in { Bootstrap { Outlet } } else { Outlet }` branch
+  //     swap during route navigation
+  // The fix moved signal installation into a stable `NotificationsBootstrap`
+  // ancestor that renders unconditionally and wraps the outlet directly
+  // (see `app/ratel/src/root_layout.rs`).
+
+  test("User1: Home ↔ space navigation renders without runtime errors", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      storageState: newUserStoragePath,
+      viewport: { width: 1440, height: 950 },
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    // Collect runtime panics routed through the WASM `pageerror` channel
+    // and the `console.error` pipe that Dioxus uses for captured panics.
+    // Signal-ownership WARNs are left out on purpose — they're soft
+    // notices and don't by themselves break anything.
+    const fatalErrors = [];
+    const fatalPattern =
+      /panicked at|ValueDroppedError|Unable to retrieve the hook|cannot reclaim ElementId/i;
+
+    page.on("pageerror", (err) => {
+      if (fatalPattern.test(err.message)) {
+        fatalErrors.push(`[pageerror] ${err.message}`);
+      }
+    });
+    page.on("console", (msg) => {
+      if (msg.type() !== "error") return;
+      const text = msg.text();
+      if (fatalPattern.test(text)) fatalErrors.push(`[console] ${text}`);
+    });
+
+    try {
+      // 1. Home renders — NotificationsBootstrap installs the inbox
+      //    signals in its own scope and the bell picks them up via
+      //    context.
+      await goto(page, "/");
+      await pauseAnimations(page);
+      await expect(page.getByTestId("notification-bell")).toBeVisible({
+        timeout: 10000,
+      });
+      await expect(page.getByText("Something went wrong")).toBeHidden();
+
+      // 2. Locate our space card on the home arena. User1 is a
+      //    participant so the lifecycle space should surface in the
+      //    "Mine" tab; fall back to "Hot" just in case the default
+      //    active tab changes. This exercises the actual SPA route
+      //    transition (`nav.push(Route::SpaceIndexPage { ... })`) the
+      //    way a real user hits it — not a raw URL load — so any
+      //    panic in client-side route dispatch is captured.
+      await clickNoNav(page, { testId: "home-tab-mine" });
+
+      let ourCard = page.locator(".space-card", { hasText: postTitle });
+      if (!(await ourCard.first().isVisible({ timeout: 3000 }).catch(() => false))) {
+        await clickNoNav(page, { testId: "home-tab-hot" });
+        ourCard = page.locator(".space-card", { hasText: postTitle });
+      }
+      await expect(ourCard.first()).toBeVisible({ timeout: 10000 });
+
+      // 3. Click "Enter Arena" CTA → SPA navigation. This is the
+      //    transition that used to fire `ValueDroppedError` because the
+      //    home-scoped bell/panel would unmount while the root-scoped
+      //    context kept their signals.
+      await ourCard.first().locator(".space-card__cta").click();
+
+      await page.waitForURL(/\/spaces\/[a-z0-9-]+/, { waitUntil: "load" });
+      await expect(page.getByTestId("notification-bell")).toBeVisible({
+        timeout: 10000,
+      });
+      await expect(page.getByText("Something went wrong")).toBeHidden();
+
+      // 4. Back to home — the mirror transition that triggered the
+      //    second wave of panics after the initial fix attempt.
+      await page.goBack();
+      await page.waitForLoadState("load");
+      await expect(page.getByTestId("notification-bell")).toBeVisible({
+        timeout: 10000,
+      });
+      await expect(page.getByText("Something went wrong")).toBeHidden();
+
+      // 5. One more round-trip to exercise the arena-ID recycling path
+      //    that produced `cannot reclaim ElementId` errors on space
+      //    enter after the Bootstrap + `if logged_in` approach.
+      ourCard = page.locator(".space-card", { hasText: postTitle });
+      await expect(ourCard.first()).toBeVisible({ timeout: 10000 });
+      await ourCard.first().locator(".space-card__cta").click();
+      await page.waitForURL(/\/spaces\/[a-z0-9-]+/, { waitUntil: "load" });
+      await page.goBack();
+      await page.waitForLoadState("load");
+
+      expect(
+        fatalErrors,
+        `Fatal runtime errors during Home ↔ Space navigation:\n${fatalErrors.join(
+          "\n"
+        )}`
+      ).toEqual([]);
     } finally {
       await context.close();
     }
