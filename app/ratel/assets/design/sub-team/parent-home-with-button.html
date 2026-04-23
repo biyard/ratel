@@ -41,6 +41,147 @@
       border-left:1px solid rgba(252,179,0,0.30);border-top:1px solid rgba(252,179,0,0.30);
     }
 
+    /* ── Parent-team HUD button + panel ────────────────── */
+    .hud-btn--parent{
+      position:relative;
+      background:rgba(252,179,0,0.08) !important;
+      border-color:rgba(252,179,0,0.22) !important;
+    }
+    .hud-btn--parent svg{color:var(--accent-gold) !important}
+    .hud-btn--parent::after{
+      content:'';position:absolute;top:6px;right:6px;
+      width:9px;height:9px;border-radius:50%;
+      background:var(--accent-gold);
+      box-shadow:0 0 8px var(--accent-gold);
+      border:2px solid var(--bg-void);
+    }
+    .hud-btn--parent[data-state="pending"]::after{
+      background:var(--accent-amber,#f59e0b);
+      box-shadow:0 0 8px var(--accent-amber,#f59e0b);
+      animation:parent-pulse 1.6s ease-in-out infinite;
+    }
+    .hud-btn--parent[data-state="none"]::after{display:none}
+    @keyframes parent-pulse{
+      0%,100%{opacity:1;transform:scale(1)}
+      50%{opacity:0.5;transform:scale(1.25)}
+    }
+
+    /* Parent panel (floating dropdown) */
+    .parent-panel-wrap{position:relative;display:inline-block}
+    .parent-panel{
+      position:absolute;top:calc(100% + 12px);right:0;z-index:80;
+      width:380px;max-width:calc(100vw - 32px);
+      border-radius:16px;
+      background:rgba(10,10,22,0.96);backdrop-filter:blur(22px);
+      border:1px solid rgba(252,179,0,0.22);
+      box-shadow:0 18px 48px rgba(0,0,0,0.65),0 0 28px rgba(252,179,0,0.06);
+      padding:16px;display:flex;flex-direction:column;gap:12px;
+      opacity:0;visibility:hidden;transform:translateY(-6px);
+      transition:all 0.22s ease;
+    }
+    .parent-panel[data-open="true"]{opacity:1;visibility:visible;transform:translateY(0)}
+    .parent-panel__head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .parent-panel__title{font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-gold);display:flex;align-items:center;gap:8px}
+    .parent-panel__title svg{width:13px;height:13px}
+    .parent-panel__close{width:24px;height:24px;border-radius:7px;padding:0;background:transparent;border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer}
+    .parent-panel__close:hover{border-color:rgba(239,68,68,0.25);color:var(--accent-coral);background:rgba(239,68,68,0.04)}
+    .parent-panel__close svg{width:11px;height:11px}
+
+    /* State toggle (demo switcher inside panel) */
+    .parent-panel__state-toggle{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:4px;
+      padding:3px;border-radius:9px;
+      background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);
+    }
+    .parent-panel__state-btn{
+      padding:6px 8px;border-radius:6px;background:transparent;border:1px solid transparent;
+      color:var(--text-muted);font-family:var(--font-display);font-size:9px;font-weight:700;
+      letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.15s;
+    }
+    .parent-panel__state-btn[aria-selected="true"][data-state="recognized"]{background:rgba(34,197,94,0.08);color:var(--accent-green,#22c55e);border-color:rgba(34,197,94,0.25)}
+    .parent-panel__state-btn[aria-selected="true"][data-state="pending"]{background:rgba(245,158,11,0.08);color:var(--accent-amber,#f59e0b);border-color:rgba(245,158,11,0.25)}
+    .parent-panel__state-btn[aria-selected="true"][data-state="none"]{background:rgba(255,255,255,0.04);color:var(--text-primary);border-color:var(--border-subtle)}
+
+    /* Content blocks (swap by state) */
+    .parent-state-block{display:none;flex-direction:column;gap:12px}
+    .parent-state-block[data-active="true"]{display:flex;animation:pp-fade 0.2s ease}
+    @keyframes pp-fade{from{opacity:0;transform:translateY(-2px)}to{opacity:1;transform:translateY(0)}}
+
+    .parent-card{
+      position:relative;overflow:hidden;
+      display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;
+      padding:14px;border-radius:12px;
+      background:linear-gradient(135deg,rgba(252,179,0,0.08),rgba(110,237,216,0.04));
+      border:1px solid rgba(252,179,0,0.25);
+    }
+    .parent-card[data-variant="pending"]{background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(252,179,0,0.03));border-color:rgba(245,158,11,0.28)}
+    .parent-card__avatar{
+      width:44px;height:44px;border-radius:11px;flex-shrink:0;
+      background:linear-gradient(135deg,rgba(252,179,0,0.35),rgba(110,237,216,0.12));
+      border:1px solid rgba(252,179,0,0.30);
+      display:flex;align-items:center;justify-content:center;
+      font-family:var(--font-display);font-weight:800;font-size:14px;color:var(--accent-gold);
+    }
+    .parent-card__body{min-width:0}
+    .parent-card__name{font-family:var(--font-display);font-size:14px;font-weight:800;letter-spacing:0.02em;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .parent-card__meta{font-family:var(--font-display);font-size:10px;color:var(--text-muted);letter-spacing:0.04em;margin-top:2px}
+    .parent-card__status{
+      display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:100px;
+      font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+      border:1px solid;
+    }
+    .parent-card__status::before{content:'';width:5px;height:5px;border-radius:50%}
+    .parent-card__status--recognized{background:rgba(34,197,94,0.10);color:var(--accent-green,#22c55e);border-color:rgba(34,197,94,0.28)}
+    .parent-card__status--recognized::before{background:var(--accent-green,#22c55e);box-shadow:0 0 6px var(--accent-green,#22c55e)}
+    .parent-card__status--pending{background:rgba(245,158,11,0.10);color:var(--accent-amber,#f59e0b);border-color:rgba(245,158,11,0.28)}
+    .parent-card__status--pending::before{background:var(--accent-amber,#f59e0b);box-shadow:0 0 6px var(--accent-amber,#f59e0b);animation:parent-pulse 1.6s infinite}
+
+    .pp-info{padding:10px 12px;border-radius:10px;background:rgba(6,6,14,0.5);border:1px solid var(--border-subtle);font-size:12px;color:var(--text-muted);line-height:1.55}
+    .pp-info strong{color:var(--text-primary)}
+    .pp-info--amber{background:rgba(245,158,11,0.04);border-color:rgba(245,158,11,0.22)}
+
+    .pp-actions{display:flex;flex-direction:column;gap:6px}
+    .pp-action{
+      display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;
+      background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);
+      color:var(--text-primary);text-decoration:none;
+      font-family:var(--font-body);font-size:13px;font-weight:600;
+      transition:all 0.2s;cursor:pointer;
+    }
+    .pp-action:hover{background:rgba(255,255,255,0.06);border-color:var(--border-strong)}
+    .pp-action__icon{
+      width:28px;height:28px;border-radius:8px;flex-shrink:0;
+      background:rgba(252,179,0,0.08);border:1px solid rgba(252,179,0,0.22);
+      color:var(--accent-gold);display:flex;align-items:center;justify-content:center;
+    }
+    .pp-action__icon svg{width:13px;height:13px}
+    .pp-action__body{flex:1;min-width:0}
+    .pp-action__title{font-size:13px;font-weight:600;color:var(--text-primary)}
+    .pp-action__sub{font-size:11px;color:var(--text-muted);margin-top:1px}
+    .pp-action__chev{color:var(--text-dim);transition:all 0.2s}
+    .pp-action__chev svg{width:13px;height:13px}
+    .pp-action:hover .pp-action__chev{color:var(--accent-gold);transform:translateX(2px)}
+    .pp-action--danger:hover{border-color:rgba(239,68,68,0.25);background:rgba(239,68,68,0.04)}
+    .pp-action--danger .pp-action__icon{background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.22);color:var(--accent-coral)}
+    .pp-action--danger:hover .pp-action__chev{color:var(--accent-coral)}
+    .pp-action--primary{background:linear-gradient(135deg,rgba(252,179,0,0.14),rgba(252,179,0,0.06));border-color:rgba(252,179,0,0.30)}
+    .pp-action--primary:hover{box-shadow:0 0 16px rgba(252,179,0,0.15)}
+
+    .pp-empty{
+      display:flex;flex-direction:column;align-items:center;gap:8px;
+      padding:18px 12px;border-radius:12px;
+      background:rgba(255,255,255,0.02);border:1px dashed var(--border-strong);
+      text-align:center;
+    }
+    .pp-empty__icon{
+      width:44px;height:44px;border-radius:12px;
+      background:rgba(255,255,255,0.04);border:1px solid var(--border-subtle);
+      color:var(--text-dim);display:flex;align-items:center;justify-content:center;
+    }
+    .pp-empty__icon svg{width:20px;height:20px}
+    .pp-empty__title{font-family:var(--font-display);font-size:12px;font-weight:800;letter-spacing:0.04em;color:var(--text-primary)}
+    .pp-empty__desc{font-size:12px;color:var(--text-muted);line-height:1.55;max-width:280px}
+
     /* ── Parent team tag (clickable chip in topbar) ── */
     .parent-tag{
       display:inline-flex;align-items:center;gap:6px;
@@ -178,6 +319,135 @@
       <button class="hud-btn" aria-label="Members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></button>
       <button class="hud-btn" aria-label="Rewards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg></button>
 
+      <!-- NEW 상위팀 button + panel -->
+      <div class="parent-panel-wrap">
+        <button class="hud-btn hud-btn--parent" id="parent-btn" data-state="recognized" aria-label="Parent team" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L3 7v3h18V7l-9-5z"/><path d="M5 10v7a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-7"/></svg>
+        </button>
+        <div class="parent-panel" id="parent-panel" data-open="false" role="dialog" aria-label="Parent team relationship">
+          <div class="parent-panel__head">
+            <span class="parent-panel__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L3 7v3h18V7l-9-5z"/><path d="M5 10v7a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-7"/></svg>
+              상위팀 · Parent
+            </span>
+            <button class="parent-panel__close" id="parent-panel-close" aria-label="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+
+          <!-- Demo state switcher -->
+          <div class="parent-panel__state-toggle" role="tablist">
+            <button class="parent-panel__state-btn" role="tab" aria-selected="true" data-state="recognized">인증됨</button>
+            <button class="parent-panel__state-btn" role="tab" aria-selected="false" data-state="pending">심사 중</button>
+            <button class="parent-panel__state-btn" role="tab" aria-selected="false" data-state="none">독립 팀</button>
+          </div>
+
+          <!-- State: recognized -->
+          <div class="parent-state-block" data-state="recognized" data-active="true">
+            <div class="parent-card">
+              <div class="parent-card__avatar">서울</div>
+              <div class="parent-card__body">
+                <div class="parent-card__name">서울대학교</div>
+                <div class="parent-card__meta">@snu_main · 인증 2025-03-01 ~ · 2년차</div>
+              </div>
+              <span class="parent-card__status parent-card__status--recognized">Active</span>
+            </div>
+
+            <div class="pp-info">이 팀은 <strong>서울대학교</strong>의 인증 하위팀입니다. 상위팀의 공지를 받고, 상위팀 활동 대시보드에 공개 활동이 집계됩니다.</div>
+
+            <div class="pp-actions">
+              <a class="pp-action" href="parent-home-with-button.html">
+                <span class="pp-action__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
+                <span class="pp-action__body">
+                  <span class="pp-action__title">상위팀 홈으로 이동</span>
+                  <span class="pp-action__sub">서울대학교 팀 피드 열기</span>
+                </span>
+                <span class="pp-action__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+              </a>
+              <a class="pp-action" href="bylaws-section.html">
+                <span class="pp-action__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+                <span class="pp-action__body">
+                  <span class="pp-action__title">상위팀 학칙 보기</span>
+                  <span class="pp-action__sub">v2 · 2026-02-01 업데이트</span>
+                </span>
+                <span class="pp-action__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+              </a>
+              <a class="pp-action pp-action--danger" href="child-leave-parent.html">
+                <span class="pp-action__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
+                <span class="pp-action__body">
+                  <span class="pp-action__title">상위팀에서 이탈</span>
+                  <span class="pp-action__sub">독립 팀으로 전환 · 콘텐츠는 유지</span>
+                </span>
+                <span class="pp-action__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+              </a>
+            </div>
+          </div>
+
+          <!-- State: pending -->
+          <div class="parent-state-block" data-state="pending">
+            <div class="parent-card" data-variant="pending">
+              <div class="parent-card__avatar">서울</div>
+              <div class="parent-card__body">
+                <div class="parent-card__name">서울대학교</div>
+                <div class="parent-card__meta">@snu_main · 제출 2026-04-20 · Form v3</div>
+              </div>
+              <span class="parent-card__status parent-card__status--pending">Pending</span>
+            </div>
+
+            <div class="pp-info pp-info--amber">학과 담당자가 신청서를 검토 중입니다. 보통 영업일 3–5일 소요. 결과는 인앱 + 이메일 알림으로 안내됩니다.</div>
+
+            <div class="pp-actions">
+              <a class="pp-action pp-action--primary" href="child-application-status.html">
+                <span class="pp-action__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+                <span class="pp-action__body">
+                  <span class="pp-action__title">신청 상태 확인</span>
+                  <span class="pp-action__sub">타임라인 · 학과 피드백 열기</span>
+                </span>
+                <span class="pp-action__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+              </a>
+              <a class="pp-action" href="subteam-apply.html">
+                <span class="pp-action__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
+                <span class="pp-action__body">
+                  <span class="pp-action__title">신청서 수정</span>
+                  <span class="pp-action__sub">아직 심사 대기 중 · 내용 업데이트</span>
+                </span>
+                <span class="pp-action__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+              </a>
+              <button class="pp-action pp-action--danger" id="cancel-apply-btn">
+                <span class="pp-action__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+                <span class="pp-action__body">
+                  <span class="pp-action__title">신청 취소</span>
+                  <span class="pp-action__sub">현재 심사 중인 신청을 철회</span>
+                </span>
+                <span class="pp-action__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- State: standalone -->
+          <div class="parent-state-block" data-state="none">
+            <div class="pp-empty">
+              <div class="pp-empty__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div class="pp-empty__title">독립 팀입니다</div>
+              <div class="pp-empty__desc">아직 어떤 상위팀에도 속해있지 않습니다. 대학교·협회·커뮤니티 등 상위팀에 신청하면 공지를 받고 상위팀 공식 활동에 합류할 수 있습니다.</div>
+            </div>
+
+            <div class="pp-actions">
+              <a class="pp-action pp-action--primary" href="subteam-apply.html">
+                <span class="pp-action__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+                <span class="pp-action__body">
+                  <span class="pp-action__title">상위팀에 신청하기</span>
+                  <span class="pp-action__sub">가입 요건 확인 → 신청서 제출</span>
+                </span>
+                <span class="pp-action__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- NEW 하위팀 button (focus) -->
       <button class="hud-btn hud-btn--subteam" id="subteam-btn" aria-label="Sub-teams">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.09 4.23 4.66.68-3.38 3.29.8 4.64L12 12.67l-4.17 2.17.8-4.64L5.25 6.91l4.66-.68L12 2z"/><circle cx="6" cy="19" r="3"/><circle cx="18" cy="19" r="3"/><path d="M9 19h6"/></svg>
@@ -192,9 +462,9 @@
     <!-- Annotation: what clicking the button does -->
     <div class="annotation-panel">
       <span class="annotation-panel__eyebrow">New · Top-right HUD</span>
-      <h1 class="annotation-panel__title">기존 팀 홈에 <strong>하위팀</strong> 아이콘이 추가됩니다</h1>
+      <h1 class="annotation-panel__title">기존 팀 홈에 <strong>상위팀</strong> · <strong>하위팀</strong> 아이콘이 추가됩니다</h1>
       <p class="annotation-panel__sub">
-        team-arena UI는 그대로. HUD 버튼에 sub-team 아이콘 하나만 얹힙니다. 클릭하면 보는 사용자의 역할에 따라 <strong style="color:var(--accent-gold)">2가지</strong> 경로로 분기됩니다.
+        모든 팀은 상위팀도 될 수 있고 하위팀도 될 수 있습니다. 두 아이콘은 각 관계를 관리하는 독립 엔트리 포인트이며, 이 페이지 하나가 두 역할을 모두 대변합니다. <strong style="color:var(--accent-gold)">상위팀 아이콘</strong> → 내가 속한 상위팀과의 관계 (신청 상태 · 이탈 · 상위팀 홈). <strong style="color:var(--accent-gold)">하위팀 아이콘</strong> → 내 팀 아래 하위팀 관리 (admin) 또는 이 팀에 가입 신청 (비-admin).
       </p>
 
       <div class="branch-grid">
@@ -277,6 +547,52 @@
         e.preventDefault();
         SubTeam.toast('서울대학교 홈으로 이동 · (demo에서는 같은 페이지로 리로드)', 'success');
         setTimeout(() => { window.location.href = parentTag.getAttribute('href'); }, 800);
+      });
+    }
+
+    // ── Parent HUD button + panel ────────────────────────
+    const parentBtn = document.getElementById('parent-btn');
+    const parentPanel = document.getElementById('parent-panel');
+    const parentClose = document.getElementById('parent-panel-close');
+
+    function setParentPanelOpen(open) {
+      parentPanel.setAttribute('data-open', open);
+      parentBtn.setAttribute('aria-expanded', open);
+    }
+
+    parentBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = parentPanel.getAttribute('data-open') !== 'true';
+      setParentPanelOpen(open);
+    });
+    parentClose.addEventListener('click', () => setParentPanelOpen(false));
+    document.addEventListener('click', (e) => {
+      if (!parentPanel.contains(e.target) && e.target !== parentBtn && !parentBtn.contains(e.target)) {
+        setParentPanelOpen(false);
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') setParentPanelOpen(false);
+    });
+
+    // State switcher (demo)
+    document.querySelectorAll('.parent-panel__state-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const state = btn.dataset.state;
+        document.querySelectorAll('.parent-panel__state-btn').forEach(b => b.setAttribute('aria-selected', b.dataset.state === state));
+        document.querySelectorAll('.parent-state-block').forEach(block => block.setAttribute('data-active', block.dataset.state === state));
+        // Update HUD button's state dot
+        parentBtn.setAttribute('data-state', state);
+      });
+    });
+
+    // Cancel pending application (demo)
+    const cancelBtn = document.getElementById('cancel-apply-btn');
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => {
+        SubTeam.toast('신청 취소됨 · 독립 팀 상태로 전환', 'danger');
+        // Switch to "none" state for demo continuity
+        document.querySelector('.parent-panel__state-btn[data-state="none"]').click();
       });
     }
   });
