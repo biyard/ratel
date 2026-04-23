@@ -66,3 +66,25 @@ async fn test_create_meet_unauthenticated() {
     };
     assert_ne!(status, 200, "unauthenticated create_meet should fail");
 }
+
+#[tokio::test]
+async fn test_get_meet_returns_response_with_space_action() {
+    let ctx = TestContext::setup().await;
+    let space_id = seed_creator_space(&ctx).await;
+
+    let (_, _, create_body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/spaces/{}/meets", space_id),
+        headers: ctx.test_user.1.clone(),
+    };
+    let meet_sk = create_body["sk"].as_str().unwrap();
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/spaces/{}/meets/{}", space_id, meet_sk),
+        headers: ctx.test_user.1.clone(),
+    };
+    assert_eq!(status, 200, "get_meet: {:?}", body);
+    assert_eq!(body["sk"].as_str().unwrap(), meet_sk);
+    assert!(body["space_action"].is_object(), "space_action must be populated");
+}
