@@ -275,7 +275,7 @@ fn ReplyThreadView(
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
                         disabled: reply_text().trim().is_empty()
-                                                                                                                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                                                                                                    && reply_pending_images.read().is_empty(),
                         on_mention_query_change,
                         on_composer_focus,
                         priority_user_pks: reply_priority,
@@ -444,7 +444,9 @@ pub fn DiscussionArenaPage(
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         document::Script { r#type: "module", src: asset!("./script.js") }
 
-        div { class: "discussion-arena",
+        div {
+            class: "discussion-arena",
+            "data-testid": "discussion-arena-overlay",
             div { class: "topbar",
                 div { class: "topbar__left",
                     button {
@@ -623,7 +625,7 @@ pub fn DiscussionArenaPage(
                                 on_submit: move |_| on_submit_comment(()),
                                 placeholder: tr.comment_placeholder.to_string(),
                                 disabled: comment_text().trim().is_empty()
-                                                                                                                                                                                                                                                                                                                                                                    && pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                                                                                                                                                    && pending_images.read().is_empty(),
                                 on_mention_query_change,
                                 on_composer_focus,
                                 priority_user_pks: top_priority,
@@ -1157,7 +1159,7 @@ fn CommentItem(
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
                         disabled: reply_text().trim().is_empty()
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    && reply_pending_images.read().is_empty(),
                         on_mention_query_change,
                         on_composer_focus,
                         priority_user_pks: reply_priority,
