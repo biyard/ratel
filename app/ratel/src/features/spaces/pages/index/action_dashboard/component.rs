@@ -207,9 +207,7 @@ pub fn ActionDashboard(
                         {
                             let action = action.clone();
                             let key = action.action_id.clone();
-                            let lock = super::dependency_lock::resolve_dependency_lock(
-                                &action, &lookup,
-                            );
+                            let lock = super::dependency_lock::resolve_dependency_lock(&action, &lookup);
                             match action.action_type {
                                 SpaceActionType::Poll => rsx! {
                                     PollActionCard {
@@ -415,6 +413,7 @@ fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus, space_id: Space
                     | SpaceActionType::Poll
             ));
     let mut overlay: ActiveActionOverlaySignal = use_context();
+    let nav = use_navigator();
     let action_id = action.action_id.clone();
     let space_id_for_click = space_id.clone();
     let action_type = action.action_type.clone();
@@ -440,7 +439,10 @@ fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus, space_id: Space
                     }
                     SpaceActionType::TopicDiscussion => {
                         let did: SpacePostEntityType = aid.into();
-                        overlay.0.set(Some(ActiveActionOverlay::Discussion(sid, did)));
+                        nav.push(crate::Route::SpaceDiscussionPage {
+                            space_id: sid,
+                            discussion_id: did,
+                        });
                     }
                     SpaceActionType::Follow => {} // Follow has no in-overlay detail view yet; skip.
                 }

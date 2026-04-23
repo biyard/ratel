@@ -2,9 +2,6 @@ use crate::features::spaces::pages::actions::types::SpaceActionSummary;
 use crate::features::spaces::pages::index::action_dashboard::dependency_lock::{
     open_locked_popup, resolve_outstanding_actions, DependencyLock,
 };
-use crate::features::spaces::pages::index::action_pages::quiz::{
-    ActiveActionOverlay, ActiveActionOverlaySignal,
-};
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::providers::use_space_context;
 
@@ -17,13 +14,12 @@ pub fn DiscussionActionCard(
 ) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
     let lang = use_language();
-    let mut overlay: ActiveActionOverlaySignal = use_context();
     let nav = use_navigator();
     let mut space_ctx = use_space_context();
     let mut popup = use_popup();
 
     let action_id = action.action_id.clone();
-    let action_id_overlay = action_id.clone();
+    let action_id_click = action_id.clone();
     let action_id_edit = action_id.clone();
     let prerequisite = action.prerequisite;
     let locked = lock.locked;
@@ -40,14 +36,17 @@ pub fn DiscussionActionCard(
             "data-type": "discuss",
             onclick: {
                 let outstanding = outstanding.clone();
-                let action_id_overlay = action_id_overlay.clone();
+                let action_id_click = action_id_click.clone();
                 move |_| {
                     if locked {
                         open_locked_popup(&mut popup, space_id(), outstanding.clone());
                         return;
                     }
-                    let discussion_id: SpacePostEntityType = action_id_overlay.clone().into();
-                    overlay.0.set(Some(ActiveActionOverlay::Discussion(space_id(), discussion_id)));
+                    let discussion_id: SpacePostEntityType = action_id_click.clone().into();
+                    nav.push(crate::Route::SpaceDiscussionPage {
+                        space_id: space_id(),
+                        discussion_id,
+                    });
                 }
             },
 
@@ -162,10 +161,7 @@ pub fn DiscussionActionCard(
                     "{action.credits} CR"
                 }
                 if locked {
-                    button {
-                        class: "quest-card__cta quest-card__cta--locked",
-                        "{tr.locked_see_required}"
-                    }
+                    button { class: "quest-card__cta quest-card__cta--locked", "{tr.locked_see_required}" }
                 } else {
                     button { class: "quest-card__cta quest-card__cta--start", "{tr.start_quest}" }
                 }

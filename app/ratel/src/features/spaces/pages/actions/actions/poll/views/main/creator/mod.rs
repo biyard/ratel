@@ -9,7 +9,9 @@ mod config_card;
 use content_card::ContentCard;
 use config_card::ConfigCard;
 
-use crate::features::spaces::pages::actions::components::ActionEditTopbar;
+use crate::features::spaces::pages::actions::components::{
+    ActionEditFooter, ActionEditSaveBus, ActionEditTopbar,
+};
 
 #[component]
 pub fn PollCreatorPage(
@@ -24,13 +26,18 @@ pub fn PollCreatorPage(
     let initial_title = ctx.poll.read().title.clone();
     let title = use_signal(|| initial_title);
 
+    // Provide the save bus so cards (Content/Config) can flush pending
+    // debounced autosaves when the footer's Save button is pressed.
+    ActionEditSaveBus::provide();
+    let current_page = use_signal(|| 0usize);
+
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div { class: "arena",
             ActionEditTopbar {
                 space_name: space.title.clone(),
                 action_type_label: tr.type_badge_label.to_string(),
-                action_type_key: "poll".to_string(),
+                action_type_key: "poll",
                 title,
                 on_title_change: move |_v: String| {},
                 editable_title: false,
@@ -42,9 +49,14 @@ pub fn PollCreatorPage(
                 },
             }
             main { class: "pager",
-                ContentCard {}
-                ConfigCard {}
+                div {
+                    class: "pager__track",
+                    style: "transform: translateX(-{current_page() * 100}%);",
+                    ContentCard {}
+                    ConfigCard {}
+                }
             }
+            ActionEditFooter { current_page, total_pages: 2, action_type_key: "poll" }
         }
     }
 }

@@ -89,13 +89,10 @@ pub fn PrerequisiteCard(space_id: ReadSignal<SpacePartition>) -> Element {
                                                     .action_id
                                                     .clone()
                                                     .into();
-                                                overlay
-                                                    .0
-                                                    .set(
-                                                        Some(
-                                                            ActiveActionOverlay::Discussion(space_id(), discussion_id),
-                                                        ),
-                                                    );
+                                                nav.push(crate::Route::SpaceDiscussionPage {
+                                                    space_id: space_id(),
+                                                    discussion_id,
+                                                });
                                             }
                                             SpaceActionType::Follow if !is_done => {
                                                 let route = action.get_url(&space_id());
