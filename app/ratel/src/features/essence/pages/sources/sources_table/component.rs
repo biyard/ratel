@@ -138,18 +138,35 @@ fn SourceRow(source: EssenceResponse) -> Element {
             span { class: "essence-src-icon {kind_class}", {kind_icon(source.source_kind)} }
 
             div { class: "essence-src-title-wrap",
-                span { class: "essence-src-title", "{source.title}" }
+                // Defensive strip: titles are supposed to be stored as
+                // plain text (see `common::utils::html::summarize_plain`
+                // used by the indexer), but older rows predating the
+                // tag-strip fix may still contain raw markup like
+                // `<p>option 1</p>`. Running `strip_html_tags` at render
+                // time cleans those up without needing to re-migrate.
+                span { class: "essence-src-title",
+                    "{crate::common::utils::html::strip_html_tags(&source.title)}"
+                }
+                // Per-row kind badge. Every row gets one so rows share the
+                // same two-line height; comment rows additionally pick up
+                // a colored `--comment` / `--discussion` modifier to echo
+                // their icon tint.
                 span { class: "essence-src-meta",
-                    span { class: "essence-src-meta__link", "{source.source_path}" }
-                    if source.source_kind == EssenceSourceKind::PostComment {
-                        span { class: "essence-src-meta__dot", "·" }
-                        span { class: "essence-src-meta__badge essence-src-meta__badge--comment",
-                            "{tr.tag_post_comment}"
-                        }
-                    } else if source.source_kind == EssenceSourceKind::DiscussionComment {
-                        span { class: "essence-src-meta__dot", "·" }
-                        span { class: "essence-src-meta__badge essence-src-meta__badge--discussion",
-                            "{tr.tag_discussion_comment}"
+                    {
+                        let (label, modifier) = match source.source_kind {
+                            EssenceSourceKind::Notion => (tr.tag_notion, ""),
+                            EssenceSourceKind::Post => (tr.tag_post, ""),
+                            EssenceSourceKind::PostComment => {
+                                (tr.tag_post_comment, "essence-src-meta__badge--comment")
+                            }
+                            EssenceSourceKind::Poll => (tr.tag_poll, ""),
+                            EssenceSourceKind::Quiz => (tr.tag_quiz, ""),
+                            EssenceSourceKind::DiscussionComment => {
+                                (tr.tag_discussion_comment, "essence-src-meta__badge--discussion")
+                            }
+                        };
+                        rsx! {
+                            span { class: "essence-src-meta__badge {modifier}", "{label}" }
                         }
                     }
                 }

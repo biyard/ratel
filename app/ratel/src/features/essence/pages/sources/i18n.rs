@@ -50,9 +50,15 @@ translate! {
     // Row menu (`...` popover)
     menu_delete: { en: "Delete", ko: "삭제" },
 
-    // Comment parent-kind badge
-    tag_post_comment: { en: "on post", ko: "포스트 댓글" },
-    tag_discussion_comment: { en: "on discussion", ko: "토론 댓글" },
+    // Row kind badges — singular forms for per-row meta. Kept separate
+    // from the `kind_*` strings that the filter chips use (plural:
+    // "Posts", "Comments") so the row badge reads naturally.
+    tag_notion: { en: "Notion", ko: "Notion" },
+    tag_post: { en: "Post", ko: "포스트" },
+    tag_poll: { en: "Poll", ko: "투표" },
+    tag_quiz: { en: "Quiz", ko: "퀴즈" },
+    tag_post_comment: { en: "Post comment", ko: "포스트 댓글" },
+    tag_discussion_comment: { en: "Discussion comment", ko: "토론 댓글" },
 
     // Pagination
     pagination_prefix: { en: "Showing", ko: "" },
