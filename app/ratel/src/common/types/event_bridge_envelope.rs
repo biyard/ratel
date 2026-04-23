@@ -53,6 +53,10 @@ pub enum DetailType {
     EssenceDeleteDiscussionComment,
     EssenceDeletePoll,
     EssenceDeleteQuiz,
+    /// Fires on SubTeamAnnouncement MODIFY with status=Published. Drives the
+    /// broadcast fan-out: create a pinned Post in every recognized sub-team
+    /// feed and notify each member.
+    SubTeamAnnouncementPublished,
     #[serde(other)]
     Unknown,
 }
@@ -247,6 +251,13 @@ impl EventBridgeEnvelope {
                 let cfg = crate::common::CommonConfig::default();
                 let cli = cfg.dynamodb();
                 crate::features::essence::services::detach_quiz(cli, &quiz).await
+            }
+            DetailType::SubTeamAnnouncementPublished => {
+                let announcement: crate::features::sub_team::models::SubTeamAnnouncement =
+                    DetailType::parse_detail(&self.detail)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                crate::features::sub_team::services::announcement_fanout::handle_announcement_published(cli, announcement).await
             }
             DetailType::Unknown => {
                 tracing::warn!(

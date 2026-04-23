@@ -1,6 +1,6 @@
 use super::*;
 
-use crate::common::types::{EntityType, ListResponse, Partition};
+use crate::common::types::{EntityType, InboxPayload, ListResponse, Partition};
 use crate::features::auth::{UserTeam, UserTeamQueryOption};
 use crate::features::posts::models::Team;
 use crate::features::social::pages::member::dto::TeamRole;
@@ -1289,6 +1289,564 @@ async fn test_parent_relationship_endpoint_reports_status_correctly() {
     assert!(matches!(rel.status, ParentRelationshipStatus::PendingSubTeam));
     assert_eq!(rel.pending_parent_team_id.as_deref(), Some(parent_id.as_str()));
     assert!(rel.latest_application_id.is_some());
+}
+
+// ── Announcement lifecycle ──────────────────────────────────────────
+
+#[tokio::test]
+async fn test_create_update_publish_announcement_lifecycle() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+
+    // Create draft.
+    let (status, _, created) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/announcements", parent_id),
+        headers: ctx.test_user.1.clone(),
+        body: {
+            "body": { "title": "Welcome", "body": "Hello world" }
+        },
+        response_type: crate::features::sub_team::types::SubTeamAnnouncementResponse,
+    };
+    assert_eq!(status, 200, "create: {:?}", created);
+    assert_eq!(created.title, "Welcome");
+    assert!(matches!(
+        created.status,
+        crate::features::sub_team::models::SubTeamAnnouncementStatus::Draft
+    ));
+    let ann_id = created.id.clone();
+
+    // Update draft.
+    let (status, _, updated) = crate::test_patch! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/announcements/{}", parent_id, ann_id),
+        headers: ctx.test_user.1.clone(),
+        body: {
+            "body": { "title": "Greetings" }
+        },
+        response_type: crate::features::sub_team::types::SubTeamAnnouncementResponse,
+    };
+    assert_eq!(status, 200, "update: {:?}", updated);
+    assert_eq!(updated.title, "Greetings");
+
+    // Publish.
+    let (status, _, published) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/announcements/{}/publish",
+            parent_id, ann_id
+        ),
+        headers: ctx.test_user.1.clone(),
+        body: {},
+        response_type: crate::features::sub_team::types::SubTeamAnnouncementResponse,
+    };
+    assert_eq!(status, 200, "publish: {:?}", published);
+    assert!(matches!(
+        published.status,
+        crate::features::sub_team::models::SubTeamAnnouncementStatus::Published
+    ));
+    assert!(published.published_at.is_some());
+}
+
+#[tokio::test]
+async fn test_announcement_edit_rejected_after_publish() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+
+    let (_, _, created) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/announcements", parent_id),
+        headers: ctx.test_user.1.clone(),
+        body: { "body": { "title": "T", "body": "B" } },
+        response_type: crate::features::sub_team::types::SubTeamAnnouncementResponse,
+    };
+    let ann_id = created.id.clone();
+
+    let (s, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/announcements/{}/publish",
+            parent_id, ann_id
+        ),
+        headers: ctx.test_user.1.clone(),
+        body: {}
+    };
+    assert_eq!(s, 200);
+
+    // Any subsequent PATCH must fail with CONFLICT.
+    let (status, _, _) = crate::test_patch! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/announcements/{}", parent_id, ann_id),
+        headers: ctx.test_user.1.clone(),
+        body: { "body": { "title": "nope" } }
+    };
+    assert_ne!(status, 200);
+}
+
+#[tokio::test]
+async fn test_publish_rejected_when_too_many_sub_teams() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+
+    // Insert 51 SubTeamLink rows directly to exceed the 50-cap.
+    for _ in 0..51 {
+        let child_id = uuid::Uuid::new_v4().to_string();
+        let link = SubTeamLink::new(
+            parent_pk.clone(),
+            child_id,
+            ctx.test_user.0.pk.to_string(),
+            "fake-app".to_string(),
+        );
+        link.create(&ctx.ddb).await.unwrap();
+    }
+
+    let (_, _, ann) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/announcements", parent_id),
+        headers: ctx.test_user.1.clone(),
+        body: { "body": { "title": "T", "body": "B" } },
+        response_type: crate::features::sub_team::types::SubTeamAnnouncementResponse,
+    };
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/announcements/{}/publish",
+            parent_id, ann.id
+        ),
+        headers: ctx.test_user.1.clone(),
+        body: {}
+    };
+    assert_ne!(status, 200);
+}
+
+#[tokio::test]
+async fn test_publish_fans_out_pinned_post_per_recognized_sub_team() {
+    use crate::features::posts::models::Post;
+
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+
+    // Build two approved sub-teams through the lifecycle.
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+    let (child_user_a, child_headers_a) = ctx.create_another_user().await;
+    let (child_pk_a, child_id_a) = create_team_for(&ctx, &child_user_a, &child_headers_a).await;
+    let (child_user_b, child_headers_b) = ctx.create_another_user().await;
+    let (child_pk_b, child_id_b) = create_team_for(&ctx, &child_user_b, &child_headers_b).await;
+
+    for (child_id, child_headers) in [
+        (&child_id_a, &child_headers_a),
+        (&child_id_b, &child_headers_b),
+    ] {
+        let (_, _, app) = crate::test_post! {
+            app: ctx.app.clone(),
+            path: &format!("/api/teams/{}/parent/applications", child_id),
+            headers: child_headers.clone(),
+            body: {
+                "body": {
+                    "parent_team_id": parent_id,
+                    "form_values": {},
+                    "doc_agreements": []
+                }
+            },
+            response_type: SubTeamApplicationResponse,
+        };
+        let (s, _, _) = crate::test_post! {
+            app: ctx.app.clone(),
+            path: &format!(
+                "/api/teams/{}/sub-teams/applications/{}/approve",
+                parent_id, app.id
+            ),
+            headers: ctx.test_user.1.clone(),
+            body: {}
+        };
+        assert_eq!(s, 200);
+    }
+
+    // Create + publish the announcement through the controller.
+    let (_, _, ann) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/announcements", parent_id),
+        headers: ctx.test_user.1.clone(),
+        body: { "body": { "title": "Quarterly update", "body": "B" } },
+        response_type: crate::features::sub_team::types::SubTeamAnnouncementResponse,
+    };
+    let (s, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/announcements/{}/publish",
+            parent_id, ann.id
+        ),
+        headers: ctx.test_user.1.clone(),
+        body: {}
+    };
+    assert_eq!(s, 200);
+
+    // Invoke the fan-out handler directly (tests don't have the stream poller).
+    let source = crate::features::sub_team::models::SubTeamAnnouncement::get(
+        &ctx.ddb,
+        &parent_pk,
+        Some(EntityType::SubTeamAnnouncement(ann.id.clone())),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    crate::features::sub_team::services::announcement_fanout::handle_announcement_published(
+        &ctx.ddb,
+        source.clone(),
+    )
+    .await
+    .unwrap();
+
+    // Verify each child has one pinned-as-announcement Post.
+    for child_pk in [&child_pk_a, &child_pk_b] {
+        let (posts, _) = Post::find_by_user_pk(&ctx.ddb, child_pk, Post::opt().limit(10))
+            .await
+            .unwrap();
+        let pinned: Vec<_> = posts
+            .into_iter()
+            .filter(|p| {
+                p.pinned_as_announcement
+                    && p.announcement_id.as_deref() == Some(ann.id.as_str())
+            })
+            .collect();
+        assert_eq!(pinned.len(), 1, "expected 1 pinned post per child");
+        assert_eq!(pinned[0].title, "Quarterly update");
+        assert_eq!(
+            pinned[0].announcement_parent_team_id.as_deref(),
+            Some(parent_id.as_str())
+        );
+    }
+
+    // fan_out_count propagated on source announcement.
+    let refreshed = crate::features::sub_team::models::SubTeamAnnouncement::get(
+        &ctx.ddb,
+        &parent_pk,
+        Some(EntityType::SubTeamAnnouncement(ann.id.clone())),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    assert_eq!(refreshed.fan_out_count, 2);
+}
+
+#[tokio::test]
+async fn test_publish_demotes_previous_announcement_post() {
+    use crate::features::posts::models::Post;
+
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+
+    let (_, _, app) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers.clone(),
+        body: {
+            "body": { "parent_team_id": parent_id, "form_values": {}, "doc_agreements": [] }
+        },
+        response_type: SubTeamApplicationResponse,
+    };
+    let (s, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/applications/{}/approve",
+            parent_id, app.id
+        ),
+        headers: ctx.test_user.1.clone(),
+        body: {}
+    };
+    assert_eq!(s, 200);
+
+    // First publish.
+    let (_, _, ann1) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/announcements", parent_id),
+        headers: ctx.test_user.1.clone(),
+        body: { "body": { "title": "First", "body": "B1" } },
+        response_type: crate::features::sub_team::types::SubTeamAnnouncementResponse,
+    };
+    let (_, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/announcements/{}/publish",
+            parent_id, ann1.id
+        ),
+        headers: ctx.test_user.1.clone(),
+        body: {}
+    };
+    let src1 = crate::features::sub_team::models::SubTeamAnnouncement::get(
+        &ctx.ddb,
+        &parent_pk,
+        Some(EntityType::SubTeamAnnouncement(ann1.id.clone())),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    crate::features::sub_team::services::announcement_fanout::handle_announcement_published(
+        &ctx.ddb, src1,
+    )
+    .await
+    .unwrap();
+
+    // Second publish.
+    let (_, _, ann2) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/announcements", parent_id),
+        headers: ctx.test_user.1.clone(),
+        body: { "body": { "title": "Second", "body": "B2" } },
+        response_type: crate::features::sub_team::types::SubTeamAnnouncementResponse,
+    };
+    let (_, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/announcements/{}/publish",
+            parent_id, ann2.id
+        ),
+        headers: ctx.test_user.1.clone(),
+        body: {}
+    };
+    let src2 = crate::features::sub_team::models::SubTeamAnnouncement::get(
+        &ctx.ddb,
+        &parent_pk,
+        Some(EntityType::SubTeamAnnouncement(ann2.id.clone())),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    crate::features::sub_team::services::announcement_fanout::handle_announcement_published(
+        &ctx.ddb, src2,
+    )
+    .await
+    .unwrap();
+
+    // The old ann1 post must be demoted; the new ann2 post is the only pinned one.
+    let (posts, _) = Post::find_by_user_pk(&ctx.ddb, &child_pk, Post::opt().limit(20))
+        .await
+        .unwrap();
+    let pinned: Vec<_> = posts
+        .iter()
+        .filter(|p| p.pinned_as_announcement)
+        .collect();
+    assert_eq!(pinned.len(), 1, "only latest should remain pinned");
+    assert_eq!(pinned[0].announcement_id.as_deref(), Some(ann2.id.as_str()));
+
+    // The demoted post exists but is no longer pinned.
+    let demoted: Vec<_> = posts
+        .iter()
+        .filter(|p| p.announcement_id.as_deref() == Some(ann1.id.as_str()))
+        .collect();
+    assert_eq!(demoted.len(), 1);
+    assert!(!demoted[0].pinned_as_announcement);
+}
+
+#[tokio::test]
+async fn test_announcement_creates_notification_per_member_of_each_sub_team() {
+    use crate::common::models::notification::UserInboxNotification;
+
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+
+    // Add two more members to child team.
+    add_n_members(&ctx, &child_pk, 2).await;
+
+    let (_, _, app) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers,
+        body: { "body": { "parent_team_id": parent_id, "form_values": {}, "doc_agreements": [] } },
+        response_type: SubTeamApplicationResponse,
+    };
+    let (_, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/applications/{}/approve",
+            parent_id, app.id
+        ),
+        headers: ctx.test_user.1.clone(),
+        body: {}
+    };
+
+    let (_, _, ann) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/announcements", parent_id),
+        headers: ctx.test_user.1.clone(),
+        body: { "body": { "title": "Hi all", "body": "Body" } },
+        response_type: crate::features::sub_team::types::SubTeamAnnouncementResponse,
+    };
+    let (_, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/announcements/{}/publish",
+            parent_id, ann.id
+        ),
+        headers: ctx.test_user.1.clone(),
+        body: {}
+    };
+    let src = crate::features::sub_team::models::SubTeamAnnouncement::get(
+        &ctx.ddb,
+        &parent_pk,
+        Some(EntityType::SubTeamAnnouncement(ann.id.clone())),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    crate::features::sub_team::services::announcement_fanout::handle_announcement_published(
+        &ctx.ddb, src,
+    )
+    .await
+    .unwrap();
+
+    // child has owner (child_user) + 2 others → 3 members → 3 announcement
+    // inbox rows for this announcement.
+    let members = crate::features::sub_team::services::announcement_fanout::resolve_team_members(
+        &ctx.ddb,
+        &child_pk,
+    )
+    .await
+    .unwrap();
+    assert!(members.len() >= 3, "expected ≥3 members: {:?}", members);
+
+    let mut found = 0;
+    for m in &members {
+        let opts = UserInboxNotification::opt().limit(50);
+        let (rows, _) = UserInboxNotification::query(&ctx.ddb, m.clone(), opts)
+            .await
+            .unwrap();
+        for r in rows {
+            if let InboxPayload::SubTeamAnnouncementReceived {
+                announcement_id, ..
+            } = r.payload
+            {
+                if announcement_id == ann.id {
+                    found += 1;
+                }
+            }
+        }
+    }
+    assert!(
+        found >= 3,
+        "expected ≥3 inbox rows across child members, found {found}"
+    );
+}
+
+#[tokio::test]
+async fn test_soft_delete_announcement_sets_status_deleted() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+
+    let (_, _, ann) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/announcements", parent_id),
+        headers: ctx.test_user.1.clone(),
+        body: { "body": { "title": "x", "body": "y" } },
+        response_type: crate::features::sub_team::types::SubTeamAnnouncementResponse,
+    };
+
+    let (status, _, _) = crate::test_delete! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/announcements/{}", parent_id, ann.id),
+        headers: ctx.test_user.1.clone(),
+    };
+    assert_eq!(status, 200);
+
+    let stored = crate::features::sub_team::models::SubTeamAnnouncement::get(
+        &ctx.ddb,
+        &parent_pk,
+        Some(EntityType::SubTeamAnnouncement(ann.id.clone())),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    assert!(matches!(
+        stored.status,
+        crate::features::sub_team::models::SubTeamAnnouncementStatus::Deleted
+    ));
+}
+
+#[tokio::test]
+async fn test_list_announcements_excludes_deleted_by_default() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+
+    // Create 2 announcements; delete one.
+    let (_, _, a1) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/announcements", parent_id),
+        headers: ctx.test_user.1.clone(),
+        body: { "body": { "title": "Kept", "body": "b" } },
+        response_type: crate::features::sub_team::types::SubTeamAnnouncementResponse,
+    };
+    let (_, _, a2) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/announcements", parent_id),
+        headers: ctx.test_user.1.clone(),
+        body: { "body": { "title": "Deleted", "body": "b" } },
+        response_type: crate::features::sub_team::types::SubTeamAnnouncementResponse,
+    };
+    let (_, _, _) = crate::test_delete! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/announcements/{}", parent_id, a2.id),
+        headers: ctx.test_user.1.clone(),
+    };
+
+    let (status, _, listed) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/announcements", parent_id),
+        headers: ctx.test_user.1.clone(),
+        response_type: ListResponse<crate::features::sub_team::types::SubTeamAnnouncementResponse>,
+    };
+    assert_eq!(status, 200);
+    assert!(listed.items.iter().any(|x| x.id == a1.id));
+    assert!(
+        !listed.items.iter().any(|x| x.id == a2.id),
+        "deleted ann must be excluded by default"
+    );
+}
+
+#[tokio::test]
+async fn test_announcement_list_supports_pagination() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    let _ = parent_pk;
+
+    // Create several. Default page limit is 50 so a smaller list is fine —
+    // smoke-test that ListResponse shape is honored and items are returned.
+    for i in 0..3 {
+        let (_, _, _) = crate::test_post! {
+            app: ctx.app.clone(),
+            path: &format!("/api/teams/{}/sub-teams/announcements", parent_id),
+            headers: ctx.test_user.1.clone(),
+            body: {
+                "body": { "title": format!("A{}", i), "body": "b" }
+            }
+        };
+    }
+
+    let (status, _, listed) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/announcements", parent_id),
+        headers: ctx.test_user.1.clone(),
+        response_type: ListResponse<crate::features::sub_team::types::SubTeamAnnouncementResponse>,
+    };
+    assert_eq!(status, 200);
+    assert!(listed.items.len() >= 3);
 }
 
 // ── Compile-time silence (unused-import guard) ───────────────────

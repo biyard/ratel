@@ -1,6 +1,8 @@
 use crate::common::*;
 
-use crate::features::sub_team::models::{SubTeamApplicationStatus, SubTeamFormFieldType};
+use crate::features::sub_team::models::{
+    BroadcastTarget, SubTeamAnnouncementStatus, SubTeamApplicationStatus, SubTeamFormFieldType,
+};
 
 // ── Settings ─────────────────────────────────────────────────────
 
@@ -290,6 +292,57 @@ pub struct ApplicationDecisionReasonRequest {
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct ApplicationReturnCommentRequest {
     pub comment: String,
+}
+
+// ── Announcements ──────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct SubTeamAnnouncementResponse {
+    pub id: String,
+    pub title: String,
+    pub body: String,
+    pub author_user_id: String,
+    pub status: SubTeamAnnouncementStatus,
+    pub target_type: BroadcastTarget,
+    pub fan_out_count: i32,
+    pub created_at: i64,
+    pub updated_at: i64,
+    pub published_at: Option<i64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct CreateSubTeamAnnouncementRequest {
+    pub title: String,
+    pub body: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct UpdateSubTeamAnnouncementRequest {
+    #[serde(default)]
+    pub title: Option<String>,
+    #[serde(default)]
+    pub body: Option<String>,
+}
+
+#[cfg(feature = "server")]
+impl From<crate::features::sub_team::models::SubTeamAnnouncement> for SubTeamAnnouncementResponse {
+    fn from(a: crate::features::sub_team::models::SubTeamAnnouncement) -> Self {
+        Self {
+            id: a.announcement_id,
+            title: a.title,
+            body: a.body,
+            author_user_id: a.author_user_id,
+            status: a.status,
+            target_type: a.target_type,
+            fan_out_count: a.fan_out_count,
+            created_at: a.created_at,
+            updated_at: a.updated_at,
+            published_at: a.published_at,
+        }
+    }
 }
 
 #[cfg(feature = "server")]

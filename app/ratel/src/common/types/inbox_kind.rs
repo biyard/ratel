@@ -12,6 +12,8 @@ pub enum InboxKind {
     SubTeamApplicationApproved,
     SubTeamApplicationRejected,
     SubTeamApplicationReturned,
+    SubTeamAnnouncementReceived,
+    SubTeamAnnouncementComment,
 }
 
 impl Default for InboxKind {
@@ -31,6 +33,8 @@ impl InboxKind {
             InboxKind::SubTeamApplicationApproved => "STAPP_APR",
             InboxKind::SubTeamApplicationRejected => "STAPP_REJ",
             InboxKind::SubTeamApplicationReturned => "STAPP_RET",
+            InboxKind::SubTeamAnnouncementReceived => "STANN_RCV",
+            InboxKind::SubTeamAnnouncementComment => "STANN_CMT",
         }
     }
 }
@@ -91,6 +95,24 @@ pub enum InboxPayload {
         comment: String,
         cta_url: String,
     },
+    SubTeamAnnouncementReceived {
+        parent_team_id: String,
+        parent_team_name: String,
+        announcement_id: String,
+        title: String,
+        post_id: String,
+        post_pk: String,
+        cta_url: String,
+    },
+    SubTeamAnnouncementComment {
+        parent_team_id: String,
+        post_id: String,
+        post_pk: String,
+        commenter_user_id: String,
+        commenter_name: String,
+        comment_preview: String,
+        cta_url: String,
+    },
 }
 
 impl InboxPayload {
@@ -104,6 +126,8 @@ impl InboxPayload {
             InboxPayload::SubTeamApplicationApproved { cta_url, .. } => cta_url,
             InboxPayload::SubTeamApplicationRejected { cta_url, .. } => cta_url,
             InboxPayload::SubTeamApplicationReturned { cta_url, .. } => cta_url,
+            InboxPayload::SubTeamAnnouncementReceived { cta_url, .. } => cta_url,
+            InboxPayload::SubTeamAnnouncementComment { cta_url, .. } => cta_url,
         }
     }
 }
@@ -139,6 +163,12 @@ impl InboxPayload {
             }
             InboxPayload::SubTeamApplicationReturned { .. } => {
                 InboxKind::SubTeamApplicationReturned
+            }
+            InboxPayload::SubTeamAnnouncementReceived { .. } => {
+                InboxKind::SubTeamAnnouncementReceived
+            }
+            InboxPayload::SubTeamAnnouncementComment { .. } => {
+                InboxKind::SubTeamAnnouncementComment
             }
         }
     }

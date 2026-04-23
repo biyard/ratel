@@ -94,6 +94,20 @@ pub enum SubTeamError {
     #[translate(en = "Announcement not found", ko = "공지를 찾을 수 없습니다.")]
     AnnouncementNotFound,
 
+    #[error("announcement not in draft")]
+    #[translate(
+        en = "Announcement is no longer in draft and cannot be edited",
+        ko = "초안 상태가 아닌 공지는 수정할 수 없습니다."
+    )]
+    AnnouncementNotInDraft,
+
+    #[error("announcement publish failed")]
+    #[translate(
+        en = "Announcement could not be published",
+        ko = "공지를 게시하지 못했습니다."
+    )]
+    AnnouncementPublishFailed,
+
     #[error("broadcast would exceed sub-team cap")]
     #[translate(
         en = "Broadcasting to more than 50 sub-teams is not supported in this release",
@@ -128,7 +142,9 @@ impl SubTeamError {
             | FormFieldNotFound
             | AnnouncementNotFound
             | SubTeamLinkNotFound => StatusCode::NOT_FOUND,
-            AlreadyRecognizedSubTeam | ApplicationInFlight => StatusCode::CONFLICT,
+            AlreadyRecognizedSubTeam | ApplicationInFlight | AnnouncementNotInDraft => {
+                StatusCode::CONFLICT
+            }
             BroadcastTooManySubTeams => StatusCode::UNPROCESSABLE_ENTITY,
             _ => StatusCode::BAD_REQUEST,
         }
