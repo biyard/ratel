@@ -36,6 +36,7 @@ export interface RegionalLambdaStackProps extends StackProps {
 
   apiDomain: string;
   baseDomain: string;
+  runtimeEnvironment?: { [key: string]: string };
 
   // Optional — when provided, the Lambda is placed in this VPC (required to
   // resolve CloudMap private DNS for Qdrant). Use the same VPC that hosts Qdrant.
@@ -76,6 +77,7 @@ export class RegionalLambdaStack extends Stack {
       DISABLE_ANSI: "true",
       NO_COLOR: "true",
       GOOGLE_APPLICATION_CREDENTIALS: ".gcp/firebase-service-account.json",
+      ...(props.runtimeEnvironment ?? {}),
     };
 
     // Bootstrap binary produced by `scripts/building-lambda-bootstrap.sh` and
