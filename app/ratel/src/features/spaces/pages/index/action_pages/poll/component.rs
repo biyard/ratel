@@ -91,6 +91,8 @@ pub fn ActionPollViewer(
         role,
         poll.space_action.prerequisite,
         space.status,
+        poll.space_action.status.as_ref(),
+        true,
         space.join_anytime,
     );
 

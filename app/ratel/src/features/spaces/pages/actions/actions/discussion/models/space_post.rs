@@ -19,11 +19,6 @@ pub struct SpacePost {
     pub updated_at: i64,
 
     #[serde(default)]
-    pub started_at: i64,
-    #[serde(default)]
-    pub ended_at: i64,
-
-    #[serde(default)]
     pub title: String,
     #[serde(default)]
     pub html_contents: String,
@@ -49,23 +44,17 @@ impl SpacePost {
         html_contents: String,
         category_name: String,
         author: &crate::common::models::space::SpaceUser,
-        started_at: Option<i64>,
-        ended_at: Option<i64>,
+        _started_at: Option<i64>,
+        _ended_at: Option<i64>,
     ) -> Self {
         let pk: Partition = space_pk.into();
         let now = crate::common::utils::time::get_now_timestamp_millis();
-        let (default_started_at, default_ended_at) =
-            crate::features::spaces::pages::actions::models::SpaceAction::default_schedule(now);
         let uuid = uuid::Uuid::now_v7().to_string();
-        let started_at = started_at.unwrap_or(default_started_at);
-        let ended_at = ended_at.unwrap_or(default_ended_at);
         Self {
             pk,
             sk: EntityType::SpacePost(uuid),
             created_at: now,
             updated_at: now,
-            started_at,
-            ended_at,
             title,
             html_contents,
             category_name,
@@ -185,11 +174,11 @@ impl SpacePost {
 impl From<(SpacePost, SpaceUserRole)>
     for crate::features::spaces::pages::actions::types::SpaceActionSummary
 {
-    fn from((post, role): (SpacePost, SpaceUserRole)) -> Self {
+    fn from((post, _role): (SpacePost, SpaceUserRole)) -> Self {
         use crate::features::spaces::pages::actions::types::SpaceActionType;
         let action_id = post.sk.to_string();
         Self {
-            user_participated: post.can_participate(&role).is_ok(),
+            user_participated: false,
             action_id,
             action_type: SpaceActionType::TopicDiscussion,
             title: post.title,
@@ -201,26 +190,25 @@ impl From<(SpacePost, SpaceUserRole)>
             quiz_score: None,
             quiz_total_score: None,
             quiz_passed: None,
-            started_at: Some(post.started_at),
-            ended_at: Some(post.ended_at),
             credits: 0,
             prerequisite: false,
             comment_count: Some(post.comments),
+            status: None,
+            depends_on: Vec::new(),
+            dependencies_met: true,
         }
     }
 }
 
 impl SpacePost {
-    pub fn status(&self) -> DiscussionStatus {
-        let now = crate::common::utils::time::get_now_timestamp_millis();
-        let started_at = self.started_at;
-        let ended_at = self.ended_at;
-        if now < started_at {
-            DiscussionStatus::NotStarted
-        } else if now <= ended_at {
-            DiscussionStatus::InProgress
-        } else {
-            DiscussionStatus::Finish
+    pub fn status_from(
+        action_status: Option<&crate::features::spaces::pages::actions::types::SpaceActionStatus>,
+    ) -> DiscussionStatus {
+        use crate::features::spaces::pages::actions::types::SpaceActionStatus;
+        match action_status {
+            Some(SpaceActionStatus::Ongoing) => DiscussionStatus::InProgress,
+            Some(SpaceActionStatus::Finish) => DiscussionStatus::Finish,
+            _ => DiscussionStatus::NotStarted,
         }
     }
 
@@ -242,12 +230,12 @@ impl SpacePost {
     }
 
     pub fn can_participate(
-        &self,
+        action_status: Option<&crate::features::spaces::pages::actions::types::SpaceActionStatus>,
         user_role: &SpaceUserRole,
     ) -> crate::features::spaces::pages::actions::actions::discussion::Result<()> {
         match user_role {
             SpaceUserRole::Creator | SpaceUserRole::Participant => {
-                if self.status() == DiscussionStatus::InProgress {
+                if Self::status_from(action_status) == DiscussionStatus::InProgress {
                     Ok(())
                 } else {
                     Err(

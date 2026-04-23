@@ -30,7 +30,7 @@ pub fn FollowActionPage(
     let space = crate::features::spaces::space_common::hooks::use_space()();
     let locked = crate::features::spaces::pages::actions::is_action_locked(
         space.status,
-        action_loader().started_at,
+        action_loader().status.as_ref(),
     );
 
     // Edit-mode override: creators can flip this from the settings

@@ -33,12 +33,19 @@ pub enum SpaceActionError {
     )]
     MembershipCheckFailed,
 
-    #[error("invalid time range")]
+    #[error("invalid status transition")]
     #[translate(
-        en = "Start time must be before end time",
-        ko = "시작 시간은 종료 시간보다 이전이어야 합니다."
+        en = "Invalid action status transition",
+        ko = "허용되지 않은 액션 상태 전이입니다."
     )]
-    InvalidTimeRange,
+    InvalidStatusTransition,
+
+    #[error("invalid dependency")]
+    #[translate(
+        en = "Invalid action dependency",
+        ko = "유효하지 않은 액션 의존성입니다."
+    )]
+    InvalidDependency,
 }
 
 #[cfg(feature = "server")]
@@ -46,7 +53,9 @@ impl SpaceActionError {
     pub fn status_code(&self) -> bdk::prelude::axum::http::StatusCode {
         use bdk::prelude::axum::http::StatusCode;
         match self {
-            SpaceActionError::InvalidTimeRange => StatusCode::BAD_REQUEST,
+            SpaceActionError::InvalidStatusTransition | SpaceActionError::InvalidDependency => {
+                StatusCode::BAD_REQUEST
+            }
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
