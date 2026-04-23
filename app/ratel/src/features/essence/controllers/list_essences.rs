@@ -95,10 +95,10 @@ async fn collect_filtered_page(
     kind: KindFilter,
     wanted: usize,
 ) -> Result<(Vec<Essence>, Option<String>)> {
-    if matches!(kind, KindFilter::All) {
-        return Essence::list_for_user(cli, user_pk, sort, bookmark, wanted as i32).await;
-    }
-
+    // Even `KindFilter::All` must go through the batching loop: the GSI
+    // query uses `filter_sk_prefix("ESSENCE#")`, which DynamoDB applies
+    // AFTER `Limit`, so a single scan at `wanted` rows returns fewer than
+    // requested whenever other entity types share the user's gsi_pk.
     const SCAN_BATCH: i32 = 50;
     const MAX_SCANS: u8 = 5;
 

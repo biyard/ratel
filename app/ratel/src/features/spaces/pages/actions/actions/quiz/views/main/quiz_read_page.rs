@@ -129,13 +129,17 @@ pub fn QuizReadPage(
         }
     });
 
-    let now = crate::common::utils::time::get_now_timestamp_millis();
-    let is_in_progress = now >= quiz.started_at && now <= quiz.ended_at;
+    let is_in_progress = matches!(
+        quiz.space_action.status,
+        Some(crate::features::spaces::pages::actions::types::SpaceActionStatus::Ongoing)
+    );
     let role = use_space_role()();
     let can_execute_action = crate::features::spaces::pages::actions::can_execute_space_action(
         role,
         quiz.space_action.prerequisite,
         space.status,
+        quiz.space_action.status.as_ref(),
+        true,
         space.join_anytime,
     );
     let has_passed = quiz.passed.unwrap_or(false);
@@ -215,10 +219,10 @@ pub fn QuizReadPage(
                     }
                 },
                 div { class: "w-full",
-                    div { class: "text-[28px]/[34px] font-bold text-text-primary", "{quiz.title}" }
+                    div { class: "font-bold text-[28px]/[34px] text-text-primary", "{quiz.title}" }
 
-                    div { class: "flex items-center justify-end border-y border-card-border py-4",
-                        div { class: "shrink-0 text-[14px] font-light text-text-primary",
+                    div { class: "flex justify-end items-center py-4 border-y border-card-border",
+                        div { class: "font-light shrink-0 text-[14px] text-text-primary",
                             "{time_ago(quiz.created_at)}"
                         }
                     }
@@ -268,6 +272,8 @@ pub fn QuizReadPage(
                         }
                     }
 
+
+
                     if !is_last_question && total_questions > 0 {
                         Button {
                             style: ButtonStyle::Outline,
@@ -297,25 +303,29 @@ pub fn QuizReadPage(
                 },
                 div { class: "w-full",
                     if !is_in_progress {
-                        if now < quiz.started_at {
-                            div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
-                                {i18n.quiz_not_started}
+                        if matches!(
+                            quiz.space_action.status,
+                            Some(crate::features::spaces::pages::actions::types::SpaceActionStatus::Finish)
+                        )
+                        {
+                            div { class: "p-3 text-sm rounded-lg bg-banner-bg text-banner-text",
+                                {i18n.quiz_ended}
                             }
                         } else {
-                            div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
-                                {i18n.quiz_ended}
+                            div { class: "p-3 text-sm rounded-lg bg-banner-bg text-banner-text",
+                                {i18n.quiz_not_started}
                             }
                         }
                     }
 
                     if is_in_progress && !can_execute_action {
-                        div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
+                        div { class: "p-3 text-sm rounded-lg bg-banner-bg text-banner-text",
                             {i18n.no_permission}
                         }
                     }
 
                     if is_in_progress && can_execute_action && has_passed {
-                        div { class: "rounded-lg bg-banner-success-bg p-3 text-sm text-banner-success-text",
+                        div { class: "p-3 text-sm rounded-lg bg-banner-success-bg text-banner-success-text",
                             {i18n.already_passed}
                         }
                     }
@@ -323,13 +333,13 @@ pub fn QuizReadPage(
                     if is_in_progress && can_execute_action && !has_passed
                         && quiz.attempt_count >= total_allowed && can_respond
                     {
-                        div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
+                        div { class: "p-3 text-sm rounded-lg bg-banner-bg text-banner-text",
                             {i18n.no_remaining_attempts}
                         }
                     }
 
                     if quiz.questions.is_empty() {
-                        div { class: "flex items-center justify-center py-10 text-foreground-muted",
+                        div { class: "flex justify-center items-center py-10 text-foreground-muted",
                             {i18n.no_questions}
                         }
                     } else {
@@ -340,7 +350,7 @@ pub fn QuizReadPage(
                             let can_next = idx + 1 < total_questions;
                             rsx! {
                                 div { key: "read-question-{idx}", class: "w-full",
-                                    div { class: "mb-5 flex items-center justify-end text-[16px] font-normal text-text-primary",
+                                    div { class: "flex justify-end items-center mb-5 font-normal text-[16px] text-text-primary",
                                         "{i18n.question_label}: {idx + 1}/{total_questions}"
                                     }
                                     div { class: "w-full [&_[data-question-title-wrap]]:mb-5 [&_[data-question-title-wrap]>div]:justify-center [&_[data-question-title]]:text-center [&_[data-question-title]]:text-[21px] [&_[data-question-desc]]:text-center",
@@ -357,10 +367,8 @@ pub fn QuizReadPage(
                                                 }
                                                 answers.set(next);
 
-                                                if can_submit
-                                                    && can_next
-                                                    && should_auto_next(&question, &next_answer)
-                                                {
+
+                                                if can_submit && can_next && should_auto_next(&question, &next_answer) {
                                                     question_index.set(idx + 1);
                                                 }
                                             },
