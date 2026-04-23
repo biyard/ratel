@@ -238,53 +238,64 @@ All new variants piggyback on the existing inbox render / unread-count infrastru
 
 All handlers use SubPartition types for path params and DTOs (`TeamPartition`, `SubTeamApplicationEntityType`, etc.) per `conventions/server-functions.md`. Unit errors from a feature-specific `SubTeamError` enum per `conventions/error-handling.md`.
 
-### Parent-admin endpoints (`role: TeamRole::Owner | Admin`)
+API paths follow the resource hierarchy: every parent-admin endpoint nests under `/api/teams/{team_id}/sub-teams/...` so the URL itself reflects the parent→sub-team governance relationship. Child-side endpoints (where `{team_id}` is the applying team, not the parent) nest under `/api/teams/{team_id}/parent/...` — symmetric hierarchy, but viewed from the child's perspective.
+
+Path-routing note: `{sub_team_id}` path segments are UUIDs and thus can never collide with literal sub-resources (`settings`, `docs`, `form-fields`, `applications`, `announcements`, `apply-context`). Axum routing also prefers literal matches over path parameters, so the ordering is robust even without the UUID-shape guarantee.
+
+### Parent-admin endpoints (`role: TeamRole::Owner | Admin` on the parent team)
+
+All under `/api/teams/{team_id}/sub-teams/...` where `{team_id}` is the parent team.
 
 | Method | Path | Purpose |
 |---|---|---|
-| PATCH | `/api/teams/{team_id}/sub-team-settings` | toggle `is_parent_eligible`, set `min_sub_team_members` |
-| GET | `/api/teams/{team_id}/sub-team-form-fields` | list form schema |
-| POST | `/api/teams/{team_id}/sub-team-form-fields` | create field |
-| PATCH | `/api/teams/{team_id}/sub-team-form-fields/{field_id}` | update |
-| DELETE | `/api/teams/{team_id}/sub-team-form-fields/{field_id}` | delete |
-| POST | `/api/teams/{team_id}/sub-team-form-fields/reorder` | body: `{ field_ids: [..] }` |
-| GET | `/api/teams/{team_id}/sub-team-docs` | list docs (admin view — includes order/updated_at) |
-| POST | `/api/teams/{team_id}/sub-team-docs` | create |
-| PATCH | `/api/teams/{team_id}/sub-team-docs/{doc_id}` | update — recomputes `body_hash` |
-| DELETE | `/api/teams/{team_id}/sub-team-docs/{doc_id}` | delete |
-| POST | `/api/teams/{team_id}/sub-team-docs/reorder` | body: `{ doc_ids: [..] }` |
-| GET | `/api/teams/{team_id}/sub-team-applications?bookmark` | queue — returns `ListResponse<SubTeamApplicationResponse>` |
-| GET | `/api/teams/{team_id}/sub-team-applications/{application_id}` | detail |
-| POST | `/api/teams/{team_id}/sub-team-applications/{application_id}/approve` | |
-| POST | `/api/teams/{team_id}/sub-team-applications/{application_id}/reject` | body: `{ reason }` |
-| POST | `/api/teams/{team_id}/sub-team-applications/{application_id}/return` | body: `{ comment }` |
-| POST | `/api/teams/{team_id}/sub-team-announcements` | create draft |
-| PATCH | `/api/teams/{team_id}/sub-team-announcements/{announcement_id}` | update draft |
-| POST | `/api/teams/{team_id}/sub-team-announcements/{announcement_id}/publish` | flip Draft → Published (triggers fan-out via stream) |
-| DELETE | `/api/teams/{team_id}/sub-team-announcements/{announcement_id}` | soft-delete |
-| GET | `/api/teams/{team_id}/sub-team-announcements?bookmark` | list (drafts + published) |
-| GET | `/api/teams/{team_id}/sub-teams?bookmark` | recognized sub-teams list (uses SubTeamLink) |
+| GET | `/api/teams/{team_id}/sub-teams?bookmark` | list recognized sub-teams (via `SubTeamLink`) |
+| PATCH | `/api/teams/{team_id}/sub-teams/settings` | toggle `is_parent_eligible`, set `min_sub_team_members` |
+| GET | `/api/teams/{team_id}/sub-teams/docs` | list docs (admin view — includes order/updated_at) |
+| POST | `/api/teams/{team_id}/sub-teams/docs` | create |
+| PATCH | `/api/teams/{team_id}/sub-teams/docs/{doc_id}` | update — recomputes `body_hash` |
+| DELETE | `/api/teams/{team_id}/sub-teams/docs/{doc_id}` | delete |
+| POST | `/api/teams/{team_id}/sub-teams/docs/reorder` | body: `{ doc_ids: [..] }` |
+| GET | `/api/teams/{team_id}/sub-teams/form-fields` | list form schema |
+| POST | `/api/teams/{team_id}/sub-teams/form-fields` | create field |
+| PATCH | `/api/teams/{team_id}/sub-teams/form-fields/{field_id}` | update |
+| DELETE | `/api/teams/{team_id}/sub-teams/form-fields/{field_id}` | delete |
+| POST | `/api/teams/{team_id}/sub-teams/form-fields/reorder` | body: `{ field_ids: [..] }` |
+| GET | `/api/teams/{team_id}/sub-teams/applications?status=Pending&bookmark` | queue — returns `ListResponse<SubTeamApplicationResponse>` |
+| GET | `/api/teams/{team_id}/sub-teams/applications/{application_id}` | detail (full `form_snapshot` + `form_values`) |
+| POST | `/api/teams/{team_id}/sub-teams/applications/{application_id}/approve` | approve |
+| POST | `/api/teams/{team_id}/sub-teams/applications/{application_id}/reject` | body: `{ reason }` |
+| POST | `/api/teams/{team_id}/sub-teams/applications/{application_id}/return` | body: `{ comment }` |
+| GET | `/api/teams/{team_id}/sub-teams/announcements?status=…&bookmark` | list drafts + published |
+| POST | `/api/teams/{team_id}/sub-teams/announcements` | create draft |
+| PATCH | `/api/teams/{team_id}/sub-teams/announcements/{announcement_id}` | update draft |
+| POST | `/api/teams/{team_id}/sub-teams/announcements/{announcement_id}/publish` | flip Draft → Published (triggers fan-out via stream) |
+| DELETE | `/api/teams/{team_id}/sub-teams/announcements/{announcement_id}` | soft-delete |
+| GET | `/api/teams/{team_id}/sub-teams/{sub_team_id}` | sub-team overview (for the detail page) |
 | GET | `/api/teams/{team_id}/sub-teams/{sub_team_id}/activity?window=Weekly\|Monthly` | dashboard counts |
-| GET | `/api/teams/{team_id}/sub-teams/{sub_team_id}/member-activity?window=Weekly\|Monthly&bookmark` | drill-down |
+| GET | `/api/teams/{team_id}/sub-teams/{sub_team_id}/member-activity?window=Weekly\|Monthly&bookmark` | per-member drill-down |
 | POST | `/api/teams/{team_id}/sub-teams/{sub_team_id}/deregister` | body: `{ reason }` |
 
 ### Sub-team-side endpoints (`role: TeamRole::Owner | Admin` on the applying team)
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/api/teams/{team_id}/application-context?parent_team_id={…}` | returns form fields + required docs + `min_members` for the apply page |
-| POST | `/api/teams/{team_id}/applications` | submit — body: `{ parent_team_id, form_values, doc_agreements: [{ doc_id, body_hash }] }` |
-| GET | `/api/teams/{team_id}/applications` | this team's application history (via GSI1) |
-| PATCH | `/api/teams/{team_id}/applications/{application_id}` | edit while in Returned status |
-| POST | `/api/teams/{team_id}/applications/{application_id}/cancel` | cancel while Pending or Returned |
-| POST | `/api/teams/{team_id}/leave-parent` | body: `{ reason?: string }` |
-
-### Public/unauthenticated
+All under `/api/teams/{team_id}/parent/...` where `{team_id}` is the child / applying team.
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/api/teams/{team_id}/public-sub-team-docs` | list published required docs (for apply-page view) |
-| GET | `/api/teams/{team_id}/public-sub-team-info` | `{ is_parent_eligible, min_sub_team_members, recognized_count, pending_count }` |
+| GET | `/api/teams/{team_id}/parent` | current parent relationship summary (`{ status, parent_team_id?, pending_parent_team_id?, latest_application_id? }`) |
+| GET | `/api/teams/{team_id}/parent/applications?bookmark` | this team's application history (via GSI1) |
+| POST | `/api/teams/{team_id}/parent/applications` | submit — body: `{ parent_team_id, form_values, doc_agreements: [{ doc_id, body_hash }] }` |
+| GET | `/api/teams/{team_id}/parent/applications/{application_id}` | detail for the child's own record |
+| PATCH | `/api/teams/{team_id}/parent/applications/{application_id}` | edit while in Returned status |
+| POST | `/api/teams/{team_id}/parent/applications/{application_id}/cancel` | cancel while Pending or Returned |
+| POST | `/api/teams/{team_id}/parent/leave` | body: `{ reason?: string }` — only valid when currently recognized |
+
+### Public / unauthenticated
+
+Expose the parent team's program in a single endpoint so the apply-page can render the entire contract in one round-trip.
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/teams/{team_id}/sub-teams/apply-context` | `{ is_parent_eligible, min_sub_team_members, recognized_count, pending_count, form_fields: [..], required_docs: [{ id, title, body, body_hash, order }] }` — everything the apply UI needs before the applicant even authenticates |
 
 ### Submit-path validation
 
