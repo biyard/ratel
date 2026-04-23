@@ -3,6 +3,7 @@ use crate::common::utils::time::get_now_timestamp_millis;
 use crate::features::spaces::pages::actions::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Translate)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum MeetMode {
     #[default]
     #[translate(ko = "예약", en = "Scheduled")]
