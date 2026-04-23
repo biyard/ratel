@@ -10,9 +10,7 @@ pub fn MeetEditorView() -> Element {
 
         SeoMeta { title: "{tr.page_title}" }
 
-        div {
-            class: "meet-editor",
-            "data-testid": "meet-editor-view",
+        div { class: "meet-editor", "data-testid": "meet-editor-view",
             MeetModeToggle {}
             MeetDetailsCard {}
             MeetWhenCard {}
