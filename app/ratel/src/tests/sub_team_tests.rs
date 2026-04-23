@@ -9,8 +9,9 @@ use crate::features::sub_team::models::{
     SubTeamFormFieldType, SubTeamLink,
 };
 use crate::features::sub_team::types::{
-    ApplyContextResponse, SubTeamDocumentResponse, SubTeamFormFieldResponse,
-    SubTeamSettingsResponse,
+    ApplyContextResponse, ParentRelationshipResponse, ParentRelationshipStatus,
+    SubTeamApplicationDetailResponse, SubTeamApplicationResponse, SubTeamDocumentResponse,
+    SubTeamFormFieldResponse, SubTeamSettingsResponse,
 };
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -675,6 +676,621 @@ async fn test_apply_context_only_includes_required_docs() {
     assert_eq!(ctx_resp.required_docs[0].title, "Req");
 }
 
+// ── Application lifecycle helpers ────────────────────────────────
+
+async fn enable_parent_eligible(ctx: &TestContext, team_id: &str, min_members: i32) {
+    let (status, _, _) = crate::test_patch! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/settings", team_id),
+        headers: ctx.test_user.1.clone(),
+        body: {
+            "body": {
+                "is_parent_eligible": true,
+                "min_sub_team_members": min_members
+            }
+        }
+    };
+    assert_eq!(status, 200);
+}
+
+async fn create_required_doc(ctx: &TestContext, team_id: &str, title: &str, body: &str) -> SubTeamDocumentResponse {
+    let (status, _, doc) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/docs", team_id),
+        headers: ctx.test_user.1.clone(),
+        body: {
+            "body": {
+                "title": title,
+                "body": body,
+                "required": true,
+                "order": 0
+            }
+        },
+        response_type: SubTeamDocumentResponse,
+    };
+    assert_eq!(status, 200);
+    doc
+}
+
+async fn create_required_form_field(ctx: &TestContext, team_id: &str, label: &str) -> SubTeamFormFieldResponse {
+    let (status, _, field) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/form-fields", team_id),
+        headers: ctx.test_user.1.clone(),
+        body: {
+            "body": {
+                "label": label,
+                "field_type": "ShortText",
+                "required": true,
+                "order": 0,
+                "options": []
+            }
+        },
+        response_type: SubTeamFormFieldResponse,
+    };
+    assert_eq!(status, 200);
+    field
+}
+
+/// Create a second team owned by `headers` and return (team_pk, team_id).
+async fn create_team_for(
+    ctx: &TestContext,
+    user: &crate::common::models::auth::User,
+    headers: &axum::http::HeaderMap,
+) -> (Partition, String) {
+    let _ = headers;
+    let pk = Team::create_new_team(
+        user,
+        &ctx.ddb,
+        format!("child{}", uuid::Uuid::new_v4().simple()),
+        String::new(),
+        format!("c-{}", uuid::Uuid::new_v4().simple()),
+        "child desc".to_string(),
+    )
+    .await
+    .unwrap();
+    let id = team_id_from(&pk);
+    (pk, id)
+}
+
+async fn add_n_members(ctx: &TestContext, team_pk: &Partition, n: usize) {
+    // Owner is already 1 member; add n more as Members.
+    for _ in 0..n {
+        let (other, _) = ctx.create_another_user().await;
+        let user_team = UserTeam::new(
+            other.pk.clone(),
+            team_pk.clone(),
+            "child".to_string(),
+            String::new(),
+            "c".to_string(),
+            None,
+            TeamRole::Member,
+        );
+        user_team.create(&ctx.ddb).await.unwrap();
+    }
+}
+
+// ── Tests: submit path ───────────────────────────────────────────
+
+#[tokio::test]
+async fn test_child_submits_application_creates_pending_with_doc_agreements() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+
+    enable_parent_eligible(&ctx, &parent_id, 1).await;
+    let doc = create_required_doc(&ctx, &parent_id, "Bylaws", "Body v1").await;
+    let field = create_required_form_field(&ctx, &parent_id, "Advisor").await;
+
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+
+    let (status, _, app) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers.clone(),
+        body: {
+            "body": {
+                "parent_team_id": parent_id,
+                "form_values": { &field.id: "Prof Kim" },
+                "doc_agreements": [
+                    { "doc_id": &doc.id, "body_hash": &doc.body_hash }
+                ]
+            }
+        },
+        response_type: SubTeamApplicationResponse,
+    };
+    assert_eq!(status, 200, "submit: {:?}", app);
+    assert_eq!(app.parent_team_id, parent_id);
+    assert_eq!(app.sub_team_id, child_id);
+    assert!(app.submitted_at.is_some());
+
+    // Pending parent id set on applying team.
+    let team = Team::get(&ctx.ddb, &child_pk, Some(EntityType::Team))
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(team.pending_parent_team_id.as_deref(), Some(parent_id.as_str()));
+    assert!(team.parent_team_id.is_none());
+}
+
+#[tokio::test]
+async fn test_submit_rejected_when_parent_not_eligible() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    // NOT enabling eligibility.
+
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (_child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers,
+        body: {
+            "body": {
+                "parent_team_id": parent_id,
+                "form_values": {},
+                "doc_agreements": []
+            }
+        }
+    };
+    assert_ne!(status, 200);
+}
+
+#[tokio::test]
+async fn test_submit_rejected_below_min_members() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 5).await;
+
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (_child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers,
+        body: {
+            "body": {
+                "parent_team_id": parent_id,
+                "form_values": {},
+                "doc_agreements": []
+            }
+        }
+    };
+    assert_ne!(status, 200);
+}
+
+#[tokio::test]
+async fn test_submit_rejected_without_required_doc_agreement() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 1).await;
+    let _doc = create_required_doc(&ctx, &parent_id, "Bylaws", "Body v1").await;
+
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (_child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers,
+        body: {
+            "body": {
+                "parent_team_id": parent_id,
+                "form_values": {},
+                "doc_agreements": []
+            }
+        }
+    };
+    assert_ne!(status, 200);
+}
+
+#[tokio::test]
+async fn test_submit_rejected_with_stale_doc_body_hash() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 1).await;
+    let doc = create_required_doc(&ctx, &parent_id, "Bylaws", "Body v1").await;
+
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (_child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers,
+        body: {
+            "body": {
+                "parent_team_id": parent_id,
+                "form_values": {},
+                "doc_agreements": [
+                    { "doc_id": &doc.id, "body_hash": "staleeeeee" }
+                ]
+            }
+        }
+    };
+    assert_ne!(status, 200);
+}
+
+#[tokio::test]
+async fn test_submit_rejected_missing_required_form_field() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 1).await;
+    let _field = create_required_form_field(&ctx, &parent_id, "Advisor").await;
+
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (_child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers,
+        body: {
+            "body": {
+                "parent_team_id": parent_id,
+                "form_values": {},
+                "doc_agreements": []
+            }
+        }
+    };
+    assert_ne!(status, 200);
+}
+
+#[tokio::test]
+async fn test_submit_rejected_cycle_to_self() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+
+    // Apply self-to-self: path team = parent_id, body.parent_team_id = parent_id.
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", parent_id),
+        headers: ctx.test_user.1.clone(),
+        body: {
+            "body": {
+                "parent_team_id": &parent_id,
+                "form_values": {},
+                "doc_agreements": []
+            }
+        }
+    };
+    assert_ne!(status, 200);
+}
+
+#[tokio::test]
+async fn test_submit_rejected_when_in_flight_application_exists() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (_child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+
+    // First submission should succeed.
+    let (status1, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers.clone(),
+        body: {
+            "body": {
+                "parent_team_id": parent_id,
+                "form_values": {},
+                "doc_agreements": []
+            }
+        }
+    };
+    assert_eq!(status1, 200);
+
+    // Second should be rejected as in-flight.
+    let (status2, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers,
+        body: {
+            "body": {
+                "parent_team_id": parent_id,
+                "form_values": {},
+                "doc_agreements": []
+            }
+        }
+    };
+    assert_ne!(status2, 200);
+}
+
+// ── Tests: parent queue ───────────────────────────────────────────
+
+#[tokio::test]
+async fn test_parent_queue_lists_only_pending_by_default() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (_child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+
+    // Pending submission.
+    let (s, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers,
+        body: {
+            "body": {
+                "parent_team_id": parent_id,
+                "form_values": {},
+                "doc_agreements": []
+            }
+        }
+    };
+    assert_eq!(s, 200);
+
+    let (status, _, listed) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/applications", parent_id),
+        headers: ctx.test_user.1.clone(),
+        response_type: ListResponse<SubTeamApplicationResponse>,
+    };
+    assert_eq!(status, 200);
+    assert!(listed.items.iter().all(|a| matches!(a.status, SubTeamApplicationStatus::Pending)));
+    assert!(!listed.items.is_empty());
+}
+
+#[tokio::test]
+async fn test_parent_approve_flips_team_status_and_creates_link() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+
+    let (_, _, app) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers.clone(),
+        body: {
+            "body": {
+                "parent_team_id": parent_id,
+                "form_values": {},
+                "doc_agreements": []
+            }
+        },
+        response_type: SubTeamApplicationResponse,
+    };
+    let app_id = app.id.clone();
+
+    let (status, _, approved) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/applications/{}/approve", parent_id, app_id),
+        headers: ctx.test_user.1.clone(),
+        body: {},
+        response_type: SubTeamApplicationResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(matches!(approved.status, SubTeamApplicationStatus::Approved));
+
+    // Team now has parent_team_id; pending cleared.
+    let team = Team::get(&ctx.ddb, &child_pk, Some(EntityType::Team))
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(team.parent_team_id.as_deref(), Some(parent_id.as_str()));
+    assert!(team.pending_parent_team_id.is_none());
+
+    // SubTeamLink row exists under parent.
+    let link_sk = EntityType::SubTeamLink(child_id.clone());
+    let link = SubTeamLink::get(&ctx.ddb, &parent_pk, Some(link_sk))
+        .await
+        .unwrap();
+    assert!(link.is_some(), "SubTeamLink must exist");
+}
+
+#[tokio::test]
+async fn test_parent_reject_clears_pending_parent_and_records_reason() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+
+    let (_, _, app) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers,
+        body: {
+            "body": {
+                "parent_team_id": parent_id,
+                "form_values": {},
+                "doc_agreements": []
+            }
+        },
+        response_type: SubTeamApplicationResponse,
+    };
+    let app_id = app.id.clone();
+
+    let (status, _, rejected) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/applications/{}/reject", parent_id, app_id),
+        headers: ctx.test_user.1.clone(),
+        body: {
+            "body": { "reason": "too few members" }
+        },
+        response_type: SubTeamApplicationResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(matches!(rejected.status, SubTeamApplicationStatus::Rejected));
+    assert_eq!(rejected.decision_reason.as_deref(), Some("too few members"));
+
+    let team = Team::get(&ctx.ddb, &child_pk, Some(EntityType::Team))
+        .await
+        .unwrap()
+        .unwrap();
+    assert!(team.pending_parent_team_id.is_none());
+    assert!(team.parent_team_id.is_none());
+}
+
+#[tokio::test]
+async fn test_parent_return_keeps_pending_status_and_allows_resubmit() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+
+    let (_, _, app) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers.clone(),
+        body: {
+            "body": {
+                "parent_team_id": parent_id,
+                "form_values": {},
+                "doc_agreements": []
+            }
+        },
+        response_type: SubTeamApplicationResponse,
+    };
+    let app_id = app.id.clone();
+
+    let (status, _, returned) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/sub-teams/applications/{}/return", parent_id, app_id),
+        headers: ctx.test_user.1.clone(),
+        body: {
+            "body": { "comment": "add advisor" }
+        },
+        response_type: SubTeamApplicationResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(matches!(returned.status, SubTeamApplicationStatus::Returned));
+
+    // child still pending.
+    let team = Team::get(&ctx.ddb, &child_pk, Some(EntityType::Team))
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(team.pending_parent_team_id.as_deref(), Some(parent_id.as_str()));
+
+    // PATCH to resubmit.
+    let (status, _, resubmitted) = crate::test_patch! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications/{}", child_id, app_id),
+        headers: child_headers,
+        body: {
+            "body": {
+                "form_values": {}
+            }
+        },
+        response_type: SubTeamApplicationResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(matches!(resubmitted.status, SubTeamApplicationStatus::Pending));
+}
+
+#[tokio::test]
+async fn test_child_cancel_clears_pending_parent() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+
+    let (_, _, app) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers.clone(),
+        body: {
+            "body": {
+                "parent_team_id": parent_id,
+                "form_values": {},
+                "doc_agreements": []
+            }
+        },
+        response_type: SubTeamApplicationResponse,
+    };
+    let app_id = app.id.clone();
+
+    let (status, _, cancelled) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications/{}/cancel", child_id, app_id),
+        headers: child_headers,
+        body: {},
+        response_type: SubTeamApplicationResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(matches!(cancelled.status, SubTeamApplicationStatus::Cancelled));
+
+    let team = Team::get(&ctx.ddb, &child_pk, Some(EntityType::Team))
+        .await
+        .unwrap()
+        .unwrap();
+    assert!(team.pending_parent_team_id.is_none());
+}
+
+#[tokio::test]
+async fn test_parent_relationship_endpoint_reports_status_correctly() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (_child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+
+    // Standalone initially.
+    let (status, _, rel) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent", child_id),
+        headers: child_headers.clone(),
+        response_type: ParentRelationshipResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(matches!(rel.status, ParentRelationshipStatus::Standalone));
+    assert!(rel.parent_team_id.is_none());
+    assert!(rel.pending_parent_team_id.is_none());
+
+    // Submit → Pending.
+    let (_, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers.clone(),
+        body: {
+            "body": {
+                "parent_team_id": parent_id,
+                "form_values": {},
+                "doc_agreements": []
+            }
+        }
+    };
+    let (_, _, rel) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent", child_id),
+        headers: child_headers.clone(),
+        response_type: ParentRelationshipResponse,
+    };
+    assert!(matches!(rel.status, ParentRelationshipStatus::PendingSubTeam));
+    assert_eq!(rel.pending_parent_team_id.as_deref(), Some(parent_id.as_str()));
+    assert!(rel.latest_application_id.is_some());
+}
+
 // ── Compile-time silence (unused-import guard) ───────────────────
 #[allow(dead_code)]
 fn _unused_guard() {
@@ -682,4 +1298,5 @@ fn _unused_guard() {
     let _ = SubTeamDocument::default();
     let _ = SubTeamFormFieldType::ShortText;
     let _ = UserTeamQueryOption::builder();
+    let _: Option<SubTeamApplicationDetailResponse> = None;
 }

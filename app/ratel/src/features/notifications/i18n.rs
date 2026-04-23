@@ -13,4 +13,20 @@ translate! {
     relative_minute: { en: "{n}m ago", ko: "{n}분 전" },
     relative_hour: { en: "{n}h ago", ko: "{n}시간 전" },
     relative_day: { en: "{n}d ago", ko: "{n}일 전" },
+    sub_team_app_submitted_title: {
+        en: "{team} submitted a sub-team application",
+        ko: "{team}팀이 하위팀 신청을 제출했습니다",
+    },
+    sub_team_app_approved_title: {
+        en: "{parent} approved your sub-team application",
+        ko: "{parent}팀이 하위팀 신청을 승인했습니다",
+    },
+    sub_team_app_rejected_title: {
+        en: "{parent} rejected your sub-team application",
+        ko: "{parent}팀이 하위팀 신청을 반려했습니다",
+    },
+    sub_team_app_returned_title: {
+        en: "{parent} returned your sub-team application for revision",
+        ko: "{parent}팀이 수정 요청과 함께 신청을 반송했습니다",
+    },
 }

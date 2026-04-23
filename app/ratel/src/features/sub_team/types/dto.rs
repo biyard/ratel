@@ -1,6 +1,6 @@
 use crate::common::*;
 
-use crate::features::sub_team::models::SubTeamFormFieldType;
+use crate::features::sub_team::models::{SubTeamApplicationStatus, SubTeamFormFieldType};
 
 // ── Settings ─────────────────────────────────────────────────────
 
@@ -186,6 +186,157 @@ impl From<crate::features::sub_team::models::SubTeamDocument> for ApplyContextDo
             body: d.body,
             body_hash: d.body_hash,
             order: d.order,
+        }
+    }
+}
+
+// ── Application lifecycle ──────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct SubTeamFormFieldSnapshotDto {
+    pub field_id: String,
+    pub label: String,
+    pub field_type: SubTeamFormFieldType,
+    pub required: bool,
+    pub order: i32,
+    pub options: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct SubTeamApplicationResponse {
+    pub id: String,
+    pub parent_team_id: String,
+    pub sub_team_id: String,
+    pub submitter_user_id: String,
+    pub status: SubTeamApplicationStatus,
+    pub decision_reason: Option<String>,
+    pub created_at: i64,
+    pub updated_at: i64,
+    pub submitted_at: Option<i64>,
+    pub decided_at: Option<i64>,
+    pub form_snapshot: Vec<SubTeamFormFieldSnapshotDto>,
+    pub form_values: std::collections::HashMap<String, serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct SubTeamDocAgreementResponse {
+    pub doc_id: String,
+    pub doc_title_snapshot: String,
+    pub body_hash_snapshot: String,
+    pub agreed_at: i64,
+    pub agreed_by: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct SubTeamApplicationDetailResponse {
+    #[serde(flatten)]
+    pub application: SubTeamApplicationResponse,
+    pub doc_agreements: Vec<SubTeamDocAgreementResponse>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+pub enum ParentRelationshipStatus {
+    #[default]
+    Standalone,
+    PendingSubTeam,
+    RecognizedSubTeam,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct ParentRelationshipResponse {
+    pub status: ParentRelationshipStatus,
+    pub parent_team_id: Option<String>,
+    pub pending_parent_team_id: Option<String>,
+    pub latest_application_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct DocAgreementInput {
+    pub doc_id: String,
+    pub body_hash: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct SubmitApplicationRequest {
+    pub parent_team_id: String,
+    pub form_values: std::collections::HashMap<String, serde_json::Value>,
+    pub doc_agreements: Vec<DocAgreementInput>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct UpdateApplicationRequest {
+    #[serde(default)]
+    pub form_values: Option<std::collections::HashMap<String, serde_json::Value>>,
+    #[serde(default)]
+    pub doc_agreements: Option<Vec<DocAgreementInput>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct ApplicationDecisionReasonRequest {
+    pub reason: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct ApplicationReturnCommentRequest {
+    pub comment: String,
+}
+
+#[cfg(feature = "server")]
+impl From<crate::features::sub_team::models::SubTeamFormFieldSnapshot>
+    for SubTeamFormFieldSnapshotDto
+{
+    fn from(s: crate::features::sub_team::models::SubTeamFormFieldSnapshot) -> Self {
+        Self {
+            field_id: s.field_id,
+            label: s.label,
+            field_type: s.field_type,
+            required: s.required,
+            order: s.order,
+            options: s.options,
+        }
+    }
+}
+
+#[cfg(feature = "server")]
+impl From<crate::features::sub_team::models::SubTeamApplication> for SubTeamApplicationResponse {
+    fn from(a: crate::features::sub_team::models::SubTeamApplication) -> Self {
+        Self {
+            id: a.application_id,
+            parent_team_id: a.parent_team_id,
+            sub_team_id: a.sub_team_id,
+            submitter_user_id: a.submitter_user_id,
+            status: a.status,
+            decision_reason: a.decision_reason,
+            created_at: a.created_at,
+            updated_at: a.updated_at,
+            submitted_at: a.submitted_at,
+            decided_at: a.decided_at,
+            form_snapshot: a.form_snapshot.into_iter().map(Into::into).collect(),
+            form_values: a.form_values,
+        }
+    }
+}
+
+#[cfg(feature = "server")]
+impl From<crate::features::sub_team::models::SubTeamDocAgreement> for SubTeamDocAgreementResponse {
+    fn from(a: crate::features::sub_team::models::SubTeamDocAgreement) -> Self {
+        Self {
+            doc_id: a.doc_id,
+            doc_title_snapshot: a.doc_title_snapshot,
+            body_hash_snapshot: a.body_hash_snapshot,
+            agreed_at: a.agreed_at,
+            agreed_by: a.agreed_by,
         }
     }
 }
