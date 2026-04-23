@@ -13,6 +13,34 @@ use crate::features::spaces::space_common::controllers::{list_space_members, Spa
 use dioxus::fullstack::Loader;
 use std::str::FromStr;
 
+/// Ranking score for a single comment, computed client-side at every
+/// render so the freshness boost stays accurate without server help.
+///
+/// Components:
+/// - `log10(likes + 1) * 3` — popularity, log-scaled so 100→200 votes is
+///   a smaller jump than 1→10.
+/// - `log10(replies + 1) * 5` — discussion activity, weighted higher
+///   than likes because replies are a stronger engagement signal.
+/// - `created_at / 86400` — additive freshness baseline (newer always
+///   ranks above older, all else equal).
+/// - `4 * exp(-age_hours / 1.0)` — short-lived "fresh boost" so a
+///   brand-new comment is visible regardless of likes/replies; decays
+///   smoothly so there is no UI jump at the 1-hour mark.
+///
+/// `now_seconds` and `comment.created_at` must share the same unit
+/// (seconds since epoch).
+pub fn comment_score(comment: &DiscussionCommentResponse, now_seconds: i64) -> f64 {
+    let likes = comment.likes as f64;
+    let replies = comment.replies as f64;
+    let likes_term = (likes + 1.0).log10() * 3.0;
+    let replies_term = (replies + 1.0).log10() * 5.0;
+    let time_term = comment.created_at as f64 / 86400.0;
+    let age_seconds = (now_seconds - comment.created_at).max(0) as f64;
+    let age_hours = age_seconds / 3600.0;
+    let fresh_term = 4.0 * (-age_hours).exp();
+    likes_term + replies_term + time_term + fresh_term
+}
+
 #[derive(Clone, Copy, DioxusController)]
 pub struct UseDiscussionArena {
     pub active_reply_thread: Signal<Option<String>>,
@@ -24,6 +52,10 @@ pub struct UseDiscussionArena {
     pub members_loader: Loader<ListResponse<SpaceMemberResponse>>,
     pub polled_new: Signal<Vec<DiscussionCommentResponse>>,
     pub last_seen_at: Signal<i64>,
+    /// Bumped every poll tick so a `use_memo` over `comment_score` re-runs
+    /// even when no new data arrives, letting the time-decay term in the
+    /// score reorder comments smoothly as time passes.
+    pub sort_tick: Signal<u32>,
     pub mention_query_raw: Signal<Option<String>>,
     pub mention_query: Signal<Option<String>>,
     pub members: ReadSignal<Vec<MentionCandidate>>,
@@ -161,7 +193,12 @@ pub fn use_discussion_arena(
             .max()
             .unwrap_or_else(crate::common::utils::time::get_now_timestamp)
     });
+    let mut sort_tick: Signal<u32> = use_signal(|| 0);
     use_interval(5000, move || {
+        // Bump unconditionally so the score-sort memo re-runs every tick,
+        // even when no new comments arrived (the fresh-boost decays with
+        // time so positions need to update independently of fetch results).
+        sort_tick.with_mut(|t| *t = t.wrapping_add(1));
         let since = last_seen_at();
         spawn(async move {
             match list_comments(space_id(), discussion_id(), None, Some(since)).await {
@@ -421,6 +458,7 @@ pub fn use_discussion_arena(
         members_loader,
         polled_new,
         last_seen_at,
+        sort_tick,
         mention_query_raw,
         mention_query,
         members,
@@ -434,4 +472,178 @@ pub fn use_discussion_arena(
         add_comment: add_comment_action,
         reply_comment: reply_comment_action,
     }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Build a fixture comment with only the fields `comment_score` reads.
+    fn fixture(created_at: i64, likes: u64, replies: u64) -> DiscussionCommentResponse {
+        DiscussionCommentResponse {
+            created_at,
+            likes,
+            replies,
+            ..Default::default()
+        }
+    }
+
+    // ── Sanity: monotonicity ──────────────────────────────────────
+
+    #[test]
+    fn more_likes_score_higher() {
+        let now = 1_000_000;
+        let same_age = now - 3600;
+        let a = fixture(same_age, 0, 0);
+        let b = fixture(same_age, 10, 0);
+        assert!(comment_score(&b, now) > comment_score(&a, now));
+    }
+
+    #[test]
+    fn more_replies_score_higher() {
+        let now = 1_000_000;
+        let same_age = now - 3600;
+        let a = fixture(same_age, 0, 0);
+        let b = fixture(same_age, 0, 10);
+        assert!(comment_score(&b, now) > comment_score(&a, now));
+    }
+
+    #[test]
+    fn newer_score_higher_when_engagement_equal() {
+        let now = 1_000_000;
+        let new = fixture(now, 5, 5);
+        let old = fixture(now - 86400, 5, 5);
+        assert!(comment_score(&new, now) > comment_score(&old, now));
+    }
+
+    // ── Algorithm intent ──────────────────────────────────────────
+
+    #[test]
+    fn fresh_comment_outranks_older_silent_comment() {
+        // Requirement: "1시간까지는 좋아요/대댓글 없어도 높이 보여야 함"
+        let now = 1_000_000;
+        let fresh = fixture(now - 60, 0, 0); // 1 min old
+        let old_silent = fixture(now - 7200, 0, 0); // 2 h old
+        assert!(comment_score(&fresh, now) > comment_score(&old_silent, now));
+    }
+
+    #[test]
+    fn replies_weighted_higher_than_likes() {
+        // Same age, same engagement count but different KIND of engagement —
+        // replies should win because they're a stronger discussion signal.
+        let now = 1_000_000;
+        let same_age = now - 3600;
+        let liked = fixture(same_age, 100, 0);
+        let replied = fixture(same_age, 0, 100);
+        assert!(comment_score(&replied, now) > comment_score(&liked, now));
+    }
+
+    #[test]
+    fn popular_old_comment_beats_brand_new_silent() {
+        // A meaningfully engaged comment should still outrank a silent fresh
+        // one — fresh boost shouldn't completely dominate.
+        let now = 1_000_000;
+        let popular_old = fixture(now - 21600, 50, 5); // 6h old, 50 likes 5 replies
+        let new_silent = fixture(now, 0, 0);
+        assert!(comment_score(&popular_old, now) > comment_score(&new_silent, now));
+    }
+
+    // ── Curve shape ────────────────────────────────────────────────
+
+    #[test]
+    fn fresh_boost_decays_within_a_few_hours() {
+        // Boost gap between 1h and 10h olds should be at least ~1 score
+        // point so the time-driven re-sort is observable across the 5s tick.
+        let now = 1_000_000;
+        let one_h = comment_score(&fixture(now - 3600, 0, 0), now);
+        let ten_h = comment_score(&fixture(now - 36000, 0, 0), now);
+        assert!(one_h - ten_h > 1.0, "1h={one_h}, 10h={ten_h}");
+    }
+
+    #[test]
+    fn likes_score_is_sublinear() {
+        // Mega-popular comments must NOT dominate forever. A 100-like comment
+        // should score far less than 100× a 1-like comment — that's the whole
+        // point of log scaling.
+        let now = 1_000_000;
+        let same_age = now - 3600;
+        let s_1 = comment_score(&fixture(same_age, 1, 0), now);
+        let s_100 = comment_score(&fixture(same_age, 100, 0), now);
+        // Linear scaling would give roughly 100× the increment. Log scaling
+        // should keep it under, say, 10× — comfortably sublinear.
+        assert!(
+            (s_100 - s_1) < 10.0 * (s_1 - 0.0),
+            "log scale broken: s(1)={s_1}, s(100)={s_100}"
+        );
+    }
+
+    #[test]
+    fn likes_score_jumps_stabilize_at_high_counts() {
+        // Above ~10, each decade of likes adds a near-constant ~3 points
+        // (log10(10) × W_L). Verifies the curve flattens — once a comment
+        // is "popular enough", more likes barely change ranking.
+        let now = 1_000_000;
+        let same_age = now - 3600;
+        let s_100 = comment_score(&fixture(same_age, 100, 0), now);
+        let s_1000 = comment_score(&fixture(same_age, 1_000, 0), now);
+        let s_10000 = comment_score(&fixture(same_age, 10_000, 0), now);
+        let jump_a = s_1000 - s_100;
+        let jump_b = s_10000 - s_1000;
+        let diff = (jump_a - jump_b).abs();
+        // At decades this large, +1 offset is negligible, so jumps should be
+        // essentially equal.
+        assert!(
+            diff < 0.05,
+            "decade jumps not stabilized: 100→1k={jump_a}, 1k→10k={jump_b}"
+        );
+    }
+
+    // ── Edge cases / safety ──────────────────────────────────────
+
+    #[test]
+    fn negative_age_does_not_panic() {
+        // Clock skew: comment "from the future".
+        let now = 1_000_000;
+        let future = fixture(now + 3600, 5, 0);
+        let _ = comment_score(&future, now); // must not panic
+    }
+
+    #[test]
+    fn zero_engagement_zero_age_safe() {
+        // Default-constructed comment (all zeros) must produce a finite score.
+        let s = comment_score(&DiscussionCommentResponse::default(), 0);
+        assert!(s.is_finite(), "got {s}");
+    }
+
+    // ── Realistic mixed scenario ──────────────────────────────────
+
+    #[test]
+    fn realistic_ordering_matches_intent() {
+        // Mirrors the simulation table from the design discussion.
+        let now = 1_000_000;
+        let scenarios = vec![
+            ("just_now",          fixture(now,           0, 0)),
+            ("30min_silent",      fixture(now - 1800,    0, 0)),
+            ("1h_silent",         fixture(now - 3600,    0, 0)),
+            ("1h_5_likes",        fixture(now - 3600,    5, 0)),
+            ("6h_popular",        fixture(now - 21600,   50, 5)),
+            ("1d_modest",         fixture(now - 86400,   10, 1)),
+            ("7d_classic",        fixture(now - 604800,  100, 20)),
+        ];
+        let mut scored: Vec<(&str, f64)> = scenarios
+            .iter()
+            .map(|(k, c)| (*k, comment_score(c, now)))
+            .collect();
+        scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        let order: Vec<&str> = scored.iter().map(|(k, _)| *k).collect();
+
+        // Top should be the engaged comment (popular 6h-old).
+        assert_eq!(order[0], "6h_popular", "ranking={scored:?}");
+        // Brand-new silent comment must beat the older silent ones.
+        let pos = |k: &str| order.iter().position(|x| *x == k).unwrap();
+        assert!(pos("just_now") < pos("30min_silent"));
+        assert!(pos("just_now") < pos("1h_silent"));
+        // 1h-old with 5 likes outranks 1h-old silent.
+        assert!(pos("1h_5_likes") < pos("1h_silent"));
+    }
 }

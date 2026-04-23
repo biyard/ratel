@@ -1,5 +1,27 @@
 import { expect } from "@playwright/test";
 
+export async function publishAction(page) {
+  const btn = page.getByTestId("action-publish");
+  if (await btn.isVisible().catch(() => false)) {
+    await btn.click();
+    await page.waitForLoadState("load");
+    await page.waitForTimeout(500);
+  }
+}
+
+export async function dismissDevToast(page) {
+  try {
+    await page.evaluate(() => {
+      document.querySelectorAll(".dx-toast").forEach((el) => {
+        if (el.id !== "dx-toast-template") {
+          el.style.display = "none";
+          el.style.pointerEvents = "none";
+        }
+      });
+    });
+  } catch {}
+}
+
 export function wrap(page, project, baseDir) {
   const pageWithCapture = page;
   pageWithCapture.order = 1;
@@ -34,6 +56,7 @@ export function wrap(page, project, baseDir) {
 }
 
 export async function click(page, opt) {
+  await dismissDevToast(page);
   const selected = await getLocator(page, opt);
 
   await selected.click();
@@ -49,6 +72,7 @@ export async function click(page, opt) {
  * because no page navigation occurs.
  */
 export async function clickNoNav(page, opt) {
+  await dismissDevToast(page);
   const selected = await getLocator(page, opt);
 
   await selected.click();
@@ -144,6 +168,7 @@ export async function goto(page, url) {
   // 1500ms is a conservative heuristic — replace if Dioxus exposes a real
   // hydration-complete signal.
   await page.waitForTimeout(1500);
+  await dismissDevToast(page);
 }
 
 /**

@@ -20,9 +20,6 @@ pub struct SpacePoll {
 
     pub user_response_count: i64, // Participants count
 
-    pub started_at: i64,
-    pub ended_at: i64,
-
     pub response_editable: bool, // Whether users can edit their responses
 
     #[serde(default)]
@@ -42,19 +39,10 @@ impl SpacePoll {
     pub fn new(
         space_pk: SpacePartition,
     ) -> crate::features::spaces::pages::actions::actions::poll::Result<Self> {
-        Self::new_with_published(space_pk, false)
-    }
-
-    pub fn new_with_published(
-        space_pk: SpacePartition,
-        is_published: bool,
-    ) -> crate::features::spaces::pages::actions::actions::poll::Result<Self> {
         let pk: Partition = space_pk.into();
         let sk = EntityType::SpacePoll(uuid::Uuid::now_v7().to_string());
 
         let now = get_now_timestamp_millis();
-        let (started_at, ended_at) =
-            crate::features::spaces::pages::actions::models::SpaceAction::default_schedule_with_published(now, is_published);
 
         Ok(Self {
             pk,
@@ -63,8 +51,6 @@ impl SpacePoll {
             updated_at: now,
             user_response_count: 0,
             response_editable: false,
-            started_at,
-            ended_at,
             title: String::new(),
             description: String::new(),
             questions: Vec::new(),
@@ -144,12 +130,13 @@ impl From<(SpacePoll, bool)>
             quiz_score: None,
             quiz_total_score: None,
             quiz_passed: None,
-            started_at: Some(poll.started_at),
-            ended_at: Some(poll.ended_at),
             user_participated,
             credits: 0,
             prerequisite: false,
             comment_count: None,
+            status: None,
+            depends_on: Vec::new(),
+            dependencies_met: true,
         }
     }
 }
@@ -161,14 +148,14 @@ impl SpacePoll {
         Ok(())
     }
 
-    pub fn status(&self) -> PollStatus {
-        let now = get_now_timestamp_millis();
-        if now < self.started_at {
-            PollStatus::NotStarted
-        } else if now >= self.started_at && now <= self.ended_at {
-            PollStatus::InProgress
-        } else {
-            PollStatus::Finish
+    pub fn status_from(
+        action_status: Option<&crate::features::spaces::pages::actions::types::SpaceActionStatus>,
+    ) -> PollStatus {
+        use crate::features::spaces::pages::actions::types::SpaceActionStatus;
+        match action_status {
+            Some(SpaceActionStatus::Ongoing) => PollStatus::InProgress,
+            Some(SpaceActionStatus::Finish) => PollStatus::Finish,
+            _ => PollStatus::NotStarted,
         }
     }
 
@@ -182,12 +169,16 @@ impl SpacePoll {
     }
 
     pub fn can_respond(
-        &self,
+        action_status: Option<&crate::features::spaces::pages::actions::types::SpaceActionStatus>,
         user_role: &SpaceUserRole,
     ) -> crate::features::spaces::pages::actions::actions::poll::Result<()> {
+        // Candidates must be able to respond to prerequisite polls — otherwise
+        // they cannot clear prerequisites and transition to Participant.
         match user_role {
-            SpaceUserRole::Creator | SpaceUserRole::Participant => {
-                if self.status() == PollStatus::InProgress {
+            SpaceUserRole::Creator
+            | SpaceUserRole::Participant
+            | SpaceUserRole::Candidate => {
+                if Self::status_from(action_status) == PollStatus::InProgress {
                     return Ok(());
                 }
                 return Err(SpacePollError::PollNotInProgress.into());
@@ -213,8 +204,6 @@ impl TryFrom<Partition> for SpacePoll {
         let pk = value;
         let sk = EntityType::SpacePoll(uuid);
         let now = get_now_timestamp_millis();
-        let (started_at, ended_at) =
-            crate::features::spaces::pages::actions::models::SpaceAction::default_schedule(now);
 
         Ok(Self {
             pk,
@@ -223,8 +212,6 @@ impl TryFrom<Partition> for SpacePoll {
             updated_at: now,
             user_response_count: 0,
             response_editable: false,
-            started_at,
-            ended_at,
             title: String::new(),
             description: String::new(),
             questions: Vec::new(),

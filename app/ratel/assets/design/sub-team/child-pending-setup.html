@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Pending Sub-team Setup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    /* Progress stepper */
+    .stepper{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+    .step{
+      display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:10px;
+      font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+      background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);color:var(--text-dim);
+      transition:all 0.3s;
+    }
+    .step[data-state="active"]{background:rgba(110,237,216,0.08);border-color:rgba(110,237,216,0.3);color:var(--accent-teal);box-shadow:0 0 12px rgba(110,237,216,0.1)}
+    .step[data-state="done"]{background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.25);color:var(--accent-green)}
+    .step__num{
+      width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+      background:rgba(255,255,255,0.04);font-size:11px;font-weight:800;
+    }
+    .step[data-state="active"] .step__num{background:rgba(110,237,216,0.15)}
+    .step[data-state="done"] .step__num{background:rgba(34,197,94,0.18)}
+    .step__arrow{color:var(--text-dim)}
+    .step__arrow svg{width:12px;height:12px}
+
+    /* Member counter gauge */
+    .gauge{
+      position:relative;display:flex;flex-direction:column;gap:10px;
+      padding:16px 18px;border-radius:14px;
+      background:rgba(110,237,216,0.04);border:1px solid rgba(110,237,216,0.22);
+    }
+    .gauge__top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .gauge__title{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-teal)}
+    .gauge__value{font-family:var(--font-display);font-size:14px;font-weight:800;color:var(--text-primary);letter-spacing:0.02em}
+    .gauge__value strong{color:var(--accent-teal);font-size:18px}
+    .gauge__track{position:relative;height:8px;border-radius:100px;background:rgba(255,255,255,0.04);overflow:hidden}
+    .gauge__fill{position:absolute;top:0;left:0;bottom:0;background:linear-gradient(90deg,var(--accent-teal),#b6f5e6);border-radius:100px;transition:width 0.4s cubic-bezier(0.16,1,0.3,1);box-shadow:0 0 8px rgba(110,237,216,0.3)}
+    .gauge__fill--met{background:linear-gradient(90deg,var(--accent-green),#86efac)}
+    .gauge__meta{display:flex;justify-content:space-between;font-family:var(--font-display);font-size:9px;letter-spacing:0.1em;color:var(--text-dim)}
+    .gauge__status{font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--accent-amber);letter-spacing:0.08em;text-transform:uppercase}
+    .gauge__status--met{color:var(--accent-green)}
+
+    /* Member list */
+    .members{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+    .member-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:rgba(6,6,14,0.4);border:1px solid var(--border-subtle)}
+    .member-row__handle{flex:1;min-width:0;font-size:13px;color:var(--text-primary);font-family:var(--font-display);letter-spacing:0.02em}
+    .member-row__role{font-family:var(--font-display);font-size:8px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:3px 8px;border-radius:6px;background:rgba(110,237,216,0.08);border:1px solid rgba(110,237,216,0.22);color:var(--accent-teal)}
+    .member-row__role--admin{background:rgba(252,179,0,0.08);border-color:rgba(252,179,0,0.22);color:var(--accent-gold)}
+    .invite-row{display:flex;gap:8px;margin-top:10px}
+    .invite-row__input{flex:1;min-width:0;padding:9px 12px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--text-primary);font-size:13px;outline:none;transition:all 0.2s}
+    .invite-row__input:focus{border-color:rgba(110,237,216,0.35);box-shadow:0 0 12px rgba(110,237,216,0.08)}
+    .invite-row__send{padding:0 16px;border-radius:10px;background:rgba(110,237,216,0.08);border:1px solid rgba(110,237,216,0.25);color:var(--accent-teal);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+    .invite-row__send:hover{background:rgba(110,237,216,0.15);box-shadow:0 0 12px rgba(110,237,216,0.12)}
+
+    /* Bylaws acknowledgement */
+    .bylaws-link{display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:10px;border-radius:10px;background:rgba(129,140,248,0.04);border:1px solid rgba(129,140,248,0.22);color:var(--text-primary);text-decoration:none;transition:all 0.2s}
+    .bylaws-link:hover{background:rgba(129,140,248,0.08)}
+    .bylaws-link__icon{width:28px;height:28px;border-radius:8px;background:rgba(129,140,248,0.10);border:1px solid rgba(129,140,248,0.25);display:flex;align-items:center;justify-content:center;color:var(--accent-violet);flex-shrink:0}
+    .bylaws-link__icon svg{width:13px;height:13px}
+    .bylaws-link__body{flex:1;min-width:0}
+    .bylaws-link__title{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--accent-violet)}
+    .bylaws-link__sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+    .bylaws-link svg.chev{width:14px;height:14px;color:var(--text-dim)}
+
+    /* Form readout (mirrors the parent-configured form) */
+    .form-set{display:flex;flex-direction:column;gap:14px}
+
+    /* Sticky submit bar */
+    .submit-bar{
+      position:sticky;bottom:16px;margin:20px -4px 0;
+      padding:16px 20px;border-radius:14px;
+      background:var(--bg-glass);backdrop-filter:blur(24px);
+      border:1px solid var(--border-subtle);
+      box-shadow:0 12px 40px rgba(0,0,0,0.5);
+      display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    }
+    .submit-bar__status{
+      display:flex;flex-direction:column;gap:2px;flex:1;min-width:200px;
+    }
+    .submit-bar__title{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted)}
+    .submit-bar__title--ready{color:var(--accent-green)}
+    .submit-bar__list{display:flex;gap:10px;flex-wrap:wrap;font-size:12px}
+    .submit-bar__list-item{display:inline-flex;align-items:center;gap:4px;color:var(--text-dim)}
+    .submit-bar__list-item svg{width:12px;height:12px}
+    .submit-bar__list-item.ok{color:var(--accent-green)}
+    .submit-bar__list-item.ok svg{color:var(--accent-green)}
+
+    /* Parent selector */
+    .parent-select{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:rgba(6,6,14,0.5);border:1px solid var(--border-subtle)}
+    .parent-select:hover{border-color:rgba(252,179,0,0.22)}
+    .parent-select__avatar{width:40px;height:40px}
+    .parent-select__body{flex:1;min-width:0}
+    .parent-select__name{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:0.02em;color:var(--text-primary)}
+    .parent-select__handle{font-family:var(--font-display);font-size:10px;color:var(--text-muted);letter-spacing:0.06em;margin-top:2px}
+    .parent-select__change{padding:6px 12px;border-radius:8px;background:transparent;border:1px solid var(--border-subtle);color:var(--text-muted);font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer}
+    .parent-select__change:hover{border-color:rgba(252,179,0,0.25);color:var(--accent-gold)}
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo arena-topbar__logo--child">QC</div>
+      <div class="u-col">
+        <span class="arena-topbar__title arena-topbar__title--child">Quantum Club</span>
+        <span class="arena-topbar__handle">@quantum_club · Pending</span>
+      </div>
+      <span class="arena-topbar__status arena-topbar__status--pending">Pending team</span>
+    </div>
+    <div class="arena-topbar__actions">
+      <button class="btn btn--ghost btn--small">초안 저장</button>
+    </div>
+  </div>
+
+  <div class="page page--narrow">
+    <div class="page-header">
+      <div class="page-header__main">
+        <span class="page-header__eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          FR-4 · Pending Setup
+        </span>
+        <h1 class="page-header__title page-header__title--child">동아리를 <strong>정식 등록</strong>하기 전 준비 단계</h1>
+        <p class="page-header__sub">멤버를 모으고, 학과 학칙을 확인하고, 신청서를 작성한 뒤 제출하세요. 최소 인원과 학칙 동의가 모두 충족되어야 제출할 수 있습니다.</p>
+      </div>
+    </div>
+
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="step" data-state="done"><span class="step__num">1</span>팀 생성</div>
+      <span class="step__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+      <div class="step" data-state="active"><span class="step__num">2</span>가입 신청 준비</div>
+      <span class="step__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+      <div class="step"><span class="step__num">3</span>부모팀 심사</div>
+      <span class="step__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+      <div class="step"><span class="step__num">4</span>승인</div>
+    </div>
+
+    <!-- Parent target -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title" style="background:linear-gradient(135deg,#6eedd8,#b6f5e6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">신청 대상 · Parent team</h2>
+        <span class="card__dash"></span>
+      </div>
+      <div class="parent-select">
+        <div class="avatar parent-select__avatar">SNU</div>
+        <div class="parent-select__body">
+          <span class="parent-select__name">SNU CS Dept.</span>
+          <span class="parent-select__handle">@snu_cs_office · 학과사무실 · Form v3</span>
+        </div>
+        <button class="parent-select__change">변경</button>
+      </div>
+    </section>
+
+    <!-- Members -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title" style="background:linear-gradient(135deg,#6eedd8,#b6f5e6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">멤버 모집 · Gather members</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta" id="member-card-meta">4 / 5</span>
+      </div>
+
+      <div class="gauge">
+        <div class="gauge__top">
+          <span class="gauge__title">Minimum members</span>
+          <span class="gauge__value"><strong id="member-count">4</strong> / <span id="member-target">5</span></span>
+        </div>
+        <div class="gauge__track"><div class="gauge__fill" id="gauge-fill" style="width:80%"></div></div>
+        <div class="gauge__meta">
+          <span>최소 5명 필요</span>
+          <span class="gauge__status" id="gauge-status">앞으로 1명 더 필요 · 초대하세요</span>
+        </div>
+      </div>
+
+      <div class="members" id="members-list">
+        <div class="member-row"><div class="avatar avatar--sm avatar--teal">PJ</div><span class="member-row__handle">@park_j</span><span class="member-row__role member-row__role--admin">Admin</span></div>
+        <div class="member-row"><div class="avatar avatar--sm">KS</div><span class="member-row__handle">@kim_s</span><span class="member-row__role">Member</span></div>
+        <div class="member-row"><div class="avatar avatar--sm avatar--violet">LH</div><span class="member-row__handle">@lee_h</span><span class="member-row__role">Member</span></div>
+        <div class="member-row"><div class="avatar avatar--sm avatar--cyan">CM</div><span class="member-row__handle">@choi_m</span><span class="member-row__role">Member</span></div>
+      </div>
+
+      <div class="invite-row">
+        <input class="invite-row__input" id="invite-input" placeholder="초대할 사용자 핸들 (예: @jung_y)" />
+        <button class="invite-row__send" id="invite-btn">Invite</button>
+      </div>
+    </section>
+
+    <!-- Bylaws acknowledgement -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title" style="background:linear-gradient(135deg,#6eedd8,#b6f5e6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">학칙 확인 · Bylaws</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta">부모팀 v2</span>
+      </div>
+
+      <a class="bylaws-link" href="bylaws-section.html">
+        <div class="bylaws-link__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="bylaws-link__body">
+          <span class="bylaws-link__title">SNU CS Dept. 학칙 (v2)</span>
+          <div class="bylaws-link__sub">8개 항목 · 최종 업데이트 2026-02-01 · 읽고 동의해주세요</div>
+        </div>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+
+      <label class="checkbox" style="margin-top:10px">
+        <input type="checkbox" id="bylaws-check" />
+        <span class="checkbox__box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+        <span class="checkbox__label">
+          위 학칙을 모두 읽고 동의합니다.
+          <small>향후 학칙이 업데이트되더라도 이미 승인된 신청에는 소급 적용되지 않지만, 새로운 학칙이 게시되면 이메일로 안내됩니다.</small>
+        </span>
+      </label>
+    </section>
+
+    <!-- Application form -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title" style="background:linear-gradient(135deg,#6eedd8,#b6f5e6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">신청서 · Application form</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta">6 필드 · 학과 제공</span>
+      </div>
+      <div class="form-set">
+        <div class="field">
+          <label class="field__label">제안하는 팀 이름 <span class="req">*</span></label>
+          <input class="field__input" value="Quantum Computing Club" data-req="true" />
+        </div>
+        <div class="field">
+          <label class="field__label">설립 목적 <span class="req">*</span></label>
+          <textarea class="field__textarea" data-req="true">학부생 중심의 양자 컴퓨팅 스터디. Qiskit/Cirq 실습, 양자 알고리즘 세미나, 학과 세미나 시리즈 참여를 통해 학과의 양자 연구 생태계 저변을 넓히고자 합니다.</textarea>
+        </div>
+        <div class="field">
+          <label class="field__label">지도교수 (이름 · 소속 · 이메일) <span class="req">*</span></label>
+          <input class="field__input" value="이양자 교수 · 양자정보연구실 · ylee@snu.ac.kr" data-req="true" />
+        </div>
+        <div class="field">
+          <label class="field__label">정기 모임 주기 <span class="req">*</span></label>
+          <select class="field__select" data-req="true">
+            <option>격주 수요일 19:00</option>
+            <option>매주</option>
+            <option>월 1회</option>
+            <option>비정기</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field__label">회칙 문서 링크 (선택)</label>
+          <input class="field__input" placeholder="https://…" />
+        </div>
+        <div class="field">
+          <label class="field__label">연간 활동 계획 인원 <span class="req">*</span></label>
+          <input class="field__input" type="number" value="15" data-req="true" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Sticky submit -->
+    <div class="submit-bar" id="submit-bar">
+      <div class="submit-bar__status">
+        <span class="submit-bar__title" id="submit-title">제출까지 1단계 남음</span>
+        <div class="submit-bar__list" id="submit-checks">
+          <span class="submit-bar__list-item" id="chk-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> 최소 멤버 5명</span>
+          <span class="submit-bar__list-item" id="chk-bylaws"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> 학칙 동의</span>
+          <span class="submit-bar__list-item ok" id="chk-form"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 필수 필드 작성</span>
+        </div>
+      </div>
+      <button class="btn btn--primary" id="submit-btn" disabled aria-disabled="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Submit application
+      </button>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+
+  <template id="member-tpl">
+    <div class="member-row"><div class="avatar avatar--sm avatar--pink"></div><span class="member-row__handle"></span><span class="member-row__role">Invited</span></div>
+  </template>
+</div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    const MIN_TARGET = 5;
+    const membersList = document.getElementById('members-list');
+    const memberCount = document.getElementById('member-count');
+    const memberCardMeta = document.getElementById('member-card-meta');
+    const gaugeFill = document.getElementById('gauge-fill');
+    const gaugeStatus = document.getElementById('gauge-status');
+    const bylawsCheck = document.getElementById('bylaws-check');
+    const submitBtn = document.getElementById('submit-btn');
+    const submitTitle = document.getElementById('submit-title');
+    const chkMembers = document.getElementById('chk-members');
+    const chkBylaws = document.getElementById('chk-bylaws');
+    const inviteInput = document.getElementById('invite-input');
+    const inviteBtn = document.getElementById('invite-btn');
+    const memberTpl = document.getElementById('member-tpl');
+
+    function renderGates() {
+      const count = membersList.children.length;
+      memberCount.textContent = count;
+      memberCardMeta.textContent = count + ' / ' + MIN_TARGET;
+      const pct = Math.min(100, Math.round((count / MIN_TARGET) * 100));
+      gaugeFill.style.width = pct + '%';
+      const membersOk = count >= MIN_TARGET;
+      if (membersOk) {
+        gaugeFill.classList.add('gauge__fill--met');
+        gaugeStatus.classList.add('gauge__status--met');
+        gaugeStatus.textContent = '최소 인원 달성';
+      } else {
+        gaugeFill.classList.remove('gauge__fill--met');
+        gaugeStatus.classList.remove('gauge__status--met');
+        gaugeStatus.textContent = '앞으로 ' + (MIN_TARGET - count) + '명 더 필요';
+      }
+
+      // Update checklist items
+      const ok = function(el, isOk) {
+        el.classList.toggle('ok', isOk);
+        const svg = el.querySelector('svg');
+        svg.replaceChildren();
+        if (isOk) {
+          svg.setAttribute('viewBox', '0 0 24 24');
+          const p = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+          p.setAttribute('points', '20 6 9 17 4 12');
+          p.setAttribute('stroke-width', '2.5');
+          p.setAttribute('stroke-linecap', 'round');
+          p.setAttribute('stroke-linejoin', 'round');
+          svg.appendChild(p);
+        } else {
+          const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          c.setAttribute('cx', '12'); c.setAttribute('cy', '12'); c.setAttribute('r', '10'); c.setAttribute('stroke-width','2');
+          svg.appendChild(c);
+        }
+      };
+      ok(chkMembers, membersOk);
+      ok(chkBylaws, bylawsCheck.checked);
+
+      const ready = membersOk && bylawsCheck.checked;
+      submitBtn.disabled = !ready;
+      submitBtn.setAttribute('aria-disabled', !ready);
+      if (ready) {
+        submitTitle.textContent = '제출 준비 완료';
+        submitTitle.classList.add('submit-bar__title--ready');
+      } else {
+        const remaining = (membersOk ? 0 : 1) + (bylawsCheck.checked ? 0 : 1);
+        submitTitle.textContent = remaining > 0 ? ('제출까지 ' + remaining + '단계 남음') : '제출 준비 완료';
+        submitTitle.classList.remove('submit-bar__title--ready');
+      }
+    }
+
+    inviteBtn.addEventListener('click', () => {
+      let h = inviteInput.value.trim();
+      if (!h) return;
+      if (!h.startsWith('@')) h = '@' + h;
+      const frag = memberTpl.content.cloneNode(true);
+      const initials = h.replace(/^@/, '').substring(0, 2).toUpperCase();
+      frag.querySelector('.avatar').textContent = initials;
+      frag.querySelector('.member-row__handle').textContent = h;
+      membersList.appendChild(frag);
+      inviteInput.value = '';
+      SubTeam.toast(h + ' 초대 전송', 'success');
+      renderGates();
+    });
+    inviteInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') inviteBtn.click(); });
+
+    bylawsCheck.addEventListener('change', renderGates);
+
+    submitBtn.addEventListener('click', () => {
+      if (submitBtn.disabled) return;
+      SubTeam.toast('신청 제출 완료 · 학과사무실 심사 대기', 'success');
+      setTimeout(() => { window.location.href = 'child-application-status.html'; }, 1500);
+    });
+
+    renderGates();
+  });
+</script>
+</body>
+</html>

@@ -204,31 +204,10 @@ test.describe
       options: ["Yes", "No"],
     });
 
-    // Arena Schedule: native datetime-local inputs (schedule-start /
-    // schedule-end). Set start = tomorrow, end = day after tomorrow.
-    const fmt = (d) => {
-      const y = d.getFullYear();
-      const mo = String(d.getMonth() + 1).padStart(2, "0");
-      const da = String(d.getDate()).padStart(2, "0");
-      const h = String(d.getHours()).padStart(2, "0");
-      const mi = String(d.getMinutes()).padStart(2, "0");
-      return `${y}-${mo}-${da}T${h}:${mi}`;
-    };
-    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    const dayAfter = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
-
-    const startInput = page.getByTestId("schedule-start");
-    await expect(startInput).toBeVisible();
-    await startInput.fill(fmt(tomorrow));
-    await startInput.blur();
-    await page.waitForLoadState("load");
-
-    const endInput = page.getByTestId("schedule-end");
-    await expect(endInput).toBeVisible();
-    await endInput.fill(fmt(dayAfter));
-    await endInput.blur();
-    await page.waitForLoadState("load");
-    await page.waitForTimeout(500);
+    // Schedule inputs were removed in the status-based refactor — actions
+    // now transition via the creator's explicit Publish button. This test
+    // leaves the poll in Designing; prerequisite visibility comes from
+    // the prerequisite toggle later in the flow.
   });
 
   test("Configure Panel app with Age and Gender attributes", async ({
