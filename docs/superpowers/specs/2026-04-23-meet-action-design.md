@@ -20,10 +20,14 @@ Ship Meet as the 5th space action alongside Poll / Quiz / Discussion / Follow. P
 - `MeetActionCard` for the carousel with Scheduled / Live / Ended visual states (derived from `SpaceActionStatus` + timestamps).
 - `DashboardAggregate::inc_meets` counter.
 
-### Stubbed in this phase (UI only)
-- Essence toggle on editor — reads `Space.include_meetings_in_essence` but does not ingest.
-- Notifications preview card — static T-0 / T-10min / Live / Rec-ready chips, no delivery.
-- Rewards — single common `ActionRewardSetting` instead of the mockup's host/attendee split. Actual reward distribution piggybacks on the existing pipeline in a later phase.
+### "Coming Soon" placeholders (framework-required only)
+- `MeetActionCard` Live / Ended visual states — the card must render when an admin flips `SpaceActionStatus` to `Ongoing` / `Finish`; the CTA buttons ("입장", "아카이브 보기") are visible but disabled with a `Coming Soon` badge, no click handler.
+- `MeetViewerView` Live / Ended branches — same reason. Role-based branching must produce some UI for those phases; these render a minimal Coming Soon placeholder (title + brief copy + `Coming Soon` badge).
+
+### Explicitly removed from the Phase 1 editor UI
+- **Essence toggle card** — not rendered in Phase 1. `Space.include_meetings_in_essence` field is still added to the Space entity so the future phase has persistence ready, but no editor affordance ships now.
+- **Notifications preview card** — not rendered. Showing a "these four notifications will be sent" panel while no notifications fire would mislead admins.
+- **Host / attendee reward split** — not rendered. Phase 1 uses the single common `ActionRewardSetting` (attendee-style reward via `SpaceAction.credits`). The host-only reward field arrives in the phase that implements ≥1-minute presence gating.
 
 ### Out of scope (follow-up phases)
 - Live meeting UI (`live.html`): video grid, chat, raise-hand, reactions, host controls.
@@ -248,14 +252,12 @@ MeetActionPage (component.rs, role-based branch)
 │  │  ├─ PrerequisiteTile
 │  │  ├─ ActionStatusControl
 │  │  └─ ActionDeleteButton
-│  ├─ MeetEssenceToggleCard  (stub: reads Space.include_meetings_in_essence, paid-tier gating UI, no ingestion)
-│  ├─ MeetNotificationsPreviewCard  (static info panel — 4 chips)
 │  └─ MeetSubmitBar        (sticky primary "Meet 예약" / "지금 시작" — wraps update_meet(StartTime) + ActionStatusControl Ongoing)
-└─ MeetViewerView         (participant — viewer_view.rs, minimal stub)
+└─ MeetViewerView         (participant — viewer_view.rs)
    ├─ Title + description
    ├─ Scheduled → start-time countdown
-   ├─ Live → "Live now" placeholder (no Chime)
-   └─ Ended → "Meeting ended" placeholder (no archive yet)
+   ├─ Live → Coming Soon placeholder (disabled "입장" button + badge)
+   └─ Ended → Coming Soon placeholder (disabled "아카이브 보기" button + badge)
 ```
 
 ### Carousel integration
@@ -266,8 +268,8 @@ MeetActionPage (component.rs, role-based branch)
 |---------------|-----------------|
 | Draft (Designing) | visible in the carousel (same as Poll / Quiz in Designing), muted styling, placeholder title "새 회의" if empty, "설정 중" badge, click → re-enters editor |
 | Scheduled | title, D-day countdown, coral accent (`#fb7185`), "자세히 보기" CTA |
-| Live | pulse-dot animation, "LIVE 진행 중", "입장" CTA (stub click) |
-| Ended | muted style, "종료됨", "아카이브 보기" CTA (stub click) |
+| Live | pulse-dot animation, "LIVE 진행 중" label, disabled "입장" CTA with Coming Soon badge |
+| Ended | muted style, "종료됨" label, disabled "아카이브 보기" CTA with Coming Soon badge |
 
 Click routes to `Route::MeetActionPage` where role-based branching renders the right view.
 
@@ -293,7 +295,7 @@ Components consume `UseMeet` — they never import `_handler` functions directly
 
 ### Space entity additive field
 
-`Space` gains `include_meetings_in_essence: bool` (default `false`). Purely persisted in Phase 1; the actual Essence ingestion wiring is a later phase. Added here so the `MeetEssenceToggleCard` has a real field to bind to rather than introducing a runtime-only signal.
+`Space` gains `include_meetings_in_essence: bool` (default `false`). Not exposed in any Phase 1 UI — the editor does not render an Essence toggle card. The field is persisted now so a future phase that ships the Essence toggle + ingestion pipeline does not need a schema migration.
 
 ## Test plan
 
