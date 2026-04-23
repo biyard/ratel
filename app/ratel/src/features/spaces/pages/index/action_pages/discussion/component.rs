@@ -275,7 +275,7 @@ fn ReplyThreadView(
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
                         disabled: reply_text().trim().is_empty()
-                                                                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
                         on_mention_query_change,
                         on_composer_focus,
                         priority_user_pks: reply_priority,
@@ -298,7 +298,7 @@ pub fn DiscussionArenaPage(
     let space = use_space()();
 
     let arena = use_discussion_arena(space_id, discussion_id)?;
-    let mut comments_loader = arena.comments_loader;
+    let mut comments_query = arena.comments_query;
     let polled_new = arena.polled_new;
     let active_reply_thread = arena.active_reply_thread;
     let mut sheet_expanded = arena.sheet_expanded;
@@ -329,34 +329,15 @@ pub fn DiscussionArenaPage(
     let is_creator = matches!(role, SpaceUserRole::Creator);
     let can_comment = can_respond && can_execute && (is_creator || is_in_progress);
 
-    // Merge base + polled (base wins on duplicate sks so loader restarts
-    // after edit/delete clobber stale polled snapshots), then rank by
-    // `comment_score` against the local `now`. Re-runs whenever:
-    //  - `comments_loader` resolves with new data
+    // Re-runs whenever:
+    //  - `comments_query` accumulates new pages or refresh resolves
     //  - `polled_new` gains a new entry
     //  - `sort_tick` ticks (every 5s, drives time-decay reorder)
     let comments: Memo<Vec<DiscussionCommentResponse>> = use_memo(move || {
         // Touch sort_tick so the memo re-evaluates each tick.
         let _ = sort_tick();
-        let polled = polled_new();
-        let base = comments_loader().items;
-        let base_sks: std::collections::HashSet<String> =
-            base.iter().map(|c| c.sk.to_string()).collect();
-        let mut merged: Vec<DiscussionCommentResponse> = base
-            .into_iter()
-            .chain(
-                polled
-                    .into_iter()
-                    .filter(|p| !base_sks.contains(&p.sk.to_string())),
-            )
-            .collect();
         let now = crate::common::utils::time::get_now_timestamp();
-        merged.sort_by(|a, b| {
-            comment_score(b, now)
-                .partial_cmp(&comment_score(a, now))
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
-        merged
+        merge_and_rank_comments(comments_query.items(), polled_new(), now)
     });
 
     // `overlay_ctx` is only present when mounted as the arena overlay;
@@ -369,7 +350,7 @@ pub fn DiscussionArenaPage(
     // Hook indices must match between SSR and hydration; gate only the
     // browser-API body, not the `use_effect` call itself.
     use_effect(move || {
-        let _ = comments_loader();
+        let _ = comments_query.items();
         if deep_link_done() {
             return;
         }
@@ -642,7 +623,7 @@ pub fn DiscussionArenaPage(
                                 on_submit: move |_| on_submit_comment(()),
                                 placeholder: tr.comment_placeholder.to_string(),
                                 disabled: comment_text().trim().is_empty()
-                                                                                                                                                                                                                                                                                                    && pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                                                                                                                    && pending_images.read().is_empty(),
                                 on_mention_query_change,
                                 on_composer_focus,
                                 priority_user_pks: top_priority,
@@ -661,6 +642,7 @@ pub fn DiscussionArenaPage(
                                         deep_link_target,
                                     }
                                 }
+                                {comments_query.more_element()}
                             }
                         }
                     }
@@ -810,9 +792,7 @@ fn CommentText(content: String) -> Element {
     let mut expanded = use_signal(|| false);
 
     rsx! {
-        div {
-            class: "comment-text",
-            "data-expanded": expanded(),
+        div { class: "comment-text", "data-expanded": expanded(),
             div { class: "comment-item__text",
                 for segment in parse_mention_segments(&content) {
                     match segment {
@@ -830,7 +810,11 @@ fn CommentText(content: String) -> Element {
             button {
                 class: "comment-item__expand",
                 onclick: move |_| expanded.toggle(),
-                if expanded() { "{tr.show_less}" } else { "{tr.show_more}" }
+                if expanded() {
+                    "{tr.show_less}"
+                } else {
+                    "{tr.show_more}"
+                }
             }
         }
     }
@@ -848,7 +832,6 @@ fn CommentItem(
 
     let arena = use_discussion_arena(space_id, discussion_id)?;
     let UseDiscussionArena {
-        mut comments_loader,
         mut polled_new,
         members,
         mut mention_query_raw,
@@ -1174,7 +1157,7 @@ fn CommentItem(
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
                         disabled: reply_text().trim().is_empty()
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            && reply_pending_images.read().is_empty(),
                         on_mention_query_change,
                         on_composer_focus,
                         priority_user_pks: reply_priority,
