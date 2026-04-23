@@ -138,26 +138,42 @@
     .add-field-btn:hover{background:rgba(252,179,0,0.08);border-color:rgba(252,179,0,0.45)}
     .add-field-btn svg{width:13px;height:13px}
 
-    /* ── Consent items ── */
-    .consent-list{display:flex;flex-direction:column;gap:10px}
-    .consent-item{padding:14px 16px;border-radius:12px;background:rgba(129,140,248,0.04);border:1px solid rgba(129,140,248,0.22);display:flex;flex-direction:column;gap:10px}
-    .consent-item__head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-    .consent-item__num{width:28px;height:28px;border-radius:8px;background:rgba(129,140,248,0.10);border:1px solid rgba(129,140,248,0.25);color:var(--accent-violet);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:11px;font-weight:800;flex-shrink:0}
-    .consent-item__title{flex:1;min-width:200px;padding:8px 12px;border-radius:8px;background:rgba(6,6,14,0.5);border:1px solid var(--border-subtle);color:var(--text-primary);font-family:var(--font-body);font-size:14px;font-weight:700;outline:none;transition:all 0.2s}
-    .consent-item__title:focus{border-color:rgba(129,140,248,0.35);box-shadow:0 0 12px rgba(129,140,248,0.1)}
-    .consent-item__req{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim)}
-    .consent-item__req input{accent-color:var(--accent-violet)}
-    .consent-item__actions{display:flex;gap:4px}
-    .consent-item__btn{width:28px;height:28px;border-radius:7px;padding:0;background:transparent;border:1px solid var(--border-subtle);color:var(--text-dim);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
-    .consent-item__btn:hover{color:var(--text-primary);border-color:var(--border-strong)}
-    .consent-item__btn--danger:hover{border-color:rgba(239,68,68,0.3);color:var(--accent-coral);background:rgba(239,68,68,0.06)}
-    .consent-item__btn svg{width:13px;height:13px}
-    .consent-item__body{width:100%;min-height:80px;padding:10px 12px;border-radius:8px;background:rgba(6,6,14,0.5);border:1px solid var(--border-subtle);color:var(--text-primary);font-family:var(--font-body);font-size:13px;line-height:1.6;outline:none;resize:vertical;transition:all 0.2s}
-    .consent-item__body:focus{border-color:rgba(129,140,248,0.35);box-shadow:0 0 12px rgba(129,140,248,0.1)}
-    .consent-item__hint{font-size:11px;color:var(--text-dim);font-family:var(--font-display);letter-spacing:0.04em;padding-left:4px}
-    .add-consent-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:10px;background:rgba(129,140,248,0.03);border:1px dashed rgba(129,140,248,0.30);color:var(--accent-violet);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
-    .add-consent-btn:hover{background:rgba(129,140,248,0.08);border-color:rgba(129,140,248,0.5)}
-    .add-consent-btn svg{width:13px;height:13px}
+    /* ── Documents (tab: 문서) ── */
+    .doc-list{display:flex;flex-direction:column;gap:10px}
+    .doc-item{padding:14px 16px;border-radius:12px;background:rgba(129,140,248,0.04);border:1px solid rgba(129,140,248,0.22);display:flex;flex-direction:column;gap:10px;transition:all 0.2s}
+    .doc-item[data-required="true"]{background:rgba(168,85,247,0.06);border-color:rgba(168,85,247,0.28)}
+    .doc-item__head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .doc-item__icon{width:30px;height:30px;border-radius:8px;background:rgba(129,140,248,0.10);border:1px solid rgba(129,140,248,0.25);color:var(--accent-violet);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .doc-item[data-required="true"] .doc-item__icon{background:rgba(168,85,247,0.12);border-color:rgba(168,85,247,0.32);color:var(--accent-purple)}
+    .doc-item__icon svg{width:14px;height:14px}
+    .doc-item__title{flex:1;min-width:200px;padding:8px 12px;border-radius:8px;background:rgba(6,6,14,0.5);border:1px solid var(--border-subtle);color:var(--text-primary);font-family:var(--font-body);font-size:14px;font-weight:700;outline:none;transition:all 0.2s}
+    .doc-item__title:focus{border-color:rgba(129,140,248,0.35);box-shadow:0 0 12px rgba(129,140,248,0.10)}
+    .doc-item__updated{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.08em;color:var(--text-dim);white-space:nowrap}
+    .doc-item__req{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+    .doc-item__req input{position:absolute;opacity:0;pointer-events:none}
+    .doc-item__req-pill{
+      display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;
+      font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+      background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);color:var(--text-dim);
+      transition:all 0.2s;
+    }
+    .doc-item__req-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;opacity:0.5}
+    .doc-item__req input:checked ~ .doc-item__req-pill{background:rgba(168,85,247,0.12);border-color:rgba(168,85,247,0.40);color:var(--accent-purple);box-shadow:0 0 10px rgba(168,85,247,0.15)}
+    .doc-item__req input:checked ~ .doc-item__req-pill::before{opacity:1;box-shadow:0 0 6px var(--accent-purple)}
+    .doc-item__actions{display:flex;gap:4px}
+    .doc-item__btn{width:28px;height:28px;border-radius:7px;padding:0;background:transparent;border:1px solid var(--border-subtle);color:var(--text-dim);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
+    .doc-item__btn:hover{color:var(--text-primary);border-color:var(--border-strong)}
+    .doc-item__btn--danger:hover{border-color:rgba(239,68,68,0.3);color:var(--accent-coral);background:rgba(239,68,68,0.06)}
+    .doc-item__btn svg{width:13px;height:13px}
+    .doc-item__body{width:100%;min-height:100px;padding:12px 14px;border-radius:8px;background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);color:var(--text-primary);font-family:var(--font-body);font-size:13px;line-height:1.65;outline:none;resize:vertical;transition:all 0.2s}
+    .doc-item__body:focus{border-color:rgba(129,140,248,0.35);box-shadow:0 0 12px rgba(129,140,248,0.10)}
+    .doc-item__foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .doc-item__stats{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--text-dim)}
+    .doc-item__hint{font-size:11px;color:var(--text-dim);font-family:var(--font-display);letter-spacing:0.04em}
+    .doc-item[data-required="true"] .doc-item__hint{color:var(--accent-purple)}
+    .add-doc-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:10px;background:rgba(129,140,248,0.03);border:1px dashed rgba(129,140,248,0.30);color:var(--accent-violet);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+    .add-doc-btn:hover{background:rgba(129,140,248,0.08);border-color:rgba(129,140,248,0.5)}
+    .add-doc-btn svg{width:13px;height:13px}
 
     /* ── Roster ── */
     .roster{display:flex;flex-direction:column;gap:8px}
@@ -329,6 +345,11 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         가입 요건
       </button>
+      <button class="tabs-nav__btn" role="tab" aria-selected="false" data-tab="documents">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+        문서
+        <span class="tabs-nav__badge" id="docs-badge">3</span>
+      </button>
       <button class="tabs-nav__btn" role="tab" aria-selected="false" data-tab="roster">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
         하위팀 목록
@@ -345,7 +366,7 @@
       </button>
     </nav>
 
-    <!-- ====== TAB: 가입 요건 (요건 + 신청폼 + 동의서) ====== -->
+    <!-- ====== TAB: 가입 요건 (요건 + 신청폼) ====== -->
     <div class="tab-panel" data-tab="requirements" data-active="true">
 
       <!-- Activation-gated wrapper — only the configuration blocks dim, roster/queue/broadcast stay live -->
@@ -389,7 +410,7 @@
 
           <div class="inline-note" style="margin-top:12px">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            지도교수·담당자 같은 팀별 정보는 신청폼에서 "필수" 체크로 받으세요. Bylaws 동의는 아래 <strong>동의서</strong> 섹션에서 직접 문구를 기술할 수 있습니다.
+            지도교수·담당자 같은 팀별 정보는 신청폼에서 "필수" 체크로 받으세요. 학칙·규정 같은 문서는 <strong>문서 탭</strong>에서 만들고 "필독"으로 지정하면 가입 신청 때 반드시 읽고 동의해야 제출됩니다.
           </div>
         </section>
 
@@ -477,100 +498,149 @@
           </div>
         </template>
 
-        <!-- 3c. 동의서 (Consent) — new -->
-        <section class="card card--collapsible" id="consent" data-collapsed="false">
-          <div class="card__head" id="consent-head">
-            <h2 class="card__title" style="background:linear-gradient(135deg,#a5b4fc,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">동의서 · Consent items</h2>
-            <span class="card__dash"></span>
-            <span class="card__meta" id="consent-meta">3 항목 · 2 필수</span>
-            <div class="card__head-toolbar">
-              <button class="card__toggle" id="consent-toggle" aria-label="Toggle consent">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-            </div>
-          </div>
-
-          <div class="card__body">
-            <div class="notice" style="margin-bottom:10px">
-              <div class="notice__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-              <div class="notice__body">
-                <span class="notice__title">Consent · 신청자가 체크할 항목</span>
-                <span class="notice__text">학칙·개인정보·활동 지침 등 원하는 동의 항목을 직접 기술하세요. 각 항목은 필수/선택을 지정할 수 있고, 제출 시점의 동의 내역이 <strong>신청 기록에 영구 보관</strong>됩니다. 항목 문구를 나중에 수정해도 기존 신청의 동의 내역은 당시 문구로 고정됩니다.</span>
-              </div>
-            </div>
-
-            <div class="consent-list" id="consent-list">
-              <div class="consent-item" data-required="true">
-                <div class="consent-item__head">
-                  <span class="consent-item__num">1</span>
-                  <input class="consent-item__title" value="학과 학칙 동의" />
-                  <label class="consent-item__req"><input type="checkbox" checked /> 필수</label>
-                  <div class="consent-item__actions">
-                    <button class="consent-item__btn" aria-label="Move up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
-                    <button class="consent-item__btn" aria-label="Move down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-                    <button class="consent-item__btn consent-item__btn--danger" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
-                  </div>
-                </div>
-                <textarea class="consent-item__body">SNU CS Dept. 학칙 v2 (2026-02-01)에 명시된 동아리 설립 요건·활동 보고 의무·학과 공지 수신 의무를 모두 읽고 이에 동의합니다. 학칙 업데이트는 기존 승인 신청에 소급 적용되지 않습니다.</textarea>
-                <span class="consent-item__hint">줄바꿈·링크 사용 가능 · 제출 시 이 문구 그대로 기록됨</span>
-              </div>
-
-              <div class="consent-item" data-required="true">
-                <div class="consent-item__head">
-                  <span class="consent-item__num">2</span>
-                  <input class="consent-item__title" value="개인정보 처리 동의" />
-                  <label class="consent-item__req"><input type="checkbox" checked /> 필수</label>
-                  <div class="consent-item__actions">
-                    <button class="consent-item__btn" aria-label="Move up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
-                    <button class="consent-item__btn" aria-label="Move down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-                    <button class="consent-item__btn consent-item__btn--danger" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
-                  </div>
-                </div>
-                <textarea class="consent-item__body">신청 시 제출한 대표자 연락처·지도교수 정보는 하위팀 심사 목적 외에는 사용되지 않으며, 학과 내부 기록으로만 보관됩니다. 승인 후에는 학과-동아리 커뮤니케이션 채널 구축에만 사용됩니다.</textarea>
-                <span class="consent-item__hint">필수 · 관련법(개인정보보호법 등) 관련 문구는 여기에 기술</span>
-              </div>
-
-              <div class="consent-item" data-required="false">
-                <div class="consent-item__head">
-                  <span class="consent-item__num">3</span>
-                  <input class="consent-item__title" value="활동 사진·영상 학과 홍보 사용 동의 (선택)" />
-                  <label class="consent-item__req"><input type="checkbox" /> 필수</label>
-                  <div class="consent-item__actions">
-                    <button class="consent-item__btn" aria-label="Move up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
-                    <button class="consent-item__btn" aria-label="Move down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-                    <button class="consent-item__btn consent-item__btn--danger" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
-                  </div>
-                </div>
-                <textarea class="consent-item__body">동아리의 공식 활동 중 촬영된 사진·영상을 학과 공식 SNS·신입생 안내 자료에 사용하는 것에 동의합니다. 이 항목은 선택이며, 동의하지 않아도 신청에는 영향이 없습니다.</textarea>
-                <span class="consent-item__hint">선택 항목 · 승인·거절에 영향 없음</span>
-              </div>
-            </div>
-
-            <button class="add-consent-btn" id="add-consent" style="margin-top:10px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              동의 항목 추가
-            </button>
-          </div>
-        </section>
-
-        <template id="new-consent-tpl">
-          <div class="consent-item" data-required="false">
-            <div class="consent-item__head">
-              <span class="consent-item__num">N</span>
-              <input class="consent-item__title" placeholder="동의 항목 제목 (예: XYZ 정책 동의)" />
-              <label class="consent-item__req"><input type="checkbox" /> 필수</label>
-              <div class="consent-item__actions">
-                <button class="consent-item__btn" aria-label="Move up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
-                <button class="consent-item__btn" aria-label="Move down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-                <button class="consent-item__btn consent-item__btn--danger" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
-              </div>
-            </div>
-            <textarea class="consent-item__body" placeholder="항목 본문을 기술하세요…"></textarea>
-            <span class="consent-item__hint">줄바꿈·링크 사용 가능</span>
-          </div>
-        </template>
-
       </div><!-- /.gated -->
+    </div>
+
+    <!-- ====== TAB: 문서 (규정 · 학칙) ====== -->
+    <div class="tab-panel" data-tab="documents">
+      <section class="card">
+        <div class="card__head">
+          <h2 class="card__title">문서 · Documents</h2>
+          <span class="card__dash"></span>
+          <span class="card__meta" id="docs-meta">3 documents · 2 필독</span>
+        </div>
+
+        <div class="notice" style="margin-bottom:10px">
+          <div class="notice__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div class="notice__body">
+            <span class="notice__title">가입 신청에서 보이는 문서</span>
+            <span class="notice__text">학칙·운영 가이드·기타 규정을 여기서 관리하세요. <strong style="color:var(--accent-violet)">가입 신청 필독</strong>으로 지정한 문서는 하위팀이 신청할 때 반드시 읽고 동의해야 제출됩니다. 문서 내용을 나중에 수정해도 기존 신청의 동의 기록은 당시 문구로 고정됩니다.</span>
+          </div>
+        </div>
+
+        <div class="doc-list" id="doc-list">
+
+          <div class="doc-item" data-required="true">
+            <div class="doc-item__head">
+              <span class="doc-item__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+              <input class="doc-item__title" value="SNU CS Dept. 학칙 v2" />
+              <span class="doc-item__updated">2026-02-01 수정</span>
+              <label class="doc-item__req">
+                <input type="checkbox" checked />
+                <span class="doc-item__req-pill">필독</span>
+              </label>
+              <div class="doc-item__actions">
+                <button class="doc-item__btn" aria-label="Move up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+                <button class="doc-item__btn" aria-label="Move down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                <button class="doc-item__btn doc-item__btn--danger" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+              </div>
+            </div>
+            <textarea class="doc-item__body">제1조 (목적) 본 학칙은 SNU CS Dept. 소속 학생 동아리의 설립, 활동, 해체에 관한 사항을 규정함을 목적으로 한다.
+
+제2조 (설립 요건)
+  1. 최소 5인 이상의 학부·대학원생 구성
+  2. 지도교수 1인 사전 섭외
+  3. 학술적 또는 사회적 공익에 부합하는 활동 목적
+
+제3조 (등록 및 인증)
+  프로스펙티브 동아리는 pending 팀을 먼저 생성하고 학과가 정한 신청서를 제출해야 한다. 학과는 영업일 3–5일 내 승인 · 거절 · 수정 반송 중 하나를 결정한다.
+
+제4조 (활동 보고)
+  인증된 동아리는 학기말에 정기 활동 보고서를 학과에 제출한다. 공개 활동은 학과 대시보드에 자동 반영된다.
+
+제5조 (학과 공지 수신 의무)
+  인증된 동아리의 admin은 학과 공지를 합리적 기한 내에 확인·전달할 책임이 있다.</textarea>
+            <div class="doc-item__foot">
+              <span class="doc-item__stats">5 조항 · 628자</span>
+              <span class="doc-item__hint">필독으로 지정됨 · 신청 시 동의 체크 필수</span>
+            </div>
+          </div>
+
+          <div class="doc-item" data-required="true">
+            <div class="doc-item__head">
+              <span class="doc-item__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+              <input class="doc-item__title" value="개인정보 처리 방침" />
+              <span class="doc-item__updated">2026-01-15 수정</span>
+              <label class="doc-item__req">
+                <input type="checkbox" checked />
+                <span class="doc-item__req-pill">필독</span>
+              </label>
+              <div class="doc-item__actions">
+                <button class="doc-item__btn" aria-label="Move up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+                <button class="doc-item__btn" aria-label="Move down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                <button class="doc-item__btn doc-item__btn--danger" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+              </div>
+            </div>
+            <textarea class="doc-item__body">신청 시 제출한 대표자 연락처·지도교수 정보는 하위팀 심사 목적 외에는 사용되지 않으며, 학과 내부 기록으로만 보관됩니다. 승인 후에는 학과-동아리 커뮤니케이션 채널 구축에만 사용됩니다.
+
+- 수집 항목: 이름, 이메일, 학번, 지도교수 정보
+- 보관 기간: 동아리 인증 종료 후 3년
+- 제3자 제공: 없음
+- 열람·수정 요청: office@snu_cs.ac.kr</textarea>
+            <div class="doc-item__foot">
+              <span class="doc-item__stats">4 항목 · 312자</span>
+              <span class="doc-item__hint">필독으로 지정됨</span>
+            </div>
+          </div>
+
+          <div class="doc-item" data-required="false">
+            <div class="doc-item__head">
+              <span class="doc-item__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
+              <input class="doc-item__title" value="동아리 운영 가이드 (참고용)" />
+              <span class="doc-item__updated">2025-12-20 수정</span>
+              <label class="doc-item__req">
+                <input type="checkbox" />
+                <span class="doc-item__req-pill">필독</span>
+              </label>
+              <div class="doc-item__actions">
+                <button class="doc-item__btn" aria-label="Move up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+                <button class="doc-item__btn" aria-label="Move down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                <button class="doc-item__btn doc-item__btn--danger" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+              </div>
+            </div>
+            <textarea class="doc-item__body">학과가 권장하는 동아리 운영 방식에 대한 참고 자료입니다. 필수가 아닌 가이드로, 동아리 특성에 맞게 참고하시면 됩니다.
+
+- 연간 계획 수립 템플릿
+- 회비 관리 권장 사항
+- 학과 공간 사용 요청 절차
+- 연계 가능한 교내 프로그램 목록</textarea>
+            <div class="doc-item__foot">
+              <span class="doc-item__stats">4 항목 · 248자</span>
+              <span class="doc-item__hint">필독 아님 · 참고 자료로만 노출</span>
+            </div>
+          </div>
+
+        </div>
+
+        <button class="add-doc-btn" id="add-doc" style="margin-top:12px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          문서 추가
+        </button>
+      </section>
+
+      <template id="new-doc-tpl">
+        <div class="doc-item" data-required="false">
+          <div class="doc-item__head">
+            <span class="doc-item__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+            <input class="doc-item__title" placeholder="문서 제목 (예: 회계 운영 지침)" />
+            <span class="doc-item__updated">방금</span>
+            <label class="doc-item__req">
+              <input type="checkbox" />
+              <span class="doc-item__req-pill">필독</span>
+            </label>
+            <div class="doc-item__actions">
+              <button class="doc-item__btn" aria-label="Move up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+              <button class="doc-item__btn" aria-label="Move down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+              <button class="doc-item__btn doc-item__btn--danger" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+            </div>
+          </div>
+          <textarea class="doc-item__body" placeholder="문서 본문을 입력하세요…"></textarea>
+          <div class="doc-item__foot">
+            <span class="doc-item__stats">0자</span>
+            <span class="doc-item__hint">필독으로 지정하면 신청 시 동의 체크 필수</span>
+          </div>
+        </div>
+      </template>
     </div>
 
     <!-- ====== TAB: 하위팀 목록 ====== -->
@@ -891,7 +961,6 @@
       });
     }
     bindCollapse('form');
-    bindCollapse('consent');
 
     // ── Linked source catalogue (per-field link menu)
     const linkSources = [
@@ -1030,45 +1099,53 @@
     document.querySelectorAll('#field-list .field-row').forEach(initFieldRow);
     updateFormMeta();
 
-    // ── Consent items
-    function renumberConsent() {
-      const items = document.querySelectorAll('#consent-list .consent-item');
-      items.forEach((it, i) => {
-        const n = it.querySelector('.consent-item__num');
-        if (n) n.textContent = String(i + 1);
-      });
-      const reqs = Array.from(items).filter(it => it.querySelector('.consent-item__req input').checked).length;
-      document.getElementById('consent-meta').textContent = items.length + ' 항목 · ' + reqs + ' 필수';
+    // ── Documents (문서 탭)
+    function refreshDocsMeta() {
+      const items = document.querySelectorAll('#doc-list .doc-item');
+      items.forEach(it => it.setAttribute('data-required', it.querySelector('.doc-item__req input').checked));
+      const required = Array.from(items).filter(it => it.querySelector('.doc-item__req input').checked).length;
+      document.getElementById('docs-meta').textContent = items.length + ' documents · ' + required + ' 필독';
+      const badge = document.getElementById('docs-badge');
+      if (badge) badge.textContent = items.length;
     }
-    document.getElementById('consent-list').addEventListener('click', (e) => {
-      const item = e.target.closest('.consent-item');
-      if (!item) return;
-      const btn = e.target.closest('.consent-item__btn');
+    function refreshDocStats(item) {
+      const ta = item.querySelector('.doc-item__body');
+      const stats = item.querySelector('.doc-item__stats');
+      if (ta && stats) stats.textContent = (ta.value || '').length + '자';
+    }
+    document.getElementById('doc-list').addEventListener('click', (e) => {
+      const btn = e.target.closest('.doc-item__btn');
       if (!btn) return;
+      const item = btn.closest('.doc-item');
       const label = btn.getAttribute('aria-label');
       if (label === 'Delete') {
         item.style.opacity = '0';
-        setTimeout(() => { item.remove(); renumberConsent(); }, 180);
+        setTimeout(() => { item.remove(); refreshDocsMeta(); }, 180);
+        SubTeam.toast('문서 삭제됨', 'danger');
       } else if (label === 'Move up') {
         const prev = item.previousElementSibling;
-        if (prev) item.parentElement.insertBefore(item, prev);
-        renumberConsent();
+        if (prev && prev.classList.contains('doc-item')) item.parentElement.insertBefore(item, prev);
       } else if (label === 'Move down') {
         const next = item.nextElementSibling;
-        if (next) item.parentElement.insertBefore(next, item);
-        renumberConsent();
+        if (next && next.classList.contains('doc-item')) item.parentElement.insertBefore(next, item);
       }
     });
-    document.getElementById('consent-list').addEventListener('change', renumberConsent);
-    document.getElementById('add-consent').addEventListener('click', () => {
-      const tpl = document.getElementById('new-consent-tpl');
-      const frag = tpl.content.cloneNode(true);
-      const item = frag.querySelector('.consent-item');
-      document.getElementById('consent-list').appendChild(item);
-      item.querySelector('.consent-item__title').focus();
-      renumberConsent();
+    document.getElementById('doc-list').addEventListener('change', refreshDocsMeta);
+    document.getElementById('doc-list').addEventListener('input', (e) => {
+      if (e.target.classList.contains('doc-item__body')) {
+        refreshDocStats(e.target.closest('.doc-item'));
+      }
     });
-    renumberConsent();
+    document.getElementById('add-doc').addEventListener('click', () => {
+      const tpl = document.getElementById('new-doc-tpl');
+      const frag = tpl.content.cloneNode(true);
+      const item = frag.querySelector('.doc-item');
+      document.getElementById('doc-list').appendChild(item);
+      item.querySelector('.doc-item__title').focus();
+      refreshDocsMeta();
+    });
+    document.querySelectorAll('#doc-list .doc-item').forEach(refreshDocStats);
+    refreshDocsMeta();
 
     // ── Queue actions
     document.getElementById('queue-list').addEventListener('click', (e) => {
@@ -1121,7 +1198,7 @@
       }, 450);
     }
     // Settings inputs: requirements, form builder, consent items, activation
-    document.querySelectorAll('#requirements input, #form input, #form select, #consent-list input, #consent-list textarea')
+    document.querySelectorAll('#requirements input, #form input, #form select, #doc-list input, #doc-list textarea')
       .forEach(el => el.addEventListener('change', flashAutosaved));
   });
 </script>
