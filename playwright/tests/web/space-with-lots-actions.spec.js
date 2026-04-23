@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import {
   click,
   createAction,
@@ -118,6 +118,44 @@ test.describe.serial("Space with lots actions", () => {
 
     // verify creator sees the follow targets card on the new arena editor.
     await getLocator(page, { testId: "page-card-config" });
+  });
+
+  test("Admin adds a Meet via TypePicker", async ({ page }) => {
+    await createAction(page, spaceUrl, "meet", /\/actions\/meets\/[^/]+/);
+
+    await expect(page.getByTestId("meet-editor-view")).toBeVisible();
+  });
+
+  test("Admin toggles mode Scheduled ↔ Instant", async ({ page }) => {
+    // Scheduled is the default — flip to Instant, then back to Scheduled.
+    await click(page, { testId: "meet-mode-instant" });
+    await expect(page.getByTestId("meet-mode-instant")).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    await click(page, { testId: "meet-mode-scheduled" });
+    await expect(page.getByTestId("meet-mode-scheduled")).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  test("Admin sets title and duration", async ({ page }) => {
+    await fill(page, { testId: "meet-title-input" }, "E2E Meet");
+    // Title commits on blur — tab out so the autosave round-trip runs.
+    await page.keyboard.press("Tab");
+    // Default duration is 60 min (+15 step → 75).
+    await click(page, { testId: "meet-duration-inc" });
+    await expect(page.getByTestId("meet-duration-value")).toContainText("75");
+  });
+
+  test("Admin publishes the Meet (Scheduled)", async ({ page }) => {
+    await click(page, { testId: "meet-submit-button" });
+    // Publishing flips SpaceActionStatus to Ongoing — the submit button is
+    // then disabled. No navigation occurs, so verify the published state
+    // by confirming the action card surfaces back on the dashboard carousel.
+    await goto(page, `${spaceUrl}/`);
+    await expect(page.getByTestId("action-card-meet").first()).toBeVisible();
   });
 
   test("Publish space public", async ({ page }) => {
