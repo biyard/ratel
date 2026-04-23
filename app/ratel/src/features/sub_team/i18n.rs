@@ -1,9 +1,10 @@
 use dioxus_translate::*;
 
+use crate::features::sub_team::models::SubTeamApplicationStatus;
 use crate::features::sub_team::models::{
     BroadcastTarget, SubTeamAnnouncementStatus, SubTeamFormFieldType,
 };
-use crate::features::sub_team::models::SubTeamApplicationStatus;
+use crate::features::sub_team::types::ParentRelationshipStatus;
 
 // ── Main UI translations ────────────────────────────────────────────
 translate! {
@@ -128,6 +129,144 @@ translate! {
         en: "Page under construction",
         ko: "페이지 준비중",
     },
+
+    // Apply page
+    apply_page_title: { en: "Apply as Sub-team", ko: "하위팀 가입 신청" },
+    apply_page_eyebrow: { en: "Apply as Sub-team", ko: "하위팀 가입 신청" },
+    apply_target_label: { en: "Target parent team", ko: "신청 대상" },
+    apply_select_parent: { en: "Select a parent team", ko: "상위팀 선택" },
+    apply_required_docs: { en: "Required reading", ko: "필독 문서" },
+    apply_docs_open_review: { en: "Open to review", ko: "열어서 검토" },
+    apply_docs_agreed: { en: "Agreed", ko: "동의 완료" },
+    apply_form_fields: { en: "Application form", ko: "신청폼" },
+    apply_eligibility_title: { en: "Eligibility check", ko: "가입 요건" },
+    apply_elig_min_members: { en: "Minimum members met", ko: "최소 멤버 수 충족" },
+    apply_elig_form_filled: { en: "Required fields filled", ko: "필수 필드 작성 완료" },
+    apply_elig_docs_agreed: { en: "Required docs agreed", ko: "필독 문서 동의 완료" },
+    apply_submit: { en: "Submit application", ko: "신청 제출" },
+    apply_submit_sub: {
+        en: "All requirements must be met before submitting",
+        ko: "모든 요건이 충족되면 제출할 수 있습니다",
+    },
+    apply_parent_eligible_off: {
+        en: "This team is not accepting sub-team applications",
+        ko: "이 팀은 현재 하위팀 신청을 받지 않습니다",
+    },
+
+    // Doc agreement modal
+    doc_modal_eyebrow: { en: "Required reading", ko: "필독 문서" },
+    doc_modal_agree: { en: "Agree", ko: "동의하기" },
+    doc_modal_agreed: { en: "Agreed", ko: "동의 완료" },
+    doc_modal_cancel: { en: "Cancel", ko: "취소" },
+    doc_modal_notice: {
+        en: "Clicking Agree records this document version and your consent timestamp permanently. Cancelling does not save your agreement.",
+        ko: "동의하기를 누르면 제출 기록에 이 문서의 현재 버전과 동의 시점이 영구 보관됩니다. 취소하면 동의 상태가 저장되지 않습니다.",
+    },
+
+    // Application status
+    status_page_title: { en: "Application Status", ko: "신청 상태" },
+    status_page_eyebrow: { en: "Application Tracker", ko: "신청 상태" },
+    status_relationship_standalone: { en: "Standalone team", ko: "독립 팀" },
+    status_relationship_pending: { en: "Application pending", ko: "심사 대기 중" },
+    status_relationship_recognized: { en: "Recognized sub-team", ko: "인증된 하위팀" },
+    status_edit_and_resubmit: { en: "Edit and resubmit", ko: "수정 후 재제출" },
+    status_cancel_application: { en: "Cancel application", ko: "신청 취소" },
+    status_history: { en: "Application history", ko: "신청 기록" },
+    status_no_applications: {
+        en: "No applications yet",
+        ko: "신청 내역이 없습니다",
+    },
+    status_decision_reason: { en: "Decision reason", ko: "심사 결과 사유" },
+    status_latest_application: { en: "Latest application", ko: "최근 신청" },
+
+    // Doc compose
+    doc_compose_title_new: { en: "New document", ko: "새 문서" },
+    doc_compose_title_edit: { en: "Edit document", ko: "문서 편집" },
+    doc_compose_eyebrow: { en: "Sub-team · Document", ko: "하위팀 · 문서" },
+    doc_compose_title_placeholder: {
+        en: "Document title",
+        ko: "문서 제목",
+    },
+    doc_compose_body_placeholder: {
+        en: "Write document content…",
+        ko: "문서 내용을 작성하세요…",
+    },
+    doc_compose_required_on: { en: "Marked as required", ko: "필독으로 지정됨" },
+    doc_compose_required_off: { en: "Not required", ko: "필독 아님" },
+    doc_compose_required_desc: {
+        en: "Sub-teams must read and agree to this document before submitting.",
+        ko: "하위팀이 가입 신청할 때 이 문서를 읽고 동의해야 합니다.",
+    },
+    doc_compose_word_count: { en: "characters", ko: "글자" },
+
+    // Leave parent
+    leave_parent_page_eyebrow: { en: "Leave Parent Team", ko: "상위팀 이탈" },
+    leave_parent_current_tie: { en: "Current relationship", ko: "현재 소속" },
+    leave_parent_keep_title: { en: "What stays", ko: "유지되는 것" },
+    leave_parent_keep_team: {
+        en: "Your team (members, posts, spaces) — continues as a standalone team.",
+        ko: "팀 자체 (멤버, 게시물, 스페이스) — 독립 팀으로 계속 운영.",
+    },
+    leave_parent_keep_announcements: {
+        en: "Past announcements from the parent remain as normal posts (unpinned).",
+        ko: "부모팀이 과거에 보낸 공지들은 일반 게시물로 남습니다 (핀 해제됨).",
+    },
+    leave_parent_keep_admins: {
+        en: "Team admins and member composition.",
+        ko: "동아리 admin 권한과 멤버 구성.",
+    },
+    leave_parent_lose_title: { en: "What you lose", ko: "상실하는 것" },
+    leave_parent_lose_broadcasts: {
+        en: "No more broadcasts from the parent team.",
+        ko: "앞으로 부모팀 공지를 받지 않습니다.",
+    },
+    leave_parent_lose_dashboard: {
+        en: "Your activity will no longer count in the parent's dashboard.",
+        ko: "부모팀 활동 대시보드에 집계되지 않습니다.",
+    },
+    leave_parent_lose_badge: {
+        en: "The parent affiliation badge is removed from your team profile.",
+        ko: "팀 프로필의 학과 소속 표시가 제거됩니다.",
+    },
+    leave_parent_lose_reapply: {
+        en: "Rejoining requires a brand-new application.",
+        ko: "재가입하려면 정식 신청 절차를 다시 거쳐야 합니다.",
+    },
+    leave_parent_reason_placeholder: {
+        en: "Optional message to parent team admins.",
+        ko: "부모팀 admin에게 남길 메시지 (선택)",
+    },
+    leave_parent_reason_hint: {
+        en: "This message is included in the parent team's leave notification. Leaving still works if you skip it.",
+        ko: "이 메시지는 부모팀 admin에게 전달되는 이탈 알림에 포함됩니다. 생략해도 이탈은 실행됩니다.",
+    },
+    leave_parent_confirm_checkbox: {
+        en: "I confirm leaving the parent team and becoming a standalone team.",
+        ko: "상위팀과의 sub-team 관계를 해제하고 독립 팀이 되는 것에 동의합니다.",
+    },
+    leave_parent_not_recognized: {
+        en: "This team is not currently a recognized sub-team.",
+        ko: "이 팀은 현재 인증된 하위팀이 아닙니다.",
+    },
+
+    // Bylaws page
+    bylaws_page_eyebrow: { en: "Bylaws", ko: "학칙" },
+    bylaws_team_regulations: {
+        en: "Team regulations",
+        ko: "팀 규정",
+    },
+    bylaws_parent_regulations: {
+        en: "Parent team regulations",
+        ko: "상위팀 규정",
+    },
+    bylaws_empty: {
+        en: "No bylaws published yet",
+        ko: "공개된 학칙이 없습니다",
+    },
+    bylaws_required_badge: {
+        en: "Required",
+        ko: "필독",
+    },
 }
 
 // ── Enum Translate derives ──────────────────────────────────────────
@@ -217,6 +356,26 @@ impl From<SubTeamAnnouncementStatus> for SubTeamAnnouncementStatusLabel {
             SubTeamAnnouncementStatus::Draft => Self::Draft,
             SubTeamAnnouncementStatus::Published => Self::Published,
             SubTeamAnnouncementStatus::Deleted => Self::Deleted,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Translate)]
+pub enum ParentRelationshipStatusLabel {
+    #[translate(en = "Standalone team", ko = "독립 팀")]
+    Standalone,
+    #[translate(en = "Application pending", ko = "심사 대기 중")]
+    PendingSubTeam,
+    #[translate(en = "Recognized sub-team", ko = "인증된 하위팀")]
+    RecognizedSubTeam,
+}
+
+impl From<ParentRelationshipStatus> for ParentRelationshipStatusLabel {
+    fn from(s: ParentRelationshipStatus) -> Self {
+        match s {
+            ParentRelationshipStatus::Standalone => Self::Standalone,
+            ParentRelationshipStatus::PendingSubTeam => Self::PendingSubTeam,
+            ParentRelationshipStatus::RecognizedSubTeam => Self::RecognizedSubTeam,
         }
     }
 }
