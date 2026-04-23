@@ -1,3 +1,4 @@
+use crate::features::spaces::pages::actions::actions::meet::MeetActionCard;
 use crate::features::spaces::pages::actions::types::{SpaceActionSummary, SpaceActionType};
 use crate::features::spaces::pages::index::action_pages::quiz::{
     ActiveActionOverlay, ActiveActionOverlaySignal, CompletedActionCard,
@@ -254,8 +255,14 @@ pub fn ActionDashboard(
                                         lock: lock.clone(),
                                     }
                                 },
-                                // TODO: swap for `MeetActionCard` when Task 24 lands.
-                                SpaceActionType::Meet => rsx! {},
+                                SpaceActionType::Meet => rsx! {
+                                    MeetActionCard {
+                                        key: "{key}",
+                                        action,
+                                        space_id,
+                                        is_admin,
+                                    }
+                                },
                             }
                         }
                     }
