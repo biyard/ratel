@@ -179,6 +179,30 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
 
             crate::transact_write_all_items!(cli, txs);
         }
+        SpaceActionType::Meet => {
+            let meet_sk = EntityType::SpaceMeet(action_id);
+            let meet = crate::features::spaces::pages::actions::actions::meet::SpaceMeet::get(
+                cli,
+                &space_pk,
+                Some(meet_sk.clone()),
+            )
+            .await?
+            .ok_or(Error::NotFound("Meet not found".into()))?;
+            let _ = meet;
+
+            let txs = vec![
+                crate::features::spaces::pages::actions::actions::meet::SpaceMeet::delete_transact_write_item(
+                    &space_pk,
+                    &meet_sk,
+                ),
+                SpaceAction::delete_transact_write_item(&space_action.pk, &EntityType::SpaceAction),
+                DashboardAggregate::inc_meets(&space_pk, -1),
+            ];
+            crate::transact_write_items!(cli, txs).map_err(|e| {
+                crate::error!("Failed to delete meet action: {e}");
+                SpaceActionError::ActionDeleteFailed
+            })?;
+        }
     }
 
     Ok(())

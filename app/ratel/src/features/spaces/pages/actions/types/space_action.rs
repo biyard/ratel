@@ -85,6 +85,11 @@ impl SpaceActionSummary {
                 space_id: space_id.clone(),
                 quiz_id: self.action_id.clone().into(),
             },
+            // Meet pages are not yet wired in the Route enum; fall back to the
+            // space index until Task 14 adds the dedicated routes.
+            SpaceActionType::Meet => Route::SpaceIndexPage {
+                space_id: space_id.clone(),
+            },
         }
     }
 }

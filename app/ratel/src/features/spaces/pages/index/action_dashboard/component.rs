@@ -58,6 +58,15 @@ pub(super) fn derive_action_status(action: &SpaceActionSummary) -> ActionStatus 
                 ActionStatus::Active
             }
         }
+        SpaceActionType::Meet => {
+            if action.user_participated {
+                ActionStatus::Completed
+            } else if ended {
+                ActionStatus::Skipped
+            } else {
+                ActionStatus::Active
+            }
+        }
     }
 }
 
@@ -245,6 +254,8 @@ pub fn ActionDashboard(
                                         lock: lock.clone(),
                                     }
                                 },
+                                // TODO: swap for `MeetActionCard` when Task 24 lands.
+                                SpaceActionType::Meet => rsx! {},
                             }
                         }
                     }
@@ -445,6 +456,7 @@ fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus, space_id: Space
                         });
                     }
                     SpaceActionType::Follow => {} // Follow has no in-overlay detail view yet; skip.
+                    SpaceActionType::Meet => {} // Meet has no in-overlay detail view yet; skip.
                 }
             },
             div { class: "archive-item__info",
@@ -495,5 +507,6 @@ fn quest_type_css(t: &SpaceActionType) -> &'static str {
         SpaceActionType::TopicDiscussion => "discuss",
         SpaceActionType::Quiz => "quiz",
         SpaceActionType::Follow => "follow",
+        SpaceActionType::Meet => "meet",
     }
 }
