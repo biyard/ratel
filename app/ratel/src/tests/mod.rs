@@ -8,6 +8,7 @@ mod notifications_tests;
 mod post_tests;
 mod space_member_tests;
 mod space_status_change_tests;
+mod sub_team_tests;
 mod xp_dedup_tests;
 
 pub use setup::*;
