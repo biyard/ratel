@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { click, fill, goto, getEditor } from "../utils";
+import { click, fill, goto, getEditor, waitForHydrated } from "../utils";
 
 /**
  * Post tag input — E2E
@@ -7,12 +7,11 @@ import { click, fill, goto, getEditor } from "../utils";
  * Originally written against the old `SearchInput`-based category UI (testids
  * `category-search-input`, `search-input-field`, `search-input-tag`). The
  * post-edit renewal replaced that component with an inline `.tag-input`
- * container that uses class names and an aria-label on each tag's remove
- * button instead of testids. It also dropped comma-separator support — tags
- * are now added only via Enter.
+ * container; tags are now added via Enter and removed by per-tag X button.
  *
- * This suite verifies the renewed tag UI: add via Enter, render as styled
- * badges with per-tag remove buttons, and remove via the X button.
+ * This suite verifies the renewed tag UI via testids exposed by the
+ * component: add via Enter, render as styled badges with per-tag remove
+ * buttons, and remove via the X button.
  */
 
 test.describe.serial("Post tag input (post-edit renewal)", () => {
@@ -23,6 +22,18 @@ test.describe.serial("Post tag input (post-edit renewal)", () => {
 
   let postEditUrl;
 
+  // Add a tag via the tag input; waits for hydration so the Dioxus
+  // `oninput`/`onkeydown` handlers are bound before events are dispatched,
+  // and waits for the DOM value to settle so the keydown handler reads the
+  // updated signal instead of an empty string.
+  async function addTag(page, value) {
+    await waitForHydrated(page, "tag-input-field");
+    await fill(page, { testId: "tag-input-field" }, value);
+    const input = page.getByTestId("tag-input-field");
+    await expect(input).toHaveValue(value);
+    await input.press("Enter");
+  }
+
   // --- 1. Create a draft post and land on its edit page ---
 
   test("Create a draft post for tag testing", async ({ page }) => {
@@ -30,6 +41,9 @@ test.describe.serial("Post tag input (post-edit renewal)", () => {
 
     await click(page, { testId: "home-btn-create" });
     await page.waitForURL(/\/posts\/.*\/edit/, { waitUntil: "load" });
+    await page.waitForFunction(
+      () => document.querySelector("[data-dioxus-id]") !== null,
+    );
     postEditUrl = new URL(page.url()).pathname;
 
     await fill(page, { placeholder: "Title your post…" }, postTitle);
@@ -49,13 +63,9 @@ test.describe.serial("Post tag input (post-edit renewal)", () => {
   test("Add a tag by typing and pressing Enter", async ({ page }) => {
     await goto(page, postEditUrl);
 
-    const tagInput = page.locator(".tag-input__field");
-    await expect(tagInput).toBeVisible();
+    await addTag(page, categoryA);
 
-    await tagInput.fill(categoryA);
-    await tagInput.press("Enter");
-
-    const tags = page.locator(".tag-input .tag");
+    const tags = page.getByTestId("post-tag");
     await expect(tags).toHaveCount(1);
     await expect(tags.first()).toContainText(categoryA);
   });
@@ -65,18 +75,13 @@ test.describe.serial("Post tag input (post-edit renewal)", () => {
   test("Add a second tag via Enter", async ({ page }) => {
     await goto(page, postEditUrl);
 
-    const tagInput = page.locator(".tag-input__field");
-    await expect(tagInput).toBeVisible();
-    const tags = page.locator(".tag-input .tag");
+    const tags = page.getByTestId("post-tag");
 
     // Tags are not autosaved, so re-add the first tag in this session.
-    await tagInput.fill(categoryA);
-    await tagInput.press("Enter");
+    await addTag(page, categoryA);
     await expect(tags).toHaveCount(1);
 
-    await tagInput.fill(categoryB);
-    await tagInput.press("Enter");
-
+    await addTag(page, categoryB);
     await expect(tags).toHaveCount(2);
     await expect(tags.filter({ hasText: categoryA })).toHaveCount(1);
     await expect(tags.filter({ hasText: categoryB })).toHaveCount(1);
@@ -87,19 +92,14 @@ test.describe.serial("Post tag input (post-edit renewal)", () => {
   test("Tag badges render with remove buttons", async ({ page }) => {
     await goto(page, postEditUrl);
 
-    const tagInput = page.locator(".tag-input__field");
-    await expect(tagInput).toBeVisible();
-    await tagInput.fill(categoryA);
-    await tagInput.press("Enter");
+    await addTag(page, categoryA);
 
-    const tags = page.locator(".tag-input .tag");
+    const tags = page.getByTestId("post-tag");
     await expect(tags).toHaveCount(1);
 
-    const count = await tags.count();
-    for (let i = 0; i < count; i++) {
-      const removeBtn = tags.nth(i).getByLabel("Remove tag", { exact: true });
-      await expect(removeBtn).toBeVisible();
-    }
+    const removeButtons = page.getByTestId("post-tag-remove");
+    await expect(removeButtons).toHaveCount(1);
+    await expect(removeButtons.first()).toBeVisible();
   });
 
   // --- 5. Remove a tag by clicking its X button ---
@@ -107,16 +107,12 @@ test.describe.serial("Post tag input (post-edit renewal)", () => {
   test("Remove a tag by clicking its X button", async ({ page }) => {
     await goto(page, postEditUrl);
 
-    const tagInput = page.locator(".tag-input__field");
-    await expect(tagInput).toBeVisible();
-    await tagInput.fill(categoryA);
-    await tagInput.press("Enter");
+    await addTag(page, categoryA);
 
-    const tags = page.locator(".tag-input .tag");
+    const tags = page.getByTestId("post-tag");
     await expect(tags).toHaveCount(1);
 
-    const firstRemoveBtn = tags.first().getByLabel("Remove tag", { exact: true });
-    await firstRemoveBtn.click();
+    await page.getByTestId("post-tag-remove").first().click();
 
     await expect(tags).toHaveCount(0);
   });

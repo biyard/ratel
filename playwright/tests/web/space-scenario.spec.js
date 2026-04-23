@@ -216,7 +216,11 @@ async function openSpaceAppSettings(page, spaceUrl, appType) {
   const installButton = page.getByTestId(`install-app-${appType}`);
   if (await installButton.isVisible().catch(() => false)) {
     await installButton.click();
-    await expect(page.getByTestId(`configure-app-${appType}`)).toBeVisible();
+    // Install is a server round-trip + context refresh before the card
+    // swaps from install → configure; 5s default is too tight under CI load.
+    await expect(page.getByTestId(`configure-app-${appType}`)).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   await click(page, { testId: `configure-app-${appType}` });
