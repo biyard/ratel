@@ -12,6 +12,7 @@ import {
   getEditor,
   getLocator,
   goto,
+  publishAction,
   setReward,
   togglePrerequisite,
   waitPopup,
@@ -240,6 +241,7 @@ test.describe.serial("Full space lifecycle with rewards", () => {
     // Prerequisite + reward live inline on the ConfigCard — no more Settings tab.
     await togglePrerequisite(page);
     await setReward(page, 1);
+    await publishAction(page);
   });
 
   // ─── 3. Create poll (normal) + reward ────────────────────────────────────
@@ -261,6 +263,7 @@ test.describe.serial("Full space lifecycle with rewards", () => {
     });
 
     await setReward(page, 2);
+    await publishAction(page);
   });
 
   // ─── 4. Create discussion + reward ───────────────────────────────────────
@@ -362,6 +365,7 @@ test.describe.serial("Full space lifecycle with rewards", () => {
     });
 
     await setReward(page, 2);
+    await publishAction(page);
   });
 
   // ─── 5. Create quiz + reward ─────────────────────────────────────────────
@@ -405,6 +409,7 @@ test.describe.serial("Full space lifecycle with rewards", () => {
     await page.waitForLoadState("load");
 
     await setReward(page, 2);
+    await publishAction(page);
   });
 
   // ─── 6. Create follow + reward ───────────────────────────────────────────
@@ -415,6 +420,7 @@ test.describe.serial("Full space lifecycle with rewards", () => {
     await getLocator(page, { testId: "page-card-config" });
 
     await setReward(page, 2);
+    await publishAction(page);
   });
 
   // ─── 7. Enable anonymous + join anytime via UI ───────────────────────────

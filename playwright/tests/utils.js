@@ -1,5 +1,14 @@
 import { expect } from "@playwright/test";
 
+export async function publishAction(page) {
+  const btn = page.getByTestId("action-publish");
+  if (await btn.isVisible().catch(() => false)) {
+    await btn.click();
+    await page.waitForLoadState("load");
+    await page.waitForTimeout(500);
+  }
+}
+
 export async function dismissDevToast(page) {
   try {
     await page.evaluate(() => {
