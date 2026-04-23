@@ -1,11 +1,34 @@
 use crate::axum::{
     extract::Path as AxumPath,
-    http::StatusCode,
+    http::{header, StatusCode},
     native_routing::get,
     response::{Html, IntoResponse, Response},
     AxumRouter,
 };
 use std::path::{Path, PathBuf};
+
+/// Map a file extension to a Content-Type suitable for design-preview static assets.
+/// Returns `None` for unknown extensions (which the caller will reject).
+fn content_type_for(ext: &str) -> Option<&'static str> {
+    match ext {
+        "html" | "htm" => Some("text/html; charset=utf-8"),
+        "css" => Some("text/css; charset=utf-8"),
+        "js" | "mjs" => Some("application/javascript; charset=utf-8"),
+        "json" => Some("application/json; charset=utf-8"),
+        "svg" => Some("image/svg+xml"),
+        "png" => Some("image/png"),
+        "jpg" | "jpeg" => Some("image/jpeg"),
+        "gif" => Some("image/gif"),
+        "webp" => Some("image/webp"),
+        "ico" => Some("image/x-icon"),
+        "woff" => Some("font/woff"),
+        "woff2" => Some("font/woff2"),
+        "ttf" => Some("font/ttf"),
+        "otf" => Some("font/otf"),
+        "txt" | "md" => Some("text/plain; charset=utf-8"),
+        _ => None,
+    }
+}
 
 /// Merge design preview routes into the app router.
 /// - `GET /designs`             — lists top-level directories + root HTML files
@@ -35,6 +58,276 @@ pub fn merge_design_routes(app: AxumRouter, design_dir: &Path) -> AxumRouter {
     app.nest("/designs", design_router)
 }
 
+/// Merge roadmap viewer routes into the app router.
+/// - `GET /roadmap`             — lists every .md spec file in the roadmap directory
+/// - `GET /roadmap/{file}`      — renders that markdown file through a styled viewer
+pub fn merge_roadmap_routes(app: AxumRouter, roadmap_dir: &Path) -> AxumRouter {
+    let root = roadmap_dir.to_path_buf();
+    let root_index = root.clone();
+    let root_catch = root.clone();
+
+    let router = AxumRouter::new()
+        .route(
+            "/",
+            get(move || {
+                let root = root_index.clone();
+                async move { roadmap_index(&root).into_response() }
+            }),
+        )
+        .route(
+            "/{*path}",
+            get(move |AxumPath(path): AxumPath<String>| {
+                let root = root_catch.clone();
+                async move { resolve_roadmap(&root, &path).await }
+            }),
+        );
+
+    tracing::info!("Roadmap viewer available at /roadmap");
+    app.nest("/roadmap", router)
+}
+
+async fn resolve_roadmap(root: &Path, relative: &str) -> Response {
+    if relative.contains("..") || relative.starts_with('/') {
+        return (StatusCode::BAD_REQUEST, Html("Invalid path".to_string())).into_response();
+    }
+
+    let target = root.join(relative);
+
+    let canonical_root = match std::fs::canonicalize(root) {
+        Ok(p) => p,
+        Err(_) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Html("Roadmap root not found".to_string()),
+            )
+                .into_response()
+        }
+    };
+    let canonical_target = match std::fs::canonicalize(&target) {
+        Ok(p) => p,
+        Err(_) => return (StatusCode::NOT_FOUND, Html("Not found".to_string())).into_response(),
+    };
+    if !canonical_target.starts_with(&canonical_root) {
+        return (StatusCode::BAD_REQUEST, Html("Invalid path".to_string())).into_response();
+    }
+
+    if canonical_target.is_dir() {
+        return roadmap_index(&canonical_target).into_response();
+    }
+
+    let ext = canonical_target
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+
+    match ext.as_str() {
+        "md" | "markdown" => match tokio::fs::read_to_string(&canonical_target).await {
+            Ok(content) => {
+                let file_name = canonical_target
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or("roadmap")
+                    .to_string();
+                render_markdown(&file_name, &content).into_response()
+            }
+            Err(_) => (StatusCode::NOT_FOUND, Html("File not found".to_string())).into_response(),
+        },
+        _ => (
+            StatusCode::BAD_REQUEST,
+            Html(format!("Unsupported roadmap file: .{ext}")),
+        )
+            .into_response(),
+    }
+}
+
+fn roadmap_index(dir: &Path) -> Html<String> {
+    let mut files: Vec<String> = Vec::new();
+    if let Ok(entries) = std::fs::read_dir(dir) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name.ends_with(".md") || name.ends_with(".markdown") {
+                files.push(name);
+            }
+        }
+    }
+    files.sort();
+
+    let rows: String = files
+        .iter()
+        .map(|name| {
+            let label = name.trim_end_matches(".md").trim_end_matches(".markdown");
+            format!(
+                r#"<a class="roadmap-card" href="/roadmap/{name}">
+  <span class="roadmap-card__icon">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+  </span>
+  <span class="roadmap-card__body">
+    <span class="roadmap-card__name">{label}</span>
+    <span class="roadmap-card__sub">{name}</span>
+  </span>
+  <svg class="roadmap-card__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+</a>"#
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    let body = if files.is_empty() {
+        r#"<p class="empty">No roadmap specs found.</p>"#.to_string()
+    } else {
+        format!(r#"<div class="roadmap-grid">{rows}</div>"#)
+    };
+
+    Html(format!(
+        r##"<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roadmap — Ratel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+*,*::before,*::after{{margin:0;padding:0;box-sizing:border-box}}
+:root{{--bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);--border-subtle:rgba(255,255,255,0.06);--text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;--accent-gold:#fcb300;--accent-teal:#6eedd8;--font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif}}
+html,body{{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body);font-size:14px;line-height:1.5}}
+body{{padding:40px 24px 80px;overflow-x:hidden}}
+body::before{{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 30% 15%,rgba(252,179,0,0.05) 0%,transparent 55%);z-index:-1;pointer-events:none}}
+.page{{max-width:760px;margin:0 auto}}
+.eyebrow{{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px}}
+.title{{font-family:var(--font-display);font-size:26px;font-weight:700;letter-spacing:0.03em;margin-bottom:22px}}
+.title strong{{background:linear-gradient(135deg,var(--accent-gold),var(--accent-teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}}
+.roadmap-grid{{display:flex;flex-direction:column;gap:10px}}
+.roadmap-card{{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);color:var(--text-primary);text-decoration:none;transition:all 0.2s}}
+.roadmap-card:hover{{border-color:rgba(252,179,0,0.25);background:var(--bg-glass-hover)}}
+.roadmap-card__icon{{width:38px;height:38px;border-radius:10px;background:rgba(110,237,216,0.06);border:1px solid rgba(110,237,216,0.18);color:var(--accent-teal);display:flex;align-items:center;justify-content:center;flex-shrink:0}}
+.roadmap-card__body{{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}}
+.roadmap-card__name{{font-weight:600;font-size:14px;color:var(--text-primary)}}
+.roadmap-card__sub{{font-family:var(--font-display);font-size:10px;letter-spacing:0.10em;color:var(--text-dim)}}
+.roadmap-card__chev{{color:var(--text-dim)}}
+.roadmap-card:hover .roadmap-card__chev{{color:var(--accent-gold)}}
+.empty{{color:var(--text-dim);font-style:italic;padding:24px;text-align:center;border-radius:12px;border:1px dashed var(--border-subtle)}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="eyebrow"><a href="/roadmap" style="color:var(--text-muted);text-decoration:none">roadmap</a></div>
+  <h1 class="title"><strong>Roadmap</strong> — specs</h1>
+  {body}
+</div>
+</body>
+</html>"##
+    ))
+}
+
+fn render_markdown(file_name: &str, source: &str) -> Html<String> {
+    use pulldown_cmark::{html, Options, Parser};
+
+    let mut opts = Options::empty();
+    opts.insert(Options::ENABLE_TABLES);
+    opts.insert(Options::ENABLE_FOOTNOTES);
+    opts.insert(Options::ENABLE_STRIKETHROUGH);
+    opts.insert(Options::ENABLE_TASKLISTS);
+    opts.insert(Options::ENABLE_SMART_PUNCTUATION);
+    opts.insert(Options::ENABLE_HEADING_ATTRIBUTES);
+
+    let parser = Parser::new_ext(source, opts);
+    let mut rendered = String::with_capacity(source.len() * 3 / 2);
+    html::push_html(&mut rendered, parser);
+
+    let label = file_name
+        .trim_end_matches(".md")
+        .trim_end_matches(".markdown");
+
+    Html(format!(
+        r##"<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{file_name} — Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Orbitron:wght@500;600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+*,*::before,*::after{{margin:0;padding:0;box-sizing:border-box}}
+:root{{
+  --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-panel:rgba(12,12,26,0.78);
+  --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+  --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+  --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-violet:#818cf8;--accent-coral:#ef4444;
+  --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;--font-mono:'JetBrains Mono',ui-monospace,monospace;
+}}
+html,body{{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body);font-size:15px;line-height:1.65}}
+body{{overflow-x:hidden}}
+body::before{{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse 70% 50% at 30% 0%,rgba(252,179,0,0.05) 0%,transparent 55%),radial-gradient(ellipse 70% 50% at 70% 100%,rgba(110,237,216,0.035) 0%,transparent 55%)}}
+
+.topbar{{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,var(--bg-void) 0%,rgba(6,6,14,0.88) 70%,transparent 100%);backdrop-filter:blur(16px);padding:14px 28px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:14px}}
+.topbar__back{{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:10px;background:var(--bg-glass);border:1px solid var(--border-subtle);color:var(--text-muted);text-decoration:none;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;transition:all 0.2s}}
+.topbar__back:hover{{color:var(--accent-gold);border-color:rgba(252,179,0,0.3)}}
+.topbar__back svg{{width:12px;height:12px}}
+.topbar__crumb{{font-family:var(--font-display);font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}}
+.topbar__crumb a{{color:var(--text-muted);text-decoration:none}}
+.topbar__crumb a:hover{{color:var(--accent-gold)}}
+.topbar__crumb-sep{{margin:0 8px;color:var(--text-dim)}}
+.topbar__file{{color:var(--text-primary);font-weight:700}}
+
+.doc{{max-width:820px;margin:0 auto;padding:40px 28px 100px}}
+.doc h1,.doc h2,.doc h3,.doc h4{{font-family:var(--font-display);font-weight:800;letter-spacing:0.02em;line-height:1.25;scroll-margin-top:80px}}
+.doc h1{{font-size:32px;margin:0 0 22px;padding-bottom:14px;border-bottom:1px solid var(--border-subtle);background:linear-gradient(135deg,var(--accent-gold),#ffd24a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}}
+.doc h2{{font-size:22px;margin:36px 0 14px;color:var(--text-primary);padding-top:4px;position:relative}}
+.doc h2::before{{content:'';position:absolute;left:-14px;top:8px;width:4px;height:22px;border-radius:2px;background:linear-gradient(180deg,var(--accent-gold),transparent)}}
+.doc h3{{font-size:16px;margin:24px 0 10px;color:var(--accent-teal);letter-spacing:0.08em;text-transform:uppercase}}
+.doc h4{{font-size:14px;margin:18px 0 8px;color:var(--accent-violet);letter-spacing:0.06em;text-transform:uppercase}}
+
+.doc p{{margin:0 0 14px;color:var(--text-primary)}}
+.doc strong{{color:var(--accent-gold);font-weight:700}}
+.doc em{{color:var(--text-muted);font-style:italic}}
+.doc a{{color:var(--accent-teal);text-decoration:underline;text-decoration-color:rgba(110,237,216,0.3);text-underline-offset:2px;transition:all 0.15s}}
+.doc a:hover{{color:#b6f5e6;text-decoration-color:var(--accent-teal)}}
+
+.doc ul,.doc ol{{margin:0 0 16px 22px;color:var(--text-primary)}}
+.doc ul li,.doc ol li{{margin:0 0 6px}}
+.doc ul li::marker{{color:var(--accent-gold)}}
+.doc ol li::marker{{color:var(--accent-teal);font-family:var(--font-display);font-weight:700;font-size:0.9em}}
+.doc li > ul,.doc li > ol{{margin-top:6px;margin-bottom:4px}}
+.doc li input[type="checkbox"]{{margin-right:8px;accent-color:var(--accent-gold);width:14px;height:14px;vertical-align:-2px}}
+
+.doc blockquote{{margin:0 0 16px;padding:10px 16px;border-left:3px solid var(--accent-violet);background:rgba(129,140,248,0.06);color:var(--text-muted);font-style:italic;border-radius:0 8px 8px 0}}
+
+.doc code{{font-family:var(--font-mono);font-size:0.88em;padding:2px 6px;border-radius:4px;background:rgba(129,140,248,0.10);border:1px solid rgba(129,140,248,0.20);color:var(--accent-violet)}}
+.doc pre{{margin:0 0 16px;padding:16px 18px;border-radius:10px;background:rgba(6,6,14,0.75);border:1px solid var(--border-subtle);overflow-x:auto;font-family:var(--font-mono);font-size:13px;line-height:1.6}}
+.doc pre code{{background:none;border:none;padding:0;color:var(--text-primary);font-size:13px}}
+
+.doc hr{{margin:28px 0;border:none;height:1px;background:linear-gradient(90deg,transparent,var(--border-strong),transparent)}}
+
+.doc table{{width:100%;margin:0 0 18px;border-collapse:separate;border-spacing:0;border:1px solid var(--border-subtle);border-radius:10px;overflow:hidden}}
+.doc th,.doc td{{padding:10px 14px;text-align:left;font-size:13px;border-bottom:1px solid var(--border-subtle)}}
+.doc th{{background:rgba(252,179,0,0.04);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted)}}
+.doc tr:last-child td{{border-bottom:none}}
+.doc tr:hover td{{background:rgba(255,255,255,0.02)}}
+
+.doc .task-list-item{{list-style:none;margin-left:-22px}}
+</style>
+</head>
+<body>
+<nav class="topbar">
+  <a class="topbar__back" href="/roadmap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    Roadmap
+  </a>
+  <span class="topbar__crumb"><a href="/roadmap">roadmap</a><span class="topbar__crumb-sep">/</span><span class="topbar__file">{label}</span></span>
+</nav>
+<article class="doc">
+{rendered}
+</article>
+</body>
+</html>"##
+    ))
+}
+
 async fn resolve_path(root: &Path, relative: &str) -> Response {
     if relative.contains("..") || relative.starts_with('/') {
         return (StatusCode::BAD_REQUEST, Html("Invalid path".to_string())).into_response();
@@ -61,20 +354,54 @@ async fn resolve_path(root: &Path, relative: &str) -> Response {
     }
 
     if canonical_target.is_dir() {
-        list_path(&canonical_target, &canonical_root).into_response()
-    } else if canonical_target.extension().and_then(|e| e.to_str()) == Some("html") {
+        return list_path(&canonical_target, &canonical_root).into_response();
+    }
+
+    let ext = canonical_target
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+
+    let Some(mime) = content_type_for(&ext) else {
+        return (
+            StatusCode::BAD_REQUEST,
+            Html(format!("Unsupported file type: .{ext}")),
+        )
+            .into_response();
+    };
+
+    // Text-based assets go through read_to_string so they serve as UTF-8 strings;
+    // binary assets (images, fonts) go through read() and are served as bytes.
+    let is_text = matches!(
+        ext.as_str(),
+        "html" | "htm" | "css" | "js" | "mjs" | "json" | "svg" | "txt" | "md"
+    );
+
+    if is_text {
         match tokio::fs::read_to_string(&canonical_target).await {
-            Ok(content) => (StatusCode::OK, Html(content)).into_response(),
+            Ok(content) => (
+                StatusCode::OK,
+                [(header::CONTENT_TYPE, mime)],
+                content,
+            )
+                .into_response(),
             Err(_) => {
                 (StatusCode::NOT_FOUND, Html("File not found".to_string())).into_response()
             }
         }
     } else {
-        (
-            StatusCode::BAD_REQUEST,
-            Html("Only HTML files are served".to_string()),
-        )
-            .into_response()
+        match tokio::fs::read(&canonical_target).await {
+            Ok(bytes) => (
+                StatusCode::OK,
+                [(header::CONTENT_TYPE, mime)],
+                bytes,
+            )
+                .into_response(),
+            Err(_) => {
+                (StatusCode::NOT_FOUND, Html("File not found".to_string())).into_response()
+            }
+        }
     }
 }
 

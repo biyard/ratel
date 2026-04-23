@@ -59,122 +59,115 @@ function initMentionFlip() {
   });
 }
 
-function initBottomSheet() {
-  var sheet = document.getElementById("discussion-comments-sheet");
-  if (!sheet || sheet.dataset.bound) return;
-  sheet.dataset.bound = "true";
+// Sheet expand state is Dioxus-managed (see `sheet_expanded` signal in
+// component.rs). The handle's click is wired via Rust `onclick`, and the
+// `data-expanded` attribute on `.comments-panel` drives the CSS
+// translate. Leaving expand state to JS caused it to reset whenever
+// Dioxus re-rendered the panel content (e.g., on Reply tap → thread
+// drill-down) because the `.expanded` class lived outside the VDOM.
 
-  var handle = sheet.querySelector(".sheet-handle");
-  if (!handle) return;
+// Drag-to-resize the comments panel. The width is JS-owned because Dioxus
+// doesn't set `style` on `.comments-panel` — the inline width survives
+// re-renders. CSS provides `min-width: 420px` (the previous fixed width);
+// here we cap the upper bound at 70% of viewport so the discussion body
+// always keeps room. Listeners are attached to `document` (not the 6px
+// handle) so the cursor doesn't fall off the hit-area mid-drag.
+var COMMENTS_PANEL_MIN = 420;
+var COMMENTS_PANEL_MAX_PCT = 0.7;
 
-  var expanded = false;
-  var startY = 0;
-  var startTranslate = 0;
+function initCommentsPanelResizer() {
+  var resizer = document.getElementById("comments-panel-resizer");
+  if (!resizer || resizer.dataset.resizerBound) return;
+  var panel = document.getElementById("discussion-comments-sheet");
+  if (!panel) return;
+  resizer.dataset.resizerBound = "true";
+
   var dragging = false;
-  var collapsedOffset = 0;
+  var startX = 0;
+  var startWidth = 0;
 
-  function getCollapsedOffset() {
-    return sheet.offsetHeight - 64;
-  }
-
-  function toggle() {
-    expanded = !expanded;
-    sheet.classList.toggle("expanded", expanded);
-  }
-
-  handle.addEventListener("click", function () {
-    if (dragging) return;
-    toggle();
-  });
-
-  handle.addEventListener(
-    "touchstart",
-    function (e) {
-      startY = e.touches[0].clientY;
-      collapsedOffset = getCollapsedOffset();
-      startTranslate = expanded ? 0 : collapsedOffset;
-      dragging = false;
-      sheet.classList.add("dragging");
-    },
-    { passive: true },
-  );
-
-  handle.addEventListener(
-    "touchmove",
-    function (e) {
-      var dy = e.touches[0].clientY - startY;
-      if (Math.abs(dy) < 5 && !dragging) return;
-      dragging = true;
-      e.preventDefault();
-      var next = Math.max(0, Math.min(collapsedOffset, startTranslate + dy));
-      sheet.style.transform = "translateY(" + next + "px)";
-    },
-    { passive: false },
-  );
-
-  handle.addEventListener("touchend", function (e) {
-    sheet.classList.remove("dragging");
+  function onPointerMove(e) {
     if (!dragging) return;
+    var clientX = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
+    // Panel is on the right; dragging left (smaller clientX) widens it.
+    var deltaX = startX - clientX;
+    var newWidth = startWidth + deltaX;
+    var maxWidth = window.innerWidth * COMMENTS_PANEL_MAX_PCT;
+    if (newWidth < COMMENTS_PANEL_MIN) newWidth = COMMENTS_PANEL_MIN;
+    if (newWidth > maxWidth) newWidth = maxWidth;
+    panel.style.width = newWidth + "px";
+  }
 
-    var dy = e.changedTouches[0].clientY - startY;
-
-    if (expanded) {
-      if (dy > 60) expanded = false;
-    } else {
-      if (dy < -60) expanded = true;
-    }
-
-    sheet.style.transform = "";
-    sheet.classList.toggle("expanded", expanded);
-    setTimeout(function () {
-      dragging = false;
-    }, 50);
-  });
-
-  handle.addEventListener("mousedown", function (e) {
-    startY = e.clientY;
-    collapsedOffset = getCollapsedOffset();
-    startTranslate = expanded ? 0 : collapsedOffset;
+  function onPointerUp() {
+    if (!dragging) return;
     dragging = false;
-    sheet.classList.add("dragging");
+    resizer.classList.remove("dragging");
+    document.body.classList.remove("comments-panel-resizing");
+  }
 
-    function onMouseMove(e) {
-      var dy = e.clientY - startY;
-      if (Math.abs(dy) < 5 && !dragging) return;
-      dragging = true;
-      var next = Math.max(0, Math.min(collapsedOffset, startTranslate + dy));
-      sheet.style.transform = "translateY(" + next + "px)";
-    }
+  function onPointerDown(e) {
+    e.preventDefault();
+    dragging = true;
+    startX = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
+    startWidth = panel.getBoundingClientRect().width;
+    resizer.classList.add("dragging");
+    document.body.classList.add("comments-panel-resizing");
+  }
 
-    function onMouseUp(e) {
-      document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", onMouseUp);
-      sheet.classList.remove("dragging");
-      if (!dragging) return;
+  resizer.addEventListener("mousedown", onPointerDown);
+  resizer.addEventListener("touchstart", onPointerDown, { passive: false });
+  document.addEventListener("mousemove", onPointerMove);
+  document.addEventListener("touchmove", onPointerMove, { passive: false });
+  document.addEventListener("mouseup", onPointerUp);
+  document.addEventListener("touchend", onPointerUp);
+  document.addEventListener("touchcancel", onPointerUp);
+}
 
-      var dy = e.clientY - startY;
-      if (expanded) {
-        if (dy > 60) expanded = false;
+// Measure each `.comment-text > .comment-item__text` against its 3-line
+// CSS clamp; flip `data-truncatable="true"` on the wrapper so the CSS
+// rule reveals the "Show more" button. ResizeObserver fires once when
+// `observe()` is called and again whenever the element's size changes
+// (line-clamp toggle on expand, viewport resize, font load). We skip
+// updates while expanded so the "접기" button stays visible.
+var commentTextResizeObserver = null;
+
+function getCommentTextObserver() {
+  if (commentTextResizeObserver) return commentTextResizeObserver;
+  commentTextResizeObserver = new ResizeObserver(function (entries) {
+    entries.forEach(function (entry) {
+      var textEl = entry.target;
+      var wrapper = textEl.parentElement;
+      if (!wrapper || !wrapper.classList.contains("comment-text")) return;
+      if (wrapper.dataset.expanded === "true") return;
+      // +1 tolerance for subpixel rounding.
+      var truncated = textEl.scrollHeight > textEl.clientHeight + 1;
+      if (truncated) {
+        wrapper.dataset.truncatable = "true";
       } else {
-        if (dy < -60) expanded = true;
+        wrapper.removeAttribute("data-truncatable");
       }
+    });
+  });
+  return commentTextResizeObserver;
+}
 
-      sheet.style.transform = "";
-      sheet.classList.toggle("expanded", expanded);
-      setTimeout(function () {
-        dragging = false;
-      }, 50);
-    }
-
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
+function bindCommentTextObservers() {
+  var nodes = document.querySelectorAll(
+    ".comment-text .comment-item__text:not([data-truncation-bound])"
+  );
+  if (nodes.length === 0) return;
+  var observer = getCommentTextObserver();
+  nodes.forEach(function (el) {
+    el.dataset.truncationBound = "true";
+    observer.observe(el);
   });
 }
 
 function init() {
   initComposerAutogrow();
   initMentionFlip();
-  initBottomSheet();
+  initCommentsPanelResizer();
+  bindCommentTextObservers();
 }
 
 init();

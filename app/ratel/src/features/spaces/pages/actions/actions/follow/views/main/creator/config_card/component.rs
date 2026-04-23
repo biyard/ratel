@@ -1,75 +1,30 @@
 use crate::features::spaces::pages::actions::actions::follow::views::main::creator::FollowCreatorTranslate;
 use crate::features::spaces::pages::actions::actions::follow::*;
-use crate::features::spaces::pages::actions::components::{ActionDeleteButton, ActionRewardSetting};
-use crate::features::spaces::pages::actions::controllers::{
-    UpdateSpaceActionRequest, update_space_action,
+use crate::features::spaces::pages::actions::components::{
+    ActionDeleteButton, ActionDependencySelector, ActionRewardSetting, ActionStatusControl,
+    PrerequisiteTile,
 };
-
-use crate::common::utils::time::{datetime_local_to_epoch_ms, epoch_ms_to_datetime_local};
+use crate::features::spaces::pages::actions::models::SpaceAction;
 
 #[component]
 pub fn ConfigCard(
     space_id: ReadSignal<SpacePartition>,
     follow_id: ReadSignal<SpaceActionFollowEntityType>,
-    started_at: i64,
-    ended_at: i64,
-    credits: u64,
-    prerequisite: bool,
+    action_setting: ReadSignal<SpaceAction>,
 ) -> Element {
     let tr: FollowCreatorTranslate = use_translate();
-    let mut toast = use_toast();
 
+    let action = action_setting();
     let action_id_str = follow_id().to_string();
-    let saved_credits = credits;
-
-    let mut prereq_follow = use_signal(|| prerequisite);
-
-    let mut started_at_signal = use_signal(|| started_at);
-    let mut ended_at_signal = use_signal(|| ended_at);
-
-    let started_at_str = epoch_ms_to_datetime_local(started_at_signal());
-    let ended_at_str = epoch_ms_to_datetime_local(ended_at_signal());
+    let saved_credits = action.credits;
+    let action_status = action.status.clone();
+    let initial_prerequisite = action.prerequisite;
+    let initial_depends_on = action.depends_on.clone();
+    let initial_status = action.status.clone();
 
     let action_id_for_signal = action_id_str.clone();
     let action_id_signal: ReadSignal<String> =
         use_signal(move || action_id_for_signal.clone()).into();
-
-    let action_id_for_schedule = action_id_str.clone();
-    let mut save_schedule = use_callback(move |_: ()| {
-        let start_ms = started_at_signal();
-        let end_ms = ended_at_signal();
-        if start_ms <= 0 || end_ms <= 0 {
-            return;
-        }
-        let action_id = action_id_for_schedule.clone();
-        spawn(async move {
-            let req = UpdateSpaceActionRequest::Time {
-                started_at: start_ms,
-                ended_at: end_ms,
-            };
-            if let Err(err) = update_space_action(space_id(), action_id, req).await {
-                error!("Failed to save follow schedule: {:?}", err);
-                toast.error(err);
-            }
-        });
-    });
-
-    let action_id_for_prereq = action_id_str.clone();
-    let toggle_prereq = move |_| {
-        let new_val = !prereq_follow();
-        prereq_follow.set(new_val);
-        let action_id = action_id_for_prereq.clone();
-        spawn(async move {
-            let req = UpdateSpaceActionRequest::Prerequisite {
-                prerequisite: new_val,
-            };
-            if let Err(err) = update_space_action(space_id(), action_id, req).await {
-                error!("Failed to save prerequisite: {:?}", err);
-                toast.error(err);
-                prereq_follow.set(!new_val);
-            }
-        });
-    };
 
     rsx! {
         section { class: "pager__page", "data-page": "1",
@@ -84,48 +39,15 @@ pub fn ConfigCard(
                     }
                 }
 
-                // ── Schedule ─────
-                section { class: "section", "data-testid": "section-schedule",
+                // ── Dependencies (other actions a user must finish first) ─────
+                section { class: "section", "data-testid": "section-dependencies",
                     div { class: "section__head",
-                        span { class: "section__label", "{tr.section_schedule_label}" }
+                        span { class: "section__label", "{tr.section_dependencies_label}" }
                     }
-                    div { class: "grid-2",
-                        div { class: "field",
-                            label { class: "field__label", "{tr.schedule_starts_at}" }
-                            input {
-                                class: "input",
-                                r#type: "datetime-local",
-                                "data-testid": "schedule-start",
-                                value: "{started_at_str}",
-                                oninput: move |e| {
-                                    if let Some(ms) = datetime_local_to_epoch_ms(&e.value()) {
-                                        let old_start = started_at_signal();
-                                        let old_end = ended_at_signal();
-                                        if old_start > 0 && old_end > old_start {
-                                            let gap = old_end - old_start;
-                                            ended_at_signal.set(ms + gap);
-                                        }
-                                        started_at_signal.set(ms);
-                                    }
-                                },
-                                onblur: move |_| save_schedule.call(()),
-                            }
-                        }
-                        div { class: "field",
-                            label { class: "field__label", "{tr.schedule_ends_at}" }
-                            input {
-                                class: "input",
-                                r#type: "datetime-local",
-                                "data-testid": "schedule-end",
-                                value: "{ended_at_str}",
-                                oninput: move |e| {
-                                    if let Some(ms) = datetime_local_to_epoch_ms(&e.value()) {
-                                        ended_at_signal.set(ms);
-                                    }
-                                },
-                                onblur: move |_| save_schedule.call(()),
-                            }
-                        }
+                    ActionDependencySelector {
+                        space_id,
+                        action_id: action_id_signal,
+                        initial_depends_on,
                     }
                 }
 
@@ -139,25 +61,24 @@ pub fn ConfigCard(
                         space_id,
                         action_id: action_id_signal,
                         saved_credits,
-                        started_at: started_at_signal(),
+                        action_status: action_status.clone(),
                     }
-                    div { class: "tile", "data-testid": "tile-prereq",
-                        span { class: "tile__label", "{tr.tile_prereq}" }
-                        div { class: "tile__row",
-                            span { style: "font-size:13px;color:var(--qc-text-muted)",
-                                "{tr.tile_prereq_label}"
-                            }
-                            span {
-                                class: "switch",
-                                role: "switch",
-                                tabindex: "0",
-                                "aria-checked": prereq_follow(),
-                                onclick: toggle_prereq,
-                                span { class: "switch__track",
-                                    span { class: "switch__thumb" }
-                                }
-                            }
-                        }
+                    PrerequisiteTile {
+                        space_id,
+                        action_id: action_id_signal,
+                        initial_prerequisite,
+                    }
+                }
+
+                // ── Status (publish / close lifecycle) ─────
+                section { class: "section", "data-testid": "section-status",
+                    div { class: "section__head",
+                        span { class: "section__label", "{tr.section_status_label}" }
+                    }
+                    ActionStatusControl {
+                        space_id,
+                        action_id: action_id_signal,
+                        initial_status: initial_status.clone(),
                     }
                 }
 

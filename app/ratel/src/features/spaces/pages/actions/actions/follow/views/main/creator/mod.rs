@@ -27,6 +27,11 @@ pub fn FollowCreatorPage(
     let initial_title = action_setting().title.clone();
     let title = use_signal(|| initial_title);
 
+    let action_for_signal = action_setting();
+    let action_setting_signal: ReadSignal<
+        crate::features::spaces::pages::actions::models::SpaceAction,
+    > = use_signal(move || action_for_signal.clone()).into();
+
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div { class: "arena",
@@ -53,10 +58,7 @@ pub fn FollowCreatorPage(
                 ConfigCard {
                     space_id,
                     follow_id,
-                    started_at: action_setting().started_at,
-                    ended_at: action_setting().ended_at,
-                    credits: action_setting().credits,
-                    prerequisite: action_setting().prerequisite,
+                    action_setting: action_setting_signal,
                 }
             }
         }

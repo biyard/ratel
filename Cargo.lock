@@ -419,6 +419,7 @@ dependencies = [
  "mimetype-detector",
  "names",
  "percent-encoding",
+ "pulldown-cmark 0.12.2",
  "qdrant-client",
  "rand 0.10.0",
  "random-string",
@@ -11328,7 +11329,7 @@ dependencies = [
  "dioxus",
  "dioxus-i18n",
  "dioxus-primitives",
- "pulldown-cmark",
+ "pulldown-cmark 0.13.0",
  "strum 0.27.2",
  "syntect",
  "time",
@@ -11548,6 +11549,18 @@ checksum = "6f42ea446cab60335f76979ec15e12619a2165b5ae2c12166bef27d283a9fadf"
 dependencies = [
  "idna",
  "psl-types",
+]
+
+[[package]]
+name = "pulldown-cmark"
+version = "0.12.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f86ba2052aebccc42cbbb3ed234b8b13ce76f75c3551a303cb2bcffcff12bb14"
+dependencies = [
+ "bitflags 2.9.4",
+ "memchr",
+ "pulldown-cmark-escape",
+ "unicase",
 ]
 
 [[package]]

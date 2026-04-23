@@ -59,4 +59,12 @@ translate! {
         en: "Action deleted successfully.",
         ko: "액션이 삭제되었습니다.",
     },
+    locked: {
+        en: "Locked",
+        ko: "잠김",
+    },
+    dependencies_not_met: {
+        en: "Complete the required actions first to unlock.",
+        ko: "선행 액션을 먼저 완료해야 참여할 수 있습니다.",
+    },
 }

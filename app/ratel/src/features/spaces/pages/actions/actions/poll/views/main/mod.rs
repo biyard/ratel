@@ -25,7 +25,10 @@ pub fn PollActionPage(space_id: SpacePartition, poll_id: SpacePollEntityType) ->
     // render. We do a lightweight standalone fetch here (NOT Context::init)
     // so we don't conflict with the child's own context initialization.
     let poll_loader = use_loader(move || get_poll(space_id(), poll_id()))?;
-    let locked = is_action_locked(use_space()().status, poll_loader().started_at);
+    let locked = is_action_locked(
+        use_space()().status,
+        poll_loader().space_action.status.as_ref(),
+    );
 
     // Edit-mode override: creators land on the participant view once
     // the action is locked, but can flip this signal via the
