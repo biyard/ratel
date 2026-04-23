@@ -79,7 +79,7 @@
       <span class="arena-topbar__status" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.22);color:var(--accent-coral)">Danger action</span>
     </div>
     <div class="arena-topbar__actions">
-      <button class="btn btn--ghost btn--small" onclick="window.location.href='parent-governance-hub.html'">취소</button>
+      <button class="btn btn--ghost btn--small" onclick="history.back()">취소</button>
     </div>
   </div>
 
@@ -167,7 +167,7 @@
       </div>
 
       <div class="u-flex u-gap-10 u-justify-between" style="flex-wrap:wrap;align-items:center">
-        <a class="btn btn--ghost" href="parent-governance-hub.html">취소</a>
+        <a class="btn btn--ghost" href="subteam-management-detail-page.html">취소</a>
         <button class="btn btn--danger" id="confirm-btn" disabled>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           해제 확정
@@ -203,7 +203,7 @@
     btn.addEventListener('click', () => {
       if (btn.disabled) return;
       SubTeam.toast('Security Enthusiasts · 등록 해제 완료 · 동아리 admin에게 알림 전송', 'danger');
-      setTimeout(() => { window.location.href = 'parent-governance-hub.html'; }, 1600);
+      setTimeout(() => { window.location.href = 'subteam-management-page.html'; }, 1600);
     });
     updateState();
   });
