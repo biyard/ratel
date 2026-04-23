@@ -9,7 +9,7 @@ This is the product index. Each checkbox maps to **exactly one spec file** in `r
 
 ## Planned
 
-_None yet._
+- [ ] [Action navigation (actions should be canonical pages, not overlays)](roadmap/action-navigation.md)
 
 ## Shipped
 
