@@ -2352,6 +2352,531 @@ async fn test_activity_requires_admin_role() {
     assert_ne!(status, 200, "non-admin must be rejected from /sub-teams");
 }
 
+// ── PR #6: Leave / deregister / parent-delete cascade ────────────
+
+use crate::features::sub_team::types::TerminationAck;
+
+/// Helper: look up a team's `username` (needed for DELETE /api/teams/:username/settings).
+async fn team_username(ctx: &TestContext, team_pk: &Partition) -> String {
+    let team = Team::get(&ctx.ddb, team_pk, Some(EntityType::Team))
+        .await
+        .unwrap()
+        .unwrap();
+    team.username
+}
+
+async fn count_inbox_with_kind<F>(
+    ctx: &TestContext,
+    recipient_pk: &Partition,
+    predicate: F,
+) -> usize
+where
+    F: Fn(&InboxPayload) -> bool,
+{
+    use crate::common::models::notification::UserInboxNotification;
+    let opts = UserInboxNotification::opt()
+        .sk("USER_INBOX_NOTIFICATION".to_string())
+        .limit(100);
+    let (rows, _) = UserInboxNotification::query(&ctx.ddb, recipient_pk.clone(), opts)
+        .await
+        .unwrap();
+    rows.iter().filter(|r| predicate(&r.payload)).count()
+}
+
+// ── AC-16: Deregister ────────────────────────────────────────────
+
+#[tokio::test]
+async fn test_deregister_clears_parent_keeps_content() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+
+    let (child_pk, child_id) = approve_child_for(&ctx, &parent_id).await;
+
+    // Seed a post under the child team so we can confirm content survives.
+    let post = seed_team_post(
+        &ctx,
+        &child_pk,
+        &child_pk,
+        0,
+        crate::features::posts::types::Visibility::Public,
+        crate::features::posts::types::PostStatus::Published,
+    )
+    .await;
+
+    // Parent deregister — uses parent_id in path, child_id as sub_team_id.
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/{}/deregister",
+            parent_id, child_id
+        ),
+        headers: ctx.test_user.1.clone(),
+        body: { "body": { "reason": "scope mismatch" } },
+        response_type: TerminationAck,
+    };
+    assert_eq!(status, 200, "deregister: {:?}", body);
+    assert!(body.ok);
+
+    // Child Team's parent_team_id cleared.
+    let child = Team::get(&ctx.ddb, &child_pk, Some(EntityType::Team))
+        .await
+        .unwrap()
+        .unwrap();
+    assert!(child.parent_team_id.is_none());
+
+    // SubTeamLink row gone.
+    let link_sk = EntityType::SubTeamLink(child_id.clone());
+    let link = SubTeamLink::get(&ctx.ddb, &parent_pk, Some(link_sk))
+        .await
+        .unwrap();
+    assert!(link.is_none(), "SubTeamLink must be deleted");
+
+    // Child content (post) still there.
+    let survived =
+        crate::features::posts::models::Post::get(&ctx.ddb, &post.pk, Some(EntityType::Post))
+            .await
+            .unwrap();
+    assert!(
+        survived.is_some(),
+        "child team content must not be touched by deregister"
+    );
+}
+
+#[tokio::test]
+async fn test_deregister_requires_parent_admin() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+    let (_child_pk, child_id) = approve_child_for(&ctx, &parent_id).await;
+
+    // A random outsider cannot deregister.
+    let (_, outsider_headers) = ctx.create_another_user().await;
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/{}/deregister",
+            parent_id, child_id
+        ),
+        headers: outsider_headers,
+        body: { "body": { "reason": "no" } }
+    };
+    assert_ne!(status, 200, "non-parent-admin must be rejected");
+
+    // Unauthenticated also rejected.
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/{}/deregister",
+            parent_id, child_id
+        ),
+        body: { "body": { "reason": "no" } }
+    };
+    assert_ne!(status, 200, "anon must be rejected");
+}
+
+#[tokio::test]
+async fn test_deregister_rejects_when_not_linked() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    let _ = parent_pk;
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+
+    // A child with no SubTeamLink yet.
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (_, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/{}/deregister",
+            parent_id, child_id
+        ),
+        headers: ctx.test_user.1.clone(),
+        body: { "body": { "reason": "not linked" } }
+    };
+    assert_ne!(status, 200, "deregister on missing link must fail");
+}
+
+#[tokio::test]
+async fn test_deregister_notifies_former_sub_team_admins() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+    let (child_pk, child_id) = approve_child_for(&ctx, &parent_id).await;
+
+    // The child's owner is registered as team owner; capture its user pk via the
+    // team-owner lookup.
+    let owner = crate::features::posts::models::TeamOwner::get(
+        &ctx.ddb,
+        &child_pk,
+        Some(&EntityType::TeamOwner),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    let child_owner_pk: Partition = owner.user_pk.to_string().parse().unwrap();
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/{}/deregister",
+            parent_id, child_id
+        ),
+        headers: ctx.test_user.1.clone(),
+        body: { "body": { "reason": "end of season" } },
+        response_type: TerminationAck,
+    };
+    assert_eq!(status, 200);
+
+    let count = count_inbox_with_kind(&ctx, &child_owner_pk, |p| {
+        matches!(p, InboxPayload::SubTeamDeregistered { .. })
+    })
+    .await;
+    assert!(
+        count >= 1,
+        "former sub-team owner must receive a Deregistered inbox row"
+    );
+}
+
+// ── AC-17: Leave parent ──────────────────────────────────────────
+
+#[tokio::test]
+async fn test_leave_parent_clears_parent_notifies_parent_admins() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+
+    // Approve a child — `approve_child_for` creates its own child owner.
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+    let (_, _, app) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers.clone(),
+        body: {
+            "body": {
+                "parent_team_id": parent_id,
+                "form_values": {},
+                "doc_agreements": []
+            }
+        },
+        response_type: SubTeamApplicationResponse,
+    };
+    let (s, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/applications/{}/approve",
+            parent_id, app.id
+        ),
+        headers: ctx.test_user.1.clone(),
+        body: {}
+    };
+    assert_eq!(s, 200);
+
+    // Child-side leave — uses child's admin headers.
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/leave", child_id),
+        headers: child_headers.clone(),
+        body: { "body": { "reason": "changed direction" } },
+        response_type: TerminationAck,
+    };
+    assert_eq!(status, 200, "leave: {:?}", body);
+    assert!(body.ok);
+
+    // Child Team parent_team_id cleared.
+    let child = Team::get(&ctx.ddb, &child_pk, Some(EntityType::Team))
+        .await
+        .unwrap()
+        .unwrap();
+    assert!(child.parent_team_id.is_none());
+
+    // SubTeamLink row gone.
+    let link_sk = EntityType::SubTeamLink(child_id.clone());
+    let link = SubTeamLink::get(&ctx.ddb, &parent_pk, Some(link_sk))
+        .await
+        .unwrap();
+    assert!(link.is_none());
+
+    // Parent's owner (ctx.test_user.0) receives a LeftParent inbox row.
+    let parent_owner_pk: Partition = ctx.test_user.0.pk.to_string().parse().unwrap();
+    let count = count_inbox_with_kind(&ctx, &parent_owner_pk, |p| {
+        matches!(p, InboxPayload::SubTeamLeftParent { .. })
+    })
+    .await;
+    assert!(
+        count >= 1,
+        "parent owner must receive a LeftParent inbox row"
+    );
+}
+
+#[tokio::test]
+async fn test_leave_parent_rejects_when_not_a_sub_team() {
+    let ctx = TestContext::setup().await;
+
+    // Child team with no parent.
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (_, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/leave", child_id),
+        headers: child_headers,
+        body: { "body": { "reason": "nope" } }
+    };
+    assert_ne!(status, 200, "standalone team cannot leave — must fail");
+}
+
+#[tokio::test]
+async fn test_leave_parent_requires_child_admin() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (_child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+    let (_, _, app) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers.clone(),
+        body: {
+            "body": {
+                "parent_team_id": parent_id,
+                "form_values": {},
+                "doc_agreements": []
+            }
+        },
+        response_type: SubTeamApplicationResponse,
+    };
+    let (s, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/applications/{}/approve",
+            parent_id, app.id
+        ),
+        headers: ctx.test_user.1.clone(),
+        body: {}
+    };
+    assert_eq!(s, 200);
+
+    // A third user (not in child team) tries to leave.
+    let (_, stranger_headers) = ctx.create_another_user().await;
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/leave", child_id),
+        headers: stranger_headers,
+        body: { "body": { "reason": "mischief" } }
+    };
+    assert_ne!(status, 200, "non-admin of child must be rejected");
+
+    // Unauthenticated also rejected.
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/leave", child_id),
+        body: { "body": { "reason": "mischief" } }
+    };
+    assert_ne!(status, 200, "anon must be rejected");
+}
+
+#[tokio::test]
+async fn test_reapply_after_leaving_is_allowed() {
+    // Reapply after leaving is allowed — the apply flow from PR #3 already
+    // supports this; just verify there's no lingering `pending_parent_team_id`
+    // or `parent_team_id` blocking a fresh submission.
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+
+    let (child_user, child_headers) = ctx.create_another_user().await;
+    let (child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
+
+    // Apply + approve + leave.
+    let (_, _, app) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers.clone(),
+        body: {
+            "body": { "parent_team_id": parent_id, "form_values": {}, "doc_agreements": [] }
+        },
+        response_type: SubTeamApplicationResponse,
+    };
+    let (s, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!(
+            "/api/teams/{}/sub-teams/applications/{}/approve",
+            parent_id, app.id
+        ),
+        headers: ctx.test_user.1.clone(),
+        body: {}
+    };
+    assert_eq!(s, 200);
+
+    let (s, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/leave", child_id),
+        headers: child_headers.clone(),
+        body: { "body": { "reason": null } }
+    };
+    assert_eq!(s, 200);
+
+    // Reapply — must succeed (no in-flight, no existing link).
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/parent/applications", child_id),
+        headers: child_headers,
+        body: {
+            "body": { "parent_team_id": parent_id, "form_values": {}, "doc_agreements": [] }
+        },
+        response_type: SubTeamApplicationResponse,
+    };
+    assert_eq!(status, 200, "reapply must succeed: {:?}", body);
+    let _ = child_pk;
+}
+
+// ── AC-18: Parent-delete cascade ─────────────────────────────────
+
+#[tokio::test]
+async fn test_parent_delete_cascades_to_sub_teams() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+
+    let (child_pk_a, child_id_a) = approve_child_for(&ctx, &parent_id).await;
+    let (child_pk_b, child_id_b) = approve_child_for(&ctx, &parent_id).await;
+
+    // Delete parent via the existing endpoint.
+    let username = team_username(&ctx, &parent_pk).await;
+    let (status, _, _) = crate::test_delete! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/settings", username),
+        headers: ctx.test_user.1.clone(),
+    };
+    assert_eq!(status, 200, "delete_team must succeed");
+
+    // Both children no longer carry parent_team_id.
+    for (cpk, cid) in [(&child_pk_a, &child_id_a), (&child_pk_b, &child_id_b)] {
+        let child = Team::get(&ctx.ddb, cpk, Some(EntityType::Team))
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(
+            child.parent_team_id.is_none(),
+            "child {cid} still has parent_team_id"
+        );
+    }
+}
+
+#[tokio::test]
+async fn test_parent_delete_notifies_former_sub_teams() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+
+    let (child_pk, _child_id) = approve_child_for(&ctx, &parent_id).await;
+    let child_owner = crate::features::posts::models::TeamOwner::get(
+        &ctx.ddb,
+        &child_pk,
+        Some(&EntityType::TeamOwner),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    let child_owner_pk: Partition = child_owner.user_pk.to_string().parse().unwrap();
+
+    let username = team_username(&ctx, &parent_pk).await;
+    let (status, _, _) = crate::test_delete! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/settings", username),
+        headers: ctx.test_user.1.clone(),
+    };
+    assert_eq!(status, 200);
+
+    let count = count_inbox_with_kind(&ctx, &child_owner_pk, |p| {
+        matches!(p, InboxPayload::SubTeamParentDeleted { .. })
+    })
+    .await;
+    assert!(
+        count >= 1,
+        "former sub-team owner must receive a ParentDeleted inbox row"
+    );
+}
+
+#[tokio::test]
+async fn test_parent_delete_does_not_touch_sub_team_content() {
+    let ctx = TestContext::setup().await;
+    let parent_pk = create_parent_team(&ctx).await;
+    let parent_id = team_id_from(&parent_pk);
+    enable_parent_eligible(&ctx, &parent_id, 0).await;
+
+    let (child_pk, _child_id) = approve_child_for(&ctx, &parent_id).await;
+
+    // Seed a post under the child team.
+    let post = seed_team_post(
+        &ctx,
+        &child_pk,
+        &child_pk,
+        0,
+        crate::features::posts::types::Visibility::Public,
+        crate::features::posts::types::PostStatus::Published,
+    )
+    .await;
+    // Seed a member on the child team.
+    let (extra_user, _) = ctx.create_another_user().await;
+    let ut = UserTeam::new(
+        extra_user.pk.clone(),
+        child_pk.clone(),
+        "childname".to_string(),
+        String::new(),
+        "chld".to_string(),
+        None,
+        TeamRole::Member,
+    );
+    ut.create(&ctx.ddb).await.unwrap();
+
+    // Delete parent.
+    let username = team_username(&ctx, &parent_pk).await;
+    let (status, _, _) = crate::test_delete! {
+        app: ctx.app.clone(),
+        path: &format!("/api/teams/{}/settings", username),
+        headers: ctx.test_user.1.clone(),
+    };
+    assert_eq!(status, 200);
+
+    // Child post preserved.
+    let still =
+        crate::features::posts::models::Post::get(&ctx.ddb, &post.pk, Some(EntityType::Post))
+            .await
+            .unwrap();
+    assert!(still.is_some(), "child post must survive parent delete");
+
+    // Child team still exists.
+    let child = Team::get(&ctx.ddb, &child_pk, Some(EntityType::Team))
+        .await
+        .unwrap();
+    assert!(child.is_some(), "child team itself must survive");
+
+    // Child's UserTeam membership rows preserved.
+    let opt = UserTeamQueryOption::builder().limit(50);
+    let (members, _) =
+        UserTeam::find_by_team(&ctx.ddb, &EntityType::UserTeam(child_pk.to_string()), opt)
+            .await
+            .unwrap();
+    assert!(
+        !members.is_empty(),
+        "child team membership must be preserved"
+    );
+}
+
 // ── Compile-time silence (unused-import guard) ───────────────────
 #[allow(dead_code)]
 fn _unused_guard() {
@@ -2360,4 +2885,5 @@ fn _unused_guard() {
     let _ = SubTeamFormFieldType::ShortText;
     let _ = UserTeamQueryOption::builder();
     let _: Option<SubTeamApplicationDetailResponse> = None;
+    let _ = TerminationAck::default();
 }
