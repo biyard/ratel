@@ -25,6 +25,11 @@ const host = process.env.DOMAIN || "dev.ratel.foundation";
 const webDomain = host;
 const apiDomain = `api.${host}`;
 const baseDomain = "ratel.foundation";
+const publicBiyardApiUrl =
+  process.env.BIYARD_PUBLIC_API_URL || "https://api.biyard.co";
+const privateBiyardApiUrl =
+  process.env.BIYARD_PRIVATE_API_URL ||
+  "http://api.biyard-prod-svc.local:8080";
 
 // Shared VPC endpoints (singleton, not stage-scoped — VPC endpoints can only
 // exist once per VPC, so dev and prod share this stack).
@@ -81,6 +86,9 @@ new RegionalLambdaStack(app, `ratel-${env}-svc-ap-northeast-2`, {
   commit: process.env.COMMIT!,
   baseDomain,
   apiDomain,
+  runtimeEnvironment: {
+    BIYARD_API_URL: publicBiyardApiUrl,
+  },
 });
 
 // Shared ALB for Qdrant gRPC across dev and prod
@@ -118,6 +126,9 @@ const ap_northeast_2_lambda = new RegionalLambdaStack(
     commit: process.env.COMMIT!,
     baseDomain,
     apiDomain: `lambda-${apiDomain}`,
+    runtimeEnvironment: {
+      BIYARD_API_URL: privateBiyardApiUrl,
+    },
     // Place Lambda in the same VPC as Qdrant so CloudMap private DNS resolves.
     vpc: escStack.vpc,
     sharedSecurityGroup: vpcEndpointStack.sharedSecurityGroup,
@@ -133,6 +144,9 @@ new RegionalLambdaStack(app, `ratel-${env}-svc-eu-central-1`, {
   commit: process.env.COMMIT!,
   baseDomain,
   apiDomain,
+  runtimeEnvironment: {
+    BIYARD_API_URL: publicBiyardApiUrl,
+  },
 });
 
 new RegionalLambdaStack(app, `ratel-${env}-svc-us-east-1`, {
@@ -144,6 +158,9 @@ new RegionalLambdaStack(app, `ratel-${env}-svc-us-east-1`, {
   commit: process.env.COMMIT!,
   baseDomain,
   apiDomain,
+  runtimeEnvironment: {
+    BIYARD_API_URL: publicBiyardApiUrl,
+  },
 });
 
 new GlobalAccelStack(app, "GlobalAccel", {
