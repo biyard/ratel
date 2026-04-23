@@ -1,4 +1,5 @@
 mod use_parent_relationship;
+mod use_sub_team_activity;
 mod use_sub_team_application_status;
 mod use_sub_team_apply;
 mod use_sub_team_broadcast;
@@ -12,6 +13,7 @@ mod use_sub_team_queue;
 mod use_sub_team_settings;
 
 pub use use_parent_relationship::*;
+pub use use_sub_team_activity::*;
 pub use use_sub_team_application_status::*;
 pub use use_sub_team_apply::*;
 pub use use_sub_team_broadcast::*;

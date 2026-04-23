@@ -1,3 +1,4 @@
+pub mod components;
 pub mod controllers;
 pub mod hooks;
 pub mod i18n;
@@ -7,6 +8,7 @@ pub mod pages;
 pub mod services;
 pub mod types;
 
+pub use components::*;
 pub use hooks::*;
 pub use i18n::*;
 pub use models::*;
