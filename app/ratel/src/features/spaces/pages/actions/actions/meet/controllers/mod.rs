@@ -6,3 +6,6 @@ pub use get_meet::*;
 
 mod update_meet;
 pub use update_meet::*;
+
+mod delete_meet;
+pub use delete_meet::*;

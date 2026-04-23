@@ -137,3 +137,30 @@ async fn test_update_meet_duration_invalid_zero() {
     };
     assert_ne!(status, 200, "duration 0 should fail");
 }
+
+#[tokio::test]
+async fn test_delete_meet_removes_row() {
+    let ctx = TestContext::setup().await;
+    let space_id = seed_creator_space(&ctx).await;
+
+    let (_, _, body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/spaces/{}/meets", space_id),
+        headers: ctx.test_user.1.clone(),
+    };
+    let meet_sk = body["sk"].as_str().unwrap().to_string();
+
+    let (status, _, _) = crate::test_delete! {
+        app: ctx.app.clone(),
+        path: &format!("/api/spaces/{}/meets/{}", space_id, meet_sk),
+        headers: ctx.test_user.1.clone(),
+    };
+    assert_eq!(status, 200, "delete_meet should succeed");
+
+    let (status, _, _) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/spaces/{}/meets/{}", space_id, meet_sk),
+        headers: ctx.test_user.1.clone(),
+    };
+    assert_ne!(status, 200, "get after delete should fail");
+}
