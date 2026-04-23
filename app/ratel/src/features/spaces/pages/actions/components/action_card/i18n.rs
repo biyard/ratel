@@ -19,6 +19,10 @@ translate! {
         en: "Follow",
         ko: "팔로우"
     },
+    action_type_meet: {
+        en: "Meet",
+        ko: "미팅"
+    },
     prerequisite: {
         en: "Pre",
         ko: "사전"

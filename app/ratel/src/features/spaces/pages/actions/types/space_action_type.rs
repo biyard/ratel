@@ -15,6 +15,8 @@ pub enum SpaceActionType {
     Follow,
     #[translate(ko = "퀴즈", en = "Quiz")]
     Quiz,
+    #[translate(ko = "미팅", en = "Meet")]
+    Meet,
 }
 
 impl SpaceActionType {
@@ -24,6 +26,7 @@ impl SpaceActionType {
             SpaceActionType::TopicDiscussion => RewardUserBehavior::DiscussionComment,
             SpaceActionType::Quiz => RewardUserBehavior::QuizAnswer,
             SpaceActionType::Follow => RewardUserBehavior::Follow,
+            SpaceActionType::Meet => RewardUserBehavior::AttendMeet,
         }
     }
 
@@ -60,6 +63,9 @@ impl SpaceActionType {
                     quiz_id: response.quiz_id.clone(),
                 })
             }
+            SpaceActionType::Meet => Err(crate::common::Error::NotFound(
+                "meet routing not wired yet".into(),
+            )),
         }
     }
 }
