@@ -151,8 +151,13 @@ fn BylawCard(doc: ApplyContextDocument, parent: bool) -> Element {
         "bylaw-card"
     };
 
+    let testid = if parent {
+        "sub-team-bylaws-parent-card"
+    } else {
+        "sub-team-bylaws-team-card"
+    };
     rsx! {
-        article { class: "{variant_class}",
+        article { class: "{variant_class}", "data-testid": "{testid}",
             div { class: "bylaw-card__top",
                 span { class: "bylaw-card__num", "{tr.bylaws_required_badge}" }
             }

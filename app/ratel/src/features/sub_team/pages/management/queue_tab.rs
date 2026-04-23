@@ -71,7 +71,7 @@ fn QueueRow(
     let submitter = app.submitter_user_id.clone();
 
     rsx! {
-        div { class: "queue-row",
+        div { class: "queue-row", "data-testid": "sub-team-queue-row",
             div { class: "avatar avatar--teal", "•" }
             div { class: "queue-row__body",
                 span { class: "queue-row__name", "Application {app.id}" }
@@ -83,11 +83,13 @@ fn QueueRow(
             div { class: "queue-row__actions",
                 button {
                     class: "queue-row__action queue-row__action--approve",
+                    "data-testid": "sub-team-queue-approve-btn",
                     onclick: move |_| on_approve.call(app_id_for_approve.clone()),
                     "{tr.approve}"
                 }
                 button {
                     class: "queue-row__action queue-row__action--return",
+                    "data-testid": "sub-team-queue-return-btn",
                     onclick: move |_| {
                         mode.set(QueueRowMode::Return);
                         text.set(String::new());
@@ -96,6 +98,7 @@ fn QueueRow(
                 }
                 button {
                     class: "queue-row__action queue-row__action--reject",
+                    "data-testid": "sub-team-queue-reject-btn",
                     onclick: move |_| {
                         mode.set(QueueRowMode::Reject);
                         text.set(String::new());
@@ -107,6 +110,7 @@ fn QueueRow(
                 div { class: "field",
                     textarea {
                         class: "field__textarea",
+                        "data-testid": "sub-team-queue-decision-text",
                         placeholder: if mode() == QueueRowMode::Return { "{tr.return_comment}" } else { "{tr.reject_reason}" },
                         value: "{text()}",
                         oninput: move |e| text.set(e.value()),
@@ -119,6 +123,7 @@ fn QueueRow(
                         }
                         button {
                             class: "btn btn--primary btn--small",
+                            "data-testid": "sub-team-queue-decision-confirm",
                             onclick: move |_| {
                                 let content = text().clone();
                                 match mode() {

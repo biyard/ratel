@@ -59,6 +59,7 @@ pub fn FormTab() -> Element {
                 button {
                     class: "add-field-btn",
                     id: "add-field",
+                    "data-testid": "sub-team-form-field-create-btn",
                     onclick: move |_| {
                         handle_create_field
                             .call(CreateSubTeamFormFieldRequest {
@@ -121,7 +122,10 @@ fn FieldRow(
     };
 
     rsx! {
-        div { class: "field-row", "data-linked": "none",
+        div {
+            class: "field-row",
+            "data-linked": "none",
+            "data-testid": "sub-team-form-field-row",
             span { class: "field-row__drag",
                 button {
                     class: "req-card__stepper",
@@ -161,6 +165,7 @@ fn FieldRow(
             }
             input {
                 class: "field-row__label",
+                "data-testid": "sub-team-form-field-label-input",
                 value: "{label}",
                 onchange: move |e| {
                     on_update
@@ -176,6 +181,7 @@ fn FieldRow(
             label { class: "field-row__req",
                 input {
                     r#type: "checkbox",
+                    "data-testid": "sub-team-form-field-required-check",
                     checked: required,
                     onchange: move |e| {
                         on_update

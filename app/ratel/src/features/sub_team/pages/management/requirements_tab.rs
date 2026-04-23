@@ -41,6 +41,7 @@ pub fn RequirementsTab() -> Element {
                 input {
                     r#type: "checkbox",
                     id: "activation-toggle",
+                    "data-testid": "sub-team-settings-eligibility-switch",
                     checked: is_on,
                     onchange: move |e| {
                         let v = e.checked();
@@ -86,6 +87,7 @@ pub fn RequirementsTab() -> Element {
                             class: "req-card__value",
                             r#type: "number",
                             id: "min-members",
+                            "data-testid": "sub-team-settings-min-members-input",
                             value: "{min_members}",
                             onchange: move |e| {
                                 if let Ok(n) = e.value().parse::<i32>() {
