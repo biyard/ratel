@@ -14,7 +14,6 @@ import {
   togglePrerequisite,
   setReward,
   commitAutosave,
-  setActionSchedule,
 } from "../utils";
 
 // This test requires the backend to be built with --features bypass
@@ -205,13 +204,10 @@ test.describe
       options: ["Yes", "No"],
     });
 
-    // Schedule: start = tomorrow, end = day after tomorrow. Driven via
-    // the server's update endpoint (the picker UI is no longer a native
-    // input — see `setActionSchedule` in utils.js).
-    await setActionSchedule(page, {
-      startedAt: Date.now() + 24 * 60 * 60 * 1000,
-      endedAt: Date.now() + 2 * 24 * 60 * 60 * 1000,
-    });
+    // Schedule inputs were removed in the status-based refactor — actions
+    // now transition via the creator's explicit Publish button. This test
+    // leaves the poll in Designing; prerequisite visibility comes from
+    // the prerequisite toggle later in the flow.
   });
 
   test("Configure Panel app with Age and Gender attributes", async ({

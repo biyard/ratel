@@ -147,26 +147,28 @@ pub async fn respond_poll(
 
     let space_action = SpaceAction::get(
         cli,
-        &CompositePartition(space_id, poll_sk.to_string()),
+        &CompositePartition(space_id.clone(), poll_sk.to_string()),
         Some(EntityType::SpaceAction),
     )
     .await?
     .ok_or(Error::SpaceActionNotFound)?;
 
+    let deps_met = crate::features::spaces::pages::actions::services::dependency::dependencies_met(
+        cli,
+        &space,
+        &space_action,
+        &member.pk,
+    )
+    .await?;
+
     if !crate::features::spaces::pages::actions::can_execute_space_action(
         role,
         space_action.prerequisite,
         space.status,
+        space_action.status.as_ref(),
+        deps_met,
         space.join_anytime,
     ) {
-        return Err(SpacePollError::PollNotInProgress.into());
-    }
-
-    // Prerequisite polls are available during the Open phase regardless of their
-    // individual started_at timer, but finished polls are never respondable.
-    if poll.status() != PollStatus::InProgress
-        && !(space_action.prerequisite && poll.status() == PollStatus::NotStarted)
-    {
         return Err(SpacePollError::PollNotInProgress.into());
     }
 

@@ -6,6 +6,7 @@ import {
   createAction,
   createTeamFromHome,
   createTeamPostFromHome,
+  dismissDevToast,
   fill,
   goto,
   getLocator,
@@ -15,7 +16,6 @@ import {
   fillPollQuestion,
   togglePrerequisite,
   commitAutosave,
-  setActionSchedule,
 } from "../utils";
 
 // This test covers the full space lifecycle with three users:
@@ -49,20 +49,17 @@ const user2 = {
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 /**
- * Set the action start date to now and end date a week out. Drives the
- * server's update endpoint directly (`setActionSchedule` in utils.js)
- * instead of the picker UI — the arena editor migrated from native
- * `<input type="datetime-local">` to a popover-based DateAndTimePicker
- * that can't be filled with `.fill('YYYY-MM-DDTHH:MM')`. This helper's
- * intent is to put the action In Progress so downstream tests can
- * exercise it; the picker UI itself is not under test here.
+ * Publish the action so it's immediately available to participants.
+ * Replaces the old "set started_at to now" flow — actions now flip
+ * Designing → Ongoing via the creator's explicit Publish button.
  */
 async function setStartDateToToday(page) {
-  const now = Date.now();
-  await setActionSchedule(page, {
-    startedAt: now,
-    endedAt: now + 7 * 24 * 60 * 60 * 1000,
-  });
+  const publishBtn = page.getByTestId("action-publish");
+  if (await publishBtn.isVisible().catch(() => false)) {
+    await publishBtn.click();
+    await page.waitForLoadState("load");
+    await page.waitForTimeout(500);
+  }
 }
 
 /** Hide the floating action button that may overlap modal buttons. */
@@ -150,6 +147,9 @@ async function participateAndCompletePoll(page, _spaceUrl, pollOptionText) {
   // Click participate button on the ArenaViewer
   await clickNoNav(page, { testId: "btn-participate" });
 
+  // Dev rebuild overlay can steal pointer events and block visibility checks.
+  await dismissDevToast(page);
+
   // PrerequisiteCard appears (no consent modal since no panels configured)
   await expect(page.getByTestId("card-prerequisite")).toBeVisible({
     timeout: 30000,
@@ -174,8 +174,11 @@ async function participateAndCompletePoll(page, _spaceUrl, pollOptionText) {
     timeout: 30000,
   });
 
-  // Select the specific poll option inside the overlay
-  await overlay.getByText(pollOptionText, { exact: true }).click();
+  // Select the specific poll option inside the overlay.
+  await overlay
+    .locator(".option-single", { hasText: pollOptionText })
+    .first()
+    .click();
 
   // Submit the poll using testId (avoids ambiguity with confirm dialog)
   await clickNoNav(page, { testId: "poll-submit" });
@@ -285,6 +288,9 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Blur the editor so the autosave debounce commits.
     await page.keyboard.press("Tab");
+
+    // Publish the discussion so it's visible to non-Creators as Ongoing.
+    await setStartDateToToday(page);
   });
 
   test("Create a poll action (prerequisite) in the space", async ({ page }) => {
@@ -306,6 +312,9 @@ test.describe.serial("Space with actions created by a team", () => {
 
     // Prerequisite is toggled via the ConfigCard tile (no more Settings tab).
     await togglePrerequisite(page);
+
+    // Publish the poll so it's visible as Ongoing.
+    await setStartDateToToday(page);
   });
 
   test("Create a quiz action in the space", async ({ page }) => {
@@ -342,6 +351,9 @@ test.describe.serial("Space with actions created by a team", () => {
       await page.waitForLoadState("load");
       await page.waitForTimeout(200);
     }
+
+    // Publish the quiz so it's visible as Ongoing.
+    await setStartDateToToday(page);
   });
 
   test("Create a follow action in the space", async ({ page }) => {
@@ -349,6 +361,9 @@ test.describe.serial("Space with actions created by a team", () => {
     // Arena follow creator: verify the ConfigCard renders (TargetsCard +
     // ConfigCard are inline, no more General tab).
     await getLocator(page, { testId: "page-card-config" });
+
+    // Publish the follow action so it's visible as Ongoing.
+    await setStartDateToToday(page);
   });
 
   // ─── 3. Creator: Publish space ────────────────────────────────────────────

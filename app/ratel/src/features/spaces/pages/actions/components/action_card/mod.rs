@@ -1,4 +1,3 @@
-use crate::common::chrono::{DateTime, Utc};
 use crate::features::spaces::pages::actions::*;
 use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
 use i18n::ActionCardTranslate;
@@ -18,10 +17,8 @@ pub fn ActionCard(
     let mut popup = use_popup();
     let space = use_space();
     let role = use_space_role()();
-    let now = crate::common::utils::time::get_now_timestamp_millis();
 
-    let period = format_action_period(action.started_at, action.ended_at);
-    let status = resolve_action_status(&action, now);
+    let status = resolve_action_status(&action);
     let status_label = match status {
         ActionStatus::Draft => tr.status_draft,
         ActionStatus::Ongoing => tr.status_ongoing,
@@ -67,7 +64,12 @@ pub fn ActionCard(
         action.description.clone()
     };
     let is_closed = matches!(status, ActionStatus::Closed);
-    let card_class = if is_closed {
+    let is_locked = !matches!(role, SpaceUserRole::Creator)
+        && !action.depends_on.is_empty()
+        && !action.dependencies_met;
+    let card_class = if is_locked {
+        "flex flex-col w-full text-left border transition-colors gap-[0.625rem] !rounded-[1rem] !bg-neutral-900 light:!bg-white !p-[0.9375rem] border-neutral-800 light:border-neutral-300 opacity-60 cursor-not-allowed"
+    } else if is_closed {
         "flex flex-col w-full text-left border transition-colors cursor-pointer gap-[0.625rem] !rounded-[1rem] !bg-neutral-900 light:!bg-white !p-[0.9375rem] border-neutral-800 light:border-neutral-300 opacity-60"
     } else {
         "flex flex-col w-full text-left border transition-colors cursor-pointer gap-[0.625rem] !rounded-[1rem] !bg-neutral-900 light:!bg-white !p-[0.9375rem] border-neutral-800 light:border-neutral-300 light:hover:!bg-neutral-50 hover:!bg-neutral-800"
@@ -128,6 +130,10 @@ pub fn ActionCard(
             class: card_class.to_string(),
             onclick: {
                 move |_| {
+                    if is_locked {
+                        toast.info(tr.dependencies_not_met.to_string());
+                        return;
+                    }
                     if role != SpaceUserRole::Creator {
                         let space_status = space().status;
                         let enable_action = action.prerequisite
@@ -175,23 +181,21 @@ pub fn ActionCard(
                             {tr.prerequisite}
                         }
                     }
+
+                    if is_locked {
+                        Badge {
+                            color: BadgeColor::Grey,
+                            variant: BadgeVariant::Rounded,
+                            {tr.locked}
+                        }
+                    }
                 }
 
                 div { class: "flex gap-2 items-center max-mobile:self-end",
-                    if let Some(period) = period {
-                        span { class: "font-medium text-[0.75rem]/[1rem] text-neutral-500",
-                            {period}
-                        }
-                    }
-                    // Only allow deletion while the action is not locked.
-                    // An action is locked once the space has launched
-                    // (Ongoing) AND the action's time window has begun,
-                    // or the space has moved past the live phase
-                    // (Processing / Finished).
                     if deletable
                         && !crate::features::spaces::pages::actions::is_action_locked(
                             space().status,
-                            action.started_at.unwrap_or(i64::MAX),
+                            action.status.as_ref(),
                         )
                     {
                         button {
@@ -217,6 +221,17 @@ pub fn ActionCard(
                 class: "flex-1 w-full min-h-0 font-medium break-words line-clamp-1 text-[0.75rem]/[1rem] text-foreground-muted",
                 class: if action.description.is_empty() { " text-text-primary" },
                 dangerous_inner_html: description,
+            }
+
+            if is_locked {
+                div { class: "flex gap-1.5 items-center font-medium text-[0.75rem]/[1rem] text-foreground-muted",
+                    icons::security::Lock1 {
+                        width: "14",
+                        height: "14",
+                        class: "[&>path]:stroke-current",
+                    }
+                    span { {tr.dependencies_not_met} }
+                }
             }
 
             if has_stats {
@@ -262,24 +277,10 @@ enum ActionStatus {
     Closed,
 }
 
-fn resolve_action_status(action: &SpaceActionSummary, now_millis: i64) -> ActionStatus {
-    match (action.started_at, action.ended_at) {
-        (Some(started_at), Some(ended_at)) => {
-            if now_millis < started_at {
-                ActionStatus::Draft
-            } else if now_millis <= ended_at {
-                ActionStatus::Ongoing
-            } else {
-                ActionStatus::Closed
-            }
-        }
-        (Some(started_at), None) => {
-            if now_millis < started_at {
-                ActionStatus::Draft
-            } else {
-                ActionStatus::Ongoing
-            }
-        }
+fn resolve_action_status(action: &SpaceActionSummary) -> ActionStatus {
+    match action.status {
+        Some(SpaceActionStatus::Ongoing) => ActionStatus::Ongoing,
+        Some(SpaceActionStatus::Finish) => ActionStatus::Closed,
         _ => ActionStatus::Draft,
     }
 }
@@ -300,22 +301,6 @@ fn action_type_badge_color(action_type: &SpaceActionType) -> BadgeColor {
         SpaceActionType::Follow => BadgeColor::Pink,
         SpaceActionType::Quiz => BadgeColor::Purple,
     }
-}
-
-fn format_action_period(started_at: Option<i64>, ended_at: Option<i64>) -> Option<String> {
-    let (Some(started_at), Some(ended_at)) = (started_at, ended_at) else {
-        return None;
-    };
-
-    let start = DateTime::<Utc>::from_timestamp_millis(started_at)?;
-    let end = DateTime::<Utc>::from_timestamp_millis(ended_at)?;
-
-    Some(format!(
-        "{} - {}, {}",
-        start.format("%b %-d"),
-        end.format("%b %-d"),
-        end.format("%Y")
-    ))
 }
 
 fn format_with_commas(value: i64) -> String {

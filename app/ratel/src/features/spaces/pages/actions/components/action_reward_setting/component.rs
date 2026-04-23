@@ -1,5 +1,4 @@
 use crate::features::spaces::pages::actions::*;
-use crate::features::spaces::pages::actions::components::ActionCommonSettingsTranslate;
 use crate::features::spaces::pages::actions::controllers::{
     UpdateSpaceActionRequest, update_space_action,
 };
@@ -12,10 +11,9 @@ pub fn ActionRewardSetting(
     space_id: ReadSignal<SpacePartition>,
     action_id: ReadSignal<String>,
     saved_credits: u64,
-    started_at: i64,
+    action_status: Option<SpaceActionStatus>,
     #[props(default)] on_change: EventHandler<u64>,
 ) -> Element {
-    let tr: ActionCommonSettingsTranslate = use_translate();
     let tr_reward: ArenaRewardTranslate = use_translate();
     let mut toast = crate::common::use_toast();
     let mut current_credits = use_signal(move || saved_credits);
@@ -25,7 +23,7 @@ pub fn ActionRewardSetting(
     let current_space = space();
     let reward_locked = crate::features::spaces::pages::actions::is_action_locked(
         current_space.status,
-        started_at,
+        action_status.as_ref(),
     );
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let personal_username = user_ctx
@@ -143,7 +141,7 @@ pub fn ActionRewardSetting(
                                 (membership.remaining_credits - delta).max(0);
                         }
                     }
-                    toast.info(tr.reward_updated.to_string());
+                    toast.info(tr_reward.reward_updated.to_string());
                     on_change.call(next_credits);
                 }
                 Err(e) => {
@@ -413,5 +411,9 @@ translate! {
     locked_started: {
         en: "Rewards cannot be changed after the action has started.",
         ko: "액션이 시작된 이후에는 보상을 변경할 수 없습니다.",
+    },
+    reward_updated: {
+        en: "Reward credits updated.",
+        ko: "보상 크레딧이 업데이트되었습니다.",
     },
 }

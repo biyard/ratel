@@ -14,7 +14,8 @@ use crate::features::membership::models::{
 #[serde(untagged)]
 pub enum UpdateSpaceActionRequest {
     Credits { credits: u64 },
-    Time { started_at: i64, ended_at: i64 },
+    Status { status: SpaceActionStatus },
+    Dependencies { depends_on: Vec<String> },
     Prerequisite { prerequisite: bool },
     Title { title: String },
 }
@@ -58,23 +59,33 @@ pub async fn update_space_action(
             )
             .await?;
         }
-        UpdateSpaceActionRequest::Time {
-            started_at,
-            ended_at,
-        } => {
-            if started_at >= ended_at {
-                return Err(SpaceActionError::InvalidTimeRange.into());
+        UpdateSpaceActionRequest::Status { status } => {
+            if !SpaceActionStatus::allows_transition(space_action.status.as_ref(), &status) {
+                return Err(SpaceActionError::InvalidStatusTransition.into());
             }
-            space_action.started_at = started_at;
-            space_action.ended_at = ended_at;
+            space_action.status = Some(status.clone());
             SpaceAction::updater(&pk, &EntityType::SpaceAction)
-                .with_started_at(started_at)
-                .with_ended_at(ended_at)
+                .with_status(status)
                 .with_updated_at(now)
                 .execute(cli)
                 .await
                 .map_err(|e| {
-                    crate::error!("Failed to update space action: {e:?}");
+                    crate::error!("Failed to update action status: {e:?}");
+                    SpaceActionError::ActionUpdateFailed
+                })?;
+        }
+        UpdateSpaceActionRequest::Dependencies { depends_on } => {
+            if depends_on.iter().any(|id| id == &action_id) {
+                return Err(SpaceActionError::InvalidDependency.into());
+            }
+            space_action.depends_on = depends_on.clone();
+            SpaceAction::updater(&pk, &EntityType::SpaceAction)
+                .with_depends_on(depends_on)
+                .with_updated_at(now)
+                .execute(cli)
+                .await
+                .map_err(|e| {
+                    crate::error!("Failed to update action dependencies: {e:?}");
                     SpaceActionError::ActionUpdateFailed
                 })?;
         }
