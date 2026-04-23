@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Apply to Parent Team</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .apply-grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;align-items:start}
+    @media (max-width:1000px){.apply-grid{grid-template-columns:1fr}}
+
+    .target-summary{display:flex;align-items:center;gap:14px;padding:18px 22px;border-radius:16px;background:var(--bg-glass);backdrop-filter:blur(14px);border:1px solid var(--border-subtle)}
+    .target-summary__body{flex:1;min-width:0}
+    .target-summary__label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:3px}
+    .target-summary__name{font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--text-primary);letter-spacing:0.02em;margin-bottom:3px}
+    .target-summary__handle{font-family:var(--font-display);font-size:11px;color:var(--text-muted);letter-spacing:0.04em}
+
+    /* ── Team dropdown ─────────────────────────────────── */
+    /* position:relative + high z-index lifts the picker above its sibling
+       composer card (which creates its own stacking context via
+       backdrop-filter), so the open menu is never obscured. */
+    .team-picker{
+      position:relative;z-index:30;
+      padding:18px 20px;border-radius:14px;
+      background:var(--bg-glass);backdrop-filter:blur(12px);
+      border:1px solid var(--border-subtle);
+      display:flex;flex-direction:column;gap:10px;
+    }
+    .team-picker:has(.team-dropdown__trigger[aria-expanded="true"]){z-index:100}
+    .team-picker__label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted)}
+    .team-dropdown{position:relative}
+    .team-dropdown__trigger{
+      width:100%;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;
+      padding:12px 16px;border-radius:11px;
+      background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);
+      color:var(--text-primary);cursor:pointer;transition:all 0.2s;
+      text-align:left;
+    }
+    .team-dropdown__trigger:hover{border-color:rgba(110,237,216,0.28)}
+    .team-dropdown__trigger[aria-expanded="true"]{border-color:rgba(110,237,216,0.40);box-shadow:0 0 14px rgba(110,237,216,0.12)}
+    .team-dropdown__body{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .team-dropdown__name{font-size:15px;font-weight:700;font-family:var(--font-display);letter-spacing:0.02em;color:var(--text-primary)}
+    .team-dropdown__meta{font-family:var(--font-display);font-size:10px;color:var(--text-muted);letter-spacing:0.04em}
+    .team-dropdown__chev{width:18px;height:18px;color:var(--text-muted);transition:transform 0.25s}
+    .team-dropdown__trigger[aria-expanded="true"] .team-dropdown__chev{transform:rotate(180deg);color:var(--accent-teal)}
+
+    .team-dropdown__menu{
+      position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:200;
+      padding:6px;border-radius:12px;
+      background:var(--bg-panel);backdrop-filter:blur(22px);
+      border:1px solid var(--border-subtle);
+      box-shadow:0 16px 40px rgba(0,0,0,0.65),0 0 0 1px rgba(110,237,216,0.08);
+      opacity:0;visibility:hidden;transform:translateY(-4px);
+      transition:all 0.18s ease;
+      max-height:320px;overflow-y:auto;
+    }
+    .team-dropdown__menu[data-open="true"]{opacity:1;visibility:visible;transform:translateY(0)}
+    .team-dropdown__item{
+      display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;
+      padding:10px 12px;border-radius:9px;cursor:pointer;transition:background 0.15s;
+    }
+    .team-dropdown__item:hover{background:rgba(255,255,255,0.03)}
+    .team-dropdown__item[aria-selected="true"]{background:rgba(110,237,216,0.06)}
+    .team-dropdown__item[aria-selected="true"] .team-dropdown__name{color:var(--accent-teal)}
+    .team-dropdown__item[data-ineligible="true"]{opacity:0.55;cursor:not-allowed}
+    .team-dropdown__item[data-ineligible="true"]:hover{background:transparent}
+    .team-dropdown__item-badges{display:flex;gap:4px;align-items:center}
+    .team-dropdown__check{color:transparent;transition:color 0.15s}
+    .team-dropdown__check svg{width:14px;height:14px}
+    .team-dropdown__item[aria-selected="true"] .team-dropdown__check{color:var(--accent-teal)}
+    .ineligible-badge{font-family:var(--font-display);font-size:8px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:2px 7px;border-radius:5px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.22);color:var(--accent-coral)}
+
+    .team-picker__hint{font-size:11px;color:var(--text-dim);font-family:var(--font-display);letter-spacing:0.06em;display:flex;align-items:center;gap:6px}
+    .team-picker__hint svg{width:11px;height:11px}
+
+    /* ── Bylaws ack ── */
+    .bylaws-link{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;background:rgba(129,140,248,0.04);border:1px solid rgba(129,140,248,0.22);color:var(--text-primary);text-decoration:none;transition:all 0.2s}
+    .bylaws-link:hover{background:rgba(129,140,248,0.08)}
+    .bylaws-link__icon{width:28px;height:28px;border-radius:8px;background:rgba(129,140,248,0.10);border:1px solid rgba(129,140,248,0.25);color:var(--accent-violet);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .bylaws-link__icon svg{width:13px;height:13px}
+    .bylaws-link__body{flex:1;min-width:0}
+    .bylaws-link__title{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--accent-violet)}
+    .bylaws-link__sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+
+    /* Composer */
+    .composer-card{padding:22px 24px;border-radius:16px;background:var(--bg-glass);backdrop-filter:blur(14px);border:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:16px}
+    .composer-meta{display:flex;align-items:center;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--border-subtle);flex-wrap:wrap}
+    .composer-meta__selected{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:11px;color:var(--text-primary)}
+    .composer-meta__selected strong{color:var(--accent-teal);font-weight:700}
+    .composer-meta__arrow{color:var(--text-dim)}
+    .composer-meta__arrow svg{width:12px;height:12px}
+    .composer-meta__target{font-family:var(--font-display);font-size:11px;color:var(--accent-gold);font-weight:700}
+
+    /* ── Linked-field labels & restore button ── */
+    .field__label{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .field__linked-chip{
+      display:inline-flex;align-items:center;gap:4px;
+      padding:2px 8px;border-radius:5px;
+      background:rgba(110,237,216,0.08);border:1px solid rgba(110,237,216,0.25);
+      color:var(--accent-teal);
+      font-family:var(--font-display);font-size:8px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+    }
+    .field__linked-chip svg{width:10px;height:10px}
+    .field__restore{
+      margin-left:auto;
+      display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;
+      background:transparent;border:1px solid transparent;color:var(--text-dim);
+      font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+      cursor:pointer;transition:all 0.15s;
+    }
+    .field__restore:hover{color:var(--accent-teal);border-color:rgba(110,237,216,0.22)}
+    .field__restore svg{width:10px;height:10px}
+    .field__restore[hidden]{display:none}
+    .field__input--linked,.field__textarea--linked{border-color:rgba(110,237,216,0.15)}
+
+    /* ── Eligibility panel (right) ── */
+    .eligibility-panel{position:sticky;top:112px;padding:20px;border-radius:16px;background:var(--bg-glass);backdrop-filter:blur(14px);border:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:14px;max-height:calc(100vh - 140px);overflow:auto}
+    .eligibility-panel__title{font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);display:flex;align-items:center;gap:8px}
+    .eligibility-panel__title svg{width:12px;height:12px;color:var(--accent-gold)}
+    .elig-list{display:flex;flex-direction:column;gap:8px}
+    .elig-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:10px;background:rgba(6,6,14,0.5);border:1px solid var(--border-subtle);transition:all 0.25s}
+    .elig-item[data-met="true"]{background:rgba(34,197,94,0.04);border-color:rgba(34,197,94,0.22)}
+    .elig-item[data-met="false"]{background:rgba(245,158,11,0.04);border-color:rgba(245,158,11,0.22)}
+    .elig-item__check{width:22px;height:22px;border-radius:6px;background:rgba(255,255,255,0.04);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;color:var(--text-dim);flex-shrink:0;transition:all 0.2s}
+    .elig-item[data-met="true"] .elig-item__check{background:var(--accent-green);border-color:var(--accent-green);color:#0a0a0a}
+    .elig-item[data-met="false"] .elig-item__check{color:var(--accent-amber);border-color:rgba(245,158,11,0.3)}
+    .elig-item__check svg{width:12px;height:12px}
+    .elig-item__body{flex:1;min-width:0}
+    .elig-item__title{font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--text-primary);letter-spacing:0.02em;margin-bottom:2px}
+    .elig-item__desc{font-size:11px;color:var(--text-muted);line-height:1.5}
+    .elig-item__status{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.1em;margin-top:3px}
+    .elig-item[data-met="true"] .elig-item__status{color:var(--accent-green)}
+    .elig-item[data-met="false"] .elig-item__status{color:var(--accent-amber)}
+
+    .elig-progress{display:flex;flex-direction:column;gap:6px}
+    .elig-progress__top{display:flex;justify-content:space-between;align-items:center;font-family:var(--font-display);font-size:10px;color:var(--text-muted);letter-spacing:0.1em}
+    .elig-progress__fraction{color:var(--text-primary);font-weight:800}
+    .elig-progress__fraction--ready{color:var(--accent-green)}
+    .elig-progress__track{height:8px;border-radius:100px;background:rgba(255,255,255,0.04);overflow:hidden}
+    .elig-progress__fill{height:100%;background:linear-gradient(90deg,var(--accent-amber),var(--accent-gold));transition:width 0.4s;box-shadow:0 0 8px rgba(252,179,0,0.25)}
+    .elig-progress__fill[data-ready="true"]{background:linear-gradient(90deg,var(--accent-teal),var(--accent-green));box-shadow:0 0 10px rgba(34,197,94,0.3)}
+
+    /* Submit bar */
+    .submit-bar{position:sticky;bottom:16px;margin-top:18px;padding:14px 18px;border-radius:14px;background:var(--bg-glass);backdrop-filter:blur(24px);border:1px solid var(--border-subtle);box-shadow:0 12px 40px rgba(0,0,0,0.5);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+    .submit-bar__status{flex:1;min-width:240px}
+    .submit-bar__title{font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:0.1em;color:var(--text-muted);text-transform:uppercase}
+    .submit-bar__title--ready{color:var(--accent-green)}
+    .submit-bar__sub{font-size:12px;color:var(--text-dim);margin-top:2px}
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back" onclick="history.back()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo">SNU</div>
+      <div class="u-col">
+        <span class="arena-topbar__title">SNU CS Dept.</span>
+        <span class="arena-topbar__handle">하위팀 가입 신청</span>
+      </div>
+      <span class="arena-topbar__status arena-topbar__status--scheduled">Drafting</span>
+    </div>
+    <div class="arena-topbar__actions">
+      <button class="btn btn--ghost btn--small">초안 저장</button>
+    </div>
+  </div>
+
+  <div class="page page--wide">
+
+    <div class="page-header">
+      <div class="page-header__main">
+        <span class="page-header__eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.09 4.23 4.66.68-3.38 3.29.8 4.64L12 12.67l-4.17 2.17.8-4.64L5.25 6.91l4.66-.68L12 2z"/><circle cx="6" cy="19" r="3"/><circle cx="18" cy="19" r="3"/><path d="M9 19h6"/></svg>
+          Apply as Sub-team
+        </span>
+        <h1 class="page-header__title"><strong>SNU CS Dept.</strong>의 하위팀으로 신청합니다</h1>
+        <p class="page-header__sub">내가 관리자인 팀을 선택하면 팀 프로필(이름·소개·지도자 등)이 <strong>신청폼에 자동 채워집니다</strong>. 필요하면 이 자리에서 바로 수정할 수 있어요.</p>
+      </div>
+    </div>
+
+    <!-- Target summary -->
+    <div class="target-summary">
+      <div class="avatar avatar--lg">SNU</div>
+      <div class="target-summary__body">
+        <div class="target-summary__label">신청 대상 · Target parent</div>
+        <div class="target-summary__name">SNU CS Dept.</div>
+        <div class="target-summary__handle">@snu_cs_office · 학과사무실 · Form v3 · 12 sub-teams</div>
+      </div>
+      <a class="btn btn--ghost btn--small" href="parent-home-with-button.html">다시 선택</a>
+    </div>
+
+    <!-- Team dropdown picker -->
+    <div class="team-picker">
+      <div class="team-picker__label">내가 관리자인 팀 선택 · Pick your team</div>
+      <div class="team-dropdown">
+        <button class="team-dropdown__trigger" id="dd-trigger" aria-expanded="false" aria-haspopup="listbox">
+          <div class="avatar avatar--sm avatar--teal" id="dd-avatar">QC</div>
+          <div class="team-dropdown__body">
+            <span class="team-dropdown__name" id="dd-name">Quantum Computing Club</span>
+            <span class="team-dropdown__meta" id="dd-meta">@quantum_club · 7 members · 24일 · 관리자</span>
+          </div>
+          <svg class="team-dropdown__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="team-dropdown__menu" id="dd-menu" role="listbox" data-open="false">
+
+          <div class="team-dropdown__item" role="option" data-team="quantum" aria-selected="true">
+            <div class="avatar avatar--sm avatar--teal">QC</div>
+            <div class="team-dropdown__body">
+              <span class="team-dropdown__name">Quantum Computing Club</span>
+              <span class="team-dropdown__meta">@quantum_club · 7 members · 24일 · admin</span>
+            </div>
+            <div class="team-dropdown__item-badges">
+              <span class="team-dropdown__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            </div>
+          </div>
+
+          <div class="team-dropdown__item" role="option" data-team="ml">
+            <div class="avatar avatar--sm avatar--violet">ML</div>
+            <div class="team-dropdown__body">
+              <span class="team-dropdown__name">ML Reading Group</span>
+              <span class="team-dropdown__meta">@ml_reading · 14 members · 60일 · admin</span>
+            </div>
+            <div class="team-dropdown__item-badges">
+              <span class="team-dropdown__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            </div>
+          </div>
+
+          <div class="team-dropdown__item" role="option" data-team="tiny" data-ineligible="true">
+            <div class="avatar avatar--sm avatar--pink">TN</div>
+            <div class="team-dropdown__body">
+              <span class="team-dropdown__name">Tiny Tinkerers</span>
+              <span class="team-dropdown__meta">@tiny_tinkerers · 3 members · 5일 · admin</span>
+            </div>
+            <div class="team-dropdown__item-badges">
+              <span class="ineligible-badge">요건 미충족</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <span class="team-picker__hint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        관리자 권한이 있는 팀만 선택 가능. <strong style="color:var(--accent-teal);margin-left:4px">🔗 linked</strong> 표시가 있는 필드는 선택한 팀의 프로필에서 자동으로 채워집니다.
+      </span>
+    </div>
+
+    <div class="apply-grid">
+      <!-- Left: composer + form -->
+      <div class="u-col u-gap-16">
+
+        <section class="composer-card">
+          <div class="composer-meta">
+            <div class="composer-meta__selected">
+              <div class="avatar avatar--sm avatar--teal" id="selected-avatar">QC</div>
+              <span id="selected-name">Quantum Computing Club</span>
+            </div>
+            <span class="composer-meta__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+            <div class="composer-meta__selected">
+              <div class="avatar avatar--sm">SNU</div>
+              <span class="composer-meta__target">SNU CS Dept.</span>
+            </div>
+          </div>
+
+          <!-- Bylaws ack -->
+          <a class="bylaws-link" href="bylaws-section.html">
+            <div class="bylaws-link__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div class="bylaws-link__body">
+              <span class="bylaws-link__title">SNU CS Dept. 학칙 (v2)</span>
+              <div class="bylaws-link__sub">8개 항목 · 최종 업데이트 2026-02-01 · 읽고 동의해주세요</div>
+            </div>
+            <svg style="width:14px;height:14px;color:var(--text-dim)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+          <label class="checkbox">
+            <input type="checkbox" id="bylaws-check" />
+            <span class="checkbox__box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            <span class="checkbox__label">위 학칙을 읽고 동의합니다.<small>학칙 업데이트는 기존 승인 신청에 소급 적용되지 않습니다.</small></span>
+          </label>
+
+          <!-- Form fields (linked fields auto-populate from selected team) -->
+          <div class="field" data-field="name" data-linked-to="team.name">
+            <label class="field__label">
+              제안하는 팀 이름 <span class="req">*</span>
+              <span class="field__linked-chip">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                팀명 자동
+              </span>
+              <button type="button" class="field__restore" hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/></svg>
+                자동값 복원
+              </button>
+            </label>
+            <input class="field__input field__input--linked" id="f-name" data-req="true" />
+          </div>
+
+          <div class="field" data-field="purpose" data-linked-to="team.bio">
+            <label class="field__label">
+              설립 목적 <span class="req">*</span>
+              <span class="field__linked-chip">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                팀 소개글 자동
+              </span>
+              <button type="button" class="field__restore" hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><polyline points="3 3 3 8 8 8"/></svg>
+                자동값 복원
+              </button>
+            </label>
+            <textarea class="field__textarea field__textarea--linked" id="f-purpose" data-req="true"></textarea>
+          </div>
+
+          <div class="field" data-field="advisor">
+            <label class="field__label">
+              지도교수 (이름 · 소속 · 이메일) <span class="req">*</span>
+            </label>
+            <input class="field__input" id="f-advisor" value="이양자 교수 · 양자정보연구실 · ylee@snu.ac.kr" data-req="true" />
+          </div>
+
+          <div class="field" data-field="freq">
+            <label class="field__label">
+              정기 모임 주기 <span class="req">*</span>
+            </label>
+            <select class="field__select" id="f-freq" data-req="true">
+              <option value="bi-weekly">격주 수요일 19:00</option>
+              <option value="weekly">매주</option>
+              <option value="monthly">월 1회</option>
+              <option value="irregular">비정기</option>
+            </select>
+          </div>
+
+          <div class="field" data-field="link" data-linked-to="team.website">
+            <label class="field__label">
+              회칙 문서 링크 (선택)
+              <span class="field__linked-chip">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                팀 웹사이트 자동
+              </span>
+              <button type="button" class="field__restore" hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><polyline points="3 3 3 8 8 8"/></svg>
+                자동값 복원
+              </button>
+            </label>
+            <input class="field__input field__input--linked" id="f-link" placeholder="https://…" />
+          </div>
+
+          <div class="field" data-field="yearly">
+            <label class="field__label">
+              연간 활동 계획 인원 <span class="req">*</span>
+            </label>
+            <input class="field__input" type="number" id="f-yearly" value="15" data-req="true" />
+          </div>
+        </section>
+
+        <!-- Sticky submit bar -->
+        <div class="submit-bar">
+          <div class="submit-bar__status">
+            <div class="submit-bar__title" id="submit-title">요건 1 / 5 충족</div>
+            <div class="submit-bar__sub" id="submit-sub">모든 요건이 충족되면 제출 버튼이 활성화됩니다</div>
+          </div>
+          <a class="btn btn--ghost" href="parent-home-with-button.html">취소</a>
+          <button class="btn btn--primary" id="submit-btn" disabled aria-disabled="true" style="background:linear-gradient(135deg,rgba(110,237,216,0.2),rgba(129,140,248,0.08));border-color:rgba(110,237,216,0.3);color:var(--accent-teal)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            신청 제출
+          </button>
+        </div>
+      </div>
+
+      <!-- Right: live eligibility panel -->
+      <aside>
+        <div class="eligibility-panel">
+          <div class="eligibility-panel__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            가입 요건 · Live check
+          </div>
+
+          <div class="elig-progress">
+            <div class="elig-progress__top">
+              <span>요건 충족도</span>
+              <span class="elig-progress__fraction" id="elig-fraction">1 / 5</span>
+            </div>
+            <div class="elig-progress__track"><div class="elig-progress__fill" id="elig-fill" style="width:20%" data-ready="false"></div></div>
+          </div>
+
+          <div class="elig-list" id="elig-list">
+            <div class="elig-item" data-met="true" data-key="admin">
+              <div class="elig-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="elig-item__body">
+                <div class="elig-item__title">팀의 관리자 권한</div>
+                <div class="elig-item__desc">선택한 팀의 admin이어야 신청 가능</div>
+                <div class="elig-item__status" id="elig-status-admin">✓ 권한 확인됨</div>
+              </div>
+            </div>
+            <div class="elig-item" data-met="false" data-key="members">
+              <div class="elig-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="elig-item__body">
+                <div class="elig-item__title">최소 멤버 수 · 5명 이상</div>
+                <div class="elig-item__desc" id="elig-desc-members">팀이 이 인원을 달성해야 제출 가능</div>
+                <div class="elig-item__status" id="elig-status-members">현재 7명 · ✓ 충족</div>
+              </div>
+            </div>
+            <div class="elig-item" data-met="false" data-key="days">
+              <div class="elig-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="elig-item__body">
+                <div class="elig-item__title">팀 생성 14일 이상</div>
+                <div class="elig-item__desc">최근 만들어진 팀은 신청 불가</div>
+                <div class="elig-item__status" id="elig-status-days">현재 24일 · ✓ 충족</div>
+              </div>
+            </div>
+            <div class="elig-item" data-met="false" data-key="bylaws">
+              <div class="elig-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="elig-item__body">
+                <div class="elig-item__title">학칙 동의</div>
+                <div class="elig-item__desc">학과 학칙 v2 체크박스 필수</div>
+                <div class="elig-item__status" id="elig-status-bylaws">↔ 체크 대기</div>
+              </div>
+            </div>
+            <div class="elig-item" data-met="false" data-key="form">
+              <div class="elig-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="elig-item__body">
+                <div class="elig-item__title">신청폼 필수 항목</div>
+                <div class="elig-item__desc">5개 필수 필드 모두 작성</div>
+                <div class="elig-item__status" id="elig-status-form">5 / 5 · 작성 필요</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="notice" style="margin-top:4px">
+            <div class="notice__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+            <div class="notice__body">
+              <span class="notice__title">Form v3 고정</span>
+              <span class="notice__text">제출 시점의 폼 버전에 이 신청이 고정됩니다. 학과가 폼을 업데이트해도 이 신청에는 적용되지 않습니다.</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+</div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    const MIN_MEMBERS = 5;
+    const MIN_DAYS = 14;
+
+    // Rich team profile model — the parent team/space "form builder" on the other side chose which
+    // of these properties to link to each field, and we mirror those choices here.
+    const teams = {
+      quantum: {
+        name: 'Quantum Computing Club',
+        initials: 'QC', color: 'avatar--teal',
+        handle: '@quantum_club',
+        members: 7, days: 24,
+        bio: '학부생 중심의 양자 컴퓨팅 스터디. Qiskit/Cirq 실습, 양자 알고리즘 세미나, 학과 세미나 시리즈 참여를 통해 학과의 양자 연구 생태계 저변을 넓히고자 합니다.',
+        website: 'https://quantum-club.snu.ac.kr/bylaws',
+        admin: { name:'박진호', email:'park_j@snu.ac.kr', handle:'@park_j' },
+      },
+      ml: {
+        name: 'ML Reading Group',
+        initials: 'ML', color: 'avatar--violet',
+        handle: '@ml_reading',
+        members: 14, days: 60,
+        bio: '학부생/대학원생이 섞여 매주 최신 ML 논문 1편을 깊이 있게 리뷰하고 구현해보는 스터디. 분기별로 발표회를 열어 학과에 공유합니다.',
+        website: 'https://ml-reading.example/bylaws',
+        admin: { name:'김수진', email:'kim_s@snu.ac.kr', handle:'@kim_s' },
+      },
+      tiny: {
+        name: 'Tiny Tinkerers',
+        initials: 'TN', color: 'avatar--pink',
+        handle: '@tiny_tinkerers',
+        members: 3, days: 5,
+        bio: '작은 하드웨어 프로젝트를 함께 만드는 동아리. 아직 활동이 막 시작됐습니다.',
+        website: '',
+        admin: { name:'최민', email:'choi_m@snu.ac.kr', handle:'@choi_m' },
+      },
+    };
+
+    // Linked-field resolver — map declared "team.xxx" path to actual value
+    function resolveLink(team, path) {
+      if (!team || !path) return '';
+      const parts = path.split('.');
+      let v = { team }[parts[0]];
+      for (let i = 1; i < parts.length; i++) v = v ? v[parts[i]] : '';
+      return v || '';
+    }
+
+    let selected = 'quantum';
+
+    // DOM refs
+    const ddTrigger = document.getElementById('dd-trigger');
+    const ddMenu = document.getElementById('dd-menu');
+    const ddAvatar = document.getElementById('dd-avatar');
+    const ddName = document.getElementById('dd-name');
+    const ddMeta = document.getElementById('dd-meta');
+    const selectedAvatar = document.getElementById('selected-avatar');
+    const selectedName = document.getElementById('selected-name');
+    const bylawsCheck = document.getElementById('bylaws-check');
+    const submitBtn = document.getElementById('submit-btn');
+    const submitTitle = document.getElementById('submit-title');
+    const submitSub = document.getElementById('submit-sub');
+    const eligFraction = document.getElementById('elig-fraction');
+    const eligFill = document.getElementById('elig-fill');
+
+    // Track user edits per linked field so we don't overwrite them on team switch
+    const userOverridden = {};
+
+    function setMetStatus(key, met, msg) {
+      const el = document.querySelector('[data-key="' + key + '"]');
+      if (!el) return;
+      el.setAttribute('data-met', met);
+      const statusEl = document.getElementById('elig-status-' + key);
+      if (statusEl && msg) statusEl.textContent = msg;
+    }
+
+    function applyLinkedFields(team) {
+      document.querySelectorAll('[data-linked-to]').forEach(fieldEl => {
+        const key = fieldEl.dataset.field;
+        const path = fieldEl.dataset.linkedTo;
+        const input = fieldEl.querySelector('.field__input, .field__textarea');
+        const restoreBtn = fieldEl.querySelector('.field__restore');
+        const linkedValue = resolveLink(team, path);
+
+        if (userOverridden[key]) {
+          // Keep user's override; show the restore button so they can snap back
+          if (restoreBtn) restoreBtn.hidden = !(linkedValue && input.value !== linkedValue);
+        } else {
+          if (input) input.value = linkedValue;
+          if (restoreBtn) restoreBtn.hidden = true;
+        }
+      });
+    }
+
+    function checkForm() {
+      const reqInputs = document.querySelectorAll('.field [data-req="true"]');
+      let filled = 0;
+      let total = 0;
+      reqInputs.forEach(inp => {
+        total++;
+        if (inp.value && inp.value.trim().length > 0) filled++;
+      });
+      const met = filled === total;
+      setMetStatus('form', met, filled + ' / ' + total + ' 필수 · ' + (met ? '✓ 작성 완료' : '작성 필요'));
+      return met;
+    }
+
+    function renderTrigger(team) {
+      ddAvatar.textContent = team.initials;
+      ddAvatar.className = 'avatar avatar--sm ' + team.color;
+      ddName.textContent = team.name;
+      ddMeta.textContent = team.handle + ' · ' + team.members + ' members · ' + team.days + '일 · 관리자';
+
+      selectedAvatar.textContent = team.initials;
+      selectedAvatar.className = 'avatar avatar--sm ' + team.color;
+      selectedName.textContent = team.name;
+    }
+
+    function renderAll() {
+      const team = teams[selected];
+      if (!team) return;
+      renderTrigger(team);
+      applyLinkedFields(team);
+
+      // Members check
+      const membersMet = team.members >= MIN_MEMBERS;
+      setMetStatus('members', membersMet, '현재 ' + team.members + '명 · ' + (membersMet ? '✓ 충족' : '최소 ' + MIN_MEMBERS + '명 필요'));
+
+      // Days
+      const daysMet = team.days >= MIN_DAYS;
+      setMetStatus('days', daysMet, '현재 ' + team.days + '일 · ' + (daysMet ? '✓ 충족' : '최소 ' + MIN_DAYS + '일 필요'));
+
+      // Admin (always met for pickable teams)
+      setMetStatus('admin', true, '✓ 권한 확인됨');
+
+      // Bylaws
+      const bylawsMet = bylawsCheck.checked;
+      setMetStatus('bylaws', bylawsMet, bylawsMet ? '✓ 동의함' : '↔ 체크 대기');
+
+      // Form
+      const formMet = checkForm();
+
+      // Aggregate
+      const metCount = [true, membersMet, daysMet, bylawsMet, formMet].filter(Boolean).length;
+      const allMet = metCount === 5;
+
+      eligFraction.textContent = metCount + ' / 5';
+      eligFraction.classList.toggle('elig-progress__fraction--ready', allMet);
+      eligFill.style.width = (metCount / 5 * 100) + '%';
+      eligFill.setAttribute('data-ready', allMet);
+
+      submitBtn.disabled = !allMet;
+      submitBtn.setAttribute('aria-disabled', !allMet);
+
+      if (allMet) {
+        submitTitle.textContent = '모든 요건 충족 · 제출 가능';
+        submitTitle.classList.add('submit-bar__title--ready');
+        submitSub.textContent = '제출 후 학과 담당자가 영업일 3–5일 내 검토합니다';
+      } else {
+        submitTitle.textContent = '요건 ' + metCount + ' / 5 충족';
+        submitTitle.classList.remove('submit-bar__title--ready');
+        submitSub.textContent = '남은 항목을 오른쪽 패널에서 확인하세요';
+      }
+    }
+
+    // Dropdown toggle
+    ddTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = ddTrigger.getAttribute('aria-expanded') === 'true';
+      ddTrigger.setAttribute('aria-expanded', !open);
+      ddMenu.setAttribute('data-open', !open);
+    });
+    document.addEventListener('click', (e) => {
+      if (!ddMenu.contains(e.target) && e.target !== ddTrigger) {
+        ddTrigger.setAttribute('aria-expanded', 'false');
+        ddMenu.setAttribute('data-open', 'false');
+      }
+    });
+
+    // Dropdown item select
+    ddMenu.addEventListener('click', (e) => {
+      const item = e.target.closest('.team-dropdown__item');
+      if (!item || item.dataset.ineligible === 'true') return;
+      const newTeam = item.dataset.team;
+      if (newTeam === selected) {
+        ddTrigger.setAttribute('aria-expanded', 'false');
+        ddMenu.setAttribute('data-open', 'false');
+        return;
+      }
+      document.querySelectorAll('.team-dropdown__item').forEach(i => i.setAttribute('aria-selected', 'false'));
+      item.setAttribute('aria-selected', 'true');
+      selected = newTeam;
+      // Reset user overrides when team changes — user probably wants fresh auto-fill
+      Object.keys(userOverridden).forEach(k => delete userOverridden[k]);
+      ddTrigger.setAttribute('aria-expanded', 'false');
+      ddMenu.setAttribute('data-open', 'false');
+      renderAll();
+    });
+
+    // Track overrides when user edits a linked field
+    document.querySelectorAll('[data-linked-to]').forEach(fieldEl => {
+      const key = fieldEl.dataset.field;
+      const input = fieldEl.querySelector('.field__input, .field__textarea');
+      const restoreBtn = fieldEl.querySelector('.field__restore');
+      if (input) {
+        input.addEventListener('input', () => {
+          userOverridden[key] = true;
+          const linkedValue = resolveLink(teams[selected], fieldEl.dataset.linkedTo);
+          if (restoreBtn) restoreBtn.hidden = linkedValue === input.value;
+          renderAll();
+        });
+      }
+      if (restoreBtn) {
+        restoreBtn.addEventListener('click', () => {
+          delete userOverridden[key];
+          const linkedValue = resolveLink(teams[selected], fieldEl.dataset.linkedTo);
+          if (input) input.value = linkedValue;
+          restoreBtn.hidden = true;
+          renderAll();
+        });
+      }
+    });
+
+    // Bylaws
+    bylawsCheck.addEventListener('change', renderAll);
+
+    // Non-linked form inputs
+    document.querySelectorAll('.field:not([data-linked-to]) .field__input, .field:not([data-linked-to]) .field__textarea, .field:not([data-linked-to]) .field__select').forEach(el => {
+      el.addEventListener('input', renderAll);
+      el.addEventListener('change', renderAll);
+    });
+
+    // Submit
+    submitBtn.addEventListener('click', () => {
+      if (submitBtn.disabled) return;
+      SubTeam.toast('신청 제출 완료 · SNU CS Dept. 심사 대기', 'success');
+      setTimeout(() => { window.location.href = 'child-application-status.html'; }, 1500);
+    });
+
+    renderAll();
+  });
+</script>
+</body>
+</html>

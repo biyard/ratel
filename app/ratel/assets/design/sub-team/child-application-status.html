@@ -304,27 +304,27 @@
 
       feedbackActions.replaceChildren();
       if (fb.actions === 'returned') {
-        const editBtn = document.createElement('button');
+        const editBtn = document.createElement('a');
         editBtn.className = 'btn btn--primary';
+        editBtn.href = 'subteam-apply.html';
         editBtn.textContent = '신청서 수정 후 재제출';
-        editBtn.addEventListener('click', () => SubTeam.toast('신청서 편집 모드 · 재제출 시 v3 유지'));
         feedbackActions.appendChild(editBtn);
       } else if (fb.actions === 'approved') {
         const goBtn = document.createElement('a');
         goBtn.className = 'btn btn--primary';
-        goBtn.href = 'bylaws-section.html';
-        goBtn.textContent = '학과 Bylaws 보기';
+        goBtn.href = 'parent-home-with-button.html';
+        goBtn.textContent = '팀 홈으로 이동';
         feedbackActions.appendChild(goBtn);
         const goBtn2 = document.createElement('a');
         goBtn2.className = 'btn btn--ghost';
-        goBtn2.href = 'sub-team-join-notice.html';
-        goBtn2.textContent = '멤버 가입 안내 미리보기';
+        goBtn2.href = 'bylaws-section.html';
+        goBtn2.textContent = '학과 Bylaws 보기';
         feedbackActions.appendChild(goBtn2);
       } else if (fb.actions === 'rejected') {
-        const again = document.createElement('button');
+        const again = document.createElement('a');
         again.className = 'btn btn--primary';
+        again.href = 'subteam-apply.html';
         again.textContent = '다른 부모팀에 재신청';
-        again.addEventListener('click', () => SubTeam.toast('부모팀 선택 화면으로 이동합니다', 'success'));
         feedbackActions.appendChild(again);
       }
     }
