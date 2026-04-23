@@ -273,6 +273,12 @@ impl Essence {
     /// List Essence rows for a user, paginated through the GSI matching
     /// `sort`. DynamoDB returns rows already in sorted order — no
     /// in-memory re-sort, so pagination is correct at any data size.
+    ///
+    /// All three GSIs share `pk = USER#{uid}`, which other entity types
+    /// (UserPoint, UserActivity, UserFollow, …) also write. Without a
+    /// base-sk filter the raw GSI query returns non-Essence rows that fail
+    /// to deserialize with `missing field source_kind`, so we attach
+    /// `.filter_sk_prefix("ESSENCE#")` to restrict results server-side.
     pub async fn list_for_user(
         cli: &aws_sdk_dynamodb::Client,
         user_pk: Partition,
@@ -280,7 +286,9 @@ impl Essence {
         bookmark: Option<String>,
         limit: i32,
     ) -> Result<(Vec<Self>, Option<String>)> {
-        let opts = Self::opt_with_bookmark(bookmark).limit(limit);
+        let opts = Self::opt_with_bookmark(bookmark)
+            .limit(limit)
+            .filter_sk_prefix(EntityType::Essence(String::new()).to_string());
         let result = match sort {
             EssenceSort::LastEditedDesc => {
                 Self::find_by_user_recent(cli, user_pk, opts.scan_index_forward(false)).await
