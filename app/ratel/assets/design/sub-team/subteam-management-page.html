@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Sub-team Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .activation{position:relative;overflow:hidden;padding:22px 26px;border-radius:18px;background:var(--bg-glass);backdrop-filter:blur(14px);border:1px solid var(--border-subtle);display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center}
+    .activation::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 60% at 15% 15%,var(--act-glow,rgba(255,255,255,0.04)) 0%,transparent 60%);pointer-events:none;transition:all 0.3s}
+    .activation[data-on="true"]::before{--act-glow:rgba(252,179,0,0.12)}
+    .activation[data-on="true"]{border-color:rgba(252,179,0,0.28)}
+    .activation > *{position:relative;z-index:1}
+    .activation__icon{width:54px;height:54px;border-radius:14px;flex-shrink:0;background:rgba(255,255,255,0.04);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all 0.3s}
+    .activation[data-on="true"] .activation__icon{background:rgba(252,179,0,0.10);border-color:rgba(252,179,0,0.28);color:var(--accent-gold);box-shadow:0 0 18px rgba(252,179,0,0.15)}
+    .activation__icon svg{width:24px;height:24px}
+    .activation__label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px}
+    .activation[data-on="true"] .activation__label{color:var(--accent-gold)}
+    .activation__title{font-family:var(--font-display);font-size:18px;font-weight:800;letter-spacing:0.02em;color:var(--text-primary);margin-bottom:4px}
+    .activation__desc{font-size:13px;color:var(--text-muted);line-height:1.55}
+    .activation__switch{transform:scale(1.3);transform-origin:right center}
+
+    .gated{transition:all 0.35s}
+    [data-activated="false"] .gated{opacity:0.25;pointer-events:none;filter:saturate(0.4)}
+
+    .kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    @media (max-width:720px){.kpi-row{grid-template-columns:1fr}}
+    .kpi{padding:14px 18px;border-radius:12px;background:var(--bg-glass);backdrop-filter:blur(12px);border:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:4px;min-width:0}
+    .kpi__label{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
+    .kpi__value{font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:0.02em;color:var(--text-primary)}
+    .kpi__value--gold{background:linear-gradient(135deg,var(--accent-gold),#ffd24a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .kpi__value--amber{color:var(--accent-amber)}
+    .kpi__value--teal{color:var(--accent-teal)}
+    .kpi__delta{font-family:var(--font-display);font-size:10px;color:var(--accent-green);letter-spacing:0.08em}
+
+    .req-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:720px){.req-grid{grid-template-columns:1fr}}
+    .req-card{padding:14px 16px;border-radius:12px;background:rgba(6,6,14,0.5);border:1px solid var(--border-subtle);display:flex;align-items:center;gap:14px}
+    .req-card__icon{width:38px;height:38px;border-radius:10px;background:rgba(252,179,0,0.08);border:1px solid rgba(252,179,0,0.22);color:var(--accent-gold);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .req-card__icon svg{width:16px;height:16px}
+    .req-card__body{flex:1;min-width:0}
+    .req-card__title{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--accent-gold)}
+    .req-card__desc{font-size:12px;color:var(--text-muted);margin-top:2px}
+    .req-card__input-wrap{display:flex;align-items:center;gap:6px}
+    .req-card__stepper{width:28px;height:28px;border-radius:7px;padding:0;background:transparent;border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:var(--font-display);font-size:14px;font-weight:800}
+    .req-card__stepper:hover{color:var(--accent-gold);border-color:rgba(252,179,0,0.3)}
+    .req-card__value{width:48px;text-align:center;padding:6px;border-radius:7px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--text-primary);font-family:var(--font-display);font-size:14px;font-weight:700;outline:none}
+
+    .field-list{display:flex;flex-direction:column;gap:8px}
+    .field-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:rgba(6,6,14,0.5);border:1px solid var(--border-subtle)}
+    .field-row[data-locked="true"]{border-color:rgba(252,179,0,0.18);background:rgba(252,179,0,0.04)}
+    .field-row__drag{color:var(--text-dim);cursor:grab;display:flex;align-items:center}
+    .field-row__drag svg{width:14px;height:14px}
+    .field-row__type{padding:4px 8px;border-radius:6px;background:rgba(129,140,248,0.08);border:1px solid rgba(129,140,248,0.22);color:var(--accent-violet);font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;appearance:none;cursor:pointer;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23818cf8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 6px center;padding-right:22px}
+    .field-row__label{flex:1;min-width:0;padding:6px 10px;border-radius:7px;background:transparent;border:1px solid transparent;color:var(--text-primary);font-size:13px;font-weight:600;outline:none;transition:all 0.2s}
+    .field-row__label:hover{border-color:var(--border-subtle)}
+    .field-row__label:focus{border-color:rgba(252,179,0,0.3);background:rgba(6,6,14,0.6)}
+    .field-row__req{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim)}
+    .field-row__req input{accent-color:var(--accent-gold)}
+    .field-row__del{width:24px;height:24px;border-radius:6px;padding:0;background:transparent;border:1px solid transparent;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+    .field-row__del:hover{border-color:rgba(239,68,68,0.3);color:var(--accent-coral)}
+    .field-row__del svg{width:12px;height:12px}
+    .field-row__lock-badge{font-family:var(--font-display);font-size:8px;font-weight:700;letter-spacing:0.12em;color:var(--accent-gold);padding:2px 6px;border-radius:5px;background:rgba(252,179,0,0.08);border:1px solid rgba(252,179,0,0.22)}
+
+    .add-field-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;border-radius:10px;background:rgba(252,179,0,0.03);border:1px dashed rgba(252,179,0,0.25);color:var(--accent-gold);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;margin-top:10px;transition:all 0.2s}
+    .add-field-btn:hover{background:rgba(252,179,0,0.08);border-color:rgba(252,179,0,0.45)}
+    .add-field-btn svg{width:13px;height:13px}
+
+    .roster{display:flex;flex-direction:column;gap:8px}
+    .roster-row{display:grid;grid-template-columns:auto 1fr auto auto;gap:14px;align-items:center;padding:12px 14px;border-radius:11px;background:rgba(6,6,14,0.45);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.2s;text-decoration:none;color:var(--text-primary)}
+    .roster-row:hover{border-color:rgba(252,179,0,0.25);transform:translateY(-1px)}
+    .roster-row__body{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .roster-row__name{font-size:14px;font-weight:700;font-family:var(--font-display);letter-spacing:0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .roster-row__handle{font-family:var(--font-display);font-size:10px;color:var(--text-muted);letter-spacing:0.04em}
+    .roster-row__metrics{display:flex;gap:8px}
+    .roster-row__metric{font-family:var(--font-display);font-size:11px;color:var(--text-muted);padding:3px 9px;border-radius:7px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle)}
+    .roster-row__metric strong{color:var(--text-primary);font-weight:700}
+    .roster-row__chev svg{width:16px;height:16px;color:var(--text-dim);transition:all 0.2s}
+    .roster-row:hover .roster-row__chev svg{color:var(--accent-gold);transform:translateX(3px)}
+
+    .queue-row{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:14px 16px;border-radius:12px;background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.22);transition:all 0.25s}
+    .queue-row:hover{border-color:rgba(245,158,11,0.35)}
+    .queue-row__body{min-width:0}
+    .queue-row__name{font-size:14px;font-weight:700;font-family:var(--font-display);letter-spacing:0.02em;color:var(--text-primary)}
+    .queue-row__meta{font-size:11px;color:var(--text-muted);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap}
+    .queue-row__actions{display:flex;gap:6px}
+    .queue-row__action{padding:7px 12px;border-radius:8px;font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;border:1px solid}
+    .queue-row__action--approve{background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.25);color:var(--accent-green)}
+    .queue-row__action--approve:hover{background:rgba(34,197,94,0.18)}
+    .queue-row__action--return{background:rgba(129,140,248,0.06);border-color:rgba(129,140,248,0.25);color:var(--accent-violet)}
+    .queue-row__action--return:hover{background:rgba(129,140,248,0.14)}
+    .queue-row__action--reject{background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.22);color:var(--accent-coral)}
+    .queue-row__action--reject:hover{background:rgba(239,68,68,0.14)}
+
+    .section-nav{position:sticky;top:100px;z-index:5;display:flex;gap:6px;padding:4px;border-radius:11px;background:rgba(6,6,14,0.75);backdrop-filter:blur(14px);border:1px solid var(--border-subtle);overflow-x:auto;scrollbar-width:none}
+    .section-nav::-webkit-scrollbar{display:none}
+    .section-nav__btn{padding:8px 14px;border-radius:8px;background:transparent;border:1px solid transparent;color:var(--text-muted);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:all 0.2s;text-decoration:none}
+    .section-nav__btn:hover{color:var(--text-primary)}
+    .section-nav__btn.active{background:rgba(252,179,0,0.08);color:var(--accent-gold);border-color:rgba(252,179,0,0.22)}
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo">SNU</div>
+      <div class="u-col">
+        <span class="arena-topbar__title">SNU CS Dept.</span>
+        <span class="arena-topbar__handle">하위팀 관리 · Management</span>
+      </div>
+      <span class="arena-topbar__status arena-topbar__status--parent" id="top-status">Active · 12 sub-teams</span>
+    </div>
+    <div class="arena-topbar__actions">
+      <button class="btn btn--ghost btn--small" id="save-btn">설정 저장</button>
+    </div>
+  </div>
+
+  <div class="page page--wide" id="page-root" data-activated="true">
+
+    <section class="activation" id="activation" data-on="true">
+      <div class="activation__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.09 4.23 4.66.68-3.38 3.29.8 4.64L12 12.67l-4.17 2.17.8-4.64L5.25 6.91l4.66-.68L12 2z"/><circle cx="6" cy="19" r="3"/><circle cx="18" cy="19" r="3"/><path d="M9 19h6"/></svg></div>
+      <div>
+        <div class="activation__label" id="activation-label">Parent-eligible · ON</div>
+        <div class="activation__title">하위팀 가입 신청을 받고 있습니다</div>
+        <p class="activation__desc">이 팀 홈페이지의 HUD에 "하위팀" 아이콘이 노출되어 누구나 가입 신청 페이지로 진입할 수 있습니다. OFF하면 진행 중 신청은 유지되지만 신규 신청은 차단됩니다.</p>
+      </div>
+      <label class="switch activation__switch">
+        <input type="checkbox" id="activation-toggle" checked />
+        <span class="switch__track"></span>
+      </label>
+    </section>
+
+    <nav class="section-nav gated">
+      <a class="section-nav__btn active" href="#requirements">가입 요건</a>
+      <a class="section-nav__btn" href="#form">신청폼</a>
+      <a class="section-nav__btn" href="#roster">하위팀 목록 <span style="color:var(--accent-gold);margin-left:4px">12</span></a>
+      <a class="section-nav__btn" href="#queue">신청 대기 <span style="color:var(--accent-amber);margin-left:4px">4</span></a>
+    </nav>
+
+    <div class="kpi-row gated">
+      <div class="kpi"><span class="kpi__label">Recognized sub-teams</span><span class="kpi__value kpi__value--gold">12</span><span class="kpi__delta">+2 이번 달</span></div>
+      <div class="kpi"><span class="kpi__label">Pending applications</span><span class="kpi__value kpi__value--amber">4</span><span class="kpi__delta" style="color:var(--accent-amber)">검토 필요</span></div>
+      <div class="kpi"><span class="kpi__label">Aggregate members</span><span class="kpi__value kpi__value--teal">342</span><span class="kpi__delta">sub-teams 전체</span></div>
+    </div>
+
+    <section class="card gated" id="requirements">
+      <div class="card__head">
+        <h2 class="card__title">가입 요건 · Eligibility</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta">제출 전 체크리스트</span>
+      </div>
+
+      <div class="req-grid">
+        <div class="req-card">
+          <div class="req-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="req-card__body">
+            <div class="req-card__title">최소 멤버 수</div>
+            <div class="req-card__desc">팀이 이 인원을 달성해야 제출 가능</div>
+          </div>
+          <div class="req-card__input-wrap">
+            <button class="req-card__stepper" data-step="min-members" data-dir="-">−</button>
+            <input class="req-card__value" type="number" id="min-members" value="5" min="1" max="99" />
+            <button class="req-card__stepper" data-step="min-members" data-dir="+">+</button>
+          </div>
+        </div>
+
+        <div class="req-card">
+          <div class="req-card__icon" style="background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.22);color:var(--accent-green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="req-card__body">
+            <div class="req-card__title" style="color:var(--accent-green)">Bylaws 동의 필수</div>
+            <div class="req-card__desc">학칙 v2 체크박스 확인 없이 제출 불가</div>
+          </div>
+          <label class="switch"><input type="checkbox" checked /><span class="switch__track"></span></label>
+        </div>
+
+        <div class="req-card">
+          <div class="req-card__icon" style="background:rgba(129,140,248,0.08);border-color:rgba(129,140,248,0.22);color:var(--accent-violet)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <div class="req-card__body">
+            <div class="req-card__title" style="color:var(--accent-violet)">지도교수 등록 필수</div>
+            <div class="req-card__desc">신청폼의 advisor 필드가 required</div>
+          </div>
+          <label class="switch"><input type="checkbox" checked /><span class="switch__track"></span></label>
+        </div>
+
+        <div class="req-card">
+          <div class="req-card__icon" style="background:rgba(110,237,216,0.06);border-color:rgba(110,237,216,0.22);color:var(--accent-teal)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="req-card__body">
+            <div class="req-card__title" style="color:var(--accent-teal)">팀 생성 최소 기간</div>
+            <div class="req-card__desc">팀이 만들어진 후 최소 일수 후에 신청 가능</div>
+          </div>
+          <div class="req-card__input-wrap">
+            <button class="req-card__stepper" data-step="min-days" data-dir="-">−</button>
+            <input class="req-card__value" type="number" id="min-days" value="14" min="0" max="365" />
+            <button class="req-card__stepper" data-step="min-days" data-dir="+">+</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card gated" id="form">
+      <div class="card__head">
+        <h2 class="card__title">신청폼 · Application form</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta" id="form-meta">6 필드 · 4 필수 · Form v3</span>
+      </div>
+
+      <div class="field-list" id="field-list">
+        <div class="field-row" data-locked="true">
+          <span class="field-row__drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+          <select class="field-row__type" disabled><option>Short text</option></select>
+          <input class="field-row__label" value="제안하는 팀 이름" readonly />
+          <span class="field-row__lock-badge">Default</span>
+          <label class="field-row__req"><input type="checkbox" checked disabled /> 필수</label>
+        </div>
+        <div class="field-row" data-locked="true">
+          <span class="field-row__drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+          <select class="field-row__type" disabled><option>Long text</option></select>
+          <input class="field-row__label" value="설립 목적" readonly />
+          <span class="field-row__lock-badge">Default</span>
+          <label class="field-row__req"><input type="checkbox" checked disabled /> 필수</label>
+        </div>
+        <div class="field-row">
+          <span class="field-row__drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+          <select class="field-row__type"><option>Short text</option><option>Long text</option><option>Number</option><option>Date</option><option>URL</option></select>
+          <input class="field-row__label" value="지도교수 (이름 · 소속 · 이메일)" />
+          <label class="field-row__req"><input type="checkbox" checked /> 필수</label>
+          <button class="field-row__del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+        <div class="field-row">
+          <span class="field-row__drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+          <select class="field-row__type"><option selected>Single select</option><option>Short text</option><option>Number</option></select>
+          <input class="field-row__label" value="정기 모임 주기" />
+          <label class="field-row__req"><input type="checkbox" checked /> 필수</label>
+          <button class="field-row__del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+        <div class="field-row">
+          <span class="field-row__drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+          <select class="field-row__type"><option selected>URL</option><option>Short text</option></select>
+          <input class="field-row__label" value="회칙 문서 링크 (선택)" />
+          <label class="field-row__req"><input type="checkbox" /> 필수</label>
+          <button class="field-row__del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+        <div class="field-row">
+          <span class="field-row__drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+          <select class="field-row__type"><option selected>Number</option><option>Short text</option></select>
+          <input class="field-row__label" value="연간 활동 계획 인원" />
+          <label class="field-row__req"><input type="checkbox" checked /> 필수</label>
+          <button class="field-row__del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+
+      <button class="add-field-btn" id="add-field">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        필드 추가
+      </button>
+    </section>
+
+    <template id="new-field-tpl">
+      <div class="field-row">
+        <span class="field-row__drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+        <select class="field-row__type">
+          <option>Short text</option><option>Long text</option><option>Number</option>
+          <option>Date</option><option>URL</option><option>Single select</option>
+        </select>
+        <input class="field-row__label" placeholder="필드명 입력…" />
+        <label class="field-row__req"><input type="checkbox" /> 필수</label>
+        <button class="field-row__del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+      </div>
+    </template>
+
+    <section class="card gated" id="roster">
+      <div class="card__head">
+        <h2 class="card__title">하위팀 목록 · Recognized</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta">12개 · 클릭하면 상세 보기</span>
+      </div>
+
+      <div class="roster">
+        <a class="roster-row" href="subteam-management-detail-page.html">
+          <div class="avatar avatar--teal">SC</div>
+          <div class="roster-row__body"><span class="roster-row__name">SNU Code Club</span><span class="roster-row__handle">@snu_code_club · 인증 2026-02-14</span></div>
+          <div class="roster-row__metrics"><span class="roster-row__metric"><strong>48</strong> posts</span><span class="roster-row__metric"><strong>32</strong> members</span></div>
+          <span class="roster-row__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </a>
+        <a class="roster-row" href="subteam-management-detail-page.html">
+          <div class="avatar avatar--violet">AL</div>
+          <div class="roster-row__body"><span class="roster-row__name">Algorithm Lab</span><span class="roster-row__handle">@snu_algo · 인증 2025-11-02</span></div>
+          <div class="roster-row__metrics"><span class="roster-row__metric"><strong>31</strong> posts</span><span class="roster-row__metric"><strong>25</strong> members</span></div>
+          <span class="roster-row__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </a>
+        <a class="roster-row" href="subteam-management-detail-page.html">
+          <div class="avatar avatar--cyan">AI</div>
+          <div class="roster-row__body"><span class="roster-row__name">AI &amp; ML Society</span><span class="roster-row__handle">@snu_aiml · 인증 2026-03-08</span></div>
+          <div class="roster-row__metrics"><span class="roster-row__metric"><strong>22</strong> posts</span><span class="roster-row__metric"><strong>18</strong> members</span></div>
+          <span class="roster-row__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </a>
+        <a class="roster-row" href="subteam-management-detail-page.html">
+          <div class="avatar avatar--pink">GD</div>
+          <div class="roster-row__body"><span class="roster-row__name">Game Dev Crew</span><span class="roster-row__handle">@snu_gamedev · 인증 2026-04-01</span></div>
+          <div class="roster-row__metrics"><span class="roster-row__metric"><strong>18</strong> posts</span><span class="roster-row__metric"><strong>14</strong> members</span></div>
+          <span class="roster-row__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </a>
+        <a class="roster-row" href="subteam-management-detail-page.html">
+          <div class="avatar avatar--purple">SE</div>
+          <div class="roster-row__body"><span class="roster-row__name">Security Enthusiasts</span><span class="roster-row__handle">@snu_sec · 인증 2025-09-22</span></div>
+          <div class="roster-row__metrics"><span class="roster-row__metric"><strong>5</strong> posts</span><span class="roster-row__metric"><strong>8</strong> members</span></div>
+          <span class="roster-row__chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+        </a>
+      </div>
+    </section>
+
+    <section class="card gated" id="queue">
+      <div class="card__head">
+        <h2 class="card__title">신청 대기 · Pending applications</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta">4건 · 오래된 순</span>
+      </div>
+
+      <div class="u-col u-gap-10" id="queue-list">
+        <div class="queue-row">
+          <div class="avatar avatar--teal">QC</div>
+          <div class="queue-row__body">
+            <span class="queue-row__name">Quantum Computing Club</span>
+            <div class="queue-row__meta"><span>7 members</span><span>학칙 ✓</span><span>2일 전</span><span>v3 form</span></div>
+          </div>
+          <div class="queue-row__actions">
+            <button class="queue-row__action queue-row__action--approve">Approve</button>
+            <button class="queue-row__action queue-row__action--return">Return</button>
+            <button class="queue-row__action queue-row__action--reject">Reject</button>
+          </div>
+        </div>
+        <div class="queue-row">
+          <div class="avatar avatar--violet">RV</div>
+          <div class="queue-row__body">
+            <span class="queue-row__name">Robotics &amp; Vision Lab</span>
+            <div class="queue-row__meta"><span>12 members</span><span>학칙 ✓</span><span>어제</span><span>v3 form</span></div>
+          </div>
+          <div class="queue-row__actions">
+            <button class="queue-row__action queue-row__action--approve">Approve</button>
+            <button class="queue-row__action queue-row__action--return">Return</button>
+            <button class="queue-row__action queue-row__action--reject">Reject</button>
+          </div>
+        </div>
+        <div class="queue-row">
+          <div class="avatar avatar--purple">DE</div>
+          <div class="queue-row__body">
+            <span class="queue-row__name">Data Engineering Society</span>
+            <div class="queue-row__meta"><span>5 members</span><span>학칙 ✓</span><span>오늘</span><span>v3 form</span></div>
+          </div>
+          <div class="queue-row__actions">
+            <button class="queue-row__action queue-row__action--approve">Approve</button>
+            <button class="queue-row__action queue-row__action--return">Return</button>
+            <button class="queue-row__action queue-row__action--reject">Reject</button>
+          </div>
+        </div>
+        <div class="queue-row">
+          <div class="avatar avatar--cyan">BC</div>
+          <div class="queue-row__body">
+            <span class="queue-row__name">Blockchain &amp; Web3 Circle</span>
+            <div class="queue-row__meta"><span>8 members</span><span>학칙 ✓</span><span>오늘</span><span>v3 form</span></div>
+          </div>
+          <div class="queue-row__actions">
+            <button class="queue-row__action queue-row__action--approve">Approve</button>
+            <button class="queue-row__action queue-row__action--return">Return</button>
+            <button class="queue-row__action queue-row__action--reject">Reject</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+</div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    const root = document.getElementById('page-root');
+    const activation = document.getElementById('activation');
+    const activationToggle = document.getElementById('activation-toggle');
+    const activationLabel = document.getElementById('activation-label');
+    const topStatus = document.getElementById('top-status');
+
+    activationToggle.addEventListener('change', (e) => {
+      const on = e.target.checked;
+      root.setAttribute('data-activated', on);
+      activation.setAttribute('data-on', on);
+      activationLabel.textContent = on ? 'Parent-eligible · ON' : 'Parent-eligible · OFF';
+      topStatus.textContent = on ? 'Active · 12 sub-teams' : 'Inactive · 아이콘 숨김';
+      SubTeam.toast(on ? '가입 신청 활성화됨 · 하위팀 아이콘이 팀 홈에 노출됩니다' : '비활성화됨 · 진행 중 신청은 유지', on ? 'success' : 'danger');
+    });
+
+    document.querySelectorAll('.req-card__stepper').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.step;
+        const dir = btn.dataset.dir;
+        const input = document.getElementById(id);
+        const cur = +input.value;
+        input.value = dir === '+' ? cur + 1 : Math.max(0, cur - 1);
+      });
+    });
+
+    function updateFormMeta() {
+      const rows = document.querySelectorAll('#field-list .field-row');
+      const reqs = Array.from(rows).filter(r => {
+        const cb = r.querySelector('.field-row__req input');
+        return cb && cb.checked;
+      }).length;
+      document.getElementById('form-meta').textContent = rows.length + ' 필드 · ' + reqs + ' 필수 · Form v3 (draft)';
+    }
+    document.getElementById('field-list').addEventListener('change', updateFormMeta);
+    document.getElementById('field-list').addEventListener('click', (e) => {
+      const del = e.target.closest('.field-row__del');
+      if (del) {
+        del.closest('.field-row').remove();
+        updateFormMeta();
+      }
+    });
+    document.getElementById('add-field').addEventListener('click', () => {
+      const tpl = document.getElementById('new-field-tpl');
+      const frag = tpl.content.cloneNode(true);
+      const row = frag.querySelector('.field-row');
+      document.getElementById('field-list').appendChild(row);
+      const labelInput = row.querySelector('.field-row__label');
+      labelInput.focus();
+      updateFormMeta();
+    });
+
+    document.getElementById('queue-list').addEventListener('click', (e) => {
+      const btn = e.target.closest('.queue-row__action');
+      if (!btn) return;
+      const row = btn.closest('.queue-row');
+      const name = row.querySelector('.queue-row__name').textContent;
+      row.style.opacity = '0';
+      setTimeout(() => row.remove(), 180);
+      if (btn.classList.contains('queue-row__action--approve')) SubTeam.toast(name + ' 승인됨 · 알림 전송', 'success');
+      else if (btn.classList.contains('queue-row__action--reject')) SubTeam.toast(name + ' 거절됨 · 사유 요청', 'danger');
+      else SubTeam.toast(name + ' 반송됨 · 재제출 대기');
+    });
+
+    document.getElementById('save-btn').addEventListener('click', () => {
+      SubTeam.toast('설정 저장 완료 · 신청폼 v4로 업데이트', 'success');
+    });
+
+    const sections = ['requirements','form','roster','queue'];
+    const navBtns = document.querySelectorAll('.section-nav__btn');
+    function onScroll() {
+      let current = sections[0];
+      sections.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top <= 180) current = id;
+      });
+      navBtns.forEach(b => b.classList.toggle('active', b.getAttribute('href') === '#' + current));
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  });
+</script>
+</body>
+</html>

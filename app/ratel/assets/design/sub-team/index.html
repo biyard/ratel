@@ -145,9 +145,9 @@
     <div class="index-hero">
       <div>
         <div class="index-hero__eyebrow">Stage 2 · UI Mockup</div>
-        <h1 class="index-hero__title">Sub-team Governance <strong>— 13 screens</strong></h1>
+        <h1 class="index-hero__title">Sub-team Governance <strong>— Revised flow</strong></h1>
         <p class="index-hero__sub">
-          부모팀 ↔ 자식팀 관계, Bylaws, 지원 폼, 신청 검토, 공지 방송, 활동 대시보드, 이탈/해제 — 학과사무실 ↔ 학생 동아리 MVP용 UI 모크업. 기존 team-arena 미학 (arena/glass dark, Orbitron + Outfit, gold/teal) 위에 구축.
+          기존 team-arena 홈에 <strong>하위팀 아이콘</strong> 하나를 추가해서 거버넌스 기능을 전개하는 간결한 구조로 재설계. Admin은 Management로, non-admin은 Apply로 자연스럽게 분기됩니다. 아래 <strong>Revised flow</strong> 4개 + Legacy 13개 screen으로 구성.
         </p>
       </div>
       <div class="index-hero__badge">roadmap/sub-team.md</div>
@@ -160,13 +160,80 @@
       <span class="legend__item"><span class="legend__dot legend__dot--shared"></span> 공용 (양쪽 다)</span>
     </div>
 
-    <!-- PARENT -->
+    <!-- REVISED FLOW -->
     <section class="section">
       <div class="section__head">
-        <h2 class="section__title section__title--parent">학과사무실 (부모팀) · Parent Admin</h2>
+        <h2 class="section__title" style="background:linear-gradient(135deg,var(--accent-gold),var(--accent-teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">★ Revised Flow · 권장</h2>
         <span class="section__dash"></span>
-        <span class="section__count">5 screens</span>
+        <span class="section__count">4 screens · 신규</span>
       </div>
+      <div class="grid">
+
+        <a class="mock-card" href="parent-home-with-button.html">
+          <div class="mock-card__top"><span class="mock-card__num">R1</span><span class="mock-card__fr">Entry point</span></div>
+          <h3 class="mock-card__title">팀 홈 · 하위팀 아이콘</h3>
+          <p class="mock-card__desc">기존 team-arena 그대로 + 우측 상단 HUD에 하위팀 아이콘 추가. 클릭 시 역할별 분기.</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--gold">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.09 4.23 4.66.68-3.38 3.29.8 4.64L12 12.67l-4.17 2.17.8-4.64L5.25 6.91l4.66-.68L12 2z"/></svg>
+              Branch
+            </span>
+            <span class="mock-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+        <a class="mock-card" href="subteam-management-page.html">
+          <div class="mock-card__top"><span class="mock-card__num">R2</span><span class="mock-card__fr">Parent admin</span></div>
+          <h3 class="mock-card__title">하위팀 관리 페이지</h3>
+          <p class="mock-card__desc">활성화 switch · 가입 요건 · 신청폼 빌더 · 하위팀 roster · 신청 queue — 한 페이지에서 모두.</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--gold">All-in-one</span>
+            <span class="mock-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+        <a class="mock-card" href="subteam-management-detail-page.html">
+          <div class="mock-card__top"><span class="mock-card__num">R3</span><span class="mock-card__fr">Parent admin</span></div>
+          <h3 class="mock-card__title">하위팀 상세 관리</h3>
+          <p class="mock-card__desc">Metric (일/주/월 토글) · 트렌드 차트 · 멤버별 활동 · 다이렉트 공지 · 등록 해제.</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--cyan">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              Deep drill
+            </span>
+            <span class="mock-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+        <a class="mock-card mock-card--child" href="subteam-apply.html">
+          <div class="mock-card__top"><span class="mock-card__num">R4</span><span class="mock-card__fr">Non-admin</span></div>
+          <h3 class="mock-card__title">가입 신청 페이지</h3>
+          <p class="mock-card__desc">내가 관리자인 팀 선택 · 가입 요건 라이브 체크 · 신청폼 · 모든 요건 충족 시에만 제출.</p>
+          <div class="mock-card__foot">
+            <span class="chip chip--teal">Live gate</span>
+            <span class="mock-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- PARENT (LEGACY) -->
+    <section class="section">
+      <div class="section__head">
+        <h2 class="section__title section__title--parent">Legacy · 부모팀 admin 상세 화면</h2>
+        <span class="section__dash"></span>
+        <span class="section__count">6 screens</span>
+      </div>
+      <p style="color:var(--text-dim);font-size:12px;padding:0 4px;margin-bottom:4px">※ Revised flow에 흡수/대체됨 — 필요 시 reference로 유지</p>
       <div class="grid">
 
         <a class="mock-card" href="parent-governance-hub.html">
@@ -283,10 +350,11 @@
     <!-- CHILD -->
     <section class="section">
       <div class="section__head">
-        <h2 class="section__title section__title--child">동아리 창립자 (자식팀) · Child Admin</h2>
+        <h2 class="section__title section__title--child">자식팀 admin · Child flow</h2>
         <span class="section__dash"></span>
         <span class="section__count">4 screens</span>
       </div>
+      <p style="color:var(--text-dim);font-size:12px;padding:0 4px;margin-bottom:4px">※ Revised flow의 R4(가입 신청)와 조합해서 사용</p>
       <div class="grid">
 
         <a class="mock-card mock-card--child" href="child-pending-setup.html">
