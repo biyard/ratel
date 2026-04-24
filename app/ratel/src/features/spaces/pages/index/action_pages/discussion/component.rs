@@ -280,7 +280,6 @@ fn ReplyThreadView(
                             reply: reply.clone(),
                             space_id,
                             discussion_id,
-                            replies,
                             can_comment,
                         }
                     }
@@ -864,6 +863,188 @@ fn CommentText(content: String) -> Element {
     }
 }
 
+/// Shared card markup for both top-level comments and replies: avatar,
+/// header (name + time + overflow menu), content (view or edit), and the
+/// actions row with the like button. Callers slot extra action buttons
+/// (e.g. the top-level "Reply" button) via `children`.
+#[component]
+fn CommentCardBody(
+    comment: DiscussionCommentResponse,
+    space_id: ReadSignal<SpacePartition>,
+    discussion_id: ReadSignal<SpacePostEntityType>,
+    can_comment: bool,
+    /// DOM id used by the top-level comment's deep-link scroll target.
+    /// Replies pass an empty string.
+    #[props(default)] dom_id: String,
+    /// Highlights this card when it matches the current deep-link target.
+    #[props(default)] is_deep_link: bool,
+    /// Extra elements appended to the actions row after the like button.
+    /// Top-level uses this for the Reply button.
+    children: Element,
+) -> Element {
+    let tr: DiscussionArenaTranslate = use_translate();
+    let arena = use_discussion_arena(space_id, discussion_id)?;
+    let mut like_comment_action = arena.like_comment;
+    let mut update_comment_action = arena.update_comment;
+    let mut delete_comment_action = arena.delete_comment;
+
+    let user_ctx = crate::features::auth::hooks::use_user_context();
+    let is_own = user_ctx
+        .read()
+        .user
+        .as_ref()
+        .map(|u| u.pk == comment.author_pk)
+        .unwrap_or(false);
+
+    let comment_sk = use_signal(|| comment.sk.clone());
+    let mut menu_open = use_signal(|| false);
+    let mut editing = use_signal(|| false);
+    let mut edit_text = use_signal(|| comment.content.clone());
+    let original_content = comment.content.clone();
+    let time_ago = format_time_ago(comment.created_at);
+
+    let comment_for_like = comment.clone();
+    let on_like = move |_| {
+        let sk_str = comment_for_like.sk.to_string();
+        let next = !arena.effective_liked(&comment_for_like);
+        like_comment_action.call(sk_str, next);
+    };
+
+    let start_edit_content = original_content.clone();
+    let on_edit_start = move |_| {
+        edit_text.set(start_edit_content.clone());
+        editing.set(true);
+        menu_open.set(false);
+    };
+
+    let on_edit_cancel = move |_| {
+        editing.set(false);
+    };
+
+    let on_edit_save = move |_| {
+        let new_text = edit_text().trim().to_string();
+        if new_text.is_empty() {
+            return;
+        }
+        editing.set(false);
+        update_comment_action.call(comment_sk().to_string(), new_text);
+    };
+
+    let on_delete = move |_| {
+        menu_open.set(false);
+        delete_comment_action.call(comment_sk().to_string());
+    };
+
+    // Hoist overlay reads — each render loop can hit 3+ sites per comment,
+    // and `effective_*` hashes `sk.to_string()` every call.
+    let liked = arena.effective_liked(&comment);
+    let likes_count = arena.effective_likes(&comment);
+    let effective_text = arena.effective_content(&comment);
+
+    rsx! {
+        div {
+            class: "comment-item",
+            id: "{dom_id}",
+            "data-deep-link": if is_deep_link { "true" } else { "false" },
+            img {
+                class: "comment-item__avatar",
+                src: "{comment.author_profile_url}",
+                alt: "{comment.author_display_name}",
+            }
+            div { class: "comment-item__body",
+                div { class: "comment-item__top",
+                    span { class: "comment-item__name", "{comment.author_display_name}" }
+                    span { class: "comment-item__time", "{time_ago}" }
+                    if is_own && can_comment && !editing() {
+                        div { class: "comment-menu",
+                            button {
+                                class: "comment-menu__trigger",
+                                "data-testid": "comment-menu-trigger",
+                                aria_label: "{tr.more_options}",
+                                onclick: move |_| menu_open.set(!menu_open()),
+                                svg {
+                                    view_box: "0 0 24 24",
+                                    fill: "currentColor",
+                                    xmlns: "http://www.w3.org/2000/svg",
+                                    circle { cx: "5", cy: "12", r: "1.6" }
+                                    circle { cx: "12", cy: "12", r: "1.6" }
+                                    circle { cx: "19", cy: "12", r: "1.6" }
+                                }
+                            }
+                            if menu_open() {
+                                div { class: "comment-menu__dropdown",
+                                    button {
+                                        class: "comment-menu__item",
+                                        "data-testid": "comment-menu-edit",
+                                        onclick: on_edit_start,
+                                        "{tr.edit_btn}"
+                                    }
+                                    button {
+                                        class: "comment-menu__item comment-menu__item--danger",
+                                        "data-testid": "comment-menu-delete",
+                                        onclick: on_delete,
+                                        "{tr.delete_btn}"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if editing() {
+                    div { class: "comment-item__edit",
+                        textarea {
+                            class: "comment-item__edit-input",
+                            "data-testid": "comment-edit-input",
+                            rows: "2",
+                            value: "{edit_text}",
+                            oninput: move |e| {
+                                edit_text.set(e.value());
+                            },
+                        }
+                        div { class: "comment-item__edit-actions",
+                            button {
+                                class: "comment-item__edit-cancel",
+                                "data-testid": "comment-edit-cancel",
+                                onclick: on_edit_cancel,
+                                "{tr.cancel_btn}"
+                            }
+                            button {
+                                class: "comment-item__edit-save",
+                                "data-testid": "comment-edit-save",
+                                disabled: edit_text().trim().is_empty(),
+                                onclick: on_edit_save,
+                                "{tr.save_btn}"
+                            }
+                        }
+                    }
+                } else {
+                    CommentText { content: effective_text.clone() }
+                    CommentImageGrid { images: comment.images.clone() }
+                    div { class: "comment-item__actions",
+                        button {
+                            class: "comment-action",
+                            "aria-pressed": liked,
+                            disabled: like_comment_action.pending(),
+                            onclick: on_like,
+                            svg {
+                                view_box: "0 0 24 24",
+                                fill: if liked { "currentColor" } else { "none" },
+                                stroke: "currentColor",
+                                stroke_width: "2",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                path { d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" }
+                            }
+                            span { "{likes_count}" }
+                        }
+                        {children}
+                    }
+                }
+            }
+        }
+    }
+}
+
 #[component]
 fn CommentItem(
     comment: DiscussionCommentResponse,
@@ -876,7 +1057,6 @@ fn CommentItem(
 
     let arena = use_discussion_arena(space_id, discussion_id)?;
     let UseDiscussionArena {
-        mut polled_new,
         members,
         mut mention_query_raw,
         mut active_reply_thread,
@@ -898,7 +1078,6 @@ fn CommentItem(
     let mut reply_tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
     let mut replies: Signal<Vec<DiscussionCommentResponse>> = use_signal(Vec::new);
 
-    let time_ago = format_time_ago(comment.created_at);
     let comment_sk = use_signal(|| comment.sk.clone());
     let reply_count = comment.replies;
 
@@ -969,27 +1148,7 @@ fn CommentItem(
     let comment_dom_id: String = SpacePostCommentEntityType::try_from(comment.sk.clone())
         .map(|e| e.0)
         .unwrap_or_else(|_| comment.sk.to_string());
-
-    let mut like_comment_action = arena.like_comment;
-    let user_ctx = crate::features::auth::hooks::use_user_context();
-    let is_own = user_ctx
-        .read()
-        .user
-        .as_ref()
-        .map(|u| u.pk == comment.author_pk)
-        .unwrap_or(false);
-
-    let mut menu_open = use_signal(|| false);
-    let mut editing = use_signal(|| false);
-    let mut edit_text = use_signal(|| comment.content.clone());
-    let original_content = comment.content.clone();
-
-    let comment_for_like = comment.clone();
-    let on_like = move |_| {
-        let sk_str = comment_for_like.sk.to_string();
-        let next = !arena.effective_liked(&comment_for_like);
-        like_comment_action.call(sk_str, next);
-    };
+    let is_deep_link = deep_link_target().as_deref() == Some(comment_dom_id.as_str());
 
     let on_toggle_replies = move |_| async move {
         // Mobile swaps the panel into the in-sheet thread view instead
@@ -1047,158 +1206,32 @@ fn CommentItem(
         }
     };
 
-    let start_edit_content = original_content.clone();
-    let on_edit_start = move |_| {
-        edit_text.set(start_edit_content.clone());
-        editing.set(true);
-        menu_open.set(false);
-    };
-
-    let on_edit_cancel = move |_| {
-        editing.set(false);
-    };
-
-    let mut update_comment_action = arena.update_comment;
-    let mut delete_comment_action = arena.delete_comment;
-    let on_edit_save = move |_| {
-        let new_text = edit_text().trim().to_string();
-        if new_text.is_empty() {
-            return;
-        }
-        editing.set(false);
-        update_comment_action.call(comment_sk().to_string(), new_text);
-    };
-
-    let on_delete = move |_| {
-        menu_open.set(false);
-        delete_comment_action.call(comment_sk().to_string());
-    };
-
-    // Hoist overlay reads — each render loop can hit 3+ sites per
-    // comment, and `effective_*` hashes `sk.to_string()` every call.
-    let liked = arena.effective_liked(&comment);
-    let likes_count = arena.effective_likes(&comment);
-    let effective_text = arena.effective_content(&comment);
-
     rsx! {
         div { class: "comment-entry",
-            div {
-                class: "comment-item",
-                id: "{comment_dom_id}",
-                "data-deep-link": if deep_link_target().as_deref() == Some(comment_dom_id.as_str()) { "true" } else { "false" },
-                img {
-                    class: "comment-item__avatar",
-                    src: "{comment.author_profile_url}",
-                    alt: "{comment.author_display_name}",
-                }
-                div { class: "comment-item__body",
-                    div { class: "comment-item__top",
-                        span { class: "comment-item__name", "{comment.author_display_name}" }
-                        span { class: "comment-item__time", "{time_ago}" }
-                        if is_own && can_comment && !editing() {
-                            div { class: "comment-menu",
-                                button {
-                                    class: "comment-menu__trigger",
-                                    "data-testid": "comment-menu-trigger",
-                                    aria_label: "{tr.more_options}",
-                                    onclick: move |_| menu_open.set(!menu_open()),
-                                    svg {
-                                        view_box: "0 0 24 24",
-                                        fill: "currentColor",
-                                        xmlns: "http://www.w3.org/2000/svg",
-                                        circle { cx: "5", cy: "12", r: "1.6" }
-                                        circle { cx: "12", cy: "12", r: "1.6" }
-                                        circle { cx: "19", cy: "12", r: "1.6" }
-                                    }
-                                }
-                                if menu_open() {
-                                    div { class: "comment-menu__dropdown",
-                                        button {
-                                            class: "comment-menu__item",
-                                            "data-testid": "comment-menu-edit",
-                                            onclick: on_edit_start,
-                                            "{tr.edit_btn}"
-                                        }
-                                        button {
-                                            class: "comment-menu__item comment-menu__item--danger",
-                                            "data-testid": "comment-menu-delete",
-                                            onclick: on_delete,
-                                            "{tr.delete_btn}"
-                                        }
-                                    }
-                                }
-                            }
+            CommentCardBody {
+                comment: comment.clone(),
+                space_id,
+                discussion_id,
+                can_comment,
+                dom_id: comment_dom_id,
+                is_deep_link,
+                if can_comment {
+                    button {
+                        class: "comment-action comment-action--reply",
+                        "data-testid": "comment-action-reply",
+                        onclick: on_toggle_replies,
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            path { d: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" }
                         }
-                    }
-                    if editing() {
-                        div { class: "comment-item__edit",
-                            textarea {
-                                class: "comment-item__edit-input",
-                                "data-testid": "comment-edit-input",
-                                rows: "2",
-                                value: "{edit_text}",
-                                oninput: move |e| {
-                                    edit_text.set(e.value());
-                                },
-                            }
-                            div { class: "comment-item__edit-actions",
-                                button {
-                                    class: "comment-item__edit-cancel",
-                                    "data-testid": "comment-edit-cancel",
-                                    onclick: on_edit_cancel,
-                                    "{tr.cancel_btn}"
-                                }
-                                button {
-                                    class: "comment-item__edit-save",
-                                    "data-testid": "comment-edit-save",
-                                    disabled: edit_text().trim().is_empty(),
-                                    onclick: on_edit_save,
-                                    "{tr.save_btn}"
-                                }
-                            }
-                        }
-                    } else {
-                        CommentText { content: effective_text.clone() }
-                        CommentImageGrid { images: comment.images.clone() }
-                    }
-                    if !editing() {
-                        div { class: "comment-item__actions",
-                            button {
-                                class: "comment-action",
-                                "aria-pressed": liked,
-                                disabled: like_comment_action.pending(),
-                                onclick: on_like,
-                                svg {
-                                    view_box: "0 0 24 24",
-                                    fill: if liked { "currentColor" } else { "none" },
-                                    stroke: "currentColor",
-                                    stroke_width: "2",
-                                    stroke_linecap: "round",
-                                    stroke_linejoin: "round",
-                                    path { d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" }
-                                }
-                                span { "{likes_count}" }
-                            }
-                            if can_comment {
-                                button {
-                                    class: "comment-action comment-action--reply",
-                                    "data-testid": "comment-action-reply",
-                                    onclick: on_toggle_replies,
-                                    svg {
-                                        view_box: "0 0 24 24",
-                                        fill: "none",
-                                        stroke: "currentColor",
-                                        stroke_width: "2",
-                                        stroke_linecap: "round",
-                                        stroke_linejoin: "round",
-                                        path { d: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" }
-                                    }
-                                    span { "{tr.reply_label}" }
-                                    if reply_count > 0 {
-                                        span { class: "comment-action__reply-count", "{reply_count}" }
-                                    }
-                                }
-                            }
+                        span { "{tr.reply_label}" }
+                        if reply_count > 0 {
+                            span { class: "comment-action__reply-count", "{reply_count}" }
                         }
                     }
                 }
@@ -1231,7 +1264,6 @@ fn CommentItem(
                             reply: reply.clone(),
                             space_id,
                             discussion_id,
-                            replies,
                             can_comment,
                         }
                     }
@@ -1247,7 +1279,7 @@ fn CommentItem(
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
                         disabled: reply_text().trim().is_empty()
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    && reply_pending_images.read().is_empty(),
+                            && reply_pending_images.read().is_empty(),
                         on_mention_query_change,
                         on_composer_focus,
                         priority_user_pks: reply_priority,
@@ -1281,171 +1313,21 @@ fn format_time_ago(timestamp: i64) -> String {
     }
 }
 
-/// Reply variant of `CommentItem` for per-comment inline / thread-view
-/// lists. Mutations route through the controller actions.
+/// Reply variant — a thin wrapper around `CommentCardBody` with no extra
+/// chrome (no reply-toggle, no nested composer).
 #[component]
 fn ReplyItem(
     reply: DiscussionCommentResponse,
     space_id: ReadSignal<SpacePartition>,
     discussion_id: ReadSignal<SpacePostEntityType>,
-    replies: Signal<Vec<DiscussionCommentResponse>>,
     can_comment: bool,
 ) -> Element {
-    let tr: DiscussionArenaTranslate = use_translate();
-    let mut replies = replies;
-
-    let arena = use_discussion_arena(space_id, discussion_id)?;
-    let mut like_comment_action = arena.like_comment;
-
-    let user_ctx = crate::features::auth::hooks::use_user_context();
-    let is_own = user_ctx
-        .read()
-        .user
-        .as_ref()
-        .map(|u| u.pk == reply.author_pk)
-        .unwrap_or(false);
-
-    let reply_sk = use_signal(|| reply.sk.clone());
-    let mut menu_open = use_signal(|| false);
-    let mut editing = use_signal(|| false);
-    let mut edit_text = use_signal(|| reply.content.clone());
-    let original_content = reply.content.clone();
-    let time_ago = format_time_ago(reply.created_at);
-
-    let reply_for_like = reply.clone();
-    let on_like = move |_| {
-        let sk_str = reply_for_like.sk.to_string();
-        let next = !arena.effective_liked(&reply_for_like);
-        like_comment_action.call(sk_str, next);
-    };
-
-    let start_edit_content = original_content.clone();
-    let on_edit_start = move |_| {
-        edit_text.set(start_edit_content.clone());
-        editing.set(true);
-        menu_open.set(false);
-    };
-
-    let on_edit_cancel = move |_| {
-        editing.set(false);
-    };
-
-    let mut update_comment_action = arena.update_comment;
-    let mut delete_comment_action = arena.delete_comment;
-    let on_edit_save = move |_| {
-        let new_text = edit_text().trim().to_string();
-        if new_text.is_empty() {
-            return;
-        }
-        editing.set(false);
-        update_comment_action.call(reply_sk().to_string(), new_text);
-    };
-
-    let on_delete = move |_| {
-        menu_open.set(false);
-        delete_comment_action.call(reply_sk().to_string());
-    };
-
-    let liked = arena.effective_liked(&reply);
-    let likes_count = arena.effective_likes(&reply);
-    let effective_text = arena.effective_content(&reply);
-
     rsx! {
-        div { class: "comment-item",
-            img {
-                class: "comment-item__avatar",
-                src: "{reply.author_profile_url}",
-                alt: "{reply.author_display_name}",
-            }
-            div { class: "comment-item__body",
-                div { class: "comment-item__top",
-                    span { class: "comment-item__name", "{reply.author_display_name}" }
-                    span { class: "comment-item__time", "{time_ago}" }
-                    if is_own && can_comment && !editing() {
-                        div { class: "comment-menu",
-                            button {
-                                class: "comment-menu__trigger",
-                                "data-testid": "comment-menu-trigger",
-                                aria_label: "{tr.more_options}",
-                                onclick: move |_| menu_open.set(!menu_open()),
-                                svg {
-                                    view_box: "0 0 24 24",
-                                    fill: "currentColor",
-                                    xmlns: "http://www.w3.org/2000/svg",
-                                    circle { cx: "5", cy: "12", r: "1.6" }
-                                    circle { cx: "12", cy: "12", r: "1.6" }
-                                    circle { cx: "19", cy: "12", r: "1.6" }
-                                }
-                            }
-                            if menu_open() {
-                                div { class: "comment-menu__dropdown",
-                                    button {
-                                        class: "comment-menu__item",
-                                        "data-testid": "comment-menu-edit",
-                                        onclick: on_edit_start,
-                                        "{tr.edit_btn}"
-                                    }
-                                    button {
-                                        class: "comment-menu__item comment-menu__item--danger",
-                                        "data-testid": "comment-menu-delete",
-                                        onclick: on_delete,
-                                        "{tr.delete_btn}"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                if editing() {
-                    div { class: "comment-item__edit",
-                        textarea {
-                            class: "comment-item__edit-input",
-                            "data-testid": "comment-edit-input",
-                            rows: "2",
-                            value: "{edit_text}",
-                            oninput: move |e| {
-                                edit_text.set(e.value());
-                            },
-                        }
-                        div { class: "comment-item__edit-actions",
-                            button {
-                                class: "comment-item__edit-cancel",
-                                "data-testid": "comment-edit-cancel",
-                                onclick: on_edit_cancel,
-                                "{tr.cancel_btn}"
-                            }
-                            button {
-                                class: "comment-item__edit-save",
-                                "data-testid": "comment-edit-save",
-                                disabled: edit_text().trim().is_empty(),
-                                onclick: on_edit_save,
-                                "{tr.save_btn}"
-                            }
-                        }
-                    }
-                } else {
-                    CommentText { content: effective_text.clone() }
-                    CommentImageGrid { images: reply.images.clone() }
-                    div { class: "comment-item__actions",
-                        button {
-                            class: "comment-action",
-                            "aria-pressed": liked,
-                            disabled: like_comment_action.pending(),
-                            onclick: on_like,
-                            svg {
-                                view_box: "0 0 24 24",
-                                fill: if liked { "currentColor" } else { "none" },
-                                stroke: "currentColor",
-                                stroke_width: "2",
-                                stroke_linecap: "round",
-                                stroke_linejoin: "round",
-                                path { d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" }
-                            }
-                            span { "{likes_count}" }
-                        }
-                    }
-                }
-            }
+        CommentCardBody {
+            comment: reply,
+            space_id,
+            discussion_id,
+            can_comment,
         }
     }
 }
