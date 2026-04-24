@@ -93,9 +93,9 @@ pub fn SpaceGeneralAppPage(space_id: ReadSignal<SpacePartition>) -> Element {
                         "aria-label": "Back",
                         "data-testid": "topbar-back",
                         onclick: move |_| {
-                            nav.push(Route::SpaceAppsPage {
-                                space_id: space_id(),
-                            });
+                            // Follow browser history — whichever page
+                            // the user was on before landing here.
+                            nav.go_back();
                         },
                         svg {
                             view_box: "0 0 24 24",

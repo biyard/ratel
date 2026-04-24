@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>App Settings — File (View)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+    html[data-theme="dark"]{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --surface-soft:rgba(255,255,255,0.02);--surface-hover:rgba(255,255,255,0.04);
+      --glow-aura-a:rgba(139,92,246,0.05);--glow-aura-b:rgba(252,179,0,0.03);
+      --panel-bg:rgba(12,12,26,1);
+    }
+    html[data-theme="light"]{
+      --bg-void:#f5f5fb;--bg-glass:rgba(255,255,255,0.75);--bg-glass-hover:rgba(255,255,255,0.95);
+      --border-subtle:rgba(10,10,30,0.08);--border-strong:rgba(10,10,30,0.16);
+      --text-primary:#12121a;--text-muted:#5b5b75;--text-dim:#9898ad;
+      --surface-soft:rgba(10,10,30,0.03);--surface-hover:rgba(10,10,30,0.05);
+      --glow-aura-a:rgba(139,92,246,0.08);--glow-aura-b:rgba(252,179,0,0.06);
+      --panel-bg:rgba(255,255,255,1);
+    }
+
+    :root{
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+      --file-color:#8b5cf6;--file-bg:rgba(139,92,246,0.10);--file-border:rgba(139,92,246,0.24);--file-glow:rgba(139,92,246,0.15);
+    }
+
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body);transition:background 0.25s,color 0.25s}
+
+    .arena{position:relative;min-height:100vh;display:flex;flex-direction:column}
+    .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 20%,var(--glow-aura-a),transparent 60%),radial-gradient(ellipse 120% 100% at 50% 120%,var(--glow-aura-b),transparent 50%);z-index:0;pointer-events:none}
+
+    .arena-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;padding:16px 28px;gap:16px;background:var(--bg-glass);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-subtle)}
+    .arena-topbar__left{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+    .back-btn{width:36px;height:36px;border-radius:10px;background:var(--surface-soft);border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s}
+    .back-btn:hover{border-color:rgba(252,179,0,0.3);color:var(--accent-gold)}
+    .back-btn svg{width:16px;height:16px}
+    .arena-topbar__logo{width:36px;height:36px;border-radius:9px;object-fit:cover;border:1px solid rgba(252,179,0,0.15);flex-shrink:0}
+    .breadcrumb{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .breadcrumb__item{font-family:var(--font-display);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted)}
+    .breadcrumb__sep{color:var(--text-dim);font-size:10px}
+    .breadcrumb__current{color:var(--text-primary);font-weight:600}
+    .type-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:var(--file-bg);color:var(--file-color);border:1px solid var(--file-border)}
+    .type-badge svg{width:13px;height:13px}
+
+    .topbar-title{flex:1;min-width:180px;color:var(--text-primary);font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:0.04em;padding:6px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+    .arena-body{position:relative;z-index:10;flex:1;padding:28px 28px 64px;max-width:1100px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:18px}
+
+    .tabs{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .segmented{display:inline-flex;padding:3px;background:var(--surface-soft);border:1px solid var(--border-subtle);border-radius:10px;gap:2px}
+    .segmented__btn{padding:8px 16px;border-radius:8px;background:transparent;border:none;color:var(--text-muted);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.15s}
+    .segmented__btn:hover{color:var(--text-primary)}
+    .segmented__btn[aria-selected="true"]{background:var(--file-bg);color:var(--file-color);box-shadow:0 1px 4px var(--file-glow)}
+    .tabs__meta{display:flex;align-items:center;gap:10px}
+    .tab-count{padding:4px 10px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--text-muted)}
+    .tab-count strong{color:var(--text-primary);font-weight:700;margin-right:4px}
+
+    .section{background:var(--bg-glass);backdrop-filter:blur(18px);border:1px solid var(--border-subtle);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px}
+    .section__head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .section__label{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
+    .section__hint{font-size:12px;color:var(--text-muted)}
+
+    .file-list{display:flex;flex-direction:column;gap:10px}
+    .file-card{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;background:var(--surface-soft);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.15s}
+    .file-card:hover{background:var(--surface-hover);border-color:var(--file-border)}
+    .file-card__icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.06em}
+    .file-card__icon--img{background:rgba(34,197,94,0.10);color:#22c55e;border:1px solid rgba(34,197,94,0.22)}
+    .file-card__icon--vid{background:rgba(239,68,68,0.10);color:#ef4444;border:1px solid rgba(239,68,68,0.22)}
+    .file-card__icon--doc{background:rgba(110,237,216,0.10);color:var(--accent-teal);border:1px solid rgba(110,237,216,0.22)}
+    .file-card__icon--zip{background:rgba(252,179,0,0.10);color:var(--accent-gold);border:1px solid rgba(252,179,0,0.24)}
+    .file-card__body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+    .file-card__name{font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .file-card__meta{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--text-muted)}
+    .file-card__tag{padding:2px 8px;border-radius:100px;font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase}
+    .file-card__tag--overview{background:rgba(110,237,216,0.08);color:var(--accent-teal);border:1px solid rgba(110,237,216,0.22)}
+    .file-card__tag--board{background:rgba(96,165,250,0.08);color:#60a5fa;border:1px solid rgba(96,165,250,0.22)}
+    .file-card__tag--quiz{background:rgba(251,146,60,0.08);color:#fb923c;border:1px solid rgba(251,146,60,0.22)}
+
+    .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:48px 24px;border-radius:16px;background:var(--surface-soft);border:1px dashed var(--border-strong);text-align:center}
+    .empty__icon{width:46px;height:46px;border-radius:12px;background:var(--surface-hover);color:var(--text-dim);display:flex;align-items:center;justify-content:center}
+    .empty__icon svg{width:22px;height:22px}
+    .empty__title{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted)}
+    .empty__sub{font-size:12px;color:var(--text-dim)}
+
+    .preview-group__head{display:flex;align-items:center;gap:10px;padding-top:2px}
+    .preview-group__title{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
+    .preview-group__count{padding:2px 8px;border-radius:100px;background:var(--surface-soft);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:9px;font-weight:700;color:var(--text-muted)}
+    .preview-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .preview-media{position:relative;width:100%;aspect-ratio:16/10;border-radius:12px;overflow:hidden;background:#000;border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center}
+    .preview-media img{width:100%;height:100%;object-fit:cover}
+    .preview-media__play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3)}
+    .preview-media__play svg{width:52px;height:52px;color:#fff;opacity:0.9;filter:drop-shadow(0 4px 14px rgba(0,0,0,0.6))}
+    .preview-media__label{position:absolute;top:10px;left:10px;padding:3px 10px;border-radius:100px;background:rgba(0,0,0,0.55);color:#fff;font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase}
+
+    .sticky-footer{position:sticky;bottom:0;z-index:25;background:var(--bg-glass);backdrop-filter:blur(20px);border-top:1px solid var(--border-subtle);padding:14px 28px;display:flex;align-items:center;gap:12px;margin-top:auto}
+    .sticky-footer__left{font-size:12px;color:var(--text-muted)}
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <header class="arena-topbar" role="banner">
+      <div class="arena-topbar__left">
+        <button class="back-btn" aria-label="Back" data-testid="topbar-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        </button>
+        <img class="arena-topbar__logo" alt="Space logo" src="https://api.dicebear.com/7.x/shapes/svg?seed=climate&backgroundColor=8b5cf6" />
+        <nav class="breadcrumb">
+          <span class="breadcrumb__item">Climate Action DAO</span>
+          <span class="breadcrumb__sep">›</span>
+          <span class="breadcrumb__item">Apps</span>
+          <span class="breadcrumb__sep">›</span>
+          <span class="breadcrumb__item breadcrumb__current">File</span>
+        </nav>
+        <span class="type-badge" data-testid="type-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          File
+        </span>
+        <span class="topbar-title">File Library</span>
+      </div>
+    </header>
+
+    <main class="arena-body">
+      <div class="tabs">
+        <div class="segmented" data-testid="file-tabs">
+          <button class="segmented__btn" aria-selected="true" data-testid="tab-all">All</button>
+          <button class="segmented__btn" aria-selected="false" data-testid="tab-overview">Overview</button>
+          <button class="segmented__btn" aria-selected="false" data-testid="tab-boards">Boards</button>
+          <button class="segmented__btn" aria-selected="false" data-testid="tab-quiz">Quiz</button>
+        </div>
+        <div class="tabs__meta">
+          <span class="tab-count" data-testid="file-count"><strong>4</strong>files</span>
+        </div>
+      </div>
+
+      <section class="section" data-testid="section-files">
+        <div class="section__head">
+          <span class="section__label">Files</span>
+          <span class="section__hint">Click a card to open</span>
+        </div>
+        <div class="file-list" data-testid="file-list">
+          <div class="file-card" data-testid="file-card">
+            <div class="file-card__icon file-card__icon--img">PNG</div>
+            <div class="file-card__body">
+              <span class="file-card__name">climate-hero-2026.png</span>
+              <span class="file-card__meta">
+                <span>2.4 MB</span>
+                <span class="file-card__tag file-card__tag--overview">Overview</span>
+              </span>
+            </div>
+          </div>
+          <div class="file-card">
+            <div class="file-card__icon file-card__icon--vid">MP4</div>
+            <div class="file-card__body">
+              <span class="file-card__name">keynote-intro-cut.mp4</span>
+              <span class="file-card__meta">
+                <span>18.2 MB</span>
+                <span class="file-card__tag file-card__tag--board">Board</span>
+              </span>
+            </div>
+          </div>
+          <div class="file-card">
+            <div class="file-card__icon file-card__icon--doc">PDF</div>
+            <div class="file-card__body">
+              <span class="file-card__name">proposal-final-v3.pdf</span>
+              <span class="file-card__meta">
+                <span>820 KB</span>
+                <span class="file-card__tag file-card__tag--quiz">Quiz</span>
+              </span>
+            </div>
+          </div>
+          <div class="file-card">
+            <div class="file-card__icon file-card__icon--zip">ZIP</div>
+            <div class="file-card__body">
+              <span class="file-card__name">assets-bundle.zip</span>
+              <span class="file-card__meta">
+                <span>34.1 MB</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" data-testid="section-empty" style="display:none">
+        <div class="empty">
+          <span class="empty__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </span>
+          <span class="empty__title">No files yet</span>
+          <span class="empty__sub">Files shared in this space will appear here</span>
+        </div>
+      </section>
+
+      <section class="section" data-testid="section-image-preview">
+        <div class="preview-group__head">
+          <span class="preview-group__title">Image previews</span>
+          <span class="preview-group__count">2</span>
+        </div>
+        <div class="preview-grid">
+          <div class="preview-media">
+            <img src="https://images.unsplash.com/photo-1569163139394-de4798d9c2c3?w=800" alt="" />
+            <span class="preview-media__label">PNG</span>
+          </div>
+          <div class="preview-media">
+            <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=800" alt="" />
+            <span class="preview-media__label">JPG</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" data-testid="section-video-preview">
+        <div class="preview-group__head">
+          <span class="preview-group__title">Video previews</span>
+          <span class="preview-group__count">1</span>
+        </div>
+        <div class="preview-grid" style="grid-template-columns:1fr">
+          <div class="preview-media" style="aspect-ratio:16/7">
+            <img src="https://images.unsplash.com/photo-1611605698335-8b1569810432?w=1200" alt="" />
+            <span class="preview-media__label">MP4</span>
+            <span class="preview-media__play">
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+            </span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="sticky-footer">
+      <span class="sticky-footer__left" data-testid="footer-status">4 files · 55.4 MB</span>
+    </footer>
+  </div>
+
+  <script>
+    (function(){
+      var saved = localStorage.getItem('ratel-theme');
+      if (saved) document.documentElement.setAttribute('data-theme', saved);
+      document.querySelectorAll('.segmented').forEach(function(grp){
+        grp.querySelectorAll('[aria-selected]').forEach(function(b){
+          b.addEventListener('click', function(){
+            grp.querySelectorAll('[aria-selected]').forEach(function(x){ x.setAttribute('aria-selected','false'); });
+            b.setAttribute('aria-selected','true');
+          });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
