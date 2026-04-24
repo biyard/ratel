@@ -1,6 +1,6 @@
 use super::*;
 use crate::common::{
-    components::{Button, ButtonStyle, TiptapEditor, Typo, Variant, Weight},
+    components::{editor::Editor as RichEditor, Button, ButtonStyle, Typo, Variant, Weight},
     icons::{edit::Edit1, other_devices::Save},
 };
 use dioxus::prelude::spawn;
@@ -57,7 +57,11 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
                         let mut is_loading = is_loading.clone();
                         let mut error = error.clone();
                         spawn(async move {
-                            match crate::features::spaces::pages::report::controllers::create_ai_report(space_pk).await {
+                            match crate::features::spaces::pages::report::controllers::create_ai_report(
+                                    space_pk,
+                                )
+                                .await
+                            {
                                 Ok(resp) => {
                                     content.set(resp.html_contents);
                                 }
@@ -108,12 +112,12 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
                                     let mut editable = editable.clone();
                                     spawn(async move {
                                         match crate::features::spaces::pages::report::controllers::update_analyze(
-                                            space_pk,
-                                            crate::features::spaces::pages::report::controllers::UpdateAnalyzeHtmlRequest {
-                                                html_contents: html,
-                                            },
-                                        )
-                                        .await
+                                                space_pk,
+                                                crate::features::spaces::pages::report::controllers::UpdateAnalyzeHtmlRequest {
+                                                    html_contents: html,
+                                                },
+                                            )
+                                            .await
                                         {
                                             Ok(_) => editable.set(false),
                                             Err(err) => error.set(Some(err.to_string())),
@@ -127,7 +131,7 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
                     }
                 }
                 div { class: "flex flex-col w-full min-h-0 flex-1 overflow-hidden",
-                    TiptapEditor {
+                    RichEditor {
                         class: "w-full h-fit",
                         content: content(),
                         editable: editable(),

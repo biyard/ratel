@@ -1,3 +1,4 @@
+use crate::common::components::editor::Editor as RichEditor;
 use crate::common::components::{FileUploader, UploadedFileMeta};
 use crate::common::types::extract_filename_from_url;
 use crate::features::spaces::pages::actions::actions::quiz::*;
@@ -181,8 +182,7 @@ pub fn ContentCard() -> Element {
                         span { class: "section__hint", "{tr.section_content_hint}" }
                     }
                     div { class: "field",
-                        div {
-                            style: "display:flex;align-items:center;justify-content:space-between;gap:8px",
+                        div { style: "display:flex;align-items:center;justify-content:space-between;gap:8px",
                             label { class: "field__label", "{tr.title_label}" }
                             AutosaveStatusBadge { status: title_status() }
                         }
@@ -200,8 +200,8 @@ pub fn ContentCard() -> Element {
                         }
                     }
                     div { class: "editor",
-                        crate::common::components::TiptapEditor {
-                            class: "[&_[data-tiptap-toolbar]]:border-b [&_[data-tiptap-toolbar]]:border-[rgba(255,255,255,0.06)] [&_[contenteditable='true']]:min-h-[180px] [&_[contenteditable='true']]:px-[22px] [&_[contenteditable='true']]:py-[20px] [&_[contenteditable='true']]:outline-none",
+                        RichEditor {
+                            class: "[&_.re-toolbar]:border-b [&_.re-toolbar]:border-[rgba(255,255,255,0.06)] [&_.re-content]:min-h-[180px] [&_.re-content]:px-[22px] [&_.re-content]:py-[20px] [&_.re-content]:outline-none",
                             content: description(),
                             editable: true,
                             placeholder: "",
@@ -227,7 +227,7 @@ pub fn ContentCard() -> Element {
                     }
 
                     div { "data-testid": "attachment-list",
-                        for (idx , file) in files().iter().enumerate() {
+                        for (idx, file) in files().iter().enumerate() {
                             {
                                 let file_id = file.id.clone();
                                 let file_name = file.name.clone();
@@ -242,9 +242,7 @@ pub fn ContentCard() -> Element {
                                         }
                                         div { class: "file-row__info",
                                             div { class: "file-row__name", "{file_name}" }
-                                            div { class: "file-row__meta",
-                                                "{ext_label} \u{00B7} {file_size}"
-                                            }
+                                            div { class: "file-row__meta", "{ext_label} \u{00B7} {file_size}" }
                                         }
                                         button {
                                             class: "icon-btn",
@@ -258,9 +256,7 @@ pub fn ContentCard() -> Element {
                                                     match remove_quiz_file(
                                                             space_id(),
                                                             quiz_id(),
-                                                            RemoveQuizFileRequest {
-                                                                file_url,
-                                                            },
+                                                            RemoveQuizFileRequest { file_url },
                                                         )
                                                         .await
                                                     {
