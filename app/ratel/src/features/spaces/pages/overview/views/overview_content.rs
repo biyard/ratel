@@ -1,7 +1,6 @@
 use super::*;
-use crate::common::components::{
-    Button, ButtonShape, ButtonSize, ButtonStyle, SpaceCard, TiptapEditor,
-};
+use crate::common::components::editor::Editor as RichEditor;
+use crate::common::components::{Button, ButtonShape, ButtonSize, ButtonStyle, SpaceCard};
 use crate::common::icons::{edit::Edit1, other_devices::Save};
 use crate::common::lucide_dioxus::Users;
 use crate::features::posts::controllers::like_post::like_post_handler;
@@ -215,8 +214,8 @@ pub fn OverviewContent(
                 }
 
                 SpaceCard { class: "border-none shadow-none !bg-transparent !p-0",
-                    TiptapEditor {
-                        class: "w-full h-fit [&>div]:border-0 [&>div]:bg-transparent [&_[contenteditable='true']]:px-0 [&_[contenteditable='true']]:py-0 [&_[contenteditable='true']]:text-[15px]/[24px] [&_[contenteditable='true']]:tracking-[0.5px] [&_[contenteditable='true']]:text-title-text",
+                    RichEditor {
+                        class: "w-full h-fit [&>div]:border-0 [&>div]:bg-transparent [&_.re-content]:px-0 [&_.re-content]:py-0 [&_.re-content]:text-[15px]/[24px] [&_.re-content]:tracking-[0.5px] [&_.re-content]:text-title-text",
                         content: content(),
                         editable: allow_edit,
                         placeholder: tr.placeholder,

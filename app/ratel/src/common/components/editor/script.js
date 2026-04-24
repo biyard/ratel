@@ -32,6 +32,12 @@
     editor.setAttribute("contenteditable", editable ? "true" : "false");
     refreshEmptyState();
 
+    // Viewer mode skips all toolbar/modal/IME wiring — those DOM nodes
+    // are not rendered when `editable=false`, so querying them would
+    // throw. Read-only surfaces just need contenteditable=false and the
+    // empty-state flag set above.
+    if (!editable) return;
+
     // ── IME-safe input handling ────────────────────────────
     var composing = false;
     editor.addEventListener("compositionstart", function () {

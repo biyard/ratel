@@ -1,3 +1,4 @@
+use crate::common::components::editor::Editor as RichEditor;
 use crate::common::components::{FileUploader, UploadedFileMeta};
 use crate::common::types::extract_filename_from_url;
 use crate::features::spaces::pages::actions::actions::discussion::views::editor::DiscussionEditorTranslate;
@@ -186,8 +187,8 @@ pub fn ContentCard() -> Element {
                         }
                     }
                     div { class: "editor",
-                        crate::common::components::TiptapEditor {
-                            class: "[&_[data-tiptap-toolbar]]:border-b [&_[data-tiptap-toolbar]]:border-[rgba(255,255,255,0.06)] [&_[contenteditable='true']]:min-h-[220px] [&_[contenteditable='true']]:px-[22px] [&_[contenteditable='true']]:py-[20px] [&_[contenteditable='true']]:outline-none",
+                        RichEditor {
+                            class: "[&_.re-toolbar]:border-b [&_.re-toolbar]:border-[rgba(255,255,255,0.06)] [&_.re-content]:min-h-[220px] [&_.re-content]:px-[22px] [&_.re-content]:py-[20px] [&_.re-content]:outline-none",
                             content: html_contents(),
                             editable: true,
                             placeholder: "",
@@ -213,7 +214,7 @@ pub fn ContentCard() -> Element {
                     }
 
                     div { "data-testid": "attachment-list",
-                        for (idx , file) in files().iter().enumerate() {
+                        for (idx, file) in files().iter().enumerate() {
                             {
                                 let file_id = file.id.clone();
                                 let file_name = file.name.clone();
