@@ -32,6 +32,10 @@ pub struct SpaceParticipant {
     /// participants without this field still deserialize cleanly.
     #[serde(default)]
     pub informed_agreed: Option<bool>,
+
+    /// `None` for legacy rows — fall back to `created_at`.
+    #[serde(default)]
+    pub last_activity_at: Option<i64>,
 }
 
 impl SpaceParticipant {
@@ -57,6 +61,7 @@ impl SpaceParticipant {
             space_pk,
             user_pk,
             informed_agreed: None,
+            last_activity_at: None,
         }
     }
 
@@ -84,6 +89,7 @@ impl SpaceParticipant {
             space_pk,
             user_pk,
             informed_agreed: None,
+            last_activity_at: None,
         }
     }
 
@@ -102,6 +108,7 @@ impl SpaceParticipant {
             space_pk,
             user_pk,
             informed_agreed: None,
+            last_activity_at: None,
         }
     }
 
@@ -233,6 +240,7 @@ impl From<(Partition, User)> for SpaceParticipant {
             space_pk,
             user_pk: user.pk,
             informed_agreed: None,
+            last_activity_at: None,
         }
     }
 }
