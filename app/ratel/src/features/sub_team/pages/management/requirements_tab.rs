@@ -37,11 +37,12 @@ pub fn RequirementsTab() -> Element {
                 }
                 div { class: "activation__title", "{tr.settings_is_parent_eligible}" }
             }
-            label { class: "switch activation__switch",
+            label {
+                class: "switch activation__switch",
+                "data-testid": "sub-team-settings-eligibility-switch",
                 input {
                     r#type: "checkbox",
                     id: "activation-toggle",
-                    "data-testid": "sub-team-settings-eligibility-switch",
                     checked: is_on,
                     onchange: move |e| {
                         let v = e.checked();
