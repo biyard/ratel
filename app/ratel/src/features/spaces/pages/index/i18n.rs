@@ -475,6 +475,11 @@ translate! {
         en: "Require participants to follow curated users or teams.",
         ko: "참가자에게 지정된 사용자 또는 팀을 팔로우하도록 요구하세요.",
     },
+    meet_name: { en: "Meet", ko: "미팅" },
+    meet_desc: {
+        en: "Live meeting with recording & transcript",
+        ko: "녹화·transcript 자동 저장 실시간 회의",
+    },
 
     // Topbar
     admin_badge: { en: "Admin", ko: "관리자" },

@@ -18,6 +18,7 @@ pub enum UpdateSpaceActionRequest {
     Dependencies { depends_on: Vec<String> },
     Prerequisite { prerequisite: bool },
     Title { title: String },
+    Description { description: String },
 }
 
 #[post(
@@ -110,6 +111,18 @@ pub async fn update_space_action(
                 .await
                 .map_err(|e| {
                     crate::error!("Failed to update space action title: {e:?}");
+                    SpaceActionError::ActionUpdateFailed
+                })?;
+        }
+        UpdateSpaceActionRequest::Description { description } => {
+            space_action.description = description.clone();
+            SpaceAction::updater(&pk, &EntityType::SpaceAction)
+                .with_description(description)
+                .with_updated_at(now)
+                .execute(cli)
+                .await
+                .map_err(|e| {
+                    crate::error!("Failed to update space action description: {e:?}");
                     SpaceActionError::ActionUpdateFailed
                 })?;
         }

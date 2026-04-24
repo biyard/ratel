@@ -85,6 +85,10 @@ impl SpaceActionSummary {
                 space_id: space_id.clone(),
                 quiz_id: self.action_id.clone().into(),
             },
+            SpaceActionType::Meet => Route::MeetActionPage {
+                space_id: space_id.clone(),
+                meet_id: self.action_id.clone().into(),
+            },
         }
     }
 }
