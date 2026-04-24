@@ -109,6 +109,29 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
             href: asset!("./action_pages/discussion/style.css"),
             r#as: "style",
         }
+        // Slide-in panels — preloaded here so the CSS is already cached
+        // when the child components mount on SPA navigation. Without
+        // these, the panel `<div>` renders in the DOM before its
+        // stylesheet finishes fetching, so `position: absolute;
+        // z-index: 25` isn't applied and the panel visually collapses
+        // into normal flow underneath the HUD topbar. Full-page reloads
+        // don't hit this race because the server-rendered HTML already
+        // has every stylesheet in `<head>`.
+        document::Link {
+            rel: "preload",
+            href: asset!("./overview_panel/style.css"),
+            r#as: "style",
+        }
+        document::Link {
+            rel: "preload",
+            href: asset!("./leaderboard_panel/style.css"),
+            r#as: "style",
+        }
+        document::Link {
+            rel: "preload",
+            href: asset!("./settings_panel/style.css"),
+            r#as: "style",
+        }
 
         div { class: "arena", "data-testid": "space-index-page",
             ArenaTopbar {
