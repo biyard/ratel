@@ -75,7 +75,7 @@ pub fn TeamBylawsPage(username: String) -> Element {
 
     rsx! {
         SeoMeta { title: "{tr.bylaws_title}" }
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "arena sub-team-bylaws",
             div { class: "arena-topbar",

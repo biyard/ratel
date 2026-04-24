@@ -12,7 +12,7 @@ use super::super::popover::*;
 #[component]
 pub fn DatePicker(props: DatePickerProps) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         div {
             date_picker::DatePicker {
                 class: "date-picker",
@@ -38,7 +38,7 @@ pub fn DatePicker(props: DatePickerProps) -> Element {
 #[component]
 pub fn DateRangePicker(props: DateRangePickerProps) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         div {
             date_picker::DateRangePicker {
                 class: "date-picker",

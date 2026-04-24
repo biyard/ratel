@@ -38,7 +38,7 @@ pub fn FollowCreatorPage(
     > = use_signal(move || action_for_signal.clone()).into();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         div { class: "arena",
             ActionEditTopbar {
                 space_name: space.title.clone(),

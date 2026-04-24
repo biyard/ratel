@@ -42,7 +42,7 @@ pub fn Sheet(props: DialogRootProps) -> Element {
 #[component]
 fn SheetRoot(props: DialogRootProps) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         dialog::DialogRoot {
             class: "sheet-root",
             "data-slot": "sheet-root",

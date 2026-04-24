@@ -7,7 +7,7 @@ use dioxus_primitives_core::menubar::{
 #[component]
 pub fn Menubar(props: MenubarProps) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         menubar::Menubar {
             class: "menubar",
             disabled: props.disabled,
