@@ -57,8 +57,7 @@ pub fn SpaceAnalyzeDetailPage(
 
     if real_role != SpaceUserRole::Creator {
         return rsx! {
-            document::Link { rel: "preload", href: asset!("./style.css"), r#as: "style" }
-            document::Link { rel: "stylesheet", href: asset!("./style.css") }
+            document::Stylesheet { href: asset!("./style.css") }
             div { class: "sap-arena",
                 div { class: "sap-viewer-empty", "Creator access only." }
             }
@@ -131,8 +130,7 @@ fn PollAnalyzeArena(
     };
 
     rsx! {
-        document::Link { rel: "preload", href: asset!("./style.css"), r#as: "style" }
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "sap-arena",
             // ── Topbar ───────────────────────────────────────────

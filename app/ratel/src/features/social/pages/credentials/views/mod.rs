@@ -80,7 +80,6 @@ pub fn Home(username: String) -> Element {
             crossorigin: "anonymous",
         }
         document::Stylesheet { href: "https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" }
-        document::Link { rel: "preload", href: asset!("./style.css"), r#as: "style" }
         document::Stylesheet { href: asset!("./style.css") }
         document::Script { defer: true, src: asset!("./script.js") }
 
