@@ -691,3 +691,161 @@
   align-items: center;
   gap: 6px;
 }
+
+/* ── Delete space confirmation modal ─────────────────────────
+   Mirrors the team-delete arena modal in
+   `features/social/pages/setting/views/style.css` (`.ts-modal-*`).
+   Kept scoped to `.sga-` so the two surfaces can evolve
+   independently if they ever diverge. Arena tokens
+   (`--arena-*`) are inherited from the `.space-general-arena`
+   wrapper that owns this tree. */
+.sga-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 24px;
+  animation: sga-modal-overlay-in 0.2s ease;
+}
+html[data-theme="light"] .sga-modal-overlay,
+[data-theme="light"] .sga-modal-overlay {
+  background: rgba(0, 0, 0, 0.35);
+}
+@keyframes sga-modal-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.sga-modal {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  padding: 28px 28px 24px;
+  background: rgba(16, 16, 32, 0.95);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 20px;
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(239, 68, 68, 0.08);
+  animation: sga-modal-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+html[data-theme="light"] .sga-modal,
+[data-theme="light"] .sga-modal {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(220, 38, 38, 0.22);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.14),
+    0 0 28px rgba(220, 38, 38, 0.06);
+}
+@keyframes sga-modal-in {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.sga-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.sga-modal__title {
+  font-family: var(--arena-font-display);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ef4444;
+}
+html[data-theme="light"] .sga-modal__title,
+[data-theme="light"] .sga-modal__title {
+  color: #b91c1c;
+}
+
+.sga-modal__close {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--arena-border-subtle);
+  color: var(--arena-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.sga-modal__close:hover {
+  color: var(--arena-text-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+.sga-modal__close svg { width: 14px; height: 14px; }
+
+.sga-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sga-modal__desc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--arena-text-muted);
+}
+.sga-modal__desc strong {
+  color: var(--arena-text-primary);
+  font-weight: 600;
+}
+
+.sga-modal__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+.sga-modal__cancel,
+.sga-modal__confirm-danger {
+  flex: 1;
+  padding: 12px;
+  border-radius: 11px;
+  font-family: var(--arena-font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s;
+  border: 1px solid var(--arena-border-subtle);
+}
+.sga-modal__cancel {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--arena-text-primary);
+  font-weight: 700;
+}
+.sga-modal__cancel:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.sga-modal__confirm-danger {
+  background: rgba(239, 68, 68, 0.16);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.22);
+}
+html[data-theme="light"] .sga-modal__confirm-danger,
+[data-theme="light"] .sga-modal__confirm-danger {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+  border-color: rgba(220, 38, 38, 0.32);
+}
+.sga-modal__confirm-danger:hover {
+  background: rgba(239, 68, 68, 0.26);
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.2);
+}
+.sga-modal__confirm-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

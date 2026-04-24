@@ -66,12 +66,12 @@ pub fn SpaceAnalyzeDetailPage(
     }
 
     rsx! {
-        CreatorArenaPage { space_id, poll_id }
+        PollAnalyzeArena { space_id, poll_id }
     }
 }
 
 #[component]
-fn CreatorArenaPage(
+fn PollAnalyzeArena(
     space_id: ReadSignal<SpacePartition>,
     poll_id: ReadSignal<SpacePollEntityType>,
 ) -> Element {

@@ -26,12 +26,12 @@ pub fn SpaceAnalyzesAppPage(space_id: ReadSignal<SpacePartition>) -> Element {
     }
 
     rsx! {
-        CreatorArenaPage { space_id }
+        AnalyzesListArena { space_id }
     }
 }
 
 #[component]
-fn CreatorArenaPage(space_id: ReadSignal<SpacePartition>) -> Element {
+fn AnalyzesListArena(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
     let space = use_space();
     let nav = use_navigator();
