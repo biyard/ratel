@@ -1,48 +1,61 @@
 use super::*;
 
 #[component]
-pub fn StartTimeSetting() -> Element {
-    let mut space = use_space();
+pub fn StartTimeSetting(space_id: ReadSignal<SpacePartition>) -> Element {
+    let space = use_space();
     let tr: GeneralTranslate = use_translate();
-    let mut toast = use_toast();
+    let UseSpaceGeneralSettings {
+        mut update_start_time,
+        ..
+    } = use_space_general_settings(space_id)?;
+
+    let started_at = space().started_at;
+    let input_value = started_at
+        .map(crate::common::utils::time::epoch_ms_to_datetime_local)
+        .unwrap_or_else(|| {
+            crate::common::utils::time::epoch_ms_to_datetime_local(space().created_at)
+        });
 
     rsx! {
-        Card {
-            div { class: "flex justify-between items-center self-stretch py-4 px-5 border-b border-separator",
-                p { class: "font-semibold text-center font-raleway text-[17px]/[20px] tracking-[-0.18px] text-web-font-primary",
-                    {tr.start_time_setting}
-                }
+        section { class: "sga-section", "data-testid": "section-start-time",
+            div { class: "sga-section__head",
+                span { class: "sga-section__label", "{tr.start_time_setting}" }
+                span { class: "sga-section__hint", "{tr.start_time_description}" }
             }
-
-            div { class: "flex flex-col items-start self-stretch gap-2.5 p-5 bg-card max-mobile:p-4",
-                p { class: "font-normal leading-6 font-raleway text-[15px] tracking-[0.5px] text-card-meta",
-                    {tr.start_time_description}
-                }
-
-                DateAndTimePicker {
-                    initial_started_at: space().started_at,
-                    on_change: move |range: DateTimeRange| async move {
-                        if let Some(start_date) = range.start_date {
-                            let started_at = range
-                                .timezone
-                                .local_to_utc_millis(start_date, range.start_hour, range.start_minute);
-                            let space_id = space().id;
-                            let result = update_space(
-                                    space_id,
-                                    UpdateSpaceRequest::StartTime {
-                                        started_at: Some(started_at),
-                                    },
-                                )
-                                .await;
-                            match result {
-                                Ok(_) => {
-                                    space.with_mut(|s| s.started_at = Some(started_at));
-                                    toast.info(tr.start_time_updated_successfully);
-                                }
-                                Err(err) => {
-                                    toast.error(err);
+            div { class: "sga-field",
+                label { class: "sga-field__label", "Started at" }
+                input {
+                    class: "sga-input sga-input--datetime",
+                    r#type: "datetime-local",
+                    value: "{input_value}",
+                    "data-testid": "start-time-input",
+                    // Chromium/Firefox: clicking anywhere on the field
+                    // only opens the picker if we explicitly call
+                    // `showPicker()`. Without this, only the built-in
+                    // calendar icon is a hot-zone.
+                    onclick: move |e: MouseEvent| {
+                        #[cfg(feature = "web")]
+                        {
+                            use dioxus::web::WebEventExt;
+                            use wasm_bindgen::JsCast;
+                            if let Some(web_event) = e.try_as_web_event() {
+                                if let Some(input) = web_event
+                                    .target()
+                                    .and_then(|t| { t.dyn_into::<web_sys::HtmlInputElement>().ok() })
+                                {
+                                    let _ = input.show_picker();
                                 }
                             }
+                        }
+                        #[cfg(not(feature = "web"))]
+                        let _ = e;
+                    },
+                    onchange: move |e: FormEvent| {
+                        let raw = e.value();
+                        if let Some(ms) =
+                            crate::common::utils::time::datetime_local_to_epoch_ms(&raw)
+                        {
+                            update_start_time.call(ms);
                         }
                     },
                 }

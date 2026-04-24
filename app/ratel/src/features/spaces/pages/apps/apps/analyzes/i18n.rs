@@ -127,6 +127,10 @@ translate! {
         en: "No text responses",
         ko: "주관식 응답이 없습니다",
     },
+    other_label: {
+        en: "Other",
+        ko: "기타",
+    },
     id: {
         en: "ID",
         ko: "ID",

@@ -1,21 +1,16 @@
-use super::components::*;
-use crate::common::utils::time::get_now_timestamp_millis;
+use crate::features::spaces::pages::actions::actions::poll::Question;
 use crate::features::spaces::pages::actions::actions::poll::controllers::{
-    get_poll, get_poll_result, PollResultResponse, PollResultSummary,
-};
-use crate::features::spaces::pages::actions::actions::poll::{
-    Answer, PollResponse, Question, SpacePollUserAnswer,
+    PollResultResponse, PollResultSummary,
 };
 use crate::features::spaces::pages::apps::apps::analyzes::*;
-use crate::features::spaces::pages::apps::apps::panels::{
-    list_panels, CollectiveAttribute, PanelAttribute, SpacePanelQuotaResponse, VerifiableAttribute,
-};
-use crate::features::spaces::space_common::hooks::use_space_role;
+use crate::features::spaces::space_common::hooks::use_space;
+use crate::features::spaces::space_common::providers::use_space_context;
 
+/// Chart palette. MUST stay in sync with `style.css` `--sap-c1`..`--sap-c6`.
 const ANALYZE_CHART_COLORS: [&str; 6] = [
     "#f97316", "#6366f1", "#22c55e", "#3b82f6", "#8b5cf6", "#eab308",
 ];
-const DAY_MILLIS: i64 = 24 * 60 * 60 * 1000;
+const DEFAULT_SPACE_LOGO: &str = "https://metadata.ratel.foundation/logos/logo-symbol.png";
 
 #[derive(Debug, Clone, PartialEq)]
 struct AnalyzeFilterOption {
@@ -23,11 +18,30 @@ struct AnalyzeFilterOption {
     label: String,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
-struct AnalyzeExportAttributes {
-    include_gender: bool,
-    include_age: bool,
-    include_university: bool,
+/// Per-choice stat used by the arena bar chart and pie chart.
+///
+/// `label` is the positional index ("1", "2", …) shown in the left
+/// gutter of each bar row. `option_text` is the human-readable option
+/// (e.g. "재생에너지 확대") shown next to the count/percentage.
+///
+/// Two different normalised widths live on each stat:
+///
+/// * `percentage` — `count / sum(counts) × 100`. Shown next to every
+///   label and used for pie slice angles. Sums to 100 across all
+///   stats, which keeps the pie consistent with the legend even for
+///   multi-select questions where response rates exceed 100%.
+/// * `bar_width` — `count / max(counts) × 100`. Only used for the bar
+///   fill width. Anchors the leading option at 100% of the track so
+///   short bars and empty (0-count) bars stay visually distinct; when
+///   every option ties, every bar hits 100% too.
+#[derive(Debug, Clone, PartialEq)]
+struct AnalyzeChoiceStat {
+    label: String,
+    option_text: String,
+    count: i64,
+    percentage: f64,
+    bar_width: f64,
+    color: &'static str,
 }
 
 #[component]
@@ -35,178 +49,203 @@ pub fn SpaceAnalyzeDetailPage(
     space_id: ReadSignal<SpacePartition>,
     poll_id: ReadSignal<SpacePollEntityType>,
 ) -> Element {
-    let tr: SpaceAnalyzesAppTranslate = use_translate();
-    let role = use_space_role()();
-    let mut toast = use_toast();
+    // Read the underlying role — `current_role` flips Creator →
+    // Participant once the space is Ongoing, but analyze is always
+    // creator-only. See `views/home/mod.rs` for the full story.
+    let mut ctx = use_space_context();
+    let real_role = ctx.role();
 
-    if role != SpaceUserRole::Creator {
-        return rsx! {};
+    if real_role != SpaceUserRole::Creator {
+        return rsx! {
+            document::Link { rel: "preload", href: asset!("./style.css"), r#as: "style" }
+            document::Link { rel: "stylesheet", href: asset!("./style.css") }
+            div { class: "sap-arena",
+                div { class: "sap-viewer-empty", "Creator access only." }
+            }
+        };
     }
 
-    let panels_query = use_loader(move || list_panels(space_id()))?;
-    let poll_query = use_loader(move || get_poll(space_id(), poll_id()))?;
-    let result_query = use_loader(move || get_poll_result(space_id(), poll_id()))?;
+    rsx! {
+        PollAnalyzeArena { space_id, poll_id }
+    }
+}
 
-    let panels = panels_query.read().clone();
-    let poll = poll_query.read().clone();
-    let result = result_query.read().clone();
+#[component]
+fn PollAnalyzeArena(
+    space_id: ReadSignal<SpacePartition>,
+    poll_id: ReadSignal<SpacePollEntityType>,
+) -> Element {
+    let tr: SpaceAnalyzesAppTranslate = use_translate();
+    let space = use_space();
+    let nav = use_navigator();
 
-    let filter_groups = build_filter_group_options(&result, &tr);
-    let mut selected_filter_group = use_signal(|| "overall".to_string());
-    let mut selected_filter_value = use_signal(String::new);
+    let UseSpaceAnalyzePoll {
+        poll,
+        result,
+        mut selected_filter_group,
+        mut selected_filter_value,
+        mut handle_export_excel,
+        ..
+    } = use_space_analyze_poll(space_id, poll_id)?;
+
+    let poll_data = poll.read().clone();
+    let result_data = result.read().clone();
+
+    let filter_groups = build_filter_group_options(&result_data, &tr);
     let active_group = active_filter_group(&filter_groups, &selected_filter_group());
-    let filter_values = build_filter_value_options(&result, &active_group, &tr);
+    let filter_values = build_filter_value_options(&result_data, &active_group, &tr);
     let active_value = active_filter_value(&filter_values, &selected_filter_value());
     let active_filter_key = compose_filter_key(&active_group, &active_value);
-    let active_summaries = select_summaries(&result, &active_filter_key);
-    let response_count = active_summaries
-        .first()
-        .map(summary_total_count)
-        .unwrap_or(poll.user_response_count);
+    let active_summaries = select_summaries(&result_data, &active_filter_key);
 
-    let poll_for_download = poll.clone();
-    let panels_for_download = panels.clone();
-    let result_for_download = result.clone();
-    let download_started_text = tr.download_started.to_string();
-    let tr_for_excel = tr.clone();
-    let result_for_filter_group = result.clone();
-    let tr_for_filter_group = tr.clone();
+    let space_data = space();
+    let space_logo = if space_data.logo.is_empty() {
+        DEFAULT_SPACE_LOGO.to_string()
+    } else {
+        space_data.logo.clone()
+    };
+    let space_title = space_data.title.clone();
+    let poll_title = poll_data.title.clone();
+
+    let export_pending = handle_export_excel.pending();
+
+    let result_for_group_change = result_data.clone();
+    let tr_for_group_change = tr.clone();
+
+    let on_group_change = move |value: String| {
+        let next_values = build_filter_value_options(
+            &result_for_group_change,
+            &value,
+            &tr_for_group_change,
+        );
+        let next_value = next_values
+            .first()
+            .map(|option| option.key.clone())
+            .unwrap_or_default();
+        selected_filter_group.set(value);
+        selected_filter_value.set(next_value);
+    };
+
+    let on_value_change = move |value: String| {
+        selected_filter_value.set(value);
+    };
 
     rsx! {
-        div { class: "flex flex-col gap-5 w-full",
-            div { class: "flex gap-3 justify-between items-center max-tablet:flex-col max-tablet:items-start",
-                div { class: "flex flex-col gap-2 min-w-0",
-                    div { class: "flex gap-2 items-center max-mobile:flex-wrap",
-                        h3 { class: "font-bold font-raleway text-[28px]/[32px] tracking-[-0.28px] text-text-primary",
-                            "{poll.title}"
+        document::Link { rel: "preload", href: asset!("./style.css"), r#as: "style" }
+        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+
+        div { class: "sap-arena",
+            // ── Topbar ───────────────────────────────────────────
+            header { class: "sap-topbar", role: "banner",
+                div { class: "sap-topbar__left",
+                    button {
+                        r#type: "button",
+                        class: "sap-back-btn",
+                        "aria-label": "Back",
+                        "data-testid": "topbar-back",
+                        onclick: move |_| {
+                            nav.go_back();
+                        },
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            "stroke-width": "2",
+                            "stroke-linecap": "round",
+                            "stroke-linejoin": "round",
+                            path { d: "M19 12H5" }
+                            path { d: "M12 19l-7-7 7-7" }
                         }
                     }
+                    img {
+                        class: "sap-topbar__logo",
+                        alt: "Space logo",
+                        src: "{space_logo}",
+                    }
+                    nav { class: "sap-breadcrumb",
+                        span { class: "sap-breadcrumb__item", "{space_title}" }
+                        span { class: "sap-breadcrumb__sep", "›" }
+                        span { class: "sap-breadcrumb__item", "Apps" }
+                        span { class: "sap-breadcrumb__sep", "›" }
+                        span { class: "sap-breadcrumb__item", "Analyze" }
+                        span { class: "sap-breadcrumb__sep", "›" }
+                        span { class: "sap-breadcrumb__item sap-breadcrumb__current",
+                            "Poll"
+                        }
+                    }
+                    span { class: "sap-type-badge", "data-testid": "type-badge",
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            "stroke-width": "2",
+                            "stroke-linecap": "round",
+                            "stroke-linejoin": "round",
+                            path { d: "M3 3v18h18" }
+                            path { d: "M7 14l4-4 4 4 5-5" }
+                        }
+                        "Analyze"
+                    }
+                    span { class: "sap-topbar__title", "{poll_title}" }
                 }
-                Button {
-                    style: ButtonStyle::Primary,
-                    shape: ButtonShape::Square,
-                    class: "flex flex-row justify-center items-center w-fit min-w-[140px]".to_string(),
-                    onclick: move |_| {
-                        let poll = poll_for_download.clone();
-                        let panels = panels_for_download.clone();
-                        let result = result_for_download.clone();
-                        let tr_for_excel = tr_for_excel.clone();
-                        let excel_data = build_excel_data(&poll, &panels, &result, &tr_for_excel);
-                        let mut toast = toast;
-                        let download_started_text = download_started_text.clone();
-                        spawn(async move {
-                            match download_analyze_excel(DownloadAnalyzeExcelRequest {
-                                    file_name: build_excel_file_name(&space_id()),
-                                    sheet_name: "Responses".to_string(),
-                                    rows: excel_data.rows,
-                                    merges: excel_data.merges,
-                                })
-                                .await
-                            {
-                                Ok(_) => {
-                                    toast.info(download_started_text);
-                                }
-                                Err(err) => {
-                                    toast.error(err);
-                                }
+
+                div { class: "sap-topbar__right",
+                    button {
+                        r#type: "button",
+                        class: "sap-btn sap-btn--primary sap-btn--lg",
+                        "data-testid": "export-excel-btn",
+                        disabled: export_pending,
+                        onclick: move |_| handle_export_excel.call(),
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            "stroke-width": "2",
+                            "stroke-linecap": "round",
+                            "stroke-linejoin": "round",
+                            path { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }
+                            polyline { points: "7 10 12 15 17 10" }
+                            line {
+                                x1: "12",
+                                y1: "15",
+                                x2: "12",
+                                y2: "3",
                             }
-                        });
-                    },
-                    {tr.download_excel}
+                        }
+                        "{tr.download_excel}"
+                    }
                 }
             }
 
-            div { class: "grid gap-3 md:grid-cols-3",
-                AnalyzeMetricCard {
-                    label: tr.responses_count.to_string(),
-                    value: response_count.to_string(),
-                }
-                AnalyzeMetricCard {
-                    label: tr.remaining_days.to_string(),
-                    value: "—".to_string(),
-                }
-                AnalyzeMetricCard {
-                    label: tr.survey_period.to_string(),
-                    value: "—".to_string(),
-                }
-            }
-
-            div { class: "flex gap-3 justify-between items-center max-tablet:flex-col max-tablet:items-stretch",
-                div { class: "flex gap-3 items-center max-tablet:flex-col max-tablet:items-stretch",
-                    crate::common::components::Select::<String> {
-                        value: Some(active_group.clone()),
-                        on_value_change: move |value: Option<String>| {
-                            let Some(value) = value else {
-                                return;
-                            };
-                            let next_values = build_filter_value_options(
-                                &result_for_filter_group,
-                                &value,
-                                &tr_for_filter_group,
-                            );
-                            let next_value = next_values
-                                .first()
-                                .map(|option| option.key.clone())
-                                .unwrap_or_default();
-                            selected_filter_group.set(value);
-                            selected_filter_value.set(next_value);
-                        },
-                        SelectTrigger {
-                            min_width: "13.75rem",
-                            aria_label: tr.filter_group_label,
-                            SelectValue {}
-                        }
-                        SelectList { aria_label: tr.filter_group_label,
-                            SelectGroup {
-                                for (idx , option) in filter_groups.iter().enumerate() {
-                                    SelectOption::<String> {
-                                        key: "{option.key}",
-                                        index: idx,
-                                        value: option.key.clone(),
-                                        text_value: "{option.label}",
-                                        "{option.label}"
-                                        SelectItemIndicator {}
-                                    }
-                                }
-                            }
-                        }
+            // ── Body ─────────────────────────────────────────────
+            // `div` instead of `main` — AppLayout already renders an
+            // outer <main> (SidebarInset), and nesting <main> inside
+            // <main> is invalid HTML and trips some browsers into
+            // clipping content.
+            div { class: "sap-body",
+                // Filter bar — primary (group) + optional secondary (value).
+                div { class: "sap-filter-bar", "data-testid": "filter-bar",
+                    ArenaFilterDropdown {
+                        testid: "filter-select".to_string(),
+                        aria_label: tr.filter_group_label.to_string(),
+                        selected_key: active_group.clone(),
+                        options: filter_groups.clone(),
+                        on_change: on_group_change,
                     }
 
                     if active_group != "overall" && !filter_values.is_empty() {
-                        crate::common::components::Select::<String> {
-                            value: Some(active_value.clone()),
-                            on_value_change: move |value: Option<String>| {
-                                let Some(value) = value else {
-                                    return;
-                                };
-                                selected_filter_value.set(value);
-                            },
-                            SelectTrigger {
-                                min_width: "13.75rem",
-                                aria_label: tr.filter_value_label,
-                                SelectValue {}
-                            }
-                            SelectList { aria_label: tr.filter_value_label,
-                                SelectGroup {
-                                    for (idx , option) in filter_values.iter().enumerate() {
-                                        SelectOption::<String> {
-                                            key: "{option.key}",
-                                            index: idx,
-                                            value: option.key.clone(),
-                                            text_value: "{option.label}",
-                                            "{option.label}"
-                                            SelectItemIndicator {}
-                                        }
-                                    }
-                                }
-                            }
+                        ArenaFilterDropdown {
+                            testid: "filter-select-value".to_string(),
+                            aria_label: tr.filter_value_label.to_string(),
+                            selected_key: active_value.clone(),
+                            options: filter_values.clone(),
+                            on_change: on_value_change,
                         }
                     }
                 }
-            }
 
-            div { class: "flex flex-col gap-4 w-full",
-                for (idx , question) in poll.questions.iter().enumerate() {
+                // Question cards — one per question, styled based on type.
+                for (idx , question) in poll_data.questions.iter().enumerate() {
                     if let Some(summary) = active_summaries.get(idx) {
                         {render_question_card(idx, question, summary, &active_filter_key, &tr)}
                     }
@@ -216,6 +255,8 @@ pub fn SpaceAnalyzeDetailPage(
     }
 }
 
+/// Render a single question card — dispatches on whether the summary is
+/// objective (bar chart + pie chart) or subjective (text response list).
 fn render_question_card(
     idx: usize,
     question: &Question,
@@ -224,6 +265,11 @@ fn render_question_card(
     tr: &SpaceAnalyzesAppTranslate,
 ) -> Element {
     let filter_suffix = filter_dom_suffix(filter_key);
+    let card_key = format!("analyze-question-{filter_suffix}-{idx}");
+    let title = question.title().to_string();
+    let total = summary_total_count(summary);
+    let response_unit = tr.total_response_count_unit.to_string();
+
     match summary {
         PollResultSummary::ShortAnswer {
             total_count,
@@ -232,31 +278,140 @@ fn render_question_card(
         | PollResultSummary::Subjective {
             total_count,
             answers,
-        } => rsx! {
-            SubjectiveQuestionSummary {
-                key: "analyze-question-{filter_suffix}-{idx}",
-                title: question.title().to_string(),
-                total_responses: *total_count,
-                response_unit: tr.total_response_count_unit.to_string(),
-                responses: sorted_text_answers(answers),
-                no_responses_text: tr.no_text_responses.to_string(),
-            }
-        },
-        _ => {
-            let (bars, other_answers) = build_choice_stats(question, summary);
+        } => {
+            let responses = sorted_text_answers(answers);
+            let no_responses_text = tr.no_text_responses.to_string();
+            let is_empty = responses.is_empty();
+
             rsx! {
-                ObjectiveQuestionSummary {
-                    key: "analyze-question-{filter_suffix}-{idx}",
-                    title: question.title().to_string(),
-                    total_responses: summary_total_count(summary),
-                    response_unit: tr.total_response_count_unit.to_string(),
-                    chart_base_id: format!("analyze-question-chart-{filter_suffix}-{idx}"),
-                    answers: bars,
-                    other_answers,
+                section {
+                    key: "{card_key}",
+                    class: "sap-q-card",
+                    "data-testid": "question-card-subjective",
+                    div { class: "sap-q-card__head",
+                        div { class: "sap-q-card__title", "{title}" }
+                        span { class: "sap-q-card__count", "{total_count} {response_unit}" }
+                    }
+                    if is_empty {
+                        div { class: "sap-text-empty", "{no_responses_text}" }
+                    } else {
+                        div { class: "sap-text-list", "data-testid": "text-response-list",
+                            for (row_idx , (text , count)) in responses.into_iter().enumerate() {
+                                div {
+                                    key: "text-response-{row_idx}",
+                                    class: "sap-text-item",
+                                    "{text} ({count})"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        _ => {
+            let bars = build_choice_stats(question, summary, tr.other_label.to_string());
+            let pie_gradient = build_pie_gradient(&bars);
+            let total_label = total.to_string();
+            let has_pie_data: bool = bars.iter().any(|stat| stat.count > 0);
+
+            rsx! {
+                section {
+                    key: "{card_key}",
+                    class: "sap-q-card",
+                    "data-testid": "question-card-objective",
+                    div { class: "sap-q-card__head",
+                        div { class: "sap-q-card__title", "{title}" }
+                        span { class: "sap-q-card__count", "{total} {response_unit}" }
+                    }
+
+                    // Bar chart — horizontal bars, one per choice.
+                    div { class: "sap-bar-chart", "data-testid": "bar-chart",
+                        for (bar_idx , stat) in bars.iter().enumerate() {
+                            div { key: "bar-{bar_idx}", class: "sap-bar-row",
+                                span { class: "sap-bar-row__label", "{stat.label}" }
+                                div { class: "sap-bar-row__track",
+                                    div {
+                                        class: "sap-bar-row__fill",
+                                        style: "width: {stat.bar_width}%; background: {stat.color};",
+                                    }
+                                }
+                                span { class: "sap-bar-row__value",
+                                    "{stat.option_text} · {stat.count} ({stat.percentage:.1}%)"
+                                }
+                            }
+                        }
+                    }
+
+                    // Pie chart — conic-gradient + center donut hole + legend.
+                    if !bars.is_empty() && has_pie_data {
+                        div { class: "sap-pie-wrap", "data-testid": "pie-chart",
+                            div {
+                                class: "sap-pie",
+                                role: "img",
+                                "aria-label": build_pie_aria_label(&bars),
+                                style: "background: {pie_gradient};",
+                                div { class: "sap-pie__labels",
+                                    div {
+                                        span { class: "sap-pie__label-line sap-pie__label-line--top",
+                                            "Total"
+                                        }
+                                        span { class: "sap-pie__label-line sap-pie__label-line--big",
+                                            "{total_label}"
+                                        }
+                                        span { class: "sap-pie__label-line sap-pie__label-line--sub",
+                                            "{response_unit}"
+                                        }
+                                    }
+                                }
+                            }
+                            div { class: "sap-pie-legend", "aria-label": "chart legend",
+                                for (legend_idx , stat) in bars.iter().enumerate() {
+                                    div { key: "legend-{legend_idx}", class: "sap-pie-legend__row",
+                                        span {
+                                            class: "sap-pie-legend__swatch",
+                                            style: "background: {stat.color};",
+                                        }
+                                        span { class: "sap-pie-legend__label", "{stat.option_text}" }
+                                        span { class: "sap-pie-legend__value", "{stat.percentage:.1}%" }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
     }
+}
+
+// ── Chart helpers ─────────────────────────────────────────────────
+
+/// Build the pie chart's `conic-gradient` value.
+///
+/// Safe to use `stat.percentage` directly because `build_choice_stats`
+/// normalises percentages to sum to 100 (across both single-select and
+/// multi-select questions), so slices always fit inside the 360° disc.
+fn build_pie_gradient(bars: &[AnalyzeChoiceStat]) -> String {
+    if bars.is_empty() {
+        return String::new();
+    }
+
+    let mut stops = Vec::with_capacity(bars.len());
+    let mut cursor: f64 = 0.0;
+    for stat in bars.iter() {
+        let next = cursor + (stat.percentage / 100.0) * 360.0;
+        stops.push(format!("{} {:.4}deg {:.4}deg", stat.color, cursor, next));
+        cursor = next;
+    }
+
+    format!("conic-gradient({})", stops.join(", "))
+}
+
+fn build_pie_aria_label(bars: &[AnalyzeChoiceStat]) -> String {
+    bars.iter()
+        .map(|stat| format!("{} {:.1}%", stat.option_text, stat.percentage))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 fn filter_dom_suffix(filter_key: &str) -> String {
@@ -265,6 +420,8 @@ fn filter_dom_suffix(filter_key: &str) -> String {
         .map(|ch| if ch.is_ascii_alphanumeric() { ch } else { '-' })
         .collect()
 }
+
+// ── Filter builders (view-layer derivations) ─────────────────────
 
 fn build_filter_group_options(
     result: &PollResultResponse,
@@ -407,7 +564,53 @@ fn summary_total_count(summary: &PollResultSummary) -> i64 {
 fn build_choice_stats(
     question: &Question,
     summary: &PollResultSummary,
-) -> (Vec<AnalyzeChoiceStat>, Vec<(String, i64)>) {
+    other_label: String,
+) -> Vec<AnalyzeChoiceStat> {
+    let mut stats = build_choice_stats_raw(question, summary, other_label);
+
+    // Re-normalise `percentage` so every bar's width and the pie slice
+    // both express the same thing: this option's share of all votes.
+    //
+    // For single-select questions (SingleChoice / Dropdown / LinearScale)
+    // the sum of counts equals `total_count`, so percentage stays the
+    // same as the response-rate the build helpers originally computed.
+    //
+    // For multi-select questions (MultipleChoice / Checkbox) a single
+    // respondent can pick multiple options, so response-rate percentages
+    // can sum to more than 100% and a 50/50 split would otherwise show
+    // as 100% / 100%. Dividing by the total vote count produces the
+    // slice shares you actually see in the pie chart.
+    let total: i64 = stats.iter().map(|stat| stat.count).sum();
+    if total > 0 {
+        let total_f = total as f64;
+        for stat in &mut stats {
+            stat.percentage = (stat.count as f64 / total_f) * 100.0;
+        }
+    } else {
+        for stat in &mut stats {
+            stat.percentage = 0.0;
+        }
+    }
+
+    // Max-normalise bar widths. The leading option fills the track
+    // (100%), every other bar is proportional to it, and 0-count bars
+    // render as an empty track — no coloured fill for dead options.
+    let max: i64 = stats.iter().map(|stat| stat.count).max().unwrap_or(0);
+    if max > 0 {
+        let max_f = max as f64;
+        for stat in &mut stats {
+            stat.bar_width = (stat.count as f64 / max_f) * 100.0;
+        }
+    }
+
+    stats
+}
+
+fn build_choice_stats_raw(
+    question: &Question,
+    summary: &PollResultSummary,
+    other_label: String,
+) -> Vec<AnalyzeChoiceStat> {
     match (question, summary) {
         (
             Question::SingleChoice(question) | Question::MultipleChoice(question),
@@ -421,97 +624,97 @@ fn build_choice_stats(
                 answers,
                 other_answers,
             },
-        ) => (
-            question
-                .options
-                .iter()
-                .enumerate()
-                .map(|(idx, _option)| {
-                    build_choice_stat(
-                        &(idx + 1).to_string(),
-                        *answers.get(&idx.to_string()).unwrap_or(&0),
-                        *total_count,
-                        idx,
-                    )
-                })
-                .chain(build_other_choice_stat(
-                    question.allow_other.unwrap_or(false),
-                    other_answers,
+        ) => question
+            .options
+            .iter()
+            .enumerate()
+            .map(|(idx, option_text)| {
+                build_choice_stat(
+                    &(idx + 1).to_string(),
+                    option_text.clone(),
+                    *answers.get(&idx.to_string()).unwrap_or(&0),
                     *total_count,
-                    question.options.len(),
-                ))
-                .collect(),
-            sorted_text_answers(other_answers),
-        ),
+                    idx,
+                )
+            })
+            .chain(build_other_choice_stat(
+                question.allow_other.unwrap_or(false),
+                other_answers,
+                *total_count,
+                question.options.len(),
+                &other_label,
+            ))
+            .collect(),
         (
             Question::Checkbox(question),
             PollResultSummary::Checkbox {
                 total_count,
                 answers,
             },
-        ) => (
-            question
-                .options
-                .iter()
-                .enumerate()
-                .map(|(idx, _option)| {
-                    build_choice_stat(
-                        &(idx + 1).to_string(),
-                        *answers.get(&idx.to_string()).unwrap_or(&0),
-                        *total_count,
-                        idx,
-                    )
-                })
-                .collect(),
-            vec![],
-        ),
+        ) => question
+            .options
+            .iter()
+            .enumerate()
+            .map(|(idx, option_text)| {
+                build_choice_stat(
+                    &(idx + 1).to_string(),
+                    option_text.clone(),
+                    *answers.get(&idx.to_string()).unwrap_or(&0),
+                    *total_count,
+                    idx,
+                )
+            })
+            .collect(),
         (
             Question::Dropdown(question),
             PollResultSummary::Dropdown {
                 total_count,
                 answers,
             },
-        ) => (
-            question
-                .options
-                .iter()
-                .enumerate()
-                .map(|(idx, _option)| {
-                    build_choice_stat(
-                        &(idx + 1).to_string(),
-                        *answers.get(&idx.to_string()).unwrap_or(&0),
-                        *total_count,
-                        idx,
-                    )
-                })
-                .collect(),
-            vec![],
-        ),
+        ) => question
+            .options
+            .iter()
+            .enumerate()
+            .map(|(idx, option_text)| {
+                build_choice_stat(
+                    &(idx + 1).to_string(),
+                    option_text.clone(),
+                    *answers.get(&idx.to_string()).unwrap_or(&0),
+                    *total_count,
+                    idx,
+                )
+            })
+            .collect(),
         (
             Question::LinearScale(question),
             PollResultSummary::LinearScale {
                 total_count,
                 answers,
             },
-        ) => (
-            (question.min_value..=question.max_value)
-                .enumerate()
-                .map(|(idx, value)| {
-                    build_choice_stat(
-                        &value.to_string(),
-                        *answers.get(&value.to_string()).unwrap_or(&0),
-                        *total_count,
-                        idx,
-                    )
-                })
-                .collect(),
-            vec![],
-        ),
-        _ => (vec![], vec![]),
+        ) => (question.min_value..=question.max_value)
+            .enumerate()
+            .map(|(idx, value)| {
+                let label = value.to_string();
+                build_choice_stat(
+                    &label,
+                    label.clone(),
+                    *answers.get(&value.to_string()).unwrap_or(&0),
+                    *total_count,
+                    idx,
+                )
+            })
+            .collect(),
+        _ => vec![],
     }
 }
 
-fn build_choice_stat(label: &str, count: i64, total_count: i64, index: usize) -> AnalyzeChoiceStat {
+fn build_choice_stat(
+    label: &str,
+    option_text: String,
+    count: i64,
+    total_count: i64,
+    index: usize,
+) -> AnalyzeChoiceStat {
     let percentage = if total_count > 0 {
         (count as f64 / total_count as f64) * 100.0
     } else {
@@ -520,8 +723,11 @@ fn build_choice_stat(label: &str, count: i64, total_count: i64, index: usize) ->
 
     AnalyzeChoiceStat {
         label: label.to_string(),
+        option_text,
         count,
         percentage,
+        // Filled in by `build_choice_stats` after the full list is known.
+        bar_width: 0.0,
         color: ANALYZE_CHART_COLORS[index % ANALYZE_CHART_COLORS.len()],
     }
 }
@@ -531,6 +737,7 @@ fn build_other_choice_stat(
     other_answers: &std::collections::HashMap<String, i64>,
     total_count: i64,
     index: usize,
+    other_label: &str,
 ) -> std::option::IntoIter<AnalyzeChoiceStat> {
     if !allow_other {
         return None.into_iter();
@@ -539,6 +746,7 @@ fn build_other_choice_stat(
     let count: i64 = other_answers.values().copied().sum();
     Some(build_choice_stat(
         &(index + 1).to_string(),
+        other_label.to_string(),
         count,
         total_count,
         index,
@@ -568,475 +776,93 @@ fn sorted_text_answers(answers: &std::collections::HashMap<String, i64>) -> Vec<
     items
 }
 
-fn remaining_days_label(ended_at: i64) -> String {
-    let now = get_now_timestamp_millis();
-    if ended_at <= now {
-        return "0 Day".to_string();
-    }
+// ── Arena filter dropdown ─────────────────────────────────────────
+//
+// Custom dropdown mirroring `common::TeamSelector` — trigger button +
+// `position: fixed` backdrop for outside-click close + absolute-
+// positioned panel underneath the trigger. Native `<select>` dropdowns
+// are rendered by the OS and can't be styled to match the arena glass
+// aesthetic, so we roll our own.
 
-    let remaining = ((ended_at - now) + (DAY_MILLIS - 1)) / DAY_MILLIS;
-    format!("{remaining} Day")
-}
+#[component]
+fn ArenaFilterDropdown(
+    testid: String,
+    aria_label: String,
+    selected_key: String,
+    options: Vec<AnalyzeFilterOption>,
+    on_change: EventHandler<String>,
+) -> Element {
+    let mut open = use_signal(|| false);
 
-fn format_period(started_at: i64, ended_at: i64) -> String {
-    let Some(start) = chrono::DateTime::<chrono::Utc>::from_timestamp_millis(started_at) else {
-        return "-".to_string();
-    };
-    let Some(end) = chrono::DateTime::<chrono::Utc>::from_timestamp_millis(ended_at) else {
-        return "-".to_string();
-    };
+    let selected_label = options
+        .iter()
+        .find(|option| option.key == selected_key)
+        .map(|option| option.label.clone())
+        .unwrap_or_default();
 
-    format!("{} - {}", start.format("%Y.%m.%d"), end.format("%Y.%m.%d"))
-}
-
-fn humanize_group_value(value: &str, tr: &SpaceAnalyzesAppTranslate) -> String {
-    match value {
-        "male" => tr.gender_male.to_string(),
-        "female" => tr.gender_female.to_string(),
-        "UNKNOWN" => tr.gender_unknown.to_string(),
-        _ => value.to_string(),
-    }
-}
-
-fn build_excel_file_name(space_id: &SpacePartition) -> String {
-    format!("{}-analysis.xlsx", space_id)
-}
-
-#[derive(Debug, Clone, Default, PartialEq)]
-struct AnalyzeExcelData {
-    rows: Vec<Vec<String>>,
-    merges: Vec<AnalyzeExcelMerge>,
-}
-
-fn build_excel_data(
-    poll: &PollResponse,
-    panels: &[SpacePanelQuotaResponse],
-    result: &PollResultResponse,
-    tr: &SpaceAnalyzesAppTranslate,
-) -> AnalyzeExcelData {
-    let export_attributes = build_export_attributes(panels);
-    let user_rows = build_response_rows(result, tr);
-    let question_count = poll.questions.len();
-
-    let mut col = 0usize;
-    let col_id = col;
-    col += 1;
-    let col_attr_start = col;
-    let col_gender = if export_attributes.include_gender {
-        let value = col;
-        col += 1;
-        Some(value)
-    } else {
-        None
-    };
-    let col_age = if export_attributes.include_age {
-        let value = col;
-        col += 1;
-        Some(value)
-    } else {
-        None
-    };
-    let col_university = if export_attributes.include_university {
-        let value = col;
-        col += 1;
-        Some(value)
-    } else {
-        None
-    };
-    let attr_count = usize::from(export_attributes.include_gender)
-        + usize::from(export_attributes.include_age)
-        + usize::from(export_attributes.include_university);
-    let col_category = col;
-    col += 1;
-    let col_type = col;
-    col += 1;
-    let col_question_start = col;
-    let total_columns = col_question_start + question_count;
-
-    let mut header_top = vec![String::new(); total_columns];
-    header_top[col_id] = tr.id.to_string();
-    if attr_count > 0 {
-        header_top[col_attr_start] = tr.attribute.to_string();
-    }
-    header_top[col_category] = tr.category.to_string();
-    header_top[col_type] = tr.type_.to_string();
-    if question_count > 0 {
-        header_top[col_question_start] = tr.questionnaire.to_string();
-    }
-
-    let mut header_bottom = vec![String::new(); total_columns];
-    if let Some(index) = col_gender {
-        header_bottom[index] = tr.filter_gender.to_string();
-    }
-    if let Some(index) = col_age {
-        header_bottom[index] = tr.filter_age.to_string();
-    }
-    if let Some(index) = col_university {
-        header_bottom[index] = tr.university.to_string();
-    }
-
-    let mut rows = vec![header_top, header_bottom];
-    let mut merges = vec![
-        AnalyzeExcelMerge {
-            start_row: 0,
-            start_col: col_id,
-            end_row: 1,
-            end_col: col_id,
-        },
-        AnalyzeExcelMerge {
-            start_row: 0,
-            start_col: col_category,
-            end_row: 1,
-            end_col: col_category,
-        },
-        AnalyzeExcelMerge {
-            start_row: 0,
-            start_col: col_type,
-            end_row: 1,
-            end_col: col_type,
-        },
-    ];
-
-    if attr_count > 0 {
-        merges.push(AnalyzeExcelMerge {
-            start_row: 0,
-            start_col: col_attr_start,
-            end_row: 0,
-            end_col: col_attr_start + attr_count - 1,
-        });
-    }
-
-    if question_count > 0 {
-        merges.push(AnalyzeExcelMerge {
-            start_row: 0,
-            start_col: col_question_start,
-            end_row: 1,
-            end_col: col_question_start + question_count - 1,
-        });
-    }
-
-    let category_label = if poll.space_action.prerequisite {
-        tr.sample_survey.to_string()
-    } else {
-        tr.final_survey.to_string()
-    };
-
-    for response_row in user_rows {
-        let start_row = rows.len();
-
-        if let Some(sample) = response_row.sample.as_ref() {
-            push_excel_block(
-                &mut rows,
-                &mut merges,
-                poll,
-                sample,
-                &response_row,
-                category_label.clone(),
-                tr.question.to_string(),
-                tr.answer.to_string(),
-                col_category,
-                col_type,
-                col_question_start,
-                total_columns,
-            );
-        }
-
-        if let Some(final_answer) = response_row.final_answer.as_ref() {
-            push_excel_block(
-                &mut rows,
-                &mut merges,
-                poll,
-                final_answer,
-                &response_row,
-                tr.final_survey.to_string(),
-                tr.question.to_string(),
-                tr.answer.to_string(),
-                col_category,
-                col_type,
-                col_question_start,
-                total_columns,
-            );
-        }
-
-        if rows.len() == start_row {
-            continue;
-        }
-
-        let end_row = rows.len() - 1;
-        merges.push(AnalyzeExcelMerge {
-            start_row,
-            start_col: col_id,
-            end_row,
-            end_col: col_id,
-        });
-
-        if let Some(index) = col_gender {
-            merges.push(AnalyzeExcelMerge {
-                start_row,
-                start_col: index,
-                end_row,
-                end_col: index,
-            });
-            rows[start_row][index] = response_row.gender.clone();
-        }
-
-        if let Some(index) = col_age {
-            merges.push(AnalyzeExcelMerge {
-                start_row,
-                start_col: index,
-                end_row,
-                end_col: index,
-            });
-            rows[start_row][index] = response_row.age.clone();
-        }
-
-        if let Some(index) = col_university {
-            merges.push(AnalyzeExcelMerge {
-                start_row,
-                start_col: index,
-                end_row,
-                end_col: index,
-            });
-            rows[start_row][index] = response_row.university.clone();
-        }
-
-        rows[start_row][col_id] = response_row.display_name.clone();
-    }
-    AnalyzeExcelData { rows, merges }
-}
-
-#[derive(Debug, Clone, Default, PartialEq)]
-struct AnalyzeResponseRow {
-    display_name: String,
-    gender: String,
-    age: String,
-    university: String,
-    sample: Option<SpacePollUserAnswer>,
-    final_answer: Option<SpacePollUserAnswer>,
-}
-
-fn build_export_attributes(panels: &[SpacePanelQuotaResponse]) -> AnalyzeExportAttributes {
-    let mut attributes = AnalyzeExportAttributes::default();
-
-    for panel in panels {
-        let panel_attributes = if panel.attributes_vec.is_empty()
-            && !matches!(panel.attributes, PanelAttribute::None)
-        {
-            vec![panel.attributes]
-        } else {
-            panel.attributes_vec.clone()
-        };
-
-        for attribute in panel_attributes {
-            match attribute {
-                PanelAttribute::CollectiveAttribute(CollectiveAttribute::Gender)
-                | PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(_)) => {
-                    attributes.include_gender = true;
+    rsx! {
+        div { class: "sap-filter-dropdown",
+            button {
+                r#type: "button",
+                class: "sap-filter-trigger",
+                "data-testid": testid,
+                "aria-label": aria_label,
+                "aria-haspopup": "listbox",
+                "aria-expanded": open(),
+                onclick: move |_| open.set(!open()),
+                span { class: "sap-filter-trigger__label", "{selected_label}" }
+                svg {
+                    class: "sap-filter-trigger__chevron",
+                    view_box: "0 0 24 24",
+                    fill: "none",
+                    stroke: "currentColor",
+                    "stroke-width": "2",
+                    "stroke-linecap": "round",
+                    "stroke-linejoin": "round",
+                    polyline { points: "6 9 12 15 18 9" }
                 }
-                PanelAttribute::CollectiveAttribute(CollectiveAttribute::Age)
-                | PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age(_)) => {
-                    attributes.include_age = true;
+            }
+
+            if open() {
+                // Click-outside backdrop — `fixed inset-0` so it blankets
+                // the viewport regardless of page scroll.
+                div {
+                    class: "sap-filter-backdrop",
+                    onclick: move |_| open.set(false),
                 }
-                PanelAttribute::CollectiveAttribute(CollectiveAttribute::University) => {
-                    attributes.include_university = true;
+                div { class: "sap-filter-panel", role: "listbox",
+                    for option in options.iter() {
+                        {render_dropdown_option(option, &selected_key, on_change, open)}
+                    }
                 }
-                _ => {}
             }
         }
     }
-
-    attributes
 }
 
-fn build_response_rows(
-    result: &PollResultResponse,
-    tr: &SpaceAnalyzesAppTranslate,
-) -> Vec<AnalyzeResponseRow> {
-    use std::collections::HashMap;
+fn render_dropdown_option(
+    option: &AnalyzeFilterOption,
+    selected_key: &str,
+    on_change: EventHandler<String>,
+    mut open: Signal<bool>,
+) -> Element {
+    let key = option.key.clone();
+    let label = option.label.clone();
+    let is_selected = option.key == selected_key;
 
-    let mut final_by_user: HashMap<String, SpacePollUserAnswer> = HashMap::new();
-    for answer in &result.final_answers {
-        final_by_user.insert(user_key_from_pk(&answer.pk.to_string()), answer.clone());
-    }
-
-    let mut sample_by_user: HashMap<String, SpacePollUserAnswer> = HashMap::new();
-    for answer in &result.sample_answers {
-        sample_by_user.insert(user_key_from_pk(&answer.pk.to_string()), answer.clone());
-    }
-
-    let mut user_order = Vec::new();
-    for user in final_by_user.keys() {
-        user_order.push(user.clone());
-    }
-    for user in sample_by_user.keys() {
-        if !final_by_user.contains_key(user) {
-            user_order.push(user.clone());
+    rsx! {
+        button {
+            key: "{option.key}",
+            r#type: "button",
+            class: "sap-filter-option",
+            role: "option",
+            "aria-selected": is_selected,
+            "data-selected": is_selected,
+            onclick: move |_| {
+                open.set(false);
+                on_change.call(key.clone());
+            },
+            "{label}"
         }
     }
-    user_order.sort();
-
-    user_order
-        .into_iter()
-        .filter_map(|user_key| {
-            let final_answer = final_by_user.get(&user_key).cloned();
-            let sample = sample_by_user.get(&user_key).cloned();
-            let meta = final_answer.as_ref().or(sample.as_ref())?;
-
-            Some(AnalyzeResponseRow {
-                display_name: meta
-                    .display_name
-                    .clone()
-                    .or_else(|| meta.username.clone())
-                    .unwrap_or(user_key),
-                gender: meta
-                    .respondent
-                    .as_ref()
-                    .and_then(|respondent| respondent.gender.as_ref())
-                    .map(|gender| humanize_group_value(&gender.to_string(), tr))
-                    .unwrap_or_default(),
-                age: meta
-                    .respondent
-                    .as_ref()
-                    .and_then(|respondent| respondent.age.as_ref())
-                    .map(ToString::to_string)
-                    .unwrap_or_default(),
-                university: meta
-                    .respondent
-                    .as_ref()
-                    .and_then(|respondent| respondent.school.clone())
-                    .unwrap_or_default(),
-                sample,
-                final_answer,
-            })
-        })
-        .collect()
-}
-
-fn push_excel_block(
-    rows: &mut Vec<Vec<String>>,
-    merges: &mut Vec<AnalyzeExcelMerge>,
-    poll: &PollResponse,
-    response: &SpacePollUserAnswer,
-    row_meta: &AnalyzeResponseRow,
-    category_label: String,
-    question_label: String,
-    answer_label: String,
-    col_category: usize,
-    col_type: usize,
-    col_question_start: usize,
-    total_columns: usize,
-) {
-    let start_row = rows.len();
-    let mut question_row = vec![String::new(); total_columns];
-    question_row[col_category] = category_label.clone();
-    question_row[col_type] = question_label;
-
-    for (index, question) in poll.questions.iter().enumerate() {
-        question_row[col_question_start + index] = question.title().to_string();
-    }
-
-    let mut answer_row = vec![String::new(); total_columns];
-    answer_row[col_category] = category_label;
-    answer_row[col_type] = answer_label;
-
-    for (index, question) in poll.questions.iter().enumerate() {
-        answer_row[col_question_start + index] =
-            to_answer_display(question, response.answers.get(index));
-    }
-
-    rows.push(question_row);
-    rows.push(answer_row);
-
-    merges.push(AnalyzeExcelMerge {
-        start_row,
-        start_col: col_category,
-        end_row: start_row + 1,
-        end_col: col_category,
-    });
-
-    let _ = row_meta;
-}
-
-fn user_key_from_pk(pk: &str) -> String {
-    pk.split("#USER#").nth(1).unwrap_or(pk).to_string()
-}
-
-fn to_answer_display(question: &Question, answer: Option<&Answer>) -> String {
-    let Some(answer) = answer else {
-        return String::new();
-    };
-
-    match (question, answer) {
-        (
-            Question::SingleChoice(question) | Question::MultipleChoice(question),
-            Answer::SingleChoice { answer, other },
-        ) => combine_parts([
-            answer.and_then(|value| label_of_option(&question.options, value)),
-            non_empty_optional_text(other),
-        ]),
-        (
-            Question::SingleChoice(question) | Question::MultipleChoice(question),
-            Answer::MultipleChoice { answer, other },
-        ) => combine_parts([
-            answer.as_ref().map(|indices| {
-                indices
-                    .iter()
-                    .filter_map(|value| label_of_option(&question.options, *value))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            }),
-            non_empty_optional_text(other),
-        ]),
-        (Question::ShortAnswer(_), Answer::ShortAnswer { answer })
-        | (Question::Subjective(_), Answer::Subjective { answer }) => {
-            sanitized_optional_text(answer)
-        }
-        (Question::Checkbox(question), Answer::Checkbox { answer }) => answer
-            .as_ref()
-            .map(|indices| {
-                indices
-                    .iter()
-                    .filter_map(|value| label_of_option(&question.options, *value))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            })
-            .unwrap_or_default(),
-        (Question::Dropdown(question), Answer::Dropdown { answer }) => answer
-            .and_then(|value| label_of_option(&question.options, value))
-            .unwrap_or_default(),
-        (Question::LinearScale(_), Answer::LinearScale { answer }) => {
-            answer.map(|value| value.to_string()).unwrap_or_default()
-        }
-        _ => String::new(),
-    }
-}
-
-fn label_of_option(options: &[String], index: i32) -> Option<String> {
-    if index < 0 {
-        return None;
-    }
-
-    options.get(index as usize).cloned()
-}
-
-fn sanitized_optional_text(value: &Option<String>) -> String {
-    non_empty_optional_text(value).unwrap_or_default()
-}
-
-fn non_empty_optional_text(value: &Option<String>) -> Option<String> {
-    value
-        .as_ref()
-        .map(|value| value.trim())
-        .filter(|value| !value.is_empty())
-        .map(ToOwned::to_owned)
-}
-
-fn combine_parts(parts: [Option<String>; 2]) -> String {
-    parts
-        .into_iter()
-        .flatten()
-        .map(|part| part.trim().to_string())
-        .filter(|part| !part.is_empty())
-        .collect::<Vec<_>>()
-        .join(", ")
 }

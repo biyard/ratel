@@ -1,56 +1,41 @@
 use super::*;
 
 #[component]
-pub fn JoinAnytimeSetting() -> Element {
-    let mut space = use_space();
+pub fn JoinAnytimeSetting(space_id: ReadSignal<SpacePartition>) -> Element {
+    let space = use_space();
     let tr: GeneralTranslate = use_translate();
-    let mut toast = use_toast();
-    let mut loading = use_signal(|| false);
+    let UseSpaceGeneralSettings {
+        mut update_join_anytime,
+        ..
+    } = use_space_general_settings(space_id)?;
 
-    let enable_join_anytime = space().join_anytime;
+    let enabled = space().join_anytime;
+    let pending = update_join_anytime.pending();
 
     rsx! {
-        Card {
-            div { class: "flex justify-between items-center self-stretch py-4 px-5 border-b border-separator",
-                p { class: "font-semibold text-center font-raleway text-[17px]/[20px] tracking-[-0.18px] text-web-font-primary",
-                    {tr.join_anytime_setting}
-                }
+        section { class: "sga-section", "data-testid": "section-join-anytime",
+            div { class: "sga-section__head",
+                span { class: "sga-section__label", "{tr.join_anytime_setting}" }
             }
-
-            div { class: "flex flex-row justify-between items-center self-stretch p-5 gap-[10px] bg-card max-mobile:p-4",
-                p { class: "font-normal leading-6 font-raleway text-[15px] tracking-[0.5px] text-card-meta",
-                    {tr.join_anytime_description}
+            button {
+                r#type: "button",
+                class: "sga-switch",
+                role: "switch",
+                tabindex: "0",
+                "aria-checked": enabled,
+                "aria-disabled": pending,
+                "data-testid": "join-anytime-switch",
+                onclick: move |_| {
+                    if !pending {
+                        update_join_anytime.call(!enabled);
+                    }
+                },
+                span { class: "sga-switch__track",
+                    span { class: "sga-switch__thumb" }
                 }
-
-                Switch {
-                    active: enable_join_anytime,
-                    label: tr.join_anytime_setting.to_string(),
-                    on_toggle: move |_| async move {
-                        if loading() {
-                            return;
-                        }
-                        loading.set(true);
-                        let space_id = space().id;
-                        let next_join_anytime = !enable_join_anytime;
-                        let result = update_space(
-                                space_id,
-                                UpdateSpaceRequest::JoinAnytime {
-                                    join_anytime: next_join_anytime,
-                                },
-                            )
-                            .await;
-                        loading.set(false);
-                        match result {
-                            Ok(_) => {
-                                space.with_mut(|s| s.join_anytime = next_join_anytime);
-                                toast.info(tr.join_anytime_updated_successfully);
-                            }
-                            Err(err) => {
-                                space.with_mut(|s| s.join_anytime = enable_join_anytime);
-                                toast.error(err);
-                            }
-                        }
-                    },
+                span { class: "sga-switch__body",
+                    span { class: "sga-switch__label", "{tr.join_anytime_setting}" }
+                    span { class: "sga-switch__sub", "{tr.join_anytime_description}" }
                 }
             }
         }

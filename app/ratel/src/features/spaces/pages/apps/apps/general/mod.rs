@@ -1,7 +1,9 @@
 pub(crate) mod controllers;
+mod hooks;
 mod i18n;
 mod views;
 
+use hooks::*;
 use i18n::*;
 
 pub use controllers::*;

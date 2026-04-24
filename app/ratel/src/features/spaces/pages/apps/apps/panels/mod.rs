@@ -1,14 +1,17 @@
-mod components;
-mod controllers;
+pub(crate) mod controllers;
+mod hooks;
+mod i18n;
 mod types;
 mod views;
 
 use dioxus::prelude::*;
 
-pub use components::*;
+use hooks::*;
+use i18n::*;
+
 pub use controllers::*;
 pub use types::*;
-pub use views::HomePage as SpacePanelsAppPage;
+pub use views::SpacePanelsAppPage;
 
 pub use crate::common::attribute::{Age, Gender};
 use crate::common::*;
