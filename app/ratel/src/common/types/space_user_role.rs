@@ -93,8 +93,11 @@ async fn has_completed_prerequisite_actions(
     Ok(true)
 }
 
+/// Checks whether `user_pk` has personally completed `action`.
+/// Dispatches on action type (Poll → UserAnswer, Quiz → Attempt,
+/// Discussion → Comment, Follow → UserFollow edges).
 #[cfg(feature = "server")]
-async fn has_completed_prerequisite_action(
+pub async fn has_completed_prerequisite_action(
     cli: &aws_sdk_dynamodb::Client,
     space: &crate::common::models::space::SpaceCommon,
     action: &crate::features::spaces::pages::actions::models::SpaceAction,
@@ -111,6 +114,8 @@ async fn has_completed_prerequisite_action(
             has_completed_discussion_action(cli, &action.pk.1, user_pk).await
         }
         SpaceActionType::Follow => has_completed_follow_action(cli, space, user_pk).await,
+        // Meet prerequisites are not tracked per-user yet; treat as not-completed.
+        SpaceActionType::Meet => Ok(false),
     }
 }
 

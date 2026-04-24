@@ -22,12 +22,26 @@ pub fn MentionAutocomplete(
     text: ReadSignal<String>,
     on_select: EventHandler<MentionInsert>,
     members: ReadSignal<Vec<MentionCandidate>>,
+    // Fires whenever the active `@` query changes. `Some("")` means the user
+    // typed `@` with no characters yet (parent should prefetch or show a
+    // default list); `Some("foo")` means they are searching "foo"; `None`
+    // means no active mention is being composed.
+    #[props(default)] on_query_change: EventHandler<Option<String>>,
+    // Priority-ordered user pks (earlier = higher). Used to hoist thread
+    // participants above the raw server prefix order so replying to a
+    // thread shows the conversation's own voices first. Empty = unchanged.
+    #[props(default)] priority_user_pks: ReadSignal<Vec<String>>,
     children: Element,
 ) -> Element {
     let mut show_dropdown = use_signal(|| false);
     let mut query = use_signal(String::new);
     let mut at_position = use_signal(|| 0usize);
     let mut selected_index = use_signal(|| 0usize);
+
+    // Tracks the last value we reported upstream so we can skip redundant
+    // callback calls. Read via `.peek()` to avoid subscribing the effect to
+    // its own writes (which would re-trigger the effect every frame).
+    let mut last_reported: Signal<Option<String>> = use_signal(|| None);
 
     use_effect(move || {
         let val = text();
@@ -37,23 +51,52 @@ pub fn MentionAutocomplete(
                 .chars()
                 .take_while(|c| !c.is_whitespace())
                 .collect();
+            let next = Some(q.clone());
+            if *last_reported.peek() != next {
+                last_reported.set(next.clone());
+                on_query_change.call(next);
+            }
             query.set(q);
             at_position.set(pos);
             show_dropdown.set(true);
             selected_index.set(0);
         } else {
+            if last_reported.peek().is_some() {
+                last_reported.set(None);
+                on_query_change.call(None);
+            }
             show_dropdown.set(false);
         }
     });
 
+    // Client-side prefix filter mirrors the server's prefix semantics.
+    // When the dropdown consumer (e.g. space discussion) already fetches a
+    // server-filtered list this is a no-op pass-through; when it feeds a
+    // locally-built candidate list (e.g. post comment authors) this keeps
+    // match behavior consistent across both surfaces.
     let filtered: Vec<MentionCandidate> = if show_dropdown() {
         let q = query().to_lowercase();
-        members()
+        let mut matches: Vec<MentionCandidate> = members()
             .into_iter()
             .filter(|m| {
-                m.display_name.to_lowercase().contains(&q) || m.username.to_lowercase().contains(&q)
+                m.display_name.to_lowercase().starts_with(&q)
+                    || m.username.to_lowercase().starts_with(&q)
             })
-            .collect()
+            .collect();
+
+        // Stable-sort by priority rank so thread participants rise to the
+        // top while the server's original ordering wins all ties (including
+        // every non-priority candidate, which shares usize::MAX).
+        let priority = priority_user_pks();
+        if !priority.is_empty() {
+            let rank: std::collections::HashMap<String, usize> = priority
+                .iter()
+                .enumerate()
+                .map(|(i, pk)| (pk.clone(), i))
+                .collect();
+            matches.sort_by_key(|m| rank.get(&m.user_pk).copied().unwrap_or(usize::MAX));
+        }
+        matches
     } else {
         vec![]
     };
@@ -105,7 +148,7 @@ pub fn MentionAutocomplete(
 
             if show_dropdown() && !filtered.is_empty() {
                 div {
-                    class: "absolute right-0 left-0 z-50 mt-1 max-h-[200px] overflow-y-auto rounded-lg shadow-lg bg-popover",
+                    class: "overflow-y-auto absolute right-0 left-0 z-50 mt-1 rounded-lg shadow-lg max-h-[200px] bg-popover",
                     role: "listbox",
                     for (i, member) in filtered.iter().enumerate() {
                         {
@@ -128,18 +171,29 @@ pub fn MentionAutocomplete(
                                     },
                                     if !member.profile_url.is_empty() {
                                         img {
-                                            class: "object-cover w-6 h-6 rounded",
+                                            class: "object-cover shrink-0 w-6 h-6 rounded",
                                             src: "{member.profile_url}",
                                             alt: "{member.display_name}",
                                         }
                                     } else {
-                                        div { class: "flex justify-center items-center w-6 h-6 rounded bg-hover text-foreground-muted text-sm font-medium",
+                                        div { class: "flex shrink-0 justify-center items-center w-6 h-6 text-sm font-medium rounded bg-hover text-foreground-muted",
                                             "{member.display_name.chars().next().unwrap_or('?')}"
                                         }
                                     }
-                                    span { class: "flex-1 text-sm font-semibold", "{member.display_name}" }
+                                    // Slack-style single-line row: display
+                                    // name is the primary target and wins
+                                    // truncation priority; username follows
+                                    // in muted text and collapses first via
+                                    // min-w-0 + truncate on the name and
+                                    // flex-shrink on the username span.
+                                    span { class: "flex overflow-hidden flex-1 gap-2 items-baseline min-w-0",
+                                        span { class: "text-sm font-semibold truncate text-text-primary", "{member.display_name}" }
+                                        if !member.username.is_empty() {
+                                            span { class: "text-xs truncate shrink text-foreground-muted", "@{member.username}" }
+                                        }
+                                    }
                                     if is_selected {
-                                        span { class: "py-0.5 px-2 text-xs rounded border text-foreground-muted border-border",
+                                        span { class: "py-0.5 px-2 text-xs rounded border shrink-0 text-foreground-muted border-border",
                                             "Enter"
                                         }
                                     }

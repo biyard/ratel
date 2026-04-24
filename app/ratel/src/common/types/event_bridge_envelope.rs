@@ -34,6 +34,29 @@ pub enum DetailType {
     QuizXpRecord,
     DiscussionXpRecord,
     FollowXpRecord,
+    // Essence indexing — driven by DynamoDB Stream so writes don't have to
+    // wait on a synchronous index call. Each variant maps to a single source
+    // entity type. Index variants fire on INSERT/MODIFY; Delete variants on
+    // REMOVE. The underlying handlers live in `essence::services` and are
+    // shared with the migrate endpoint.
+    EssenceIndexPost,
+    EssenceIndexPostComment,
+    EssenceIndexDiscussionComment,
+    EssenceIndexPoll,
+    EssenceIndexQuiz,
+    /// Fires on SPACE_ACTION INSERT/MODIFY. Quiz essence rows derive their
+    /// title/description from the matching SpaceAction row, so we re-index
+    /// the underlying quiz whenever action metadata changes.
+    EssenceActionMetadataUpdate,
+    EssenceDeletePost,
+    EssenceDeletePostComment,
+    EssenceDeleteDiscussionComment,
+    EssenceDeletePoll,
+    EssenceDeleteQuiz,
+    /// Fires on SubTeamAnnouncement MODIFY with status=Published. Drives the
+    /// broadcast fan-out: create a pinned Post in every recognized sub-team
+    /// feed and notify each member.
+    SubTeamAnnouncementPublished,
     #[serde(other)]
     Unknown,
 }
@@ -136,6 +159,105 @@ impl EventBridgeEnvelope {
             DetailType::FollowXpRecord => {
                 let follow = DetailType::parse_detail(&self.detail)?;
                 crate::features::activity::services::handle_follow_xp(follow).await
+            }
+            DetailType::EssenceIndexPost => {
+                let post: crate::features::posts::models::Post =
+                    DetailType::parse_detail(&self.detail)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                crate::features::essence::services::index_post(cli, &post).await
+            }
+            DetailType::EssenceIndexPostComment => {
+                let comment: crate::features::posts::models::PostComment =
+                    DetailType::parse_detail(&self.detail)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                crate::features::essence::services::index_post_comment(cli, &comment).await
+            }
+            DetailType::EssenceIndexDiscussionComment => {
+                let comment: crate::features::spaces::pages::actions::actions::discussion::SpacePostComment =
+                    DetailType::parse_detail(&self.detail)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                crate::features::essence::services::index_discussion_comment(cli, &comment).await
+            }
+            DetailType::EssenceIndexPoll => {
+                let poll: crate::features::spaces::pages::actions::actions::poll::SpacePoll =
+                    DetailType::parse_detail(&self.detail)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                crate::features::essence::services::index_poll(cli, &poll).await
+            }
+            DetailType::EssenceIndexQuiz => {
+                let quiz: crate::features::spaces::pages::actions::actions::quiz::SpaceQuiz =
+                    DetailType::parse_detail(&self.detail)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                crate::features::essence::services::index_quiz(cli, &quiz).await
+            }
+            DetailType::EssenceActionMetadataUpdate => {
+                use crate::features::spaces::pages::actions::actions::quiz::SpaceQuiz;
+                use crate::features::spaces::pages::actions::models::SpaceAction;
+                use crate::features::spaces::pages::actions::types::SpaceActionType;
+                let action: SpaceAction = DetailType::parse_detail(&self.detail)?;
+                if matches!(action.space_action_type, SpaceActionType::Quiz) {
+                    let cfg = crate::common::CommonConfig::default();
+                    let cli = cfg.dynamodb();
+                    let space_pk: crate::common::types::Partition = action.pk.0.clone().into();
+                    let quiz_sk =
+                        crate::common::types::EntityType::SpaceQuiz(action.pk.1.clone());
+                    match SpaceQuiz::get(cli, &space_pk, Some(quiz_sk)).await {
+                        Ok(Some(quiz)) => {
+                            crate::features::essence::services::index_quiz(cli, &quiz).await
+                        }
+                        Ok(None) => Ok(()),
+                        Err(e) => Err(e),
+                    }
+                } else {
+                    Ok(())
+                }
+            }
+            DetailType::EssenceDeletePost => {
+                let post: crate::features::posts::models::Post =
+                    DetailType::parse_detail(&self.detail)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                crate::features::essence::services::detach_post(cli, &post).await
+            }
+            DetailType::EssenceDeletePostComment => {
+                let comment: crate::features::posts::models::PostComment =
+                    DetailType::parse_detail(&self.detail)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                crate::features::essence::services::detach_post_comment(cli, &comment).await
+            }
+            DetailType::EssenceDeleteDiscussionComment => {
+                let comment: crate::features::spaces::pages::actions::actions::discussion::SpacePostComment =
+                    DetailType::parse_detail(&self.detail)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                crate::features::essence::services::detach_discussion_comment(cli, &comment).await
+            }
+            DetailType::EssenceDeletePoll => {
+                let poll: crate::features::spaces::pages::actions::actions::poll::SpacePoll =
+                    DetailType::parse_detail(&self.detail)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                crate::features::essence::services::detach_poll(cli, &poll).await
+            }
+            DetailType::EssenceDeleteQuiz => {
+                let quiz: crate::features::spaces::pages::actions::actions::quiz::SpaceQuiz =
+                    DetailType::parse_detail(&self.detail)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                crate::features::essence::services::detach_quiz(cli, &quiz).await
+            }
+            DetailType::SubTeamAnnouncementPublished => {
+                let announcement: crate::features::sub_team::models::SubTeamAnnouncement =
+                    DetailType::parse_detail(&self.detail)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                crate::features::sub_team::services::announcement_fanout::handle_announcement_published(cli, announcement).await
             }
             DetailType::Unknown => {
                 tracing::warn!(

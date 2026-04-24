@@ -1,0 +1,204 @@
+/* Doc agreement modal overlay used by the apply page. */
+
+.sub-team-apply-doc-modal {
+  --sub-team-glass: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, rgba(255, 255, 255, 0.72));
+  --sub-team-panel: var(--dark, rgba(20, 20, 40, 0.92)) var(--light, #ffffff);
+  --sub-team-border: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(0, 0, 0, 0.08));
+  --sub-team-border-strong: var(--dark, rgba(255, 255, 255, 0.12)) var(--light, rgba(0, 0, 0, 0.16));
+  --sub-team-text: var(--dark, #f0f0f5) var(--light, #12121a);
+  --sub-team-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+  --sub-team-dim: var(--dark, #55556a) var(--light, #9595a8);
+  --sub-team-purple: #a855f7;
+  --sub-team-green: #22c55e;
+  --sub-team-coral: #ef4444;
+  --sub-team-gold: #fcb300;
+
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease;
+}
+.sub-team-apply-doc-modal[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+}
+
+.sub-team-apply-doc-modal .modal {
+  width: 100%;
+  max-width: 760px;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  background: var(--sub-team-panel);
+  border: 1px solid var(--sub-team-border-strong);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.sub-team-apply-doc-modal .doc-modal__head {
+  padding: 22px 26px;
+  border-bottom: 1px solid var(--sub-team-border);
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.sub-team-apply-doc-modal .doc-modal__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: var(--sub-team-purple);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sub-team-apply-doc-modal .doc-modal__title-wrap {
+  flex: 1;
+  min-width: 0;
+}
+.sub-team-apply-doc-modal .doc-modal__kicker {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sub-team-purple);
+  margin-bottom: 4px;
+}
+.sub-team-apply-doc-modal .doc-modal__title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--sub-team-text);
+}
+.sub-team-apply-doc-modal .doc-modal__close-x {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  padding: 0;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--sub-team-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--sub-team-muted);
+}
+.sub-team-apply-doc-modal .doc-modal__close-x:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: var(--sub-team-coral);
+}
+
+.sub-team-apply-doc-modal .doc-modal__body {
+  padding: 22px 26px;
+  overflow: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sub-team-apply-doc-modal .doc-modal__content {
+  padding: 20px 22px;
+  border-radius: 12px;
+  background: rgba(12, 12, 26, 0.45);
+  border: 1px solid var(--sub-team-border);
+  font-size: 13.5px;
+  line-height: 1.85;
+  color: var(--sub-team-text);
+  white-space: pre-wrap;
+}
+.sub-team-apply-doc-modal .doc-modal__notice {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(252, 179, 0, 0.04);
+  border: 1px solid rgba(252, 179, 0, 0.22);
+  align-items: flex-start;
+}
+.sub-team-apply-doc-modal .doc-modal__notice svg {
+  color: var(--sub-team-gold);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.sub-team-apply-doc-modal .doc-modal__notice-text {
+  font-size: 12px;
+  color: var(--sub-team-muted);
+  line-height: 1.6;
+}
+
+.sub-team-apply-doc-modal .doc-modal__foot {
+  padding: 18px 26px;
+  border-top: 1px solid var(--sub-team-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: rgba(6, 6, 14, 0.40);
+}
+.sub-team-apply-doc-modal .doc-modal__foot-left {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sub-team-muted);
+}
+.sub-team-apply-doc-modal .doc-modal__foot-actions {
+  display: flex;
+  gap: 10px;
+}
+.sub-team-apply-doc-modal .doc-modal__cancel {
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid var(--sub-team-border);
+  color: var(--sub-team-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.sub-team-apply-doc-modal .doc-modal__cancel:hover {
+  border-color: var(--sub-team-border-strong);
+  color: var(--sub-team-text);
+}
+.sub-team-apply-doc-modal .doc-modal__agree-btn {
+  padding: 10px 22px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.28), rgba(129, 140, 248, 0.18));
+  border: 1px solid rgba(168, 85, 247, 0.50);
+  color: #f3e8ff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+.sub-team-apply-doc-modal .doc-modal__agree-btn:hover {
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.30);
+}
+.sub-team-apply-doc-modal .doc-modal__agree-btn[data-agreed="true"] {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.28), rgba(16, 185, 129, 0.18));
+  border-color: rgba(34, 197, 94, 0.50);
+  color: #d1fae5;
+  cursor: default;
+}
+.sub-team-apply-doc-modal .doc-modal__agree-btn:disabled {
+  cursor: default;
+}

@@ -33,6 +33,11 @@ translate! {
         ko: "자격증명",
     },
 
+    essence: {
+        en: "Essence",
+        ko: "Essence",
+    },
+
     settings: {
         en: "Settings",
         ko: "설정",

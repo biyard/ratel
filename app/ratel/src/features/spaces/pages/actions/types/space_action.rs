@@ -2,7 +2,6 @@ use super::SpaceActionType;
 use crate::features::spaces::pages::actions::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, PartialEq)]
-// #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct SpaceActionSummary {
     pub action_id: String,
     pub action_type: SpaceActionType,
@@ -18,12 +17,24 @@ pub struct SpaceActionSummary {
     pub quiz_total_score: Option<i64>,
     pub quiz_passed: Option<bool>,
 
-    pub started_at: Option<i64>,
-    pub ended_at: Option<i64>,
-
     pub user_participated: bool,
     pub credits: u64,
     pub prerequisite: bool,
+
+    // Populated for Discussion actions only; mirrors `SpacePost.comments`.
+    #[serde(default)]
+    pub comment_count: Option<i64>,
+
+    #[serde(default)]
+    pub status: Option<SpaceActionStatus>,
+    #[serde(default)]
+    pub depends_on: Vec<String>,
+    #[serde(default = "default_deps_met")]
+    pub dependencies_met: bool,
+}
+
+fn default_deps_met() -> bool {
+    true
 }
 
 impl From<crate::features::spaces::pages::actions::models::SpaceAction> for SpaceActionSummary {
@@ -41,11 +52,13 @@ impl From<crate::features::spaces::pages::actions::models::SpaceAction> for Spac
             quiz_score: None,
             quiz_total_score: None,
             quiz_passed: None,
-            started_at: Some(action.started_at),
-            ended_at: Some(action.ended_at),
             user_participated: false,
             credits: action.credits,
             prerequisite: action.prerequisite,
+            comment_count: None,
+            status: action.status,
+            depends_on: action.depends_on,
+            dependencies_met: true,
         }
     }
 }
@@ -71,6 +84,10 @@ impl SpaceActionSummary {
             SpaceActionType::Quiz => Route::QuizActionPage {
                 space_id: space_id.clone(),
                 quiz_id: self.action_id.clone().into(),
+            },
+            SpaceActionType::Meet => Route::MeetActionPage {
+                space_id: space_id.clone(),
+                meet_id: self.action_id.clone().into(),
             },
         }
     }

@@ -93,6 +93,9 @@ pub enum EntityType {
     SpaceQuizAnswer(String),  // SpaceQuizAnswer#{quiz_id}
     SpaceQuizAttempt(String), // SpaceQuizAttempt#{quiz_id}#{attempt_id}
 
+    // Meet action entity types
+    SpaceMeet(String),        // SpaceMeet#{uuid}
+
     // Survery space entity types
     SurveySpace,
 
@@ -211,6 +214,25 @@ pub enum EntityType {
     // Activity
     SpaceActivity(String), // SPACE_ACTIVITY#action_id#timestamp
     SpaceScore,
+
+    // Essence — user's knowledge graph entries. Each row is a reference to
+    // something the user authored (Post, Poll, Quiz, PostComment,
+    // DiscussionComment) or imported (Notion). pk = USER#{user_id}.
+    Essence(String), // ESSENCE#{uuid}
+    /// Singleton counter row per user; atomic ADDs from `Essence::put` /
+    /// delete keep the aggregates consistent.
+    UserEssenceStats,
+
+    // Sub-team governance — parent team owns the records in its own pk space.
+    // pk = TEAM#{parent_team_id} throughout (SubTeamDocAgreement's composite
+    // sk encodes application_id + doc_id so one parent pk can hold
+    // agreements for many applications).
+    SubTeamLink(String),                  // SUB_TEAM_LINK#{child_team_id}
+    SubTeamDocument(String),              // SUB_TEAM_DOCUMENT#{doc_id}
+    SubTeamDocAgreement(String, String),  // SUB_TEAM_DOC_AGREEMENT#{app_id}#{doc_id}
+    SubTeamFormField(String),             // SUB_TEAM_FORM_FIELD#{field_id}
+    SubTeamApplication(String),           // SUB_TEAM_APPLICATION#{application_id}
+    SubTeamAnnouncement(String),          // SUB_TEAM_ANNOUNCEMENT#{announcement_id}
 }
 
 impl TryInto<Partition> for EntityType {

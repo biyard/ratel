@@ -160,6 +160,18 @@ pub fn Index() -> Element {
         nav.push(Route::CredentialsHome {});
     };
 
+    let go_essence = move |_: Event<MouseData>| {
+        if !has_user {
+            popup
+                .open(rsx! {
+                    LoginModal { on_success: on_login_success }
+                })
+                .with_title("Start building your Essence");
+            return;
+        }
+        nav.push(Route::EssenceSourcesPage {});
+    };
+
     let open_settings = move |_: Event<MouseData>| {
         settings_open.set(true);
     };
@@ -307,6 +319,24 @@ pub fn Index() -> Element {
                         }
                         span { class: "hud-btn__label", "{t.credentials}" }
                     }
+                    button {
+                        class: "hud-btn",
+                        aria_label: "{t.essence}",
+                        "data-testid": "home-btn-essence",
+                        onclick: go_essence,
+                        svg {
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            stroke_width: "1.6",
+                            view_box: "0 0 24 24",
+                            xmlns: "http://www.w3.org/2000/svg",
+                            path { d: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20" }
+                            path { d: "M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" }
+                        }
+                        span { class: "hud-btn__label", "{t.essence}" }
+                    }
                     if has_user {
                         div { class: "hud-teams", "aria-expanded": teams_open(),
                             button {
@@ -354,12 +384,12 @@ pub fn Index() -> Element {
                                     // onscroll + JS so pagination triggers reliably.
                                     onscroll: move |_| {
                                         let js = r#"
-                                                                                                                                                                                                                                                                                                                                            const el = document.getElementById('home-teams-dd-list');
-                                                                                                                                                                                                                                                                                                                                            if (!el) { dioxus.send(false); return; }
-                                                                                                                                                                                                                                                                                                                                            const nearBottom =
-                                                                                                                                                                                                                                                                                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
-                                                                                                                                                                                                                                                                                                                                            dioxus.send(nearBottom);
-                                                                                                                                                                                                                                                                                                                                        "#;
+                                                                                                                                                                                                                                                                                                                                                                                                            const el = document.getElementById('home-teams-dd-list');
+                                                                                                                                                                                                                                                                                                                                                                                                            if (!el) { dioxus.send(false); return; }
+                                                                                                                                                                                                                                                                                                                                                                                                            const nearBottom =
+                                                                                                                                                                                                                                                                                                                                                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+                                                                                                                                                                                                                                                                                                                                                                                                            dioxus.send(nearBottom);
+                                                                                                                                                                                                                                                                                                                                                                                                        "#;
                                         let mut ctrl = teams_query;
                                         spawn(async move {
                                             let mut eval = document::eval(js);

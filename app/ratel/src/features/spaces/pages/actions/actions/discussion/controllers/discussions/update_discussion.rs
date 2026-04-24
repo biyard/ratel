@@ -11,21 +11,17 @@ pub struct UpdateDiscussionRequest {
     #[serde(default)]
     pub category_name: Option<String>,
     #[serde(default)]
-    pub started_at: Option<i64>,
-    #[serde(default)]
-    pub ended_at: Option<i64>,
-    #[serde(default)]
     pub files: Option<Vec<File>>,
 }
 
-#[mcp_tool(name = "update_discussion", description = "Update a discussion (title, html_contents, category_name, started_at, ended_at). Requires creator role.")]
+#[mcp_tool(name = "update_discussion", description = "Update a discussion (title, html_contents, category_name). Requires creator role.")]
 #[patch("/api/spaces/{space_id}/discussions/{discussion_sk}", role: SpaceUserRole)]
 pub async fn update_discussion(
     #[mcp(description = "Space partition key")]
     space_id: SpacePartition,
     #[mcp(description = "Discussion sort key (e.g. 'SpacePost#<uuid>')")]
     discussion_sk: SpacePostEntityType,
-    #[mcp(description = "Discussion update data as JSON. Fields: title, html_contents, category_name, started_at, ended_at (all optional)")]
+    #[mcp(description = "Discussion update data as JSON. Fields: title, html_contents, category_name (all optional)")]
     req: UpdateDiscussionRequest,
 ) -> Result<SpacePost> {
     SpacePost::can_edit(&role)?;
@@ -57,16 +53,6 @@ pub async fn update_discussion(
     }
     if let Some(category_name) = &req.category_name {
         updater = updater.with_category_name(category_name.clone());
-    }
-    if let Some(started_at) = req.started_at {
-        updater = updater.with_started_at(started_at);
-        action_updater = action_updater.with_started_at(started_at);
-        update_action = true;
-    }
-    if let Some(ended_at) = req.ended_at {
-        updater = updater.with_ended_at(ended_at);
-        action_updater = action_updater.with_ended_at(ended_at);
-        update_action = true;
     }
     if let Some(mut files) = req.files {
         for file in &mut files {

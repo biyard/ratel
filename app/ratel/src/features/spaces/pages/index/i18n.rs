@@ -220,6 +220,26 @@ translate! {
         ko: "필수",
     },
 
+    locked_label: {
+        en: "Locked",
+        ko: "잠김",
+    },
+
+    dependency_locked_prefix: {
+        en: "Complete first:",
+        ko: "먼저 완료:",
+    },
+
+    dependency_locked_generic: {
+        en: "required actions",
+        ko: "선행 액션",
+    },
+
+    locked_see_required: {
+        en: "See Required",
+        ko: "선행 액션 보기",
+    },
+
     start_quest: {
         en: "Start",
         ko: "시작",
@@ -455,10 +475,19 @@ translate! {
         en: "Require participants to follow curated users or teams.",
         ko: "참가자에게 지정된 사용자 또는 팀을 팔로우하도록 요구하세요.",
     },
+    meet_name: { en: "Meet", ko: "미팅" },
+    meet_desc: {
+        en: "Live meeting with recording & transcript",
+        ko: "녹화·transcript 자동 저장 실시간 회의",
+    },
 
     // Topbar
     admin_badge: { en: "Admin", ko: "관리자" },
+    home: { en: "Home", ko: "홈" },
     publish: { en: "Publish", ko: "게시" },
     start: { en: "Start", ko: "시작" },
     finish: { en: "Finish", ko: "종료" },
+
+    // Discussion card
+    comments_count: { en: "comments", ko: "개의 댓글" },
 }

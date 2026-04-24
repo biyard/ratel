@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Meet · Notifications</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .notif-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+    @media (max-width:960px){.notif-grid{grid-template-columns:1fr}}
+
+    /* Event tab bar */
+    .event-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px}
+    @media (max-width:720px){.event-tabs{grid-template-columns:1fr 1fr}}
+    .event-tab{
+      padding:14px 16px;border-radius:13px;
+      background:rgba(6,6,14,0.45);border:1px solid var(--border-subtle);
+      cursor:pointer;transition:all 0.2s;
+      display:flex;flex-direction:column;gap:6px;
+    }
+    .event-tab:hover{border-color:var(--border-strong)}
+    .event-tab[aria-selected="true"]{background:var(--tab-bg,rgba(251,113,133,0.06));border-color:var(--tab-border,var(--meet-border));box-shadow:0 0 16px var(--tab-glow,var(--meet-glow))}
+    .event-tab__top{display:flex;align-items:center;justify-content:space-between}
+    .event-tab__num{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;color:var(--text-dim)}
+    .event-tab__status{width:8px;height:8px;border-radius:50%;background:var(--tab-dot)}
+    .event-tab__title{font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:0.04em;color:var(--text-primary)}
+    .event-tab[aria-selected="true"] .event-tab__title{color:var(--tab-color)}
+    .event-tab__when{font-family:var(--font-display);font-size:10px;color:var(--text-muted);letter-spacing:0.04em}
+
+    .event-tab[data-v="schedule"]{--tab-bg:rgba(129,140,248,0.06);--tab-border:rgba(129,140,248,0.28);--tab-glow:rgba(129,140,248,0.12);--tab-dot:var(--accent-violet);--tab-color:var(--accent-violet)}
+    .event-tab[data-v="reminder"]{--tab-bg:rgba(245,158,11,0.06);--tab-border:rgba(245,158,11,0.28);--tab-glow:rgba(245,158,11,0.12);--tab-dot:var(--accent-amber);--tab-color:var(--accent-amber)}
+    .event-tab[data-v="live"]{--tab-bg:rgba(251,113,133,0.06);--tab-border:rgba(251,113,133,0.30);--tab-glow:rgba(251,113,133,0.18);--tab-dot:var(--meet-color);--tab-color:var(--meet-color)}
+    .event-tab[data-v="rec"]{--tab-bg:rgba(34,197,94,0.06);--tab-border:rgba(34,197,94,0.25);--tab-glow:rgba(34,197,94,0.12);--tab-dot:var(--accent-green);--tab-color:var(--accent-green)}
+
+    /* In-app notification preview */
+    .inapp-preview{
+      position:relative;overflow:hidden;
+      padding:24px;border-radius:18px;
+      background:var(--bg-glass);backdrop-filter:blur(16px);
+      border:1px solid var(--border-subtle);
+      display:flex;flex-direction:column;gap:14px;
+    }
+    .preview-head{display:flex;align-items:center;gap:10px}
+    .preview-head__badge{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:4px 10px;border-radius:6px;border:1px solid;background:rgba(255,255,255,0.03);color:var(--text-muted)}
+    .preview-head__title{font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted)}
+
+    /* Inbox notification item */
+    .inbox-item{
+      position:relative;display:flex;gap:12px;padding:14px 16px;border-radius:12px;
+      background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);
+      cursor:pointer;transition:all 0.2s;
+    }
+    .inbox-item:hover{background:rgba(12,12,26,0.7);border-color:var(--border-strong)}
+    .inbox-item[data-unread="true"]::before{content:'';position:absolute;top:18px;left:6px;width:6px;height:6px;border-radius:50%;background:var(--meet-color);box-shadow:0 0 6px var(--meet-color)}
+    .inbox-item[data-unread="true"]{padding-left:22px}
+    .inbox-item__icon{width:40px;height:40px;border-radius:11px;background:var(--meet-bg);border:1px solid var(--meet-border);display:flex;align-items:center;justify-content:center;color:var(--meet-color);flex-shrink:0}
+    .inbox-item__icon svg{width:18px;height:18px}
+    .inbox-item__body{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+    .inbox-item__title{font-size:14px;color:var(--text-primary);font-weight:600;line-height:1.35}
+    .inbox-item__desc{font-size:12px;color:var(--text-muted);line-height:1.5}
+    .inbox-item__meta{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}
+    .inbox-item__chip{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-display);font-size:9px;color:var(--text-dim);letter-spacing:0.06em}
+    .inbox-item__cta{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;background:var(--meet-bg);border:1px solid var(--meet-border);color:var(--meet-color);font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase}
+
+    /* Email preview */
+    .email{
+      border:1px solid var(--border-subtle);border-radius:13px;overflow:hidden;
+      background:rgba(6,6,14,0.5);
+    }
+    .email__header{padding:14px 18px;border-bottom:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,0.02)}
+    .email__row{display:grid;grid-template-columns:64px 1fr;gap:10px;font-size:12px;align-items:baseline}
+    .email__k{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim)}
+    .email__v{color:var(--text-primary);line-height:1.5}
+    .email__v strong{color:var(--meet-color)}
+    .email__subject{font-family:var(--font-display);font-size:15px;font-weight:800;color:var(--text-primary);letter-spacing:0.02em}
+    .email__body{padding:18px 22px;font-size:13px;line-height:1.75;color:var(--text-primary);max-height:380px;overflow:auto}
+    .email__body h3{font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--meet-color);letter-spacing:0.02em;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border-subtle)}
+    .email__body p{margin-bottom:10px}
+    .email__body ul{margin:8px 0 12px 20px;color:var(--text-muted);font-size:12px}
+    .email__body li{margin-bottom:4px}
+    .email__cta{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:12px 22px;border-radius:10px;
+      background:linear-gradient(135deg,var(--meet-color),#ef4444);color:#fff;text-decoration:none;
+      font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;
+      margin:12px 0;box-shadow:0 0 16px rgba(251,113,133,0.25);
+    }
+    .email__cta svg{width:14px;height:14px}
+    .email__footer{padding:12px 18px;background:rgba(0,0,0,0.25);border-top:1px solid var(--border-subtle);font-family:var(--font-display);font-size:10px;letter-spacing:0.08em;color:var(--text-dim);display:flex;align-items:center;gap:8px}
+    .email__footer a{color:var(--meet-color);text-decoration:none}
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo">R</div>
+      <div class="u-col">
+        <span class="arena-topbar__title">Notifications</span>
+        <span class="arena-topbar__handle">4 events preview</span>
+      </div>
+      <span class="arena-topbar__status arena-topbar__status--live">In-app + Email</span>
+    </div>
+  </div>
+
+  <div class="page page--wide">
+    <div class="page-header">
+      <div class="page-header__main">
+        <span class="page-header__eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          FR-5 · Notifications
+        </span>
+        <h1 class="page-header__title page-header__title--meet">참가자는 회의에 대해 <strong>4번</strong> 알림을 받습니다</h1>
+        <p class="page-header__sub">모든 participant는 <strong>인앱 + 이메일</strong> 두 채널로 알림을 받습니다. Phase 1에서는 개인별 opt-out이 없습니다. Instant 모드의 경우 (a)와 (c)는 단일 "live now" 알림으로 합쳐집니다.</p>
+      </div>
+    </div>
+
+    <!-- Event tabs -->
+    <div class="event-tabs">
+      <button class="event-tab" aria-selected="true" data-v="schedule">
+        <div class="event-tab__top">
+          <span class="event-tab__num">T=0 (a)</span>
+          <span class="event-tab__status"></span>
+        </div>
+        <span class="event-tab__title">Scheduled</span>
+        <span class="event-tab__when">예약 시 즉시</span>
+      </button>
+      <button class="event-tab" aria-selected="false" data-v="reminder">
+        <div class="event-tab__top">
+          <span class="event-tab__num">T-10min (b)</span>
+          <span class="event-tab__status"></span>
+        </div>
+        <span class="event-tab__title">Reminder</span>
+        <span class="event-tab__when">시작 10분 전</span>
+      </button>
+      <button class="event-tab" aria-selected="false" data-v="live">
+        <div class="event-tab__top">
+          <span class="event-tab__num">T=START (c)</span>
+          <span class="event-tab__status"></span>
+        </div>
+        <span class="event-tab__title">Live now</span>
+        <span class="event-tab__when">회의 시작 시</span>
+      </button>
+      <button class="event-tab" aria-selected="false" data-v="rec">
+        <div class="event-tab__top">
+          <span class="event-tab__num">T=END+Δ (d)</span>
+          <span class="event-tab__status"></span>
+        </div>
+        <span class="event-tab__title">Recording ready</span>
+        <span class="event-tab__when">종료 후 몇 분 내</span>
+      </button>
+    </div>
+
+    <div class="notif-grid">
+      <!-- In-app side -->
+      <section class="inapp-preview">
+        <div class="preview-head">
+          <span class="preview-head__badge">In-app</span>
+          <span class="preview-head__title" id="inapp-subject">Ratel Inbox · 알림</span>
+        </div>
+        <div id="inapp-body"></div>
+      </section>
+
+      <!-- Email side -->
+      <section class="inapp-preview" style="padding:0;overflow:hidden">
+        <div style="padding:20px 24px 12px">
+          <div class="preview-head">
+            <span class="preview-head__badge">Email</span>
+            <span class="preview-head__title" id="email-subject">miner@biyard.co</span>
+          </div>
+        </div>
+        <div class="email" style="margin:0 22px 22px;border-radius:10px">
+          <div class="email__header">
+            <div class="email__row"><span class="email__k">From</span><span class="email__v">Ratel &lt;meet-noreply@ratel.foundation&gt;</span></div>
+            <div class="email__row"><span class="email__k">To</span><span class="email__v">you@example.com</span></div>
+            <div class="email__row"><span class="email__k">Subject</span><span class="email__subject" id="email-title">…</span></div>
+          </div>
+          <div class="email__body" id="email-body"></div>
+          <div class="email__footer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            sent via Ratel · <a href="#">Unsubscribe</a> · <a href="#">Manage preferences</a>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Delivery constraint notice -->
+    <div class="notice">
+      <div class="notice__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+      <div class="notice__body">
+        <span class="notice__title">Phase 1 제약</span>
+        <span class="notice__text">• 모든 space participant는 <strong>4개 알림 × 2채널</strong> 전부를 받습니다 (per-user opt-out 없음 — Phase 2).<br>• Instant 모드의 경우 (a) + (c)가 하나의 "live now" 알림으로 통합됩니다.<br>• 알림은 기존 Ratel inbox/email 파이프라인을 <strong>재사용</strong>하며 새로운 인프라를 추가하지 않습니다.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+</div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    const variants = {
+      schedule: {
+        inapp: {
+          badge:'Meet · Scheduled', time:'지금',
+          title:'새 Meet이 예약되었습니다',
+          desc:'@park_j가 "Mid-semester retrospective call"을 예약했습니다 — 2026-04-25 (금) 19:00, 60분 예상.',
+          cta:'캘린더에 추가',
+        },
+        email: {
+          subj:'[Ratel] 새 Meet이 예약되었습니다 · Mid-semester retrospective call',
+          heading:'📅 새 Meet이 예약되었습니다',
+          lines:[
+            '안녕하세요,',
+            '<strong>SNU Code Club</strong>의 <strong>@park_j</strong>가 새 Meet 액션을 예약했습니다.',
+          ],
+          details:{title:'Mid-semester retrospective call', when:'2026-04-25 (금) 19:00 → 20:00 · Asia/Seoul', dur:'60분 예상', essence:'SNU Code Club Essence에 포함됨'},
+          bullets:['스프린트 회고 + 다음 분기 계획 논의', '각 팀 리드는 3분 내 회고 공유', '다음 분기 우선순위 투표'],
+          ctaLabel:'Meet 페이지 열기',
+          outro:'시작 10분 전에 리마인더를 한 번 더 보내드립니다. 달력에 미리 추가해두시면 좋아요.',
+        }
+      },
+      reminder: {
+        inapp: {
+          badge:'Meet · 곧 시작', time:'18:50 · 10분 전',
+          title:'Mid-semester retrospective call · 10분 남았습니다',
+          desc:'@park_j가 호스팅하는 회의가 19:00에 시작됩니다. 마이크와 카메라를 미리 테스트해보세요.',
+          cta:'Meet 페이지 열기',
+        },
+        email: {
+          subj:'[Ratel] ⏱ Mid-semester retrospective call 10분 전',
+          heading:'⏱ 회의가 곧 시작됩니다',
+          lines:[
+            '<strong>Mid-semester retrospective call</strong>이 10분 뒤인 <strong>19:00</strong>에 시작됩니다.',
+          ],
+          details:{title:'Mid-semester retrospective call', when:'2026-04-25 (금) 19:00 → 20:00 · Asia/Seoul', dur:'60분 예상', essence:'SNU Code Club Essence에 포함됨'},
+          bullets:['네트워크 연결 확인 · 이어폰 권장', '마이크/카메라 사전 테스트', '공유할 자료가 있다면 미리 준비'],
+          ctaLabel:'지금 참여하기',
+          outro:'5분 전부터 Join 버튼이 활성화됩니다.',
+        }
+      },
+      live: {
+        inapp: {
+          badge:'Meet · Live', time:'지금',
+          title:'🔴 Live · Mid-semester retrospective call',
+          desc:'@park_j가 회의를 시작했습니다. 참가자 6명이 이미 입장했습니다. 참여하여 팀 미팅에 함께하세요.',
+          cta:'Join live',
+        },
+        email: {
+          subj:'[Ratel] 🔴 Live now · Mid-semester retrospective call',
+          heading:'🔴 회의가 지금 진행 중입니다',
+          lines:[
+            '<strong>@park_j</strong>가 방금 회의를 시작했습니다.',
+          ],
+          details:{title:'Mid-semester retrospective call', when:'진행 중 · 19:00 시작', dur:'60분 예상', essence:'SNU Code Club Essence에 포함됨'},
+          bullets:['6명이 이미 입장', '늦게 입장해도 1분 이상 참여 시 보상 지급', '녹화가 진행 중입니다'],
+          ctaLabel:'지금 참여하기',
+          outro:'Instant 모드로 시작된 회의의 경우 이 알림이 첫 알림이 될 수도 있습니다 (예약 알림과 통합).',
+        }
+      },
+      rec: {
+        inapp: {
+          badge:'Meet · Recording ready', time:'10분 전',
+          title:'녹화와 transcript 준비 완료',
+          desc:'Mid-semester retrospective call · 62분 · 화자 5명 · 녹화, transcript, chat log, moderation log를 모두 확인할 수 있습니다.',
+          cta:'Archive 열기',
+        },
+        email: {
+          subj:'[Ratel] ✅ Mid-semester retrospective call · Recording ready',
+          heading:'✅ 녹화와 transcript가 준비되었습니다',
+          lines:[
+            '회의가 성공적으로 종료되었습니다. 참석하신 분들께 감사드립니다.',
+            '녹화, 화자별 transcript, chat log를 지금 확인할 수 있습니다.',
+          ],
+          details:{title:'Mid-semester retrospective call', when:'종료 · 19:00 → 20:02', dur:'62분 · 6/7 참석', essence:'SNU Code Club Essence에 포함됨'},
+          bullets:['녹화 HD 1080p · 520 MB', 'Transcript · 42 segments · 8.4k chars · 5 speakers', '보상 총 80 credits 지급 완료 (Host 30 + 참석자 5×10)'],
+          ctaLabel:'Archive에서 확인',
+          outro:'놓치신 분들도 Meet 페이지에서 녹화를 시청하고 transcript를 검색할 수 있습니다.',
+        }
+      },
+    };
+
+    const inappBody = document.getElementById('inapp-body');
+    const emailTitle = document.getElementById('email-title');
+    const emailBody = document.getElementById('email-body');
+
+    function buildInapp(v) {
+      const d = variants[v].inapp;
+      inappBody.replaceChildren();
+
+      const item = document.createElement('div');
+      item.className = 'inbox-item';
+      item.setAttribute('data-unread', 'true');
+
+      const icon = document.createElement('div');
+      icon.className = 'inbox-item__icon';
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox','0 0 24 24'); svg.setAttribute('fill','none'); svg.setAttribute('stroke','currentColor'); svg.setAttribute('stroke-width','2'); svg.setAttribute('stroke-linecap','round'); svg.setAttribute('stroke-linejoin','round');
+      const polygon = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+      polygon.setAttribute('points','23 7 16 12 23 17 23 7');
+      const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      rect.setAttribute('x','1'); rect.setAttribute('y','5'); rect.setAttribute('width','15'); rect.setAttribute('height','14'); rect.setAttribute('rx','2'); rect.setAttribute('ry','2');
+      svg.appendChild(polygon); svg.appendChild(rect);
+      icon.appendChild(svg);
+
+      const body = document.createElement('div');
+      body.className = 'inbox-item__body';
+      const title = document.createElement('div');
+      title.className = 'inbox-item__title';
+      title.textContent = d.title;
+      const desc = document.createElement('div');
+      desc.className = 'inbox-item__desc';
+      desc.textContent = d.desc;
+      const meta = document.createElement('div');
+      meta.className = 'inbox-item__meta';
+      const badge = document.createElement('span');
+      badge.className = 'inbox-item__chip';
+      badge.textContent = d.badge;
+      const time = document.createElement('span');
+      time.className = 'inbox-item__chip';
+      time.textContent = '· ' + d.time;
+      const cta = document.createElement('span');
+      cta.className = 'inbox-item__cta';
+      cta.textContent = d.cta;
+      const chev = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      chev.setAttribute('viewBox','0 0 24 24'); chev.setAttribute('fill','none'); chev.setAttribute('stroke','currentColor'); chev.setAttribute('stroke-width','2.5'); chev.setAttribute('stroke-linecap','round'); chev.setAttribute('stroke-linejoin','round');
+      chev.setAttribute('width','10'); chev.setAttribute('height','10');
+      const polyline = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+      polyline.setAttribute('points','9 18 15 12 9 6');
+      chev.appendChild(polyline);
+      cta.appendChild(chev);
+
+      meta.appendChild(badge); meta.appendChild(time); meta.appendChild(cta);
+      body.appendChild(title); body.appendChild(desc); body.appendChild(meta);
+      item.appendChild(icon); item.appendChild(body);
+      inappBody.appendChild(item);
+    }
+
+    function buildEmail(v) {
+      const d = variants[v].email;
+      emailTitle.textContent = d.subj;
+      emailBody.replaceChildren();
+
+      const h = document.createElement('h3');
+      h.textContent = d.heading;
+      emailBody.appendChild(h);
+
+      d.lines.forEach(line => {
+        const p = document.createElement('p');
+        // line may contain inline <strong> wrappers — parse simply
+        const matches = line.match(/<strong>(.*?)<\/strong>/g) || [];
+        if (matches.length === 0) {
+          p.textContent = line;
+        } else {
+          // split on <strong>…</strong> segments
+          const parts = line.split(/(<strong>.*?<\/strong>)/g);
+          parts.forEach(part => {
+            const m = part.match(/<strong>(.*?)<\/strong>/);
+            if (m) {
+              const s = document.createElement('strong');
+              s.textContent = m[1];
+              p.appendChild(s);
+            } else if (part) {
+              p.appendChild(document.createTextNode(part));
+            }
+          });
+        }
+        emailBody.appendChild(p);
+      });
+
+      // Details block
+      const details = document.createElement('div');
+      details.style.padding = '12px 14px';
+      details.style.borderRadius = '9px';
+      details.style.background = 'rgba(251,113,133,0.04)';
+      details.style.border = '1px solid var(--meet-border)';
+      details.style.margin = '10px 0';
+      details.style.fontSize = '12px';
+      details.style.color = 'var(--text-muted)';
+      details.style.lineHeight = '1.7';
+      const dTitle = document.createElement('div');
+      dTitle.textContent = d.details.title;
+      dTitle.style.fontFamily = 'var(--font-display)';
+      dTitle.style.fontWeight = '800';
+      dTitle.style.fontSize = '13px';
+      dTitle.style.color = 'var(--text-primary)';
+      dTitle.style.marginBottom = '6px';
+      details.appendChild(dTitle);
+      ['when','dur','essence'].forEach(k => {
+        const line = document.createElement('div');
+        line.textContent = (k === 'when' ? '📅 ' : k === 'dur' ? '⏱ ' : '🔷 ') + d.details[k];
+        details.appendChild(line);
+      });
+      emailBody.appendChild(details);
+
+      if (d.bullets) {
+        const ul = document.createElement('ul');
+        d.bullets.forEach(b => { const li = document.createElement('li'); li.textContent = b; ul.appendChild(li); });
+        emailBody.appendChild(ul);
+      }
+
+      const cta = document.createElement('a');
+      cta.className = 'email__cta';
+      cta.href = '#';
+      cta.textContent = d.ctaLabel;
+      const chev = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      chev.setAttribute('viewBox','0 0 24 24'); chev.setAttribute('fill','none'); chev.setAttribute('stroke','currentColor'); chev.setAttribute('stroke-width','2.5');
+      const poly = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+      poly.setAttribute('points','9 18 15 12 9 6');
+      chev.appendChild(poly);
+      cta.appendChild(chev);
+      emailBody.appendChild(cta);
+
+      const outro = document.createElement('p');
+      outro.textContent = d.outro;
+      outro.style.color = 'var(--text-muted)';
+      outro.style.fontSize = '12px';
+      outro.style.marginTop = '12px';
+      emailBody.appendChild(outro);
+    }
+
+    function render(v) {
+      document.querySelectorAll('.event-tab').forEach(t => t.setAttribute('aria-selected', t.dataset.v === v));
+      buildInapp(v);
+      buildEmail(v);
+    }
+
+    document.querySelectorAll('.event-tab').forEach(tab => {
+      tab.addEventListener('click', () => render(tab.dataset.v));
+    });
+    render('schedule');
+  });
+</script>
+</body>
+</html>

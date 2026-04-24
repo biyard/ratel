@@ -89,13 +89,10 @@ pub fn PrerequisiteCard(space_id: ReadSignal<SpacePartition>) -> Element {
                                                     .action_id
                                                     .clone()
                                                     .into();
-                                                overlay
-                                                    .0
-                                                    .set(
-                                                        Some(
-                                                            ActiveActionOverlay::Discussion(space_id(), discussion_id),
-                                                        ),
-                                                    );
+                                                nav.push(crate::Route::SpaceDiscussionPage {
+                                                    space_id: space_id(),
+                                                    discussion_id,
+                                                });
                                             }
                                             SpaceActionType::Follow if !is_done => {
                                                 let route = action.get_url(&space_id());
@@ -221,6 +218,26 @@ fn action_type_icon(action_type: &SpaceActionType) -> Element {
                     y1: "11",
                     y2: "11",
                 }
+            }
+        },
+        SpaceActionType::Meet => rsx! {
+            svg {
+                fill: "none",
+                stroke: "currentColor",
+                stroke_width: "2",
+                stroke_linecap: "round",
+                stroke_linejoin: "round",
+                view_box: "0 0 24 24",
+                xmlns: "http://www.w3.org/2000/svg",
+                rect {
+                    x: "3",
+                    y: "4",
+                    width: "14",
+                    height: "14",
+                    rx: "2",
+                    ry: "2",
+                }
+                path { d: "M21 7l-4 4 4 4z" }
             }
         },
     }

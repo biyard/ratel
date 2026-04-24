@@ -24,6 +24,10 @@
   --follow-bg: rgba(251,146,60,0.08);
   --follow-border: rgba(251,146,60,0.18);
   --follow-glow: rgba(251,146,60,0.12);
+  --meet-color: #fb7185;
+  --meet-bg: rgba(251,113,133,0.08);
+  --meet-border: rgba(251,113,133,0.18);
+  --meet-glow: rgba(251,113,133,0.12);
 
   position: fixed;
   inset: 0;
@@ -132,6 +136,11 @@
   background: var(--follow-bg);
   box-shadow: 0 8px 24px var(--follow-glow);
 }
+.type-option[data-type="meet"]:hover {
+  border-color: var(--meet-border);
+  background: var(--meet-bg);
+  box-shadow: 0 8px 24px var(--meet-glow);
+}
 .type-option__icon {
   width: 36px;
   height: 36px;
@@ -159,6 +168,11 @@
   background: var(--follow-bg);
   color: var(--follow-color);
   border: 1px solid var(--follow-border);
+}
+.type-option[data-type="meet"] .type-option__icon {
+  background: var(--meet-bg);
+  color: var(--meet-color);
+  border: 1px solid var(--meet-border);
 }
 .type-option__icon svg { width: 18px; height: 18px; }
 .type-option__name {

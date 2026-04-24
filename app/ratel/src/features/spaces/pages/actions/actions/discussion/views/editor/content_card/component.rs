@@ -57,8 +57,6 @@ pub fn ContentCard() -> Element {
                 title: None,
                 html_contents: Some(current.clone()),
                 category_name: None,
-                started_at: None,
-                ended_at: None,
                 files: None,
             };
             if let Err(err) = update_discussion(space_id(), discussion_id(), req).await {
@@ -84,8 +82,6 @@ pub fn ContentCard() -> Element {
                 title: Some(current.clone()),
                 html_contents: None,
                 category_name: None,
-                started_at: None,
-                ended_at: None,
                 files: None,
             };
             if let Err(err) = update_discussion(space_id(), discussion_id(), req).await {
@@ -142,8 +138,6 @@ pub fn ContentCard() -> Element {
                 title: None,
                 html_contents: None,
                 category_name: None,
-                started_at: None,
-                ended_at: None,
                 files: Some(next_files),
             };
             if let Err(err) = update_discussion(space_id(), discussion_id(), req).await {
@@ -174,8 +168,7 @@ pub fn ContentCard() -> Element {
                         span { class: "section__hint", "{tr.section_content_hint}" }
                     }
                     div { class: "field",
-                        div {
-                            style: "display:flex;align-items:center;justify-content:space-between;gap:8px",
+                        div { style: "display:flex;align-items:center;justify-content:space-between;gap:8px",
                             label { class: "field__label", "{tr.title_label}" }
                             AutosaveStatusBadge { status: title_status() }
                         }
@@ -235,9 +228,7 @@ pub fn ContentCard() -> Element {
                                         }
                                         div { class: "file-row__info",
                                             div { class: "file-row__name", "{file_name}" }
-                                            div { class: "file-row__meta",
-                                                "{ext_label} \u{00B7} {file_size}"
-                                            }
+                                            div { class: "file-row__meta", "{ext_label} \u{00B7} {file_size}" }
                                         }
                                         button {
                                             class: "icon-btn",
