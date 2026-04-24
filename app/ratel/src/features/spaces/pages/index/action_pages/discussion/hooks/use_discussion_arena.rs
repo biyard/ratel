@@ -114,6 +114,12 @@ pub struct UseDiscussionArena {
     pub delete_comment: Action<(String,), ()>,
     pub add_comment: Action<(String, Vec<String>), ()>,
     pub reply_comment: Action<(String, String, Vec<String>), ()>,
+
+    /// Bumped whenever a reply successfully posts. CommentItem watches this
+    /// to reload its local `replies` signal — the global composer submits
+    /// outside the CommentItem's scope, so we need a cross-component signal
+    /// to tell the thread-active item that its reply list is stale.
+    pub reply_refresh_tick: Signal<u32>,
 }
 
 impl UseDiscussionArena {
@@ -329,6 +335,7 @@ pub fn use_discussion_arena(
         use_signal(std::collections::HashMap::new);
     let mut deleted_sks: Signal<std::collections::HashSet<String>> =
         use_signal(std::collections::HashSet::new);
+    let mut reply_refresh_tick: Signal<u32> = use_signal(|| 0);
 
     let mut toast = use_toast();
     let like_comment = use_action(move |sk_str: String, next: bool| async move {
@@ -471,6 +478,7 @@ pub fn use_discussion_arena(
                     comments_query.refresh();
                     replies_loader.restart();
                     parent_loader.restart();
+                    reply_refresh_tick.with_mut(|t| *t = t.wrapping_add(1));
                 }
                 Err(e) => {
                     tracing::error!("reply comment: {:?}", e);
@@ -504,6 +512,7 @@ pub fn use_discussion_arena(
         delete_comment,
         add_comment: add_comment_action,
         reply_comment: reply_comment_action,
+        reply_refresh_tick,
     }))
 }
 

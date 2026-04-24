@@ -107,8 +107,12 @@ translate! {
         en: "Replies",
         ko: "답글",
     },
-    replies_back_aria: {
-        en: "Back",
-        ko: "뒤로",
+    replying_to: {
+        en: "Replying to",
+        ko: "답글 대상:",
+    },
+    cancel_reply_aria: {
+        en: "Cancel reply",
+        ko: "답글 취소",
     },
 }
