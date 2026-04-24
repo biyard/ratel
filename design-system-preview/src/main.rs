@@ -192,12 +192,9 @@ fn NavigationLayout() -> Element {
     });
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("/assets/main.css") }
-        document::Link {
-            rel: "stylesheet",
-            href: asset!("/assets/dx-components-theme.css"),
-        }
-        document::Link { rel: "stylesheet", href: asset!("/assets/hero.css") }
+        document::Stylesheet { href: asset!("/assets/main.css") }
+        document::Stylesheet { href: asset!("/assets/dx-components-theme.css") }
+        document::Stylesheet { href: asset!("/assets/hero.css") }
         Navbar {}
         Outlet::<Route> {}
     }
@@ -811,7 +808,7 @@ fn ComponentDemo(iframe: Option<bool>, dark_mode: Option<bool>, name: String) ->
         };
     };
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("/assets/prism.css") }
+        document::Stylesheet { href: asset!("/assets/prism.css") }
         script { src: asset!("/assets/prism.js") }
         ComponentHighlight { demo }
     }
@@ -1120,10 +1117,7 @@ fn ComponentBlockDemo(name: String, variant: Option<String>, dark_mode: Option<b
     let Comp = variant.component;
 
     rsx! {
-        document::Link {
-            rel: "stylesheet",
-            href: asset!("/assets/dx-components-theme.css"),
-        }
+        document::Stylesheet { href: asset!("/assets/dx-components-theme.css") }
         div { style: "min-height: 100vh;", Comp {} }
     }
 }

@@ -27,7 +27,7 @@ pub fn TeamSubTeamDeregisterPage(username: String, sub_team_id: String) -> Eleme
 
     rsx! {
         SeoMeta { title: "{tr.deregister_title}" }
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         DeregisterForm {}
     }
 }

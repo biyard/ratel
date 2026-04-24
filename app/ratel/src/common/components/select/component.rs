@@ -7,7 +7,7 @@ use dioxus_primitives::select::{
 #[component]
 pub fn Select<T: Clone + PartialEq + 'static>(props: SelectProps<T>) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         select::Select {
             class: "select @max-mobile:w-full",
             value: props.value,

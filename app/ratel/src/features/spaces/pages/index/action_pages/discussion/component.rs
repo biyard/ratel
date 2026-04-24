@@ -261,7 +261,7 @@ pub fn DiscussionArenaPage(
     let in_thread = active_reply_thread().is_some();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         document::Script { r#type: "module", src: asset!("./script.js") }
 
         div {
