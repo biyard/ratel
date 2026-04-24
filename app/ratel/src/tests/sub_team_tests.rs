@@ -1723,7 +1723,9 @@ async fn test_announcement_creates_notification_per_member_of_each_sub_team() {
 
     let mut found = 0;
     for m in &members {
-        let opts = UserInboxNotification::opt().limit(50);
+        let opts = UserInboxNotification::opt()
+            .sk("USER_INBOX_NOTIFICATION".to_string())
+            .limit(50);
         let (rows, _) = UserInboxNotification::query(&ctx.ddb, m.clone(), opts)
             .await
             .unwrap();
