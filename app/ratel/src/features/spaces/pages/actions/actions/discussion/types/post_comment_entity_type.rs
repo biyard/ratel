@@ -17,7 +17,16 @@ impl FromStr for SpacePostCommentTargetEntityType {
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let s = if s.starts_with("SPACE_POST_COMMENT_REPLY#") {
+            // After stripping the prefix the remainder is `parent#reply`.
+            // The inner `#` would be parsed as a URL fragment delimiter
+            // (browsers strip everything after `#` before sending), causing
+            // requests like `/comments/parent#reply/likes` to actually hit
+            // `/comments/parent` and route to `update_comment` instead of
+            // `like_comment` — yielding `missing field content` errors.
+            // Switch to the `::` separator that `From<EntityType>` uses so
+            // both sides of the conversion produce URL-safe values.
             s.replacen("SPACE_POST_COMMENT_REPLY#", "", 1)
+                .replacen('#', "::", 1)
         } else if s.starts_with("SPACE_POST_COMMENT#") {
             s.replacen("SPACE_POST_COMMENT#", "", 1)
         } else {

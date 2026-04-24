@@ -1,0 +1,301 @@
+/* Leave-parent page. Mirrors
+ * assets/design/sub-team/child-leave-parent.html.
+ */
+
+.sub-team-leave-parent {
+  --sub-team-bg: var(--dark, #06060e) var(--light, #f7f7fb);
+  --sub-team-glass: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, rgba(255, 255, 255, 0.72));
+  --sub-team-border: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(0, 0, 0, 0.08));
+  --sub-team-text: var(--dark, #f0f0f5) var(--light, #12121a);
+  --sub-team-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+  --sub-team-dim: var(--dark, #55556a) var(--light, #9595a8);
+  --sub-team-amber: #f59e0b;
+  --sub-team-green: #22c55e;
+  --sub-team-coral: #ef4444;
+  --sub-team-input-bg: var(--dark, rgba(255, 255, 255, 0.025)) var(--light, rgba(0, 0, 0, 0.03));
+
+  background: var(--sub-team-bg);
+  color: var(--sub-team-text);
+  min-height: 100vh;
+}
+
+.sub-team-leave-parent .arena-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  padding: 18px 28px;
+  background: var(--sub-team-glass);
+  border-bottom: 1px solid var(--sub-team-border);
+}
+.sub-team-leave-parent .arena-topbar__left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.sub-team-leave-parent .back-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--sub-team-glass);
+  border: 1px solid var(--sub-team-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--sub-team-muted);
+}
+.sub-team-leave-parent .topbar-title {
+  display: flex;
+  flex-direction: column;
+}
+.sub-team-leave-parent .topbar-title__eyebrow {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sub-team-dim);
+}
+.sub-team-leave-parent .topbar-title__main {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sub-team-leave-parent .page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 28px 20px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sub-team-leave-parent .notice {
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+.sub-team-leave-parent .notice--warn {
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  color: var(--sub-team-amber);
+}
+
+.sub-team-leave-parent .current-tie {
+  padding: 18px 22px;
+  border-radius: 14px;
+  background: var(--sub-team-glass);
+  border: 1px solid var(--sub-team-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sub-team-leave-parent .current-tie__label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sub-team-dim);
+}
+.sub-team-leave-parent .current-tie__value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--sub-team-text);
+}
+
+.sub-team-leave-parent .leave {
+  padding: 26px 28px;
+  border-radius: 18px;
+  background: var(--sub-team-glass);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.sub-team-leave-parent .leave__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.sub-team-leave-parent .leave__icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 13px;
+  background: rgba(245, 158, 11, 0.10);
+  border: 1px solid rgba(245, 158, 11, 0.30);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sub-team-amber);
+  flex-shrink: 0;
+}
+.sub-team-leave-parent .leave__title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--sub-team-text);
+  line-height: 1.25;
+}
+
+.sub-team-leave-parent .keep-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(34, 197, 94, 0.04);
+  border: 1px solid rgba(34, 197, 94, 0.22);
+}
+.sub-team-leave-parent .keep-list__title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sub-team-green);
+  margin-bottom: 6px;
+}
+.sub-team-leave-parent .keep-list__item {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--sub-team-text);
+  line-height: 1.55;
+}
+.sub-team-leave-parent .keep-list__item svg {
+  color: var(--sub-team-green);
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.sub-team-leave-parent .lose-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.04);
+  border: 1px solid rgba(239, 68, 68, 0.22);
+}
+.sub-team-leave-parent .lose-list__title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sub-team-coral);
+  margin-bottom: 6px;
+}
+.sub-team-leave-parent .lose-list__item {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--sub-team-text);
+  line-height: 1.55;
+}
+.sub-team-leave-parent .lose-list__item svg {
+  color: var(--sub-team-coral);
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.sub-team-leave-parent .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sub-team-leave-parent .field__label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sub-team-muted);
+}
+.sub-team-leave-parent .field__textarea {
+  width: 100%;
+  min-height: 90px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--sub-team-input-bg);
+  border: 1px solid var(--sub-team-border);
+  color: var(--sub-team-text);
+  font-size: 13px;
+  outline: none;
+  resize: vertical;
+}
+.sub-team-leave-parent .field__hint {
+  font-size: 11px;
+  color: var(--sub-team-dim);
+}
+
+.sub-team-leave-parent .checkbox {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+.sub-team-leave-parent .checkbox input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.sub-team-leave-parent .checkbox__box {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background: var(--sub-team-input-bg);
+  border: 1px solid var(--sub-team-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  flex-shrink: 0;
+}
+.sub-team-leave-parent .checkbox input:checked ~ .checkbox__box {
+  background: var(--sub-team-amber);
+  border-color: var(--sub-team-amber);
+  color: #0a0a0a;
+}
+.sub-team-leave-parent .checkbox__label {
+  font-size: 13px;
+  color: var(--sub-team-text);
+  line-height: 1.5;
+}
+
+.sub-team-leave-parent .u-flex {
+  display: flex;
+}
+.sub-team-leave-parent .u-gap-10 {
+  gap: 10px;
+}
+.sub-team-leave-parent .u-justify-between {
+  justify-content: space-between;
+}
+
+.sub-team-leave-parent .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid;
+}
+.sub-team-leave-parent .btn--ghost {
+  background: transparent;
+  border-color: var(--sub-team-border);
+  color: var(--sub-team-muted);
+}
+.sub-team-leave-parent .btn--danger {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: var(--sub-team-coral);
+}
+.sub-team-leave-parent .btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}

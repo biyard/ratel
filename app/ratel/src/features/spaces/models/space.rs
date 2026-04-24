@@ -39,6 +39,9 @@ pub struct Space {
     pub remains: i64,
     pub quota: i64,
     pub is_report: bool,
+
+    #[serde(default)]
+    pub include_meetings_in_essence: bool,
 }
 
 impl From<GetSpaceResponse> for Space {
@@ -79,6 +82,7 @@ impl From<GetSpaceResponse> for Space {
             remains: dto.remains,
             quota: dto.quota,
             is_report: dto.is_report,
+            include_meetings_in_essence: false,
         }
     }
 }

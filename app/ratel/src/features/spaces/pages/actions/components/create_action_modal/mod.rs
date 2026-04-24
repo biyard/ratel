@@ -167,6 +167,18 @@ fn ActionPreview(selected: Option<SpaceActionType>, tr: CreateActionModalTransla
         Some(SpaceActionType::Follow) => rsx! {
             FollowPreview {}
         },
+        Some(SpaceActionType::Meet) => rsx! {
+            SpaceCard {
+                class: "flex flex-col gap-5 border border-action-type-card-border !bg-action-type-card-bg !rounded-[0.75rem] !p-4"
+                    .to_string(),
+                p { class: "font-medium text-text-primary text-[1.0625rem]/[1.25rem]",
+                    {tr.preview_title}
+                }
+                div { class: "flex justify-center items-center w-full border h-[14.875rem] rounded-[0.75rem] border-action-type-card-border bg-action-preview-inner-bg",
+                    p { class: "text-[0.875rem]/[1.25rem] text-foreground-muted", "Meet" }
+                }
+            }
+        },
         None => {
             return rsx! {
                 SpaceCard {

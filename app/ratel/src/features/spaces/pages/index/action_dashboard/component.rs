@@ -1,3 +1,4 @@
+use crate::features::spaces::pages::actions::actions::meet::MeetActionCard;
 use crate::features::spaces::pages::actions::types::{SpaceActionSummary, SpaceActionType};
 use crate::features::spaces::pages::index::action_pages::quiz::{
     ActiveActionOverlay, ActiveActionOverlaySignal, CompletedActionCard,
@@ -12,8 +13,10 @@ pub(super) enum ActionStatus {
 }
 
 pub(super) fn derive_action_status(action: &SpaceActionSummary) -> ActionStatus {
-    let now = crate::common::utils::time::get_now_timestamp_millis();
-    let ended = action.ended_at.map(|t| now >= t).unwrap_or(false);
+    let ended = matches!(
+        action.status,
+        Some(crate::features::spaces::pages::actions::types::SpaceActionStatus::Finish)
+    );
 
     match action.action_type {
         SpaceActionType::Poll => {
@@ -56,6 +59,15 @@ pub(super) fn derive_action_status(action: &SpaceActionSummary) -> ActionStatus 
                 ActionStatus::Active
             }
         }
+        SpaceActionType::Meet => {
+            if action.user_participated {
+                ActionStatus::Completed
+            } else if ended {
+                ActionStatus::Skipped
+            } else {
+                ActionStatus::Active
+            }
+        }
     }
 }
 
@@ -72,6 +84,7 @@ pub fn ActionDashboard(
     let nav = use_navigator();
     let mut toast = use_toast();
 
+    let lookup = super::dependency_lock::build_action_lookup(&actions);
     let active: Vec<_> = actions
         .iter()
         .filter(|a| derive_action_status(a) == ActionStatus::Active)
@@ -204,6 +217,7 @@ pub fn ActionDashboard(
                         {
                             let action = action.clone();
                             let key = action.action_id.clone();
+                            let lock = super::dependency_lock::resolve_dependency_lock(&action, &lookup);
                             match action.action_type {
                                 SpaceActionType::Poll => rsx! {
                                     PollActionCard {
@@ -211,6 +225,7 @@ pub fn ActionDashboard(
                                         action,
                                         space_id,
                                         is_admin,
+                                        lock: lock.clone(),
                                     }
                                 },
                                 SpaceActionType::TopicDiscussion => rsx! {
@@ -219,6 +234,7 @@ pub fn ActionDashboard(
                                         action,
                                         space_id,
                                         is_admin,
+                                        lock: lock.clone(),
                                     }
                                 },
                                 SpaceActionType::Quiz => rsx! {
@@ -227,10 +243,20 @@ pub fn ActionDashboard(
                                         action,
                                         space_id,
                                         is_admin,
+                                        lock: lock.clone(),
                                     }
                                 },
                                 SpaceActionType::Follow => rsx! {
                                     FollowActionCard {
+                                        key: "{key}",
+                                        action,
+                                        space_id,
+                                        is_admin,
+                                        lock: lock.clone(),
+                                    }
+                                },
+                                SpaceActionType::Meet => rsx! {
+                                    MeetActionCard {
                                         key: "{key}",
                                         action,
                                         space_id,
@@ -405,6 +431,7 @@ fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus, space_id: Space
                     | SpaceActionType::Poll
             ));
     let mut overlay: ActiveActionOverlaySignal = use_context();
+    let nav = use_navigator();
     let action_id = action.action_id.clone();
     let space_id_for_click = space_id.clone();
     let action_type = action.action_type.clone();
@@ -430,9 +457,13 @@ fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus, space_id: Space
                     }
                     SpaceActionType::TopicDiscussion => {
                         let did: SpacePostEntityType = aid.into();
-                        overlay.0.set(Some(ActiveActionOverlay::Discussion(sid, did)));
+                        nav.push(crate::Route::SpaceDiscussionPage {
+                            space_id: sid,
+                            discussion_id: did,
+                        });
                     }
                     SpaceActionType::Follow => {} // Follow has no in-overlay detail view yet; skip.
+                    SpaceActionType::Meet => {} // Meet has no in-overlay detail view yet; skip.
                 }
             },
             div { class: "archive-item__info",
@@ -483,5 +514,6 @@ fn quest_type_css(t: &SpaceActionType) -> &'static str {
         SpaceActionType::TopicDiscussion => "discuss",
         SpaceActionType::Quiz => "quiz",
         SpaceActionType::Follow => "follow",
+        SpaceActionType::Meet => "meet",
     }
 }

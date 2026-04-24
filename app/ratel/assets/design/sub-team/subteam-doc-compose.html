@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — 문서 편집</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --bg-input:rgba(255,255,255,0.025);--bg-input-focus:rgba(255,255,255,0.04);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-coral:#ef4444;
+      --accent-violet:#818cf8;--accent-purple:#a855f7;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+    }
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+    body{overflow-x:hidden}
+
+    .arena{position:relative;min-height:100vh;display:flex;flex-direction:column}
+    .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 30%,rgba(168,85,247,0.05) 0%,transparent 60%),radial-gradient(ellipse 120% 100% at 50% 120%,rgba(129,140,248,0.03) 0%,transparent 50%);z-index:0;pointer-events:none}
+
+    /* Top bar */
+    .arena-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:18px 28px;background:rgba(6,6,14,0.80);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-subtle)}
+    .arena-topbar__left{display:flex;align-items:center;gap:14px}
+    .back-btn{width:38px;height:38px;border-radius:10px;background:var(--bg-glass);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0;color:var(--text-muted);text-decoration:none}
+    .back-btn:hover{border-color:rgba(168,85,247,0.28);background:var(--bg-glass-hover);color:var(--accent-purple)}
+    .back-btn svg{width:18px;height:18px;transition:color 0.2s}
+
+    .topbar-title{display:flex;flex-direction:column;gap:2px}
+    .topbar-title__eyebrow{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim)}
+    .topbar-title__main{font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-primary)}
+
+    .arena-topbar__right{display:flex;align-items:center;gap:10px}
+    .autosave{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:100px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.20);font-size:11px;font-weight:600;letter-spacing:0.04em;color:#22c55e;margin-right:4px}
+    .autosave::before{content:'';width:6px;height:6px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px #22c55e;animation:pulse-dot 2s ease-in-out infinite}
+    @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+
+    .topbar-btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--bg-glass);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all 0.25s ease}
+    .topbar-btn:hover{border-color:rgba(168,85,247,0.28);color:var(--accent-purple);background:var(--bg-glass-hover)}
+    .topbar-btn svg{width:13px;height:13px}
+    .topbar-btn--primary{background:linear-gradient(135deg,var(--accent-purple),#7e22ce);color:#fff;border-color:transparent;box-shadow:0 2px 14px rgba(168,85,247,0.28)}
+    .topbar-btn--primary:hover{background:linear-gradient(135deg,#c084fc,var(--accent-purple));border-color:transparent;color:#fff;box-shadow:0 4px 22px rgba(168,85,247,0.45);transform:translateY(-1px)}
+
+    /* Edit banner */
+    .edit-banner{max-width:1280px;margin:0 auto;width:100%;padding:14px 28px 0;position:relative;z-index:1}
+    .edit-banner__inner{
+      display:flex;align-items:center;gap:12px;
+      padding:12px 18px;border-radius:12px;
+      background:linear-gradient(135deg,rgba(168,85,247,0.08),rgba(129,140,248,0.03));
+      border:1px solid rgba(168,85,247,0.25);
+    }
+    .edit-banner__icon{
+      width:32px;height:32px;border-radius:9px;flex-shrink:0;
+      background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.28);
+      color:var(--accent-purple);display:flex;align-items:center;justify-content:center;
+    }
+    .edit-banner__icon svg{width:15px;height:15px}
+    .edit-banner__body{flex:1;min-width:0}
+    .edit-banner__label{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-purple)}
+    .edit-banner__text{font-size:12.5px;color:var(--text-muted);line-height:1.5;margin-top:2px}
+    .edit-banner__text strong{color:var(--text-primary)}
+
+    /* Layout */
+    .composer-page{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:28px;padding:22px 28px 100px;max-width:1280px;margin:0 auto;width:100%}
+    .composer{display:flex;flex-direction:column;gap:20px;min-width:0}
+
+    .title-input{width:100%;padding:14px 0;background:transparent;border:none;outline:none;font-family:var(--font-body);font-size:34px;font-weight:700;color:var(--text-primary);line-height:1.2;letter-spacing:-0.01em}
+    .title-input::placeholder{color:var(--text-dim);font-weight:600}
+    .title-divider{height:1px;background:linear-gradient(90deg,var(--border-subtle),transparent);margin:0 0 4px}
+
+    /* Toolbar */
+    .toolbar{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:12px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);position:sticky;top:84px;z-index:10}
+    .toolbar__group{display:flex;gap:2px}
+    .toolbar__divider{width:1px;height:18px;background:var(--border-subtle);margin:0 4px}
+    .tool-btn{width:32px;height:32px;border-radius:7px;background:transparent;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted);transition:all 0.2s ease;padding:0}
+    .tool-btn svg{width:15px;height:15px}
+    .tool-btn:hover{background:rgba(255,255,255,0.04);color:var(--text-primary)}
+    .tool-btn[aria-pressed="true"]{background:rgba(168,85,247,0.12);color:var(--accent-purple)}
+    .toolbar__spacer{flex:1}
+    .toolbar__count{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--text-dim);padding:0 8px}
+
+    /* Body editor */
+    .body-editor{min-height:420px;padding:22px;border-radius:14px;background:var(--bg-input);border:1px solid var(--border-subtle);font-size:15.5px;line-height:1.75;color:var(--text-primary);outline:none;transition:all 0.25s ease}
+    .body-editor:focus,.body-editor:hover{background:var(--bg-input-focus);border-color:rgba(168,85,247,0.20)}
+    .body-editor[contenteditable="true"]:empty::before{content:attr(data-placeholder);color:var(--text-dim);font-style:italic}
+    .body-editor h1,.body-editor h2,.body-editor h3{font-family:var(--font-display);font-weight:800;letter-spacing:0.02em;line-height:1.3;margin-top:18px;margin-bottom:10px}
+    .body-editor h1{font-size:24px}
+    .body-editor h2{font-size:19px;color:var(--accent-violet)}
+    .body-editor h3{font-size:16px}
+    .body-editor p{margin-bottom:10px}
+    .body-editor ul,.body-editor ol{margin:8px 0 12px 22px}
+    .body-editor li{margin-bottom:4px}
+    .body-editor blockquote{border-left:3px solid var(--accent-violet);background:rgba(129,140,248,0.05);padding:8px 14px;border-radius:0 8px 8px 0;margin:8px 0;color:var(--text-muted);font-style:italic}
+    .body-editor code{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:0.9em;padding:2px 6px;border-radius:4px;background:rgba(168,85,247,0.10);color:var(--accent-purple);border:1px solid rgba(168,85,247,0.18)}
+
+    /* Attachments */
+    .attachments{display:flex;flex-direction:column;gap:10px}
+    .attachments__title{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);display:flex;align-items:center;gap:8px}
+    .attachments__title svg{width:12px;height:12px}
+    .attachment-list{display:flex;flex-direction:column;gap:8px}
+    .file-row{
+      display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;
+      padding:10px 14px;border-radius:11px;
+      background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);
+      transition:all 0.2s;
+    }
+    .file-row:hover{border-color:rgba(168,85,247,0.28)}
+    .file-row__icon{
+      width:36px;height:36px;border-radius:9px;flex-shrink:0;
+      background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.22);
+      color:var(--accent-purple);display:flex;align-items:center;justify-content:center;
+    }
+    .file-row__icon svg{width:16px;height:16px}
+    .file-row__icon--pdf{background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.25);color:var(--accent-coral)}
+    .file-row__icon--img{background:rgba(110,237,216,0.06);border-color:rgba(110,237,216,0.22);color:var(--accent-teal)}
+    .file-row__body{min-width:0}
+    .file-row__name{font-size:13px;color:var(--text-primary);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--font-display);letter-spacing:0.02em}
+    .file-row__meta{font-family:var(--font-display);font-size:10px;color:var(--text-dim);letter-spacing:0.06em;margin-top:2px}
+    .file-row__meta strong{color:var(--accent-purple)}
+    .file-row__progress{display:flex;align-items:center;gap:6px;padding:3px 8px;border-radius:100px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.22);color:#22c55e;font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase}
+    .file-row__progress svg{width:10px;height:10px}
+    .file-row__del{width:28px;height:28px;border-radius:7px;padding:0;background:transparent;border:1px solid var(--border-subtle);color:var(--text-dim);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
+    .file-row__del:hover{border-color:rgba(239,68,68,0.3);color:var(--accent-coral);background:rgba(239,68,68,0.06)}
+    .file-row__del svg{width:12px;height:12px}
+
+    .file-dropzone{
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      padding:16px;border-radius:11px;
+      background:rgba(168,85,247,0.03);border:1px dashed rgba(168,85,247,0.28);
+      color:var(--accent-purple);cursor:pointer;transition:all 0.2s;
+      font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+    }
+    .file-dropzone:hover{background:rgba(168,85,247,0.08);border-color:rgba(168,85,247,0.48)}
+    .file-dropzone svg{width:15px;height:15px}
+    .file-dropzone small{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);letter-spacing:0.02em;text-transform:none;font-weight:500;margin-top:2px}
+
+    /* Side panel */
+    .side-panel{display:flex;flex-direction:column;gap:14px;align-self:start;position:sticky;top:84px}
+    .side-card{background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px}
+    .side-card__title{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);display:flex;align-items:center;gap:8px}
+    .side-card__title svg{width:13px;height:13px;color:var(--accent-purple)}
+
+    /* Required toggle (violet pill) */
+    .required-row{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);transition:all 0.2s}
+    .required-row[data-on="true"]{background:rgba(168,85,247,0.06);border-color:rgba(168,85,247,0.35)}
+    .required-row__body{flex:1;min-width:0}
+    .required-row__title{font-family:var(--font-display);font-size:12px;font-weight:800;letter-spacing:0.04em;color:var(--text-primary)}
+    .required-row[data-on="true"] .required-row__title{color:var(--accent-purple)}
+    .required-row__desc{font-size:11.5px;color:var(--text-muted);line-height:1.5;margin-top:2px}
+
+    /* Switch */
+    .switch{position:relative;width:40px;height:22px;border-radius:100px;background:rgba(255,255,255,0.06);border:1px solid var(--border-subtle);cursor:pointer;transition:all 0.25s;flex-shrink:0;display:inline-block}
+    .switch::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--text-muted);transition:all 0.25s}
+    .switch input{position:absolute;opacity:0;pointer-events:none}
+    .switch:has(input:checked),.switch[aria-checked="true"]{background:rgba(168,85,247,0.30);border-color:rgba(168,85,247,0.48)}
+    .switch:has(input:checked)::after,.switch[aria-checked="true"]::after{transform:translateX(16px);background:var(--accent-purple);box-shadow:0 0 10px rgba(168,85,247,0.5)}
+
+    /* Meta card */
+    .meta-list{display:flex;flex-direction:column;gap:8px}
+    .meta-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;font-size:12px}
+    .meta-row + .meta-row{border-top:1px dashed var(--border-subtle)}
+    .meta-row__k{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-dim)}
+    .meta-row__v{font-size:12px;color:var(--text-primary);font-weight:600;text-align:right}
+    .meta-row__v--accent{color:var(--accent-purple);font-family:var(--font-display);letter-spacing:0.02em}
+
+    /* Impact callout */
+    .impact-note{padding:12px 14px;border-radius:11px;background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.20);font-size:12px;color:var(--text-muted);line-height:1.55;display:flex;gap:10px}
+    .impact-note svg{width:14px;height:14px;color:#f59e0b;flex-shrink:0;margin-top:3px}
+    .impact-note strong{color:var(--text-primary)}
+
+    /* Danger row */
+    .danger-row{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.12);color:var(--accent-coral);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;cursor:pointer;transition:all 0.2s ease;text-decoration:none;justify-content:center}
+    .danger-row:hover{background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.22)}
+    .danger-row svg{width:13px;height:13px}
+
+    /* Bottom bar */
+    .bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:25;display:flex;align-items:center;justify-content:space-between;padding:12px 28px;background:rgba(6,6,14,0.86);backdrop-filter:blur(20px);border-top:1px solid var(--border-subtle)}
+    .bottom-bar__left{display:flex;align-items:center;gap:18px;font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--text-dim)}
+    .bottom-bar__stat{display:inline-flex;align-items:center;gap:6px}
+    .bottom-bar__stat svg{width:13px;height:13px}
+    .bottom-bar__stat strong{color:var(--text-primary);font-weight:700;letter-spacing:0.04em}
+
+    @media (max-width:980px){
+      .composer-page{grid-template-columns:1fr;padding:20px 16px 110px;gap:18px}
+      .toolbar{position:static}
+      .side-panel{position:static;top:auto}
+      .autosave{display:none}
+      .edit-banner{padding:12px 16px 0}
+    }
+    @media (max-width:500px){
+      .arena-topbar{padding:12px 14px}
+      .topbar-title__eyebrow{display:none}
+      .topbar-title__main{font-size:13px}
+      .title-input{font-size:24px;padding:10px 0}
+      .body-editor{padding:16px;font-size:14.5px;min-height:300px;line-height:1.65}
+      .toolbar{flex-wrap:wrap;gap:4px;padding:6px}
+      .tool-btn{width:30px;height:30px}
+      .toolbar__count{font-size:9px;padding:0 4px;margin-left:auto}
+      .composer{gap:16px}
+      .side-card{padding:14px}
+      .bottom-bar{padding:10px 14px}
+    }
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <!-- TOP BAR -->
+    <div class="arena-topbar">
+      <div class="arena-topbar__left">
+        <a class="back-btn" href="subteam-management-page.html#documents" aria-label="Back to document list">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <div class="topbar-title">
+          <span class="topbar-title__eyebrow">Sub-team · 문서 편집</span>
+          <span class="topbar-title__main">SNU CS Dept. 학칙 v2</span>
+        </div>
+      </div>
+      <div class="arena-topbar__right">
+        <span class="autosave">Auto-saved 3초 전</span>
+        <button class="topbar-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          미리보기
+        </button>
+        <button class="topbar-btn topbar-btn--primary" id="publish-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          저장 · v3 게시
+        </button>
+      </div>
+    </div>
+
+    <!-- EDIT BANNER -->
+    <div class="edit-banner">
+      <div class="edit-banner__inner">
+        <div class="edit-banner__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div class="edit-banner__body">
+          <div class="edit-banner__label">Document editor · Rich text + 첨부</div>
+          <div class="edit-banner__text">학칙·규정·운영 가이드를 <strong>Ratel rich editor</strong>로 작성합니다. <strong>필독</strong>으로 지정하면 하위팀이 가입 신청 때 반드시 읽고 동의해야 제출됩니다. 파일 첨부는 본문 옆 <strong>첨부 파일</strong> 섹션으로 추가하세요.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPOSER PAGE -->
+    <div class="composer-page">
+
+      <!-- LEFT: composer -->
+      <main class="composer">
+        <!-- Title -->
+        <div>
+          <input class="title-input" type="text" placeholder="문서 제목 (예: 학과 학칙 v2)" value="SNU CS Dept. 학칙 v2" />
+          <div class="title-divider"></div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+          <div class="toolbar__group">
+            <button class="tool-btn" aria-label="Heading 1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M6 12h12"/></svg></button>
+            <button class="tool-btn" aria-label="Heading 2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16M14 4v16M4 12h10"/><path d="M20 20h-4v-2c0-1 1-2 2-2s2 1 2 2-1 2-2 2"/></svg></button>
+            <button class="tool-btn" aria-label="Bold" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg></button>
+            <button class="tool-btn" aria-label="Italic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg></button>
+            <button class="tool-btn" aria-label="Underline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"/><line x1="4" y1="21" x2="20" y2="21"/></svg></button>
+            <button class="tool-btn" aria-label="Strikethrough"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4H9a3 3 0 0 0-2.83 4M14 12a4 4 0 0 1 0 8H6"/><line x1="4" y1="12" x2="20" y2="12"/></svg></button>
+          </div>
+          <div class="toolbar__divider"></div>
+          <div class="toolbar__group">
+            <button class="tool-btn" aria-label="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
+            <button class="tool-btn" aria-label="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></button>
+            <button class="tool-btn" aria-label="Quote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg></button>
+            <button class="tool-btn" aria-label="Code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></button>
+            <button class="tool-btn" aria-label="Divider"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/></svg></button>
+          </div>
+          <div class="toolbar__divider"></div>
+          <div class="toolbar__group">
+            <button class="tool-btn" aria-label="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+            <button class="tool-btn" aria-label="Image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>
+            <button class="tool-btn" aria-label="Table"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></button>
+          </div>
+          <div class="toolbar__spacer"></div>
+          <span class="toolbar__count" id="body-count">648 / 20000</span>
+        </div>
+
+        <!-- Body (rich content) -->
+        <div class="body-editor" id="body-editor" contenteditable="true" data-placeholder="문서 내용을 작성하세요…">
+          <h2>제1조 (목적)</h2>
+          <p>본 학칙은 <strong>SNU CS Dept.</strong> 소속 학생 동아리의 설립, 활동, 해체에 관한 사항을 규정함을 목적으로 한다.</p>
+
+          <h2>제2조 (설립 요건)</h2>
+          <ol>
+            <li>최소 <strong>5인 이상</strong>의 학부·대학원생 구성</li>
+            <li>지도교수 1인 사전 섭외</li>
+            <li>학술적 또는 사회적 공익에 부합하는 활동 목적</li>
+          </ol>
+
+          <h2>제3조 (등록 및 인증)</h2>
+          <p>프로스펙티브 동아리는 pending 팀을 먼저 생성하고 학과가 정한 신청서를 제출해야 한다. 학과는 영업일 <code>3–5일</code> 내 승인 · 거절 · 수정 반송 중 하나를 결정한다.</p>
+
+          <blockquote>신청자는 제출 시점의 학칙 문구에 동의한 것으로 간주되며, 이후 학칙 업데이트는 기존 승인 신청에 소급 적용되지 않습니다.</blockquote>
+
+          <h2>제4조 (활동 보고)</h2>
+          <p>인증된 동아리는 학기말에 정기 활동 보고서를 학과에 제출한다. 공개 활동은 학과 대시보드에 자동 반영된다.</p>
+
+          <h2>제5조 (학과 공지 수신 의무)</h2>
+          <p>인증된 동아리의 admin은 학과 공지를 합리적 기한 내에 확인·전달할 책임이 있다.</p>
+        </div>
+
+        <!-- Attachments -->
+        <div class="attachments">
+          <div class="attachments__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            첨부 파일 · Attachments <span id="attach-count" style="color:var(--accent-purple);margin-left:6px;font-family:var(--font-display)">2</span>
+          </div>
+
+          <div class="attachment-list" id="attach-list">
+            <div class="file-row">
+              <div class="file-row__icon file-row__icon--pdf">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+              </div>
+              <div class="file-row__body">
+                <div class="file-row__name">학칙_개정안_v2_본문.pdf</div>
+                <div class="file-row__meta">PDF · <strong>248 KB</strong> · 2026-02-01 업로드</div>
+              </div>
+              <span class="file-row__progress">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                업로드 완료
+              </span>
+              <button class="file-row__del" aria-label="Delete">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            <div class="file-row">
+              <div class="file-row__icon file-row__icon--img">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+              <div class="file-row__body">
+                <div class="file-row__name">학과_조직도_2026.png</div>
+                <div class="file-row__meta">Image · <strong>82 KB</strong> · 2026-01-20 업로드</div>
+              </div>
+              <span class="file-row__progress">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                업로드 완료
+              </span>
+              <button class="file-row__del" aria-label="Delete">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <button class="file-dropzone" id="add-file-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>
+              파일 추가 · Upload
+              <small>PDF · DOCX · 이미지 (최대 25 MB/파일)</small>
+            </span>
+          </button>
+        </div>
+      </main>
+
+      <!-- RIGHT: side panel -->
+      <aside class="side-panel">
+        <!-- 필독 toggle -->
+        <div class="side-card">
+          <div class="side-card__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            가입 신청 필독
+          </div>
+          <div class="required-row" id="required-row" data-on="true">
+            <div class="required-row__body">
+              <div class="required-row__title">필독으로 지정됨</div>
+              <div class="required-row__desc">하위팀이 가입 신청할 때 이 문서를 읽고 <strong>동의하기</strong>를 눌러야 제출할 수 있습니다.</div>
+            </div>
+            <label class="switch" id="required-switch" aria-checked="true">
+              <input type="checkbox" checked />
+            </label>
+          </div>
+        </div>
+
+        <!-- Meta -->
+        <div class="side-card">
+          <div class="side-card__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            문서 정보
+          </div>
+          <div class="meta-list">
+            <div class="meta-row"><span class="meta-row__k">Version</span><span class="meta-row__v meta-row__v--accent">v2 · draft v3</span></div>
+            <div class="meta-row"><span class="meta-row__k">Last updated</span><span class="meta-row__v">2026-02-01 14:32</span></div>
+            <div class="meta-row"><span class="meta-row__k">Editor</span><span class="meta-row__v">@snu_cs_office</span></div>
+            <div class="meta-row"><span class="meta-row__k">Attachments</span><span class="meta-row__v">2 files · 330 KB</span></div>
+            <div class="meta-row"><span class="meta-row__k">Required</span><span class="meta-row__v meta-row__v--accent">Yes</span></div>
+          </div>
+        </div>
+
+        <!-- Impact -->
+        <div class="side-card">
+          <div class="side-card__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"/><path d="M7 7h10v10H7z"/></svg>
+            영향 범위
+          </div>
+          <div class="impact-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div>저장 시 <strong>v3</strong>로 게시됩니다. 현재 <strong>4개의 대기 중 신청</strong>에는 이전 버전(v2)이 유지되지만, 이후 새 신청자부터 v3 문구에 동의해야 합니다.</div>
+          </div>
+        </div>
+
+        <!-- Discard -->
+        <a class="danger-row" href="subteam-management-page.html#documents">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          변경 폐기 · Discard
+        </a>
+      </aside>
+    </div>
+
+    <!-- BOTTOM BAR -->
+    <div class="bottom-bar">
+      <div class="bottom-bar__left">
+        <span class="bottom-bar__stat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <strong id="word-count">128</strong> 단어 · <strong>1 min</strong> read
+        </span>
+        <span class="bottom-bar__stat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          <strong>2</strong> 파일 · 330 KB
+        </span>
+        <span class="bottom-bar__stat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          저장됨 · <strong>3초 전</strong>
+        </span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Body counter
+    const body = document.getElementById('body-editor');
+    const bodyCount = document.getElementById('body-count');
+    const wordCount = document.getElementById('word-count');
+    function updateCounts() {
+      const text = body.innerText || '';
+      bodyCount.textContent = text.length + ' / 20000';
+      wordCount.textContent = text.trim().split(/\s+/).filter(Boolean).length;
+    }
+    body.addEventListener('input', updateCounts);
+    updateCounts();
+
+    // Required toggle
+    const reqSwitch = document.getElementById('required-switch');
+    const reqRow = document.getElementById('required-row');
+    reqSwitch.addEventListener('click', (e) => {
+      e.preventDefault();
+      const on = reqSwitch.getAttribute('aria-checked') !== 'true';
+      reqSwitch.setAttribute('aria-checked', on);
+      const input = reqSwitch.querySelector('input');
+      if (input) input.checked = on;
+      reqRow.setAttribute('data-on', on);
+      reqRow.querySelector('.required-row__title').textContent = on ? '필독으로 지정됨' : '필독 아님';
+    });
+
+    // Attachment delete
+    document.getElementById('attach-list').addEventListener('click', (e) => {
+      const del = e.target.closest('.file-row__del');
+      if (!del) return;
+      const row = del.closest('.file-row');
+      row.style.opacity = '0';
+      setTimeout(() => {
+        row.remove();
+        const n = document.querySelectorAll('#attach-list .file-row').length;
+        document.getElementById('attach-count').textContent = n;
+      }, 180);
+    });
+    document.getElementById('add-file-btn').addEventListener('click', () => {
+      alert('파일 선택 다이얼로그 (mock) · PDF · DOCX · 이미지 지원');
+    });
+
+    // Publish
+    document.getElementById('publish-btn').addEventListener('click', () => {
+      alert('v3로 저장 완료 · 이후 새 신청자부터 v3 문구에 동의');
+      window.location.href = 'subteam-management-page.html#documents';
+    });
+  </script>
+</body>
+</html>

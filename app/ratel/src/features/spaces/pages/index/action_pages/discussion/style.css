@@ -450,7 +450,11 @@
 
 /* ── Right: Comments Panel ─────────────────────── */
 .comments-panel {
+  /* Initial width = previous fixed 420px. JS may set a larger inline
+     `style.width` via the resizer drag; `min-width` keeps the panel
+     from shrinking below the design floor regardless. */
   width: 420px;
+  min-width: 420px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -459,6 +463,32 @@
   -webkit-backdrop-filter: blur(24px);
   border-left: 1px solid var(--border);
   overflow: hidden;
+}
+
+/* Drag handle between discussion-main and comments-panel. Visual chrome
+   is intentionally minimal — a hover/active accent strip is enough to
+   signal interactivity without competing with the comment content. */
+.comments-panel__resizer {
+  width: 6px;
+  flex-shrink: 0;
+  background: transparent;
+  cursor: col-resize;
+  position: relative;
+  z-index: 2;
+  transition: background 0.15s ease;
+  user-select: none;
+}
+.comments-panel__resizer:hover,
+.comments-panel__resizer.dragging {
+  background: var(--dark, rgba(252, 179, 0, 0.35))
+    var(--light, rgba(252, 179, 0, 0.45));
+}
+/* While dragging, suppress text selection and force the col-resize
+   cursor across the whole document so the cursor doesn't flicker when
+   the pointer leaves the 6px hit-area. */
+body.comments-panel-resizing {
+  cursor: col-resize !important;
+  user-select: none !important;
 }
 
 .comments-panel__header {
@@ -489,10 +519,10 @@
 }
 
 /* ── Comment Input ─────────────────────────────── */
-/* The top-level composer (at the top of the comments panel) always
-   gets the padded + divider chrome. The compact reply composer only
-   inherits the same chrome on mobile — on desktop it stays bare so the
-   `.reply-input` pill appears inline under the comment without an
+/* The top-level composer (pinned to the bottom of the comments panel)
+   always gets the padded + divider chrome. The compact reply composer
+   only inherits the same chrome on mobile — on desktop it stays bare so
+   the `.reply-input` pill appears inline under the comment without an
    extra panel frame (matching the pre-unification look). */
 .comment-input:not([data-compact="true"]) {
   padding: 16px 20px;
@@ -500,7 +530,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--border);
 }
 /* Kill the reply-box offsets when the top-level wrapper provides its
    own positioning — those margins only make sense for the bare inline
@@ -790,6 +820,11 @@
 .comment-action--reply:hover {
   color: var(--discuss-color);
 }
+.comment-action__reply-count {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
 
 /* ── Replies ───────────────────────────────────── */
 .comment-replies {
@@ -958,7 +993,7 @@
   display: none;
 }
 /* ── Responsive: Bottom Sheet ─────────────────── */
-@media (max-width: 900px) {
+@media (max-width: 749px) {
   .discussion-layout {
     flex-direction: column;
     flex: 1;
@@ -978,6 +1013,11 @@
     grid-template-columns: 1fr;
   }
 
+  /* Resizer is irrelevant in bottom-sheet layout. */
+  .comments-panel__resizer {
+    display: none;
+  }
+
   /* Convert comments-panel to bottom sheet */
   .comments-panel {
     position: fixed;
@@ -985,7 +1025,12 @@
     left: 0;
     right: 0;
     z-index: 100;
-    width: 100%;
+    /* `!important` overrides any inline `style.width` set by the
+       desktop drag-resizer when the user shrinks the viewport across
+       the breakpoint. `min-width` reset lets the sheet follow small
+       phone widths (e.g. 375px). */
+    width: 100% !important;
+    min-width: 0 !important;
     max-height: 85vh;
     border-left: none;
     border-top: 1px solid var(--border);
@@ -1144,12 +1189,50 @@
   margin-bottom: 4px;
 }
 
+/* ── Panel body (comments view) ─────────────────────────────
+   Wrapper for the comments list, header, and composer. Animates
+   in from the left when returning from the reply thread view. */
+.comments-panel__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@keyframes comments-panel-body-enter {
+  from {
+    transform: translateX(-24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 500px) {
+  .comments-panel__body {
+    animation: comments-panel-body-enter 0.28s ease-out;
+  }
+}
+
 /* ── In-sheet reply thread view ─────────────────────────────
    Rendered inside the comments panel when a user taps a comment's
    Reply action on mobile. Fills the panel (flex column) with a header
    on top, scrollable parent + replies, and a pinned composer at the
    bottom. Cards reuse `.comment-item` / `.reply-input` so styling
    stays consistent with the inline arena view. */
+
+@keyframes reply-thread-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 .reply-thread {
   display: flex;
   flex-direction: column;
@@ -1157,45 +1240,30 @@
   min-height: 0;
   background: var(--surface);
   color: var(--text);
+  animation: reply-thread-slide-in 0.32s cubic-bezier(0.32, 0.72, 0, 1);
 }
-.reply-thread__header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 12px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  flex-shrink: 0;
-}
-.reply-thread__title {
-  flex: 1;
-  text-align: center;
-  font-family: "Outfit", sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--text);
-}
-.reply-thread__icon-btn {
-  width: 36px;
-  height: 36px;
+.sheet-handle__back {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   border: none;
   background: transparent;
-  color: var(--text);
+  color: var(--text-muted);
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background 0.15s, color 0.15s;
+  padding: 0;
   flex-shrink: 0;
 }
-.reply-thread__icon-btn:hover {
-  background: var(--hover, rgba(255, 255, 255, 0.06));
+.sheet-handle__back:hover {
+  background: var(--surface-raised);
+  color: var(--text);
 }
-.reply-thread__icon-btn svg {
-  width: 20px;
-  height: 20px;
+.sheet-handle__back svg {
+  width: 18px;
+  height: 18px;
 }
 .reply-thread__scroll {
   flex: 1;
@@ -1206,11 +1274,52 @@
 }
 /* The parent comment sits in its own highlighted block above the thread
    (matches YouTube/Reddit's mobile replies view where the comment you
-   tapped stays visible as context). */
+   tapped stays visible as context). Scrolls naturally with the replies
+   underneath; long bodies stay readable via the `더보기` toggle inside
+   `CommentText`. */
 .reply-thread__parent {
   padding: 4px 0 12px;
   border-bottom: 1px solid var(--border);
   background: var(--surface-raised);
+}
+
+/* `CommentText` wrapper. `data-expanded` is Dioxus-controlled (toggle
+   button); `data-truncatable` is JS-controlled (set after measuring
+   that the rendered text exceeds 3 lines). The expand button is hidden
+   unless `data-truncatable="true"` so short comments don't show a
+   useless toggle. */
+.comment-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+  width: 100%;
+}
+.comment-text[data-expanded="false"] .comment-item__text {
+  display: -webkit-box;
+  -webkit-line-clamp: 10;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.comment-item__expand {
+  margin-top: 2px;
+  padding: 2px 0;
+  background: transparent;
+  border: none;
+  color: var(--accent, #fcb300);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  align-self: flex-start;
+  display: none;
+}
+.comment-text[data-truncatable="true"] .comment-item__expand {
+  display: inline-block;
+}
+.comment-item__expand:hover {
+  text-decoration: underline;
 }
 .reply-thread__list {
   padding: 4px 0 0;

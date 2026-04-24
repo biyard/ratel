@@ -1,3 +1,4 @@
+#[allow(unused)]
 mod i18n;
 
 use super::controllers::{
@@ -359,12 +360,11 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                     month_pretty: month_pretty.clone(),
                 }
 
-                TokenCard {
-                    tr: tr.clone(),
-                    token_symbol: token_symbol.clone(),
-                    price_svg: price_svg.clone(),
-                }
-
+                // TokenCard {
+                //     tr: tr.clone(),
+                //     token_symbol: token_symbol.clone(),
+                //     price_svg: price_svg.clone(),
+                // }
                 div { class: "charts",
                     div { class: "chart-card",
                         div { class: "chart-card__head",
@@ -401,7 +401,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                                 if donut_items.is_empty() {
                                     div { class: "empty-desc", "{tr.activity_empty}" }
                                 } else {
-                                    for (name, value, color) in donut_items.iter() {
+                                    for (name , value , color) in donut_items.iter() {
                                         div {
                                             class: "legend-item",
                                             key: "{name}",
@@ -644,7 +644,7 @@ fn TokenCard(tr: UserRewardsTranslate, token_symbol: String, price_svg: String) 
                 }
                 div { class: "token-card__price",
                     span { class: "token-card__price-num", "—" }
-                    span { class: "token-card__price-unit", "USDC {tr.per_token}" }
+                    span { class: "token-card__price-unit", "USDT {tr.per_token}" }
                 }
                 div { class: "token-card__sub", "{tr.price_desc}" }
                 div { class: "token-card__stats",
@@ -853,6 +853,7 @@ fn CycleCard(
                 button {
                     class: "cycle-card__expand",
                     "aria-label": "Expand",
+                    disabled: true,
                     onclick: move |_| expanded.set(!expanded()),
                     svg {
                         view_box: "0 0 24 24",

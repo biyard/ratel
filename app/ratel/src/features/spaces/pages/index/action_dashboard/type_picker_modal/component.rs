@@ -178,6 +178,38 @@ pub fn TypePickerModal(
                         div { class: "type-option__name", "{tr.follow_name}" }
                         div { class: "type-option__desc", "{tr.follow_desc}" }
                     }
+                    // Meet
+                    button {
+                        class: "type-option",
+                        "data-testid": "type-option-meet",
+                        "data-type": "meet",
+                        onclick: move |_| {
+                            on_pick.call(SpaceActionType::Meet);
+                            on_close.call(());
+                        },
+                        div { class: "type-option__icon",
+                            svg {
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "2",
+                                view_box: "0 0 24 24",
+                                xmlns: "http://www.w3.org/2000/svg",
+                                polygon { points: "23 7 16 12 23 17 23 7" }
+                                rect {
+                                    x: "1",
+                                    y: "5",
+                                    width: "15",
+                                    height: "14",
+                                    rx: "2",
+                                    ry: "2",
+                                }
+                            }
+                        }
+                        div { class: "type-option__name", "{tr.meet_name}" }
+                        div { class: "type-option__desc", "{tr.meet_desc}" }
+                    }
                 }
             }
         }

@@ -265,6 +265,7 @@ async fn count_actions(
             SpaceActionType::TopicDiscussion => discussions += 1,
             SpaceActionType::Quiz => quizzes += 1,
             SpaceActionType::Follow => follows += 1,
+            SpaceActionType::Meet => {}
         }
     }
     (polls, discussions, quizzes, follows)

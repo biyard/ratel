@@ -773,5 +773,720 @@ export class DynamoStreamEventStack extends Stack {
       },
       targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
     });
+
+    // ─────────────────────────────────────────────────────────────────
+    // Essence indexing — moved off the synchronous controller path so
+    // creates/updates don't pay an extra DynamoDB roundtrip on the hot
+    // path. Each entity type gets two pipes (INSERT/MODIFY → IndexX,
+    // REMOVE → DeleteX). The Lambda dispatch lives in
+    // `EventBridgeEnvelope::proc` and shares its handler with the
+    // migrate endpoint via `essence::services`.
+    // ─────────────────────────────────────────────────────────────────
+
+    // ── Pipe: Post insert/modify → EssenceIndexPost ─────────────────
+    new pipes.CfnPipe(this, "EssenceIndexPostPipe", {
+      name: `ratel-${stage}-essence-index-post-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT", "MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: ["POST"] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "EssenceIndexPost",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    new events.Rule(this, "EssenceIndexPostRule", {
+      eventBus,
+      description: "Route post insert/update to app-shell for essence indexing",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["EssenceIndexPost"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe: Post remove → EssenceDeletePost ───────────────────────
+    new pipes.CfnPipe(this, "EssenceDeletePostPipe", {
+      name: `ratel-${stage}-essence-delete-post-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["REMOVE"],
+                dynamodb: {
+                  OldImage: {
+                    sk: { S: ["POST"] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "EssenceDeletePost",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.OldImage>}',
+      },
+    });
+
+    new events.Rule(this, "EssenceDeletePostRule", {
+      eventBus,
+      description: "Route post removes to app-shell for essence detach",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["EssenceDeletePost"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe: PostComment insert/modify → EssenceIndexPostComment ──
+    // Top-level post comments. Replies are routed through a separate pipe
+    // (below) to keep each filter to a single well-established prefix match.
+    new pipes.CfnPipe(this, "EssenceIndexPostCommentPipe", {
+      name: `ratel-${stage}-essence-index-post-comment-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT", "MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "POST_COMMENT#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "EssenceIndexPostComment",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Pipe: PostCommentReply insert/modify → EssenceIndexPostComment ──
+    // Reply entities route to the SAME detailType so one Lambda handler
+    // covers both (they share the `PostComment` Rust model). The existing
+    // Rule already routes `EssenceIndexPostComment` — this pipe just adds
+    // another source flow into it.
+    new pipes.CfnPipe(this, "EssenceIndexPostCommentReplyPipe", {
+      name: `ratel-${stage}-essence-index-post-comment-reply-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT", "MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "POST_COMMENT_REPLY#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "EssenceIndexPostComment",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    new events.Rule(this, "EssenceIndexPostCommentRule", {
+      eventBus,
+      description:
+        "Route post comment insert/update to app-shell for essence indexing",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["EssenceIndexPostComment"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe: PostComment remove → EssenceDeletePostComment ─────────
+    new pipes.CfnPipe(this, "EssenceDeletePostCommentPipe", {
+      name: `ratel-${stage}-essence-delete-post-comment-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["REMOVE"],
+                dynamodb: {
+                  OldImage: {
+                    sk: { S: [{ prefix: "POST_COMMENT#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "EssenceDeletePostComment",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.OldImage>}',
+      },
+    });
+
+    // ── Pipe: PostCommentReply remove → EssenceDeletePostComment ────
+    new pipes.CfnPipe(this, "EssenceDeletePostCommentReplyPipe", {
+      name: `ratel-${stage}-essence-delete-post-comment-reply-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["REMOVE"],
+                dynamodb: {
+                  OldImage: {
+                    sk: { S: [{ prefix: "POST_COMMENT_REPLY#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "EssenceDeletePostComment",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.OldImage>}',
+      },
+    });
+
+    new events.Rule(this, "EssenceDeletePostCommentRule", {
+      eventBus,
+      description: "Route post comment removes to app-shell for essence detach",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["EssenceDeletePostComment"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe: SpacePostComment insert/modify → EssenceIndexDiscussionComment ──
+    // Top-level discussion comments. Replies go through a separate pipe
+    // below. `SPACE_POST_COMMENT_LIKE#` is excluded by the `#` boundary.
+    new pipes.CfnPipe(this, "EssenceIndexDiscussionCommentPipe", {
+      name: `ratel-${stage}-essence-index-discussion-comment-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT", "MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SPACE_POST_COMMENT#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "EssenceIndexDiscussionComment",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Pipe: SpacePostCommentReply insert/modify → EssenceIndexDiscussionComment ──
+    // Reply entities route to the SAME detailType as top-level comments
+    // (shared `SpacePostComment` Rust model).
+    new pipes.CfnPipe(this, "EssenceIndexDiscussionCommentReplyPipe", {
+      name: `ratel-${stage}-essence-index-discussion-comment-reply-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT", "MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SPACE_POST_COMMENT_REPLY#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "EssenceIndexDiscussionComment",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    new events.Rule(this, "EssenceIndexDiscussionCommentRule", {
+      eventBus,
+      description:
+        "Route discussion comment + reply insert/update to app-shell for essence indexing",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["EssenceIndexDiscussionComment"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe: SpacePostComment remove → EssenceDeleteDiscussionComment ──
+    new pipes.CfnPipe(this, "EssenceDeleteDiscussionCommentPipe", {
+      name: `ratel-${stage}-essence-delete-discussion-comment-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["REMOVE"],
+                dynamodb: {
+                  OldImage: {
+                    sk: { S: [{ prefix: "SPACE_POST_COMMENT#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "EssenceDeleteDiscussionComment",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.OldImage>}',
+      },
+    });
+
+    // ── Pipe: SpacePostCommentReply remove → EssenceDeleteDiscussionComment ──
+    new pipes.CfnPipe(this, "EssenceDeleteDiscussionCommentReplyPipe", {
+      name: `ratel-${stage}-essence-delete-discussion-comment-reply-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["REMOVE"],
+                dynamodb: {
+                  OldImage: {
+                    sk: { S: [{ prefix: "SPACE_POST_COMMENT_REPLY#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "EssenceDeleteDiscussionComment",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.OldImage>}',
+      },
+    });
+
+    new events.Rule(this, "EssenceDeleteDiscussionCommentRule", {
+      eventBus,
+      description:
+        "Route discussion comment + reply removes to app-shell for essence detach",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["EssenceDeleteDiscussionComment"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe: SpacePoll insert/modify → EssenceIndexPoll ────────────
+    new pipes.CfnPipe(this, "EssenceIndexPollPipe", {
+      name: `ratel-${stage}-essence-index-poll-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT", "MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SPACE_POLL#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "EssenceIndexPoll",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    new events.Rule(this, "EssenceIndexPollRule", {
+      eventBus,
+      description:
+        "Route space poll insert/update to app-shell for essence indexing",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["EssenceIndexPoll"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe: SpacePoll remove → EssenceDeletePoll ──────────────────
+    new pipes.CfnPipe(this, "EssenceDeletePollPipe", {
+      name: `ratel-${stage}-essence-delete-poll-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["REMOVE"],
+                dynamodb: {
+                  OldImage: {
+                    sk: { S: [{ prefix: "SPACE_POLL#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "EssenceDeletePoll",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.OldImage>}',
+      },
+    });
+
+    new events.Rule(this, "EssenceDeletePollRule", {
+      eventBus,
+      description: "Route space poll removes to app-shell for essence detach",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["EssenceDeletePoll"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe: SpaceQuiz insert/modify → EssenceIndexQuiz ────────────
+    new pipes.CfnPipe(this, "EssenceIndexQuizPipe", {
+      name: `ratel-${stage}-essence-index-quiz-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT", "MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SPACE_QUIZ#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "EssenceIndexQuiz",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    new events.Rule(this, "EssenceIndexQuizRule", {
+      eventBus,
+      description:
+        "Route space quiz insert/update to app-shell for essence indexing",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["EssenceIndexQuiz"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe: SpaceQuiz remove → EssenceDeleteQuiz ──────────────────
+    new pipes.CfnPipe(this, "EssenceDeleteQuizPipe", {
+      name: `ratel-${stage}-essence-delete-quiz-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["REMOVE"],
+                dynamodb: {
+                  OldImage: {
+                    sk: { S: [{ prefix: "SPACE_QUIZ#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "EssenceDeleteQuiz",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.OldImage>}',
+      },
+    });
+
+    new events.Rule(this, "EssenceDeleteQuizRule", {
+      eventBus,
+      description: "Route space quiz removes to app-shell for essence detach",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["EssenceDeleteQuiz"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe: SpaceAction insert/modify → EssenceActionMetadataUpdate ──
+    // Quiz essence rows derive title/description from SpaceAction. When the
+    // action metadata changes (admin fills in the initially-empty title/desc
+    // via `update_space_action`), re-index the related SpaceQuiz so the
+    // essence row picks up the new copy.
+    new pipes.CfnPipe(this, "EssenceActionMetadataPipe", {
+      name: `ratel-${stage}-essence-action-metadata-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT", "MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: ["SPACE_ACTION"] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "EssenceActionMetadataUpdate",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    new events.Rule(this, "EssenceActionMetadataRule", {
+      eventBus,
+      description:
+        "Route space action metadata updates to app-shell for quiz essence re-index",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["EssenceActionMetadataUpdate"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe: SubTeamAnnouncement Publish → SubTeamAnnouncementPublished ──
+    // Fires on MODIFY when the announcement's status becomes "Published" —
+    // drives the broadcast fan-out (create a pinned Post per recognized
+    // sub-team + notify each member).
+    new pipes.CfnPipe(this, "SubTeamAnnouncementPublishedPipe", {
+      name: `ratel-${stage}-sub-team-ann-pub-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SUB_TEAM_ANNOUNCEMENT#" }] },
+                    status: { S: ["Published"] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "SubTeamAnnouncementPublished",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route SubTeamAnnouncementPublished events to app-shell Lambda ──
+    new events.Rule(this, "SubTeamAnnouncementPublishedRule", {
+      eventBus,
+      description:
+        "Route sub-team announcement publish events to app-shell for fan-out",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["SubTeamAnnouncementPublished"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
   }
 }

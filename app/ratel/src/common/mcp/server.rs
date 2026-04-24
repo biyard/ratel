@@ -361,6 +361,52 @@ impl RatelMcpServer {
         crate::features::spaces::pages::actions::actions::follow::controllers::create_follow_mcp_handler(&self.mcp_secret, req).await
     }
 
+    // ── Meet tools ──────────────────────────────────────────────────
+
+    #[rmcp::tool(
+        name = "create_meet",
+        description = "Create a new meet action in a space. Requires creator role."
+    )]
+    async fn create_meet(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::actions::actions::meet::controllers::CreateMeetMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::actions::actions::meet::controllers::create_meet_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "get_meet",
+        description = "Fetch a meet action with its companion SpaceAction row."
+    )]
+    async fn get_meet(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::actions::actions::meet::controllers::GetMeetMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::actions::actions::meet::controllers::get_meet_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "update_meet",
+        description = "Update meet-specific fields (mode, start_time, duration_min). Requires creator role."
+    )]
+    async fn update_meet(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::actions::actions::meet::controllers::UpdateMeetMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::actions::actions::meet::controllers::update_meet_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "delete_meet",
+        description = "Delete a meet action from a space. Requires creator role."
+    )]
+    async fn delete_meet(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::actions::actions::meet::controllers::DeleteMeetMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::actions::actions::meet::controllers::delete_meet_mcp_handler(&self.mcp_secret, req).await
+    }
+
     // ── App tools ───────────────────────────────────────────────────
 
     #[rmcp::tool(
