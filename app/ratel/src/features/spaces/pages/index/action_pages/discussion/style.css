@@ -993,7 +993,7 @@ body.comments-panel-resizing {
   display: none;
 }
 /* ── Responsive: Bottom Sheet ─────────────────── */
-@media (max-width: 900px) {
+@media (max-width: 749px) {
   .discussion-layout {
     flex-direction: column;
     flex: 1;
@@ -1298,7 +1298,7 @@ body.comments-panel-resizing {
 }
 .comment-text[data-expanded="false"] .comment-item__text {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 10;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
