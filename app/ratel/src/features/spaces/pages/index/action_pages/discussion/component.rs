@@ -32,7 +32,7 @@ fn reset_composer_height() {
     reset_composer_height_js();
 }
 
-// Matches the 500px CSS breakpoint that switches the arena into the
+// Matches the 750px CSS breakpoint that switches the arena into the
 // bottom-sheet layout.
 #[cfg(not(feature = "server"))]
 fn is_arena_mobile_viewport() -> bool {
@@ -40,7 +40,7 @@ fn is_arena_mobile_viewport() -> bool {
         .and_then(|w| w.inner_width().ok())
         .and_then(|v| v.as_f64())
         .unwrap_or(0.0);
-    width_px > 0.0 && width_px <= 500.0
+    width_px > 0.0 && width_px < 750.0
 }
 
 #[component]
@@ -170,6 +170,49 @@ fn ReplyThreadView(
     });
     let reply_priority: ReadSignal<Vec<String>> = reply_priority.into();
 
+    // Same enrichment as `CommentItem` — prepend thread participants so the
+    // parent author + reply authors appear first in the mention dropdown
+    // regardless of the server's space-wide member pagination.
+    let reply_thread_members = use_memo(move || {
+        let p = parent_loader();
+        let mut seen = std::collections::HashSet::new();
+        let mut out: Vec<MentionCandidate> = Vec::new();
+        let parent_pk = p.author_pk.to_string();
+        seen.insert(parent_pk.clone());
+        out.push(MentionCandidate {
+            user_pk: parent_pk,
+            display_name: p.author_display_name.clone(),
+            username: p.author_username.clone(),
+            profile_url: p.author_profile_url.clone(),
+        });
+        for r in replies.read().iter().rev() {
+            let pk = r.author_pk.to_string();
+            if seen.insert(pk.clone()) {
+                out.push(MentionCandidate {
+                    user_pk: pk,
+                    display_name: r.author_display_name.clone(),
+                    username: r.author_username.clone(),
+                    profile_url: r.author_profile_url.clone(),
+                });
+            }
+        }
+        for m in members() {
+            if seen.insert(m.user_pk.clone()) {
+                out.push(m);
+            }
+        }
+        out
+    });
+    let reply_thread_members: ReadSignal<Vec<MentionCandidate>> = reply_thread_members.into();
+
+    // Render replies oldest-first so the newest reply lands at the bottom
+    // (chat-style). Server returns likes DESC, so we re-sort client-side.
+    let sorted_replies = use_memo(move || {
+        let mut v = replies();
+        v.sort_by_key(|r| r.created_at);
+        v
+    });
+
     let parent_sk_for_submit = parent.sk.to_string();
     let mut reply_comment_action = arena.reply_comment;
     let on_submit_reply = move |_| {
@@ -231,7 +274,7 @@ fn ReplyThreadView(
                 }
 
                 div { class: "reply-thread__list",
-                    for reply in replies().iter().filter(|r| !arena.is_deleted(r)) {
+                    for reply in sorted_replies().iter().filter(|r| !arena.is_deleted(r)) {
                         ReplyItem {
                             key: "{reply.sk}",
                             reply: reply.clone(),
@@ -250,7 +293,7 @@ fn ReplyThreadView(
                         text: reply_text,
                         tracked_mentions: reply_tracked_mentions,
                         pending_images: reply_pending_images,
-                        members,
+                        members: reply_thread_members,
                         on_submit: on_submit_reply,
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,
@@ -778,11 +821,11 @@ fn CommentComposer(
 }
 
 /// Renders comment content with mention highlighting and a "Show more"
-/// toggle when the rendered text exceeds 3 visual lines. Used by the
+/// toggle when the rendered text exceeds 10 visual lines. Used by the
 /// parent in `ReplyThreadView`, top-level `CommentItem`, and `ReplyItem`
 /// so the truncation behavior stays consistent everywhere.
 ///
-/// Truncation is purely visual (CSS `-webkit-line-clamp: 3` when
+/// Truncation is purely visual (CSS `-webkit-line-clamp: 10` when
 /// `data-expanded="false"`); JS measures `scrollHeight > clientHeight`
 /// and sets `data-truncatable="true"` to reveal the toggle button. This
 /// matches what the user actually sees regardless of viewport width or
@@ -878,6 +921,49 @@ fn CommentItem(
         )
     });
     let reply_priority: ReadSignal<Vec<String>> = reply_priority.into();
+
+    // Reply composer's candidate list prepends the thread's own participants
+    // (parent author + existing reply authors) so they surface even when the
+    // space has more members than `list_space_members` returns on its first
+    // 50-member page.
+    let parent_cand = MentionCandidate {
+        user_pk: comment.author_pk.to_string(),
+        display_name: comment.author_display_name.clone(),
+        username: comment.author_username.clone(),
+        profile_url: comment.author_profile_url.clone(),
+    };
+    let reply_thread_members = use_memo(move || {
+        let mut seen = std::collections::HashSet::new();
+        let mut out: Vec<MentionCandidate> = Vec::new();
+        seen.insert(parent_cand.user_pk.clone());
+        out.push(parent_cand.clone());
+        for r in replies.read().iter().rev() {
+            let pk = r.author_pk.to_string();
+            if seen.insert(pk.clone()) {
+                out.push(MentionCandidate {
+                    user_pk: pk,
+                    display_name: r.author_display_name.clone(),
+                    username: r.author_username.clone(),
+                    profile_url: r.author_profile_url.clone(),
+                });
+            }
+        }
+        for m in members() {
+            if seen.insert(m.user_pk.clone()) {
+                out.push(m);
+            }
+        }
+        out
+    });
+    let reply_thread_members: ReadSignal<Vec<MentionCandidate>> = reply_thread_members.into();
+
+    // Render replies oldest-first so the newest reply lands at the bottom
+    // (chat-style). Server returns likes DESC, so we re-sort client-side.
+    let sorted_replies = use_memo(move || {
+        let mut v = replies();
+        v.sort_by_key(|r| r.created_at);
+        v
+    });
 
     // DOM id matches the deep-link URL fragment format.
     let comment_dom_id: String = SpacePostCommentEntityType::try_from(comment.sk.clone())
@@ -1139,7 +1225,7 @@ fn CommentItem(
 
             if show_replies() {
                 div { class: "comment-replies",
-                    for reply in replies().iter().filter(|r| !arena.is_deleted(r)) {
+                    for reply in sorted_replies().iter().filter(|r| !arena.is_deleted(r)) {
                         ReplyItem {
                             key: "{reply.sk}",
                             reply: reply.clone(),
@@ -1156,7 +1242,7 @@ fn CommentItem(
                         text: reply_text,
                         tracked_mentions: reply_tracked_mentions,
                         pending_images: reply_pending_images,
-                        members,
+                        members: reply_thread_members,
                         on_submit: move |_| on_submit_reply(()),
                         placeholder: tr.reply_placeholder.to_string(),
                         compact: true,

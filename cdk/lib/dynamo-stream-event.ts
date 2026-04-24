@@ -1437,5 +1437,56 @@ export class DynamoStreamEventStack extends Stack {
       },
       targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
     });
+
+    // ── Pipe: SubTeamAnnouncement Publish → SubTeamAnnouncementPublished ──
+    // Fires on MODIFY when the announcement's status becomes "Published" —
+    // drives the broadcast fan-out (create a pinned Post per recognized
+    // sub-team + notify each member).
+    new pipes.CfnPipe(this, "SubTeamAnnouncementPublishedPipe", {
+      name: `ratel-${stage}-sub-team-ann-pub-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SUB_TEAM_ANNOUNCEMENT#" }] },
+                    status: { S: ["Published"] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "SubTeamAnnouncementPublished",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route SubTeamAnnouncementPublished events to app-shell Lambda ──
+    new events.Rule(this, "SubTeamAnnouncementPublishedRule", {
+      eventBus,
+      description:
+        "Route sub-team announcement publish events to app-shell for fan-out",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["SubTeamAnnouncementPublished"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
   }
 }

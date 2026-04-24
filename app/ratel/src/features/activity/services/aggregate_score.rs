@@ -46,6 +46,13 @@ pub async fn aggregate_score(
             existing.follow_score,
             existing.discussion_score + activity.total_score,
         ),
+        // Meet actions are not yet tracked in per-category score breakdowns.
+        SpaceActionType::Meet => (
+            existing.poll_score,
+            existing.quiz_score,
+            existing.follow_score,
+            existing.discussion_score,
+        ),
     };
 
     SpaceScore::updater(&score_pk, &score_sk)

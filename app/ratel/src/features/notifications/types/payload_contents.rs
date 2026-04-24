@@ -50,6 +50,89 @@ impl InboxPayload {
                 String::new(),
                 None,
             ),
+            InboxPayload::SubTeamApplicationSubmitted { sub_team_name, .. } => (
+                tr.sub_team_app_submitted_title
+                    .replace("{team}", sub_team_name),
+                String::new(),
+                None,
+            ),
+            InboxPayload::SubTeamApplicationApproved {
+                parent_team_name, ..
+            } => (
+                tr.sub_team_app_approved_title
+                    .replace("{parent}", parent_team_name),
+                String::new(),
+                None,
+            ),
+            InboxPayload::SubTeamApplicationRejected {
+                parent_team_name,
+                reason,
+                ..
+            } => (
+                tr.sub_team_app_rejected_title
+                    .replace("{parent}", parent_team_name),
+                reason.clone(),
+                None,
+            ),
+            InboxPayload::SubTeamApplicationReturned {
+                parent_team_name,
+                comment,
+                ..
+            } => (
+                tr.sub_team_app_returned_title
+                    .replace("{parent}", parent_team_name),
+                comment.clone(),
+                None,
+            ),
+            InboxPayload::SubTeamAnnouncementReceived {
+                parent_team_name,
+                title,
+                ..
+            } => (
+                tr.sub_team_ann_received_title
+                    .replace("{parent}", parent_team_name),
+                title.clone(),
+                None,
+            ),
+            InboxPayload::SubTeamAnnouncementComment {
+                commenter_name,
+                comment_preview,
+                ..
+            } => (
+                tr.sub_team_ann_comment_title
+                    .replace("{name}", commenter_name),
+                comment_preview.clone(),
+                None,
+            ),
+            InboxPayload::SubTeamDeregistered {
+                former_parent_team_name,
+                reason,
+                ..
+            } => (
+                tr.sub_team_deregistered_title
+                    .replace("{parent}", former_parent_team_name),
+                reason.clone(),
+                None,
+            ),
+            InboxPayload::SubTeamLeftParent {
+                former_sub_team_name,
+                reason,
+                ..
+            } => (
+                tr.sub_team_left_parent_title
+                    .replace("{team}", former_sub_team_name),
+                reason.clone().unwrap_or_default(),
+                None,
+            ),
+            InboxPayload::SubTeamParentDeleted {
+                former_parent_team_name,
+                ..
+            } => (
+                tr.sub_team_parent_deleted_title
+                    .replace("{parent}", former_parent_team_name),
+                String::new(),
+                None,
+            ),
         }
     }
 }
