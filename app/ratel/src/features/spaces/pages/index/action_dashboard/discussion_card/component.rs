@@ -1,6 +1,6 @@
 use crate::features::spaces::pages::actions::types::SpaceActionSummary;
-use crate::features::spaces::pages::index::action_pages::quiz::{
-    ActiveActionOverlay, ActiveActionOverlaySignal,
+use crate::features::spaces::pages::index::action_dashboard::dependency_lock::{
+    open_locked_popup, resolve_outstanding_actions, DependencyLock,
 };
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::providers::use_space_context;
@@ -10,28 +10,44 @@ pub fn DiscussionActionCard(
     action: SpaceActionSummary,
     space_id: ReadSignal<SpacePartition>,
     #[props(default)] is_admin: bool,
+    #[props(default = DependencyLock::none())] lock: DependencyLock,
 ) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
     let lang = use_language();
-    let mut overlay: ActiveActionOverlaySignal = use_context();
     let nav = use_navigator();
     let mut space_ctx = use_space_context();
+    let mut popup = use_popup();
 
     let action_id = action.action_id.clone();
-    let action_id_overlay = action_id.clone();
+    let action_id_click = action_id.clone();
     let action_id_edit = action_id.clone();
     let prerequisite = action.prerequisite;
+    let locked = lock.locked;
+    let all_actions = space_ctx.actions();
+    let outstanding = resolve_outstanding_actions(&action, &all_actions);
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div {
             class: "quest-card quest-card--discuss",
             "data-prerequisite": prerequisite,
+            "data-locked": locked,
             "data-testid": "quest-card-{action_id}",
             "data-type": "discuss",
-            onclick: move |_| {
-                let discussion_id: SpacePostEntityType = action_id_overlay.clone().into();
-                overlay.0.set(Some(ActiveActionOverlay::Discussion(space_id(), discussion_id)));
+            onclick: {
+                let outstanding = outstanding.clone();
+                let action_id_click = action_id_click.clone();
+                move |_| {
+                    if locked {
+                        open_locked_popup(&mut popup, space_id(), outstanding.clone());
+                        return;
+                    }
+                    let discussion_id: SpacePostEntityType = action_id_click.clone().into();
+                    nav.push(crate::Route::SpaceDiscussionPage {
+                        space_id: space_id(),
+                        discussion_id,
+                    });
+                }
             },
 
             svg {
@@ -59,6 +75,11 @@ pub fn DiscussionActionCard(
                     "{action.action_type.translate(&lang())}"
                 }
                 div { class: "quest-card__top-actions",
+                    if locked {
+                        span { class: "quest-card__badge quest-card__badge--locked",
+                            "{tr.locked_label}"
+                        }
+                    }
                     if prerequisite {
                         span { class: "quest-card__badge quest-card__badge--prerequisite",
                             "{tr.required_label}"
@@ -107,6 +128,21 @@ pub fn DiscussionActionCard(
                         }
                         "{tr.join_discussion}"
                     }
+                    if let Some(count) = action.comment_count {
+                        div { class: "quest-detail-chip",
+                            svg {
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "2",
+                                view_box: "0 0 24 24",
+                                xmlns: "http://www.w3.org/2000/svg",
+                                path { d: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" }
+                            }
+                            "{count} {tr.comments_count}"
+                        }
+                    }
                 }
             }
 
@@ -124,7 +160,11 @@ pub fn DiscussionActionCard(
                     }
                     "{action.credits} CR"
                 }
-                button { class: "quest-card__cta quest-card__cta--start", "{tr.start_quest}" }
+                if locked {
+                    button { class: "quest-card__cta quest-card__cta--locked", "{tr.locked_see_required}" }
+                } else {
+                    button { class: "quest-card__cta quest-card__cta--start", "{tr.start_quest}" }
+                }
             }
         }
     }

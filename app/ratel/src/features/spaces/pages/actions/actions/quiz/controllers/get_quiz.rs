@@ -33,12 +33,13 @@ pub async fn get_quiz(
 
     response.title = space_action.title.clone();
     response.description = space_action.description.clone();
-    response.started_at = space_action.started_at;
-    response.ended_at = space_action.ended_at;
+    let action_status = space_action.status.clone();
     response.space_action = space_action;
 
-    let now = crate::common::utils::time::get_now_timestamp_millis();
-    let is_ended = response.ended_at > 0 && now >= response.ended_at;
+    let is_ended = matches!(
+        action_status,
+        Some(crate::features::spaces::pages::actions::types::SpaceActionStatus::Finish)
+    );
 
     let mut include_correct_answers = false;
 

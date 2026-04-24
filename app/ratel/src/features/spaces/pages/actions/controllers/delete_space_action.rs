@@ -20,12 +20,12 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
         .await?
         .ok_or(Error::NotFound("Action not found".into()))?;
 
-    // Once the action has started it is locked — creators can no
-    // longer delete it. The list UI hides the delete button past
-    // lock; defend the API surface here too.
+    // Once the action has been published (Ongoing / Finish) it is locked —
+    // creators can no longer delete it. Designing / legacy (None) actions
+    // remain deletable.
     if crate::features::spaces::pages::actions::is_action_locked(
         space.status.clone(),
-        space_action.started_at,
+        space_action.status.as_ref(),
     ) {
         return Err(Error::ActionLocked);
     }
@@ -178,6 +178,30 @@ pub async fn delete_space_action(space_id: SpacePartition, action_id: String) ->
             }
 
             crate::transact_write_all_items!(cli, txs);
+        }
+        SpaceActionType::Meet => {
+            let meet_sk = EntityType::SpaceMeet(action_id);
+            let meet = crate::features::spaces::pages::actions::actions::meet::SpaceMeet::get(
+                cli,
+                &space_pk,
+                Some(meet_sk.clone()),
+            )
+            .await?
+            .ok_or(Error::NotFound("Meet not found".into()))?;
+            let _ = meet;
+
+            let txs = vec![
+                crate::features::spaces::pages::actions::actions::meet::SpaceMeet::delete_transact_write_item(
+                    &space_pk,
+                    &meet_sk,
+                ),
+                SpaceAction::delete_transact_write_item(&space_action.pk, &EntityType::SpaceAction),
+                DashboardAggregate::inc_meets(&space_pk, -1),
+            ];
+            crate::transact_write_items!(cli, txs).map_err(|e| {
+                crate::error!("Failed to delete meet action: {e}");
+                SpaceActionError::ActionDeleteFailed
+            })?;
         }
     }
 

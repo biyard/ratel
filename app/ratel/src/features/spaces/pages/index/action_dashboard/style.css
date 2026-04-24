@@ -9,7 +9,7 @@
   display: inline-flex; align-items: center; gap: 6px;
   justify-content: center;
   width: 100%;
-  padding: 0 28px; margin-bottom: 8px;
+  padding: 0 28px; margin-top: 4px; margin-bottom: 8px;
 }
 .quest-label__title {
   font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 600;
@@ -114,6 +114,85 @@
 .quest-card__badge { padding: 3px 8px; border-radius: 100px; font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
 .quest-card__badge--prerequisite { background: rgba(252,179,0,0.1); color: #fcb300; border: 1px solid rgba(252,179,0,0.2); }
 .quest-card__badge--credits     { background: rgba(252,179,0,0.06); color: #fcb300; border: 1px solid rgba(252,179,0,0.12); }
+.quest-card__badge--locked      { background: rgba(148,163,184,0.12); color: #94a3b8; border: 1px solid rgba(148,163,184,0.25); }
+
+/* Locked state — card grey/dim, cursor cue, inline hint, CTA muted. */
+.quest-card[data-locked="true"] { opacity: 0.65; cursor: not-allowed; filter: saturate(0.6); }
+.quest-card[data-locked="true"]:hover { opacity: 0.7; }
+.quest-card__locked-hint {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--dark, #8888a8) var(--light, #6b6b80);
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(148,163,184,0.08);
+  border: 1px dashed rgba(148,163,184,0.2);
+}
+.quest-card__cta--locked {
+  background: linear-gradient(135deg, rgba(252,179,0,0.92), rgba(229,162,0,0.92));
+  color: #0a0a0a;
+  border: none;
+  box-shadow: 0 2px 12px rgba(252,179,0,0.2);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.quest-card__cta--locked:hover {
+  background: linear-gradient(135deg, #fcb300, #e5a200);
+  box-shadow: 0 4px 20px rgba(252,179,0,0.35);
+  transform: translateY(-1px);
+}
+.quest-card__cta--locked::after {
+  content: "";
+  width: 10px; height: 10px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='9 18 15 12 9 6'/></svg>") center / contain no-repeat;
+          mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='9 18 15 12 9 6'/></svg>") center / contain no-repeat;
+  flex: 0 0 auto;
+}
+
+/* ── Locked dependencies popup ─────────────────────────────────── */
+.locked-deps { display: flex; flex-direction: column; gap: 14px; min-width: 280px; max-width: 420px; }
+.locked-deps__head { display: flex; align-items: flex-start; gap: 10px; }
+.locked-deps__icon {
+  width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 8px; background: rgba(148,163,184,0.12); color: #94a3b8;
+  flex: 0 0 auto;
+}
+.locked-deps__head-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.locked-deps__title { font-size: 15px; font-weight: 700; color: var(--dark, #f0f0f5) var(--light, #12121a); }
+.locked-deps__subtitle { font-size: 12px; color: var(--dark, #8888a8) var(--light, #6b6b80); }
+
+.locked-deps__list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.locked-deps__item { margin: 0; }
+.locked-deps__row {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 10px 12px;
+  border: 1px solid var(--dark, rgba(255,255,255,0.08)) var(--light, rgba(0,0,0,0.08));
+  border-radius: 10px;
+  background: var(--dark, rgba(255,255,255,0.02)) var(--light, rgba(0,0,0,0.02));
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  text-align: left;
+}
+.locked-deps__row:hover {
+  background: var(--dark, rgba(255,255,255,0.05)) var(--light, rgba(0,0,0,0.04));
+  border-color: rgba(252,179,0,0.4);
+}
+.locked-deps__row-type {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
+  padding: 2px 6px; border-radius: 4px;
+  background: rgba(148,163,184,0.12); color: #94a3b8;
+  flex: 0 0 auto;
+}
+.locked-deps__row-title {
+  flex: 1; min-width: 0;
+  font-size: 14px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--dark, #f0f0f5) var(--light, #12121a);
+}
+.locked-deps__row-chevron { flex: 0 0 auto; color: var(--dark, #8888a8) var(--light, #6b6b80); }
 
 .quest-card__body { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; gap: 10px; }
 .quest-card__title { font-size: 20px; font-weight: 700; line-height: 1.3; }
@@ -134,11 +213,20 @@
   padding: 9px 20px; border-radius: 8px; border: none;
   font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700;
   letter-spacing: 0.08em; text-transform: uppercase;
+  white-space: nowrap;
   cursor: pointer; transition: all 0.25s ease;
   background: linear-gradient(135deg, #fcb300, #e5a200);
   color: #0a0a0a; box-shadow: 0 2px 12px rgba(252,179,0,0.2);
 }
 .quest-card__cta:hover { box-shadow: 0 4px 20px rgba(252,179,0,0.35); transform: translateY(-1px); }
+
+/* Locked CTA is a tag-style chip, not a primary CTA, so it can sit
+   comfortably next to the reward badge even on narrow screens. */
+.quest-card__cta--locked {
+  padding: 6px 12px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
 
 /* ── Arrow nav (desktop/tablet only) ─────────────── */
 .carousel-arrow {
@@ -321,9 +409,10 @@
 
 /* ── Responsive ──────────────────────────────────── */
 @media (max-width: 500px) {
+  .quest-label { margin-top: 8px; }
   .quest-card { width: 320px; min-height: 340px; padding: 22px 20px 20px; }
   .quest-card__title { font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .carousel-track { padding-left: calc(50vw - 160px); padding-right: calc(50vw - 160px); gap: 20px; }
+  .carousel-track { padding-left: calc(50vw - 160px); padding-right: calc(50vw - 160px); gap: 20px; padding-top: 40px; padding-bottom: 40px; }
   .carousel-wrapper::before, .carousel-wrapper::after { width: 60px; }
   .carousel-arrow { display: none; }
   .bottom-bar { padding: 10px 16px 16px; gap: 10px; }

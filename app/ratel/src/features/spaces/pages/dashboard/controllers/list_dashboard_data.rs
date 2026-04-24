@@ -35,6 +35,7 @@ pub async fn list_dashboard_data_handler(
                 SpaceActionType::TopicDiscussion => counts.discussion_count += 1,
                 SpaceActionType::Quiz => counts.quiz_count += 1,
                 SpaceActionType::Follow => counts.follow_count += 1,
+                SpaceActionType::Meet => {}
             }
         }
         counts

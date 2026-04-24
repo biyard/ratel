@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Meet · Terminal States</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .variant-switch{display:flex;gap:6px;padding:4px;border-radius:12px;background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);margin-bottom:16px}
+    .variant-switch__btn{flex:1;padding:10px 14px;border-radius:9px;background:transparent;border:1px solid transparent;color:var(--text-muted);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+    .variant-switch__btn[aria-selected="true"][data-v="cancelled"]{background:rgba(239,68,68,0.08);color:var(--accent-coral);border-color:rgba(239,68,68,0.22)}
+    .variant-switch__btn[aria-selected="true"][data-v="expired"]{background:rgba(245,158,11,0.08);color:var(--accent-amber);border-color:rgba(245,158,11,0.25)}
+
+    .term-hero{
+      position:relative;overflow:hidden;padding:30px 32px;border-radius:20px;
+      background:var(--bg-glass);backdrop-filter:blur(14px);
+      border:1px solid var(--border-subtle);
+      display:flex;gap:24px;align-items:center;
+    }
+    .term-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 60% at 15% 15%,var(--term-accent,rgba(239,68,68,0.10)) 0%,transparent 60%);pointer-events:none}
+    .term-hero > *{position:relative;z-index:1}
+    .term-hero[data-v="cancelled"]{--term-accent:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.22)}
+    .term-hero[data-v="expired"]{--term-accent:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.28)}
+    .term-hero__icon{width:64px;height:64px;border-radius:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .term-hero__icon svg{width:28px;height:28px}
+    .term-hero[data-v="cancelled"] .term-hero__icon{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.28);color:var(--accent-coral)}
+    .term-hero[data-v="expired"] .term-hero__icon{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.30);color:var(--accent-amber)}
+    .term-hero__eyebrow{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px}
+    .term-hero__title{font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:0.02em;line-height:1.25;color:var(--text-primary);margin-bottom:8px}
+    .term-hero__sub{font-size:13px;color:var(--text-muted);line-height:1.6;max-width:560px}
+
+    .detail-row{display:flex;gap:10px;flex-wrap:wrap;padding:14px 18px;border-radius:12px;background:rgba(6,6,14,0.45);border:1px solid var(--border-subtle)}
+
+    /* Reason card (cancelled only) */
+    .reason-card{
+      padding:18px 20px;border-radius:14px;
+      background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.20);
+      display:flex;gap:12px;
+    }
+    .reason-card__avatar{flex-shrink:0}
+    .reason-card__body{flex:1;min-width:0}
+    .reason-card__head{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+    .reason-card__author{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--text-primary)}
+    .reason-card__when{font-family:var(--font-display);font-size:10px;color:var(--text-dim);letter-spacing:0.08em;margin-left:auto}
+    .reason-card__title{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-coral);margin-bottom:6px}
+    .reason-card__text{font-size:14px;line-height:1.7;color:var(--text-primary);background:rgba(12,12,26,0.55);padding:12px 14px;border-radius:10px;border-left:3px solid var(--accent-coral)}
+
+    .absence-list{display:flex;flex-direction:column;gap:8px}
+    .absence-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);color:var(--text-muted);font-size:13px}
+    .absence-row svg{width:14px;height:14px;color:var(--text-dim);flex-shrink:0}
+
+    .action-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:4px}
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo">SC</div>
+      <div class="u-col">
+        <span class="arena-topbar__title">SNU Code Club</span>
+        <span class="arena-topbar__handle">Meet · Terminal</span>
+      </div>
+      <span class="arena-topbar__status" id="top-status" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.22);color:var(--accent-coral)">Cancelled</span>
+    </div>
+  </div>
+
+  <div class="page page--narrow">
+    <div class="page-header">
+      <div class="page-header__main">
+        <span class="page-header__eyebrow">FR-12 · Terminal states</span>
+        <h1 class="page-header__title page-header__title--meet">회의가 <strong>시작되지 않았습니다</strong></h1>
+        <p class="page-header__sub">Cancelled / Expired 두 terminal state는 recording, transcript, chat log가 생성되지 않습니다. 아래 토글로 두 상태를 전환해볼 수 있습니다.</p>
+      </div>
+    </div>
+
+    <div class="variant-switch" role="tablist">
+      <button class="variant-switch__btn" role="tab" aria-selected="true" data-v="cancelled">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Cancelled · admin이 취소
+      </button>
+      <button class="variant-switch__btn" role="tab" aria-selected="false" data-v="expired">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Expired · 24h 내 시작 안 됨
+      </button>
+    </div>
+
+    <div class="term-hero" id="hero" data-v="cancelled">
+      <div class="term-hero__icon" id="hero-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+      <div>
+        <div class="term-hero__eyebrow" id="hero-eyebrow">취소된 회의 · 2일 전</div>
+        <h1 class="term-hero__title" id="hero-title">회의가 취소되었습니다</h1>
+        <p class="term-hero__sub" id="hero-sub">호스트 @park_j가 Scheduled 상태에서 회의를 취소했습니다. 모든 space participant에게 인앱 + 이메일로 취소 알림이 전송되었습니다.</p>
+      </div>
+    </div>
+
+    <!-- Meeting basics -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title card__title--meet">회의 정보</h2>
+        <span class="card__dash"></span>
+      </div>
+      <div class="detail-row">
+        <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Apr 25 · 19:00 Scheduled</span>
+        <span class="chip">예상 60분</span>
+        <span class="chip">Host · @park_j</span>
+        <span class="chip">7 participants</span>
+      </div>
+      <div style="margin-top:12px">
+        <div style="font-family:var(--font-display);font-size:11px;color:var(--text-muted);letter-spacing:0.08em;margin-bottom:6px">Title</div>
+        <div style="font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--text-primary)">Mid-semester retrospective call</div>
+      </div>
+      <div style="margin-top:12px">
+        <div style="font-family:var(--font-display);font-size:11px;color:var(--text-muted);letter-spacing:0.08em;margin-bottom:6px">Description</div>
+        <div style="font-size:13px;color:var(--text-muted);line-height:1.6">스프린트 회고 + 다음 분기 계획 논의. 각 팀 리드는 지난 2주 진척과 블로커를 3분 내로 공유합니다.</div>
+      </div>
+    </section>
+
+    <!-- Reason (cancelled) -->
+    <section class="card" id="reason-section">
+      <div class="card__head">
+        <h2 class="card__title card__title--meet" id="reason-heading">취소 사유 · Cancellation reason</h2>
+        <span class="card__dash"></span>
+      </div>
+      <div class="reason-card" id="reason-card">
+        <div class="avatar reason-card__avatar">PJ</div>
+        <div class="reason-card__body">
+          <div class="reason-card__head">
+            <span class="reason-card__author">@park_j</span>
+            <span class="u-text-dim" style="font-family:var(--font-display);font-size:10px;letter-spacing:0.06em">· Host</span>
+            <span class="reason-card__when" id="reason-when">어제 · 22:14</span>
+          </div>
+          <span class="reason-card__title" id="reason-title">Admin이 남긴 사유</span>
+          <div class="reason-card__text" id="reason-text">갑자기 학과 회의 일정이 잡혀서 오늘 retrospective는 어렵게 되었습니다. 다음 주 같은 시간으로 다시 예약할게요 — 미리 공지 못해 죄송합니다.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- What's not available -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title card__title--meet">이 회의에서 생성되지 않은 것 · Not available</h2>
+        <span class="card__dash"></span>
+      </div>
+      <div class="absence-list">
+        <div class="absence-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Recording — 회의가 Live에 진입하지 않았으므로 녹화 파일이 없습니다</div>
+        <div class="absence-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Transcript — 오디오 소스가 없으므로 화자별 transcript가 생성되지 않았습니다</div>
+        <div class="absence-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Chat log — 채팅 세션이 시작되지 않았습니다</div>
+        <div class="absence-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Rewards — 누구도 1분 이상 참석하지 않았으므로 보상이 지급되지 않았습니다</div>
+        <div class="absence-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Essence — 이 회의의 내용은 space Essence pool에 포함되지 않습니다</div>
+      </div>
+    </section>
+
+    <!-- Actions -->
+    <div class="action-row">
+      <a class="btn btn--ghost" href="action-list-with-meet.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        액션 목록으로
+      </a>
+      <a class="btn btn--primary" href="create-meet.html" style="background:linear-gradient(135deg,var(--meet-color),#fb923c);border-color:var(--meet-color);color:#fff">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        새 Meet 예약
+      </a>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+</div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    const svgNS = 'http://www.w3.org/2000/svg';
+    function svgChild(tag, attrs) { const n = document.createElementNS(svgNS, tag); Object.entries(attrs).forEach(([k,v]) => n.setAttribute(k, v)); return n; }
+
+    const hero = document.getElementById('hero');
+    const heroIcon = document.getElementById('hero-icon');
+    const heroEyebrow = document.getElementById('hero-eyebrow');
+    const heroTitle = document.getElementById('hero-title');
+    const heroSub = document.getElementById('hero-sub');
+    const topStatus = document.getElementById('top-status');
+    const reasonSection = document.getElementById('reason-section');
+    const reasonHeading = document.getElementById('reason-heading');
+    const reasonCard = document.getElementById('reason-card');
+    const reasonTitle = document.getElementById('reason-title');
+    const reasonText = document.getElementById('reason-text');
+    const reasonWhen = document.getElementById('reason-when');
+
+    function render(v) {
+      document.querySelectorAll('.variant-switch__btn').forEach(b => b.setAttribute('aria-selected', b.dataset.v === v));
+      hero.dataset.v = v;
+
+      const svg = document.createElementNS(svgNS, 'svg');
+      svg.setAttribute('viewBox','0 0 24 24');
+      svg.setAttribute('fill','none');
+      svg.setAttribute('stroke','currentColor');
+      svg.setAttribute('stroke-width','2');
+      svg.setAttribute('stroke-linecap','round');
+      svg.setAttribute('stroke-linejoin','round');
+
+      if (v === 'cancelled') {
+        topStatus.style.background = 'rgba(239,68,68,0.08)';
+        topStatus.style.borderColor = 'rgba(239,68,68,0.22)';
+        topStatus.style.color = 'var(--accent-coral)';
+        topStatus.textContent = 'Cancelled';
+        heroEyebrow.textContent = '취소된 회의 · 어제';
+        heroTitle.textContent = '회의가 취소되었습니다';
+        heroSub.textContent = '호스트 @park_j가 Scheduled 상태에서 회의를 취소했습니다. 모든 space participant에게 인앱 + 이메일로 취소 알림이 전송되었습니다.';
+        svg.appendChild(svgChild('line',{x1:'18',y1:'6',x2:'6',y2:'18'}));
+        svg.appendChild(svgChild('line',{x1:'6',y1:'6',x2:'18',y2:'18'}));
+        heroIcon.replaceChildren(svg);
+
+        reasonSection.hidden = false;
+        reasonHeading.textContent = '취소 사유 · Cancellation reason';
+        reasonTitle.textContent = 'Admin이 남긴 사유';
+        reasonText.textContent = '갑자기 학과 회의 일정이 잡혀서 오늘 retrospective는 어렵게 되었습니다. 다음 주 같은 시간으로 다시 예약할게요 — 미리 공지 못해 죄송합니다.';
+        reasonWhen.textContent = '어제 · 22:14';
+      } else {
+        topStatus.style.background = 'rgba(245,158,11,0.08)';
+        topStatus.style.borderColor = 'rgba(245,158,11,0.25)';
+        topStatus.style.color = 'var(--accent-amber)';
+        topStatus.textContent = 'Expired';
+        heroEyebrow.textContent = '만료된 회의 · 1일 전 자동';
+        heroTitle.textContent = '회의가 시작되지 않아 만료되었습니다';
+        heroSub.textContent = '예약 시각 이후 24시간이 지날 때까지 host가 회의를 시작하지 않아 자동으로 Expired 상태로 전환되었습니다. Cancelled와 다르게 admin 관여 없이 시스템이 처리합니다.';
+        svg.appendChild(svgChild('circle',{cx:'12',cy:'12',r:'10'}));
+        svg.appendChild(svgChild('polyline',{points:'12 6 12 12 16 14'}));
+        heroIcon.replaceChildren(svg);
+
+        reasonSection.hidden = true;
+      }
+    }
+
+    document.querySelectorAll('.variant-switch__btn').forEach(btn => btn.addEventListener('click', () => render(btn.dataset.v)));
+
+    // URL ?v=expired support
+    const q = new URLSearchParams(window.location.search).get('v');
+    if (q === 'expired') render('expired');
+    else render('cancelled');
+  });
+</script>
+</body>
+</html>

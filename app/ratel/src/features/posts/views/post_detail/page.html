@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Post Detail · Syndicated</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --bg-input:rgba(255,255,255,0.025);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-coral:#ef4444;--accent-green:#22c55e;--accent-violet:#818cf8;
+      --bsky:#0a85ff;--linkedin:#0a66c2;--threads:#f5f5f5;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+    }
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+    body{overflow-x:hidden}
+
+    .arena{position:relative;min-height:100vh;display:flex;flex-direction:column;isolation:isolate}
+    .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 30% 15%,rgba(252,179,0,0.04) 0%,transparent 60%),radial-gradient(ellipse 60% 60% at 80% 85%,rgba(110,237,216,0.03) 0%,transparent 60%);z-index:-1;pointer-events:none}
+
+    .arena-topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:18px 28px;background:rgba(6,6,14,0.80);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-subtle)}
+    .arena-topbar__left{display:flex;align-items:center;gap:14px}
+    .back-btn{width:38px;height:38px;border-radius:10px;background:var(--bg-glass);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0}
+    .back-btn:hover{border-color:rgba(252,179,0,0.25);background:var(--bg-glass-hover)}
+    .back-btn svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+    .back-btn:hover svg{color:var(--accent-gold)}
+
+    .topbar-title{display:flex;flex-direction:column;gap:2px}
+    .topbar-title__eyebrow{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim)}
+    .topbar-title__main{font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-primary)}
+
+    .arena-topbar__right{display:flex;align-items:center;gap:10px}
+    .topbar-btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--bg-glass);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all 0.25s ease}
+    .topbar-btn:hover{border-color:rgba(252,179,0,0.25);color:var(--accent-gold);background:var(--bg-glass-hover)}
+    .topbar-btn svg{width:13px;height:13px}
+
+    .page{position:relative;z-index:1;flex:1;max-width:760px;margin:0 auto;width:100%;padding:32px 28px 60px;display:flex;flex-direction:column;gap:28px}
+
+    /* Post hero */
+    .post-hero{display:flex;flex-direction:column;gap:16px}
+    .post-hero__meta{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--text-muted)}
+    .post-hero__avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--accent-gold),var(--accent-teal));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:13px;font-weight:800;color:#0a0a0a}
+    .post-hero__author{display:flex;flex-direction:column;gap:2px}
+    .post-hero__author-name{font-size:14px;font-weight:600;color:var(--text-primary)}
+    .post-hero__author-time{font-size:12px;color:var(--text-dim)}
+    .post-hero__title{font-size:36px;font-weight:700;line-height:1.2;letter-spacing:-0.015em;color:var(--text-primary)}
+    .post-hero__body{font-size:16px;line-height:1.75;color:var(--text-primary)}
+    .post-hero__body p{margin-bottom:16px}
+
+    .post-hero__image{border-radius:16px;overflow:hidden;border:1px solid var(--border-subtle);aspect-ratio:16/9}
+    .post-hero__image img{width:100%;height:100%;object-fit:cover}
+
+    .post-hero__actions{display:flex;align-items:center;gap:10px;padding:14px 0;border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle)}
+    .action-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;background:transparent;border:1px solid var(--border-subtle);color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s ease}
+    .action-btn:hover{border-color:rgba(252,179,0,0.22);color:var(--accent-gold)}
+    .action-btn svg{width:14px;height:14px}
+    .action-btn strong{color:var(--text-primary);font-weight:700}
+
+    /* Syndication section */
+    .syn{display:flex;flex-direction:column;gap:14px}
+    .syn-head{display:flex;align-items:center;justify-content:space-between}
+    .syn-head__title{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-muted);display:flex;align-items:center;gap:10px}
+    .syn-head__title::before{content:'';width:4px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--accent-gold),transparent)}
+    .syn-head__summary{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-dim)}
+    .syn-head__summary strong{color:var(--accent-teal);font-weight:700}
+
+    .syn-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:18px;border-radius:16px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle)}
+    .syn-stat{display:flex;flex-direction:column;gap:3px;padding:8px 12px;border-left:1px solid var(--border-subtle)}
+    .syn-stat:first-child{border-left:none}
+    .syn-stat__value{font-family:var(--font-display);font-size:22px;font-weight:700;letter-spacing:0.02em;color:var(--text-primary)}
+    .syn-stat__value--accent{color:var(--accent-teal)}
+    .syn-stat__label{font-family:var(--font-display);font-size:9.5px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
+
+    /* Syndication cards */
+    .syn-list{display:flex;flex-direction:column;gap:12px}
+    .syn-card{position:relative;border-radius:14px;border:1px solid var(--border-subtle);background:var(--bg-glass);backdrop-filter:blur(16px);overflow:hidden;transition:all 0.25s ease}
+    .syn-card:hover{border-color:rgba(255,255,255,0.10)}
+    .syn-card[data-status="success"]{border-color:rgba(34,197,94,0.16)}
+    .syn-card[data-status="pending"]{border-color:rgba(252,179,0,0.16)}
+    .syn-card[data-status="failed"]{border-color:rgba(239,68,68,0.18)}
+
+    .syn-card__body{display:grid;grid-template-columns:auto 1fr auto;gap:14px;padding:14px 16px;align-items:center}
+
+    .syn-logo{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .syn-logo--bsky{background:linear-gradient(135deg,#0a85ff,#1da1f2)}
+    .syn-logo--linkedin{background:#0a66c2}
+    .syn-logo--threads{background:#0a0a0a;border:1px solid rgba(255,255,255,0.18)}
+    .syn-logo svg{width:18px;height:18px;color:#fff}
+
+    .syn-card__main{display:flex;flex-direction:column;gap:4px;min-width:0}
+    .syn-card__name-row{display:flex;align-items:center;gap:10px}
+    .syn-card__name{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:0.06em;color:var(--text-primary)}
+    .status-pill{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:100px;font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;border:1px solid transparent}
+    .status-pill::before{content:'';width:5px;height:5px;border-radius:50%}
+    .status-pill--success{background:rgba(34,197,94,0.08);color:var(--accent-green);border-color:rgba(34,197,94,0.20)}
+    .status-pill--success::before{background:var(--accent-green);box-shadow:0 0 6px var(--accent-green);animation:pulse-dot 2s ease-in-out infinite}
+    .status-pill--pending{background:rgba(252,179,0,0.08);color:var(--accent-gold);border-color:rgba(252,179,0,0.20)}
+    .status-pill--pending::before{background:var(--accent-gold);animation:pulse-dot 1.2s ease-in-out infinite}
+    .status-pill--failed{background:rgba(239,68,68,0.08);color:var(--accent-coral);border-color:rgba(239,68,68,0.20)}
+    .status-pill--failed::before{background:var(--accent-coral)}
+    @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+
+    .syn-card__sub{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--text-muted)}
+    .syn-card__sub-item{display:inline-flex;align-items:center;gap:5px}
+    .syn-card__sub-item svg{width:12px;height:12px;color:var(--text-dim)}
+    .syn-card__sub-item strong{color:var(--text-primary);font-weight:600}
+    .syn-card__err{font-size:12px;color:var(--accent-coral);display:inline-flex;align-items:center;gap:6px}
+    .syn-card__err svg{width:12px;height:12px}
+
+    .syn-card__actions{display:flex;gap:6px}
+    .mini-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border-radius:8px;background:transparent;border:1px solid var(--border-subtle);color:var(--text-muted);font-family:var(--font-display);font-size:9.5px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+    .mini-btn:hover{border-color:rgba(252,179,0,0.22);color:var(--accent-gold)}
+    .mini-btn svg{width:10px;height:10px}
+    .mini-btn--retry{background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.20);color:var(--accent-coral)}
+    .mini-btn--retry:hover{background:rgba(239,68,68,0.12);color:var(--accent-coral);border-color:rgba(239,68,68,0.30)}
+
+    .syn-card__engagement{display:flex;align-items:center;gap:14px;padding:10px 16px;border-top:1px solid var(--border-subtle);background:rgba(0,0,0,0.18)}
+    .engage{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted)}
+    .engage svg{width:12px;height:12px;color:var(--text-dim)}
+    .engage strong{color:var(--text-primary);font-weight:700;font-family:var(--font-display);font-size:12.5px}
+
+    @media (max-width:720px){
+      .post-hero__title{font-size:28px}
+      .syn-stats{grid-template-columns:repeat(3,1fr);padding:14px}
+      .syn-stat__value{font-size:18px}
+      .syn-card__body{grid-template-columns:auto 1fr;padding:14px}
+      .syn-card__actions{grid-column:1/-1;justify-content:flex-end}
+    }
+    @media (max-width:500px){
+      .arena-topbar{padding:12px 14px}
+      .topbar-title__eyebrow{display:none}
+      .topbar-title__main{font-size:13px}
+      .page{padding:22px 14px 60px;gap:22px}
+      .post-hero__title{font-size:24px}
+      .post-hero__body{font-size:15px}
+      .syn-stats{grid-template-columns:1fr 1fr;gap:6px}
+      .syn-stat:nth-child(3){border-left:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <div class="arena-topbar">
+      <div class="arena-topbar__left">
+        <button class="back-btn" aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="topbar-title">
+          <span class="topbar-title__eyebrow">Post</span>
+          <span class="topbar-title__main">Detail</span>
+        </div>
+      </div>
+      <div class="arena-topbar__right">
+        <button class="topbar-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+          Edit
+        </button>
+        <button class="topbar-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share
+        </button>
+      </div>
+    </div>
+
+    <main class="page">
+
+      <article class="post-hero">
+        <div class="post-hero__meta">
+          <span class="post-hero__avatar">S</span>
+          <div class="post-hero__author">
+            <span class="post-hero__author-name">Sangwoo Kim</span>
+            <span class="post-hero__author-time">Published 2 hours ago · 4 min read</span>
+          </div>
+        </div>
+
+        <h1 class="post-hero__title">Why MCP changes everything for knowledge creators</h1>
+
+        <figure class="post-hero__image">
+          <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=900&q=80" alt="" />
+        </figure>
+
+        <div class="post-hero__body">
+          <p>For the last five years, I've watched tools promise "your second brain" and deliver another silo. Notion, Roam, Obsidian — beautiful, but locked inside apps and behind screens.</p>
+          <p>MCP flips that. Your knowledge becomes a queryable surface. You stop being the reader of your own notes and start being someone whose thinking can be queried, on demand, by agents working for you — or for people who subscribe to your House.</p>
+          <p>Ratel is building toward this. Connect Notion, open a House, let your essence compound.</p>
+        </div>
+
+        <div class="post-hero__actions">
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <strong>142</strong> likes
+          </button>
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <strong>28</strong> comments
+          </button>
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7z"/></svg>
+            Save
+          </button>
+        </div>
+      </article>
+
+      <!-- ─── SYNDICATION ─── -->
+      <section class="syn">
+
+        <div class="syn-head">
+          <span class="syn-head__title">Syndication</span>
+          <span class="syn-head__summary"><strong>2 of 3</strong> succeeded · 1 retrying</span>
+        </div>
+
+        <div class="syn-stats">
+          <div class="syn-stat">
+            <div class="syn-stat__value"><span class="syn-stat__value--accent">1,420</span></div>
+            <div class="syn-stat__label">External reads</div>
+          </div>
+          <div class="syn-stat">
+            <div class="syn-stat__value">87</div>
+            <div class="syn-stat__label">Reactions</div>
+          </div>
+          <div class="syn-stat">
+            <div class="syn-stat__value">12</div>
+            <div class="syn-stat__label">Backlink clicks</div>
+          </div>
+        </div>
+
+        <div class="syn-list">
+
+          <!-- ── Bluesky: SUCCESS ── -->
+          <article class="syn-card" data-status="success">
+            <div class="syn-card__body">
+              <span class="syn-logo syn-logo--bsky">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.5c-1.3-2.5-4.9-7.2-8.2-9.5C.7-1.2 0 .5 0 1.5c0 1.1.6 9.1 1 10.3.8 4 5.5 5.1 9.6 4.4-6.5 1.1-12.3 3.5-4.7 11.4 2.5 2.6 3.5-2.6 4-5.2.5 2.6 1.6 7.8 4 5.2 7.7-7.9 1.9-10.4-4.6-11.5 4 .7 8.8-.4 9.6-4.4.4-1.2 1-9.2 1-10.3 0-1-.7-2.7-3.8-.5-3.3 2.3-6.9 7-8.2 9.6z"/></svg>
+              </span>
+              <div class="syn-card__main">
+                <div class="syn-card__name-row">
+                  <span class="syn-card__name">Bluesky</span>
+                  <span class="status-pill status-pill--success">Published</span>
+                </div>
+                <div class="syn-card__sub">
+                  <span class="syn-card__sub-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    2 hours ago
+                  </span>
+                  <span class="syn-card__sub-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    <strong>287</strong>/300 chars
+                  </span>
+                  <span class="syn-card__sub-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    Truncated
+                  </span>
+                </div>
+              </div>
+              <div class="syn-card__actions">
+                <a class="mini-btn" href="https://bsky.app/profile/you.bsky.social/post/abc123" target="_blank">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="10 14 21 3"/><path d="M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"/></svg>
+                  View
+                </a>
+              </div>
+            </div>
+            <div class="syn-card__engagement">
+              <span class="engage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><strong>42</strong> likes</span>
+              <span class="engage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg><strong>18</strong> reposts</span>
+              <span class="engage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><strong>7</strong> replies</span>
+              <span class="engage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 11 22 2 13 21 11 13 3 11"/></svg>Backlink: <strong>6</strong></span>
+            </div>
+          </article>
+
+          <!-- ── LinkedIn: SUCCESS ── -->
+          <article class="syn-card" data-status="success">
+            <div class="syn-card__body">
+              <span class="syn-logo syn-logo--linkedin">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.063 2.063 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+              </span>
+              <div class="syn-card__main">
+                <div class="syn-card__name-row">
+                  <span class="syn-card__name">LinkedIn</span>
+                  <span class="status-pill status-pill--success">Published</span>
+                </div>
+                <div class="syn-card__sub">
+                  <span class="syn-card__sub-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    2 hours ago
+                  </span>
+                  <span class="syn-card__sub-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    <strong>1,340</strong>/3,000 chars
+                  </span>
+                </div>
+              </div>
+              <div class="syn-card__actions">
+                <a class="mini-btn" href="https://linkedin.com/posts/xyz" target="_blank">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="10 14 21 3"/><path d="M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"/></svg>
+                  View
+                </a>
+              </div>
+            </div>
+            <div class="syn-card__engagement">
+              <span class="engage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><strong>27</strong> reactions</span>
+              <span class="engage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><strong>4</strong> comments</span>
+              <span class="engage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 11 22 2 13 21 11 13 3 11"/></svg>Backlink: <strong>3</strong></span>
+            </div>
+          </article>
+
+          <!-- ── Threads: FAILED ── -->
+          <article class="syn-card" data-status="failed">
+            <div class="syn-card__body">
+              <span class="syn-logo syn-logo--threads">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798z"/></svg>
+              </span>
+              <div class="syn-card__main">
+                <div class="syn-card__name-row">
+                  <span class="syn-card__name">Threads</span>
+                  <span class="status-pill status-pill--failed">Failed · retrying</span>
+                </div>
+                <div class="syn-card__err">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span>Rate-limited by Meta (HTTP 429). Auto-retry in <strong style="color:var(--accent-coral)">2 min</strong> · Attempt 2/5</span>
+                </div>
+              </div>
+              <div class="syn-card__actions">
+                <button class="mini-btn mini-btn--retry">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  Retry now
+                </button>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+</body>
+</html>

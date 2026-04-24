@@ -7,11 +7,6 @@ pub use action_settings_modal::ActionSettingsModal;
 mod create_action_modal;
 pub use create_action_modal::CreateActionModal;
 
-mod action_common_settings;
-pub use action_common_settings::ActionCommonSettings;
-pub use action_common_settings::ActionCommonSettingsTranslate;
-pub use action_common_settings::RewardSetting;
-
 mod action_reward_setting;
 pub use action_reward_setting::ActionRewardSetting;
 
@@ -29,5 +24,17 @@ pub use settings_switch_button::{ActionEditMode, SettingsSwitchButton, use_actio
 
 mod action_edit_topbar;
 pub use action_edit_topbar::*;
+
+mod action_edit_footer;
+pub use action_edit_footer::*;
+
+mod action_status_control;
+pub use action_status_control::ActionStatusControl;
+
+mod action_dependency_selector;
+pub use action_dependency_selector::ActionDependencySelector;
+
+mod prerequisite_tile;
+pub use prerequisite_tile::PrerequisiteTile;
 
 use super::*;

@@ -37,6 +37,8 @@ pub async fn reply_to_comment_handler(
     )
     .await?;
 
+    // Essence indexing happens via the DynamoDB Stream pipeline.
+
     let cta_url = format!(
         "{}/posts/{}",
         crate::common::config::site_base_url(),

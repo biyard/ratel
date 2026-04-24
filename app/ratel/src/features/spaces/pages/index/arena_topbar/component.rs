@@ -1,3 +1,4 @@
+use crate::features::posts::controllers::like_post::like_post_handler;
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::controllers::{self, update_space};
 use crate::features::spaces::space_common::components::SpaceVisibilityModal;
@@ -13,6 +14,7 @@ pub fn ArenaTopbar(
     let tr: SpaceViewerTranslate = use_translate();
     let mut ctx = use_space_context();
     let mut popup = use_popup();
+    let nav = use_navigator();
     let real_role = ctx.role();
     let is_admin = real_role.is_admin();
     let user_ctx = crate::features::auth::hooks::use_user_context();
@@ -24,6 +26,14 @@ pub fn ArenaTopbar(
     let overview_open = active_panel() == ActivePanel::Overview;
     let leaderboard_open = active_panel() == ActivePanel::Leaderboard;
     let settings_open = active_panel() == ActivePanel::Settings;
+    // Like toggle state — used to disable the HUD button while the
+    // `like_post_handler` round-trip is in flight and to refetch the
+    // space so the count + liked flag refresh everywhere (HUD badge,
+    // overview panel LIKES metric card, etc.).
+    let mut is_like_processing = use_signal(|| false);
+    let space_liked = ctx.space().liked;
+    let space_likes = ctx.space().likes;
+    let space_post_id = ctx.space().post_id.clone();
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
@@ -55,6 +65,26 @@ pub fn ArenaTopbar(
                 }
             }
             div { class: "arena-topbar__actions",
+                button {
+                    aria_label: "{tr.home}",
+                    class: "hud-btn",
+                    "data-testid": "btn-home",
+                    onclick: move |_| {
+                        nav.push(crate::Route::Index {});
+                    },
+                    svg {
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        stroke_width: "1.5",
+                        view_box: "0 0 24 24",
+                        xmlns: "http://www.w3.org/2000/svg",
+                        path { d: "m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" }
+                        polyline { points: "9 22 9 12 15 12 15 22" }
+                    }
+                    span { class: "tooltip", "{tr.home}" }
+                }
                 if has_user {
                     crate::features::notifications::components::NotificationBell {
                         class: "hud-btn",
@@ -168,6 +198,50 @@ pub fn ArenaTopbar(
                             span { class: "tooltip", "{tr.finish}" }
                         }
                     }
+                }
+                // Like toggle on the HUD. Sits next to the other
+                // panel-toggle buttons so the space has a clearly visible
+                // "좋아요" affordance — clicking flips the underlying
+                // post's like and refetches the space so every counter
+                // (HUD badge, overview LIKES card) updates.
+                button {
+                    aria_label: "{tr.likes}",
+                    aria_pressed: space_liked,
+                    class: "hud-btn hud-btn--like",
+                    "data-testid": "btn-space-like",
+                    disabled: is_like_processing(),
+                    onclick: {
+                        let post_id = space_post_id.clone();
+                        move |_| {
+                            if is_like_processing() {
+                                return;
+                            }
+                            is_like_processing.set(true);
+                            let post_id = post_id.clone();
+                            spawn(async move {
+                                if let Err(e) = like_post_handler(post_id, !space_liked).await {
+                                    tracing::error!("space like toggle failed: {e}");
+                                }
+                                ctx.space.restart();
+                                is_like_processing.set(false);
+                            });
+                        }
+                    },
+                    svg {
+                        fill: if space_liked { "currentColor" } else { "none" },
+                        stroke: "currentColor",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        stroke_width: "1.5",
+                        view_box: "0 0 24 24",
+                        xmlns: "http://www.w3.org/2000/svg",
+                        path { d: "M7 10v12" }
+                        path { d: "M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" }
+                    }
+                    if space_likes > 0 {
+                        span { class: "hud-btn__count", "{space_likes}" }
+                    }
+                    span { class: "tooltip", "{tr.likes}" }
                 }
                 button {
                     aria_label: "{tr.overview}",

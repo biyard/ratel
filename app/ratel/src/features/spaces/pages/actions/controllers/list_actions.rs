@@ -6,7 +6,7 @@ use crate::common::models::space::SpaceCommon;
 #[cfg(feature = "server")]
 use crate::features::auth::models::user::OptionalUser;
 #[cfg(feature = "server")]
-use crate::features::spaces::pages::actions::actions::discussion::SpacePostComment;
+use crate::features::spaces::pages::actions::actions::discussion::{SpacePost, SpacePostComment};
 #[cfg(feature = "server")]
 use crate::features::spaces::pages::actions::actions::follow::SpaceFollowUser;
 #[cfg(feature = "server")]
@@ -14,11 +14,11 @@ use crate::features::spaces::pages::actions::actions::poll::SpacePollUserAnswer;
 #[cfg(feature = "server")]
 use crate::features::spaces::pages::actions::actions::quiz::{SpaceQuiz, SpaceQuizAttempt};
 #[cfg(feature = "server")]
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 #[mcp_tool(
     name = "list_actions",
-    description = "List all actions in a space (polls, quizzes, discussions, follow). Shows action type, title, and status."
+    description = "List all actions in a space (polls, quizzes, discussions, follow). Shows action type, title, status, and dependency state."
 )]
 #[get("/api/spaces/{space_pk}/actions", role: SpaceUserRole, user: OptionalUser, space: SpaceCommon)]
 pub async fn list_actions(
@@ -28,8 +28,6 @@ pub async fn list_actions(
         .common
         .dynamodb();
     let space_pk: Partition = space_pk.into();
-    let space_status = space.status.clone();
-    let join_anytime = space.join_anytime;
 
     let (space_actions, _) =
         SpaceAction::find_by_space(cli, &space_pk, SpaceAction::opt().oldest())
@@ -40,6 +38,41 @@ pub async fn list_actions(
             })?;
 
     let mut actions: Vec<SpaceActionSummary> = space_actions.into_iter().map(Into::into).collect();
+
+    // Enrich discussion actions with their current comment count.
+    let discussion_keys: Vec<(Partition, EntityType)> = actions
+        .iter()
+        .filter(|a| a.action_type == SpaceActionType::TopicDiscussion)
+        .map(|a| {
+            (
+                space_pk.clone(),
+                EntityType::SpacePost(a.action_id.clone()),
+            )
+        })
+        .collect();
+    if !discussion_keys.is_empty() {
+        let posts = SpacePost::batch_get(cli, discussion_keys).await.map_err(|e| {
+            crate::error!("failed to batch_get discussion posts: {e:?}");
+            SpaceActionError::ActionLoadFailed
+        })?;
+        let count_by_id: std::collections::HashMap<String, i64> = posts
+            .into_iter()
+            .filter_map(|p| match &p.sk {
+                EntityType::SpacePost(id) => Some((id.clone(), p.comments)),
+                _ => None,
+            })
+            .collect();
+        for action in actions.iter_mut() {
+            if action.action_type == SpaceActionType::TopicDiscussion {
+                action.comment_count = Some(
+                    count_by_id
+                        .get(&action.action_id)
+                        .copied()
+                        .unwrap_or(0),
+                );
+            }
+        }
+    }
 
     let current_user = user.0;
     for action in actions.iter_mut() {
@@ -87,23 +120,35 @@ pub async fn list_actions(
         }
     }
 
-    // Creators can preview upcoming actions. Other roles only see actions after start time.
-    // Prerequisite actions are always visible regardless of started_at — Candidates need them
-    // during the Open phase before the individual action timer starts.
-    let now = crate::common::utils::time::get_now_timestamp_millis();
-    actions
-        .retain(|action| action.prerequisite || is_visible_for_role(&role, action.started_at, now));
+    let participated_by_id: HashMap<String, bool> = actions
+        .iter()
+        .map(|a| (a.action_id.clone(), a.user_participated))
+        .collect();
+
+    for action in actions.iter_mut() {
+        if action.depends_on.is_empty() {
+            action.dependencies_met = true;
+            continue;
+        }
+        action.dependencies_met = current_user.is_some()
+            && action
+                .depends_on
+                .iter()
+                .all(|dep_id| participated_by_id.get(dep_id).copied().unwrap_or(false));
+    }
 
     if !matches!(role, SpaceUserRole::Creator) {
-        actions.retain(|action| {
-            is_visible_for_space_status(space_status.clone(), action.prerequisite)
+        actions.retain(|a| {
+            a.prerequisite
+                || matches!(
+                    a.status,
+                    Some(SpaceActionStatus::Ongoing | SpaceActionStatus::Finish)
+                )
         });
     }
 
-    // Pre-action filtering for non-creators
     if !matches!(role, SpaceUserRole::Creator) {
         let has_pre_actions = actions.iter().any(|a| a.prerequisite);
-
         if has_pre_actions {
             let all_pre_actions_done = actions
                 .iter()
@@ -111,8 +156,8 @@ pub async fn list_actions(
                 .all(|a| a.user_participated);
 
             if should_only_show_prerequisite_actions(
-                space_status,
-                join_anytime,
+                space.status.clone(),
+                space.join_anytime,
                 all_pre_actions_done,
             ) {
                 actions.retain(|a| a.prerequisite);
@@ -248,21 +293,6 @@ async fn has_completed_follow_action(
     })?;
 
     Ok(follows.len() == deduped_targets.len())
-}
-
-fn is_visible_for_role(role: &SpaceUserRole, started_at: Option<i64>, now: i64) -> bool {
-    matches!(role, SpaceUserRole::Creator)
-        || started_at
-            .map(|started_at| now >= started_at)
-            .unwrap_or(false)
-}
-
-fn is_visible_for_space_status(status: Option<SpaceStatus>, prerequisite: bool) -> bool {
-    match status {
-        Some(SpaceStatus::Ongoing) | Some(SpaceStatus::Finished) => true,
-        Some(SpaceStatus::Open) => prerequisite,
-        _ => false,
-    }
 }
 
 fn should_only_show_prerequisite_actions(

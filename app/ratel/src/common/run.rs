@@ -77,9 +77,17 @@ fn serve(app: fn() -> Element) {
 
         #[cfg(feature = "local-dev")]
         let app = {
-            let design_dir =
-                std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets/design");
-            crate::common::design_preview::merge_design_routes(app, &design_dir)
+            let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            let design_dir = manifest_dir.join("assets/design");
+            let app = crate::common::design_preview::merge_design_routes(app, &design_dir);
+
+            // Repo root is app/ratel/../.. — mount the roadmap/ spec folder as /roadmap.
+            let roadmap_dir = manifest_dir.join("../../roadmap");
+            if roadmap_dir.exists() {
+                crate::common::design_preview::merge_roadmap_routes(app, &roadmap_dir)
+            } else {
+                app
+            }
         };
 
         dioxus::serve(move || {
