@@ -2,13 +2,16 @@
 mod viewer;
 
 use crate::features::spaces::pages::apps::apps::rewards::*;
-use crate::features::spaces::space_common::hooks::use_space_role;
+use crate::features::spaces::space_common::providers::use_space_context;
 
+/// Gated on the real (non-memo) role: the creator/participant check
+/// stays stable regardless of the `current_role` preview toggle.
 #[component]
 pub fn HomePage(space_id: ReadSignal<SpacePartition>) -> Element {
-    let role = use_space_role()();
+    let mut ctx = use_space_context();
+    let real_role = ctx.role();
 
-    if role == SpaceUserRole::Creator || role == SpaceUserRole::Participant {
+    if real_role == SpaceUserRole::Creator || real_role == SpaceUserRole::Participant {
         rsx! {
             viewer::ViewerPage { space_id }
         }

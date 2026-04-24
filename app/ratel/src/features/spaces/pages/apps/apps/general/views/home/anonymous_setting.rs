@@ -1,55 +1,41 @@
 use super::*;
 
 #[component]
-pub fn AnonymousSetting() -> Element {
-    let mut space = use_space();
+pub fn AnonymousSetting(space_id: ReadSignal<SpacePartition>) -> Element {
+    let space = use_space();
     let tr: GeneralTranslate = use_translate();
-    let mut toast = use_toast();
-    let mut loading = use_signal(|| false);
+    let UseSpaceGeneralSettings {
+        mut update_anonymous,
+        ..
+    } = use_space_general_settings(space_id)?;
 
-    let enable_anonymous = space().anonymous_participation;
+    let enabled = space().anonymous_participation;
+    let pending = update_anonymous.pending();
 
     rsx! {
-        Card {
-            div { class: "flex justify-between items-center self-stretch py-4 px-5 border-b border-separator",
-                p { class: "font-semibold text-center font-raleway text-[17px]/[20px] tracking-[-0.18px] text-web-font-primary",
-                    {tr.anonymous_setting}
-                }
+        section { class: "sga-section", "data-testid": "section-anonymous",
+            div { class: "sga-section__head",
+                span { class: "sga-section__label", "{tr.anonymous_setting}" }
             }
-
-            div { class: "flex flex-row justify-between items-center self-stretch p-5 gap-[10px] bg-card max-mobile:p-4",
-                p { class: "font-normal leading-6 font-raleway text-[15px] tracking-[0.5px] text-card-meta",
-                    {tr.anonymous_setting_description}
+            button {
+                r#type: "button",
+                class: "sga-switch",
+                role: "switch",
+                tabindex: "0",
+                "aria-checked": enabled,
+                "aria-disabled": pending,
+                "data-testid": "anonymous-switch",
+                onclick: move |_| {
+                    if !pending {
+                        update_anonymous.call(!enabled);
+                    }
+                },
+                span { class: "sga-switch__track",
+                    span { class: "sga-switch__thumb" }
                 }
-
-                Switch {
-                    active: enable_anonymous,
-                    on_toggle: move |_| async move {
-                        if loading() {
-                            return;
-                        }
-                        loading.set(true);
-                        let space_id = space().id;
-                        let next_anonymous = !enable_anonymous;
-                        let result = update_space(
-                                space_id,
-                                UpdateSpaceRequest::Anonymous {
-                                    anonymous_participation: next_anonymous,
-                                },
-                            )
-                            .await;
-                        loading.set(false);
-                        match result {
-                            Ok(_) => {
-                                space.with_mut(|s| s.anonymous_participation = next_anonymous);
-                                toast.info(tr.anonymous_updated_successfully);
-                            }
-                            Err(err) => {
-                                space.with_mut(|s| s.anonymous_participation = enable_anonymous);
-                                toast.error(err);
-                            }
-                        }
-                    },
+                span { class: "sga-switch__body",
+                    span { class: "sga-switch__label", "{tr.anonymous_setting}" }
+                    span { class: "sga-switch__sub", "{tr.anonymous_setting_description}" }
                 }
             }
         }
