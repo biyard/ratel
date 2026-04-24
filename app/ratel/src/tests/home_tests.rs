@@ -70,18 +70,18 @@ fn space_id_str(pk: &Partition) -> String {
 // ----- My Spaces ---------------------------------------------------------
 
 #[tokio::test]
-async fn test_my_spaces_filters_to_active_status() {
+async fn test_my_spaces_ranks_active_before_inactive() {
     let ctx = TestContext::setup().await;
     let user = ctx.test_user.0.clone();
 
     let designing = seed_space(&ctx, &user, SpaceStatus::Designing).await;
-    seed_participant(&ctx, &designing.pk, &user, None).await;
+    seed_participant(&ctx, &designing.pk, &user, Some(9_000)).await;
 
     let ongoing = seed_space(&ctx, &user, SpaceStatus::Ongoing).await;
-    seed_participant(&ctx, &ongoing.pk, &user, None).await;
+    seed_participant(&ctx, &ongoing.pk, &user, Some(1_000)).await;
 
     let finished = seed_space(&ctx, &user, SpaceStatus::Finished).await;
-    seed_participant(&ctx, &finished.pk, &user, None).await;
+    seed_participant(&ctx, &finished.pk, &user, Some(5_000)).await;
 
     let (status, _, body) = crate::test_get! {
         app: ctx.app.clone(),
@@ -92,19 +92,32 @@ async fn test_my_spaces_filters_to_active_status() {
     assert_eq!(status, 200, "my-spaces: {:?}", body);
 
     let returned: Vec<String> = body.items.iter().map(|i| i.space_id.to_string()).collect();
+    let ongoing_id = space_id_str(&ongoing.pk);
+    let designing_id = space_id_str(&designing.pk);
+    let finished_id = space_id_str(&finished.pk);
+
     assert!(
-        returned.contains(&space_id_str(&ongoing.pk)),
+        returned.contains(&ongoing_id),
         "Ongoing space should appear: {:?}",
         returned
     );
     assert!(
-        !returned.contains(&space_id_str(&designing.pk)),
-        "Designing space must be filtered out: {:?}",
+        returned.contains(&designing_id),
+        "Designing space should still appear for history access: {:?}",
         returned
     );
     assert!(
-        !returned.contains(&space_id_str(&finished.pk)),
-        "Finished space must be filtered out: {:?}",
+        returned.contains(&finished_id),
+        "Finished space should still appear for history access: {:?}",
+        returned
+    );
+
+    let ongoing_idx = returned.iter().position(|id| id == &ongoing_id).unwrap();
+    let designing_idx = returned.iter().position(|id| id == &designing_id).unwrap();
+    let finished_idx = returned.iter().position(|id| id == &finished_id).unwrap();
+    assert!(
+        ongoing_idx < designing_idx && ongoing_idx < finished_idx,
+        "Ongoing must rank above non-active spaces regardless of activity time: {:?}",
         returned
     );
 }
