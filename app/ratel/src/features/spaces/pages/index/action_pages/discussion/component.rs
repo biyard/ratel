@@ -656,22 +656,6 @@ pub fn DiscussionArenaPage(
                                 span { class: "comments-panel__count", "{post.comments}" }
                             }
 
-                            if can_comment {
-                                CommentComposer {
-                                    text: comment_text,
-                                    tracked_mentions,
-                                    pending_images,
-                                    members,
-                                    on_submit: move |_| on_submit_comment(()),
-                                    placeholder: tr.comment_placeholder.to_string(),
-                                    disabled: comment_text().trim().is_empty()
-                                                                                                                                                                                                                                                                                                                                                                                                        && pending_images.read().is_empty(),
-                                    on_mention_query_change,
-                                    on_composer_focus,
-                                    priority_user_pks: top_priority,
-                                }
-                            }
-
                             div { class: "comments-scroll",
                                 div { class: "comment-list",
                                     for comment in comments().iter().filter(|c| !arena.is_deleted(c)) {
@@ -685,6 +669,22 @@ pub fn DiscussionArenaPage(
                                         }
                                     }
                                     {comments_query.more_element()}
+                                }
+                            }
+
+                            if can_comment {
+                                CommentComposer {
+                                    text: comment_text,
+                                    tracked_mentions,
+                                    pending_images,
+                                    members,
+                                    on_submit: move |_| on_submit_comment(()),
+                                    placeholder: tr.comment_placeholder.to_string(),
+                                    disabled: comment_text().trim().is_empty()
+                                        && pending_images.read().is_empty(),
+                                    on_mention_query_change,
+                                    on_composer_focus,
+                                    priority_user_pks: top_priority,
                                 }
                             }
                         }

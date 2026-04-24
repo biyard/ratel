@@ -519,10 +519,10 @@ body.comments-panel-resizing {
 }
 
 /* ── Comment Input ─────────────────────────────── */
-/* The top-level composer (at the top of the comments panel) always
-   gets the padded + divider chrome. The compact reply composer only
-   inherits the same chrome on mobile — on desktop it stays bare so the
-   `.reply-input` pill appears inline under the comment without an
+/* The top-level composer (pinned to the bottom of the comments panel)
+   always gets the padded + divider chrome. The compact reply composer
+   only inherits the same chrome on mobile — on desktop it stays bare so
+   the `.reply-input` pill appears inline under the comment without an
    extra panel frame (matching the pre-unification look). */
 .comment-input:not([data-compact="true"]) {
   padding: 16px 20px;
@@ -530,7 +530,7 @@ body.comments-panel-resizing {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--border);
 }
 /* Kill the reply-box offsets when the top-level wrapper provides its
    own positioning — those margins only make sense for the bare inline
