@@ -12,4 +12,5 @@ pub enum RewardAction {
     SpaceStudyAndQuiz,
     SpaceDiscussion,
     SpaceFollow,
+    SpaceMeet,
 }
