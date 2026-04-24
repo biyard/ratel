@@ -1,16 +1,25 @@
 use super::*;
-use crate::features::spaces::space_common::hooks::{use_space, use_space_role};
+use crate::features::spaces::space_common::hooks::use_space;
+use crate::features::spaces::space_common::providers::use_space_context;
 
 const DEFAULT_SPACE_LOGO: &str = "https://metadata.ratel.foundation/logos/logo-symbol.png";
 
 /// Public entrypoint for the Analyzes list page. Creators get the full
-/// arena list; other roles see a minimal "no access" state (matches the
-/// existing pre-arena implementation which early-returned for non-creators).
+/// arena list; other roles see a minimal "no access" state.
+///
+/// Gates on the *real* role from `SpaceContextProvider::role`, not the
+/// derived `current_role` that `use_space_role()` exposes. Once a
+/// Space transitions to `Ongoing`, `current_role` intentionally
+/// swaps Creator → Participant so the creator can experience the
+/// participant view (see `space_context_provider.rs`). The analyze
+/// surface is creator-only regardless of that toggle, so read the
+/// underlying role instead.
 #[component]
 pub fn SpaceAnalyzesAppPage(space_id: ReadSignal<SpacePartition>) -> Element {
-    let role = use_space_role()();
+    let mut ctx = use_space_context();
+    let real_role = ctx.role();
 
-    if role != SpaceUserRole::Creator {
+    if real_role != SpaceUserRole::Creator {
         return rsx! {
             ViewerEmpty {}
         };

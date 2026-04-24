@@ -1,5 +1,5 @@
 use super::*;
-use crate::features::spaces::space_common::hooks::use_space_role;
+use crate::features::spaces::space_common::providers::use_space_context;
 
 mod attribute_groups;
 mod collective_panel;
@@ -16,12 +16,19 @@ use viewer::*;
 const DEFAULT_SPACE_LOGO: &str = "https://metadata.ratel.foundation/logos/logo-symbol.png";
 
 /// Public entrypoint — dispatches between the Creator arena view and
-/// the viewer fallback based on the space role.
+/// the viewer fallback based on the *real* space role.
+///
+/// Uses `ctx.role()` (the underlying Loader value) instead of
+/// `use_space_role()` (which exposes the `current_role` memo). The
+/// memo flips Creator → Participant once the space is Ongoing so the
+/// creator can preview the participant view; that preview toggle
+/// must not affect admin-surface gating like the panels composer.
 #[component]
 pub fn SpacePanelsAppPage(space_id: ReadSignal<SpacePartition>) -> Element {
-    let role = use_space_role()();
+    let mut ctx = use_space_context();
+    let real_role = ctx.role();
 
-    if role == SpaceUserRole::Creator {
+    if real_role == SpaceUserRole::Creator {
         rsx! {
             CreatorArenaPage { space_id }
         }
