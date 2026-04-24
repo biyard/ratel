@@ -9,7 +9,7 @@ This is the product index. Each checkbox maps to **exactly one spec file** in `r
 
 ## Planned
 
-_None yet._
+- [ ] [Badge system (non-transferable recognition badges)](roadmap/badge.md)
 
 ## Shipped
 
