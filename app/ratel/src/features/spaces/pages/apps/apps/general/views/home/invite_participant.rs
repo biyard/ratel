@@ -1,53 +1,56 @@
 use super::*;
-use crate::common::hooks::use_infinite_query;
 use crate::spaces::InvitationStatus;
 
-const INVITATION_PAGE_SIZE: i32 = 20;
+fn avatar_initials(name: &str, email: &str) -> String {
+    let src = if !name.trim().is_empty() { name } else { email };
+    src.split(|c: char| !c.is_alphanumeric())
+        .filter(|s| !s.is_empty())
+        .filter_map(|w| w.chars().next())
+        .take(2)
+        .collect::<String>()
+        .to_uppercase()
+}
 
 #[component]
-pub fn InviteParticipant() -> Element {
-    let space = use_space();
+pub fn InviteParticipant(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: GeneralTranslate = use_translate();
-
     let mut toast = use_toast();
+
+    let UseSpaceGeneralSettings {
+        mut invitations,
+        mut send_invitations,
+        mut delete_invitation,
+        ..
+    } = use_space_general_settings(space_id)?;
 
     let mut email_input = use_signal(String::new);
     let mut invited_emails = use_signal(Vec::<String>::new);
-    let mut invite_loading = use_signal(|| false);
-    let mut invitations_query = use_infinite_query(move |bookmark| {
-        list_space_invitations(space().id, bookmark, Some(INVITATION_PAGE_SIZE))
-    })?;
-    let invitation_items = invitations_query.items();
-    let more_element = invitations_query.more_element();
+
+    let invitation_items = invitations.items();
+    let more_element = invitations.more_element();
+    let invite_pending = send_invitations.pending();
 
     rsx! {
-        Card {
-            div { class: "flex justify-between items-center self-stretch py-4 px-5 border-b border-separator",
-                p { class: "font-semibold text-center font-raleway text-[17px]/[20px] tracking-[-0.18px] text-web-font-primary",
-                    {tr.invite_participant}
-                }
+        section { class: "sga-section", "data-testid": "section-invite",
+            div { class: "sga-section__head",
+                span { class: "sga-section__label", "{tr.invite_participant}" }
+                span { class: "sga-section__hint", "Send email invitations to join this space" }
             }
 
-            div { class: "flex flex-col gap-5 items-start self-stretch p-5 bg-card max-mobile:p-4",
-                div {
-                    class: "flex items-start w-full gap-[10px] max-tablet:flex-col",
-                    div { class: "flex flex-col flex-1 gap-2 justify-center items-start",
-                        p { class: "font-semibold font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-primary",
-                            {tr.email_address}
-                        }
-                        Input {
-                            id: "email-input",
-                            r#type: InputType::Email,
-                            placeholder: tr.email_placeholder,
-                            value: email_input(),
-                            oninput: move |evt: FormEvent| {
-                                email_input.set(evt.value());
-                            },
-                            onchange: move |evt: FormEvent| {
-                                email_input.set(evt.value());
-                            },
-                            onconfirm: move |evt: KeyboardEvent| {
-                                evt.stop_propagation();
+            div { class: "sga-field",
+                span { class: "sga-field__label", "{tr.email_address}" }
+                div { class: "sga-input-group",
+                    input {
+                        class: "sga-input",
+                        r#type: "email",
+                        placeholder: "{tr.email_placeholder}",
+                        value: "{email_input()}",
+                        "data-testid": "invite-email-input",
+                        oninput: move |e: FormEvent| email_input.set(e.value()),
+                        onchange: move |e: FormEvent| email_input.set(e.value()),
+                        onkeydown: move |e: KeyboardEvent| {
+                            if e.key() == Key::Enter {
+                                e.stop_propagation();
                                 let Ok(parsed_emails) = normalize_email_inputs(&email_input()) else {
                                     toast.error(Error::InvalidEmail);
                                     return;
@@ -61,47 +64,15 @@ pub fn InviteParticipant() -> Element {
                                         }
                                     });
                                 email_input.set(String::new());
-                            },
-                        }
-
-                        div { class: "flex flex-wrap gap-2 items-center w-full",
-                            for (idx , value) in invited_emails().iter().enumerate() {
-                                InviteEmailChip {
-                                    key: "{idx}-{value}",
-                                    value: value.clone(),
-                                    on_remove: move |_| {
-                                        invited_emails
-                                            .with_mut(|emails| {
-                                                if idx < emails.len() {
-                                                    emails.remove(idx);
-                                                }
-                                            });
-                                    },
-                                }
                             }
-                        }
+                        },
                     }
-                
-                // div { class: "flex flex-col flex-1 gap-2 justify-center items-start w-full",
-                //     p { class: "font-semibold font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-primary",
-                //         {tr.default_reward}
-                //     }
-                //     RewardRoleCard {
-                //         title: tr.participant.to_string(),
-                //         description: tr.can_participate_in_this_space.to_string(),
-                //     }
-                // }
-                }
-
-                div { class: "flex justify-end w-full max-tablet:justify-stretch",
-                    Button {
-                        class: "self-stretch w-fit max-tablet:w-full",
-                        style: ButtonStyle::Primary,
-                        disabled: invite_loading(),
-                        onclick: move |_| async move {
-                            if invite_loading() {
-                                return;
-                            }
+                    button {
+                        r#type: "button",
+                        class: "sga-btn sga-btn--accent",
+                        "data-testid": "invite-send-btn",
+                        disabled: invite_pending,
+                        onclick: move |_| {
                             let mut emails = invited_emails();
                             let current_input = email_input();
                             if !current_input.trim().is_empty() {
@@ -118,109 +89,96 @@ pub fn InviteParticipant() -> Element {
                             if emails.is_empty() {
                                 return;
                             }
-                            invite_loading.set(true);
-                            let space_id = space().id;
-                            let result = invite_space_participants(
-                                    space_id,
-                                    InviteSpaceParticipantsRequest {
-                                        emails,
-                                    },
-                                )
-                                .await;
-                            invite_loading.set(false);
-
-                            match result {
-                                Ok(_) => {
-                                    invited_emails.set(vec![]);
-                                    email_input.set(String::new());
-                                    invitations_query.refresh();
-                                    toast.info(tr.participants_invited_successfully);
-                                }
-                                Err(err) => {
-                                    toast.error(err);
-                                }
-                            }
-                            debug!("Invited participants with emails: {:?}", invited_emails());
+                            // Clear local state optimistically; the hook's action
+                            // refreshes the invitations list on success.
+                            invited_emails.set(vec![]);
+                            email_input.set(String::new());
+                            send_invitations.call(emails);
                         },
-                        if invite_loading() {
+                        if invite_pending {
                             {tr.inviting}
                         } else {
                             {tr.invite}
                         }
                     }
                 }
+            }
 
-                div { class: "flex flex-col gap-3 w-full",
-                    div { class: "flex items-center justify-between",
-                        p { class: "font-semibold font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-primary",
-                            {tr.invited_accounts}
+            // Queue preview — chips for emails the user has typed but
+            // hasn't sent yet.
+            if !invited_emails().is_empty() {
+                div { class: "sga-creator-row", "data-testid": "invite-queue",
+                    for (idx, value) in invited_emails().iter().enumerate() {
+                        InviteEmailChip {
+                            key: "{idx}-{value}",
+                            value: value.clone(),
+                            on_remove: move |_| {
+                                invited_emails
+                                    .with_mut(|emails| {
+                                        if idx < emails.len() {
+                                            emails.remove(idx);
+                                        }
+                                    });
+                            },
                         }
                     }
+                }
+            }
 
-                    div { class: "overflow-hidden w-full rounded-[12px] border border-separator bg-background",
-                        div { class: "grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)_110px_72px] gap-3 px-4 py-3 border-b border-separator bg-card max-tablet:hidden",
-                            p { class: "text-[13px] font-semibold text-text-secondary",
-                                {tr.participant_name}
-                            }
-                            p { class: "text-[13px] font-semibold text-text-secondary",
-                                {tr.invitation_email}
-                            }
-                            p { class: "text-[13px] font-semibold text-text-secondary text-center",
-                                {tr.invitation_status}
-                            }
-                            p { class: "text-[13px] font-semibold text-text-secondary text-center",
-                                {tr.invitation_actions}
-                            }
-                        }
-
-                        if invitation_items.is_empty() && invitations_query.is_loading() {
-                            div { class: "px-4 py-8 text-sm text-center text-text-secondary",
-                                {tr.loading_invitations}
-                            }
-                        } else if invitation_items.is_empty() {
-                            div { class: "px-4 py-8 text-sm text-center text-text-secondary",
-                                {tr.no_invited_accounts}
-                            }
-                        } else {
-                            div { class: "flex flex-col w-full",
-                                for item in invitation_items {
-                                    InvitationMemberRow {
-                                        key: "{item.user_id}",
-                                        space_id: space().id,
-                                        item,
-                                        on_deleted: move |_| {
-                                            invitations_query.refresh();
-                                        },
-                                    }
-                                }
-                                div { class: "px-4 py-2", {more_element} }
+            // Invited accounts — includes both Pending and Accepted.
+            div { class: "sga-field",
+                span { class: "sga-field__label", "{tr.invited_accounts}" }
+                div { class: "sga-creator-row", "data-testid": "invite-list",
+                    if invitation_items.is_empty() && invitations.is_loading() {
+                        div { class: "sga-empty", "{tr.loading_invitations}" }
+                    } else if invitation_items.is_empty() {
+                        div { class: "sga-empty", "{tr.no_invited_accounts}" }
+                    } else {
+                        for item in invitation_items {
+                            InvitedAccountChip {
+                                key: "{item.user_id}",
+                                item: item.clone(),
+                                on_remove: move |user_id: UserPartition| { delete_invitation.call(user_id) },
                             }
                         }
                     }
                 }
+                div { {more_element} }
             }
         }
     }
 }
 
-/// Pill-shaped chip used to display a queued email/username before
-/// submission. Re-exported so the Administrators panel can reuse the
-/// same look as InviteParticipant.
 #[component]
 pub fn InviteEmailChip(value: String, on_remove: EventHandler<MouseEvent>) -> Element {
+    let initials = avatar_initials(&value, &value);
     rsx! {
-        div { class: "flex gap-1 items-center pr-1 pl-3 h-7 rounded-[100px] bg-btn-primary-bg",
-            span { class: "font-medium leading-6 font-raleway text-[15px] tracking-[0.5px] text-btn-primary-text",
-                "{value}"
-            }
+        div { class: "sga-creator-chip",
+            span { class: "sga-creator-chip__avatar", "{initials}" }
+            span { class: "sga-creator-chip__name", "{value}" }
             button {
                 r#type: "button",
-                class: "flex items-center justify-center rounded-full size-5 p-0 bg-transparent disabled:opacity-50 hover:bg-transparent",
-                onclick: move |evt| on_remove.call(evt),
-                icons::ratel::XMarkIcon {
-                    width: "12",
-                    height: "12",
-                    class: "w-3 h-3 [&>path]:stroke-icon-primary",
+                class: "sga-creator-chip__x",
+                onclick: move |e| on_remove.call(e),
+                svg {
+                    view_box: "0 0 24 24",
+                    fill: "none",
+                    stroke: "currentColor",
+                    "stroke-width": "2",
+                    "stroke-linecap": "round",
+                    "stroke-linejoin": "round",
+                    line {
+                        x1: "18",
+                        y1: "6",
+                        x2: "6",
+                        y2: "18",
+                    }
+                    line {
+                        x1: "6",
+                        y1: "6",
+                        x2: "18",
+                        y2: "18",
+                    }
                 }
             }
         }
@@ -228,112 +186,63 @@ pub fn InviteEmailChip(value: String, on_remove: EventHandler<MouseEvent>) -> El
 }
 
 #[component]
-fn RewardRoleCard(title: String, description: String) -> Element {
-    rsx! {
-        div { class: "flex flex-col gap-1 items-start px-4 w-full text-left border h-[108px] shrink-0 rounded-[12px] border-btn-primary-outline bg-btn-primary-bg/5 py-[17px]",
-            p { class: "font-semibold font-raleway text-[15px] leading-[18px] tracking-[-0.16px] text-web-font-primary",
-                "{title}"
-            }
-            p { class: "font-normal leading-6 font-raleway text-[15px] tracking-[0.5px] text-card-meta",
-                "{description}"
-            }
-        }
-    }
-}
-
-#[component]
-fn InvitationMemberRow(
-    space_id: SpacePartition,
+fn InvitedAccountChip(
     item: SpaceInvitationListItem,
-    on_deleted: EventHandler<()>,
+    on_remove: EventHandler<UserPartition>,
 ) -> Element {
-    let tr: GeneralTranslate = use_translate();
-    let mut toast = use_toast();
-    let mut show_action_menu = use_signal(|| false);
-    let mut deleting = use_signal(|| false);
+    let initials = avatar_initials(&item.display_name, &item.email);
+    let name_display = if item.display_name.trim().is_empty() {
+        item.email.clone()
+    } else {
+        item.display_name.clone()
+    };
+    let role_class = match item.status {
+        InvitationStatus::Accepted => "sga-creator-chip__role sga-creator-chip__role--admin",
+        InvitationStatus::Declined => "sga-creator-chip__role",
+        InvitationStatus::Pending | InvitationStatus::Invited => {
+            "sga-creator-chip__role sga-creator-chip__role--pending"
+        }
+    };
+    let role_text = match item.status {
+        InvitationStatus::Accepted => "Accepted",
+        InvitationStatus::Declined => "Declined",
+        InvitationStatus::Pending | InvitationStatus::Invited => "Pending",
+    };
     let user_id = item.user_id.clone();
 
-    let status_icon = match item.status {
-        InvitationStatus::Accepted => rsx! {
-            icons::ratel::CheckIcon {
-                width: "16",
-                height: "16",
-                class: "w-4 h-4 text-icon-success",
-            }
-        },
-        InvitationStatus::Declined => rsx! {
-            icons::ratel::XMarkIcon { width: "16", height: "16", class: "w-4 h-4 text-icon-error" }
-        },
-
-        InvitationStatus::Pending | InvitationStatus::Invited => rsx! {},
-    };
-
     rsx! {
-        div { class: "grid relative grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)_110px_72px] gap-3 items-center px-4 py-3 border-b border-separator last:border-b-0 max-tablet:flex max-tablet:flex-col max-tablet:items-start max-tablet:gap-2",
-            div { class: "flex gap-3 items-center min-w-0",
-                img {
-                    class: "object-cover rounded-full size-8 shrink-0",
-                    src: if item.profile_url.is_empty() { DEFAULT_PROFILE_IMAGE.to_string() } else { item.profile_url.clone() },
-                    alt: item.display_name,
+        div { class: "sga-creator-chip",
+            if item.profile_url.trim().is_empty() {
+                span { class: "sga-creator-chip__avatar", "{initials}" }
+            } else {
+                span { class: "sga-creator-chip__avatar",
+                    img { src: "{item.profile_url}", alt: "{name_display}" }
                 }
-                div { class: "flex flex-col min-w-0",
-                    p { class: "truncate text-[14px] font-medium text-web-font-primary",
-                        "{item.display_name}"
+            }
+            span { class: "sga-creator-chip__name", "{name_display}" }
+            span { class: "{role_class}", "{role_text}" }
+            button {
+                r#type: "button",
+                class: "sga-creator-chip__x",
+                onclick: move |_| on_remove.call(user_id.clone()),
+                svg {
+                    view_box: "0 0 24 24",
+                    fill: "none",
+                    stroke: "currentColor",
+                    "stroke-width": "2",
+                    "stroke-linecap": "round",
+                    "stroke-linejoin": "round",
+                    line {
+                        x1: "18",
+                        y1: "6",
+                        x2: "6",
+                        y2: "18",
                     }
-                    p { class: "truncate text-[12px] text-text-secondary", "@{item.username}" }
-                }
-            }
-
-            div { class: "min-w-0 max-tablet:w-full",
-                p { class: "truncate text-[14px] text-web-font-primary", "{item.email}" }
-            }
-
-            div { class: "flex justify-center items-center h-full max-tablet:justify-start",
-                {status_icon}
-            }
-
-            div { class: "flex relative justify-center items-center h-full max-tablet:self-end",
-                button {
-                    r#type: "button",
-                    class: "flex justify-center items-center rounded-full size-8 p-0 bg-transparent text-text-primary hover:bg-hover disabled:bg-transparent disabled:text-text-secondary",
-                    "aria-label": "{tr.invitation_actions}",
-                    onclick: move |_| {
-                        show_action_menu.set(!show_action_menu());
-                    },
-                    lucide_dioxus::EllipsisVertical { class: "w-4 h-4 text-icon-primary [&>*]:stroke-current" }
-                }
-
-                if show_action_menu() {
-                    div { class: "absolute top-9 right-0 z-10 min-w-[120px] rounded-[10px] border border-separator bg-card shadow-lg",
-                        button {
-                            r#type: "button",
-                            class: "flex w-full justify-start px-3 py-2 text-[14px] font-medium text-web-error hover:bg-card/80 disabled:text-text-secondary disabled:hover:bg-transparent",
-                            disabled: deleting(),
-                            onclick: move |_| {
-                                let user_id = user_id.clone();
-                                let space_id = space_id.clone();
-                                async move {
-                                    if deleting() {
-                                        return;
-                                    }
-                                    deleting.set(true);
-                                    let result = delete_space_invitation(space_id, user_id).await;
-                                    deleting.set(false);
-                                    show_action_menu.set(false);
-
-                                    match result {
-                                        Ok(_) => {
-                                            toast.info(tr.invitation_deleted_successfully);
-                                            on_deleted.call(());
-                                        }
-                                        Err(err) => {
-                                            toast.error(err);
-                                        }
-                                    }
-                                }
-                            },
-                            {tr.invitation_delete}
-                        }
+                    line {
+                        x1: "6",
+                        y1: "6",
+                        x2: "18",
+                        y2: "18",
                     }
                 }
             }

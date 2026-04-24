@@ -1,101 +1,68 @@
 use super::*;
 
-#[component]
-pub fn SpaceLogoSetting() -> Element {
-    let mut space = use_space();
-    let tr: GeneralTranslate = use_translate();
-    let mut toast = use_toast();
-    let mut loading = use_signal(|| false);
+fn initials_for(name: &str) -> String {
+    name.split_whitespace()
+        .filter_map(|w| w.chars().next())
+        .take(2)
+        .collect::<String>()
+        .to_uppercase()
+}
 
-    let on_upload = move |url: String| {
-        let url = url.clone();
-        spawn(async move {
-            if loading() {
-                return;
-            }
-            loading.set(true);
-            let space_id = space().id;
-            let result = update_space(
-                space_id,
-                UpdateSpaceRequest::Logo {
-                    logo: url.clone(),
-                },
-            )
-            .await;
-            loading.set(false);
-            match result {
-                Ok(_) => {
-                    space.with_mut(|s| s.logo = url);
-                    toast.info(tr.logo_updated_successfully);
-                }
-                Err(err) => {
-                    toast.error(err);
-                }
-            }
-        });
-    };
+#[component]
+pub fn SpaceLogoSetting(space_id: ReadSignal<SpacePartition>) -> Element {
+    let space = use_space();
+    let tr: GeneralTranslate = use_translate();
+    let UseSpaceGeneralSettings {
+        mut update_logo, ..
+    } = use_space_general_settings(space_id)?;
 
     let logo = space().logo.clone();
+    let placeholder_initials = initials_for(&space().title);
+    let pending = update_logo.pending();
 
     rsx! {
-        Card {
-            div { class: "flex justify-between items-center self-stretch py-4 px-5 border-b border-separator",
-                p { class: "font-semibold text-center font-raleway text-[17px]/[20px] tracking-[-0.18px] text-web-font-primary",
-                    {tr.space_logo}
-                }
+        section { class: "sga-section", "data-testid": "section-space-logo",
+            div { class: "sga-section__head",
+                span { class: "sga-section__label", "{tr.space_logo}" }
+                span { class: "sga-section__hint", "{tr.space_logo_description}" }
             }
-
-            div { class: "flex flex-col items-start self-stretch p-5 gap-[10px] bg-card max-mobile:p-4",
-                p { class: "font-normal leading-6 font-raleway text-[15px] tracking-[0.5px] text-card-meta",
-                    {tr.space_logo_description}
-                }
-
-                div { class: "flex flex-row gap-4 items-center",
-                    FileUploader { on_upload_success: on_upload,
-                        if logo.is_empty() {
-                            div { class: "flex justify-center items-center w-20 h-20 rounded-lg border-2 border-dashed cursor-pointer border-border hover:border-primary transition-colors",
-                                span { class: "text-2xl text-card-meta", "+" }
-                            }
-                        } else {
-                            img {
-                                src: "{logo}",
-                                class: "object-contain w-20 h-20 rounded-lg border cursor-pointer border-border hover:border-primary transition-colors",
-                            }
-                        }
+            div { class: "sga-logo-uploader",
+                // Avatar is visual-only — upload must happen via the
+                // "Upload logo" pill so the click surface matches the
+                // user's mental model (label says Upload, the click
+                // should originate there).
+                if logo.is_empty() {
+                    div {
+                        class: "sga-logo-preview sga-logo-preview--static",
+                        "data-testid": "space-logo-preview",
+                        "{placeholder_initials}"
                     }
-
+                } else {
+                    div {
+                        class: "sga-logo-preview sga-logo-preview--static",
+                        "data-testid": "space-logo-preview",
+                        img { src: "{logo}", alt: "Space logo" }
+                    }
+                }
+                div { class: "sga-logo-uploader__actions",
+                    // Upload Logo — style the FileUploader's own <label>
+                    // as the accent button. A <button> nested inside a
+                    // <label> does NOT trigger the associated file input
+                    // (HTML spec: form-control children of a label don't
+                    // delegate), so we promote the label itself.
+                    FileUploader {
+                        class: "sga-btn sga-btn--accent",
+                        on_upload_success: move |url: String| update_logo.call(url),
+                        {tr.upload_logo}
+                    }
                     if !logo.is_empty() {
-                        Button {
-                            class: "border border-web-error !bg-transparent !text-web-error hover:!bg-transparent hover:!border-web-error hover:!text-web-error",
-                            style: ButtonStyle::Text,
-                            loading: loading(),
-                            onclick: move |_| async move {
-                                if loading() {
-                                    return;
-                                }
-                                loading.set(true);
-                                let space_id = space().id;
-                                let result = update_space(
-                                        space_id,
-                                        UpdateSpaceRequest::Logo {
-                                            logo: String::new(),
-                                        },
-                                    )
-                                    .await;
-                                loading.set(false);
-                                match result {
-                                    Ok(_) => {
-                                        space.with_mut(|s| s.logo = String::new());
-                                        toast.info(tr.logo_updated_successfully);
-                                    }
-                                    Err(err) => {
-                                        toast.error(err);
-                                    }
-                                }
-                            },
-                            icons::edit::Delete2 {
-                                class: "w-4 h-4 [&>path]:stroke-current",
-                            }
+                        button {
+                            r#type: "button",
+                            class: "sga-btn",
+                            "data-testid": "space-logo-remove",
+                            disabled: pending,
+                            onclick: move |_| update_logo.call(String::new()),
+                            "Remove"
                         }
                     }
                 }
