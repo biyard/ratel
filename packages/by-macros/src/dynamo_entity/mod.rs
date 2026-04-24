@@ -1220,6 +1220,16 @@ fn generate_struct_impl(
                         .expression_attribute_values(":sk", aws_sdk_dynamodb::types::AttributeValue::S(sk.to_string()));
                 }
 
+                if let Some(ref filter_prefix) = opt.filter_sk_prefix {
+                    req = req
+                        .filter_expression("begins_with(#base_sk, :base_sk_prefix)")
+                        .expression_attribute_names("#base_sk", "sk")
+                        .expression_attribute_values(
+                            ":base_sk_prefix",
+                            aws_sdk_dynamodb::types::AttributeValue::S(filter_prefix.clone()),
+                        );
+                }
+
                 if let Some(bookmark) = opt.bookmark {
                     let lek = Self::decode_bookmark_all(&bookmark)?;
                     req = req.set_exclusive_start_key(Some(lek));
@@ -1819,6 +1829,12 @@ fn generate_query_option(st_name: &str, cfg: &StructCfg) -> proc_macro2::TokenSt
             pub limit: i32,
             pub scan_index_forward: bool,
             pub all: bool,
+            /// Server-side `FilterExpression` — `begins_with(sk, <prefix>)` on
+            /// the base-table sort key. Useful on GSI queries where multiple
+            /// entity types share the same gsi_pk and a deserialize-fail is
+            /// otherwise inevitable. Unlike [`sk`], this never touches the
+            /// `KeyConditionExpression` and always filters on the base `sk`.
+            pub filter_sk_prefix: Option<String>,
         }
 
         impl Default for #opt_ident {
@@ -1829,6 +1845,7 @@ fn generate_query_option(st_name: &str, cfg: &StructCfg) -> proc_macro2::TokenSt
                     limit: 10,
                     scan_index_forward: false,
                     all: false,
+                    filter_sk_prefix: None,
                 }
             }
         }
@@ -1895,6 +1912,14 @@ fn generate_query_option(st_name: &str, cfg: &StructCfg) -> proc_macro2::TokenSt
 
             pub fn latest(mut self) -> Self {
                 self.scan_index_forward = false;
+                self
+            }
+
+            /// Attach a `begins_with(sk, <prefix>)` FilterExpression so
+            /// DynamoDB drops rows of other entity types before they reach
+            /// the deserializer. See field docs for rationale.
+            pub fn filter_sk_prefix(mut self, prefix: impl std::fmt::Display) -> Self {
+                self.filter_sk_prefix = Some(prefix.to_string());
                 self
             }
         }
@@ -2006,6 +2031,22 @@ fn generate_index_fn(
         }
     };
 
+    // FilterExpression on the *base* sk — applied after the KeyCondition
+    // matches and before items reach the deserializer. Uses a distinct alias
+    // ("#base_sk"/":base_sk_prefix") so it never collides with the GSI sk
+    // attribute aliases above.
+    let filter_condition = quote! {
+        if let Some(ref filter_prefix) = opt.filter_sk_prefix {
+            req = req
+                .filter_expression("begins_with(#base_sk, :base_sk_prefix)")
+                .expression_attribute_names("#base_sk", "sk")
+                .expression_attribute_values(
+                    ":base_sk_prefix",
+                    aws_sdk_dynamodb::types::AttributeValue::S(filter_prefix.clone()),
+                );
+        }
+    };
+
     quote! {
         pub async fn #idx_ident(
             cli: &aws_sdk_dynamodb::Client,
@@ -2023,6 +2064,7 @@ fn generate_index_fn(
                 .expression_attribute_values(":pk", aws_sdk_dynamodb::types::AttributeValue::S(Self::#pk_composer(pk.clone())));
 
             #sk_condition
+            #filter_condition
 
             if let Some(bookmark) = opt.bookmark {
                 let lek = Self::decode_bookmark_all(&bookmark)?;
@@ -2056,6 +2098,7 @@ fn generate_index_fn(
                         .expression_attribute_values(":pk", aws_sdk_dynamodb::types::AttributeValue::S(Self::#pk_composer(pk.clone())));
 
                     #sk_condition
+                    #filter_condition
 
                     let resp = req
                         .scan_index_forward(opt.scan_index_forward)

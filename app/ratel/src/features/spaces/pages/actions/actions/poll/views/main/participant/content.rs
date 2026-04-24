@@ -29,6 +29,8 @@ pub fn PollContent(
         role,
         poll.space_action.prerequisite,
         space.status,
+        poll.space_action.status.as_ref(),
+        true,
         space.join_anytime,
     );
 
@@ -155,6 +157,8 @@ pub fn PollContent(
                     }
                 }
 
+
+
                 if !is_last_question && total > 0 {
                     Button {
                         style: ButtonStyle::Outline,
@@ -188,18 +192,18 @@ pub fn PollContent(
             },
             div { class: "w-full",
                 if poll.status == PollStatus::Finish {
-                    div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
+                    div { class: "p-3 text-sm rounded-lg bg-banner-bg text-banner-text",
                         {tr.poll_ended}
                     }
                 }
                 if poll.status == PollStatus::NotStarted {
-                    div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
+                    div { class: "p-3 text-sm rounded-lg bg-banner-bg text-banner-text",
                         {tr.poll_not_started}
                     }
                 }
 
                 if is_in_progress && !can_execute_action {
-                    div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
+                    div { class: "p-3 text-sm rounded-lg bg-banner-bg text-banner-text",
                         {tr.no_permission}
                     }
                 }
@@ -207,13 +211,13 @@ pub fn PollContent(
                 if is_in_progress && can_execute_action && has_response && !poll.response_editable
                     && can_respond
                 {
-                    div { class: "rounded-lg bg-banner-bg p-3 text-sm text-banner-text",
+                    div { class: "p-3 text-sm rounded-lg bg-banner-bg text-banner-text",
                         {tr.already_responded}
                     }
                 }
 
                 if total == 0 {
-                    div { class: "flex items-center justify-center py-10 text-neutral-500",
+                    div { class: "flex justify-center items-center py-10 text-neutral-500",
                         {tr.no_questions}
                     }
                 }
@@ -226,7 +230,7 @@ pub fn PollContent(
                         let can_next = idx + 1 < total;
                         rsx! {
                             div { key: "poll-read-question-{idx}", class: "w-full",
-                                div { class: "mb-5 flex items-center justify-end text-[16px] font-normal text-text-primary",
+                                div { class: "flex justify-end items-center mb-5 font-normal text-[16px] text-text-primary",
                                     "{tr.question_label}: {idx + 1}/{total}"
                                 }
                                 div { class: "w-full [&_[data-question-title-wrap]]:mb-5 [&_[data-question-title-wrap]>div]:justify-center [&_[data-question-title]]:text-center [&_[data-question-title]]:text-[21px] [&_[data-question-desc]]:text-center",
@@ -240,6 +244,7 @@ pub fn PollContent(
                                         enable_other_option: true,
                                         on_change: move |ans: Answer| {
                                             answers.write().insert(idx, ans.clone());
+
 
                                             if can_submit && can_next && should_auto_next(&question, &ans) {
                                                 question_index.set(idx + 1);

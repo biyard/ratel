@@ -15,6 +15,8 @@ pub enum SpaceActionType {
     Follow,
     #[translate(ko = "퀴즈", en = "Quiz")]
     Quiz,
+    #[translate(ko = "미팅", en = "Meet")]
+    Meet,
 }
 
 impl SpaceActionType {
@@ -24,6 +26,7 @@ impl SpaceActionType {
             SpaceActionType::TopicDiscussion => RewardUserBehavior::DiscussionComment,
             SpaceActionType::Quiz => RewardUserBehavior::QuizAnswer,
             SpaceActionType::Follow => RewardUserBehavior::Follow,
+            SpaceActionType::Meet => RewardUserBehavior::AttendMeet,
         }
     }
 
@@ -58,6 +61,13 @@ impl SpaceActionType {
                 Ok(Route::QuizActionPage {
                     space_id: space_id.clone(),
                     quiz_id: response.quiz_id.clone(),
+                })
+            }
+            SpaceActionType::Meet => {
+                let response = crate::features::spaces::pages::actions::actions::meet::create_meet(space_id.clone()).await?;
+                Ok(Route::MeetActionPage {
+                    space_id: space_id.clone(),
+                    meet_id: response.sk,
                 })
             }
         }

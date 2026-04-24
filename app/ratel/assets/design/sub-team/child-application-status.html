@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Application Status</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .variant-switch{display:flex;gap:6px;padding:4px;border-radius:12px;background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);margin-bottom:18px}
+    .variant-switch__btn{padding:8px 14px;border-radius:9px;background:transparent;border:1px solid transparent;color:var(--text-muted);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+    .variant-switch__btn[aria-selected="true"][data-v="pending"]{background:rgba(245,158,11,0.10);color:var(--accent-amber);border-color:rgba(245,158,11,0.28)}
+    .variant-switch__btn[aria-selected="true"][data-v="returned"]{background:rgba(129,140,248,0.08);color:var(--accent-violet);border-color:rgba(129,140,248,0.22)}
+    .variant-switch__btn[aria-selected="true"][data-v="approved"]{background:rgba(34,197,94,0.10);color:var(--accent-green);border-color:rgba(34,197,94,0.28)}
+    .variant-switch__btn[aria-selected="true"][data-v="rejected"]{background:rgba(239,68,68,0.08);color:var(--accent-coral);border-color:rgba(239,68,68,0.22)}
+
+    .status-hero{position:relative;overflow:hidden;padding:26px 30px;border-radius:18px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:grid;grid-template-columns:auto 1fr auto;gap:24px;align-items:center}
+    .status-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 60% at 15% 15%,var(--status-accent,rgba(245,158,11,0.12)) 0%,transparent 60%);pointer-events:none}
+    .status-hero > *{position:relative;z-index:1}
+    .status-hero[data-v="pending"]{--status-accent:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.25)}
+    .status-hero[data-v="returned"]{--status-accent:rgba(129,140,248,0.15);border-color:rgba(129,140,248,0.25)}
+    .status-hero[data-v="approved"]{--status-accent:rgba(34,197,94,0.18);border-color:rgba(34,197,94,0.30);box-shadow:0 0 36px rgba(34,197,94,0.10)}
+    .status-hero[data-v="rejected"]{--status-accent:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.25)}
+    .status-hero__icon{width:60px;height:60px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .status-hero__icon svg{width:28px;height:28px}
+    .status-hero[data-v="pending"] .status-hero__icon{background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.30);color:var(--accent-amber)}
+    .status-hero[data-v="returned"] .status-hero__icon{background:rgba(129,140,248,0.10);border:1px solid rgba(129,140,248,0.30);color:var(--accent-violet)}
+    .status-hero[data-v="approved"] .status-hero__icon{background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.35);color:var(--accent-green);box-shadow:0 0 20px rgba(34,197,94,0.2)}
+    .status-hero[data-v="rejected"] .status-hero__icon{background:rgba(239,68,68,0.10);border:1px solid rgba(239,68,68,0.30);color:var(--accent-coral)}
+    .status-hero__eyebrow{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim)}
+    .status-hero__title{font-family:var(--font-display);font-size:24px;font-weight:800;letter-spacing:0.02em;line-height:1.2;color:var(--text-primary);margin:4px 0 6px}
+    .status-hero__sub{font-size:13px;color:var(--text-muted);line-height:1.6;max-width:520px}
+
+    .timeline{position:relative;padding-left:18px;display:flex;flex-direction:column;gap:20px;margin-top:6px}
+    .timeline::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,rgba(252,179,0,0.3),rgba(110,237,216,0.15))}
+    .timeline__item{position:relative;display:flex;flex-direction:column;gap:4px}
+    .timeline__item::before{content:'';position:absolute;left:-18px;top:4px;width:14px;height:14px;border-radius:50%;background:var(--bg-void);border:2px solid var(--accent-gold);box-shadow:0 0 8px rgba(252,179,0,0.3)}
+    .timeline__item[data-state="done"]::before{background:var(--accent-gold)}
+    .timeline__item[data-state="current"]::before{animation:pulse-ring 1.6s ease-in-out infinite}
+    @keyframes pulse-ring{0%,100%{box-shadow:0 0 8px rgba(252,179,0,0.3)}50%{box-shadow:0 0 14px rgba(252,179,0,0.6)}}
+    .timeline__when{font-family:var(--font-display);font-size:10px;letter-spacing:0.12em;color:var(--text-dim)}
+    .timeline__what{font-size:13px;color:var(--text-primary);line-height:1.5}
+    .timeline__what strong{color:var(--accent-gold);font-weight:600}
+
+    .feedback{padding:18px 20px;border-radius:14px;margin-top:14px;background:rgba(6,6,14,0.5);border:1px solid var(--border-subtle);display:flex;gap:12px}
+    .feedback__avatar{flex-shrink:0}
+    .feedback__body{flex:1;min-width:0}
+    .feedback__head{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+    .feedback__author{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--text-primary)}
+    .feedback__when{font-family:var(--font-display);font-size:10px;color:var(--text-dim);letter-spacing:0.08em;margin-left:auto}
+    .feedback__title{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px}
+    .feedback__text{font-size:14px;color:var(--text-primary);line-height:1.7;background:rgba(12,12,26,0.5);padding:12px 14px;border-radius:10px;border-left:3px solid var(--accent-violet);white-space:pre-wrap}
+    .feedback--rejected .feedback__text{border-left-color:var(--accent-coral)}
+
+    .action-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px}
+
+    .snapshot{padding:16px;border-radius:12px;background:rgba(6,6,14,0.45);border:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:8px}
+    .snapshot__row{display:grid;grid-template-columns:140px 1fr;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border-subtle);font-size:12px}
+    .snapshot__row:last-child{border-bottom:none}
+    .snapshot__key{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim)}
+    .snapshot__value{color:var(--text-primary);line-height:1.55;word-break:break-word}
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo arena-topbar__logo--child">QC</div>
+      <div class="u-col">
+        <span class="arena-topbar__title arena-topbar__title--child">Quantum Club</span>
+        <span class="arena-topbar__handle">Application status</span>
+      </div>
+      <span class="arena-topbar__status arena-topbar__status--pending" id="top-status">Pending</span>
+    </div>
+  </div>
+
+  <div class="page page--narrow">
+    <div class="page-header">
+      <div class="page-header__main">
+        <span class="page-header__eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Application Tracker
+        </span>
+        <h1 class="page-header__title page-header__title--child">SNU CS Dept.에 제출한 <strong>신청서 상태</strong></h1>
+        <p class="page-header__sub">아래 토글로 시나리오 상태를 전환해보세요: 심사 중 / 수정 반송 / 승인 / 거절.</p>
+      </div>
+    </div>
+
+    <div class="variant-switch" role="tablist">
+      <button class="variant-switch__btn" role="tab" aria-selected="true" data-v="pending"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Pending</button>
+      <button class="variant-switch__btn" role="tab" aria-selected="false" data-v="returned"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><path d="M3 12a9 9 0 1 0 9-9"/><polyline points="3 3 3 8 8 8"/></svg> Returned</button>
+      <button class="variant-switch__btn" role="tab" aria-selected="false" data-v="approved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><polyline points="20 6 9 17 4 12"/></svg> Approved</button>
+      <button class="variant-switch__btn" role="tab" aria-selected="false" data-v="rejected"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Rejected</button>
+    </div>
+
+    <div class="status-hero" id="status-hero" data-v="pending">
+      <div class="status-hero__icon" id="hero-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div>
+        <span class="status-hero__eyebrow" id="hero-eyebrow">Submitted · 2일 전</span>
+        <h2 class="status-hero__title" id="hero-title">심사 대기 중입니다</h2>
+        <p class="status-hero__sub" id="hero-sub">학과사무실 담당자가 신청서를 검토하고 있습니다. 보통 영업일 기준 3–5일이 소요됩니다. 결과는 Ratel 알림 + 이메일로 안내됩니다.</p>
+      </div>
+      <div class="u-col u-gap-4" style="text-align:right">
+        <span class="pill pill--pending" id="hero-pill">Pending</span>
+        <span class="u-text-dim" style="font-family:var(--font-display);font-size:10px;letter-spacing:0.08em;margin-top:4px">v3 · 6 fields</span>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title" style="background:linear-gradient(135deg,#6eedd8,#b6f5e6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">진행 기록 · Timeline</h2>
+        <span class="card__dash"></span>
+      </div>
+      <div class="timeline" id="timeline"></div>
+    </section>
+
+    <section class="card" id="feedback-card" hidden>
+      <div class="card__head">
+        <h2 class="card__title" id="feedback-heading" style="background:linear-gradient(135deg,#818cf8,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">학과 피드백</h2>
+        <span class="card__dash"></span>
+      </div>
+      <div class="feedback" id="feedback-box">
+        <div class="avatar feedback__avatar">SNU</div>
+        <div class="feedback__body">
+          <div class="feedback__head">
+            <span class="feedback__author">SNU CS Dept.</span>
+            <span class="u-text-dim" style="font-family:var(--font-display);font-size:10px;letter-spacing:0.06em">· 학과사무실</span>
+            <span class="feedback__when" id="feedback-when">어제</span>
+          </div>
+          <div class="feedback__title" id="feedback-title">수정 요청 코멘트</div>
+          <div class="feedback__text" id="feedback-text"></div>
+        </div>
+      </div>
+      <div class="action-row" id="feedback-actions"></div>
+    </section>
+
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title" style="background:linear-gradient(135deg,#6eedd8,#b6f5e6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">제출 내역 · Submitted answers</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta">Form v3 · 6 필드</span>
+      </div>
+      <div class="snapshot">
+        <div class="snapshot__row"><span class="snapshot__key">Club name</span><span class="snapshot__value">Quantum Computing Club</span></div>
+        <div class="snapshot__row"><span class="snapshot__key">Purpose</span><span class="snapshot__value">학부생 중심의 양자 컴퓨팅 스터디. Qiskit/Cirq 실습, 양자 알고리즘 세미나, 학과 세미나 시리즈 참여.</span></div>
+        <div class="snapshot__row"><span class="snapshot__key">Faculty advisor</span><span class="snapshot__value">이양자 교수 (ylee@snu.ac.kr)</span></div>
+        <div class="snapshot__row"><span class="snapshot__key">정기 모임 주기</span><span class="snapshot__value">격주 수요일 19:00</span></div>
+        <div class="snapshot__row"><span class="snapshot__key">회칙 링크</span><span class="snapshot__value">https://docs.google.com/document/d/1abcXYZqcc</span></div>
+        <div class="snapshot__row"><span class="snapshot__key">연간 활동 계획 인원</span><span class="snapshot__value">15</span></div>
+      </div>
+    </section>
+
+    <div class="notice notice--teal">
+      <div class="notice__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <div class="notice__body">
+        <span class="notice__title">폼 버전 고정</span>
+        <span class="notice__text">제출 시점의 폼 버전(v3)에 이 신청은 고정되어 있습니다. 학과가 폼을 업데이트하더라도 이 신청에는 적용되지 않습니다.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+</div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    const svgNS = 'http://www.w3.org/2000/svg';
+    function svgChild(tag, attrs) {
+      const n = document.createElementNS(svgNS, tag);
+      Object.entries(attrs).forEach(([k,v]) => n.setAttribute(k, v));
+      return n;
+    }
+
+    const heroIcon = document.getElementById('hero-icon');
+    const heroEyebrow = document.getElementById('hero-eyebrow');
+    const heroTitle = document.getElementById('hero-title');
+    const heroSub = document.getElementById('hero-sub');
+    const heroPill = document.getElementById('hero-pill');
+    const heroWrap = document.getElementById('status-hero');
+    const topStatus = document.getElementById('top-status');
+    const timelineEl = document.getElementById('timeline');
+    const feedbackCard = document.getElementById('feedback-card');
+    const feedbackBox = document.getElementById('feedback-box');
+    const feedbackHeading = document.getElementById('feedback-heading');
+    const feedbackTitle = document.getElementById('feedback-title');
+    const feedbackText = document.getElementById('feedback-text');
+    const feedbackWhen = document.getElementById('feedback-when');
+    const feedbackActions = document.getElementById('feedback-actions');
+
+    const iconPath = {
+      pending: (svg) => { svg.appendChild(svgChild('circle',{cx:'12',cy:'12',r:'10'})); svg.appendChild(svgChild('polyline',{points:'12 6 12 12 16 14'})); },
+      returned:(svg) => { svg.appendChild(svgChild('path',{d:'M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8'})); svg.appendChild(svgChild('polyline',{points:'3 3 3 8 8 8'})); },
+      approved:(svg) => { svg.appendChild(svgChild('polyline',{points:'20 6 9 17 4 12'})); },
+      rejected:(svg) => { svg.appendChild(svgChild('line',{x1:'18',y1:'6',x2:'6',y2:'18'})); svg.appendChild(svgChild('line',{x1:'6',y1:'6',x2:'18',y2:'18'})); },
+    };
+
+    const heroContent = {
+      pending:  { eyebrow:'Submitted · 2일 전', title:'심사 대기 중입니다', sub:'학과사무실 담당자가 신청서를 검토하고 있습니다. 보통 영업일 기준 3–5일이 소요됩니다. 결과는 Ratel 알림 + 이메일로 안내됩니다.', pillClass:'pill pill--pending', pillText:'Pending', topClass:'arena-topbar__status arena-topbar__status--pending', topText:'Pending' },
+      returned: { eyebrow:'Returned · 어제', title:'수정 요청이 도착했습니다', sub:'학과 담당자가 신청서 수정을 요청했습니다. 아래 코멘트를 확인하고 수정 후 재제출해주세요. 쿨다운은 없습니다.', pillClass:'pill pill--returned', pillText:'Returned', topClass:'arena-topbar__status', topText:'Returned' },
+      approved: { eyebrow:'Approved · 오늘', title:'🎉 정식 동아리로 등록되었습니다', sub:'Quantum Club이 SNU CS Dept.의 인증된 sub-team이 되었습니다. 이제 학과 공지를 받고, 학과 대시보드에 활동이 집계됩니다.', pillClass:'pill pill--approved', pillText:'Approved', topClass:'arena-topbar__status', topText:'Approved' },
+      rejected: { eyebrow:'Rejected · 오늘', title:'안타깝게도 이번 신청은 거절되었습니다', sub:'아래 사유를 확인해주세요. Quantum Club은 독립 팀으로 계속 운영할 수 있고, 쿨다운 없이 같은 또는 다른 부모팀에 재신청할 수 있습니다.', pillClass:'pill pill--rejected', pillText:'Rejected', topClass:'arena-topbar__status', topText:'Rejected' },
+    };
+
+    const timelines = {
+      pending: [
+        { when:'2026-04-20 · 14:32', what:'팀 생성 · @park_j', state:'done' },
+        { when:'2026-04-20 · 17:08', what:'멤버 5명 달성', state:'done' },
+        { when:'2026-04-20 · 17:20', what:'학칙 v2 동의', state:'done' },
+        { when:'2026-04-20 · 17:22', bold:['신청서 제출 → ','SNU CS Dept.'], state:'done' },
+        { when:'진행 중', what:'학과 담당자 심사 중…', state:'current' },
+      ],
+      returned: [
+        { when:'2026-04-20 · 17:22', bold:['신청서 제출 → ','SNU CS Dept.'], state:'done' },
+        { when:'2026-04-21 · 10:14', what:'학과 담당자 검토 시작', state:'done' },
+        { when:'2026-04-21 · 11:02', what:'수정 반송 · 코멘트 포함', state:'done' },
+        { when:'진행 중', what:'수정 후 재제출 대기…', state:'current' },
+      ],
+      approved: [
+        { when:'2026-04-20 · 17:22', what:'신청서 제출', state:'done' },
+        { when:'2026-04-21 · 11:02', what:'수정 반송 → 재제출', state:'done' },
+        { when:'2026-04-22 · 09:41', bold:['학과 ','승인',' · 정식 동아리 등록'], state:'done' },
+      ],
+      rejected: [
+        { when:'2026-04-20 · 17:22', what:'신청서 제출', state:'done' },
+        { when:'2026-04-22 · 10:08', bold:['학과 ','거절',' · 사유 전달됨'], state:'done' },
+        { when:'선택지', what:'같은 또는 다른 부모팀에 재신청 가능 (쿨다운 없음)', state:'current' },
+      ],
+    };
+
+    const feedbackVariants = {
+      pending: null,
+      returned: { heading:'수정 요청 코멘트', title:'수정 요청 코멘트', when:'어제 · 11:02', text:'지도교수 연락처 형식이 올바르지 않습니다. (이름 · 소속 · 이메일) 순으로 다시 작성해주세요. 그리고 회칙 링크는 열람 권한을 "학과사무실에 공유"로 바꿔주세요 — 현재는 요청 권한이 필요한 상태입니다.', rejected:false, actions:'returned' },
+      approved: { heading:'환영 메시지', title:'학과 담당자의 환영 메시지', when:'오늘 · 09:41', text:'학과 가족이 되신 것을 환영합니다. 설립 목적이 학과 비전과 잘 맞아 기대가 큽니다 — 이양자 교수님께도 별도로 안내드렸습니다. 5월 첫 주 학과 세미나에 대표자 한 분 참석 부탁드립니다.', rejected:false, actions:'approved' },
+      rejected: { heading:'거절 사유', title:'학과 거절 사유', when:'오늘 · 10:08', text:'제출된 활동 계획이 학과 규정상 "학술 목적"에 부합한다고 판단하기 어려웠습니다. 구체적인 학술 계획서 (주제 · 산출물 · 지도교수 서명 포함)와 함께 다음 학기 초에 재신청 부탁드립니다.', rejected:true, actions:'rejected' },
+    };
+
+    function render(v) {
+      document.querySelectorAll('.variant-switch__btn').forEach(b => b.setAttribute('aria-selected', b.dataset.v === v));
+      heroWrap.dataset.v = v;
+      const c = heroContent[v];
+      heroEyebrow.textContent = c.eyebrow;
+      heroTitle.textContent = c.title;
+      heroSub.textContent = c.sub;
+      heroPill.className = c.pillClass;
+      heroPill.textContent = c.pillText;
+      topStatus.className = c.topClass;
+      topStatus.textContent = c.topText;
+
+      const svg = document.createElementNS(svgNS, 'svg');
+      svg.setAttribute('viewBox','0 0 24 24');
+      svg.setAttribute('fill','none');
+      svg.setAttribute('stroke','currentColor');
+      svg.setAttribute('stroke-width','2');
+      svg.setAttribute('stroke-linecap','round');
+      svg.setAttribute('stroke-linejoin','round');
+      iconPath[v](svg);
+      heroIcon.replaceChildren(svg);
+
+      timelineEl.replaceChildren();
+      timelines[v].forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'timeline__item';
+        div.dataset.state = item.state;
+        const when = document.createElement('div');
+        when.className = 'timeline__when';
+        when.textContent = item.when;
+        const what = document.createElement('div');
+        what.className = 'timeline__what';
+        if (item.bold) {
+          what.appendChild(document.createTextNode(item.bold[0]));
+          const s = document.createElement('strong');
+          s.textContent = item.bold[1];
+          what.appendChild(s);
+          if (item.bold[2]) what.appendChild(document.createTextNode(item.bold[2]));
+        } else {
+          what.textContent = item.what;
+        }
+        div.appendChild(when); div.appendChild(what);
+        timelineEl.appendChild(div);
+      });
+
+      const fb = feedbackVariants[v];
+      if (!fb) { feedbackCard.hidden = true; return; }
+      feedbackCard.hidden = false;
+      feedbackHeading.textContent = fb.heading;
+      feedbackTitle.textContent = fb.title;
+      feedbackText.textContent = fb.text;
+      feedbackWhen.textContent = fb.when;
+      feedbackBox.classList.toggle('feedback--rejected', fb.rejected);
+
+      feedbackActions.replaceChildren();
+      if (fb.actions === 'returned') {
+        const editBtn = document.createElement('a');
+        editBtn.className = 'btn btn--primary';
+        editBtn.href = 'subteam-apply.html';
+        editBtn.textContent = '신청서 수정 후 재제출';
+        feedbackActions.appendChild(editBtn);
+      } else if (fb.actions === 'approved') {
+        const goBtn = document.createElement('a');
+        goBtn.className = 'btn btn--primary';
+        goBtn.href = 'parent-home-with-button.html';
+        goBtn.textContent = '팀 홈으로 이동';
+        feedbackActions.appendChild(goBtn);
+        const goBtn2 = document.createElement('a');
+        goBtn2.className = 'btn btn--ghost';
+        goBtn2.href = 'bylaws-section.html';
+        goBtn2.textContent = '학과 Bylaws 보기';
+        feedbackActions.appendChild(goBtn2);
+      } else if (fb.actions === 'rejected') {
+        const again = document.createElement('a');
+        again.className = 'btn btn--primary';
+        again.href = 'subteam-apply.html';
+        again.textContent = '다른 부모팀에 재신청';
+        feedbackActions.appendChild(again);
+      }
+    }
+
+    document.querySelectorAll('.variant-switch__btn').forEach(btn => {
+      btn.addEventListener('click', () => render(btn.dataset.v));
+    });
+    render('pending');
+  });
+</script>
+</body>
+</html>

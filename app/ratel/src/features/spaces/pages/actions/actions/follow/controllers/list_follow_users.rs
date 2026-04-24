@@ -165,11 +165,24 @@ pub async fn list_follow_users(
                     user_type: u.user_type,
                     subscribed: subscribed_targets.contains(&u.user_pk.to_string()),
                 });
-            if creator.is_some() {
-                creator
-            } else if let Some(user) =
+            // Only hit the User table when creator_pk is actually a User
+            // partition. If it's a Team (team-owned space), calling
+            // `User::get(TEAM#..., "USER")` triggers the DynamoEntity macro's
+            // `begins_with` fallback, which then matches *any* sk starting
+            // with "USER" under that team's pk (USER_TEAM, USER_ESSENCE_STATS,
+            // USER_EVM_ADDRESS, etc.) and tries to deserialize that unrelated
+            // row as a User — which blows up with missing required fields
+            // (e.g. "missing field `created_at`"). For Teams we always fall
+            // through to the creator_profile fallback below.
+            let user_lookup = if matches!(&creator_pk, Partition::User(_)) {
                 crate::features::auth::User::get(cli, creator_pk.clone(), Some(EntityType::User))
                     .await?
+            } else {
+                None
+            };
+            if creator.is_some() {
+                creator
+            } else if let Some(user) = user_lookup
             {
                 Some(FollowUserItem {
                     user_pk: creator_pk.clone(),

@@ -2,6 +2,9 @@ use crate::features::spaces::pages::actions::actions::follow::controllers::{
     FollowUserItem, follow_user, list_follow_users,
 };
 use crate::features::spaces::pages::actions::types::SpaceActionSummary;
+use crate::features::spaces::pages::index::action_dashboard::dependency_lock::{
+    open_locked_popup, resolve_outstanding_actions, DependencyLock,
+};
 use crate::features::spaces::pages::index::action_pages::quiz::CompletedActionCard;
 use crate::features::spaces::pages::index::*;
 use crate::features::spaces::space_common::providers::use_space_context;
@@ -13,11 +16,13 @@ pub fn FollowActionCard(
     action: SpaceActionSummary,
     space_id: ReadSignal<SpacePartition>,
     #[props(default)] is_admin: bool,
+    #[props(default = DependencyLock::none())] lock: DependencyLock,
 ) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
     let lang = use_language();
     let nav = use_navigator();
     let mut space_ctx = use_space_context();
+    let mut popup = use_popup();
     let action_id_edit = action.action_id.clone();
 
     let follow_id: SpaceActionFollowEntityType = action.action_id.clone().into();
@@ -28,6 +33,9 @@ pub fn FollowActionCard(
     let total = users.len();
     let followed_count = users.iter().filter(|u| u.subscribed).count();
     let mut completed_action: CompletedActionCard = use_context();
+    let locked = lock.locked;
+    let all_actions = space_ctx.actions();
+    let outstanding = resolve_outstanding_actions(&action, &all_actions);
 
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
@@ -35,6 +43,7 @@ pub fn FollowActionCard(
             class: "quest-card quest-card--follow",
             "data-type": "follow",
             "data-prerequisite": action.prerequisite,
+            "data-locked": locked,
             "data-testid": "quest-card-{action.action_id}",
             "data-credits": "{action.credits}",
 
@@ -89,6 +98,11 @@ pub fn FollowActionCard(
                     "{action.action_type.translate(&lang())}"
                 }
                 div { class: "quest-card__top-actions",
+                    if locked {
+                        span { class: "quest-card__badge quest-card__badge--locked",
+                            "{tr.locked_label}"
+                        }
+                    }
                     if action.prerequisite {
                         span { class: "quest-card__badge quest-card__badge--prerequisite",
                             "{tr.required_label}"
@@ -112,6 +126,19 @@ pub fn FollowActionCard(
 
             div { class: "quest-card__body",
                 div { class: "quest-card__title", "{action.title}" }
+                if locked {
+                    button {
+                        r#type: "button",
+                        class: "quest-card__cta quest-card__cta--locked",
+                        onclick: {
+                            let outstanding = outstanding.clone();
+                            move |_| {
+                                open_locked_popup(&mut popup, space_id(), outstanding.clone());
+                            }
+                        },
+                        "{tr.locked_see_required}"
+                    }
+                }
                 div { class: "quest-card__detail",
                     div { class: "quest-follow-list",
                         for user in users.iter() {
@@ -126,6 +153,7 @@ pub fn FollowActionCard(
                                         space_id,
                                         follow_id: follow_id.clone(),
                                         credits_per_follow: if total > 0 { action.credits / total as u64 } else { 0 },
+                                        disabled: locked,
                                         on_followed: move |_| {
                                             follow_users.restart();
                                             if new_followed >= total {
@@ -168,6 +196,7 @@ fn FollowUserRow(
     space_id: ReadSignal<SpacePartition>,
     follow_id: ReadSignal<SpaceActionFollowEntityType>,
     credits_per_follow: u64,
+    #[props(default = false)] disabled: bool,
     on_followed: EventHandler<()>,
 ) -> Element {
     let profile = if user().profile_url.is_empty() {
@@ -208,7 +237,11 @@ fn FollowUserRow(
             } else {
                 button {
                     class: "quest-follow-user__btn",
+                    disabled,
                     onclick: move |_| async move {
+                        if disabled {
+                            return;
+                        }
                         let _ = follow_user(space_id(), follow_id(), user().user_pk).await;
                         show_points.set(true);
                         on_followed.call(());

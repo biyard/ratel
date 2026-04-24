@@ -1,5 +1,27 @@
 import { expect } from "@playwright/test";
 
+export async function publishAction(page) {
+  const btn = page.getByTestId("action-publish");
+  if (await btn.isVisible().catch(() => false)) {
+    await btn.click();
+    await page.waitForLoadState("load");
+    await page.waitForTimeout(500);
+  }
+}
+
+export async function dismissDevToast(page) {
+  try {
+    await page.evaluate(() => {
+      document.querySelectorAll(".dx-toast").forEach((el) => {
+        if (el.id !== "dx-toast-template") {
+          el.style.display = "none";
+          el.style.pointerEvents = "none";
+        }
+      });
+    });
+  } catch {}
+}
+
 export function wrap(page, project, baseDir) {
   const pageWithCapture = page;
   pageWithCapture.order = 1;
@@ -34,6 +56,7 @@ export function wrap(page, project, baseDir) {
 }
 
 export async function click(page, opt) {
+  await dismissDevToast(page);
   const selected = await getLocator(page, opt);
 
   await selected.click();
@@ -49,6 +72,7 @@ export async function click(page, opt) {
  * because no page navigation occurs.
  */
 export async function clickNoNav(page, opt) {
+  await dismissDevToast(page);
   const selected = await getLocator(page, opt);
 
   await selected.click();
@@ -144,6 +168,7 @@ export async function goto(page, url) {
   // 1500ms is a conservative heuristic — replace if Dioxus exposes a real
   // hydration-complete signal.
   await page.waitForTimeout(1500);
+  await dismissDevToast(page);
 }
 
 /**
@@ -470,4 +495,84 @@ export async function setReward(page, credits) {
   await expect(creditInput).toBeVisible();
   await creditInput.fill(String(credits));
   await commitAutosave(page);
+}
+
+/**
+ * Set the schedule (started_at / ended_at, epoch ms) on an action via
+ * the server's update endpoint instead of driving the date+time picker
+ * UI. The arena editor migrated from native `<input type="datetime-local">`
+ * to a popover-based `DateAndTimePicker`, which can't be filled with
+ * `.fill('YYYY-MM-DDTHH:MM')` anymore — and the test's intent is to
+ * exercise the post-schedule flow, not the picker UI itself.
+ *
+ * Inferred from the current page URL:
+ *   /spaces/{space_id}/actions/{kind}/{action_id}
+ * where `{kind}` is `polls` | `quizzes` | `discussions` (`/edit` for
+ * the discussion editor) | `follows`. Each kind has its own update
+ * endpoint with the same body shape.
+ *
+ * Body uses Dioxus's server-fn convention — every controller arg is
+ * wrapped under its Rust parameter name (`req`).
+ */
+export async function setActionSchedule(page, { startedAt, endedAt }) {
+  const url = page.url();
+  const m = url.match(
+    /\/spaces\/([^/]+)\/actions\/(polls|quizzes|discussions|follows)\/([^/?#]+)/,
+  );
+  if (!m) {
+    throw new Error(`setActionSchedule: not on an action editor URL: ${url}`);
+  }
+  const [, spaceId, kind, rawId] = m;
+  // Discussion editor URL is `.../actions/discussions/<id>/edit`; trim
+  // the suffix if present.
+  const actionId = rawId.replace(/\/edit$/, "");
+
+  let endpoint;
+  let method = "post";
+  let body;
+  switch (kind) {
+    case "polls":
+      endpoint = `/api/spaces/${spaceId}/polls/${actionId}`;
+      body = { req: { started_at: startedAt, ended_at: endedAt } };
+      break;
+    case "quizzes":
+      endpoint = `/api/spaces/${spaceId}/quizzes/${actionId}`;
+      body = { req: { started_at: startedAt, ended_at: endedAt } };
+      break;
+    case "discussions":
+      // Discussion uses PATCH and a wider request type with optional fields.
+      endpoint = `/api/spaces/${spaceId}/discussions/${actionId}`;
+      method = "patch";
+      body = {
+        req: {
+          title: null,
+          html_contents: null,
+          category_name: null,
+          started_at: startedAt,
+          ended_at: endedAt,
+          files: null,
+        },
+      };
+      break;
+    case "follows":
+      // Follow has no follow-specific update endpoint; uses the generic
+      // `update_space_action` route.
+      endpoint = `/api/spaces/${spaceId}/actions/${actionId}`;
+      body = { req: { started_at: startedAt, ended_at: endedAt } };
+      break;
+    default:
+      throw new Error(`setActionSchedule: unsupported kind: ${kind}`);
+  }
+
+  const res = await page.request[method](endpoint, { data: body });
+  if (!res.ok()) {
+    throw new Error(
+      `setActionSchedule: ${method.toUpperCase()} ${endpoint} failed ` +
+        `(${res.status()}): ${await res.text()}`,
+    );
+  }
+  // Reload so the page picks up the new schedule. Use a soft reload
+  // rather than full nav so the editor's pager state resets to page 0
+  // consistently.
+  await page.reload({ waitUntil: "load" });
 }

@@ -81,6 +81,32 @@
 }
 .hud-btn:hover .tooltip { opacity: 1; transform: translateY(0); }
 
+/* ── Like button + counter badge ─────────────────── */
+/* Small pill on the bottom-right of the HUD button showing the current
+   like count; hidden when `likes == 0` (component only renders it when
+   positive). The liked state reuses the standard `aria-pressed="true"`
+   styling from `.hud-btn` above (gold tint on bg + icon). */
+.hud-btn--like { position: relative; }
+.hud-btn--like:disabled { opacity: 0.55; cursor: not-allowed; }
+.hud-btn__count {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: 100px;
+  background: #fcb300;
+  color: #0a0a0a;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--dark, #0c0c1a) var(--light, #ffffff);
+}
+
 /* ── Creator Switch Button ───────────────────────── */
 
 .hud-btn--creator {

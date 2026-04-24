@@ -47,21 +47,18 @@ pub async fn list_comments(
                 .collect();
             (filtered, None)
         } else {
-            // Use GSI2 (find_by_post_order_by_likes) with ROOT_PARENT filter
-            // This queries only top-level comments, already sorted by likes descending.
-            let mut opt = SpacePostComment::opt().scan_index_forward(false).limit(50);
-            if let Some(b) = bookmark {
-                opt = opt.bookmark(b);
-            }
-            let (items, next) =
-                SpacePostComment::find_by_post_order_by_likes(cli, space_post_pk_p.clone(), opt)
-                    .await?;
-            let filtered: Vec<_> = items
-                .into_iter()
-                .filter(|comment| comment.parent_id_for_likes == ROOT_PARENT)
-                .take(50)
-                .collect();
-            (filtered, next)
+            // Base table `sk begins_with "SPACE_POST_COMMENT#"` naturally
+            // excludes replies (they use the `SPACE_POST_COMMENT_REPLY#`
+            // prefix), so limit=50 maps to 50 real top-level comments
+            // instead of being diluted by reply rows. The client re-ranks
+            // by `comment_score`, so server-side sk DESC (newest-first via
+            // UUID v7) is just a stable fetch order, not the display order.
+            let sk_prefix = EntityType::SpacePostComment(String::new()).to_string();
+            let opt = SpacePostComment::opt_with_bookmark(bookmark)
+                .sk(sk_prefix)
+                .scan_index_forward(false)
+                .limit(100);
+            SpacePostComment::query(cli, space_post_pk_p.clone(), opt).await?
         };
 
     // Check which comments the current user has liked

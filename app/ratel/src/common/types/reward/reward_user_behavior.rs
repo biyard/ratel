@@ -32,6 +32,8 @@ pub enum RewardUserBehavior {
     QuizAnswer,
     #[translate(en = "Follow", ko = "팔로우")]
     Follow,
+    #[translate(en = "Attend Meet", ko = "회의 참석")]
+    AttendMeet,
     // Signup,
     // Subscribe,
 }
@@ -43,6 +45,7 @@ impl RewardUserBehavior {
             Self::DiscussionComment => RewardAction::SpaceDiscussion,
             Self::QuizAnswer => RewardAction::SpaceStudyAndQuiz,
             Self::Follow => RewardAction::SpaceFollow,
+            Self::AttendMeet => RewardAction::SpaceMeet,
         }
     }
 
@@ -52,6 +55,7 @@ impl RewardUserBehavior {
             RewardAction::SpaceDiscussion => vec![Self::DiscussionComment],
             RewardAction::SpaceStudyAndQuiz => vec![Self::QuizAnswer],
             RewardAction::SpaceFollow => vec![Self::Follow],
+            RewardAction::SpaceMeet => vec![Self::AttendMeet],
         }
     }
 }

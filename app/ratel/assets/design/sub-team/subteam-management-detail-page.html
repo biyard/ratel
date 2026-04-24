@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Sub-team Detail · SNU Code Club</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    /* ── Team hero ── */
+    .team-hero{position:relative;overflow:hidden;padding:24px 28px;border-radius:18px;background:var(--bg-glass);backdrop-filter:blur(14px);border:1px solid var(--border-subtle);display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center}
+    .team-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 60% at 15% 15%,rgba(110,237,216,0.08) 0%,transparent 60%);pointer-events:none}
+    .team-hero > *{position:relative;z-index:1}
+    .team-hero__title{font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:0.02em;color:var(--text-primary);margin-bottom:4px}
+    .team-hero__handle{font-family:var(--font-display);font-size:11px;color:var(--text-muted);letter-spacing:0.06em;margin-bottom:8px}
+    .team-hero__meta{display:flex;gap:8px;flex-wrap:wrap}
+
+    /* ── Time window toggle ── */
+    .window-toggle{display:inline-flex;padding:4px;border-radius:12px;background:rgba(6,6,14,0.6);border:1px solid var(--border-subtle)}
+    .window-toggle__btn{padding:7px 14px;border-radius:8px;background:transparent;border:1px solid transparent;color:var(--text-muted);font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+    .window-toggle__btn[aria-selected="true"]{background:rgba(34,211,238,0.10);color:var(--accent-cyan);border-color:rgba(34,211,238,0.25);box-shadow:0 0 12px rgba(34,211,238,0.12)}
+
+    /* ── Metric KPIs ── */
+    .metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    @media (max-width:960px){.metric-grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:540px){.metric-grid{grid-template-columns:1fr}}
+    .metric{position:relative;overflow:hidden;padding:16px 18px;border-radius:13px;background:var(--bg-glass);backdrop-filter:blur(12px);border:1px solid var(--border-subtle)}
+    .metric::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,var(--m-accent,rgba(34,211,238,0.14)),transparent 60%);filter:blur(20px);pointer-events:none}
+    .metric > *{position:relative;z-index:1}
+    .metric__label{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+    .metric__label svg{width:11px;height:11px;color:var(--m-icon,var(--accent-cyan))}
+    .metric__value{font-family:var(--font-display);font-size:24px;font-weight:800;letter-spacing:0.02em;color:var(--text-primary);margin-bottom:4px}
+    .metric__delta{font-family:var(--font-display);font-size:10px;color:var(--accent-green);letter-spacing:0.06em}
+    .metric__delta--down{color:var(--accent-coral)}
+    .metric--posts{--m-accent:rgba(34,211,238,0.14);--m-icon:var(--accent-cyan)}
+    .metric--spaces{--m-accent:rgba(129,140,248,0.14);--m-icon:var(--accent-violet)}
+    .metric--members{--m-accent:rgba(110,237,216,0.14);--m-icon:var(--accent-teal)}
+    .metric--growth{--m-accent:rgba(252,179,0,0.14);--m-icon:var(--accent-gold)}
+    .metric__spark{display:flex;align-items:flex-end;gap:2px;height:24px;margin-top:8px}
+    .metric__bar{flex:1;background:var(--m-icon,var(--accent-cyan));border-radius:2px;opacity:0.35}
+    .metric__bar.peak{opacity:0.85}
+
+    /* ── Trend chart ── */
+    .trend{padding:18px 22px;border-radius:14px;background:var(--bg-glass);backdrop-filter:blur(12px);border:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:14px}
+    .trend__head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .trend__title{font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted)}
+    .trend__legend{display:flex;gap:12px;margin-left:auto}
+    .trend__legend-item{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:10px;color:var(--text-muted);letter-spacing:0.04em}
+    .trend__legend-dot{width:10px;height:10px;border-radius:50%}
+    .trend__legend-dot--posts{background:var(--accent-cyan)}
+    .trend__legend-dot--members{background:var(--accent-teal)}
+    .trend__chart{position:relative;height:120px}
+    .trend__svg{width:100%;height:100%;overflow:visible}
+
+    /* ── Member table ── */
+    .member-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+    .member-search{flex:1;min-width:200px;position:relative}
+    .member-search__input{width:100%;padding:10px 14px 10px 38px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--text-primary);font-size:13px;outline:none}
+    .member-search__input:focus{border-color:rgba(252,179,0,0.3);box-shadow:0 0 14px rgba(252,179,0,0.08)}
+    .member-search__icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted)}
+    .member-search__icon svg{width:14px;height:14px}
+
+    .member-table{width:100%;border-collapse:separate;border-spacing:0 6px}
+    .member-table thead th{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);text-align:left;padding:8px 14px;white-space:nowrap}
+    .member-table thead th:last-child{text-align:right}
+    .member-table tbody td{padding:10px 14px;background:rgba(6,6,14,0.4);border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle);font-size:13px;color:var(--text-primary);vertical-align:middle}
+    .member-table tbody td:first-child{border-left:1px solid var(--border-subtle);border-top-left-radius:10px;border-bottom-left-radius:10px}
+    .member-table tbody td:last-child{border-right:1px solid var(--border-subtle);border-top-right-radius:10px;border-bottom-right-radius:10px;text-align:right}
+    .member-table tbody tr:hover td{background:rgba(12,12,26,0.6)}
+    .member-handle{display:inline-flex;align-items:center;gap:10px}
+    .member-handle__info{display:flex;flex-direction:column;gap:1px}
+    .member-handle__name{font-weight:600}
+    .member-handle__role{font-family:var(--font-display);font-size:9px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase}
+    .member-metric{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:100px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);font-family:var(--font-display);font-size:11px;color:var(--text-primary);letter-spacing:0.04em}
+    .member-metric__label{color:var(--text-dim);font-size:9px;letter-spacing:0.1em;text-transform:uppercase}
+    .member-actions{display:inline-flex;gap:4px}
+    .member-action{width:30px;height:30px;border-radius:8px;padding:0;background:transparent;border:1px solid var(--border-subtle);color:var(--text-dim);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
+    .member-action:hover{border-color:var(--border-strong);color:var(--text-primary)}
+    .member-action--danger:hover{border-color:rgba(239,68,68,0.3);color:var(--accent-coral);background:rgba(239,68,68,0.06)}
+    .member-action svg{width:13px;height:13px}
+
+    /* ── Direct message form ── */
+    .direct-msg{display:flex;flex-direction:column;gap:10px}
+    .direct-msg__title{width:100%;padding:12px 14px;border-radius:10px;background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);color:var(--text-primary);font-family:var(--font-display);font-size:14px;font-weight:700;outline:none}
+    .direct-msg__title:focus{border-color:rgba(168,85,247,0.35);box-shadow:0 0 14px rgba(168,85,247,0.1)}
+    .direct-msg__body{width:100%;min-height:100px;padding:12px 14px;border-radius:10px;background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);color:var(--text-primary);font-size:13px;line-height:1.6;outline:none;resize:vertical}
+    .direct-msg__body:focus{border-color:rgba(168,85,247,0.35);box-shadow:0 0 14px rgba(168,85,247,0.1)}
+    .direct-msg__foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .direct-msg__note{font-family:var(--font-display);font-size:10px;color:var(--text-dim);letter-spacing:0.06em}
+
+    /* ── Deregister card ── */
+    .danger-zone{padding:18px 22px;border-radius:14px;background:rgba(239,68,68,0.03);border:1px solid rgba(239,68,68,0.22);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .danger-zone__icon{width:42px;height:42px;border-radius:11px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.22);color:var(--accent-coral);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .danger-zone__icon svg{width:18px;height:18px}
+    .danger-zone__body{flex:1;min-width:200px}
+    .danger-zone__title{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-coral);margin-bottom:3px}
+    .danger-zone__desc{font-size:12px;color:var(--text-muted);line-height:1.55}
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back" onclick="history.back()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo arena-topbar__logo--child">SC</div>
+      <div class="u-col">
+        <span class="arena-topbar__title arena-topbar__title--child">SNU Code Club</span>
+        <span class="arena-topbar__handle">@snu_code_club · Sub-team of SNU CS Dept.</span>
+      </div>
+      <span class="arena-topbar__status arena-topbar__status--parent">Recognized · Active</span>
+    </div>
+    <div class="arena-topbar__actions">
+      <a class="btn btn--ghost btn--small" href="subteam-management-page.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        목록으로
+      </a>
+    </div>
+  </div>
+
+  <div class="page page--wide">
+
+    <!-- Team hero -->
+    <div class="team-hero">
+      <div class="avatar avatar--lg avatar--teal">SC</div>
+      <div>
+        <div class="team-hero__title">SNU Code Club</div>
+        <div class="team-hero__handle">@snu_code_club · 인증 2026-02-14 ~ · 62일</div>
+        <div class="team-hero__meta">
+          <span class="chip chip--green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Highly active</span>
+          <span class="chip">학칙 v2 동의</span>
+          <span class="chip">Form v2 기준 가입</span>
+          <span class="chip">지도교수 이양자 교수</span>
+        </div>
+      </div>
+      <div class="window-toggle" role="tablist">
+        <button class="window-toggle__btn" role="tab" aria-selected="false" data-win="daily">Daily</button>
+        <button class="window-toggle__btn" role="tab" aria-selected="true" data-win="weekly">Weekly</button>
+        <button class="window-toggle__btn" role="tab" aria-selected="false" data-win="monthly">Monthly</button>
+      </div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="metric-grid">
+      <div class="metric metric--posts">
+        <div class="metric__label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Posts
+        </div>
+        <div class="metric__value" id="m-posts">48</div>
+        <div class="metric__delta">+11 vs 전주</div>
+        <div class="metric__spark" id="sp-posts"></div>
+      </div>
+      <div class="metric metric--spaces">
+        <div class="metric__label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
+          Spaces
+        </div>
+        <div class="metric__value" id="m-spaces">6</div>
+        <div class="metric__delta">+1 신규</div>
+        <div class="metric__spark" id="sp-spaces"></div>
+      </div>
+      <div class="metric metric--members">
+        <div class="metric__label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Active members
+        </div>
+        <div class="metric__value" id="m-members">32</div>
+        <div class="metric__delta">+3 vs 전주</div>
+        <div class="metric__spark" id="sp-members"></div>
+      </div>
+      <div class="metric metric--growth">
+        <div class="metric__label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          Growth score
+        </div>
+        <div class="metric__value" id="m-growth">8.4</div>
+        <div class="metric__delta">/ 10 · Top 20%</div>
+        <div class="metric__spark" id="sp-growth"></div>
+      </div>
+    </div>
+
+    <!-- Trend -->
+    <section class="trend">
+      <div class="trend__head">
+        <span class="trend__title">Activity trend · 주간</span>
+        <div class="trend__legend">
+          <span class="trend__legend-item"><span class="trend__legend-dot trend__legend-dot--posts"></span>Posts</span>
+          <span class="trend__legend-item"><span class="trend__legend-dot trend__legend-dot--members"></span>Active members</span>
+        </div>
+      </div>
+      <div class="trend__chart">
+        <svg class="trend__svg" viewBox="0 0 700 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="postsFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="membersFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#6eedd8" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#6eedd8" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <!-- Grid lines -->
+          <line x1="0" y1="30" x2="700" y2="30" stroke="rgba(255,255,255,0.04)"/>
+          <line x1="0" y1="60" x2="700" y2="60" stroke="rgba(255,255,255,0.04)"/>
+          <line x1="0" y1="90" x2="700" y2="90" stroke="rgba(255,255,255,0.04)"/>
+          <!-- Posts area -->
+          <path d="M0,90 L100,70 L200,60 L300,50 L400,40 L500,35 L600,25 L700,20 L700,120 L0,120 Z" fill="url(#postsFill)"/>
+          <path d="M0,90 L100,70 L200,60 L300,50 L400,40 L500,35 L600,25 L700,20" stroke="#22d3ee" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Members area -->
+          <path d="M0,80 L100,75 L200,72 L300,65 L400,58 L500,52 L600,50 L700,45 L700,120 L0,120 Z" fill="url(#membersFill)"/>
+          <path d="M0,80 L100,75 L200,72 L300,65 L400,58 L500,52 L600,50 L700,45" stroke="#6eedd8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 3"/>
+          <!-- Peak dot -->
+          <circle cx="700" cy="20" r="4" fill="#22d3ee" stroke="#06060e" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="u-flex u-justify-between" style="font-family:var(--font-display);font-size:9px;color:var(--text-dim);letter-spacing:0.1em">
+        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+      </div>
+    </section>
+
+    <!-- Privacy notice -->
+    <div class="notice notice--teal">
+      <div class="notice__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <div class="notice__body">
+        <span class="notice__title">집계 범위</span>
+        <span class="notice__text">이 대시보드는 <strong>공개 및 팀 공유 활동만</strong> 반영합니다. 이 팀의 비공개 게시물, 초안, DM은 절대 집계되지 않으며 학과는 이 팀의 콘텐츠를 편집 / 삭제할 수 없습니다.</span>
+      </div>
+    </div>
+
+    <!-- Members -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title">멤버별 활동 · Per-member activity</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta">32명 · 지난 7일</span>
+      </div>
+
+      <div class="member-head">
+        <div class="member-search">
+          <span class="member-search__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+          <input class="member-search__input" id="m-search" placeholder="핸들 검색…" />
+        </div>
+        <span class="u-text-dim" style="font-family:var(--font-display);font-size:10px;letter-spacing:0.08em">정렬: 활동 많은 순</span>
+      </div>
+
+      <table class="member-table">
+        <thead>
+          <tr>
+            <th>Handle</th>
+            <th>Posts</th>
+            <th>Spaces</th>
+            <th>Last active</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="member-rows">
+          <tr>
+            <td>
+              <span class="member-handle">
+                <span class="avatar avatar--sm avatar--teal">PJ</span>
+                <span class="member-handle__info"><span class="member-handle__name">@park_j</span><span class="member-handle__role">Admin · Founder</span></span>
+              </span>
+            </td>
+            <td><span class="member-metric">12 <span class="member-metric__label">posts</span></span></td>
+            <td><span class="member-metric">5</span></td>
+            <td>오늘 · 2시간 전</td>
+            <td>
+              <div class="member-actions">
+                <button class="member-action" aria-label="View"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                <button class="member-action" aria-label="Message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="member-handle">
+                <span class="avatar avatar--sm">KS</span>
+                <span class="member-handle__info"><span class="member-handle__name">@kim_s</span><span class="member-handle__role">Admin</span></span>
+              </span>
+            </td>
+            <td><span class="member-metric">9 <span class="member-metric__label">posts</span></span></td>
+            <td><span class="member-metric">4</span></td>
+            <td>오늘 · 오전</td>
+            <td>
+              <div class="member-actions">
+                <button class="member-action" aria-label="View"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                <button class="member-action" aria-label="Message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="member-handle">
+                <span class="avatar avatar--sm avatar--violet">LH</span>
+                <span class="member-handle__info"><span class="member-handle__name">@lee_h</span><span class="member-handle__role">Member</span></span>
+              </span>
+            </td>
+            <td><span class="member-metric">7</span></td>
+            <td><span class="member-metric">3</span></td>
+            <td>어제</td>
+            <td>
+              <div class="member-actions">
+                <button class="member-action" aria-label="View"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                <button class="member-action" aria-label="Message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="member-handle">
+                <span class="avatar avatar--sm avatar--cyan">CM</span>
+                <span class="member-handle__info"><span class="member-handle__name">@choi_m</span><span class="member-handle__role">Member</span></span>
+              </span>
+            </td>
+            <td><span class="member-metric">5</span></td>
+            <td><span class="member-metric">2</span></td>
+            <td>2일 전</td>
+            <td>
+              <div class="member-actions">
+                <button class="member-action" aria-label="View"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                <button class="member-action" aria-label="Message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="member-handle">
+                <span class="avatar avatar--sm avatar--pink">JY</span>
+                <span class="member-handle__info"><span class="member-handle__name">@jung_y</span><span class="member-handle__role">Member</span></span>
+              </span>
+            </td>
+            <td><span class="member-metric">4</span></td>
+            <td><span class="member-metric">2</span></td>
+            <td>3일 전</td>
+            <td>
+              <div class="member-actions">
+                <button class="member-action" aria-label="View"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                <button class="member-action" aria-label="Message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="member-handle">
+                <span class="avatar avatar--sm avatar--purple">HD</span>
+                <span class="member-handle__info"><span class="member-handle__name">@han_d</span><span class="member-handle__role">Member</span></span>
+              </span>
+            </td>
+            <td><span class="member-metric">2</span></td>
+            <td><span class="member-metric">1</span></td>
+            <td>5일 전</td>
+            <td>
+              <div class="member-actions">
+                <button class="member-action" aria-label="View"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                <button class="member-action" aria-label="Message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-with="2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Direct broadcast to this sub-team -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title" style="background:linear-gradient(135deg,#c084fc,#e9d5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">이 하위팀에만 공지 · Direct announcement</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta">SNU Code Club만 대상</span>
+      </div>
+      <div class="direct-msg">
+        <input class="direct-msg__title" id="msg-title" placeholder="공지 제목" value="코드 리뷰 심사 과정 안내" />
+        <textarea class="direct-msg__body" id="msg-body" placeholder="내용…">@park_j 님과 협의한 대로, 이번 분기 코드 리뷰 심사 절차를 업데이트합니다. 이전과 마찬가지로 공개 활동에만 기반해 평가가 이루어지며, 사무실에서 별도 일정을 잡겠습니다.</textarea>
+        <div class="direct-msg__foot">
+          <span class="direct-msg__note">이 메시지는 SNU Code Club의 팀 스페이스에만 핀 고정됩니다 · 전체 공지와 별개로 집계</span>
+          <button class="btn btn--primary btn--small" id="msg-send" style="background:linear-gradient(135deg,rgba(168,85,247,0.3),rgba(168,85,247,0.14));border-color:rgba(168,85,247,0.4);color:#e9d5ff">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            발송 · Send
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Deregister -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title" style="color:var(--accent-coral);background:none;-webkit-text-fill-color:var(--accent-coral)">Danger zone</h2>
+        <span class="card__dash"></span>
+      </div>
+      <div class="danger-zone">
+        <div class="danger-zone__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div class="danger-zone__body">
+          <div class="danger-zone__title">Sub-team 등록 해제</div>
+          <div class="danger-zone__desc">SNU Code Club과의 parent-child 관계를 해제합니다. 팀 자체는 독립 팀으로 계속 운영되며 콘텐츠에는 영향이 없습니다.</div>
+        </div>
+        <a class="btn btn--danger" href="parent-deregister.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          등록 해제
+        </a>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+</div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    // Sparkline generator
+    function renderSpark(id, n) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.replaceChildren();
+      const peakIdx = Math.floor(n * 0.75);
+      for (let i = 0; i < n; i++) {
+        const bar = document.createElement('div');
+        bar.className = 'metric__bar';
+        if (i === peakIdx) bar.classList.add('peak');
+        bar.style.height = (20 + Math.random() * 80) + '%';
+        el.appendChild(bar);
+      }
+    }
+    function renderAll(n) {
+      renderSpark('sp-posts', n);
+      renderSpark('sp-spaces', n);
+      renderSpark('sp-members', n);
+      renderSpark('sp-growth', n);
+    }
+
+    // Window toggle
+    const values = {
+      daily: { posts: 6, spaces: 6, members: 12, growth: '7.8' },
+      weekly: { posts: 48, spaces: 6, members: 32, growth: '8.4' },
+      monthly: { posts: 184, spaces: 8, members: 44, growth: '8.9' },
+    };
+    function setWindow(w) {
+      document.querySelectorAll('.window-toggle__btn').forEach(b => b.setAttribute('aria-selected', b.dataset.win === w));
+      const v = values[w];
+      document.getElementById('m-posts').textContent = v.posts;
+      document.getElementById('m-spaces').textContent = v.spaces;
+      document.getElementById('m-members').textContent = v.members;
+      document.getElementById('m-growth').textContent = v.growth;
+      renderAll(w === 'daily' ? 12 : w === 'weekly' ? 7 : 12);
+    }
+    document.querySelectorAll('.window-toggle__btn').forEach(btn => {
+      btn.addEventListener('click', () => setWindow(btn.dataset.win));
+    });
+    setWindow('weekly');
+
+    // Member search
+    document.getElementById('m-search').addEventListener('input', (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      document.querySelectorAll('#member-rows tr').forEach(row => {
+        const name = row.querySelector('.member-handle__name').textContent.toLowerCase();
+        row.style.display = !q || name.includes(q) ? '' : 'none';
+      });
+    });
+
+    // Direct message send
+    document.getElementById('msg-send').addEventListener('click', () => {
+      SubTeam.toast('SNU Code Club에 공지 전송 · 32명 알림', 'success');
+    });
+
+    // Member action buttons (view / message per member)
+    document.getElementById('member-rows').addEventListener('click', (e) => {
+      const btn = e.target.closest('.member-action');
+      if (!btn) return;
+      const row = btn.closest('tr');
+      const handle = row.querySelector('.member-handle__name').textContent;
+      const label = btn.getAttribute('aria-label') || '';
+      if (label === 'View') {
+        SubTeam.toast(handle + ' 프로필 열기 (공개 활동만)');
+      } else if (label === 'Message') {
+        SubTeam.toast(handle + ' 에게 DM 준비 · 학과 admin 권한');
+      }
+    });
+  });
+</script>
+</body>
+</html>
