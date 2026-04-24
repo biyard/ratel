@@ -31,6 +31,7 @@ pub fn ActionCard(
         SpaceActionType::TopicDiscussion => tr.action_type_discussion,
         SpaceActionType::Follow => tr.action_type_follow,
         SpaceActionType::Quiz => tr.action_type_quiz,
+        SpaceActionType::Meet => tr.action_type_meet,
     };
     let type_badge_color = action_type_badge_color(&action.action_type);
     let point_value = action.total_point.unwrap_or_default();
@@ -300,6 +301,7 @@ fn action_type_badge_color(action_type: &SpaceActionType) -> BadgeColor {
         SpaceActionType::TopicDiscussion => BadgeColor::Blue,
         SpaceActionType::Follow => BadgeColor::Pink,
         SpaceActionType::Quiz => BadgeColor::Purple,
+        SpaceActionType::Meet => BadgeColor::Green,
     }
 }
 

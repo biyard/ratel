@@ -21,6 +21,21 @@ pub async fn delete_team_handler(username: String) -> Result<DeleteTeamResponse>
         return Err(SocialError::SessionNotFound.into());
     }
 
+    // ── Pre-delete cascade: detach any recognized sub-teams ────────
+    // Before removing the Team row, sever each parent→child relationship so
+    // the former sub-teams become standalone and their admins are notified.
+    // Sub-team CONTENT (posts, spaces, members, messages) is not touched.
+    if let Err(e) =
+        crate::features::sub_team::services::termination::cascade_parent_delete_to_sub_teams(
+            cli,
+            &team_pk,
+            &team.display_name,
+        )
+        .await
+    {
+        crate::error!("delete_team: sub-team cascade failed (proceeding anyway): {e}");
+    }
+
     let mut transact_items: Vec<TransactWriteItem> = Vec::new();
 
     let mut team_group_bookmark: Option<String> = None;

@@ -14,6 +14,9 @@ pub struct DashboardAggregate {
     pub comment_count: i64,
     pub like_count: i64,
     pub total_points: i64,
+
+    #[serde(default)]
+    pub meets: i64,
 }
 
 impl DashboardAggregate {
@@ -71,6 +74,16 @@ impl DashboardAggregate {
         let (pk, sk) = Self::keys(space_pk);
         Self::updater(&pk, sk)
             .increase_poll_count(delta)
+            .transact_write_item()
+    }
+
+    pub fn inc_meets(
+        space_pk: &Partition,
+        delta: i64,
+    ) -> aws_sdk_dynamodb::types::TransactWriteItem {
+        let (pk, sk) = Self::keys(space_pk);
+        Self::updater(&pk, sk)
+            .increase_meets(delta)
             .transact_write_item()
     }
 
