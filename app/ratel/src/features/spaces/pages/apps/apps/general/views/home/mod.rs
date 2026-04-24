@@ -60,7 +60,6 @@ pub fn SpaceGeneralAppPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: GeneralTranslate = use_translate();
     let space = use_space();
     let nav = use_navigator();
-    let mut popup = use_popup();
 
     // Instantiate the controller hook once at the page root. Child
     // components pick it up via the same `use_space_general_settings(..)?`
@@ -69,6 +68,12 @@ pub fn SpaceGeneralAppPage(space_id: ReadSignal<SpacePartition>) -> Element {
         mut delete_space_action,
         ..
     } = use_space_general_settings(space_id)?;
+
+    // Delete confirmation modal is rendered inline (NOT via `popup.open`)
+    // so it stays inside the `.space-general-arena` DOM subtree and
+    // picks up the arena CSS tokens (`--arena-*`) for the red-glow
+    // panel — matching the team-delete arena modal aesthetic.
+    let mut delete_open = use_signal(|| false);
 
     let space_data = space();
     let space_logo = if space_data.logo.is_empty() {
@@ -171,22 +176,7 @@ pub fn SpaceGeneralAppPage(space_id: ReadSignal<SpacePartition>) -> Element {
                             r#type: "button",
                             class: "sga-btn sga-btn--danger",
                             disabled: delete_space_action.pending(),
-                            onclick: move |_| {
-                                // Open a confirmation popup before
-                                // firing the mutation. Confirm closes
-                                // the popup then triggers the action
-                                // (which navigates home on success);
-                                // cancel just closes.
-                                let on_confirm = move |_| {
-                                    popup.close();
-                                    delete_space_action.call();
-                                };
-                                let on_cancel = move |_| popup.close();
-                                popup
-                                    .open(rsx! {
-                                    DeleteSpacePopup { on_confirm, on_cancel }
-                                });
-                            },
+                            onclick: move |_| delete_open.set(true),
                             if delete_space_action.pending() {
                                 {tr.deleting}
                             } else {
@@ -205,6 +195,19 @@ pub fn SpaceGeneralAppPage(space_id: ReadSignal<SpacePartition>) -> Element {
                         span { style: "width:6px;height:6px;border-radius:50%;background:var(--arena-accent-teal);display:inline-block" }
                         "Synced"
                     }
+                }
+            }
+
+            // ── Delete-space arena modal ────────────────
+            if delete_open() {
+                DeleteSpacePopup {
+                    space_title: space_title.clone(),
+                    pending: delete_space_action.pending(),
+                    on_cancel: move |_| delete_open.set(false),
+                    on_confirm: move |_| {
+                        delete_open.set(false);
+                        delete_space_action.call();
+                    },
                 }
             }
         }
