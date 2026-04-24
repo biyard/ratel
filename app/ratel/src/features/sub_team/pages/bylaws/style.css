@@ -1,0 +1,170 @@
+/* Public bylaws reader page. Mirrors
+ * assets/design/sub-team/bylaws-section.html.
+ */
+
+.sub-team-bylaws {
+  --sub-team-bg: var(--dark, #06060e) var(--light, #f7f7fb);
+  --sub-team-glass: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, rgba(255, 255, 255, 0.72));
+  --sub-team-border: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(0, 0, 0, 0.08));
+  --sub-team-text: var(--dark, #f0f0f5) var(--light, #12121a);
+  --sub-team-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+  --sub-team-dim: var(--dark, #55556a) var(--light, #9595a8);
+  --sub-team-gold: #fcb300;
+  --sub-team-teal: #6eedd8;
+  --sub-team-violet: #818cf8;
+
+  background: var(--sub-team-bg);
+  color: var(--sub-team-text);
+  min-height: 100vh;
+}
+
+.sub-team-bylaws .arena-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  padding: 18px 28px;
+  background: var(--sub-team-glass);
+  border-bottom: 1px solid var(--sub-team-border);
+}
+.sub-team-bylaws .arena-topbar__left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.sub-team-bylaws .topbar-title {
+  display: flex;
+  flex-direction: column;
+}
+.sub-team-bylaws .topbar-title__eyebrow {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sub-team-dim);
+}
+.sub-team-bylaws .topbar-title__main {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sub-team-bylaws .page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.sub-team-bylaws .bylaws-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sub-team-bylaws .group-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 4px;
+}
+.sub-team-bylaws .group-header__icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sub-team-bylaws .group-header__icon--parent {
+  background: rgba(252, 179, 0, 0.08);
+  border: 1px solid rgba(252, 179, 0, 0.25);
+  color: var(--sub-team-gold);
+}
+.sub-team-bylaws .group-header__icon--child {
+  background: rgba(110, 237, 216, 0.08);
+  border: 1px solid rgba(110, 237, 216, 0.25);
+  color: var(--sub-team-teal);
+}
+.sub-team-bylaws .group-header__title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sub-team-text);
+}
+.sub-team-bylaws .group-header__count {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.10em;
+  color: var(--sub-team-dim);
+  margin-left: auto;
+}
+
+.sub-team-bylaws .bylaws-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.sub-team-bylaws .bylaw-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: var(--sub-team-glass);
+  border: 1px solid var(--sub-team-border);
+}
+.sub-team-bylaws .bylaw-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sub-team-bylaws .bylaw-card__num {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(129, 140, 248, 0.08);
+  color: var(--sub-team-violet);
+  border: 1px solid rgba(129, 140, 248, 0.22);
+}
+.sub-team-bylaws .bylaw-card--parent .bylaw-card__num {
+  background: rgba(252, 179, 0, 0.08);
+  color: var(--sub-team-gold);
+  border-color: rgba(252, 179, 0, 0.22);
+}
+.sub-team-bylaws .bylaw-card__title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+  color: var(--sub-team-text);
+}
+.sub-team-bylaws .bylaw-card__excerpt {
+  font-size: 12px;
+  color: var(--sub-team-muted);
+  line-height: 1.55;
+}
+
+.sub-team-bylaws .empty-state {
+  padding: 24px;
+  text-align: center;
+  color: var(--sub-team-muted);
+  font-style: italic;
+  border-radius: 12px;
+  background: var(--sub-team-glass);
+  border: 1px dashed var(--sub-team-border);
+}

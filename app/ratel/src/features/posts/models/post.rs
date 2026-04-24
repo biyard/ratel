@@ -70,6 +70,17 @@ pub struct Post {
         alias = "category"
     )]
     pub categories: Vec<String>,
+
+    // Sub-team announcement fan-out linkage. When a parent team publishes an
+    // announcement it fans out into a Post per recognized sub-team space;
+    // these fields let the child-side feed render the announcement banner
+    // and un-pin previous announcements on the next publish.
+    #[serde(default)]
+    pub announcement_id: Option<String>,
+    #[serde(default)]
+    pub announcement_parent_team_id: Option<String>,
+    #[serde(default)]
+    pub pinned_as_announcement: bool,
 }
 
 /// Backward-compatible deserializer: accepts both a single string (old format)
@@ -192,6 +203,9 @@ impl Post {
             urls: vec![],
             space_visibility: None,
             categories: vec![],
+            announcement_id: None,
+            announcement_parent_team_id: None,
+            pinned_as_announcement: false,
         }
     }
 

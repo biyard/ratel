@@ -95,6 +95,7 @@ fn type_label(kind: &SpaceActionType) -> &'static str {
         SpaceActionType::Quiz => "QUIZ",
         SpaceActionType::TopicDiscussion => "DISCUSSION",
         SpaceActionType::Follow => "FOLLOW",
+        SpaceActionType::Meet => "MEET",
     }
 }
 

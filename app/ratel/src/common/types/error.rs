@@ -324,6 +324,10 @@ pub enum Error {
     #[translate(from)]
     Notifications(#[from] crate::features::notifications::types::NotificationsError),
 
+    #[error("{0}")]
+    #[translate(from)]
+    SubTeam(#[from] crate::features::sub_team::types::SubTeamError),
+
     // Unit variants for common errors
     #[error("Internal error")]
     #[translate(
@@ -419,6 +423,13 @@ pub enum Error {
 
     #[error("{0}")]
     #[translate(from)]
+    MeetAction(
+        #[from]
+        crate::features::spaces::pages::actions::actions::meet::MeetActionError,
+    ),
+
+    #[error("{0}")]
+    #[translate(from)]
     SpaceFollow(
         #[from]
         crate::features::spaces::pages::actions::actions::follow::types::SpaceFollowError,
@@ -498,6 +509,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::AiModerator(e) => e.status_code(),
             Error::Activity(e) => e.status_code(),
             Error::Notifications(e) => e.status_code(),
+            Error::SubTeam(e) => e.status_code(),
             Error::Auth(e) => e.status_code(),
             Error::Post(e) => e.status_code(),
             Error::Social(e) => e.status_code(),
@@ -509,6 +521,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::FileUpload(e) => e.status_code(),
             Error::SpaceAction(e) => e.status_code(),
             Error::SpacePoll(e) => e.status_code(),
+            Error::MeetAction(e) => e.status_code(),
             Error::SpaceFollow(e) => e.status_code(),
             Error::SpaceApp(e) => e.status_code(),
             Error::SpaceReport(e) => e.status_code(),
@@ -611,6 +624,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::AiModerator(e) => e.status_code(),
             Error::Activity(e) => e.status_code(),
             Error::Notifications(e) => e.status_code(),
+            Error::SubTeam(e) => e.status_code(),
             Error::Auth(e) => e.status_code(),
             Error::Post(e) => e.status_code(),
             Error::Social(e) => e.status_code(),
@@ -622,6 +636,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::FileUpload(e) => e.status_code(),
             Error::SpaceAction(e) => e.status_code(),
             Error::SpacePoll(e) => e.status_code(),
+            Error::MeetAction(e) => e.status_code(),
             Error::SpaceFollow(e) => e.status_code(),
             Error::SpaceApp(e) => e.status_code(),
             Error::SpaceReport(e) => e.status_code(),
