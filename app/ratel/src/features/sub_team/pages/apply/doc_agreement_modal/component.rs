@@ -17,7 +17,7 @@ pub fn DocAgreementModal(
     let tr: SubTeamTranslate = use_translate();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         div {
             class: "modal-backdrop sub-team-apply-doc-modal",
             "data-open": "{open}",

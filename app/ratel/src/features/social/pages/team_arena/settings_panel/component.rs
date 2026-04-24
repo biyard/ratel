@@ -21,7 +21,7 @@ pub fn ArenaSettingsPanel(
     let nav = use_navigator();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
 
         div {
             class: "ta-settings-panel__backdrop",

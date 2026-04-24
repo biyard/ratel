@@ -67,12 +67,9 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
             href: "https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap",
             r#as: "style",
         }
-        document::Link {
-            rel: "stylesheet",
-            href: "https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap",
-        }
-        document::Link { rel: "preload", href: asset!("./style.css"), r#as: "style" }
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: "https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" }
+        document::Stylesheet { href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         // Preload sub-component CSS to prevent flash of unstyled content
         document::Link {
             rel: "preload",

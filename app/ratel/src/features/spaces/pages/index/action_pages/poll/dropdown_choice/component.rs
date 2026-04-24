@@ -15,10 +15,7 @@ pub fn PollDropdown(
     };
 
     rsx! {
-        document::Link {
-            rel: "stylesheet",
-            href: asset!("/src/features/spaces/pages/index/action_pages/poll/subjective/style.css"),
-        }
+        document::Stylesheet { href: asset!("/src/features/spaces/pages/index/action_pages/poll/subjective/style.css") }
         select {
             class: "subjective-input",
             disabled,

@@ -58,7 +58,7 @@ pub fn MeetActionCard(
     };
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         div {
             class: "quest-card quest-card--meet",
             "data-testid": "action-card-meet",
