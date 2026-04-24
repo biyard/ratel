@@ -247,16 +247,18 @@ test.describe
 
     await page.waitForURL(/\/apps\/panels/, { waitUntil: "load" });
 
-    // Toggle Age attribute button via data-testid
+    // Toggle Age + Gender attribute cards. The panels page was
+    // rewritten to the arena layout, which renames the card testids
+    // from `attr-btn-{name}` (old DOM) to `attr-{name}` (see
+    // `panels/views/home/attribute_groups.rs` → `AttributeToggleCard`).
     await getLocator(page, { text: "Attribute groups" });
-    await click(page, { testId: "attr-btn-age" });
-    await page.waitForLoadState("load");
+    await clickNoNav(page, { testId: "attr-age" });
+    await clickNoNav(page, { testId: "attr-gender" });
 
-    // Toggle Gender attribute button via data-testid
-    await click(page, { testId: "attr-btn-gender" });
-    await page.waitForLoadState("load");
-
-    // Verify collective panel shows Age and Gender badges
+    // Visibility of "Collective Panel Attributes" is the auto-save
+    // confirmation — the section only renders after at least one
+    // collective attribute flips on. Replaces the earlier
+    // `waitForLoadState("load")` filler which was racy.
     await getLocator(page, { text: "Collective Panel Attributes" });
   });
 
