@@ -48,16 +48,20 @@ pub async fn list_my_home_spaces_handler(
         SpaceCommon::batch_get(cli, space_keys).await?
     };
 
-    // BatchGetItem does not preserve input order, so resort explicitly
-    // by participant activity (with a join-time fallback for legacy rows).
+    // Active (Ongoing/Open) spaces come first so the carousel leads with
+    // what the user can still engage with; Finished/Designing still surface
+    // below for history access (result review, archive revisit, notification
+    // deep-links). Within each bucket, sort by last participant activity.
     let mut spaces: Vec<SpaceCommon> = fetched
         .into_iter()
-        .filter(|s| s.is_published() && s.is_active())
+        .filter(|s| s.is_published())
         .collect();
     spaces.sort_by(|a, b| {
-        let a_act = activity_map.get(&a.pk.to_string()).copied().unwrap_or(0);
-        let b_act = activity_map.get(&b.pk.to_string()).copied().unwrap_or(0);
-        b_act.cmp(&a_act)
+        b.is_active().cmp(&a.is_active()).then_with(|| {
+            let a_act = activity_map.get(&a.pk.to_string()).copied().unwrap_or(0);
+            let b_act = activity_map.get(&b.pk.to_string()).copied().unwrap_or(0);
+            b_act.cmp(&a_act)
+        })
     });
 
     let post_keys: Vec<(Partition, EntityType)> = spaces
