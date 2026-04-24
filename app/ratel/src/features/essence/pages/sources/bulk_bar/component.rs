@@ -11,7 +11,7 @@ pub fn EssenceBulkBar() -> Element {
     let open = use_memo(move || count() > 0);
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         div { class: "essence-bulk", "data-open": open(),
             span { class: "essence-bulk__count",
                 strong { "{count()}" }

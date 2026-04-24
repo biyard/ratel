@@ -18,7 +18,7 @@ pub fn ActionEditTopbar(
     let tr: ActionEditTopbarTranslate = use_translate();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
 
         header { class: "arena-topbar", role: "banner",
             div { class: "arena-topbar__left",

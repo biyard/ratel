@@ -48,7 +48,7 @@ pub fn Textarea(
     children: Element,
 ) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         textarea {
             class: "textarea",
             "data-slot": "textarea",

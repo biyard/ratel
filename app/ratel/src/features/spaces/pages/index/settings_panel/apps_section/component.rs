@@ -31,7 +31,7 @@ pub fn AppsSection(space_id: ReadSignal<SpacePartition>) -> Element {
     let available_count = available_apps.len();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
 
         section {
             class: "settings-section apps-section",

@@ -6,7 +6,7 @@ use dioxus_primitives::slider::{
 #[component]
 pub fn Slider(props: SliderProps) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         slider::Slider {
             class: "slider",
             value: props.value,

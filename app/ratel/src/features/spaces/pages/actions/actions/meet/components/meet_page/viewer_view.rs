@@ -24,7 +24,7 @@ pub fn MeetViewerView() -> Element {
     let is_ended = matches!(status, SpaceActionStatus::Finish);
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         SeoMeta { title: "{title}" }
         div { class: "meet-viewer", "data-testid": "meet-viewer-view",
             h1 { class: "meet-viewer__title", "{title}" }

@@ -241,7 +241,7 @@ pub fn SidebarProvider(
     let merged = merge_attributes(vec![base, attributes]);
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         div { ..merged,{children} }
     }
 }
