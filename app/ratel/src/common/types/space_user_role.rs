@@ -114,6 +114,8 @@ pub async fn has_completed_prerequisite_action(
             has_completed_discussion_action(cli, &action.pk.1, user_pk).await
         }
         SpaceActionType::Follow => has_completed_follow_action(cli, space, user_pk).await,
+        // Meet prerequisites are not tracked per-user yet; treat as not-completed.
+        SpaceActionType::Meet => Ok(false),
     }
 }
 

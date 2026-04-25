@@ -503,16 +503,19 @@ test.describe.serial("Space governance scenario", () => {
     await openSpaceAppSettings(page, spaceUrl, "panels");
     await page.waitForURL(/\/apps\/panels$/, { waitUntil: "load" });
 
-    const attributeGroups = page
-      .getByText("Attribute groups", { exact: true })
-      .locator("..");
+    // Arena rewrite flattened the "Attribute groups" section's DOM —
+    // the toggle buttons are now cousins of the label span, not
+    // siblings, so the old `.getByText().locator('..').getByRole()`
+    // chain no longer resolves. `AttributeToggleCard` exposes stable
+    // `attr-{university,age,gender}` testids (attribute_groups.rs);
+    // address the toggles directly through those.
+    await clickNoNav(page, { testId: "attr-age" });
+    await clickNoNav(page, { testId: "attr-gender" });
 
-    await attributeGroups.getByRole("button", { name: "Age" }).click();
-    await page.waitForLoadState("networkidle");
-
-    await attributeGroups.getByRole("button", { name: "Gender" }).click();
-    await page.waitForLoadState("networkidle");
-
+    // "Collective Panel Attributes" appears only once at least one
+    // collective attribute is selected — its visibility is the
+    // auto-save confirmation we need to wait on (replaces the
+    // `waitForLoadState("networkidle")` anti-pattern).
     await getLocator(page, { text: "Collective Panel Attributes" });
   });
 

@@ -27,7 +27,7 @@ pub fn PollSingleChoice(
     let other_letter = letters.get(question.options.len()).copied().unwrap_or('?');
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         div { class: "options-single",
             for (opt_idx , option) in question.options.iter().enumerate() {
                 {

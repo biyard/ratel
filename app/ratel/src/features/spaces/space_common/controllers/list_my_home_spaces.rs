@@ -23,11 +23,19 @@ pub async fn list_my_home_spaces_handler(
     let conf = crate::common::config::ServerConfig::default();
     let cli = conf.dynamodb();
 
-    // SpaceParticipant GSI1 is sorted by created_at. Default scan_index_forward
-    // is already descending, so the most recently joined spaces come first.
     let opts = SpaceParticipant::opt_with_bookmark(bookmark).limit(10);
     let (participants, next_bookmark) =
         SpaceParticipant::find_by_user(cli, &user.pk, opts).await?;
+
+    let activity_map: HashMap<String, i64> = participants
+        .iter()
+        .map(|sp| {
+            (
+                sp.space_pk.to_string(),
+                sp.last_activity_at.unwrap_or(sp.created_at),
+            )
+        })
+        .collect();
 
     let space_keys: Vec<(Partition, EntityType)> = participants
         .iter()
@@ -40,17 +48,21 @@ pub async fn list_my_home_spaces_handler(
         SpaceCommon::batch_get(cli, space_keys).await?
     };
 
-    // DynamoDB BatchGetItem does not preserve input order, so realign the
-    // fetched spaces with the participant query order (most-recent-first).
-    let mut by_pk: HashMap<String, SpaceCommon> = fetched
+    // Active (Ongoing/Open) spaces come first so the carousel leads with
+    // what the user can still engage with; Finished/Designing still surface
+    // below for history access (result review, archive revisit, notification
+    // deep-links). Within each bucket, sort by last participant activity.
+    let mut spaces: Vec<SpaceCommon> = fetched
         .into_iter()
-        .map(|s| (s.pk.to_string(), s))
-        .collect();
-    let spaces: Vec<SpaceCommon> = participants
-        .iter()
-        .filter_map(|sp| by_pk.remove(&sp.space_pk.to_string()))
         .filter(|s| s.is_published())
         .collect();
+    spaces.sort_by(|a, b| {
+        b.is_active().cmp(&a.is_active()).then_with(|| {
+            let a_act = activity_map.get(&a.pk.to_string()).copied().unwrap_or(0);
+            let b_act = activity_map.get(&b.pk.to_string()).copied().unwrap_or(0);
+            b_act.cmp(&a_act)
+        })
+    });
 
     let post_keys: Vec<(Partition, EntityType)> = spaces
         .iter()
@@ -134,6 +146,7 @@ async fn count_actions(
             SpaceActionType::TopicDiscussion => discussions += 1,
             SpaceActionType::Quiz => quizzes += 1,
             SpaceActionType::Follow => follows += 1,
+            SpaceActionType::Meet => {}
         }
     }
     (polls, discussions, quizzes, follows)

@@ -1,5 +1,5 @@
 use crate::features::spaces::pages::apps::apps::analyzes::*;
-use crate::features::spaces::space_common::hooks::use_space_role;
+use crate::features::spaces::space_common::providers::use_space_context;
 
 #[component]
 pub fn SpaceAnalyzeDiscussionPage(
@@ -9,9 +9,13 @@ pub fn SpaceAnalyzeDiscussionPage(
     let _ = space_id;
     let _ = discussion_id;
     let tr: SpaceAnalyzesAppTranslate = use_translate();
-    let role = use_space_role()();
+    // Creator-only admin surface — gate on real role, not the
+    // `current_role` memo that flips Creator → Participant while a
+    // space is Ongoing. See `views/home/mod.rs` for the full story.
+    let mut ctx = use_space_context();
+    let real_role = ctx.role();
 
-    if role != SpaceUserRole::Creator {
+    if real_role != SpaceUserRole::Creator {
         return rsx! {};
     }
 

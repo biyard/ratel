@@ -2,7 +2,7 @@ use crate::features::posts::controllers::dto::*;
 use crate::features::posts::models::PostArtworkMetadata;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
-use crate::common::components::TiptapEditor;
+use crate::common::components::editor::Editor as RichEditor;
 use dioxus::prelude::*;
 
 #[component]
@@ -52,7 +52,7 @@ pub fn PostContent(
                                 h2 { class: "text-lg font-semibold text-text-primary",
                                     "Description"
                                 }
-                                TiptapEditor {
+                                RichEditor {
                                     class: "w-full bg-transparent",
                                     content: html_contents.clone(),
                                     editable: false,
@@ -68,7 +68,7 @@ pub fn PostContent(
         rsx! {
             div { class: "flex flex-col py-5 px-4 w-full border rounded-[10px] bg-card-bg border-card-border",
                 div { class: "flex flex-col gap-5 w-full",
-                    TiptapEditor {
+                    RichEditor {
                         class: "w-full bg-transparent",
                         content: html_contents.clone(),
                         editable: false,

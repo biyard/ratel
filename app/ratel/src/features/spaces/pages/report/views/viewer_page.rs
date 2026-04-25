@@ -1,4 +1,5 @@
 use super::*;
+use crate::common::components::editor::Editor as RichEditor;
 
 #[component]
 pub fn ViewerPage(space_id: SpacePartition) -> Element {
@@ -35,7 +36,7 @@ pub fn ViewerPage(space_id: SpacePartition) -> Element {
                     div { class: "flex items-center gap-3" }
                 }
                 div { class: "flex flex-col w-full min-h-0 flex-1 overflow-hidden",
-                    TiptapEditor {
+                    RichEditor {
                         class: "w-full h-fit",
                         content: content(),
                         editable: editable(),

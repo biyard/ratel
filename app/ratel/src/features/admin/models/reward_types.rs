@@ -103,6 +103,7 @@ impl RewardUserBehaviorExt for RewardUserBehavior {
             RewardUserBehavior::DiscussionComment,
             RewardUserBehavior::QuizAnswer,
             RewardUserBehavior::Follow,
+            RewardUserBehavior::AttendMeet,
         ]
     }
 
@@ -112,6 +113,7 @@ impl RewardUserBehaviorExt for RewardUserBehavior {
             RewardUserBehavior::DiscussionComment => "Discussion Comment",
             RewardUserBehavior::QuizAnswer => "Quiz Answer",
             RewardUserBehavior::Follow => "Follow",
+            RewardUserBehavior::AttendMeet => "Attend Meet",
         }
     }
 }

@@ -256,5 +256,10 @@ pub async fn respond_poll(
         // INSERT → handle_poll_xp. See features/activity/services/handle_xp_event.rs.
     }
 
+    crate::features::spaces::space_common::services::bump_participant_activity(
+        cli, &space_pk, &member.pk,
+    )
+    .await;
+
     Ok(RespondPollResponse {})
 }

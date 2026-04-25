@@ -1,3 +1,4 @@
+use crate::features::spaces::pages::actions::actions::meet::MeetActionCard;
 use crate::features::spaces::pages::actions::types::{SpaceActionSummary, SpaceActionType};
 use crate::features::spaces::pages::index::action_pages::quiz::{
     ActiveActionOverlay, ActiveActionOverlaySignal, CompletedActionCard,
@@ -50,6 +51,15 @@ pub(super) fn derive_action_status(action: &SpaceActionSummary) -> ActionStatus 
             }
         }
         SpaceActionType::Follow => {
+            if action.user_participated {
+                ActionStatus::Completed
+            } else if ended {
+                ActionStatus::Skipped
+            } else {
+                ActionStatus::Active
+            }
+        }
+        SpaceActionType::Meet => {
             if action.user_participated {
                 ActionStatus::Completed
             } else if ended {
@@ -117,7 +127,7 @@ pub fn ActionDashboard(
     });
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         document::Script { defer: true, src: asset!("./script.js") }
 
         div { class: "quest-label",
@@ -243,6 +253,14 @@ pub fn ActionDashboard(
                                         space_id,
                                         is_admin,
                                         lock: lock.clone(),
+                                    }
+                                },
+                                SpaceActionType::Meet => rsx! {
+                                    MeetActionCard {
+                                        key: "{key}",
+                                        action,
+                                        space_id,
+                                        is_admin,
                                     }
                                 },
                             }
@@ -445,6 +463,7 @@ fn ArchiveItem(action: SpaceActionSummary, status: ActionStatus, space_id: Space
                         });
                     }
                     SpaceActionType::Follow => {} // Follow has no in-overlay detail view yet; skip.
+                    SpaceActionType::Meet => {} // Meet has no in-overlay detail view yet; skip.
                 }
             },
             div { class: "archive-item__info",
@@ -495,5 +514,6 @@ fn quest_type_css(t: &SpaceActionType) -> &'static str {
         SpaceActionType::TopicDiscussion => "discuss",
         SpaceActionType::Quiz => "quiz",
         SpaceActionType::Follow => "follow",
+        SpaceActionType::Meet => "meet",
     }
 }
