@@ -126,13 +126,13 @@ dx translate -f <path>/page.html
 
 ```rust
 rsx! {
-    document::Link { rel: "preload", href: asset!("./style.css"), r#as: "style" }
+    document::Stylesheet { href: asset!("./style.css") }
     document::Script { defer: true, src: asset!("./script.js") }  // only if JS exists
     // ... component RSX
 }
 ```
 
-- Each sub-component loads its own `style.css` via its own `document::Link`
+- Each sub-component loads its own `style.css` via its own `document::Stylesheet`
 - Always use `defer: true` on `document::Script`
 
 ## Step 8: Create i18n Translations

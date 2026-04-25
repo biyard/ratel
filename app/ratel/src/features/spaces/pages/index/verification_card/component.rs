@@ -14,7 +14,7 @@ pub fn VerificationCard(
     let user_ctx = crate::features::auth::hooks::use_user_context();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "verification-card", "data-testid": "card-verification",
             span { class: "verification-card__heading", "{tr.verification_heading}" }

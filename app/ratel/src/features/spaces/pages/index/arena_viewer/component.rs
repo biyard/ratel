@@ -54,7 +54,7 @@ pub fn ArenaViewer(
     let needs_verification = has_requirements && has_unsatisfied;
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "arena-viewer",
             div { class: "arena-ring" }

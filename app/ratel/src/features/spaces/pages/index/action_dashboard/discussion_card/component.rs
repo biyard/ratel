@@ -27,7 +27,7 @@ pub fn DiscussionActionCard(
     let outstanding = resolve_outstanding_actions(&action, &all_actions);
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         div {
             class: "quest-card quest-card--discuss",
             "data-prerequisite": prerequisite,

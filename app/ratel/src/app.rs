@@ -43,11 +43,8 @@ pub fn App() -> Element {
 
     rsx! {
         document::Link { rel: "icon", href: crate::common::assets::FAVICON }
-        document::Link { rel: "stylesheet", href: MAIN_CSS }
-        document::Link {
-            rel: "stylesheet",
-            href: asset!("/assets/dx-components-theme.css"),
-        }
+        document::Stylesheet { href: MAIN_CSS }
+        document::Stylesheet { href: asset!("/assets/dx-components-theme.css") }
         // Loaded as a module: Dioxus's `asset!()` post-processes JS into
         // an ES module wrapper (the bundle ends with `export default …`),
         // so a classic `<script>` tag throws `Unexpected token 'export'`
@@ -56,7 +53,7 @@ pub fn App() -> Element {
         // when loaded as a module.
         document::Script { r#type: "module", src: MAIN_JS }
         document::Script { src: "https://cdn.portone.io/v2/browser-sdk.js" }
-        document::Link { rel: "stylesheet", href: asset!("/assets/tailwind.css") }
+        document::Stylesheet { href: asset!("/assets/tailwind.css") }
 
         crate::common::Provider {}
         AuthProvider {}

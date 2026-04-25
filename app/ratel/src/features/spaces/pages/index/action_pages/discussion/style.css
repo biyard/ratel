@@ -519,26 +519,84 @@ body.comments-panel-resizing {
 }
 
 /* ── Comment Input ─────────────────────────────── */
-/* The top-level composer (at the top of the comments panel) always
-   gets the padded + divider chrome. The compact reply composer only
-   inherits the same chrome on mobile — on desktop it stays bare so the
-   `.reply-input` pill appears inline under the comment without an
-   extra panel frame (matching the pre-unification look). */
-.comment-input:not([data-compact="true"]) {
-  padding: 16px 20px;
+/* Single composer pinned to the bottom of the comments panel. Handles
+   both top-level comments and replies (via optional quote preview) — the
+   thread-focus mode in `.comments-scroll` provides the visual context
+   for which entity the next submit will attach to. */
+.comment-input {
+  padding: 14px 20px 16px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  background: var(--panel-bg);
 }
-/* Kill the reply-box offsets when the top-level wrapper provides its
-   own positioning — those margins only make sense for the bare inline
-   reply pill nested under a parent comment on desktop. */
-.comment-input:not([data-compact="true"]) > .reply-input {
+.comment-input > .reply-input {
   margin-left: 0;
   margin-right: 0;
   margin-top: 0;
+}
+
+/* ── Reply quote preview ──────────────────────────
+   Rendered above the textarea when `reply_quote` is set. Cancel button
+   clears `active_reply_thread`, which both hides this banner and exits
+   thread-focus mode on the comment list. */
+.comment-input__quote {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 8px 8px 12px;
+  border-left: 3px solid var(--discuss-color);
+  background: var(--discuss-bg);
+  border-radius: 0 8px 8px 0;
+}
+.comment-input__quote-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.comment-input__quote-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--discuss-color);
+}
+.comment-input__quote-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-style: italic;
+}
+.comment-input__quote-close {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  padding: 0;
+}
+.comment-input__quote-close:hover {
+  background: var(--surface-raised);
+  color: var(--text-muted);
+}
+.comment-input__quote-close svg {
+  width: 12px;
+  height: 12px;
 }
 
 /* ── Comments Scroll Area ──────────────────────── */
@@ -572,6 +630,55 @@ body.comments-panel-resizing {
    keeps the existing flex/gap layout untouched (wrapper is visually transparent). */
 .comment-entry {
   display: contents;
+}
+
+/* ── Thread focus mode ─────────────────────────────
+   Set on `.comments-scroll` when a user clicks Reply on a comment. Filters
+   the list so only the active thread (parent + its replies) is visible
+   while keeping the DOM intact — loaders, scroll position, and per-item
+   state all survive. Exit happens via the composer's quote-close button
+   (clears `active_reply_thread`). */
+.comments-scroll[data-thread-active="true"]
+  .comment-list
+  > .comment-entry:not([data-thread-active="true"]) {
+  display: none !important;
+}
+.comments-scroll[data-thread-active="true"] .load-more {
+  display: none;
+}
+.comments-scroll[data-thread-active="true"]
+  .comment-entry[data-thread-active="true"]
+  > .comment-item {
+  position: relative;
+  background: var(--discuss-bg);
+  border-bottom: 1px solid var(--discuss-border);
+  padding-top: 24px;
+}
+.comments-scroll[data-thread-active="true"]
+  .comment-entry[data-thread-active="true"]
+  > .comment-item::before {
+  content: "Thread";
+  position: absolute;
+  top: 8px;
+  left: 20px;
+  font-family: "Orbitron", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--discuss-color);
+}
+.comments-scroll[data-thread-active="true"]
+  .comment-entry[data-thread-active="true"]
+  > .reply-toggle {
+  display: none !important;
+}
+.comments-scroll[data-thread-active="true"]
+  .comment-entry[data-thread-active="true"]
+  > .comment-replies {
+  margin-left: 0;
+  padding-left: 0;
+  border-left: none;
 }
 
 /* ── Comment Item ──────────────────────────────── */
@@ -993,7 +1100,7 @@ body.comments-panel-resizing {
   display: none;
 }
 /* ── Responsive: Bottom Sheet ─────────────────── */
-@media (max-width: 900px) {
+@media (max-width: 749px) {
   .discussion-layout {
     flex-direction: column;
     flex: 1;
@@ -1161,23 +1268,6 @@ body.comments-panel-resizing {
   .comment-input > .reply-input {
     margin-left: 0;
   }
-  /* Mobile only: the compact reply composer (inside the bottom-sheet
-     thread view) gets the same padded + divider chrome as the top-level
-     composer so the sheet reads as a stack of matching sections.
-     Desktop keeps the bare inline pill — see the base rules above. */
-  .comment-input[data-compact="true"] {
-    padding: 16px 20px;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    border-top: 1px solid var(--border);
-  }
-  .comment-input[data-compact="true"] > .reply-input {
-    margin-left: 0;
-    margin-right: 0;
-    margin-top: 0;
-  }
 }
 
 /* Mention dropdown: script.js sets data-mention-flip="up" when the
@@ -1217,72 +1307,6 @@ body.comments-panel-resizing {
   }
 }
 
-/* ── In-sheet reply thread view ─────────────────────────────
-   Rendered inside the comments panel when a user taps a comment's
-   Reply action on mobile. Fills the panel (flex column) with a header
-   on top, scrollable parent + replies, and a pinned composer at the
-   bottom. Cards reuse `.comment-item` / `.reply-input` so styling
-   stays consistent with the inline arena view. */
-
-@keyframes reply-thread-slide-in {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-.reply-thread {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  background: var(--surface);
-  color: var(--text);
-  animation: reply-thread-slide-in 0.32s cubic-bezier(0.32, 0.72, 0, 1);
-}
-.sheet-handle__back {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  padding: 0;
-  flex-shrink: 0;
-}
-.sheet-handle__back:hover {
-  background: var(--surface-raised);
-  color: var(--text);
-}
-.sheet-handle__back svg {
-  width: 18px;
-  height: 18px;
-}
-.reply-thread__scroll {
-  flex: 1;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  padding: 12px 0 16px;
-}
-/* The parent comment sits in its own highlighted block above the thread
-   (matches YouTube/Reddit's mobile replies view where the comment you
-   tapped stays visible as context). Scrolls naturally with the replies
-   underneath; long bodies stay readable via the `더보기` toggle inside
-   `CommentText`. */
-.reply-thread__parent {
-  padding: 4px 0 12px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-raised);
-}
-
 /* `CommentText` wrapper. `data-expanded` is Dioxus-controlled (toggle
    button); `data-truncatable` is JS-controlled (set after measuring
    that the rendered text exceeds 3 lines). The expand button is hidden
@@ -1298,7 +1322,7 @@ body.comments-panel-resizing {
 }
 .comment-text[data-expanded="false"] .comment-item__text {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 10;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1320,21 +1344,5 @@ body.comments-panel-resizing {
 }
 .comment-item__expand:hover {
   text-decoration: underline;
-}
-.reply-thread__list {
-  padding: 4px 0 0;
-}
-.reply-thread__list .comment-item {
-  /* Indent replies so they visually hang off the parent, matching the
-     inline `.comment-replies` offset on the discussion page. */
-  padding-left: 20px;
-}
-/* The inner `.comment-input[data-compact="true"]` supplies the border +
-   padding for this pinned composer. This wrapper only adds the iOS home
-   indicator inset so the composer doesn't end up under the handle. */
-.reply-thread__composer {
-  flex-shrink: 0;
-  background: var(--surface);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 

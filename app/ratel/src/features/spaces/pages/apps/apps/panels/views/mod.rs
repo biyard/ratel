@@ -1,3 +1,4 @@
-mod main;
+mod home;
 
-pub use main::*;
+use super::*;
+pub use home::*;

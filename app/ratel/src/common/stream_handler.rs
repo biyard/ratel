@@ -196,6 +196,28 @@ pub async fn handle_stream_record(
                 {
                     tracing::error!(error = %e, "stream: PopularSpaceUpdate failed");
                 }
+            } else if sk.starts_with("SUB_TEAM_ANNOUNCEMENT#") {
+                // Fan-out fires only on the Draft→Published transition. We
+                // don't have oldImage here (local-dev stream poller is
+                // NewImage-only in the branches above), so we match on the
+                // new status directly — handle_announcement_published is a
+                // no-op for non-Published rows.
+                let status = get_string_field(image, "status").unwrap_or_default();
+                if status == "Published" {
+                    let announcement: crate::features::sub_team::models::SubTeamAnnouncement =
+                        deserialize(image)?;
+                    let cfg = crate::common::CommonConfig::default();
+                    let cli = cfg.dynamodb();
+                    if let Err(e) =
+                        crate::features::sub_team::services::announcement_fanout::handle_announcement_published(
+                            cli,
+                            announcement,
+                        )
+                        .await
+                    {
+                        tracing::error!(error = %e, "stream: SubTeamAnnouncementPublished failed");
+                    }
+                }
             }
         }
         "REMOVE" => {

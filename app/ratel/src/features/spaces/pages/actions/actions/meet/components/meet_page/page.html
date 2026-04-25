@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Create Meet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    /* Mode segmented toggle */
+    .mode-toggle{
+      display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;
+    }
+    .mode-option{
+      position:relative;padding:18px 20px;border-radius:14px;cursor:pointer;
+      background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);
+      display:flex;flex-direction:column;gap:8px;transition:all 0.25s;
+    }
+    .mode-option:hover{border-color:var(--meet-border);background:rgba(251,113,133,0.03)}
+    .mode-option[aria-selected="true"]{border-color:var(--meet-color);background:var(--meet-bg);box-shadow:0 0 18px var(--meet-glow)}
+    .mode-option__top{display:flex;align-items:center;gap:10px}
+    .mode-option__icon{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;color:var(--text-muted);flex-shrink:0}
+    .mode-option[aria-selected="true"] .mode-option__icon{background:rgba(251,113,133,0.12);border-color:var(--meet-border);color:var(--meet-color)}
+    .mode-option__icon svg{width:16px;height:16px}
+    .mode-option__title{font-family:var(--font-display);font-size:13px;font-weight:800;letter-spacing:0.04em;color:var(--text-primary)}
+    .mode-option[aria-selected="true"] .mode-option__title{color:var(--meet-color)}
+    .mode-option__desc{font-size:12px;color:var(--text-muted);line-height:1.55}
+    .mode-option__check{position:absolute;top:12px;right:12px;width:20px;height:20px;border-radius:6px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+    .mode-option[aria-selected="true"] .mode-option__check{background:var(--meet-color);border-color:var(--meet-color);color:#0a0a0a}
+    .mode-option[aria-selected="true"] .mode-option__check svg{opacity:1}
+    .mode-option__check svg{width:12px;height:12px;opacity:0;transition:opacity 0.2s}
+
+    /* When / duration row */
+    .when-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:600px){.when-row{grid-template-columns:1fr}}
+
+    /* Duration stepper */
+    .dur{
+      display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:11px;
+      background:var(--bg-input);border:1px solid var(--border-subtle);
+    }
+    .dur__step{width:28px;height:28px;border-radius:7px;padding:0;background:transparent;border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:var(--font-display);font-size:14px;font-weight:800}
+    .dur__step:hover{color:var(--meet-color);border-color:var(--meet-border)}
+    .dur__value{flex:1;text-align:center;font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text-primary)}
+    .dur__value small{color:var(--text-muted);font-weight:500;font-size:11px;margin-left:4px}
+
+    /* Tier mode (mock) */
+    .tier-mode{
+      display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;
+      background:rgba(6,6,14,0.55);border:1px solid var(--border-subtle);width:fit-content;
+    }
+    .tier-mode__label{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim)}
+    .tier-mode__pill{display:inline-flex;gap:2px;padding:2px;border-radius:8px;background:rgba(255,255,255,0.04)}
+    .tier-mode__opt{padding:5px 10px;border-radius:6px;background:transparent;border:none;color:var(--text-muted);font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer}
+    .tier-mode__opt[aria-selected="true"][data-t="free"]{background:rgba(255,255,255,0.06);color:var(--text-primary)}
+    .tier-mode__opt[aria-selected="true"][data-t="paid"]{background:rgba(252,179,0,0.15);color:var(--accent-gold)}
+
+    /* Reward block (disabled when free) */
+    .reward-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:600px){.reward-grid{grid-template-columns:1fr}}
+    .reward-card{padding:14px 16px;border-radius:12px;background:rgba(252,179,0,0.04);border:1px solid rgba(252,179,0,0.20);display:flex;flex-direction:column;gap:6px;transition:opacity 0.2s}
+    .reward-card[aria-disabled="true"]{opacity:0.38;pointer-events:none;filter:saturate(0.5)}
+    .reward-card__label{display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent-gold)}
+    .reward-card__label svg{width:12px;height:12px}
+    .reward-card__input-wrap{display:flex;align-items:center;gap:4px}
+    .reward-card__input{flex:1;background:rgba(6,6,14,0.5);border:1px solid var(--border-subtle);color:var(--text-primary);padding:9px 12px;border-radius:8px;font-family:var(--font-display);font-size:16px;font-weight:800;outline:none}
+    .reward-card__unit{font-family:var(--font-display);font-size:10px;color:var(--text-dim);letter-spacing:0.1em}
+    .reward-card__help{font-size:11px;color:var(--text-muted);line-height:1.45}
+
+    .paywall{
+      padding:12px 14px;border-radius:10px;
+      background:rgba(252,179,0,0.05);border:1px dashed rgba(252,179,0,0.30);
+      display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-muted);
+    }
+    .paywall svg{width:14px;height:14px;color:var(--accent-gold);flex-shrink:0}
+
+    /* Essence toggle */
+    .essence-card{
+      display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;
+      background:rgba(110,237,216,0.04);border:1px solid rgba(110,237,216,0.22);
+      transition:opacity 0.2s;
+    }
+    .essence-card[aria-disabled="true"]{opacity:0.38;pointer-events:none;filter:saturate(0.5)}
+    .essence-card__icon{width:40px;height:40px;border-radius:11px;background:rgba(110,237,216,0.10);border:1px solid rgba(110,237,216,0.25);display:flex;align-items:center;justify-content:center;color:var(--accent-teal);flex-shrink:0}
+    .essence-card__icon svg{width:18px;height:18px}
+    .essence-card__body{flex:1;min-width:0}
+    .essence-card__title{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent-teal)}
+    .essence-card__desc{font-size:12px;color:var(--text-muted);line-height:1.55;margin-top:3px}
+
+    /* Create bar */
+    .create-bar{
+      position:sticky;bottom:16px;margin:16px -4px 0;
+      padding:14px 18px;border-radius:14px;
+      background:var(--bg-glass);backdrop-filter:blur(24px);
+      border:1px solid var(--border-subtle);
+      box-shadow:0 12px 40px rgba(0,0,0,0.5);
+      display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    }
+    .create-bar__summary{flex:1;min-width:240px;display:flex;flex-direction:column;gap:4px}
+    .create-bar__summary-title{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--meet-color)}
+    .create-bar__summary-line{font-size:12px;color:var(--text-muted);line-height:1.5}
+  </style>
+</head>
+<body>
+
+<div class="arena">
+  <div class="bg-grid"><div class="bg-grid__plane"></div></div>
+  <div class="bg-orbs"><div class="bg-orb bg-orb--1"></div><div class="bg-orb bg-orb--2"></div><div class="bg-orb bg-orb--3"></div></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-scanline"></div>
+
+  <div class="arena-topbar">
+    <div class="arena-topbar__brand">
+      <button class="brand-home" id="brand-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <button class="brand-home" id="brand-home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+      <span class="brand-home__divider"></span>
+      <div class="arena-topbar__logo">SC</div>
+      <div class="u-col">
+        <span class="arena-topbar__title">SNU Code Club</span>
+        <span class="arena-topbar__handle">Spring 2026 · Create Meet</span>
+      </div>
+      <span class="arena-topbar__status arena-topbar__status--live">Host · you</span>
+    </div>
+    <div class="arena-topbar__actions">
+      <a class="btn btn--ghost btn--small" href="action-list-with-meet.html">취소</a>
+    </div>
+  </div>
+
+  <div class="page page--narrow">
+    <div class="page-header">
+      <div class="page-header__main">
+        <span class="page-header__eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          FR-2 · Create Meet
+        </span>
+        <h1 class="page-header__title page-header__title--meet"><strong>예약</strong>하거나 <strong>즉시 시작</strong>하는 실시간 회의</h1>
+        <p class="page-header__sub">녹화, 화자별 transcript, chat log, moderation log가 모두 자동 아카이브됩니다. 생성 즉시 모든 space participant에게 인앱 + 이메일 알림이 전송됩니다.</p>
+      </div>
+    </div>
+
+    <!-- Tier demo switch (to illustrate disabled states) -->
+    <div class="tier-mode">
+      <span class="tier-mode__label">Demo tier</span>
+      <div class="tier-mode__pill">
+        <button class="tier-mode__opt" aria-selected="false" data-t="free">Free</button>
+        <button class="tier-mode__opt" aria-selected="true" data-t="paid">Paid</button>
+      </div>
+      <span style="font-size:11px;color:var(--text-dim)">← 토글하여 rewards & Essence 비활성화 상태 확인</span>
+    </div>
+
+    <!-- Mode -->
+    <section class="card card--meet">
+      <div class="card__head">
+        <h2 class="card__title card__title--meet">시작 방식 · Mode</h2>
+        <span class="card__dash"></span>
+      </div>
+      <div class="mode-toggle" role="tablist">
+        <div class="mode-option" role="tab" aria-selected="true" data-mode="scheduled">
+          <span class="mode-option__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+          <div class="mode-option__top">
+            <div class="mode-option__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            <span class="mode-option__title">Scheduled</span>
+          </div>
+          <p class="mode-option__desc">정해진 시간에 열리는 회의. 참가자는 미리 달력에 추가할 수 있고, 10분 전 리마인더 알림이 전송됩니다.</p>
+        </div>
+        <div class="mode-option" role="tab" aria-selected="false" data-mode="instant">
+          <span class="mode-option__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+          <div class="mode-option__top">
+            <div class="mode-option__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+            <span class="mode-option__title">Instant · 지금 시작</span>
+          </div>
+          <p class="mode-option__desc">즉시 Live로 전환됩니다. 모든 participant에게 "지금 회의 중" 알림이 한 번 전송됩니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Title / description -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title card__title--meet">세부 정보 · Details</h2>
+        <span class="card__dash"></span>
+      </div>
+      <div class="field">
+        <label class="field__label">제목 <span class="req">*</span></label>
+        <input class="field__input" id="meet-title" placeholder="예: Mid-semester retrospective call" value="Mid-semester retrospective call" />
+      </div>
+      <div class="field">
+        <label class="field__label">설명 (선택)</label>
+        <textarea class="field__textarea" id="meet-desc" placeholder="회의 안건, 준비할 자료, 논의 주제…">스프린트 회고 + 다음 분기 계획 논의. 각 팀 리드는 지난 2주 진척과 블로커를 3분 내로 공유합니다.</textarea>
+        <span class="field__hint">설명은 달력 이벤트와 이메일 알림에도 포함됩니다.</span>
+      </div>
+    </section>
+
+    <!-- When -->
+    <section class="card" id="when-card">
+      <div class="card__head">
+        <h2 class="card__title card__title--meet">일정 · When</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta" id="when-meta">Apr 25 · 19:00 → 20:00 (60 min)</span>
+      </div>
+      <div class="when-row" id="when-row">
+        <div class="field" style="margin:0">
+          <label class="field__label">시작 시간 <span class="req">*</span></label>
+          <input class="field__input" type="datetime-local" id="start-time" value="2026-04-25T19:00" />
+          <span class="field__hint">로컬 타임존 (Asia/Seoul) 기준</span>
+        </div>
+        <div class="field" style="margin:0">
+          <label class="field__label">예상 지속 시간</label>
+          <div class="dur">
+            <button class="dur__step" id="dur-dec">−</button>
+            <span class="dur__value"><span id="dur-val">60</span><small>min</small></span>
+            <button class="dur__step" id="dur-inc">+</button>
+          </div>
+          <span class="field__hint">최대 24시간 (AWS Chime 한도)</span>
+        </div>
+      </div>
+      <div id="instant-note" class="notice" hidden style="margin-top:14px">
+        <div class="notice__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+        <div class="notice__body">
+          <span class="notice__title">Instant 모드</span>
+          <span class="notice__text">생성 즉시 Live 상태로 전환됩니다. 모든 participant는 "지금 회의 중" 알림 한 번만 받습니다 (schedule + 10min 알림 통합).</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Rewards -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title card__title--meet">보상 · Rewards</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta">선택 · 1분 이상 참석 필요</span>
+      </div>
+
+      <div class="paywall" id="paywall" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>Rewards는 <strong>paid-tier</strong> space에서만 사용 가능합니다. 이 space의 tier를 업그레이드하면 활성화됩니다.</span>
+      </div>
+
+      <div class="reward-grid" id="reward-grid">
+        <div class="reward-card" id="host-reward-card">
+          <label class="reward-card__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+            Host reward
+          </label>
+          <div class="reward-card__input-wrap">
+            <input class="reward-card__input" type="number" value="30" min="0" max="10000" />
+            <span class="reward-card__unit">credits</span>
+          </div>
+          <span class="reward-card__help">회의가 1분 이상 Live였다면 host에게 자동 지급됩니다.</span>
+        </div>
+        <div class="reward-card" id="att-reward-card">
+          <label class="reward-card__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            Attendee reward
+          </label>
+          <div class="reward-card__input-wrap">
+            <input class="reward-card__input" type="number" value="10" min="0" max="10000" />
+            <span class="reward-card__unit">credits</span>
+          </div>
+          <span class="reward-card__help">누적 1분 이상 참석한 attendee에게 정액 지급 (비례 지급 없음).</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Essence toggle -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title card__title--meet">Essence 통합 · Space pool</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta">Space-level · Paid feature</span>
+      </div>
+
+      <div class="essence-card" id="essence-card">
+        <div class="essence-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 0-7.07 17.07A10 10 0 1 0 12 2z"/><path d="M12 6v6l4 2"/></svg></div>
+        <div class="essence-card__body">
+          <span class="essence-card__title">Include meetings in Space Essence</span>
+          <span class="essence-card__desc">ON 이후에 열리는 모든 회의의 transcript가 <strong>space-shared Essence pool</strong>에 포함됩니다 (host 개인 Essence 아님). 과거 회의는 영향받지 않습니다. Meet UI에 "이 회의는 Essence에 포함됩니다" 고지가 표시됩니다.</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="essence-toggle" />
+          <span class="switch__track"></span>
+        </label>
+      </div>
+
+      <div class="notice notice--teal" style="margin-top:12px">
+        <div class="notice__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div class="notice__body">
+          <span class="notice__title">Privacy</span>
+          <span class="notice__text">녹화와 transcript는 Ratel 인증 서피스를 통해서만 접근 가능합니다. 퍼블릭 직링크가 생성되지 않습니다. 참가자는 회의 참여 시 녹화/Essence 포함 여부를 고지받습니다.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Notifications preview -->
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title card__title--meet">알림 미리보기 · Notifications</h2>
+        <span class="card__dash"></span>
+        <span class="card__meta">In-app + Email · 모든 participant</span>
+      </div>
+      <div class="u-col u-gap-8">
+        <div class="u-flex u-align-center u-gap-10" style="font-size:12px">
+          <span class="chip chip--violet" style="font-size:9px">T-0</span>
+          <span class="u-text-muted">생성 즉시 — "<strong style="color:var(--text-primary)" id="notif-t0-title">Mid-semester retrospective call</strong> 이(가) 예약되었습니다"</span>
+        </div>
+        <div class="u-flex u-align-center u-gap-10" style="font-size:12px">
+          <span class="chip chip--amber" style="font-size:9px">T-10min</span>
+          <span class="u-text-muted">시작 10분 전 리마인더</span>
+        </div>
+        <div class="u-flex u-align-center u-gap-10" style="font-size:12px">
+          <span class="chip chip--meet" style="font-size:9px">Live</span>
+          <span class="u-text-muted">회의 시작 알림 · 참가 버튼 deep link 포함</span>
+        </div>
+        <div class="u-flex u-align-center u-gap-10" style="font-size:12px">
+          <span class="chip chip--green" style="font-size:9px">Rec ready</span>
+          <span class="u-text-muted">회의 종료 후 녹화/transcript 공개 알림</span>
+        </div>
+      </div>
+      <a class="btn btn--ghost btn--small" href="notifications.html" style="margin-top:12px;text-decoration:none">전체 알림 프리뷰 보기 →</a>
+    </section>
+
+    <!-- Create bar -->
+    <div class="create-bar">
+      <div class="create-bar__summary">
+        <span class="create-bar__summary-title" id="summary-title">Scheduled · 60 min · 보상 설정됨</span>
+        <span class="create-bar__summary-line" id="summary-line">2026-04-25 19:00 → 7명에게 알림 전송 예정</span>
+      </div>
+      <a class="btn btn--ghost" href="action-list-with-meet.html">취소</a>
+      <button class="btn btn--primary" id="create-btn" style="background:linear-gradient(135deg,var(--meet-color),#fb923c);border-color:var(--meet-color);color:#fff">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+        <span id="create-btn-label">Meet 생성</span>
+      </button>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="toast__text"></span></div>
+</div>
+
+<script src="shared.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', function(){
+    const titleInp = document.getElementById('meet-title');
+    const descInp = document.getElementById('meet-desc');
+    const durVal = document.getElementById('dur-val');
+    const durDec = document.getElementById('dur-dec');
+    const durInc = document.getElementById('dur-inc');
+    const startInp = document.getElementById('start-time');
+    const whenMeta = document.getElementById('when-meta');
+    const whenRow = document.getElementById('when-row');
+    const instantNote = document.getElementById('instant-note');
+    const summaryTitle = document.getElementById('summary-title');
+    const summaryLine = document.getElementById('summary-line');
+    const createBtnLabel = document.getElementById('create-btn-label');
+    const paywall = document.getElementById('paywall');
+    const hostRewardCard = document.getElementById('host-reward-card');
+    const attRewardCard = document.getElementById('att-reward-card');
+    const essenceCard = document.getElementById('essence-card');
+    const essenceToggle = document.getElementById('essence-toggle');
+    const notifT0 = document.getElementById('notif-t0-title');
+    const createBtn = document.getElementById('create-btn');
+
+    let mode = 'scheduled';
+    let duration = 60;
+    let tier = 'paid';
+
+    function formatWhen() {
+      if (mode === 'instant') return '즉시 시작 → 대략 ' + duration + 'min 예상';
+      const d = new Date(startInp.value);
+      if (isNaN(d.getTime())) return duration + ' min';
+      const fmt = d.toLocaleString('ko-KR', { month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+      const end = new Date(d.getTime() + duration*60000);
+      const endFmt = end.toLocaleString('ko-KR', { hour:'2-digit', minute:'2-digit' });
+      return fmt + ' → ' + endFmt + ' (' + duration + ' min)';
+    }
+
+    function render() {
+      // Mode visual
+      document.querySelectorAll('.mode-option').forEach(m => m.setAttribute('aria-selected', m.dataset.mode === mode));
+      whenRow.style.opacity = mode === 'instant' ? '0.35' : '1';
+      whenRow.style.pointerEvents = mode === 'instant' ? 'none' : 'auto';
+      instantNote.hidden = mode !== 'instant';
+
+      durVal.textContent = duration;
+      whenMeta.textContent = formatWhen();
+
+      // Tier effect
+      const isFree = tier === 'free';
+      paywall.hidden = !isFree;
+      hostRewardCard.setAttribute('aria-disabled', isFree);
+      attRewardCard.setAttribute('aria-disabled', isFree);
+      essenceCard.setAttribute('aria-disabled', isFree);
+      if (isFree) essenceToggle.checked = false;
+
+      // Summary
+      const hostReward = hostRewardCard.querySelector('input').value;
+      const attReward = attRewardCard.querySelector('input').value;
+      const hasReward = !isFree && (+hostReward > 0 || +attReward > 0);
+      summaryTitle.textContent = (mode === 'instant' ? 'Instant · 즉시 시작' : 'Scheduled · ' + duration + ' min') + ' · ' + (hasReward ? '보상 설정됨' : '보상 없음') + (isFree ? ' · Free tier' : '');
+      summaryLine.textContent = (mode === 'instant'
+        ? '생성 즉시 Live 전환 · 7명에게 "live now" 알림 전송'
+        : formatWhen() + ' · 7명에게 알림 전송 예정');
+      createBtnLabel.textContent = mode === 'instant' ? '지금 시작 · Start now' : 'Meet 예약';
+      notifT0.textContent = titleInp.value || '(제목 미입력)';
+    }
+
+    document.querySelectorAll('.mode-option').forEach(opt => {
+      opt.addEventListener('click', () => { mode = opt.dataset.mode; render(); });
+    });
+    document.querySelectorAll('.tier-mode__opt').forEach(opt => {
+      opt.addEventListener('click', () => {
+        document.querySelectorAll('.tier-mode__opt').forEach(o => o.setAttribute('aria-selected', 'false'));
+        opt.setAttribute('aria-selected', 'true');
+        tier = opt.dataset.t;
+        render();
+      });
+    });
+    durDec.addEventListener('click', () => { duration = Math.max(15, duration - 15); render(); });
+    durInc.addEventListener('click', () => { duration = Math.min(1440, duration + 15); render(); });
+    startInp.addEventListener('input', render);
+    titleInp.addEventListener('input', render);
+    hostRewardCard.querySelector('input').addEventListener('input', render);
+    attRewardCard.querySelector('input').addEventListener('input', render);
+
+    createBtn.addEventListener('click', () => {
+      if (!titleInp.value.trim()) { SubTeam.toast('제목을 입력해주세요', 'danger'); return; }
+      if (mode === 'instant') {
+        SubTeam.toast('Meet 시작 · 7명에게 "live now" 알림 전송', 'success');
+        setTimeout(() => { window.location.href = 'live.html'; }, 1200);
+      } else {
+        SubTeam.toast('Meet 예약 완료 · 알림 전송', 'success');
+        setTimeout(() => { window.location.href = 'scheduled.html'; }, 1200);
+      }
+    });
+
+    render();
+  });
+</script>
+</body>
+</html>
