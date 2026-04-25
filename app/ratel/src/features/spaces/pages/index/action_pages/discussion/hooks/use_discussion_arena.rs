@@ -120,6 +120,13 @@ pub struct UseDiscussionArena {
     /// outside the CommentItem's scope, so we need a cross-component signal
     /// to tell the thread-active item that its reply list is stale.
     pub reply_refresh_tick: Signal<u32>,
+
+    /// `(display_name, user_pk)` pushed by ReplyItem when the user clicks
+    /// Reply on a reply: the global composer's `use_effect` consumes it
+    /// to inject an `@author ` mention pointing at the reply's author,
+    /// then clears the slot. Live across the whole arena because the
+    /// composer lives outside any individual CommentItem.
+    pub pending_mention: Signal<Option<(String, String)>>,
 }
 
 impl UseDiscussionArena {
@@ -182,6 +189,7 @@ pub fn use_discussion_arena(
 
     let active_reply_thread: Signal<Option<String>> = use_signal(|| None);
     let sheet_expanded: Signal<bool> = use_signal(|| false);
+    let pending_mention: Signal<Option<(String, String)>> = use_signal(|| None);
 
     let disc_loader = use_loader(move || async move {
         get_discussion_detail(space_id(), discussion_id()).await
@@ -513,6 +521,7 @@ pub fn use_discussion_arena(
         add_comment: add_comment_action,
         reply_comment: reply_comment_action,
         reply_refresh_tick,
+        pending_mention,
     }))
 }
 

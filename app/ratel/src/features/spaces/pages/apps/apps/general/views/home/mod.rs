@@ -84,8 +84,7 @@ pub fn SpaceGeneralAppPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let space_title = space_data.title.clone();
 
     rsx! {
-        document::Link { rel: "preload", href: asset!("./style.css"), r#as: "style" }
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "space-general-arena",
 

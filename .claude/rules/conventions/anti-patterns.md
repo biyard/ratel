@@ -284,6 +284,27 @@ status.translate(&lang())
 
 ## HTML-First Components
 
+### Using `document::Link` for stylesheets
+
+```rust
+// BAD — preload + stylesheet Link pair for the same CSS asset
+document::Link { rel: "preload", href: asset!("./style.css"), r#as: "style" }
+document::Link { rel: "stylesheet", href: asset!("./style.css") }
+
+// BAD — plain stylesheet Link
+document::Link { rel: "stylesheet", href: asset!("./style.css") }
+
+// GOOD — single Stylesheet component injects into <head> and dedupes
+document::Stylesheet { href: asset!("./style.css") }
+```
+
+`document::Stylesheet` is the dedicated component for CSS — it injects into
+`<head>`, dedupes by href across re-renders, and handles SSR/CSR
+hydration correctly. The legacy `document::Link { rel: "preload", … }`
++ `document::Link { rel: "stylesheet", … }` pair is a workaround from
+before `Stylesheet` existed; it duplicates the asset in the DOM and
+fights the framework's dedupe logic.
+
 ### Missing `defer` on Script
 
 ```rust

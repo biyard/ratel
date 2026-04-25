@@ -63,8 +63,7 @@ fn AnalyzesListArena(space_id: ReadSignal<SpacePartition>) -> Element {
     let space_title = space_data.title.clone();
 
     rsx! {
-        document::Link { rel: "preload", href: asset!("./style.css"), r#as: "style" }
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "space-analyzes-arena",
             // ── Topbar ───────────────────────────────────────────
@@ -392,8 +391,7 @@ fn DiscussionsSection(space_id: ReadSignal<SpacePartition>) -> Element {
 #[component]
 fn ViewerEmpty() -> Element {
     rsx! {
-        document::Link { rel: "preload", href: asset!("./style.css"), r#as: "style" }
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "space-analyzes-arena",
             div { class: "saz-viewer",
