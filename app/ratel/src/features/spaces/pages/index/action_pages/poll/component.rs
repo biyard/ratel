@@ -67,8 +67,8 @@ translate! {
         ko: "암호화 키를 준비 중입니다… 몇 초 걸릴 수 있어요.",
     },
     encrypted_secret_applying: {
-        en: "Applying…",
-        ko: "적용 중…",
+        en: "Securing your key…",
+        ko: "암호화 키를 저장하는 중…",
     },
 }
 
@@ -149,20 +149,19 @@ pub fn ActionPollViewer(
     let mut applying_secret = use_signal(|| false);
     let needs_secret = encryption_enabled && can_submit;
 
-    // Open the modal immediately and kick off the (slow) keygen request in the
-    // background so the user sees a loading state instead of a blank page.
+    // Kick off the (slow) keygen request and decide whether to prompt the user.
+    // - If a session secret exists, prefill secret_input and skip the modal —
+    //   the second effect will auto-finalize once material arrives.
+    // - Otherwise, show the modal so the user can type a new password.
     use_effect(move || {
         if !needs_secret {
             return;
         }
         spawn(async move {
-            if let Some(s) = load_session_vote_secret().await {
-                if !s.is_empty() && client_secret().is_none() {
-                    // Reuse session secret as soon as material arrives.
-                    secret_input.set(s);
-                }
-            }
-            if client_secret().is_none() {
+            let session_secret = load_session_vote_secret().await.unwrap_or_default();
+            if !session_secret.is_empty() && client_secret().is_none() {
+                secret_input.set(session_secret);
+            } else if client_secret().is_none() {
                 show_secret_modal.set(true);
             }
             if encryption_material().is_none() && !loading_material() {
@@ -178,10 +177,10 @@ pub fn ActionPollViewer(
         });
     });
 
-    // When both material and a session secret are present, finalize without
-    // requiring the user to press Continue again.
+    // When both material and a (session-derived) secret are present without
+    // the modal being shown, finalize automatically.
     use_effect(move || {
-        if client_secret().is_some() {
+        if client_secret().is_some() || show_secret_modal() {
             return;
         }
         let Some(material) = encryption_material() else {
@@ -189,10 +188,6 @@ pub fn ActionPollViewer(
         };
         let secret = secret_input();
         if secret.is_empty() {
-            return;
-        }
-        // Only auto-finalize when this came from session storage (modal hidden).
-        if show_secret_modal() {
             return;
         }
         match build_stored_voter_key_from_encryption_material(&material, &secret) {
@@ -825,8 +820,16 @@ pub fn ActionPollViewer(
                                 span { style: "display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;" }
                                 {tr.encrypted_material_loading}
                             }
-                            style { "@keyframes spin {{ to {{ transform: rotate(360deg); }} }}" }
                         }
+                        if applying_secret() {
+                            div {
+                                style: "display: flex; align-items: center; gap: 8px; color: var(--color-foreground-muted, #8888a8); font-size: 13px; margin: 4px 0 12px;",
+                                "data-testid": "poll-encrypted-secret-applying",
+                                span { style: "display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;" }
+                                {tr.encrypted_secret_applying}
+                            }
+                        }
+                        style { "@keyframes spin {{ to {{ transform: rotate(360deg); }} }}" }
                         div { class: "poll-confirm-modal__actions",
                             button {
                                 class: "poll-btn poll-btn--back",
@@ -849,7 +852,7 @@ pub fn ActionPollViewer(
                                 "data-testid": "poll-encrypted-secret-continue",
                                 disabled: secret_input().is_empty() || loading_material() || encryption_material().is_none()
                                     || applying_secret(),
-                                onclick: move |_| {
+                                onclick: move |_| async move {
                                     let s = secret_input();
                                     if s.is_empty() {
                                         return;
@@ -859,7 +862,12 @@ pub fn ActionPollViewer(
                                         return;
                                     };
                                     applying_secret.set(true);
-                                    match build_stored_voter_key_from_encryption_material(&material, &s) {
+                                    // Yield once so the disabled/“Applying…”
+                                    // state paints before PBKDF2 blocks the
+                                    // main thread for a few seconds.
+                                    crate::common::utils::time::sleep(std::time::Duration::from_millis(0)).await;
+                                    let result = build_stored_voter_key_from_encryption_material(&material, &s);
+                                    match result {
                                         Ok(stored) => {
                                             let _ = save_stored_voter_key(&stored);
                                             save_session_vote_secret(&s);
