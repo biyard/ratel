@@ -908,9 +908,14 @@ dependencies = [
 name = "attr-voting"
 version = "0.1.0"
 dependencies = [
+ "aes-gcm",
+ "base64 0.22.1",
+ "getrandom 0.2.16",
+ "pbkdf2 0.12.2",
  "rabe",
  "serde",
  "serde_json",
+ "sha2 0.10.9",
  "thiserror 2.0.17",
 ]
 
