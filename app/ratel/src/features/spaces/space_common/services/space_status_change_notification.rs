@@ -176,9 +176,6 @@ pub(crate) async fn resolve_space_participant_user_pks(
 
     let mut user_pks: HashSet<String> = HashSet::new();
     let mut opt = SpaceParticipant::opt_all();
-    if let Some(bm) = bookmark.as_ref() {
-        opt = opt.bookmark(bm.clone());
-    }
     let (rows, _next) = SpaceParticipant::find_by_space(cli, space_pk, opt).await?;
     for row in rows {
         user_pks.insert(row.user_pk.to_string());
