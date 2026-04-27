@@ -164,6 +164,12 @@ jobs:
           ECR: ${{ steps.ratel-ecr.outputs.registry }}/ratel/app-shell-lambda
 
           WALLETCONNECT_PROJECT_ID: ${{ secrets.WALLETCONNECT_PROJECT_ID }}
+
+          # ICP encrypted voting — point at the prod canister on IC mainnet.
+          # Reusing DEV_ICP_IDENTITY_PEM until a dedicated prod identity is provisioned.
+          RATEL_CANISTER_ID: 5wtzb-piaaa-aaaap-qhjfq-cai
+          IC_URL: https://icp0.io
+          ICP_IDENTITY_PEM: ${{ secrets.DEV_ICP_IDENTITY_PEM }}
         run: |
           rm -rf target/dx
 

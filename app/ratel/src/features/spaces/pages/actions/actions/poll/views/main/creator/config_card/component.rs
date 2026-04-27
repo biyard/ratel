@@ -1,6 +1,5 @@
-use crate::common::config::Environment;
-use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::features::spaces::pages::actions::actions::poll::views::main::creator::PollCreatorTranslate;
+use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::features::spaces::pages::actions::components::{
     ActionDeleteButton, ActionDependencySelector, ActionRewardSetting, ActionStatusControl,
     PrerequisiteTile,
@@ -20,8 +19,6 @@ pub fn ConfigCard() -> Element {
         space.status,
         poll.space_action.status.as_ref(),
     );
-
-    let show_encrypted_upload = Environment::default() != Environment::Production;
 
     let action_id_str = poll_id().to_string();
     let mut response_editable = use_signal(|| poll.response_editable);
@@ -135,17 +132,15 @@ pub fn ConfigCard() -> Element {
                             label: tr.voting_response_editable_label.to_string(),
                         }
                     }
-                    if show_encrypted_upload {
-                        div { class: "setting-row", "data-testid": "poll-encrypted-upload",
-                            div { class: "setting-row__text",
-                                span { class: "setting-row__label", "{tr.voting_encrypted_label}" }
-                                span { class: "setting-row__sub", "{tr.voting_encrypted_sub}" }
-                            }
-                            crate::common::components::Switch {
-                                active: encrypted_upload(),
-                                on_toggle: toggle_encrypted_upload,
-                                label: tr.voting_encrypted_label.to_string(),
-                            }
+                    div { class: "setting-row", "data-testid": "poll-encrypted-upload",
+                        div { class: "setting-row__text",
+                            span { class: "setting-row__label", "{tr.voting_encrypted_label}" }
+                            span { class: "setting-row__sub", "{tr.voting_encrypted_sub}" }
+                        }
+                        crate::common::components::Switch {
+                            active: encrypted_upload(),
+                            on_toggle: toggle_encrypted_upload,
+                            label: tr.voting_encrypted_label.to_string(),
                         }
                     }
                 }
