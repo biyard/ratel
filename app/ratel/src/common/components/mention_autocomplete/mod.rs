@@ -19,7 +19,7 @@ pub struct MentionInsert {
 
 #[component]
 pub fn MentionAutocomplete(
-    text: Signal<String>,
+    text: ReadSignal<String>,
     on_select: EventHandler<MentionInsert>,
     members: ReadSignal<Vec<MentionCandidate>>,
     // Fires whenever the active `@` query changes. `Some("")` means the user
