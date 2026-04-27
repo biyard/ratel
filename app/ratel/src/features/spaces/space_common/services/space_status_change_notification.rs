@@ -263,5 +263,6 @@ fn build_space_url(space_pk: &Partition) -> String {
         Partition::Space(id) => id.clone(),
         _ => String::new(),
     };
-    format!("https://ratel.foundation/spaces/{}", id)
+    let endpoint = crate::common::CommonConfig::default().env.web_endpoint();
+    format!("{}/spaces/{}", endpoint, id)
 }
