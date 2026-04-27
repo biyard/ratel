@@ -82,7 +82,6 @@ pub struct UseDiscussionArena {
         InfiniteQuery<String, DiscussionCommentResponse, ListResponse<DiscussionCommentResponse>>,
     pub parent_loader: Loader<DiscussionCommentResponse>,
     pub replies_loader: Loader<ListResponse<DiscussionCommentResponse>>,
-    pub members_loader: Loader<ListResponse<SpaceMemberResponse>>,
     pub polled_new: Signal<Vec<DiscussionCommentResponse>>,
     pub last_seen_at: Signal<i64>,
     /// Bumped every poll tick so a `use_memo` over `comment_score` re-runs
@@ -283,16 +282,29 @@ pub fn use_discussion_arena(
         });
     });
 
-    let members_loader = use_loader(move || async move {
-        match mention_query() {
-            None => Ok(ListResponse::<SpaceMemberResponse>::default()),
-            Some(q) => list_space_members(space_id(), None, Some(q)).await,
-        }
-    })?;
+    // `use_loader` does not reliably re-run on prop signal changes after SSR
+    // hydration in Dioxus 0.7 — confirmed empirically: even when
+    // `mention_query` flips from None to Some(""), the loader closure never
+    // fires post-hydration. Drive the fetch from `use_effect` (which does
+    // re-run reliably, as the debounce above demonstrates) and store
+    // results in a plain Signal that downstream `use_memo` reads.
+    let mut members_signal: Signal<Vec<SpaceMemberResponse>> = use_signal(Vec::new);
+    use_effect(move || {
+        let q = mention_query();
+        spawn(async move {
+            let items = match q {
+                None => Vec::new(),
+                Some(q) => list_space_members(space_id(), None, Some(q))
+                    .await
+                    .map(|r| r.items)
+                    .unwrap_or_default(),
+            };
+            members_signal.set(items);
+        });
+    });
 
     let members_memo = use_memo(move || {
-        members_loader()
-            .items
+        members_signal()
             .into_iter()
             .map(|m| {
                 let pk: Partition = m.user_id.clone().into();
@@ -496,7 +508,6 @@ pub fn use_discussion_arena(
         comments_query,
         parent_loader,
         replies_loader,
-        members_loader,
         polled_new,
         last_seen_at,
         sort_tick,
