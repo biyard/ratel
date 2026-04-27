@@ -33,7 +33,7 @@ RUST_LOG ?= debug
 RUSTFLAGS ?= "-D warnings"
 
 PORT ?= 8080
-RUN_FEATURES ?= local-dev
+RUN_FEATURES ?= local-dev,bypass
 
 # Auto-detect the host's LAN IP so Android devices / emulators on the same
 # network can reach `dx serve` running on this workstation. Tries Linux
