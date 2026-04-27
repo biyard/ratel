@@ -55,7 +55,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
     let total_comments: i64 = items.iter().map(|p| p.comments).sum();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         document::Script { defer: true, src: asset!("./script.js") }
 
         div { class: "home-arena", "data-testid": "team-home-arena",

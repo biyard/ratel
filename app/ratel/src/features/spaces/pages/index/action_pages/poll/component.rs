@@ -208,7 +208,7 @@ pub fn ActionPollViewer(
     let next_disabled = can_submit && !has_current_answer;
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "poll-arena",
             // ─── Header (HTML design poll-header) ───

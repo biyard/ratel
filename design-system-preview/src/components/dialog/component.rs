@@ -6,7 +6,7 @@ use dioxus_primitives_core::dialog::{
 #[component]
 pub fn DialogRoot(props: DialogRootProps) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         dialog::DialogRoot {
             class: "dialog-backdrop",
             id: props.id,

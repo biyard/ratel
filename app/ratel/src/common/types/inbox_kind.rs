@@ -1,4 +1,5 @@
 use crate::common::*;
+use crate::features::spaces::pages::actions::types::SpaceActionType;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
@@ -8,6 +9,7 @@ pub enum InboxKind {
     MentionInComment,
     SpaceStatusChanged,
     SpaceInvitation,
+    SpaceActionOngoing,
     SubTeamApplicationSubmitted,
     SubTeamApplicationApproved,
     SubTeamApplicationRejected,
@@ -32,6 +34,7 @@ impl InboxKind {
             InboxKind::MentionInComment => "MENTION",
             InboxKind::SpaceStatusChanged => "SPACE_STATUS",
             InboxKind::SpaceInvitation => "SPACE_INV",
+            InboxKind::SpaceActionOngoing => "SPACE_ACT_ON",
             InboxKind::SubTeamApplicationSubmitted => "STAPP_SUB",
             InboxKind::SubTeamApplicationApproved => "STAPP_APR",
             InboxKind::SubTeamApplicationRejected => "STAPP_REJ",
@@ -72,6 +75,14 @@ pub enum InboxPayload {
         space_id: SpacePartition,
         space_title: String,
         inviter_name: String,
+        cta_url: String,
+    },
+    SpaceActionOngoing {
+        space_id: SpacePartition,
+        space_title: String,
+        action_id: String,
+        action_type: SpaceActionType,
+        action_title: String,
         cta_url: String,
     },
     SubTeamApplicationSubmitted {
@@ -147,6 +158,7 @@ impl InboxPayload {
             InboxPayload::MentionInComment { cta_url, .. } => cta_url,
             InboxPayload::SpaceStatusChanged { cta_url, .. } => cta_url,
             InboxPayload::SpaceInvitation { cta_url, .. } => cta_url,
+            InboxPayload::SpaceActionOngoing { cta_url, .. } => cta_url,
             InboxPayload::SubTeamApplicationSubmitted { cta_url, .. } => cta_url,
             InboxPayload::SubTeamApplicationApproved { cta_url, .. } => cta_url,
             InboxPayload::SubTeamApplicationRejected { cta_url, .. } => cta_url,
@@ -180,6 +192,7 @@ impl InboxPayload {
             InboxPayload::MentionInComment { .. } => InboxKind::MentionInComment,
             InboxPayload::SpaceStatusChanged { .. } => InboxKind::SpaceStatusChanged,
             InboxPayload::SpaceInvitation { .. } => InboxKind::SpaceInvitation,
+            InboxPayload::SpaceActionOngoing { .. } => InboxKind::SpaceActionOngoing,
             InboxPayload::SubTeamApplicationSubmitted { .. } => {
                 InboxKind::SubTeamApplicationSubmitted
             }

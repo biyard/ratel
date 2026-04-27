@@ -185,6 +185,27 @@ pub fn DiscussionArenaPage(
     let mut tracked_mentions: Signal<Vec<(String, String)>> = use_signal(Vec::new);
     let mut pending_images: Signal<Vec<PendingImage>> = use_signal(Vec::new);
 
+    // Consume the cross-component mention slot pushed by ReplyItem when the
+    // user clicks Reply on a reply. Inject `@DisplayName ` at the end of the
+    // composer text and register the (display_name, user_pk) pair so
+    // `apply_mention_markup` rewrites it into the canonical `@[name](user:pk)`
+    // form on submit.
+    let mut pending_mention = arena.pending_mention;
+    use_effect(move || {
+        let Some((display_name, user_pk)) = pending_mention() else {
+            return;
+        };
+        let mention_text = crate::common::utils::mention::mention_display(&display_name);
+        let mut current = comment_text();
+        if !current.is_empty() && !current.ends_with(char::is_whitespace) {
+            current.push(' ');
+        }
+        current.push_str(&mention_text);
+        comment_text.set(current);
+        tracked_mentions.write().push((display_name, user_pk));
+        pending_mention.set(None);
+    });
+
     let on_mention_query_change = move |q: Option<String>| {
         mention_query_raw.set(q);
     };
@@ -261,7 +282,7 @@ pub fn DiscussionArenaPage(
     let in_thread = active_reply_thread().is_some();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         document::Script { r#type: "module", src: asset!("./script.js") }
 
         div {
@@ -958,6 +979,8 @@ fn CommentItem(
         });
     });
 
+    let comment_dom_id_for_replies = comment_dom_id.clone();
+
     rsx! {
         div { class: "comment-entry", "data-thread-active": is_thread_active,
             CommentCardBody {
@@ -1017,6 +1040,7 @@ fn CommentItem(
                             space_id,
                             discussion_id,
                             can_comment,
+                            parent_dom_id: comment_dom_id_for_replies.clone(),
                         }
                     }
                 }
@@ -1048,21 +1072,79 @@ fn format_time_ago(timestamp: i64) -> String {
     }
 }
 
-/// Reply variant — a thin wrapper around `CommentCardBody` with no extra
-/// chrome (no reply-toggle, no reply button — replies can't be replied to).
+/// Reply variant — wraps `CommentCardBody` with a Reply button that
+/// re-focuses the parent comment's thread instead of starting a nested
+/// thread (replies can't be replied to directly; clicking Reply on a
+/// reply jumps the user back into the parent thread composer and scrolls
+/// the parent into view).
 #[component]
 fn ReplyItem(
     reply: DiscussionCommentResponse,
     space_id: ReadSignal<SpacePartition>,
     discussion_id: ReadSignal<SpacePostEntityType>,
     can_comment: bool,
+    /// DOM id of the parent top-level comment. Clicking this reply's
+    /// Reply button activates the parent thread and scrolls it into view.
+    parent_dom_id: String,
 ) -> Element {
+    let tr: DiscussionArenaTranslate = use_translate();
+    let arena = use_discussion_arena(space_id, discussion_id)?;
+    let mut active_reply_thread = arena.active_reply_thread;
+    let mut sheet_expanded = arena.sheet_expanded;
+    let mut pending_mention = arena.pending_mention;
+
+    let parent_dom_id_click = parent_dom_id.clone();
+    let reply_author_display = reply.author_display_name.clone();
+    let reply_author_pk = reply.author_pk.to_string();
+    let on_reply_click = move |_| {
+        let id = parent_dom_id_click.clone();
+        active_reply_thread.set(Some(id.clone()));
+        sheet_expanded.set(true);
+        // Composer subscribes to `pending_mention` and prepends `@author `
+        // for the reply's author when it sees a value here. The quote chrome
+        // still tracks the parent comment via `active_reply_thread`.
+        pending_mention.set(Some((
+            reply_author_display.clone(),
+            reply_author_pk.clone(),
+        )));
+        #[cfg(feature = "web")]
+        {
+            if let Some(window) = web_sys::window() {
+                if let Some(document) = window.document() {
+                    if let Some(el) = document.get_element_by_id(&id) {
+                        let opts = web_sys::ScrollIntoViewOptions::new();
+                        opts.set_behavior(web_sys::ScrollBehavior::Smooth);
+                        opts.set_block(web_sys::ScrollLogicalPosition::Center);
+                        let _ = el.scroll_into_view_with_scroll_into_view_options(&opts);
+                    }
+                }
+            }
+        }
+    };
+
     rsx! {
         CommentCardBody {
             comment: reply,
             space_id,
             discussion_id,
             can_comment,
+            if can_comment {
+                button {
+                    class: "comment-action comment-action--reply",
+                    "data-testid": "reply-action-reply",
+                    onclick: on_reply_click,
+                    svg {
+                        view_box: "0 0 24 24",
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_width: "2",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        path { d: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" }
+                    }
+                    span { "{tr.reply_label}" }
+                }
+            }
         }
     }
 }

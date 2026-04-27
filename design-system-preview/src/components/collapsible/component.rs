@@ -8,7 +8,7 @@ use dioxus_primitives_core::merge_attributes;
 #[component]
 pub fn Collapsible(props: CollapsibleProps) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         collapsible::Collapsible {
             keep_mounted: props.keep_mounted,
             default_open: props.default_open,
