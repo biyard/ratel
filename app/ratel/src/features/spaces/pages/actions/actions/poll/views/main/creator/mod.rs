@@ -4,10 +4,10 @@ use dioxus_primitives::{ContentAlign, ContentSide};
 mod i18n;
 pub use i18n::PollCreatorTranslate;
 
-mod content_card;
 mod config_card;
-use content_card::ContentCard;
+mod content_card;
 use config_card::ConfigCard;
+use content_card::ContentCard;
 
 use crate::features::spaces::pages::actions::components::{
     ActionEditFooter, ActionEditSaveBus, ActionEditTopbar,
@@ -67,13 +67,6 @@ fn EncryptedUploadSetting(
     on_toggle: EventHandler<MouseEvent>,
 ) -> Element {
     let tr: CreatorTranslate = use_translate();
-    let is_prod = crate::common::config::Environment::default()
-        == crate::common::config::Environment::Production;
-
-    if is_prod {
-        return rsx! {};
-    }
-
     rsx! {
         Card {
             direction: CardDirection::Row,
@@ -100,7 +93,6 @@ fn EncryptedUploadSetting(
         }
     }
 }
-
 
 translate! {
     CreatorTranslate;
