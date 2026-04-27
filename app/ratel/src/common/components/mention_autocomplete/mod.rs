@@ -39,11 +39,17 @@ pub fn MentionAutocomplete(
     let mut selected_index = use_signal(|| 0usize);
 
     // Tracks the last value we reported upstream so we can skip redundant
-    // callback calls. Read via `.peek()` to avoid subscribing the effect to
-    // its own writes (which would re-trigger the effect every frame).
+    // callback calls. Read via `.peek()` to avoid re-subscribing on writes.
     let mut last_reported: Signal<Option<String>> = use_signal(|| None);
 
-    use_effect(move || {
+    // Recompute mention state from the current text. Called from the
+    // wrapper's `oninput` (which captures bubbled input events from the
+    // child textarea). Driven by the DOM event rather than `use_effect`
+    // because Dioxus 0.7 does not reliably re-establish reactive
+    // subscriptions on prop signals after SSR hydration — the effect can
+    // silently fail to re-run on the first input post-hydration, leaving
+    // the dropdown permanently dormant.
+    let mut recompute = move || {
         let val = text();
         if let Some(pos) = find_active_at(&val) {
             let after_at = &val[pos + 1..];
@@ -67,7 +73,7 @@ pub fn MentionAutocomplete(
             }
             show_dropdown.set(false);
         }
-    });
+    };
 
     // Client-side prefix filter mirrors the server's prefix semantics.
     // When the dropdown consumer (e.g. space discussion) already fetches a
@@ -106,6 +112,11 @@ pub fn MentionAutocomplete(
     rsx! {
         div {
             class: "relative",
+            // Children's textarea `oninput` bubbles here. Driving the
+            // mention recompute from the wrapper's bubbled event keeps the
+            // logic out of `use_effect`, which is unreliable on
+            // SSR-hydrated prop signals (see `recompute` definition above).
+            oninput: move |_| recompute(),
             onkeydown: move |evt: KeyboardEvent| {
                 if !show_dropdown() {
                     return;
