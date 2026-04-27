@@ -170,6 +170,8 @@ jobs:
           RATEL_CANISTER_ID: 5wtzb-piaaa-aaaap-qhjfq-cai
           IC_URL: https://icp0.io
           ICP_IDENTITY_PEM: ${{ secrets.DEV_ICP_IDENTITY_PEM }}
+          VOTER_TAG_SECRET: ${{ secrets.VOTER_TAG_SECRET }}
+          ATTR_VOTING_AUTHORITY_JSON: ${{ secrets.ATTR_VOTING_AUTHORITY_JSON }}
         run: |
           rm -rf target/dx
 
