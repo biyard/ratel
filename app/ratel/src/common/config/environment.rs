@@ -23,9 +23,16 @@ impl Environment {
             // `10.0.2.2` fallback is the Android emulator's alias for the
             // host loopback, so raw `cargo build` still produces a working
             // emulator binary when the Makefile isn't in play.
-            Environment::Local => {
-                option_env!("MOBILE_API_URL").unwrap_or("http://10.0.2.2:8080")
-            }
+            Environment::Local => option_env!("MOBILE_API_URL").unwrap_or("http://10.0.2.2:8080"),
+            Environment::Dev => "https://dev.ratel.foundation",
+            Environment::Staging => "https://stg.ratel.foundation",
+            Environment::Production => "https://ratel.foundation",
+        }
+    }
+
+    pub fn web_endpoint(self) -> &'static str {
+        match self {
+            Environment::Local => "http://localhost:8080",
             Environment::Dev => "https://dev.ratel.foundation",
             Environment::Staging => "https://stg.ratel.foundation",
             Environment::Production => "https://ratel.foundation",

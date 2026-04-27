@@ -168,6 +168,13 @@ impl VoteCryptoService {
         })
     }
 
+    pub fn authority_public_key_json(&self) -> Result<String, Error> {
+        serde_json::to_string(&self.authority.public_key).map_err(|e| {
+            crate::error!("PK serialize error: {e}");
+            Error::from(SpacePollError::EncryptionFailed)
+        })
+    }
+
     pub fn generate_voter_sk(&self, voter_tag: &str) -> Result<String, Error> {
         let attrs = UserAttributes::voter(voter_tag);
         let sk = self

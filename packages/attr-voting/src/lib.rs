@@ -1,13 +1,18 @@
 pub mod authority;
 pub mod error;
+pub mod key_vault;
 pub mod policy;
 pub mod types;
 pub mod vote;
 
 pub use authority::VotingAuthority;
 pub use error::AttrVotingError;
+pub use key_vault::{EncryptedSecretKeyBundle, unwrap_secret_key, wrap_secret_key_with_params};
 pub use types::{UserAttributes, VotePayload};
-pub use vote::{decrypt_vote, encrypt_vote, EncryptedVote};
+pub use vote::{
+    EncryptedVote, decrypt_vote, decrypt_vote_json_with_key_json, encrypt_vote,
+    encrypt_vote_json_with_pk_json,
+};
 
 #[cfg(test)]
 mod tests {
@@ -150,8 +155,7 @@ mod tests {
             choice: "yes".to_string(),
             metadata: None,
         };
-        let encrypted =
-            encrypt_vote(&authority.public_key, "blind-tag-abc123", &payload).unwrap();
+        let encrypted = encrypt_vote(&authority.public_key, "blind-tag-abc123", &payload).unwrap();
         let decrypted = decrypt_vote(&restored_sk, &encrypted).unwrap();
         assert_eq!(decrypted.choice, "yes");
     }
@@ -202,5 +206,48 @@ mod tests {
         let parsed_legacy = vote::EncryptedVote::from_json(&legacy_json).unwrap();
         let legacy_decrypted = decrypt_vote(&auth_sk, &parsed_legacy).unwrap();
         assert_eq!(legacy_decrypted.choice, "compat");
+    }
+
+    #[test]
+    fn test_secret_key_bundle_roundtrip_with_user_secret() {
+        let salt = [7u8; 16];
+        let nonce = [9u8; 12];
+        let key_json = r#"{"attrs":["voter-tag"]}"#;
+
+        let bundle_json =
+            wrap_secret_key_with_params("correct horse battery staple", key_json, &salt, &nonce)
+                .unwrap();
+
+        let restored = unwrap_secret_key("correct horse battery staple", &bundle_json).unwrap();
+        assert_eq!(restored, key_json);
+        assert!(unwrap_secret_key("wrong secret", &bundle_json).is_err());
+    }
+
+    #[test]
+    fn test_decrypt_vote_json_with_key_json() {
+        let authority = VotingAuthority::setup();
+        let voter_tag = "voter-json-helper";
+        let voter_sk = authority
+            .generate_user_key(&UserAttributes::voter(voter_tag))
+            .unwrap();
+        let voter_sk_json = VotingAuthority::serialize_key(&voter_sk).unwrap();
+        let encrypted = encrypt_vote(
+            &authority.public_key,
+            voter_tag,
+            &VotePayload {
+                choice: "choice-json".to_string(),
+                metadata: Some(serde_json::json!({ "poll": "poll-1" })),
+            },
+        )
+        .unwrap();
+        let encrypted_json = serde_json::to_string(&encrypted).unwrap();
+
+        let payload = decrypt_vote_json_with_key_json(&voter_sk_json, &encrypted_json).unwrap();
+
+        assert_eq!(payload.choice, "choice-json");
+        assert_eq!(
+            payload.metadata.unwrap(),
+            serde_json::json!({ "poll": "poll-1" })
+        );
     }
 }

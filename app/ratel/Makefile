@@ -33,7 +33,7 @@ RUST_LOG ?= debug
 RUSTFLAGS ?= "-D warnings"
 
 PORT ?= 8080
-RUN_FEATURES ?= local-dev
+RUN_FEATURES ?= local-dev,bypass
 
 # Auto-detect the host's LAN IP so Android devices / emulators on the same
 # network can reach `dx serve` running on this workstation. Tries Linux
@@ -165,9 +165,9 @@ env.sh:
 	@echo "export WALLETCONNECT_PROJECT_ID='$(WALLETCONNECT_PROJECT_ID)'" >> $@
 	@echo "export RATEL_CANISTER_ID=$(RATEL_CANISTER_ID)" >> $@
 	@echo "export IC_URL=$(IC_URL)" >> $@
-	@echo "export ICP_IDENTITY_PEM='$(ICP_IDENTITY_PEM)'" >> $@
-	@echo "export VOTER_TAG_SECRET='$(VOTER_TAG_SECRET)'" >> $@
-	@echo "export ATTR_VOTING_AUTHORITY_JSON='$(ATTR_VOTING_AUTHORITY_JSON)'" >> $@
+	@bash -c 'printf "export ICP_IDENTITY_PEM=%q\n" "$$ICP_IDENTITY_PEM"' >> $@
+	@bash -c 'printf "export VOTER_TAG_SECRET=%q\n" "$$VOTER_TAG_SECRET"' >> $@
+	@bash -c 'printf "export ATTR_VOTING_AUTHORITY_JSON=%q\n" "$$ATTR_VOTING_AUTHORITY_JSON"' >> $@
 	@echo "export HOST_UID='$(HOST_UID)'" >> $@
 	@echo "export HOST_GID='$(HOST_GID)'" >> $@
 	@echo "export BIYARD_API_URL='$(BIYARD_API_URL)'" >> $@

@@ -45,3 +45,23 @@ pub fn decrypt_vote(
     serde_json::from_slice(&plaintext).map_err(AttrVotingError::SerializationError)
 }
 
+pub fn decrypt_vote_json_with_key_json(
+    secret_key_json: &str,
+    encrypted_vote_json: &str,
+) -> Result<VotePayload, AttrVotingError> {
+    let sk: CpAbeSecretKey = serde_json::from_str(secret_key_json)?;
+    let encrypted = EncryptedVote::from_json(encrypted_vote_json)?;
+    decrypt_vote(&sk, &encrypted)
+}
+
+/// Encrypt a vote payload using a JSON-encoded ABE public key.
+/// Returns the encrypted vote serialized as JSON, ready to ship to the server.
+pub fn encrypt_vote_json_with_pk_json(
+    public_key_json: &str,
+    voter_id: &str,
+    payload: &VotePayload,
+) -> Result<String, AttrVotingError> {
+    let pk: CpAbePublicKey = serde_json::from_str(public_key_json)?;
+    let encrypted = encrypt_vote(&pk, voter_id, payload)?;
+    serde_json::to_string(&encrypted).map_err(AttrVotingError::SerializationError)
+}
