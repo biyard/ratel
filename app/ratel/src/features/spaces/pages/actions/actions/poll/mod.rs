@@ -6,6 +6,7 @@ pub mod components;
 mod context;
 pub mod controllers;
 pub mod models;
+pub mod services;
 pub mod types;
 
 use components::*;
@@ -18,6 +19,7 @@ use hooks::*;
 pub use views::*;
 
 pub use models::*;
+pub use services::*;
 pub use types::*;
 
 use super::*;

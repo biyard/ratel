@@ -6,6 +6,15 @@ use crate::features::spaces::pages::actions::models::SpaceAction;
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct RespondPollRequest {
     pub answers: Vec<Answer>,
+    /// When set, the server uses this client-side ABE ciphertext for the
+    /// canister upload instead of encrypting on the server. The plaintext
+    /// `answers` are still recorded in DynamoDB for analytics.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub client_ciphertext_json: Option<String>,
+    /// Voter tag matching `client_ciphertext_json`. Required when
+    /// `client_ciphertext_json` is provided.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub client_voter_tag: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -183,19 +192,38 @@ pub async fn respond_poll(
         return Err(SpacePollError::EditNotAllowed.into());
     }
 
-    let env = crate::common::config::Environment::default();
-    if poll.canister_upload_enabled && env != crate::common::config::Environment::Production {
+    if poll.canister_upload_enabled {
         let now = crate::common::utils::time::get_now_timestamp_millis();
         use crate::features::spaces::pages::actions::services::vote_crypto::VOTE_CRYPTO_SERVICE;
         let crypto = VOTE_CRYPTO_SERVICE
             .as_ref()
             .ok_or(SpacePollError::VoteVerificationFailed)?;
-        let metadata = PollMetadata {
-            poll_sk: poll_sk_entity.to_string(),
-            submitted_at_ms: now,
+
+        let (ciphertext_json, voter_tag) = match (&req.client_ciphertext_json, &req.client_voter_tag) {
+            (Some(ct), Some(tag)) => {
+                let expected_tag = crypto.build_voter_tag(&poll_sk_entity, &member.pk)?;
+                if expected_tag != *tag {
+                    crate::error!(
+                        "client voter_tag mismatch: expected {expected_tag}, got {tag}"
+                    );
+                    return Err(SpacePollError::VoteVerificationFailed.into());
+                }
+                (ct.clone(), tag.clone())
+            }
+            _ => {
+                let metadata = PollMetadata {
+                    poll_sk: poll_sk_entity.to_string(),
+                    submitted_at_ms: now,
+                };
+                let envelope =
+                    crypto.encrypt(&poll_sk_entity, &member.pk, &req.answers, Some(&metadata))?;
+                (envelope.ciphertext_json, envelope.voter_tag)
+            }
         };
-        let envelope =
-            crypto.encrypt(&poll_sk_entity, &member.pk, &req.answers, Some(&metadata))?;
+
+        use sha2::Digest;
+        let ciphertext_hash = hex::encode(sha2::Sha256::digest(ciphertext_json.as_bytes()));
+
         let selections: Vec<ratel_canister::types::QuestionSelection> = req
             .answers
             .iter()
@@ -210,14 +238,14 @@ pub async fn respond_poll(
             })
             .collect();
         let ballot = ratel_canister::types::VoteBallot {
-            ciphertext_hash: envelope.ciphertext_hash,
-            ciphertext_blob: envelope.ciphertext_json.into_bytes(),
+            ciphertext_hash,
+            ciphertext_blob: ciphertext_json.into_bytes(),
             submitted_at_ms: now,
             selections,
         };
         let canister = common_config.canister();
         canister
-            .upsert_vote(&poll_sk_entity.to_string(), &envelope.voter_tag, ballot)
+            .upsert_vote(&poll_sk_entity.to_string(), &voter_tag, ballot)
             .await?;
     }
 
