@@ -13,7 +13,7 @@ pub fn EssenceHero() -> Element {
     let total_words = use_memo(move || stats.read().total_words.max(0) as u64);
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         section { class: "essence-hero",
             div { class: "essence-hero__main",
                 span { class: "essence-hero__eyebrow", "{tr.hero_eyebrow}" }

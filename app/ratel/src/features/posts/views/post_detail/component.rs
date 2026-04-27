@@ -88,7 +88,7 @@ pub fn PostDetail(post_id: FeedPartition) -> Element {
             description: seo_description,
             image: post_image.clone(),
         }
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         document::Script { defer: true, src: asset!("./script.js") }
 
         div { class: "post-arena",

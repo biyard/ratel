@@ -41,7 +41,7 @@ pub fn TeamSubTeamApplyPage(username: String) -> Element {
 
     rsx! {
         SeoMeta { title: "{tr.apply_page_title}" }
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         ApplyForm {
             username: username.clone(),
             team_display: team_display.clone(),

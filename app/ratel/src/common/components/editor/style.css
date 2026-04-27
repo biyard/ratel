@@ -550,3 +550,42 @@
     font-size: 16px;
   }
 }
+
+/* ─── Viewer mode (editable="false") ──────────────────────────
+   Strip chrome sizing constraints so the editor behaves like inline
+   prose. No toolbar/statusbar/modal CSS resets needed — those DOM
+   nodes are not rendered by the Dioxus component in viewer mode. */
+.ratel-editor[data-editable="false"] {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+}
+.ratel-editor[data-editable="false"] .re-content {
+  min-height: 0;
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+}
+
+/* ─── Tiptap legacy YouTube embed compatibility ───────────────
+   Older posts stored Tiptap's `<div data-youtube-video><iframe/></div>`
+   wrapper. The new editor emits `<div class="yt-wrap">`, but existing
+   content needs the same 16:9 aspect-ratio container to render
+   correctly here. */
+.ratel-editor .re-content div[data-youtube-video] {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  margin: 0.75rem 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+}
+.ratel-editor .re-content div[data-youtube-video] iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}

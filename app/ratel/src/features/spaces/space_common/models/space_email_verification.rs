@@ -1,10 +1,10 @@
-use crate::features::spaces::space_common::*;
 #[cfg(feature = "server")]
 use crate::common::models::notification::Notification;
 #[cfg(feature = "server")]
 use crate::common::models::space::SpaceCommon;
 #[cfg(feature = "server")]
 use crate::common::utils::time::get_now_timestamp;
+use crate::features::spaces::space_common::*;
 
 const EXPIRATION_TIME: u64 = 1800; // 30 minutes
 const MAX_ATTEMPT_COUNT: i32 = 5;
@@ -144,8 +144,7 @@ impl SpaceEmailVerification {
                 let code = Self::generate_random_code();
                 let expired_at = now + EXPIRATION_TIME as i64;
 
-                let v =
-                    SpaceEmailVerification::new(space_pk.clone(), user_email, code, expired_at);
+                let v = SpaceEmailVerification::new(space_pk.clone(), user_email, code, expired_at);
                 v.create(cli).await?;
                 v
             }
@@ -189,7 +188,9 @@ impl SpaceEmailVerification {
             _ => String::new(),
         };
 
-        let cta_url = format!("https://ratel.foundation/spaces/{}", space_id);
+        let conf = crate::config::get();
+
+        let cta_url = format!("{}/spaces/{}", conf.common.env.web_endpoint(), space_id);
 
         let notification = Notification::new(NotificationData::SendSpaceInvitation {
             emails: user_emails,

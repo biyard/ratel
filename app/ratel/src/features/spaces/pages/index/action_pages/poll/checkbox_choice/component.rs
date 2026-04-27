@@ -16,10 +16,7 @@ pub fn PollCheckbox(
 
     rsx! {
         // Uses multi_choice style.css (same CSS classes)
-        document::Link {
-            rel: "stylesheet",
-            href: asset!("/src/features/spaces/pages/index/action_pages/poll/multi_choice/style.css"),
-        }
+        document::Stylesheet { href: asset!("/src/features/spaces/pages/index/action_pages/poll/multi_choice/style.css") }
         div { class: "options-multi",
             for (opt_idx , option) in question.options.iter().enumerate() {
                 {

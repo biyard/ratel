@@ -32,7 +32,7 @@ pub fn PollCreatorPage(
     let current_page = use_signal(|| 0usize);
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         div { class: "arena",
             ActionEditTopbar {
                 space_name: space.title.clone(),

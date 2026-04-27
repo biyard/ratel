@@ -26,7 +26,7 @@ pub fn Input(
     children: Element,
 ) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         input {
             class: "input",
             oninput: move |e| _ = oninput.map(|callback| callback(e)),

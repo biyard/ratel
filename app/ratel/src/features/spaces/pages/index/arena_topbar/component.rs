@@ -36,7 +36,7 @@ pub fn ArenaTopbar(
     let space_post_id = ctx.space().post_id.clone();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         div { class: "arena-topbar",
             div { class: "arena-topbar__brand",
                 img {
