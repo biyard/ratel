@@ -71,7 +71,9 @@ impl SpaceAction {
     /// Build the absolute participant-facing deep link for this action. Used
     /// by inbox + email notifications. In-app callers (Dioxus `Link`) can
     /// keep using `SpaceActionSummary::get_url` which returns a `Route`
-    /// directly.
+    /// directly. The host is environment-aware via
+    /// `CommonConfig::default().env.web_endpoint()` so links resolve to the
+    /// right domain in local/dev/staging/production.
     pub fn get_cta_url(&self) -> String {
         let space_id = &self.pk.0;
         let action_id = self.pk.1.clone();
@@ -96,6 +98,7 @@ impl SpaceAction {
                 meet_id: action_id.into(),
             },
         };
-        format!("https://ratel.foundation{}", route)
+        let endpoint = crate::common::CommonConfig::default().env.web_endpoint();
+        format!("{}{}", endpoint, route)
     }
 }
