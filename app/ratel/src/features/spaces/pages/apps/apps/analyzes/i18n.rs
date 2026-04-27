@@ -225,4 +225,286 @@ translate! {
         en: "Report",
         ko: "보고서",
     },
+
+    // ── Arena DETAIL view (Phase 3) ──────────────────────
+    detail_sidebar_label: {
+        en: "Analyzes",
+        ko: "Analyzes",
+    },
+    detail_active_filters_label: {
+        en: "Selected cross filters",
+        ko: "선택된 교차 필터",
+    },
+    detail_active_filters_empty: {
+        en: "No filters — all data",
+        ko: "필터 없음 — 전체 데이터",
+    },
+    detail_meta_filter_count: {
+        en: "filters",
+        ko: "필터",
+    },
+    detail_meta_filter_count_unit: {
+        en: "items",
+        ko: "개",
+    },
+    detail_meta_created_prefix: {
+        en: "created",
+        ko: "생성",
+    },
+    detail_panel_chip_poll: {
+        en: "Poll",
+        ko: "Poll",
+    },
+    detail_panel_chip_quiz: {
+        en: "Quiz",
+        ko: "Quiz",
+    },
+    detail_panel_chip_discussion: {
+        en: "Discussion",
+        ko: "Discussion",
+    },
+    detail_panel_chip_follow: {
+        en: "Follow",
+        ko: "Follow",
+    },
+    detail_group_poll: {
+        en: "Poll",
+        ko: "Poll",
+    },
+    detail_group_quiz: {
+        en: "Quiz",
+        ko: "Quiz",
+    },
+    detail_group_discussion: {
+        en: "Discussion",
+        ko: "Discussion",
+    },
+    detail_group_follow: {
+        en: "Follow",
+        ko: "Follow",
+    },
+    detail_filter_all: {
+        en: "All",
+        ko: "전체",
+    },
+    detail_filter_gender: {
+        en: "Gender",
+        ko: "성별",
+    },
+    detail_filter_age: {
+        en: "Age",
+        ko: "나이",
+    },
+    detail_filter_school: {
+        en: "School",
+        ko: "학교",
+    },
+    detail_download_btn: {
+        en: "Download responses",
+        ko: "응답 다운로드",
+    },
+    detail_download_poll_testid_label: {
+        en: "Download poll responses",
+        ko: "설문 응답 다운로드",
+    },
+    detail_responses_unit: {
+        en: "responses",
+        ko: "명 응답",
+    },
+    detail_attempts_unit: {
+        en: "attempts",
+        ko: "명 응시",
+    },
+    detail_correct_rate_prefix: {
+        en: "Correct rate",
+        ko: "정답률",
+    },
+    detail_correct_label: {
+        en: "Correct",
+        ko: "정답",
+    },
+    detail_card_hint_poll: {
+        en: "Click an option to narrow other panels by that respondent set · multi-select",
+        ko: "옵션을 클릭하면 해당 응답자들로 다른 패널이 좁혀집니다 · 복수 선택 가능",
+    },
+    detail_card_hint_quiz: {
+        en: "Click an answer to narrow other panels by those test-takers · multi-select",
+        ko: "답을 클릭하면 그 답을 고른 응시자들로 다른 패널이 좁혀집니다 · 복수 선택 가능",
+    },
+    detail_poll_card1_title: {
+        en: "Which area of constitutional reform is the most urgent?",
+        ko: "가장 시급하게 추진해야 할 헌법 개정 분야는?",
+    },
+    detail_poll_card2_title: {
+        en: "What value should be most central to constitutional reform?",
+        ko: "개헌 시 가장 중요하게 다뤄져야 할 가치는?",
+    },
+    detail_poll_card3_title: {
+        en: "Free-text: things to consider during reform",
+        ko: "개헌 추진 과정에서 반드시 고려해야 할 점을 자유롭게 작성해주세요",
+    },
+    detail_poll_title: {
+        en: "Do you think the Korean Constitution needs to be amended?",
+        ko: "귀하는 현재 대한민국 헌법을 개정하는 것이 필요하다고 생각하십니까?",
+    },
+    detail_quiz_title: {
+        en: "Constitutional Basics Quiz",
+        ko: "헌법 기본 상식 퀴즈",
+    },
+    detail_quiz_card1_title: {
+        en: "How many justices are on the Constitutional Court?",
+        ko: "헌법재판소의 재판관 수는?",
+    },
+    detail_quiz_card2_title: {
+        en: "Where does legislative power reside in Korea?",
+        ko: "대한민국의 입법권은 어디에 있는가?",
+    },
+    detail_quiz_card3_title: {
+        en: "What does Article 1 of the Constitution say?",
+        ko: "헌법 제1조의 내용은?",
+    },
+    detail_discussion_title: {
+        en: "What do you think about the proposed non-consent rape law?",
+        ko: "비동의 강간죄 도입에 대해서 어떻게 생각하십니까?",
+    },
+    detail_discussion_settings_title: {
+        en: "Analysis settings",
+        ko: "분석 설정",
+    },
+    detail_discussion_topic_modeling_label: {
+        en: "Topic Modeling",
+        ko: "Topic Modeling",
+    },
+    detail_discussion_lda_label: {
+        en: "LDA topic count",
+        ko: "LDA 토픽 개수",
+    },
+    detail_discussion_lda_hint: {
+        en: "Enter a value between 1 and 20.",
+        ko: "1~20 사이로 입력해주세요.",
+    },
+    detail_discussion_tfidf_label: {
+        en: "TF-IDF keyword count",
+        ko: "TF-IDF 키워드 개수",
+    },
+    detail_discussion_network_label: {
+        en: "Top network nodes",
+        ko: "네트워크 상위 노드 개수",
+    },
+    detail_discussion_network_hint: {
+        en: "Enter a value between 1 and 30.",
+        ko: "1~30 사이로 입력해주세요.",
+    },
+    detail_discussion_excluded_label: {
+        en: "Excluded topics",
+        ko: "제외된 토픽",
+    },
+    detail_discussion_excluded_placeholder: {
+        en: "e.g. it, that",
+        ko: "예: 이거, 그거",
+    },
+    detail_discussion_excluded_hint: {
+        en: "Comma-separated.",
+        ko: "쉼표(,)로 구분해 입력해주세요.",
+    },
+    detail_discussion_btn_reset: {
+        en: "Reset",
+        ko: "초기화",
+    },
+    detail_discussion_btn_apply: {
+        en: "Apply",
+        ko: "확인",
+    },
+    detail_tfidf_card_title: {
+        en: "TF-IDF keywords (top 20)",
+        ko: "TF-IDF 키워드 (상위 20개)",
+    },
+    detail_tfidf_card_count: {
+        en: "Score",
+        ko: "Score",
+    },
+    detail_lda_card_title: {
+        en: "LDA topic modeling (10 topics)",
+        ko: "LDA 토픽 모델링 (10개 토픽)",
+    },
+    detail_lda_edit_label: {
+        en: "Edit topic labels",
+        ko: "토픽 라벨 편집",
+    },
+    detail_lda_col_topic: {
+        en: "Topic",
+        ko: "토픽",
+    },
+    detail_lda_col_keywords: {
+        en: "Keywords",
+        ko: "키워드",
+    },
+    detail_lda_col_filter: {
+        en: "Filter",
+        ko: "필터",
+    },
+    detail_lda_filter_aria_prefix: {
+        en: "Toggle filter for",
+        ko: "필터 토글:",
+    },
+    detail_network_card_title: {
+        en: "Text network (top 15 nodes)",
+        ko: "텍스트 네트워크 (상위 15개 노드)",
+    },
+    detail_network_card_count: {
+        en: "Co-occurrence",
+        ko: "Co-occurrence",
+    },
+    detail_network_aria: {
+        en: "Text network",
+        ko: "텍스트 네트워크",
+    },
+    detail_follow_title: {
+        en: "Legal Expert Follow Campaign",
+        ko: "법률 전문가 팔로우 캠페인",
+    },
+    detail_follow_card_title: {
+        en: "Completion rate by follow target",
+        ko: "팔로우 대상별 수행률",
+    },
+    detail_follow_count_text: {
+        en: "42 participants · 12 targets",
+        ko: "42명 참여 · 12 타겟",
+    },
+    detail_follow_legend_done: {
+        en: "Completed",
+        ko: "수행함",
+    },
+    detail_follow_legend_miss: {
+        en: "Not completed",
+        ko: "미수행",
+    },
+    detail_back_btn_aria: {
+        en: "Back",
+        ko: "뒤로",
+    },
+    detail_sb_item_meta_questions: {
+        en: "questions",
+        ko: "문항",
+    },
+    detail_sb_item_meta_responses: {
+        en: "responses",
+        ko: "응답",
+    },
+    detail_sb_item_meta_attempts: {
+        en: "attempts",
+        ko: "응시",
+    },
+    detail_sb_item_meta_comments: {
+        en: "comments",
+        ko: "댓글",
+    },
+    detail_sb_item_meta_participants: {
+        en: "participants",
+        ko: "참여",
+    },
+    detail_sb_item_meta_targets: {
+        en: "targets",
+        ko: "타겟",
+    },
 }

@@ -46,21 +46,23 @@
   --font-body: 'Outfit', sans-serif;
 
   position: relative;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   isolation: isolate;
   background: var(--bg-void);
   color: var(--text-primary);
   font-family: var(--font-body);
-  overflow-x: hidden; /* contains the 100vw carousel breakout */
+  /* No `min-height: 100vh` — the page lives inside space layout's
+     `overflow-auto flex-1` wrapper, which is the real scroll
+     context. 100vh fights that wrapper and breaks vertical scroll
+     once content exceeds the viewport. */
 }
 
 .analyze-arena .arena {
   position: relative;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 .analyze-arena .arena::before {
   content: '';
