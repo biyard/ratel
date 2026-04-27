@@ -76,7 +76,7 @@ impl SpaceAction {
     /// right domain in local/dev/staging/production.
     pub fn get_cta_url(&self) -> String {
         let space_id = &self.pk.0;
-        let route = Route::SpaceActionsPage {
+        let route = Route::SpaceIndexPage {
             space_id: space_id.clone(),
         };
         let endpoint = crate::common::CommonConfig::default().env.web_endpoint();
