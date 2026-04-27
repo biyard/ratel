@@ -1452,7 +1452,7 @@ fn generate_struct_impl(
                         .await
                         .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
 
-                    let res = if let Some(responses) = response.responses() {
+                    let res: Vec<Self> = if let Some(responses) = response.responses() {
                         if let Some(items) = responses.get(table_name) {
                             serde_dynamo::from_items(items.to_vec())?
                         } else {
