@@ -1439,7 +1439,7 @@ fn generate_struct_impl(
 
                 for chunk in keys.chunks(100) {
                     let keys_and_attributes = aws_sdk_dynamodb::types::KeysAndAttributes::builder()
-                        .set_keys(Some(chunks))
+                        .set_keys(Some(chunk))
                         .consistent_read(false)
                         .build()
                         .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
