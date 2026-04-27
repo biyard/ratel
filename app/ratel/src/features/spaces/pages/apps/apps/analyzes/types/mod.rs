@@ -5,6 +5,8 @@
 //! `mock_reports()` in a later phase. None of these types are wired
 //! to network IO yet — they are deliberately plain structs.
 
+mod create;
 mod report;
 
+pub use create::*;
 pub use report::*;

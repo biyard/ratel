@@ -93,42 +93,13 @@
   width: 100%;
 }
 
-@media (min-width: 1101px) {
-  .analyze-arena {
-    height: 100%;
-    overflow: hidden;
-  }
-  .analyze-arena .arena {
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
-  }
-  /* Topbar can drop sticky in this mode — it's already pinned by
-     the fixed-height layout above the split row. */
-  .analyze-arena .arena-topbar {
-    position: static;
-  }
-  .analyze-arena .split {
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
-    padding-bottom: 24px; /* match top padding when main scrolls */
-  }
-  /* Sidebar stays in place. It owns its own scrollbar so long
-     ANALYZES lists don't get clipped. */
-  .analyze-arena .split > .sidebar {
-    position: static !important;
-    height: 100%;
-    max-height: none !important;
-    overflow-y: auto;
-  }
-  /* Main is the only column that scrolls with content. */
-  .analyze-arena .split > .main {
-    overflow-y: auto;
-    min-height: 0;
-    padding-right: 4px; /* room for scrollbar */
-  }
-}
+/* Page scroll lives on the space-layout's overflow-auto wrapper —
+   no `height: 100vh` / `overflow: hidden` games here. The sidebar
+   uses `position: sticky` (see its own rule) to stay anchored at
+   the viewport's top while the main column scrolls past it, which
+   gives the same "sidebar fixed, content scrolls" feel without
+   fighting the parent scroll context. */
+
 .analyze-arena .arena::before {
   content: '';
   position: absolute;
@@ -350,9 +321,10 @@
   font-style: italic;
   color: var(--text-dim);
 }
-/* Each chip is fully tinted by its source — POLL = cyan, QUIZ = purple,
-   DISCUSSION = blue, FOLLOW = orange. The inner __source pill keeps a
-   slightly stronger tint + the source colour text to act as a label. */
+/* Outer chip: subtle surface tone — distinct from page bg but
+   neutral. Inner pill: source-tinted background + matching text
+   colour. The pill is what carries the source identity; the rest
+   of the chip stays neutral so the main label reads cleanly. */
 .analyze-arena .preview-chip {
   display: inline-flex;
   align-items: center;
@@ -372,34 +344,21 @@
   text-transform: uppercase;
   padding: 2px 8px;
   border-radius: 100px;
-  background: var(--bg-void);
-}
-.analyze-arena .preview-chip[data-source="poll"] {
-  background: var(--poll-bg);
-  border-color: var(--poll-border);
 }
 .analyze-arena .preview-chip[data-source="poll"] .preview-chip__source {
+  background: var(--poll-bg);
   color: var(--poll-color);
 }
-.analyze-arena .preview-chip[data-source="quiz"] {
-  background: var(--quiz-bg);
-  border-color: var(--quiz-border);
-}
 .analyze-arena .preview-chip[data-source="quiz"] .preview-chip__source {
+  background: var(--quiz-bg);
   color: var(--quiz-color);
 }
-.analyze-arena .preview-chip[data-source="discussion"] {
-  background: var(--discussion-bg);
-  border-color: var(--discussion-border);
-}
 .analyze-arena .preview-chip[data-source="discussion"] .preview-chip__source {
+  background: var(--discussion-bg);
   color: var(--discussion-color);
 }
-.analyze-arena .preview-chip[data-source="follow"] {
-  background: var(--follow-bg);
-  border-color: var(--follow-border);
-}
 .analyze-arena .preview-chip[data-source="follow"] .preview-chip__source {
+  background: var(--follow-bg);
   color: var(--follow-color);
 }
 

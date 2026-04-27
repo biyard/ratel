@@ -507,4 +507,170 @@ translate! {
         en: "targets",
         ko: "타겟",
     },
+
+    // ── Arena CREATE wizard (Phase 2) ──────────────────────
+    create_topbar_title: {
+        en: "New analysis",
+        ko: "새 분석 만들기",
+    },
+    create_cf_title: {
+        en: "Cross filter",
+        ko: "교차 필터",
+    },
+    create_cf_hint: {
+        en: "Pick the data conditions for this analysis. Leaving it empty analyses the whole dataset.",
+        ko: "분석에 사용할 데이터 조건을 선택하세요. 비워두면 전체 데이터로 분석합니다.",
+    },
+    create_cf_chips_all: {
+        en: "All",
+        ko: "전체",
+    },
+    create_cf_add_filter: {
+        en: "Add filter",
+        ko: "필터 추가",
+    },
+    create_cf_pick_action_label: {
+        en: "Which action's data should we add?",
+        ko: "어떤 액션의 데이터를 추가할까요?",
+    },
+    create_cf_pick_action_cancel: {
+        en: "Cancel",
+        ko: "취소",
+    },
+    create_cf_pick_item_label: {
+        en: "Pick one item to analyze",
+        ko: "분석할 항목을 하나 선택하세요",
+    },
+    create_cf_pick_item_label_with_type: {
+        en: "— pick one item",
+        ko: "— 분석할 항목 하나 선택",
+    },
+    create_cf_back_to_action: {
+        en: "← Pick action again",
+        ko: "← 액션 다시 선택",
+    },
+    create_cf_remove_filter_aria: {
+        en: "Remove filter",
+        ko: "필터 제거",
+    },
+    create_action_tile_poll: {
+        en: "Poll",
+        ko: "Poll",
+    },
+    create_action_tile_quiz: {
+        en: "Quiz",
+        ko: "Quiz",
+    },
+    create_action_tile_discussion: {
+        en: "Discussion",
+        ko: "Discussion",
+    },
+    create_action_tile_follow: {
+        en: "Follow",
+        ko: "Follow",
+    },
+    create_action_count_unit: {
+        en: "items",
+        ko: "개",
+    },
+    create_sunji_back: {
+        en: "← Pick again",
+        ko: "← 다시 선택",
+    },
+    create_sunji_default_title: {
+        en: "Selected item",
+        ko: "선택한 항목",
+    },
+    create_sunji_confirm: {
+        en: "Confirm",
+        ko: "확인",
+    },
+    create_sunji_empty: {
+        en: "This item has no options to pick.",
+        ko: "이 항목에는 선택할 선지가 없습니다.",
+    },
+    create_sunji_correct_badge: {
+        en: "Correct",
+        ko: "정답",
+    },
+    create_keyword_block_title: {
+        en: "Keyword input (comma-separated)",
+        ko: "키워드 입력 (쉼표로 구분)",
+    },
+    create_keyword_input_placeholder: {
+        en: "e.g. evidence, statement, victim",
+        ko: "예: 증거, 진술, 피해자",
+    },
+    create_keyword_hint: {
+        en: "Each keyword becomes its own filter.",
+        ko: "각 키워드는 별도 필터로 추가됩니다.",
+    },
+    create_preview_title: {
+        en: "Preview",
+        ko: "미리보기",
+    },
+    create_preview_hint: {
+        en: "The report below will be generated with these settings. Enter a name and press \"Generate report\".",
+        ko: "아래 내용으로 보고서가 생성됩니다. 분석명을 입력하고 \"보고서 생성\"을 누르세요.",
+    },
+    create_preview_name_label: {
+        en: "Analysis name",
+        ko: "분석명",
+    },
+    create_preview_name_placeholder: {
+        en: "e.g. Constitutional reform × false-accusation perception cross-analysis",
+        ko: "예: 헌법 개정 의견과 무고죄 인식 교차분석",
+    },
+    create_preview_name_hint: {
+        en: "Used as the result page heading and the list-card title.",
+        ko: "결과 페이지와 목록 카드의 제목으로 사용됩니다.",
+    },
+    create_preview_chips_label: {
+        en: "Selected cross filters",
+        ko: "선택된 교차 필터",
+    },
+    create_preview_stat_respondents: {
+        en: "Matching respondents",
+        ko: "해당 응답자",
+    },
+    create_preview_stat_records: {
+        en: "Matching records",
+        ko: "해당되는 데이터 수",
+    },
+    create_preview_correct_tag: {
+        en: "Correct",
+        ko: "정답",
+    },
+    create_pager_prev: {
+        en: "← Prev",
+        ko: "← 이전",
+    },
+    create_pager_next: {
+        en: "Next →",
+        ko: "다음 →",
+    },
+    create_footer_step_label_create: {
+        en: "1 / 2",
+        ko: "1 / 2",
+    },
+    create_footer_step_label_preview: {
+        en: "2 / 2",
+        ko: "2 / 2",
+    },
+    create_footer_cancel: {
+        en: "Cancel",
+        ko: "취소",
+    },
+    create_footer_next: {
+        en: "Next →",
+        ko: "다음 →",
+    },
+    create_footer_back: {
+        en: "← Back",
+        ko: "← 이전",
+    },
+    create_footer_confirm: {
+        en: "Generate report",
+        ko: "보고서 생성",
+    },
 }
