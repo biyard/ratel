@@ -10,8 +10,8 @@ pub async fn handle_stream_record(
     new_image: Option<&std::collections::HashMap<String, serde_dynamo::AttributeValue>>,
     old_image: Option<&std::collections::HashMap<String, serde_dynamo::AttributeValue>>,
 ) -> crate::common::Result<()> {
-    use crate::common::Error;
     use crate::common::utils::InfraError;
+    use crate::common::Error;
 
     // Helper to get sk string from a DynamoDB image
     fn get_sk(
@@ -42,11 +42,10 @@ pub async fn handle_stream_record(
     fn deserialize<T: serde::de::DeserializeOwned>(
         image: &std::collections::HashMap<String, serde_dynamo::AttributeValue>,
     ) -> crate::common::Result<T> {
-        serde_dynamo::from_item(image.clone())
-            .map_err(|e| {
-                tracing::error!("stream deserialize: {e}");
-                Error::from(InfraError::StreamDeserializeFailed)
-            })
+        serde_dynamo::from_item(image.clone()).map_err(|e| {
+            tracing::error!("stream deserialize: {e}");
+            Error::from(InfraError::StreamDeserializeFailed)
+        })
     }
 
     // Dispatch essence indexing in addition to the entity-specific handlers
@@ -76,8 +75,10 @@ pub async fn handle_stream_record(
             if sk.starts_with("SPACE_POST_COMMENT#") {
                 // AiModeratorReplyIndex: index comment into Qdrant
                 let comment: crate::features::spaces::pages::actions::actions::discussion::SpacePostComment = deserialize(image)?;
-                if let Err(e) =
-                    crate::features::rag::qdrant::indexers::reply_indexer::index_reply(comment.clone()).await
+                if let Err(e) = crate::features::rag::qdrant::indexers::reply_indexer::index_reply(
+                    comment.clone(),
+                )
+                .await
                 {
                     tracing::error!(error = %e, "stream: AiModeratorReplyIndex failed");
                 }
@@ -134,24 +135,19 @@ pub async fn handle_stream_record(
             } else if sk.starts_with("SPACE_POLL_USER_ANSWER#") {
                 // PollXpRecord: record XP for poll answer
                 let answer = deserialize(image)?;
-                if let Err(e) =
-                    crate::features::activity::services::handle_poll_xp(answer).await
-                {
+                if let Err(e) = crate::features::activity::services::handle_poll_xp(answer).await {
                     tracing::error!(error = %e, "stream: PollXpRecord failed");
                 }
             } else if sk.starts_with("SPACE_QUIZ_ATTEMPT#") {
                 // QuizXpRecord: record XP for quiz attempt
                 let attempt = deserialize(image)?;
-                if let Err(e) =
-                    crate::features::activity::services::handle_quiz_xp(attempt).await
-                {
+                if let Err(e) = crate::features::activity::services::handle_quiz_xp(attempt).await {
                     tracing::error!(error = %e, "stream: QuizXpRecord failed");
                 }
             } else if sk.starts_with("FOLLOWER#") {
                 // FollowXpRecord: record XP for follow action
                 let follow = deserialize(image)?;
-                if let Err(e) =
-                    crate::features::activity::services::handle_follow_xp(follow).await
+                if let Err(e) = crate::features::activity::services::handle_follow_xp(follow).await
                 {
                     tracing::error!(error = %e, "stream: FollowXpRecord failed");
                 }
@@ -169,7 +165,7 @@ pub async fn handle_stream_record(
                 let old_status = old_image
                     .and_then(|i| get_string_field(i, "status"))
                     .unwrap_or_default();
-                if old_status == "DESIGNING" && new_status == "ONGOING" {
+                if old_status == "Designing" && new_status == "Ongoing" {
                     let action: crate::features::spaces::pages::actions::models::SpaceAction =
                         deserialize(image)?;
                     if let Err(e) =
@@ -276,8 +272,8 @@ async fn essence_index_dispatch(
     sk: &str,
     image: &std::collections::HashMap<String, serde_dynamo::AttributeValue>,
 ) -> crate::common::Result<()> {
-    use crate::common::Error;
     use crate::common::utils::InfraError;
+    use crate::common::Error;
 
     fn deserialize<T: serde::de::DeserializeOwned>(
         image: &std::collections::HashMap<String, serde_dynamo::AttributeValue>,
@@ -319,8 +315,7 @@ async fn essence_index_dispatch(
         // it deserializes to a different shape and isn't essence-indexed.
         let comment: crate::features::posts::models::PostComment = deserialize(image)?;
         crate::features::essence::services::index_post_comment(cli, &comment).await?;
-    } else if sk.starts_with("SPACE_POST_COMMENT#") || sk.starts_with("SPACE_POST_COMMENT_REPLY#")
-    {
+    } else if sk.starts_with("SPACE_POST_COMMENT#") || sk.starts_with("SPACE_POST_COMMENT_REPLY#") {
         // Same pattern for discussion comments. `SPACE_POST_COMMENT_LIKE#` is
         // a different entity (SpacePostCommentLike) and not essence-indexed.
         let comment: crate::features::spaces::pages::actions::actions::discussion::SpacePostComment = deserialize(image)?;
@@ -349,8 +344,8 @@ async fn essence_remove_dispatch(
     sk: &str,
     image: &std::collections::HashMap<String, serde_dynamo::AttributeValue>,
 ) -> crate::common::Result<()> {
-    use crate::common::Error;
     use crate::common::utils::InfraError;
+    use crate::common::Error;
 
     fn deserialize<T: serde::de::DeserializeOwned>(
         image: &std::collections::HashMap<String, serde_dynamo::AttributeValue>,
@@ -370,8 +365,7 @@ async fn essence_remove_dispatch(
     } else if sk.starts_with("POST_COMMENT#") || sk.starts_with("POST_COMMENT_REPLY#") {
         let comment: crate::features::posts::models::PostComment = deserialize(image)?;
         crate::features::essence::services::detach_post_comment(cli, &comment).await?;
-    } else if sk.starts_with("SPACE_POST_COMMENT#") || sk.starts_with("SPACE_POST_COMMENT_REPLY#")
-    {
+    } else if sk.starts_with("SPACE_POST_COMMENT#") || sk.starts_with("SPACE_POST_COMMENT_REPLY#") {
         let comment: crate::features::spaces::pages::actions::actions::discussion::SpacePostComment = deserialize(image)?;
         crate::features::essence::services::detach_discussion_comment(cli, &comment).await?;
     } else if sk.starts_with("SPACE_POLL#") {
