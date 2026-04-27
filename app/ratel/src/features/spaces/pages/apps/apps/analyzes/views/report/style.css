@@ -74,16 +74,23 @@
   --font-body: 'Outfit', sans-serif;
 
   position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   isolation: isolate;
   background: var(--bg-void);
   color: var(--text-primary);
   font-family: var(--font-body);
-  /* Desktop (>=1101px): pin the page to the parent scroll wrapper
-     and let .main own the only scrollbar — sidebar stays put,
-     content moves. Mobile flows naturally; the parent layout's
-     `overflow-auto flex-1` wrapper handles page scroll there. */
+  /* Arena owns its own scrollbar. Same pattern as
+     `pages/apps/apps/file/views/home/style.css`. The `100vh`
+     overshoots the wrapper's content area by ~120px (SpaceTop +
+     padding) which gets clipped by the wrapper's overflow-auto;
+     internally the arena scrolls cleanly within the visible fold.
+     Topbar / banner / sidebar use `position: sticky` against
+     this arena's scroll context. */
 }
 
 .analyze-arena .arena {
@@ -92,13 +99,6 @@
   flex-direction: column;
   width: 100%;
 }
-
-/* Page scroll lives on the space-layout's overflow-auto wrapper —
-   no `height: 100vh` / `overflow: hidden` games here. The sidebar
-   uses `position: sticky` (see its own rule) to stay anchored at
-   the viewport's top while the main column scrolls past it, which
-   gives the same "sidebar fixed, content scrolls" feel without
-   fighting the parent scroll context. */
 
 .analyze-arena .arena::before {
   content: '';
@@ -225,27 +225,27 @@
 /* ── Split layout — RESULT mode ──────────────────────────────
    row 1: banner banner   (.builder-result, full-width)
    row 2: sidebar main    (ANALYZES + active panel)
-   The banner sits as a direct child of `.split` so it can span
-   both grid columns. */
+   The banner spans both grid columns. Page-level scroll handles
+   tall content — the banner / sidebar use sticky positioning to
+   stay visible as the user scrolls past. */
 .analyze-arena .split {
   position: relative;
   z-index: 10;
-  flex: 1;
   display: grid;
   grid-template-columns: 320px minmax(0, 1fr);
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto;
   grid-template-areas:
     "banner  banner"
     "sidebar main";
   gap: 18px;
-  padding: 24px 24px 80px;
+  padding: 24px;
   max-width: 1440px;
   margin: 0 auto;
   width: 100%;
 }
 .analyze-arena .split > .builder-result { grid-area: banner; }
 .analyze-arena .split > .sidebar { grid-area: sidebar; }
-.analyze-arena .split > .main { grid-area: main; }
+.analyze-arena .split > .main { grid-area: main; min-width: 0; }
 @media (max-width: 1100px) {
   .analyze-arena .split {
     grid-template-columns: 1fr;
@@ -254,17 +254,19 @@
       "sidebar"
       "main";
   }
-  .analyze-arena .sidebar {
-    position: static !important;
-    max-height: none !important;
-  }
 }
 @media (max-width: 760px) {
   .analyze-arena .split { padding: 14px; gap: 14px; }
 }
 
-/* ── Builder-result banner ───────────────────────────────── */
+/* ── Builder-result banner ─────────────────────────────────
+   Sticky just below the topbar in the parent's overflow-auto
+   scroll context, so the chip summary stays visible while the
+   page scrolls past it. */
 .analyze-arena .builder-result {
+  position: sticky;
+  top: 68px;
+  z-index: 20;
   background:
     linear-gradient(180deg, rgba(252, 179, 0, 0.06), transparent 70%),
     var(--bg-glass);
@@ -1076,10 +1078,11 @@
 
 /* ── Sidebar (right column on desktop) ──────────────────── */
 .analyze-arena .sidebar {
+  /* Stack sticky below banner: topbar (~68) + banner (~110) ≈ 178. */
   align-self: start;
   position: sticky;
-  top: 84px;
-  max-height: calc(100vh - 100px);
+  top: 178px;
+  max-height: calc(100vh - 200px);
   overflow-y: auto;
   background: var(--bg-glass);
   backdrop-filter: blur(18px);
