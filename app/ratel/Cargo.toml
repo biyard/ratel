@@ -164,6 +164,7 @@ server = [
 lambda = ["lambda_http", "lambda_runtime", "server"]
 layout_test = ["web"]
 local-dev = ["beta","bypass","dep:pulldown-cmark"]
+local-dev-wo-bypass = ["beta","dep:pulldown-cmark"]
 beta = []
 futures = ["dep:futures"]
 
