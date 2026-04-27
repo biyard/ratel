@@ -59,10 +59,7 @@ pub async fn handle_space_status_change(event: SpaceStatusChangeEvent) -> Result
     let post = Post::get(cli, &post_pk, Some(&EntityType::Post))
         .await?
         .ok_or_else(|| {
-            tracing::error!(
-                "handle_space_status_change: post not found for {}",
-                post_pk
-            );
+            tracing::error!("handle_space_status_change: post not found for {}", post_pk);
             SpaceStatusChangeError::PostNotFound
         })?;
 
@@ -115,9 +112,7 @@ pub async fn handle_space_status_change(event: SpaceStatusChangeEvent) -> Result
             space_title: post.title.clone(),
         });
         if let Err(e) = notification.create(cli).await {
-            tracing::error!(
-                "handle_space_status_change: failed to create notification row: {e}"
-            );
+            tracing::error!("handle_space_status_change: failed to create notification row: {e}");
             // Continue; don't abort fan-out on a single failed chunk.
         }
     }
@@ -180,27 +175,13 @@ pub(crate) async fn resolve_space_participant_user_pks(
     use crate::common::models::space::SpaceParticipant;
 
     let mut user_pks: HashSet<String> = HashSet::new();
-
-    let mut bookmark: Option<String> = None;
-    for page in 0..MAX_PAGES {
-        let mut opt = SpaceParticipant::opt().limit(PAGE_SIZE);
-        if let Some(bm) = bookmark.as_ref() {
-            opt = opt.bookmark(bm.clone());
-        }
-        let (rows, next) = SpaceParticipant::find_by_space(cli, space_pk, opt).await?;
-        for row in rows {
-            user_pks.insert(row.user_pk.to_string());
-        }
-        match next {
-            Some(b) => bookmark = Some(b),
-            None => break,
-        }
-        if page + 1 == MAX_PAGES {
-            tracing::warn!(
-                space_pk = %space_pk,
-                "resolve_space_participant_user_pks: hit MAX_PAGES cap; additional participants truncated"
-            );
-        }
+    let mut opt = SpaceParticipant::opt_all();
+    if let Some(bm) = bookmark.as_ref() {
+        opt = opt.bookmark(bm.clone());
+    }
+    let (rows, _next) = SpaceParticipant::find_by_space(cli, space_pk, opt).await?;
+    for row in rows {
+        user_pks.insert(row.user_pk.to_string());
     }
 
     Ok(user_pks
