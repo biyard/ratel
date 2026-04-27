@@ -132,7 +132,7 @@ async fn load_space(
     Ok(SpaceCommon::get(cli, space_pk, Some(&EntityType::SpaceCommon)).await?)
 }
 
-async fn resolve_team_member_user_pks(
+pub(crate) async fn resolve_team_member_user_pks(
     cli: &aws_sdk_dynamodb::Client,
     team_pk: &Partition,
 ) -> Result<Vec<Partition>> {
@@ -173,7 +173,7 @@ async fn resolve_team_member_user_pks(
         .collect())
 }
 
-async fn resolve_space_participant_user_pks(
+pub(crate) async fn resolve_space_participant_user_pks(
     cli: &aws_sdk_dynamodb::Client,
     space_pk: &Partition,
 ) -> Result<Vec<Partition>> {
@@ -209,7 +209,7 @@ async fn resolve_space_participant_user_pks(
         .collect())
 }
 
-async fn resolve_emails(
+pub(crate) async fn resolve_emails(
     cli: &aws_sdk_dynamodb::Client,
     user_pks: Vec<Partition>,
 ) -> Result<Vec<String>> {

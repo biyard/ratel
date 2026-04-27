@@ -8,6 +8,7 @@ mod mcp_tests;
 mod meet_action_tests;
 mod notifications_tests;
 mod post_tests;
+mod space_action_notification_tests;
 mod space_member_tests;
 mod space_status_change_tests;
 mod sub_team_tests;

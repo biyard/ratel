@@ -66,3 +66,36 @@ impl SpaceAction {
         }
     }
 }
+
+impl SpaceAction {
+    /// Build the absolute participant-facing deep link for this action. Used
+    /// by inbox + email notifications. In-app callers (Dioxus `Link`) can
+    /// keep using `SpaceActionSummary::get_url` which returns a `Route`
+    /// directly.
+    pub fn get_cta_url(&self) -> String {
+        let space_id = &self.pk.0;
+        let action_id = self.pk.1.clone();
+        let route = match self.space_action_type {
+            SpaceActionType::Poll => Route::PollActionPage {
+                space_id: space_id.clone(),
+                poll_id: action_id.into(),
+            },
+            SpaceActionType::TopicDiscussion => Route::SpaceIndexPage {
+                space_id: space_id.clone(),
+            },
+            SpaceActionType::Follow => Route::FollowActionPage {
+                space_id: space_id.clone(),
+                follow_id: action_id.into(),
+            },
+            SpaceActionType::Quiz => Route::QuizActionPage {
+                space_id: space_id.clone(),
+                quiz_id: action_id.into(),
+            },
+            SpaceActionType::Meet => Route::MeetActionPage {
+                space_id: space_id.clone(),
+                meet_id: action_id.into(),
+            },
+        };
+        format!("https://ratel.foundation{}", route)
+    }
+}
