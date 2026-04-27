@@ -163,4 +163,66 @@ translate! {
         en: "University",
         ko: "학교",
     },
+
+    // ── Arena LIST view (Phase 1) ──────────────────────────
+    arena_breadcrumb_apps: {
+        en: "Apps",
+        ko: "Apps",
+    },
+    arena_breadcrumb_current: {
+        en: "Analyze",
+        ko: "Analyze",
+    },
+    arena_topbar_title: {
+        en: "Analyze Results",
+        ko: "분석 결과",
+    },
+    list_heading: {
+        en: "Result Analysis",
+        ko: "결과 분석",
+    },
+    list_count_unit: {
+        en: "analyses",
+        ko: "개 분석",
+    },
+    list_hint: {
+        en: "Use the arrows to flip through analyses, click a card to open it. The first \"+\" card creates a new analysis.",
+        ko: "좌우 화살표로 분석을 넘기고, 카드를 클릭해 열어보세요. 첫 카드의 \"+\"는 새 분석 만들기.",
+    },
+    new_analysis_title: {
+        en: "Create new analysis",
+        ko: "새 분석 만들기",
+    },
+    new_analysis_desc: {
+        en: "Pick cross filters to build a new report",
+        ko: "교차 필터를 선택해 새 보고서를 만듭니다",
+    },
+    status_done: {
+        en: "Analysis complete",
+        ko: "분석 완료",
+    },
+    status_running: {
+        en: "Running",
+        ko: "분석 중",
+    },
+    chips_empty: {
+        en: "No filters · all data",
+        ko: "필터 없음 · 전체 데이터",
+    },
+    arrow_prev_label: {
+        en: "Previous card",
+        ko: "이전 카드",
+    },
+    arrow_next_label: {
+        en: "Next card",
+        ko: "다음 카드",
+    },
+    dot_new_label: {
+        en: "Create new analysis",
+        ko: "새 분석 만들기",
+    },
+    dot_report_label_prefix: {
+        en: "Report",
+        ko: "보고서",
+    },
 }
