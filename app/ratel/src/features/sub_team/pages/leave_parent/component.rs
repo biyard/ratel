@@ -34,7 +34,7 @@ pub fn TeamLeaveParentPage(username: String) -> Element {
 
     rsx! {
         SeoMeta { title: "{tr.leave_parent_title}" }
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         LeaveParentForm { username: username.clone(), team_display: team_display.clone() }
     }
 }

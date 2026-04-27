@@ -4,7 +4,7 @@ use dioxus_primitives_core::separator::{self, SeparatorProps};
 #[component]
 pub fn Separator(props: SeparatorProps) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         separator::Separator {
             class: "separator",
             horizontal: props.horizontal,

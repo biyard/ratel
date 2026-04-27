@@ -4,7 +4,7 @@ use dioxus_primitives_core::progress::{self, ProgressIndicatorProps, ProgressPro
 #[component]
 pub fn Progress(props: ProgressProps) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         progress::Progress {
             class: "progress",
             value: props.value,

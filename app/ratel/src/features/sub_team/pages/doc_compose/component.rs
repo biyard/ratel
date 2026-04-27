@@ -43,7 +43,7 @@ fn render_compose(username: String, doc_id: Option<String>) -> Element {
         SeoMeta {
             title: if doc_id.is_some() { "{tr.doc_compose_title_edit}" } else { "{tr.doc_compose_title_new}" },
         }
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         DocComposeForm { username: username.clone() }
     }
 }
