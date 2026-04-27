@@ -568,10 +568,10 @@ export class DynamoStreamEventStack extends Stack {
                 dynamodb: {
                   NewImage: {
                     sk: { S: ["SPACE_ACTION"] },
-                    status: { S: ["ONGOING"] },
+                    status: { S: ["Ongoing"] },
                   },
                   OldImage: {
-                    status: { S: ["DESIGNING"] },
+                    status: { S: ["Designing"] },
                   },
                 },
               }),
@@ -640,8 +640,7 @@ export class DynamoStreamEventStack extends Stack {
     // ── Rule: Route PollXpRecord events to app-shell Lambda ──────────
     new events.Rule(this, "PollXpRecordRule", {
       eventBus,
-      description:
-        "Route poll answer events to app-shell for XP recording",
+      description: "Route poll answer events to app-shell for XP recording",
       eventPattern: {
         source: ["ratel.dynamodb.stream"],
         detailType: ["PollXpRecord"],
@@ -688,8 +687,7 @@ export class DynamoStreamEventStack extends Stack {
     // ── Rule: Route QuizXpRecord events to app-shell Lambda ──────────
     new events.Rule(this, "QuizXpRecordRule", {
       eventBus,
-      description:
-        "Route quiz attempt events to app-shell for XP recording",
+      description: "Route quiz attempt events to app-shell for XP recording",
       eventPattern: {
         source: ["ratel.dynamodb.stream"],
         detailType: ["QuizXpRecord"],
@@ -820,8 +818,7 @@ export class DynamoStreamEventStack extends Stack {
     // ── Rule: Route FollowXpRecord events to app-shell Lambda ────────
     new events.Rule(this, "FollowXpRecordRule", {
       eventBus,
-      description:
-        "Route follow events to app-shell for XP recording",
+      description: "Route follow events to app-shell for XP recording",
       eventPattern: {
         source: ["ratel.dynamodb.stream"],
         detailType: ["FollowXpRecord"],
