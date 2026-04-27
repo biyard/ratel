@@ -114,6 +114,19 @@ pub struct UseDiscussionArena {
     pub delete_comment: Action<(String,), ()>,
     pub add_comment: Action<(String, Vec<String>), ()>,
     pub reply_comment: Action<(String, String, Vec<String>), ()>,
+
+    /// Bumped whenever a reply successfully posts. CommentItem watches this
+    /// to reload its local `replies` signal — the global composer submits
+    /// outside the CommentItem's scope, so we need a cross-component signal
+    /// to tell the thread-active item that its reply list is stale.
+    pub reply_refresh_tick: Signal<u32>,
+
+    /// `(display_name, user_pk)` pushed by ReplyItem when the user clicks
+    /// Reply on a reply: the global composer's `use_effect` consumes it
+    /// to inject an `@author ` mention pointing at the reply's author,
+    /// then clears the slot. Live across the whole arena because the
+    /// composer lives outside any individual CommentItem.
+    pub pending_mention: Signal<Option<(String, String)>>,
 }
 
 impl UseDiscussionArena {
@@ -176,6 +189,7 @@ pub fn use_discussion_arena(
 
     let active_reply_thread: Signal<Option<String>> = use_signal(|| None);
     let sheet_expanded: Signal<bool> = use_signal(|| false);
+    let pending_mention: Signal<Option<(String, String)>> = use_signal(|| None);
 
     let disc_loader = use_loader(move || async move {
         get_discussion_detail(space_id(), discussion_id()).await
@@ -329,6 +343,7 @@ pub fn use_discussion_arena(
         use_signal(std::collections::HashMap::new);
     let mut deleted_sks: Signal<std::collections::HashSet<String>> =
         use_signal(std::collections::HashSet::new);
+    let mut reply_refresh_tick: Signal<u32> = use_signal(|| 0);
 
     let mut toast = use_toast();
     let like_comment = use_action(move |sk_str: String, next: bool| async move {
@@ -471,6 +486,7 @@ pub fn use_discussion_arena(
                     comments_query.refresh();
                     replies_loader.restart();
                     parent_loader.restart();
+                    reply_refresh_tick.with_mut(|t| *t = t.wrapping_add(1));
                 }
                 Err(e) => {
                     tracing::error!("reply comment: {:?}", e);
@@ -504,6 +520,8 @@ pub fn use_discussion_arena(
         delete_comment,
         add_comment: add_comment_action,
         reply_comment: reply_comment_action,
+        reply_refresh_tick,
+        pending_mention,
     }))
 }
 

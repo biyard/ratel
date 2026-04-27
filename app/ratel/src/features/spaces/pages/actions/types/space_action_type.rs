@@ -3,6 +3,7 @@ use crate::{
     spaces::pages::actions::actions::quiz::SpaceQuiz,
 };
 #[derive(Debug, Clone, Default, Translate, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub enum SpaceActionType {
     #[default]
     // #[translate(ko = "숙의 및 퀴즈", en = "Quiz")]

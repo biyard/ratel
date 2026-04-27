@@ -39,6 +39,12 @@ pub enum EmailOperation {
         reply_preview: String,
         cta_url: String,
     },
+    SpaceActionOngoingNotification {
+        space_title: String,
+        action_title: String,
+        action_type_label: String,
+        cta_url: String,
+    },
 }
 
 impl Default for EmailOperation {
@@ -63,6 +69,9 @@ impl EmailOperation {
             EmailOperation::SpaceStatusNotification { .. } => "space_status_notification",
             EmailOperation::MentionNotification { .. } => "mention_notification",
             EmailOperation::ReplyOnCommentNotification { .. } => "reply_on_comment_notification",
+            EmailOperation::SpaceActionOngoingNotification { .. } => {
+                "space_action_ongoing_notification"
+            }
         }
     }
 }

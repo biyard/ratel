@@ -10,7 +10,7 @@ pub fn LeaderboardPanel(
     let tr: SpaceViewerTranslate = use_translate();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
 
         div {
             class: "leaderboard-panel",

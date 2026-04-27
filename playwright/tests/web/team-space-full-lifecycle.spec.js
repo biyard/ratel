@@ -283,13 +283,13 @@ test.describe.serial("Full space lifecycle with rewards", () => {
       "Discussion: Roadmap Planning"
     );
 
-    // Wait for the <tiptap-editor> web component to mount + initialize
-    // its internal editor so setContent() actually takes effect.
+    // Wait for the .ratel-editor root to mount and be bound by
+    // script.js (it marks `data-bound="true"` once wiring completes).
     await getEditor(page);
     await page.waitForFunction(
       () => {
-        const el = document.querySelector("tiptap-editor");
-        return !!el && typeof el.setContent === "function" && !!el._editor;
+        const root = document.querySelector(".ratel-editor");
+        return !!root && root.dataset.bound === "true";
       },
       null,
       { timeout: 15000 }
@@ -339,22 +339,21 @@ test.describe.serial("Full space lifecycle with rewards", () => {
       "RFCs. Use <code>@team-name</code> to ping a specific group.</p>",
     ].join("");
 
-    // The <tiptap-editor> web component exposes setContent() which runs
-    // `editor.commands.setContent` internally. We call it and then also
-    // dispatch the `change` CustomEvent the editor normally emits on
-    // user input so Dioxus's onchange handler picks up the HTML and
-    // triggers the standard 3s html_contents autosave.
+    // The ratel-editor doesn't expose a scripting API — we write the
+    // HTML directly into `.re-content` (the visible contenteditable
+    // surface) and then fire the hidden `.re-bridge` input so Dioxus's
+    // `on_content_change` handler picks up the payload and the standard
+    // 3s html_contents autosave kicks in.
     await page.evaluate((html) => {
-      const el = document.querySelector("tiptap-editor");
-      if (!el) throw new Error("tiptap-editor not found");
-      el.setContent(html);
-      el.dispatchEvent(
-        new CustomEvent("change", {
-          detail: html,
-          bubbles: true,
-          composed: true,
-        })
-      );
+      const root = document.querySelector(".ratel-editor");
+      if (!root) throw new Error("ratel-editor not found");
+      const content = root.querySelector(".re-content");
+      const bridge = root.querySelector(".re-bridge");
+      if (!content || !bridge) throw new Error("ratel-editor DOM incomplete");
+      content.innerHTML = html;
+      content.dataset.empty = "false";
+      bridge.value = html;
+      bridge.dispatchEvent(new Event("input", { bubbles: true }));
     }, richHtml);
 
     // Blur to commit any focused field, then wait for the html autosave

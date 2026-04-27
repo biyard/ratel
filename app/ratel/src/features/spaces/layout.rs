@@ -37,6 +37,11 @@ pub fn SpaceLayout(space_id: ReadSignal<SpacePartition>) -> Element {
         Route::SpaceIndexPage { .. }
             | Route::SpaceDiscussionPage { .. }
             | Route::SpaceDiscussionCommentPage { .. }
+            | Route::SpaceGeneralAppPage { .. }
+            | Route::SpaceFileAppPage { .. }
+            | Route::SpacePanelsAppPage { .. }
+            | Route::SpaceAnalyzesAppPage { .. }
+            | Route::SpaceAnalyzeDetailPage { .. }
     );
     let is_action_edit_route = matches!(
         current_route,

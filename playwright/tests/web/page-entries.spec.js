@@ -21,7 +21,13 @@ import { goto } from "../utils";
  *   team-arena-layout   → TeamArenaLayout: /:teamUsername/home |
  *                         team-drafts | dao | members | team-rewards |
  *                         team-memberships | team-settings*
- *   space-layout-container → SpaceLayout: /spaces/:id/*
+ *   space-layout-container → SpaceLayout: /spaces/:id/* EXCEPT for
+ *                         routes listed in `is_arena_route`
+ *                         (features/spaces/layout.rs). Those full-
+ *                         screen arena pages render their own chrome
+ *                         and bypass the sidebar shell, so the tests
+ *                         use per-page markers like `topbar-back` or
+ *                         `page-card-content` instead.
  *
  * Test data is set up via REST API calls using page.request (which carries
  * the browser's auth cookies from user.json).
@@ -319,24 +325,31 @@ test.describe.serial("Page entries accessibility", () => {
     checkPage(page, `/spaces/${data.spaceId}/apps/`, {
       testId: "space-layout-container",
     }));
+  // Arena app pages (General / Files / Panels / Analyzes list + poll
+  // detail) bypass SpaceLayout via `is_arena_route` so they don't have
+  // `space-layout-container`. Each one renders its own arena topbar
+  // with a back button — use `topbar-back` as the visibility landmark,
+  // mirroring the action-editor tests above which use `page-card-*`
+  // for the same reason.
   test("GET /spaces/:space_id/apps/general", async ({ page }) =>
     checkPage(page, `/spaces/${data.spaceId}/apps/general`, {
-      testId: "space-layout-container",
+      testId: "topbar-back",
     }));
   test("GET /spaces/:space_id/apps/files", async ({ page }) =>
     checkPage(page, `/spaces/${data.spaceId}/apps/files`, {
-      testId: "space-layout-container",
+      testId: "topbar-back",
     }));
   test("GET /spaces/:space_id/apps/analyzes", async ({ page }) =>
     checkPage(page, `/spaces/${data.spaceId}/apps/analyzes`, {
-      testId: "space-layout-container",
+      testId: "topbar-back",
     }));
   test("GET /spaces/:space_id/apps/analyzes/poll/:poll_id", async ({ page }) =>
     checkPage(
       page,
       `/spaces/${data.spaceId}/apps/analyzes/poll/${data.pollId}`,
-      { testId: "space-layout-container" },
+      { testId: "topbar-back" },
     ));
+  // Discussion analyze detail still uses SpaceLayout — no arena yet.
   test("GET /spaces/:space_id/apps/analyzes/discussion/:discussion_id", async ({
     page,
   }) =>
@@ -347,7 +360,7 @@ test.describe.serial("Page entries accessibility", () => {
     ));
   test("GET /spaces/:space_id/apps/panels", async ({ page }) =>
     checkPage(page, `/spaces/${data.spaceId}/apps/panels`, {
-      testId: "space-layout-container",
+      testId: "topbar-back",
     }));
   test("GET /spaces/:space_id/apps/incentive-pool", async ({ page }) =>
     checkPage(page, `/spaces/${data.spaceId}/apps/incentive-pool`, {

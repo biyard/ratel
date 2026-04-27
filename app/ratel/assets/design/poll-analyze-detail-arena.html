@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Poll Analyze — Detail (Arena)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html[data-theme="dark"] {
+      --bg-void: #06060e;
+      --bg-glass: rgba(12, 12, 26, 0.65);
+      --bg-glass-hover: rgba(20, 20, 40, 0.80);
+      --border-subtle: rgba(255, 255, 255, 0.06);
+      --border-strong: rgba(255, 255, 255, 0.12);
+      --text-primary: #f0f0f5;
+      --text-muted: #8888a8;
+      --text-dim: #55556a;
+      --surface-soft: rgba(255, 255, 255, 0.02);
+      --surface-hover: rgba(255, 255, 255, 0.04);
+      --glow-aura-a: rgba(6, 182, 212, 0.05);
+      --glow-aura-b: rgba(252, 179, 0, 0.03);
+      --panel-bg: rgba(12, 12, 26, 1);
+      --input-bg: rgba(255, 255, 255, 0.02);
+      --input-border: rgba(255, 255, 255, 0.08);
+      --bar-track: rgba(255, 255, 255, 0.04);
+    }
+    html[data-theme="light"] {
+      --bg-void: #f5f5fb;
+      --bg-glass: rgba(255, 255, 255, 0.75);
+      --bg-glass-hover: rgba(255, 255, 255, 0.95);
+      --border-subtle: rgba(10, 10, 30, 0.08);
+      --border-strong: rgba(10, 10, 30, 0.16);
+      --text-primary: #12121a;
+      --text-muted: #5b5b75;
+      --text-dim: #9898ad;
+      --surface-soft: rgba(10, 10, 30, 0.03);
+      --surface-hover: rgba(10, 10, 30, 0.05);
+      --glow-aura-a: rgba(6, 182, 212, 0.08);
+      --glow-aura-b: rgba(252, 179, 0, 0.06);
+      --panel-bg: rgba(255, 255, 255, 1);
+      --input-bg: rgba(10, 10, 30, 0.02);
+      --input-border: rgba(10, 10, 30, 0.1);
+      --bar-track: rgba(10, 10, 30, 0.06);
+    }
+
+    :root {
+      --accent-gold: #fcb300;
+      --accent-teal: #6eedd8;
+      --accent-red: #ef4444;
+      --font-display: 'Orbitron', sans-serif;
+      --font-body: 'Outfit', sans-serif;
+
+      --analyze-color: #06b6d4;
+      --analyze-bg: rgba(6, 182, 212, 0.10);
+      --analyze-border: rgba(6, 182, 212, 0.24);
+      --analyze-glow: rgba(6, 182, 212, 0.16);
+
+      /* Chart palette — matches ANALYZE_CHART_COLORS in page.rs */
+      --c1: #f97316;
+      --c2: #6366f1;
+      --c3: #22c55e;
+      --c4: #3b82f6;
+      --c5: #8b5cf6;
+      --c6: #eab308;
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg-void);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      transition: background 0.25s, color 0.25s;
+    }
+
+    .arena {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .arena::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 20%, var(--glow-aura-a), transparent 60%),
+        radial-gradient(ellipse 120% 100% at 50% 120%, var(--glow-aura-b), transparent 50%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Topbar ────────────────────────────────────────── */
+    .arena-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px;
+      gap: 16px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .arena-topbar__left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+    }
+    .back-btn {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .back-btn:hover { border-color: rgba(252, 179, 0, 0.3); color: var(--accent-gold); }
+    .back-btn svg { width: 16px; height: 16px; }
+
+    .arena-topbar__logo {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      object-fit: cover;
+      border: 1px solid rgba(252, 179, 0, 0.15);
+      flex-shrink: 0;
+    }
+
+    .breadcrumb { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .breadcrumb__item {
+      font-family: var(--font-display);
+      font-size: 11px; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-muted);
+    }
+    .breadcrumb__sep { color: var(--text-dim); font-size: 10px; }
+    .breadcrumb__current { color: var(--text-primary); font-weight: 600; }
+
+    .type-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 8px;
+      font-family: var(--font-display);
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      background: var(--analyze-bg);
+      color: var(--analyze-color);
+      border: 1px solid var(--analyze-border);
+    }
+    .type-badge svg { width: 13px; height: 13px; }
+
+    .topbar-title {
+      flex: 1; min-width: 180px;
+      color: var(--text-primary);
+      font-family: var(--font-display);
+      font-size: 15px; font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 6px 10px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .arena-topbar__right {
+      display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    }
+
+    .btn {
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-family: var(--font-display);
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      cursor: pointer; transition: all 0.2s;
+      border: 1px solid var(--border-subtle);
+      background: transparent;
+      color: var(--text-primary);
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn svg { width: 14px; height: 14px; }
+    .btn--primary {
+      background: linear-gradient(135deg, var(--accent-gold), #e5a200);
+      border: none; color: #0a0a0a;
+      box-shadow: 0 2px 12px rgba(252, 179, 0, 0.25);
+    }
+    .btn--primary:hover {
+      color: #0a0a0a;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(252, 179, 0, 0.4);
+    }
+    .btn--lg { padding: 10px 20px; font-size: 11px; }
+
+    /* Mobile topbar — strip breadcrumb/badge */
+    @media (max-width: 760px) {
+      .arena-topbar { padding: 12px 14px; gap: 10px; }
+      .arena-topbar__left { gap: 10px; }
+      .breadcrumb, .type-badge { display: none; }
+      .topbar-title { min-width: 0; font-size: 13px; padding: 0; }
+      .btn { padding: 6px 10px; font-size: 9px; }
+      .btn--lg { padding: 8px 14px; font-size: 10px; }
+    }
+    @media (max-width: 480px) {
+      .arena-topbar { padding: 10px 12px; }
+      .back-btn, .arena-topbar__logo { width: 32px; height: 32px; }
+      .topbar-title { font-size: 12px; }
+    }
+
+    /* ── Body ────────────────────────────────────────── */
+    .arena-body {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      padding: 28px 28px 80px;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    @media (max-width: 760px) {
+      .arena-body { padding: 18px 14px 48px; gap: 14px; }
+    }
+
+    .body-title {
+      font-family: var(--font-display);
+      font-size: 24px; font-weight: 800;
+      letter-spacing: 0.04em;
+      color: var(--text-primary);
+    }
+
+    /* ── Filter bar ──────────────────────────────────── */
+    .filter-bar {
+      display: flex; align-items: center;
+      gap: 12px; flex-wrap: wrap;
+    }
+    .filter-select-wrap { position: relative; display: inline-flex; }
+    .filter-select {
+      appearance: none; -webkit-appearance: none;
+      min-width: 180px;
+      padding: 10px 36px 10px 14px;
+      border-radius: 10px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.15s;
+    }
+    .filter-select:hover { border-color: var(--analyze-border); }
+    .filter-select:focus {
+      border-color: var(--analyze-border);
+      box-shadow: 0 0 0 3px var(--analyze-glow);
+    }
+    .filter-select-wrap::after {
+      content: '';
+      position: absolute; right: 14px; top: 50%;
+      width: 8px; height: 8px;
+      border-right: 2px solid var(--text-muted);
+      border-bottom: 2px solid var(--text-muted);
+      transform: translateY(-75%) rotate(45deg);
+      pointer-events: none;
+    }
+
+    /* ── Question card ───────────────────────────────── */
+    .q-card {
+      background: var(--bg-glass);
+      backdrop-filter: blur(18px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 22px;
+      display: flex; flex-direction: column; gap: 18px;
+    }
+    @media (max-width: 760px) {
+      .q-card { padding: 16px; gap: 14px; }
+    }
+
+    .q-card__head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .q-card__title {
+      min-width: 0; flex: 1;
+      font-size: 16px; font-weight: 600;
+      color: var(--text-primary);
+      word-break: break-word;
+    }
+    .q-card__count {
+      flex-shrink: 0;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px;
+      border-radius: 100px;
+      background: var(--analyze-bg);
+      border: 1px solid var(--analyze-border);
+      color: var(--analyze-color);
+      font-family: var(--font-display);
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+
+    /* ── Bar chart (horizontal bars) ─────────────────── */
+    .bar-chart { display: flex; flex-direction: column; gap: 10px; }
+    .bar-row {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      align-items: center;
+      gap: 12px;
+    }
+    .bar-row__label {
+      font-family: var(--font-display);
+      font-size: 12px; font-weight: 700;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .bar-row__track {
+      position: relative;
+      height: 12px; width: 100%;
+      border-radius: 100px;
+      background: var(--bar-track);
+      border: 1px solid var(--border-subtle);
+      overflow: hidden;
+    }
+    .bar-row__fill {
+      position: absolute; inset: 0 auto 0 0;
+      border-radius: 100px;
+      transition: width 0.3s ease;
+    }
+    .bar-row__value {
+      font-family: var(--font-display);
+      font-size: 12px; font-weight: 700;
+      color: var(--text-primary);
+      white-space: nowrap;
+      min-width: 96px;
+      text-align: right;
+    }
+    .bar-row__value--muted { color: var(--text-dim); }
+
+    /* ── Pie chart (conic-gradient) ──────────────────── */
+    .pie-wrap {
+      display: flex; align-items: center; justify-content: center;
+      gap: 28px;
+      padding: 8px 0 4px;
+      flex-wrap: wrap;
+    }
+    .pie {
+      position: relative;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      box-shadow: 0 0 40px rgba(6, 182, 212, 0.14);
+    }
+    .pie::after {
+      /* inner donut hole so the center is legible */
+      content: '';
+      position: absolute;
+      inset: 28%;
+      border-radius: 50%;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-subtle);
+    }
+    .pie__labels {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-primary);
+      text-align: center;
+      font-family: var(--font-display);
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.5;
+      z-index: 1;
+    }
+    .pie__label-line { display: block; }
+    .pie__label-line--top {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .pie__label-line--big {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: 0.02em;
+    }
+    .pie__label-line--sub {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-dim);
+      letter-spacing: 0.06em;
+    }
+
+    .pie-legend {
+      display: flex; flex-direction: column;
+      gap: 10px;
+      min-width: 200px;
+    }
+    .pie-legend__row {
+      display: grid;
+      grid-template-columns: 12px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+    .pie-legend__swatch {
+      width: 12px; height: 12px;
+      border-radius: 3px;
+    }
+    .pie-legend__label {
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .pie-legend__value {
+      font-family: var(--font-display);
+      font-size: 11px; font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    /* ── Subjective text response list ───────────────── */
+    .text-list { display: flex; flex-direction: column; gap: 8px; }
+    .text-item {
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      color: var(--text-primary);
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+    .text-empty {
+      padding: 14px;
+      border-radius: 10px;
+      background: var(--input-bg);
+      border: 1px dashed var(--input-border);
+      color: var(--text-dim);
+      font-size: 13px;
+      font-style: italic;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <!-- ───────── Topbar ───────── -->
+    <header class="arena-topbar" role="banner">
+      <div class="arena-topbar__left">
+        <button class="back-btn" aria-label="Back" data-testid="topbar-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <img class="arena-topbar__logo" alt="Space logo" src="https://api.dicebear.com/7.x/shapes/svg?seed=climate&backgroundColor=06b6d4" />
+        <nav class="breadcrumb">
+          <span class="breadcrumb__item">Climate Action DAO</span>
+          <span class="breadcrumb__sep">›</span>
+          <span class="breadcrumb__item">Apps</span>
+          <span class="breadcrumb__sep">›</span>
+          <span class="breadcrumb__item">Analyze</span>
+          <span class="breadcrumb__sep">›</span>
+          <span class="breadcrumb__item breadcrumb__current">Poll</span>
+        </nav>
+        <span class="type-badge">
+          <!-- chart/analyze icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/>
+          </svg>
+          Analyze
+        </span>
+        <span class="topbar-title">2026 탄소 중립 로드맵 우선순위 설문</span>
+      </div>
+
+      <div class="arena-topbar__right">
+        <button class="btn btn--primary btn--lg" data-testid="export-excel-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          엑셀 다운로드
+        </button>
+      </div>
+    </header>
+
+    <!-- ───────── Body ───────── -->
+    <main class="arena-body">
+      <!-- Filter bar (단독 섹션; 참여자/남은 일시/설문 기간 카드는 요청대로 제외) -->
+      <div class="filter-bar" data-testid="filter-bar">
+        <label class="filter-select-wrap">
+          <select class="filter-select" data-testid="filter-select">
+            <option value="overall">전체</option>
+            <option value="gender">성별</option>
+            <option value="age">나이</option>
+            <option value="university">대학교</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- ── Objective question (bar + pie) ── -->
+      <section class="q-card" data-testid="question-card-objective">
+        <div class="q-card__head">
+          <div class="q-card__title">가장 시급하게 추진해야 할 탄소감축 정책은 무엇이라고 생각하시나요?</div>
+          <span class="q-card__count">128명 응답</span>
+        </div>
+
+        <!-- Bar chart — 4 options, percentages sum to 100 -->
+        <div class="bar-chart" data-testid="bar-chart">
+          <div class="bar-row">
+            <span class="bar-row__label">1</span>
+            <div class="bar-row__track">
+              <div class="bar-row__fill" style="width: 40.6%; background: var(--c1);"></div>
+            </div>
+            <span class="bar-row__value">재생에너지 확대 · 52 (40.6%)</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-row__label">2</span>
+            <div class="bar-row__track">
+              <div class="bar-row__fill" style="width: 29.7%; background: var(--c2);"></div>
+            </div>
+            <span class="bar-row__value">전기차 보급 확대 · 38 (29.7%)</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-row__label">3</span>
+            <div class="bar-row__track">
+              <div class="bar-row__fill" style="width: 20.3%; background: var(--c3);"></div>
+            </div>
+            <span class="bar-row__value">탄소세 도입 · 26 (20.3%)</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-row__label">4</span>
+            <div class="bar-row__track">
+              <div class="bar-row__fill" style="width: 9.4%; background: var(--c4);"></div>
+            </div>
+            <span class="bar-row__value">산림 복원 · 12 (9.4%)</span>
+          </div>
+        </div>
+
+        <!-- Pie chart — conic-gradient matches the bar percentages.
+             Donut hole in the middle shows the total response count. -->
+        <div class="pie-wrap" data-testid="pie-chart">
+          <div
+            class="pie"
+            role="img"
+            aria-label="재생에너지 40.6%, 전기차 29.7%, 탄소세 20.3%, 산림 9.4%"
+            style="background: conic-gradient(
+              var(--c1) 0 146.16deg,
+              var(--c2) 146.16deg 253.08deg,
+              var(--c3) 253.08deg 326.16deg,
+              var(--c4) 326.16deg 360deg
+            );"
+          >
+            <div class="pie__labels">
+              <div>
+                <span class="pie__label-line pie__label-line--top">Total</span>
+                <span class="pie__label-line pie__label-line--big">128</span>
+                <span class="pie__label-line pie__label-line--sub">responses</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pie-legend" aria-label="chart legend">
+            <div class="pie-legend__row">
+              <span class="pie-legend__swatch" style="background: var(--c1);"></span>
+              <span class="pie-legend__label">재생에너지 확대</span>
+              <span class="pie-legend__value">40.6%</span>
+            </div>
+            <div class="pie-legend__row">
+              <span class="pie-legend__swatch" style="background: var(--c2);"></span>
+              <span class="pie-legend__label">전기차 보급 확대</span>
+              <span class="pie-legend__value">29.7%</span>
+            </div>
+            <div class="pie-legend__row">
+              <span class="pie-legend__swatch" style="background: var(--c3);"></span>
+              <span class="pie-legend__label">탄소세 도입</span>
+              <span class="pie-legend__value">20.3%</span>
+            </div>
+            <div class="pie-legend__row">
+              <span class="pie-legend__swatch" style="background: var(--c4);"></span>
+              <span class="pie-legend__label">산림 복원</span>
+              <span class="pie-legend__value">9.4%</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Second objective question — shorter, different winner ── -->
+      <section class="q-card" data-testid="question-card-objective-2">
+        <div class="q-card__head">
+          <div class="q-card__title">탄소 중립 달성 목표 시점으로 적절한 연도는?</div>
+          <span class="q-card__count">124명 응답</span>
+        </div>
+
+        <div class="bar-chart">
+          <div class="bar-row">
+            <span class="bar-row__label">1</span>
+            <div class="bar-row__track">
+              <div class="bar-row__fill" style="width: 51.6%; background: var(--c5);"></div>
+            </div>
+            <span class="bar-row__value">2040년 · 64 (51.6%)</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-row__label">2</span>
+            <div class="bar-row__track">
+              <div class="bar-row__fill" style="width: 33.1%; background: var(--c6);"></div>
+            </div>
+            <span class="bar-row__value">2050년 · 41 (33.1%)</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-row__label">3</span>
+            <div class="bar-row__track">
+              <div class="bar-row__fill" style="width: 15.3%; background: var(--c4);"></div>
+            </div>
+            <span class="bar-row__value">2060년 이후 · 19 (15.3%)</span>
+          </div>
+        </div>
+
+        <!-- Pie chart — 3 slices. Same rule as Q1: every objective
+             question gets a bar chart + pie chart pair. -->
+        <div class="pie-wrap">
+          <div
+            class="pie"
+            role="img"
+            aria-label="2040년 51.6%, 2050년 33.1%, 2060년 이후 15.3%"
+            style="background: conic-gradient(
+              var(--c5) 0 185.76deg,
+              var(--c6) 185.76deg 304.92deg,
+              var(--c4) 304.92deg 360deg
+            );"
+          >
+            <div class="pie__labels">
+              <div>
+                <span class="pie__label-line pie__label-line--top">Total</span>
+                <span class="pie__label-line pie__label-line--big">124</span>
+                <span class="pie__label-line pie__label-line--sub">responses</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pie-legend" aria-label="chart legend">
+            <div class="pie-legend__row">
+              <span class="pie-legend__swatch" style="background: var(--c5);"></span>
+              <span class="pie-legend__label">2040년</span>
+              <span class="pie-legend__value">51.6%</span>
+            </div>
+            <div class="pie-legend__row">
+              <span class="pie-legend__swatch" style="background: var(--c6);"></span>
+              <span class="pie-legend__label">2050년</span>
+              <span class="pie-legend__value">33.1%</span>
+            </div>
+            <div class="pie-legend__row">
+              <span class="pie-legend__swatch" style="background: var(--c4);"></span>
+              <span class="pie-legend__label">2060년 이후</span>
+              <span class="pie-legend__value">15.3%</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Subjective question (text responses) ── -->
+      <section class="q-card" data-testid="question-card-subjective">
+        <div class="q-card__head">
+          <div class="q-card__title">정책 추진 과정에서 반드시 고려해야 할 점을 자유롭게 작성해주세요</div>
+          <span class="q-card__count">54명 응답</span>
+        </div>
+
+        <div class="text-list" data-testid="text-response-list">
+          <div class="text-item">
+            중소기업과 자영업자에 대한 전환 지원 프로그램이 함께 마련되어야 합니다. 대기업 중심의 정책만으로는 현장에서 실질적인 탄소 감축이 이루어지기 어렵습니다. (7)
+          </div>
+          <div class="text-item">
+            지역별 에너지 자립도 격차를 고려한 차등 지원이 필요합니다. 수도권과 지방의 재생에너지 인프라 격차가 크기 때문에 일괄적인 목표치 설정은 비현실적입니다. (5)
+          </div>
+          <div class="text-item">
+            시민 참여형 모니터링 체계를 구축해 정책 이행을 투명하게 공개해야 합니다. 연간 보고서만으로는 실시간 추적이 어렵습니다. (4)
+          </div>
+          <div class="text-item">
+            탄소세 도입 시 저소득층 환급 제도를 함께 설계하여 역진세 효과를 완화해야 합니다. (3)
+          </div>
+        </div>
+      </section>
+
+      <!-- Empty state example (hidden by default):
+      <section class="q-card">
+        <div class="q-card__head">
+          <div class="q-card__title">Empty question</div>
+          <span class="q-card__count">0명 응답</span>
+        </div>
+        <div class="text-empty">아직 응답이 없습니다.</div>
+      </section>
+      -->
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      var saved = localStorage.getItem('ratel-theme');
+      if (saved) document.documentElement.setAttribute('data-theme', saved);
+    })();
+  </script>
+</body>
+</html>

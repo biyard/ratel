@@ -41,7 +41,7 @@ pub fn TeamSubTeamManagementPage(username: String) -> Element {
 
     rsx! {
         SeoMeta { title: "{tr.tab_requirements}" }
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "arena sub-team-management",
             div { class: "page page--wide", id: "page-root",

@@ -26,7 +26,7 @@ Pages and their sub-components each own their assets. The page `mod.rs` is the e
 ```
 
 ### Key rules
-- Each sub-component loads its own `style.css` via `document::Link { rel: "stylesheet", href: asset!("./style.css") }` inside its component
+- Each sub-component loads its own `style.css` via `document::Stylesheet { href: asset!("./style.css") }` inside its component
 - CSS for a sub-component lives in that sub-component's directory, not in the parent
 - The page `mod.rs` declares sub-component modules and re-exports them for use in `component.rs`
 - i18n is shared at the page level — sub-components import from the parent via `use crate::features::<module>::pages::<page>::*`
@@ -65,7 +65,7 @@ pub fn MySubComponent(open: bool, on_close: EventHandler<()>) -> Element {
     let tr: PageTranslate = use_translate();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         // ... RSX
     }
 }
@@ -99,7 +99,7 @@ HTML mockups in `docs/design/`:
 
 ```rust
 rsx! {
-    document::Link { rel: "stylesheet", href: asset!("./style.css") }
+    document::Stylesheet { href: asset!("./style.css") }
     document::Script { defer: true, src: asset!("./script.js") }
     // ... component RSX
 }

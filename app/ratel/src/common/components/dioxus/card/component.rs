@@ -6,7 +6,7 @@ pub fn Card(
     children: Element,
 ) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         div {
             class: "card",
             "data-slot": "card",

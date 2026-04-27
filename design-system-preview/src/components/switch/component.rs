@@ -4,7 +4,7 @@ use dioxus_primitives_core::switch::{self, SwitchProps, SwitchThumbProps};
 #[component]
 pub fn Switch(props: SwitchProps) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         switch::Switch {
             class: "switch",
             checked: props.checked,

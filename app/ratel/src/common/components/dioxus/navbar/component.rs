@@ -6,7 +6,7 @@ use dioxus_primitives::navbar::{
 #[component]
 pub fn Navbar(props: NavbarProps) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
         navbar::Navbar {
             class: "navbar",
             disabled: props.disabled,

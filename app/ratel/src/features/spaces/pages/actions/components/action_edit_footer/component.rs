@@ -74,7 +74,7 @@ pub fn ActionEditFooter(
     let next_disabled = cur + 1 >= total_pages;
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        document::Stylesheet { href: asset!("./style.css") }
 
         footer {
             class: "action-edit-footer",
