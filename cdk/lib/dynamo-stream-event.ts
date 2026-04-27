@@ -546,6 +546,61 @@ export class DynamoStreamEventStack extends Stack {
       targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
     });
 
+    // ── Pipe: SpaceAction Designing→Ongoing → SpaceActionStatusChange ──
+    // Fires when a SpaceAction row's status transitions from DESIGNING to
+    // ONGOING. Drives participant fan-out (inbox + email) for the newly
+    // live action. Filter is encoded against the uppercase string values
+    // produced by the DynamoEnum derive on SpaceActionStatus.
+    new pipes.CfnPipe(this, "SpaceActionStatusChangePipe", {
+      name: `ratel-${stage}-space-action-status-change-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: ["SPACE_ACTION"] },
+                    status: { S: ["ONGOING"] },
+                  },
+                  OldImage: {
+                    status: { S: ["DESIGNING"] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "SpaceActionStatusChange",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route SpaceActionStatusChange events to app-shell Lambda ───
+    new events.Rule(this, "SpaceActionStatusChangeRule", {
+      eventBus,
+      description:
+        "Route action Designing→Ongoing events to app-shell for notification fan-out",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["SpaceActionStatusChange"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
     // ── Pipe 9: Poll Answer Insert → PollXpRecord ────────────────────
     // Triggers when a new SpacePollUserAnswer is inserted (user responds to poll)
     new pipes.CfnPipe(this, "PollXpPipe", {

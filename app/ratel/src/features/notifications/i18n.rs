@@ -9,6 +9,14 @@ translate! {
     mention_title: { en: "{name} mentioned you", ko: "{name}님이 나를 언급했습니다" },
     space_status_title: { en: "{space} is now {status}", ko: "{space}가 {status}로 변경되었습니다" },
     space_invite_title: { en: "{name} invited you to {space}", ko: "{name}님이 {space}에 초대했습니다" },
+    action_ongoing_title: {
+        en: "New action ongoing: {action_title}",
+        ko: "새 활동 시작: {action_title}",
+    },
+    action_ongoing_subtitle: {
+        en: "in {space_title}",
+        ko: "{space_title}에서",
+    },
     relative_now: { en: "just now", ko: "방금" },
     relative_minute: { en: "{n}m ago", ko: "{n}분 전" },
     relative_hour: { en: "{n}h ago", ko: "{n}시간 전" },
