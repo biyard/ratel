@@ -161,6 +161,28 @@ pub async fn handle_stream_record(
             let image = new_image.ok_or(Error::from(InfraError::StreamMissingImage))?;
             let sk = get_sk(image).unwrap_or_default();
 
+            if sk == "SPACE_ACTION" {
+                // SpaceActionStatusChange: notify participants when an action
+                // transitions DESIGNING → ONGOING. Mirrors the EventBridge
+                // Pipe filter so local-dev behaviour matches Lambda.
+                let new_status = get_string_field(image, "status").unwrap_or_default();
+                let old_status = old_image
+                    .and_then(|i| get_string_field(i, "status"))
+                    .unwrap_or_default();
+                if old_status == "DESIGNING" && new_status == "ONGOING" {
+                    let action: crate::features::spaces::pages::actions::models::SpaceAction =
+                        deserialize(image)?;
+                    if let Err(e) =
+                        crate::features::spaces::pages::actions::services::notify_action_ongoing(
+                            action,
+                        )
+                        .await
+                    {
+                        tracing::error!(error = %e, "stream: SpaceActionStatusChange failed");
+                    }
+                }
+            }
+
             if sk.starts_with("SPACE_POST#") {
                 // AiModeratorReplyCheck: check if moderation should trigger
                 let post = deserialize(image)?;

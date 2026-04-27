@@ -50,6 +50,17 @@ impl InboxPayload {
                 String::new(),
                 None,
             ),
+            InboxPayload::SpaceActionOngoing {
+                space_title,
+                action_title,
+                ..
+            } => (
+                tr.action_ongoing_title
+                    .replace("{action_title}", action_title),
+                tr.action_ongoing_subtitle
+                    .replace("{space_title}", space_title),
+                None,
+            ),
             InboxPayload::SubTeamApplicationSubmitted { sub_team_name, .. } => (
                 tr.sub_team_app_submitted_title
                     .replace("{team}", sub_team_name),

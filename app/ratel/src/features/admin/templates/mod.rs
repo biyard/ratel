@@ -12,4 +12,5 @@ pub mod email_verification;
 pub mod mention_notification;
 pub mod reply_on_comment;
 pub mod signup_code;
+pub mod space_action_ongoing_notification;
 pub mod space_status_notification;

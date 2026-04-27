@@ -45,6 +45,13 @@ pub enum NotificationData {
         reply_content: String,
         cta_url: String,
     },
+    SpaceActionOngoing {
+        emails: Vec<String>,
+        space_title: String,
+        action_title: String,
+        action_type_label: String,
+        cta_url: String,
+    },
 }
 
 #[cfg(feature = "server")]
@@ -156,6 +163,26 @@ impl NotificationData {
                     cta_url,
                 )
                 .await?;
+            }
+            NotificationData::SpaceActionOngoing {
+                emails,
+                space_title,
+                action_title,
+                action_type_label,
+                cta_url,
+            } => {
+                let operation = EmailOperation::SpaceActionOngoingNotification {
+                    space_title: space_title.clone(),
+                    action_title: action_title.clone(),
+                    action_type_label: action_type_label.clone(),
+                    cta_url: cta_url.clone(),
+                };
+
+                let template = EmailTemplate {
+                    targets: emails.clone(),
+                    operation,
+                };
+                template.send_email(ses).await?;
             }
             NotificationData::None => {
                 tracing::warn!("Received notification with no data, skipping");
