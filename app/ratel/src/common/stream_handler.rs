@@ -159,7 +159,7 @@ pub async fn handle_stream_record(
 
             if sk == "SPACE_ACTION" {
                 // SpaceActionStatusChange: notify participants when an action
-                // transitions DESIGNING → ONGOING. Mirrors the EventBridge
+                // transitions Designing → Ongoing. Mirrors the EventBridge
                 // Pipe filter so local-dev behaviour matches Lambda.
                 let new_status = get_string_field(image, "status").unwrap_or_default();
                 let old_status = old_image
