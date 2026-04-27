@@ -230,6 +230,36 @@ pub fn use_discussion_arena(
         .await
     })?;
 
+    // Reply-aware mention priority needs the active thread's replies live.
+    // `replies_loader` above (use_loader) does not reliably re-run on
+    // `active_reply_thread` changes after SSR hydration — same race that
+    // broke `members_loader`. Drive a dedicated fetch from `use_effect`
+    // instead so the priority memo always sees current thread replies.
+    let mut thread_replies: Signal<Vec<DiscussionCommentResponse>> = use_signal(Vec::new);
+    use_effect(move || {
+        let id = active_reply_thread();
+        spawn(async move {
+            let items = match id {
+                None => Vec::new(),
+                Some(parent_id) => match list_replies(
+                    space_id(),
+                    discussion_id(),
+                    SpacePostCommentEntityType(parent_id),
+                    None,
+                )
+                .await
+                {
+                    Ok(r) => r.items,
+                    Err(e) => {
+                        crate::error!("thread_replies fetch failed: {e}");
+                        Vec::new()
+                    }
+                },
+            };
+            thread_replies.set(items);
+        });
+    });
+
     let mut polled_new: Signal<Vec<DiscussionCommentResponse>> = use_signal(Vec::new);
     let mut last_seen_at: Signal<i64> = use_signal(move || {
         comments_query
@@ -302,10 +332,13 @@ pub fn use_discussion_arena(
         spawn(async move {
             let items = match q {
                 None => Vec::new(),
-                Some(q) => list_space_members(space_id(), None, Some(q))
-                    .await
-                    .map(|r| r.items)
-                    .unwrap_or_default(),
+                Some(q) => match list_space_members(space_id(), None, Some(q)).await {
+                    Ok(r) => r.items,
+                    Err(e) => {
+                        crate::error!("mention members fetch failed: {e}");
+                        Vec::new()
+                    }
+                },
             };
             members_signal.set(items);
         });
@@ -332,6 +365,43 @@ pub fn use_discussion_arena(
         let polled = polled_new();
         let base_sks: std::collections::HashSet<String> =
             base.iter().map(|c| c.sk.to_string()).collect();
+
+        // Reply mode: hoist parent comment author as primary, reply
+        // authors as the thread. Falls back to the discussion-wide
+        // ordering below if the parent isn't in the loaded base/polled
+        // set (very old thread scrolled past).
+        if let Some(parent_id) = active_reply_thread() {
+            let parent_sk_str =
+                EntityType::SpacePostComment(parent_id).to_string();
+            let parent = base
+                .iter()
+                .chain(polled.iter())
+                .find(|c| c.sk.to_string() == parent_sk_str);
+
+            if let Some(parent) = parent {
+                let replies = thread_replies();
+                let parent_tuple =
+                    (parent.author_pk.to_string(), parent.content.clone());
+                let reply_tuples: Vec<(String, String)> = replies
+                    .iter()
+                    .map(|r| (r.author_pk.to_string(), r.content.clone()))
+                    .collect();
+
+                let primary_ref = (parent_tuple.0.as_str(), parent_tuple.1.as_str());
+                let thread_refs: Vec<(&str, &str)> = reply_tuples
+                    .iter()
+                    .map(|(a, c)| (a.as_str(), c.as_str()))
+                    .collect();
+
+                return crate::common::utils::mention::build_mention_priority(
+                    Some(primary_ref),
+                    &thread_refs,
+                );
+            }
+        }
+
+        // Non-reply mode: every loaded participant gets equal-rank
+        // priority over non-participants (no single primary).
         let tuples: Vec<(String, String)> = base
             .iter()
             .chain(
