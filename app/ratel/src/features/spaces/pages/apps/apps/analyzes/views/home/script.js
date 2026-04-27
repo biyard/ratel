@@ -79,36 +79,47 @@
       updateArrowStates();
     }
 
-    function scrollToCard(index) {
+    function scrollToCard(index, behavior) {
       var cards = getCards();
       if (index < 0 || index >= cards.length) return;
       var card = cards[index];
       var trackRect = track.getBoundingClientRect();
       var cardRect = card.getBoundingClientRect();
+      // Layout not ready (CSR navigation can fire init while the
+      // browser is still resolving styles). Bail and let the next
+      // tick / ResizeObserver retry.
+      if (trackRect.width === 0 || cardRect.width === 0) return;
       var offset =
         cardRect.left -
         trackRect.left +
         track.scrollLeft -
         trackRect.width / 2 +
         cardRect.width / 2;
-      track.scrollTo({ left: offset, behavior: "smooth" });
+      track.scrollTo({ left: offset, behavior: behavior || "auto" });
     }
+
+    // Expose a re-snap helper on the track so the global mutation
+    // observer can re-centre after CSR navigation without re-binding.
+    track.__analyzeRecentre = function () {
+      scrollToCard(activeIndex);
+      updateActive();
+    };
 
     // Bind prev/next buttons.
     if (prevBtn) {
       prevBtn.addEventListener("click", function () {
-        scrollToCard(activeIndex - 1);
+        scrollToCard(activeIndex - 1, "smooth");
       });
     }
     if (nextBtn) {
       nextBtn.addEventListener("click", function () {
-        scrollToCard(activeIndex + 1);
+        scrollToCard(activeIndex + 1, "smooth");
       });
     }
     // Bind dot clicks — index matches DOM order.
     getDots().forEach(function (dot, i) {
       dot.addEventListener("click", function () {
-        scrollToCard(i);
+        scrollToCard(i, "smooth");
       });
     });
 
@@ -120,11 +131,35 @@
       scrollToCard(activeIndex);
     });
 
-    // Initial highlight + position.
+    // Re-centre whenever the viewport / slide width settles. Fires
+    // immediately after first layout AND every time SPA navigation
+    // remounts the page — the track's clientWidth changes from 0 to
+    // its real value, ResizeObserver picks that up and we re-snap.
+    if (typeof ResizeObserver !== "undefined") {
+      var ro = new ResizeObserver(function () {
+        scrollToCard(activeIndex);
+        updateActive();
+      });
+      ro.observe(track);
+    }
+
+    // Belt-and-suspenders: also schedule re-snaps at staggered ticks
+    // so a slow first paint doesn't leave the carousel mis-centred.
     requestAnimationFrame(function () {
       scrollToCard(0);
-      setTimeout(updateActive, 100);
+      requestAnimationFrame(function () {
+        scrollToCard(0);
+        updateActive();
+      });
     });
+    setTimeout(function () {
+      scrollToCard(activeIndex);
+      updateActive();
+    }, 100);
+    setTimeout(function () {
+      scrollToCard(activeIndex);
+      updateActive();
+    }, 300);
   }
 
   // Window-level arrow-key navigation (bind once, page-scoped via
@@ -158,11 +193,20 @@
 
   // Try immediately (works for SSR with defer).
   initCarousel();
-  // Also observe for CSR rendering (Dioxus adds elements after script runs).
+  // Also observe for CSR rendering. Two cases:
+  //   (a) Track is fresh (no `analyzeCarouselBound` flag) → init it.
+  //   (b) Track was previously bound but the page just re-mounted
+  //       (user navigated detail → list); the bind flag persists on
+  //       the new DOM node only if Dioxus re-uses it. Either way,
+  //       call the recentre helper if exposed so the carousel snaps
+  //       to centre after the layout settles.
   new MutationObserver(function () {
     var track = document.getElementById("report-track");
-    if (track && !track.dataset.analyzeCarouselBound) {
+    if (!track) return;
+    if (!track.dataset.analyzeCarouselBound) {
       initCarousel();
+    } else if (typeof track.__analyzeRecentre === "function") {
+      requestAnimationFrame(track.__analyzeRecentre);
     }
   }).observe(document.body, { childList: true, subtree: true });
 })();
