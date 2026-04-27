@@ -12,14 +12,17 @@ pub enum UpdatePollRequest {
     CanisterUploadEnabled { canister_upload_enabled: bool },
 }
 
-#[mcp_tool(name = "update_poll", description = "Update a poll (title, questions, response_editable). Requires creator role.")]
+#[mcp_tool(
+    name = "update_poll",
+    description = "Update a poll (title, questions, response_editable). Requires creator role."
+)]
 #[post("/api/spaces/{space_pk}/polls/{poll_sk}", role: SpaceUserRole)]
 pub async fn update_poll(
-    #[mcp(description = "Space partition key")]
-    space_pk: SpacePartition,
-    #[mcp(description = "Poll sort key (e.g. 'SpacePoll#<uuid>')")]
-    poll_sk: SpacePollEntityType,
-    #[mcp(description = "Poll update data as JSON. Supported variants: {\"title\": \"...\"}, {\"questions\": [...]}, {\"response_editable\": true}")]
+    #[mcp(description = "Space partition key")] space_pk: SpacePartition,
+    #[mcp(description = "Poll sort key (e.g. 'SpacePoll#<uuid>')")] poll_sk: SpacePollEntityType,
+    #[mcp(
+        description = "Poll update data as JSON. Supported variants: {\"title\": \"...\"}, {\"questions\": [...]}, {\"response_editable\": true}"
+    )]
     req: UpdatePollRequest,
 ) -> Result<String> {
     SpacePoll::can_edit(&role)?;
@@ -55,10 +58,6 @@ pub async fn update_poll(
         UpdatePollRequest::CanisterUploadEnabled {
             canister_upload_enabled,
         } => {
-            let env = crate::common::config::Environment::default();
-            if env == crate::common::config::Environment::Production {
-                return Err(SpacePollError::InvalidQuestionFormat.into());
-            }
             poll_updater = poll_updater.with_canister_upload_enabled(canister_upload_enabled);
             // When enabling encrypted upload, force response_editable to false
             // because encrypted votes cannot be edited after submission.

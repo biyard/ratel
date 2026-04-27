@@ -16,5 +16,11 @@ pub use respond_poll::*;
 mod get_poll_result;
 pub use get_poll_result::*;
 
+mod get_vote_verification_material;
+pub use get_vote_verification_material::*;
+
+mod get_encryption_material;
+pub use get_encryption_material::*;
+
 mod verify_vote;
 pub use verify_vote::*;
