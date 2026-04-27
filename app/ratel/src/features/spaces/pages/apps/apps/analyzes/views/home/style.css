@@ -46,16 +46,18 @@
   --font-body: 'Outfit', sans-serif;
 
   position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   isolation: isolate;
   background: var(--bg-void);
   color: var(--text-primary);
   font-family: var(--font-body);
-  /* No `min-height: 100vh` — the page lives inside space layout's
-     `overflow-auto flex-1` wrapper, which is the real scroll
-     context. 100vh fights that wrapper and breaks vertical scroll
-     once content exceeds the viewport. */
+  /* Arena owns its own scrollbar — same pattern as
+     `pages/apps/apps/file/views/home/style.css`. */
 }
 
 .analyze-arena .arena {
