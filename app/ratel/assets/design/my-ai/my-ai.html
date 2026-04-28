@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — My AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --bg-input:rgba(0,0,0,0.30);--bg-code:rgba(6,6,14,0.55);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-violet:#818cf8;
+      --accent-cyan:#22d3ee;--accent-green:#22c55e;--accent-coral:#ef4444;--accent-pink:#db2780;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;--font-mono:'JetBrains Mono',monospace;
+    }
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body);overflow-x:hidden}
+
+    .arena{position:relative;min-height:100vh;display:flex;flex-direction:column;isolation:isolate}
+    .arena::before{
+      content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 25%, rgba(34,211,238,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 60% at 50% 90%, rgba(129,140,248,0.05) 0%, transparent 55%),
+        radial-gradient(circle at 50% 50%, var(--bg-void) 0%, var(--bg-void) 100%);
+    }
+
+    /* ─── Top bar ────────────────────────────────────────── */
+    .arena-topbar{
+      position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;
+      padding:18px 28px;background:rgba(6,6,14,0.80);backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--border-subtle);
+    }
+    .arena-topbar__left{display:flex;align-items:center;gap:14px}
+    .back-btn{
+      width:38px;height:38px;border-radius:10px;background:var(--bg-glass);
+      border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;
+      cursor:pointer;transition:all 0.25s ease;padding:0;color:var(--text-muted);
+    }
+    .back-btn:hover{border-color:rgba(252,179,0,0.25);background:var(--bg-glass-hover);color:var(--accent-gold)}
+    .back-btn svg{width:18px;height:18px}
+    .topbar-title{display:flex;align-items:baseline;gap:10px}
+    .topbar-title__main{
+      font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:0.10em;
+      text-transform:uppercase;color:var(--text-primary);
+    }
+    .topbar-title__main em{font-style:normal;color:var(--accent-cyan);font-weight:700}
+    .topbar-title__status{
+      display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:100px;
+      font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.08em;
+      text-transform:uppercase;background:rgba(34,197,94,0.08);color:var(--accent-green);
+      border:1px solid rgba(34,197,94,0.18);
+    }
+    .topbar-title__status::before{
+      content:'';width:6px;height:6px;border-radius:50%;background:var(--accent-green);
+      box-shadow:0 0 6px var(--accent-green);animation:pulse-dot 2s ease-in-out infinite;
+    }
+    .topbar-title__status[data-state="off"]{background:rgba(85,85,106,0.10);color:var(--text-dim);border-color:rgba(85,85,106,0.25)}
+    .topbar-title__status[data-state="off"]::before{background:var(--text-dim);box-shadow:none;animation:none}
+    @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+
+    .topbar-btn{
+      display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px;border-radius:10px;
+      border:1px solid var(--border-subtle);background:var(--bg-glass);font-family:var(--font-display);
+      font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;
+      color:var(--text-muted);cursor:pointer;transition:all 0.25s ease;
+    }
+    .topbar-btn:hover{border-color:rgba(252,179,0,0.25);color:var(--accent-gold);background:var(--bg-glass-hover)}
+    .topbar-btn svg{width:13px;height:13px}
+
+    /* ─── Page shell ─────────────────────────────────────── */
+    .page{
+      position:relative;z-index:1;flex:1;max-width:980px;margin:0 auto;width:100%;
+      padding:32px 28px 80px;display:flex;flex-direction:column;gap:24px;
+    }
+
+    /* ─── Hero / endpoint card ───────────────────────────── */
+    .endpoint-hero{
+      position:relative;overflow:hidden;border-radius:20px;border:1px solid var(--border-subtle);
+      background:var(--bg-glass);backdrop-filter:blur(16px);padding:28px 30px;
+      display:flex;flex-direction:column;gap:22px;
+    }
+    .endpoint-hero::before{
+      content:'';position:absolute;inset:0;pointer-events:none;
+      background:
+        radial-gradient(ellipse 60% 40% at 12% 0%, rgba(34,211,238,0.18) 0%, transparent 65%),
+        radial-gradient(ellipse 50% 50% at 95% 110%, rgba(129,140,248,0.10) 0%, transparent 60%);
+    }
+    .endpoint-hero > *{position:relative;z-index:1}
+
+    .endpoint-hero__head{display:flex;align-items:flex-start;gap:18px}
+    .endpoint-hero__crest{
+      width:56px;height:56px;border-radius:14px;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(135deg, rgba(34,211,238,0.22), rgba(129,140,248,0.18));
+      border:1px solid rgba(34,211,238,0.28);box-shadow:0 0 24px rgba(34,211,238,0.16);
+    }
+    .endpoint-hero__crest svg{width:28px;height:28px;color:#fff}
+    .endpoint-hero__heading{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+    .endpoint-hero__eyebrow{
+      font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.18em;
+      text-transform:uppercase;color:var(--text-dim);
+    }
+    .endpoint-hero__eyebrow strong{color:var(--accent-cyan);font-weight:700}
+    .endpoint-hero__title{font-family:var(--font-display);font-size:22px;font-weight:700;letter-spacing:0.02em}
+    .endpoint-hero__sub{font-size:13.5px;color:var(--text-muted);line-height:1.6;max-width:620px}
+
+    /* URL row */
+    .endpoint-url{
+      display:flex;align-items:stretch;gap:0;border-radius:12px;overflow:hidden;
+      background:var(--bg-input);border:1px solid var(--border-subtle);
+    }
+    .endpoint-url__label{
+      display:flex;align-items:center;gap:8px;padding:0 14px;
+      background:rgba(34,211,238,0.05);border-right:1px solid var(--border-subtle);
+      font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.14em;
+      text-transform:uppercase;color:var(--accent-cyan);white-space:nowrap;
+    }
+    .endpoint-url__label svg{width:12px;height:12px}
+    .endpoint-url__value{
+      flex:1;padding:14px 16px;font-family:var(--font-mono);font-size:13px;color:var(--text-primary);
+      letter-spacing:0;line-height:1.4;background:transparent;border:0;outline:0;width:100%;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    }
+    .endpoint-url__value--placeholder{color:var(--text-dim);font-style:italic;font-family:var(--font-body);font-size:13.5px}
+    .endpoint-url__copy{
+      flex-shrink:0;padding:0 18px;border:0;border-left:1px solid var(--border-subtle);
+      background:rgba(252,179,0,0.05);color:var(--accent-gold);
+      font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.12em;
+      text-transform:uppercase;cursor:pointer;transition:all 0.2s ease;
+      display:inline-flex;align-items:center;gap:6px;
+    }
+    .endpoint-url__copy:hover{background:rgba(252,179,0,0.12)}
+    .endpoint-url__copy svg{width:12px;height:12px}
+    .endpoint-url__copy[data-copied="true"]{color:var(--accent-green);background:rgba(34,197,94,0.10)}
+
+    /* Inline note shown when secret exists but raw token isn't available */
+    .endpoint-note{
+      display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:10px;
+      background:rgba(252,179,0,0.06);border:1px solid rgba(252,179,0,0.18);
+      font-size:12.5px;color:#f5d68a;line-height:1.5;
+    }
+    .endpoint-note svg{width:14px;height:14px;flex-shrink:0;margin-top:2px;color:var(--accent-gold)}
+    .endpoint-note strong{color:var(--accent-gold);font-weight:700}
+
+    /* Action row */
+    .endpoint-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .btn{
+      display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 18px;border-radius:10px;
+      border:1px solid var(--border-subtle);background:var(--bg-glass);cursor:pointer;
+      font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.10em;
+      text-transform:uppercase;transition:all 0.2s ease;
+    }
+    .btn svg{width:14px;height:14px}
+    .btn--primary{background:var(--accent-gold);color:#0a0a0a;border-color:var(--accent-gold)}
+    .btn--primary:hover{box-shadow:0 0 24px rgba(252,179,0,0.35)}
+    .btn--ghost{color:var(--text-muted)}
+    .btn--ghost:hover{color:var(--text-primary);border-color:rgba(255,255,255,0.18);background:var(--bg-glass-hover)}
+    .btn--danger{color:var(--accent-coral);border-color:rgba(239,68,68,0.25);background:rgba(239,68,68,0.06)}
+    .btn--danger:hover{background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.5)}
+    .btn:disabled{opacity:0.45;cursor:not-allowed;box-shadow:none}
+
+    .endpoint-actions__hint{margin-left:auto;font-size:11.5px;color:var(--text-dim)}
+    .endpoint-actions__hint kbd{
+      font-family:var(--font-mono);font-size:10px;padding:1px 6px;border-radius:4px;
+      background:rgba(255,255,255,0.06);border:1px solid var(--border-subtle);color:var(--text-muted);
+    }
+
+    /* ─── Section heading ────────────────────────────────── */
+    .section-head{display:flex;align-items:baseline;justify-content:space-between;margin-top:8px}
+    .section-head__title{
+      font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:0.14em;
+      text-transform:uppercase;color:var(--text-primary);
+    }
+    .section-head__title em{font-style:normal;color:var(--accent-cyan)}
+    .section-head__sub{font-size:12.5px;color:var(--text-muted)}
+
+    /* ─── Capability pills ───────────────────────────────── */
+    .caps{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;
+    }
+    .cap{
+      padding:14px 16px;border-radius:12px;background:var(--bg-glass);
+      backdrop-filter:blur(16px);border:1px solid var(--border-subtle);
+      display:flex;align-items:flex-start;gap:12px;
+    }
+    .cap__icon{
+      width:34px;height:34px;border-radius:9px;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(34,211,238,0.10);color:var(--accent-cyan);
+    }
+    .cap__icon svg{width:16px;height:16px}
+    .cap--gold .cap__icon{background:rgba(252,179,0,0.10);color:var(--accent-gold)}
+    .cap--violet .cap__icon{background:rgba(129,140,248,0.10);color:var(--accent-violet)}
+    .cap--teal .cap__icon{background:rgba(110,237,216,0.10);color:var(--accent-teal)}
+    .cap--pink .cap__icon{background:rgba(219,39,128,0.10);color:var(--accent-pink)}
+    .cap__body{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .cap__label{
+      font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.10em;
+      text-transform:uppercase;color:var(--text-dim);
+    }
+    .cap__value{font-size:13.5px;color:var(--text-primary);font-weight:600;line-height:1.4}
+
+    /* ─── Setup guide ────────────────────────────────────── */
+    .guide{
+      position:relative;border-radius:18px;border:1px solid var(--border-subtle);
+      background:var(--bg-glass);backdrop-filter:blur(16px);overflow:hidden;
+    }
+    .guide__tabs{
+      display:flex;gap:0;padding:6px;background:rgba(6,6,14,0.55);
+      border-bottom:1px solid var(--border-subtle);overflow-x:auto;
+    }
+    .guide__tab{
+      flex:1;min-width:130px;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      padding:10px 14px;border-radius:9px;background:transparent;border:0;cursor:pointer;
+      font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.10em;
+      text-transform:uppercase;color:var(--text-muted);transition:all 0.2s ease;white-space:nowrap;
+    }
+    .guide__tab:hover{color:var(--text-primary);background:rgba(255,255,255,0.03)}
+    .guide__tab[aria-selected="true"]{
+      background:rgba(34,211,238,0.10);color:var(--accent-cyan);
+      box-shadow:inset 0 0 0 1px rgba(34,211,238,0.20);
+    }
+    .guide__tab svg{width:14px;height:14px}
+
+    .guide__panel{padding:24px 28px;display:none;flex-direction:column;gap:20px}
+    .guide__panel[data-active="true"]{display:flex}
+
+    .guide__lede{font-size:13.5px;color:var(--text-muted);line-height:1.6}
+    .guide__lede strong{color:var(--text-primary);font-weight:600}
+    .guide__lede a{color:var(--accent-cyan);text-decoration:none;border-bottom:1px dashed rgba(34,211,238,0.4)}
+    .guide__lede a:hover{border-bottom-style:solid}
+
+    /* Numbered steps */
+    .steps{display:flex;flex-direction:column;gap:18px;counter-reset:step}
+    .step{
+      display:grid;grid-template-columns:30px 1fr;gap:14px;
+    }
+    .step__num{
+      width:30px;height:30px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(34,211,238,0.10);color:var(--accent-cyan);
+      font-family:var(--font-display);font-size:12px;font-weight:700;
+      border:1px solid rgba(34,211,238,0.25);
+    }
+    .step__body{display:flex;flex-direction:column;gap:8px;min-width:0}
+    .step__title{font-size:14px;font-weight:600;color:var(--text-primary);line-height:1.4}
+    .step__title em{font-style:normal;color:var(--accent-cyan);font-weight:700}
+    .step__hint{font-size:12.5px;color:var(--text-muted);line-height:1.55}
+    .step__hint code{
+      font-family:var(--font-mono);font-size:11.5px;padding:1px 6px;border-radius:4px;
+      background:rgba(34,211,238,0.08);color:var(--accent-cyan);
+    }
+
+    /* Code block with copy */
+    .code-block{
+      position:relative;border-radius:12px;background:var(--bg-code);
+      border:1px solid var(--border-subtle);overflow:hidden;
+    }
+    .code-block__head{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:8px 12px 8px 14px;background:rgba(0,0,0,0.30);
+      border-bottom:1px solid var(--border-subtle);
+    }
+    .code-block__path{
+      font-family:var(--font-mono);font-size:11px;color:var(--text-muted);
+      display:inline-flex;align-items:center;gap:6px;
+    }
+    .code-block__path svg{width:12px;height:12px;color:var(--text-dim)}
+    .code-block__copy{
+      display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;
+      background:transparent;border:1px solid var(--border-subtle);color:var(--text-muted);
+      font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:0.10em;
+      text-transform:uppercase;cursor:pointer;transition:all 0.2s ease;
+    }
+    .code-block__copy:hover{color:var(--accent-gold);border-color:rgba(252,179,0,0.25)}
+    .code-block__copy[data-copied="true"]{color:var(--accent-green);border-color:rgba(34,197,94,0.25)}
+    .code-block__copy svg{width:11px;height:11px}
+    .code-block pre{
+      margin:0;padding:14px 16px;font-family:var(--font-mono);font-size:12.5px;line-height:1.55;
+      color:var(--text-primary);overflow-x:auto;
+    }
+    .code-block .tok-key{color:#a5d6ff}
+    .code-block .tok-str{color:#9bdab2}
+    .code-block .tok-com{color:#6e7681;font-style:italic}
+    .code-block .tok-cmd{color:var(--accent-gold)}
+    .code-block .tok-flag{color:var(--accent-cyan)}
+    .code-block .tok-url{color:var(--accent-violet);text-decoration:underline;text-decoration-color:rgba(129,140,248,0.4)}
+
+    /* Verify card */
+    .verify-card{
+      display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:12px;
+      background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.18);
+    }
+    .verify-card svg{width:18px;height:18px;color:var(--accent-green);flex-shrink:0;margin-top:2px}
+    .verify-card__body{display:flex;flex-direction:column;gap:4px}
+    .verify-card__title{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--accent-green)}
+    .verify-card__hint{font-size:12.5px;color:var(--text-muted);line-height:1.55}
+
+    /* ─── Empty state (no secret) ────────────────────────── */
+    .empty-state{
+      padding:36px 28px;border-radius:18px;text-align:center;
+      background:var(--bg-glass);border:1px solid var(--border-subtle);
+      display:flex;flex-direction:column;gap:16px;align-items:center;
+    }
+    .empty-state__icon{
+      width:64px;height:64px;border-radius:50%;
+      background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.20);
+      display:flex;align-items:center;justify-content:center;color:var(--accent-cyan);
+    }
+    .empty-state__icon svg{width:30px;height:30px}
+    .empty-state__title{
+      font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:0.10em;
+      text-transform:uppercase;color:var(--text-primary);
+    }
+    .empty-state__sub{font-size:13px;color:var(--text-muted);max-width:480px;line-height:1.55}
+
+    /* ─── Responsive ─────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .arena-topbar{padding:14px 16px}
+      .topbar-title__main{font-size:13px}
+      .page{padding:18px 16px 60px}
+      .endpoint-hero{padding:20px 18px;gap:18px}
+      .endpoint-hero__head{gap:12px}
+      .endpoint-hero__crest{width:46px;height:46px}
+      .endpoint-hero__title{font-size:18px}
+      .endpoint-url{flex-direction:column}
+      .endpoint-url__label{padding:8px 14px;border-right:0;border-bottom:1px solid var(--border-subtle)}
+      .endpoint-url__copy{border-left:0;border-top:1px solid var(--border-subtle);padding:10px 14px}
+      .guide__panel{padding:18px 16px}
+      .step{grid-template-columns:24px 1fr;gap:10px}
+      .step__num{width:24px;height:24px;font-size:11px}
+    }
+  </style>
+</head>
+<body>
+  <div class="arena">
+
+    <!-- ─── Topbar (back + title) ─────────────────────────── -->
+    <header class="arena-topbar">
+      <div class="arena-topbar__left">
+        <button class="back-btn" aria-label="Back">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </button>
+        <div class="topbar-title">
+          <span class="topbar-title__main">My <em>AI</em></span>
+          <span class="topbar-title__status">MCP Online</span>
+        </div>
+      </div>
+      <a href="https://modelcontextprotocol.io/" target="_blank" rel="noopener" class="topbar-btn">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+          <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+        MCP Docs
+      </a>
+    </header>
+
+    <!-- ─── Page body ─────────────────────────────────────── -->
+    <main class="page">
+
+      <!-- ── Endpoint hero ───────────────────────────────── -->
+      <section class="endpoint-hero">
+        <div class="endpoint-hero__head">
+          <div class="endpoint-hero__crest">
+            <svg fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3 13.6 9.4 20 11l-6.4 1.6L12 19l-1.6-6.4L4 11l6.4-1.6L12 3Z"/>
+              <path d="M19 4 19.7 6.3 22 7l-2.3 0.7L19 10l-0.7-2.3L16 7l2.3-0.7L19 4Z" stroke-width="1.2" opacity="0.7"/>
+            </svg>
+          </div>
+          <div class="endpoint-hero__heading">
+            <div class="endpoint-hero__eyebrow"><strong>Personal MCP Endpoint</strong> · Streamable HTTP</div>
+            <h1 class="endpoint-hero__title">Plug Ratel into your AI agent</h1>
+            <p class="endpoint-hero__sub">
+              This is your private endpoint. Add it to Claude Code, Claude Desktop, Cursor, or any
+              MCP-compatible client to let your agent post on Ratel, vote in polls, browse spaces
+              and discussions, and act on your behalf — securely scoped to your account.
+            </p>
+          </div>
+        </div>
+
+        <!-- URL input -->
+        <div class="endpoint-url">
+          <span class="endpoint-url__label">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            Endpoint
+          </span>
+          <input class="endpoint-url__value"
+                 value="https://ratel.foundation/mcp/r_l8fk2p9q4nXJv2K3mQpYvHbWcZxRtAuB1eFgHiJkLm"
+                 readonly />
+          <button class="endpoint-url__copy" data-copied="false">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            Copy
+          </button>
+        </div>
+
+        <!-- Note about freshness -->
+        <div class="endpoint-note">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <div>
+            <strong>Heads up.</strong> The full URL is shown only once — right after you generate
+            or regenerate it. Copy it now and paste into your agent's config. If you lose it,
+            you'll need to <strong>regenerate</strong> (the old token will stop working immediately).
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="endpoint-actions">
+          <button class="btn btn--primary">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            Copy URL
+          </button>
+          <button class="btn btn--danger">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+            Regenerate
+          </button>
+          <span class="endpoint-actions__hint">
+            Keep this URL secret. Treat it like an API key. Press <kbd>⌘C</kbd> after click to copy.
+          </span>
+        </div>
+      </section>
+
+      <!-- ── Capabilities ────────────────────────────────── -->
+      <div class="section-head">
+        <div class="section-head__title">What your agent can do</div>
+        <div class="section-head__sub">All actions are scoped to your account · auditable</div>
+      </div>
+      <section class="caps">
+        <div class="cap">
+          <div class="cap__icon">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+          <div class="cap__body">
+            <div class="cap__label">Posts &amp; Drafts</div>
+            <div class="cap__value">Create, edit, like, and delete posts</div>
+          </div>
+        </div>
+        <div class="cap cap--gold">
+          <div class="cap__icon">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/>
+            </svg>
+          </div>
+          <div class="cap__body">
+            <div class="cap__label">Polls &amp; Quizzes</div>
+            <div class="cap__value">Run, respond, and analyze results</div>
+          </div>
+        </div>
+        <div class="cap cap--violet">
+          <div class="cap__icon">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <div class="cap__body">
+            <div class="cap__label">Spaces &amp; Teams</div>
+            <div class="cap__value">Create spaces, manage teams, follow users</div>
+          </div>
+        </div>
+        <div class="cap cap--teal">
+          <div class="cap__icon">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              <line x1="9" y1="10" x2="15" y2="10"/>
+            </svg>
+          </div>
+          <div class="cap__body">
+            <div class="cap__label">Discussions</div>
+            <div class="cap__value">Read, comment, and start discussions</div>
+          </div>
+        </div>
+        <div class="cap cap--pink">
+          <div class="cap__icon">
+            <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+          </div>
+          <div class="cap__body">
+            <div class="cap__label">Notifications</div>
+            <div class="cap__value">Read inbox, mark items as read</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Setup guide ─────────────────────────────────── -->
+      <div class="section-head">
+        <div class="section-head__title">Setup <em>guide</em></div>
+        <div class="section-head__sub">Pick your client · 2-minute setup</div>
+      </div>
+
+      <section class="guide">
+        <div class="guide__tabs" role="tablist">
+          <button class="guide__tab" role="tab" aria-selected="true" data-target="claude-code">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+            </svg>
+            Claude Code
+          </button>
+          <button class="guide__tab" role="tab" aria-selected="false" data-target="claude-desktop">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+            Claude Desktop
+          </button>
+          <button class="guide__tab" role="tab" aria-selected="false" data-target="cursor">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 2l8 18 2-8 8-2L2 2z"/>
+            </svg>
+            Cursor
+          </button>
+          <button class="guide__tab" role="tab" aria-selected="false" data-target="generic">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+            </svg>
+            Generic JSON
+          </button>
+        </div>
+
+        <!-- ── Claude Code panel ───────────────────────── -->
+        <div class="guide__panel" data-active="true" id="claude-code">
+          <p class="guide__lede">
+            <strong>Claude Code</strong> is Anthropic's CLI agent. Add Ratel as a streamable HTTP MCP server
+            in one command, then call <code style="font-family:var(--font-mono);background:rgba(34,211,238,0.08);color:var(--accent-cyan);padding:1px 6px;border-radius:4px;font-size:12px">/mcp</code> inside Claude Code to confirm.
+          </p>
+
+          <div class="steps">
+            <div class="step">
+              <div class="step__num">1</div>
+              <div class="step__body">
+                <div class="step__title">Add the server with <em>claude mcp add</em></div>
+                <div class="step__hint">Run this in your terminal. Replace the URL with the one you copied above.</div>
+                <div class="code-block">
+                  <div class="code-block__head">
+                    <span class="code-block__path">
+                      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+                      </svg>
+                      terminal
+                    </span>
+                    <button class="code-block__copy" data-copied="false">
+                      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                      </svg>
+                      Copy
+                    </button>
+                  </div>
+<pre><span class="tok-cmd">claude</span> mcp add <span class="tok-flag">--transport</span> http ratel \
+  <span class="tok-url">https://ratel.foundation/mcp/r_l8fk2p9q4nXJv2K3mQpYvHbWcZxRtAuB1eFgHiJkLm</span></pre>
+                </div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step__num">2</div>
+              <div class="step__body">
+                <div class="step__title">Verify the connection</div>
+                <div class="step__hint">Inside an active Claude Code session, run <code>/mcp</code>. You should see a <strong>ratel</strong> server with status ✓ <em>connected</em> and the available tools listed.</div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step__num">3</div>
+              <div class="step__body">
+                <div class="step__title">Try it out</div>
+                <div class="step__hint">Ask Claude Code something like:
+                  <br/>“List my latest 5 Ratel posts and mark all unread notifications as read.”
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="verify-card">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <div class="verify-card__body">
+              <div class="verify-card__title">Local-only token</div>
+              <div class="verify-card__hint">Claude Code stores the URL in <code style="font-family:var(--font-mono);font-size:11px;color:var(--text-primary)">~/.claude.json</code> on your machine. Don't commit this file to git.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Claude Desktop panel ────────────────────── -->
+        <div class="guide__panel" data-active="false" id="claude-desktop">
+          <p class="guide__lede">
+            <strong>Claude Desktop</strong> reads its MCP server list from <code style="font-family:var(--font-mono);background:rgba(34,211,238,0.08);color:var(--accent-cyan);padding:1px 6px;border-radius:4px;font-size:12px">claude_desktop_config.json</code>.
+            Add the snippet below, save, and fully quit + relaunch Claude.
+          </p>
+
+          <div class="steps">
+            <div class="step">
+              <div class="step__num">1</div>
+              <div class="step__body">
+                <div class="step__title">Open the config file</div>
+                <div class="step__hint">
+                  macOS: <code>~/Library/Application Support/Claude/claude_desktop_config.json</code><br/>
+                  Windows: <code>%APPDATA%\Claude\claude_desktop_config.json</code>
+                </div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step__num">2</div>
+              <div class="step__body">
+                <div class="step__title">Add the <em>ratel</em> server</div>
+                <div class="step__hint">Merge into <code>"mcpServers"</code> (create the key if missing).</div>
+                <div class="code-block">
+                  <div class="code-block__head">
+                    <span class="code-block__path">
+                      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                      </svg>
+                      claude_desktop_config.json
+                    </span>
+                    <button class="code-block__copy" data-copied="false">
+                      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                      </svg>
+                      Copy
+                    </button>
+                  </div>
+<pre>{
+  <span class="tok-key">"mcpServers"</span>: {
+    <span class="tok-key">"ratel"</span>: {
+      <span class="tok-key">"transport"</span>: <span class="tok-str">"http"</span>,
+      <span class="tok-key">"url"</span>: <span class="tok-str">"https://ratel.foundation/mcp/r_l8fk2p9q4nXJv2K3mQpYvHbWcZxRtAuB1eFgHiJkLm"</span>
+    }
+  }
+}</pre>
+                </div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step__num">3</div>
+              <div class="step__body">
+                <div class="step__title">Restart Claude Desktop</div>
+                <div class="step__hint">Fully quit (not just close) then reopen. Look for the 🔌 icon at the bottom of the chat input — <strong>ratel</strong> should appear in the connected servers list.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Cursor panel ────────────────────────────── -->
+        <div class="guide__panel" data-active="false" id="cursor">
+          <p class="guide__lede">
+            <strong>Cursor</strong> supports MCP servers via Settings → Cursor Settings → <em>MCP</em>.
+            You can either add the server through the UI or paste the JSON directly.
+          </p>
+          <div class="steps">
+            <div class="step">
+              <div class="step__num">1</div>
+              <div class="step__body">
+                <div class="step__title">Open <em>Cursor Settings · MCP</em></div>
+                <div class="step__hint">Press <code>⌘,</code> (macOS) or <code>Ctrl+,</code> (Windows/Linux), then search "MCP".</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step__num">2</div>
+              <div class="step__body">
+                <div class="step__title">Add a new server &nbsp;→&nbsp; <em>HTTP / Streamable</em></div>
+                <div class="step__hint">Name: <code>ratel</code> · URL: paste the endpoint you copied above.</div>
+                <div class="code-block">
+                  <div class="code-block__head">
+                    <span class="code-block__path">
+                      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                      </svg>
+                      ~/.cursor/mcp.json
+                    </span>
+                    <button class="code-block__copy" data-copied="false">
+                      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                      </svg>
+                      Copy
+                    </button>
+                  </div>
+<pre>{
+  <span class="tok-key">"mcpServers"</span>: {
+    <span class="tok-key">"ratel"</span>: {
+      <span class="tok-key">"url"</span>: <span class="tok-str">"https://ratel.foundation/mcp/r_l8fk2p9q4nXJv2K3mQpYvHbWcZxRtAuB1eFgHiJkLm"</span>
+    }
+  }
+}</pre>
+                </div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step__num">3</div>
+              <div class="step__body">
+                <div class="step__title">Toggle the server <em>on</em></div>
+                <div class="step__hint">Cursor will show "Loading tools…" then list the Ratel tools (create_post, list_inbox, vote_poll, …). Open the chat sidebar and the agent can now use them.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Generic JSON-RPC panel ──────────────────── -->
+        <div class="guide__panel" data-active="false" id="generic">
+          <p class="guide__lede">
+            Any client that speaks the <strong>Model Context Protocol</strong> over Streamable HTTP can
+            connect. The endpoint accepts JSON-RPC 2.0 requests at <code style="font-family:var(--font-mono);background:rgba(34,211,238,0.08);color:var(--accent-cyan);padding:1px 6px;border-radius:4px;font-size:12px">POST {endpoint}</code> and streams responses via Server-Sent Events.
+          </p>
+
+          <div class="steps">
+            <div class="step">
+              <div class="step__num">1</div>
+              <div class="step__body">
+                <div class="step__title">Smoke-test with <em>curl</em></div>
+                <div class="step__hint">Confirm your endpoint is reachable and lists tools.</div>
+                <div class="code-block">
+                  <div class="code-block__head">
+                    <span class="code-block__path">
+                      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+                      </svg>
+                      terminal
+                    </span>
+                    <button class="code-block__copy" data-copied="false">
+                      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                      </svg>
+                      Copy
+                    </button>
+                  </div>
+<pre><span class="tok-cmd">curl</span> <span class="tok-flag">-X</span> POST <span class="tok-url">https://ratel.foundation/mcp/&lt;your-token&gt;</span> \
+  <span class="tok-flag">-H</span> <span class="tok-str">"Content-Type: application/json"</span> \
+  <span class="tok-flag">-H</span> <span class="tok-str">"Accept: application/json, text/event-stream"</span> \
+  <span class="tok-flag">-d</span> <span class="tok-str">'{"jsonrpc":"2.0","id":1,"method":"tools/list"}'</span></pre>
+                </div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step__num">2</div>
+              <div class="step__body">
+                <div class="step__title">Use any MCP SDK</div>
+                <div class="step__hint">Python, TypeScript, Rust SDKs all work. Point the client's <code>StreamableHTTPServerTransport</code> at your endpoint URL.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Empty state preview (commented but kept for reference) ───── -->
+      <!--
+      <section class="empty-state">
+        <div class="empty-state__icon">
+          <svg fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3 13.6 9.4 20 11l-6.4 1.6L12 19l-1.6-6.4L4 11l6.4-1.6L12 3Z"/>
+          </svg>
+        </div>
+        <div class="empty-state__title">No MCP token yet</div>
+        <div class="empty-state__sub">Generate your personal endpoint to let Claude Code, Cursor, and other MCP clients act on Ratel as you.</div>
+        <button class="btn btn--primary">Generate endpoint</button>
+      </section>
+      -->
+    </main>
+  </div>
+
+  <script>
+    // Tab switching
+    document.querySelectorAll('.guide__tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.target;
+        document.querySelectorAll('.guide__tab').forEach(t => t.setAttribute('aria-selected', t === tab ? 'true' : 'false'));
+        document.querySelectorAll('.guide__panel').forEach(p => p.setAttribute('data-active', p.id === target ? 'true' : 'false'));
+      });
+    });
+
+    // Generic copy helper
+    function flashCopy(btn) {
+      btn.setAttribute('data-copied', 'true');
+      const prev = btn.querySelector('svg + *') ? null : btn.lastChild;
+      setTimeout(() => btn.setAttribute('data-copied', 'false'), 1600);
+    }
+
+    document.querySelectorAll('.endpoint-url__copy').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const url = btn.parentElement.querySelector('.endpoint-url__value').value;
+        if (navigator.clipboard) navigator.clipboard.writeText(url);
+        flashCopy(btn);
+      });
+    });
+
+    document.querySelectorAll('.code-block__copy').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pre = btn.closest('.code-block').querySelector('pre');
+        if (navigator.clipboard) navigator.clipboard.writeText(pre.innerText);
+        flashCopy(btn);
+      });
+    });
+  </script>
+</body>
+</html>

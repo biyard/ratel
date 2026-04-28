@@ -43,3 +43,6 @@ pub use file::*;
 
 pub mod inbox_kind;
 pub use inbox_kind::*;
+
+mod windowed_rank_key;
+pub use windowed_rank_key::*;
