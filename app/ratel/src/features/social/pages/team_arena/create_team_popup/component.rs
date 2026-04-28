@@ -1,9 +1,5 @@
-use crate::common::contexts::TeamItem;
 use crate::common::{use_popup, use_team_context, TeamCreationForm, TeamCreationPayload};
-use crate::features::auth::UserType;
-use crate::features::posts::types::TeamGroupPermissions;
-use crate::features::social::controllers::{create_team_handler, CreateTeamRequest};
-use crate::get_user_teams_handler;
+use crate::features::social::controllers::{create_team_handler, get_user_teams_handler, CreateTeamRequest};
 use crate::route::Route;
 use dioxus::prelude::*;
 
@@ -67,78 +63,33 @@ pub fn ArenaTeamCreationPopup() -> Element {
                     on_cancel: move |_| {
                         popup.close();
                     },
-                    on_submit: move |payload: TeamCreationPayload| {
-                        let nav = nav;
-                        spawn(async move {
-                            submitting.set(true);
-                            error_msg.set(None);
+                    on_submit: move |payload: TeamCreationPayload| async move {
+                        submitting.set(true);
+                        error_msg.set(None);
 
-                            let TeamCreationPayload { profile_url, username, nickname, description } = payload;
-                            let req = CreateTeamRequest {
-                                username: username.clone(),
-                                nickname: nickname.clone(),
-                                profile_url: profile_url.clone(),
-                                description: description.clone(),
-                            };
-                            match create_team_handler(req).await {
-                                Ok(response) => {
-                                    let permissions: Vec<u8> = TeamGroupPermissions::all()
-                                        .0
-                                        .into_iter()
-                                        .map(|p| p as u8)
-                                        .collect();
-                                    let mut teams = team_ctx.teams.read().clone();
-                                    if let Some(existing) = teams
-                                        .iter_mut()
-                                        .find(|t| t.username == username)
-                                    {
-                                        existing.nickname = nickname.clone();
-                                        existing.profile_url = profile_url.clone();
-                                        existing.description = description.clone();
-                                        existing.permissions = permissions.clone();
-                                        if existing.pk.is_empty() {
-                                            existing.pk = response.team_pk.clone();
-                                        }
-                                    } else {
-                                        teams
-                                            .push(TeamItem {
-                                                pk: response.team_pk.clone(),
-                                                nickname: nickname.clone(),
-                                                username: username.clone(),
-                                                profile_url: profile_url.clone(),
-                                                user_type: UserType::Team,
-                                                permissions: permissions.clone(),
-                                                description: description.clone(),
-                                            });
-                                    }
-                                    let selected_index = teams
-                                        .iter()
-                                        .position(|t| t.username == username);
-                                    team_ctx.set_teams(teams);
-                                    if let Some(idx) = selected_index {
-                                        team_ctx.set_selected_index(idx);
-                                    }
-                                    if let Ok(resp) = get_user_teams_handler(None).await {
-                                        let selected_index = resp
-                                            .items
-                                            .iter()
-                                            .position(|t| t.username == username);
-                                        team_ctx.set_teams(resp.items);
-                                        if let Some(idx) = selected_index {
-                                            team_ctx.set_selected_index(idx);
-                                        }
-                                    }
-                                    popup.close();
-                                    nav.push(Route::TeamHome {
-                                        username: username.clone(),
-                                    });
+                        let TeamCreationPayload { profile_url, username, nickname, description } = payload;
+                        let req = CreateTeamRequest {
+                            username: username.clone(),
+                            nickname: nickname.clone(),
+                            profile_url: profile_url.clone(),
+                            description: description.clone(),
+                        };
+                        match create_team_handler(req).await {
+                            Ok(response) => {
+                                if let Ok(resp) = get_user_teams_handler(None).await {
+                                    team_ctx.set_teams(resp.items);
                                 }
-                                Err(e) => {
-                                    error_msg.set(Some(format!("{}", e)));
-                                }
+                                team_ctx.select_team(&response.team_pk);
+                                popup.close();
+                                nav.push(Route::TeamHome {
+                                    username: username.clone(),
+                                });
                             }
-                            submitting.set(false);
-                        });
+                            Err(e) => {
+                                error_msg.set(Some(format!("{}", e)));
+                            }
+                        }
+                        submitting.set(false);
                     },
                 }
             }

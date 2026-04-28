@@ -10,38 +10,24 @@ use crate::features::social::*;
 /// Always renders TeamSidemenu with categories sidebar.
 #[component]
 pub fn SocialLayout(username: String) -> Element {
-    crate::common::contexts::TeamContext::init();
     let user_ctx = crate::features::auth::hooks::use_user_context();
-    let mut team_ctx = crate::common::contexts::use_team_context();
     let logged_in = user_ctx().user.is_some();
 
     // Provide selected category context shared with child routes
     use_context_provider(|| Signal::new(Option::<String>::None));
 
-    let teams_future = use_server_future(move || async move {
-        crate::get_user_teams_handler(None)
-            .await
-            .map(|r| r.items)
-            .unwrap_or_default()
-    })?;
-    use_effect(move || {
-        if let Some(teams) = teams_future.value().read().clone() {
-            team_ctx.set_teams(teams);
-        }
-    });
-
     rsx! {
         div {
             class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-team-bg text-text-primary",
             "data-testid": "social-layout",
-            div { class: "hidden tablet:flex h-screen overflow-hidden",
+            div { class: "hidden overflow-hidden h-screen tablet:flex",
                 TeamSidemenu {
                     key: "{username}",
                     username: username.clone(),
                     logged_in,
                 }
             }
-            div { class: "flex flex-col min-w-0 min-h-0 overflow-hidden",
+            div { class: "flex overflow-hidden flex-col min-w-0 min-h-0",
                 div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px] max-tablet:p-3 max-mobile:p-2",
                     Outlet::<Route> {}
                 }
@@ -65,9 +51,7 @@ pub fn UserLayout(username: String) -> Element {
                 if logged_in {
                     UserSidemenu { username: username.clone() }
                 }
-                div { class: "flex flex-col px-5 grow max-mobile:px-0",
-                    Outlet::<Route> {}
-                }
+                div { class: "flex flex-col px-5 grow max-mobile:px-0", Outlet::<Route> {} }
             }
         }
     }
@@ -122,7 +106,8 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
         for value in &permissions_vec {
             mask |= 1i64 << (*value as i32);
         }
-        let role = crate::features::social::pages::member::dto::TeamRole::from_legacy_permissions(mask);
+        let role =
+            crate::features::social::pages::member::dto::TeamRole::from_legacy_permissions(mask);
         let is_admin = role.is_owner();
         let can_team_edit = role.is_admin_or_owner();
         let is_team_member = mask != 0;
@@ -141,7 +126,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                     div { class: "px-4 pt-4 pb-2 shrink-0",
                         Link {
                             to: "{team_home_route}",
-                            class: "flex items-center gap-1.5 text-sm text-foreground-muted hover:text-text-primary transition-colors",
+                            class: "flex gap-1.5 items-center text-sm transition-colors text-foreground-muted hover:text-text-primary",
                             lucide_dioxus::ChevronLeft { class: "w-4 h-4 [&>polyline]:stroke-current shrink-0" }
                             "{tr.back_to_page}"
                         }
@@ -194,7 +179,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                 }
 
                 // Category section
-                div { class: "flex overflow-y-auto flex-col flex-1 min-h-0 px-3 pb-4",
+                div { class: "flex overflow-y-auto flex-col flex-1 px-3 pb-4 min-h-0",
                     span { class: "px-2 pb-2 text-xs font-semibold tracking-wider uppercase text-foreground-muted",
                         "Category"
                     }
@@ -309,7 +294,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                                 to: Route::TeamReward {
                                                     username: username.clone(),
                                                 },
-                                                class: "flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-hover transition-colors w-full text-left",
+                                                class: "flex gap-2 items-center py-2 px-3 w-full text-sm text-left transition-colors text-text-primary hover:bg-hover",
                                                 onclick: move |_| show_user_menu.set(false),
                                                 "data-pw": "team-reward-menu-link",
                                                 icons::game::Trophy { class: "w-[15px] h-[15px] [&>path]:stroke-text-primary [&>path]:fill-transparent shrink-0" }
@@ -323,7 +308,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                                 } } else { Route::TeamSettingMember {
                                                     username: username.clone(),
                                                 } },
-                                                class: "flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-hover transition-colors w-full text-left",
+                                                class: "flex gap-2 items-center py-2 px-3 w-full text-sm text-left transition-colors text-text-primary hover:bg-hover",
                                                 onclick: move |_| show_user_menu.set(false),
                                                 lucide_dioxus::Settings { class: "w-[15px] h-[15px] [&>path]:stroke-text-primary [&>line]:stroke-text-primary [&>polyline]:stroke-text-primary [&>circle]:stroke-text-primary shrink-0" }
                                                 {tr.settings}
