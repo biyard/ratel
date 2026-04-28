@@ -79,6 +79,11 @@
   /* Reserve space for the fixed footer so cards aren't hidden behind
      it when scrolled to the bottom. */
   padding-bottom: 96px;
+  /* Without `flex-shrink: 0`, the inner arena (a flex child of the
+     100vh root) gets squeezed to the root's main-axis size and the
+     root's `overflow-y: auto` never fires — the content silently
+     clips. Pin the arena to its content height so the root scrolls. */
+  flex-shrink: 0;
 }
 .analyze-arena.analyze-arena--create .arena::before {
   content: '';
@@ -862,7 +867,7 @@
   padding: 4px 12px 4px 5px;
   border-radius: 100px;
   font-size: 12px;
-  background: var(--bg-void);
+  background: var(--surface-hover);
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
 }

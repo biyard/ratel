@@ -1,25 +1,32 @@
-//! cf-sunji card — opens below the cross-filter when an item radio
-//! is picked. Lists the item's questions with options as nested
-//! checkbox rows. For DISCUSSION items, prepends a comma-separated
-//! keyword input that drains into chips on 확인.
+//! cf-sunji card — opens below the cross-filter when the picker has
+//! something to commit.
+//!
+//! Source-specific layout:
+//! - Poll: questions + options as nested checkbox rows. Question
+//!   index drives the chip's `question_id`; option index drives
+//!   `option_id`.
+//! - Quiz: same as Poll plus a "정답" badge on options that match the
+//!   loaded `correct_answers`.
+//! - Discussion: keyword input only — no predefined options.
+//! - Follow: flat target list as multi-select checkboxes — no item
+//!   layer above it.
 
+use crate::features::spaces::pages::actions::actions::poll::Question;
+use crate::features::spaces::pages::actions::actions::quiz::QuizCorrectAnswer;
 use crate::features::spaces::pages::apps::apps::analyzes::views::create::*;
 use crate::features::spaces::pages::apps::apps::analyzes::*;
 use crate::*;
 
 #[component]
-pub fn CfSunjiCard() -> Element {
+pub fn CfSunjiCard(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
-    let mut ctrl = use_analyze_create()?;
+    let mut ctrl = use_analyze_create(space_id)?;
 
     let picking_type = ctrl.picking_type.read().clone();
     let picked_item_id = ctrl.picked_item_id.read().clone();
     let picked_sunji = ctrl.picked_sunji.read().clone();
     let keyword_input = ctrl.keyword_input.read().clone();
 
-    // Hidden whenever no item is picked. Returning `None` means the
-    // section is not rendered, which matches the HTML mockup's
-    // `[hidden]` attribute toggling.
     let (item_id, src) = match (picked_item_id.clone(), picking_type) {
         (Some(id), Some(s)) => (id, s),
         _ => {
@@ -29,23 +36,24 @@ pub fn CfSunjiCard() -> Element {
         }
     };
 
-    let item = find_action_item(src, &item_id);
-    let title_text = item
-        .as_ref()
-        .map(|i| i.title.clone())
-        .unwrap_or_else(|| tr.create_sunji_default_title.to_string());
+    let title_text = match src {
+        AnalyzeFilterSource::Follow => tr.create_sunji_follow_title.to_string(),
+        _ => {
+            let stored = ctrl.picked_item_title.read().clone();
+            if stored.is_empty() {
+                tr.create_sunji_default_title.to_string()
+            } else {
+                stored
+            }
+        }
+    };
+
     let badge_text = src.badge();
     let src_attr = src.as_str();
 
-    // Discussion items skip the predefined `keywords` question — the
-    // keyword input replaces it. LDA topics still render.
-    let mut questions = mock_questions_for(&item_id);
-    if matches!(src, AnalyzeFilterSource::Discussion) {
-        questions.retain(|q| q.id != "keywords");
-    }
-
-    let has_visible_questions = !questions.is_empty();
     let is_discussion = matches!(src, AnalyzeFilterSource::Discussion);
+    let is_follow = matches!(src, AnalyzeFilterSource::Follow);
+
     let has_kw = is_discussion
         && !keyword_input
             .split(',')
@@ -72,50 +80,32 @@ pub fn CfSunjiCard() -> Element {
                     class: "cross-filter__pick-cancel",
                     id: "cf-sunji-back",
                     "data-testid": "cf-sunji-back",
-                    onclick: move |_| ctrl.clear_item(),
+                    onclick: move |_| {
+                        if is_follow {
+                            ctrl.back_to_action();
+                        } else {
+                            ctrl.clear_item();
+                        }
+                    },
                     "{tr.create_sunji_back}"
                 }
             }
 
             div { class: "cf-sunji__list", id: "cf-sunji-list",
 
-                // Discussion: keyword input goes first.
-                if is_discussion {
-                    KeywordBlock {}
-                }
-
-                // Empty state — discussion's keyword input still works
-                // even when there are no other LDA-style questions.
-                if !has_visible_questions && !is_discussion {
-                    div {
-                        class: "cross-filter__chips-empty",
-                        style: "padding: 20px 4px;",
-                        "{tr.create_sunji_empty}"
-                    }
-                }
-
-                for question in questions.iter() {
-                    {
-                        let q_id = question.id.clone();
-                        let q_title = question.title.clone();
-                        let options = question.options.clone();
-                        rsx! {
-                            div { key: "{q_id}", class: "cf-question",
-                                div { class: "cf-question__title", "{q_title}" }
-                                div { class: "cf-question__options",
-                                    for option in options.iter() {
-                                        QuestionOption {
-                                            key: "{q_id}-{option.id}",
-                                            question_id: q_id.clone(),
-                                            option_id: option.id.clone(),
-                                            label: option.label.clone(),
-                                            correct: option.correct,
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                match src {
+                    AnalyzeFilterSource::Discussion => rsx! {
+                        KeywordBlock { space_id }
+                    },
+                    AnalyzeFilterSource::Follow => rsx! {
+                        FollowTargetsBlock { space_id }
+                    },
+                    AnalyzeFilterSource::Poll => rsx! {
+                        PollQuestionsBlock { space_id, item_id }
+                    },
+                    AnalyzeFilterSource::Quiz => rsx! {
+                        QuizQuestionsBlock { space_id, item_id }
+                    },
                 }
             }
 
@@ -135,16 +125,148 @@ pub fn CfSunjiCard() -> Element {
 }
 
 #[component]
+fn PollQuestionsBlock(space_id: ReadSignal<SpacePartition>, item_id: String) -> Element {
+    let tr: SpaceAnalyzesAppTranslate = use_translate();
+    let ctrl = use_analyze_create(space_id)?;
+    let detail = ctrl.selected_poll.read().clone();
+    let questions = detail
+        .as_ref()
+        .map(|p| p.questions.clone())
+        .unwrap_or_default();
+
+    // `Loader<T>` keeps the previous value visible while the next fetch
+    // is in flight, so a freshly-picked poll briefly shows the prior
+    // (often-empty) data. Suppress the empty state until the loader
+    // settles to avoid the false "no questions" flash.
+    if questions.is_empty() {
+        if ctrl.selected_poll.loading() {
+            return rsx! {
+                div {
+                    class: "cross-filter__chips-empty",
+                    style: "padding: 20px 4px;",
+                    "{tr.create_sunji_loading}"
+                }
+            };
+        }
+        return rsx! {
+            div {
+                class: "cross-filter__chips-empty",
+                style: "padding: 20px 4px;",
+                "{tr.create_sunji_empty}"
+            }
+        };
+    }
+
+    rsx! {
+        for (q_idx, question) in questions.iter().enumerate() {
+            QuestionBlock {
+                key: "q-{q_idx}",
+                space_id,
+                item_id: item_id.clone(),
+                q_idx,
+                question: question.clone(),
+                correct_indices: Vec::new(),
+            }
+        }
+    }
+}
+
+#[component]
+fn QuizQuestionsBlock(space_id: ReadSignal<SpacePartition>, item_id: String) -> Element {
+    let tr: SpaceAnalyzesAppTranslate = use_translate();
+    let ctrl = use_analyze_create(space_id)?;
+    let detail = ctrl.selected_quiz.read().clone();
+    let questions = detail
+        .as_ref()
+        .map(|q| q.questions.clone())
+        .unwrap_or_default();
+    let correct_answers = detail
+        .as_ref()
+        .and_then(|q| q.correct_answers.clone())
+        .unwrap_or_default();
+
+    if questions.is_empty() {
+        if ctrl.selected_quiz.loading() {
+            return rsx! {
+                div {
+                    class: "cross-filter__chips-empty",
+                    style: "padding: 20px 4px;",
+                    "{tr.create_sunji_loading}"
+                }
+            };
+        }
+        return rsx! {
+            div {
+                class: "cross-filter__chips-empty",
+                style: "padding: 20px 4px;",
+                "{tr.create_sunji_empty}"
+            }
+        };
+    }
+
+    rsx! {
+        for (q_idx, question) in questions.iter().enumerate() {
+            QuestionBlock {
+                key: "q-{q_idx}",
+                space_id,
+                item_id: item_id.clone(),
+                q_idx,
+                question: question.clone(),
+                correct_indices: correct_indices_at(&correct_answers, q_idx),
+            }
+        }
+    }
+}
+
+#[component]
+fn QuestionBlock(
+    space_id: ReadSignal<SpacePartition>,
+    item_id: String,
+    q_idx: usize,
+    question: Question,
+    correct_indices: Vec<u32>,
+) -> Element {
+    let _ = item_id;
+    let q_title = question.title().to_string();
+    let options = options_of(&question);
+
+    if options.is_empty() {
+        // Skip questions that don't have a finite option list (e.g.
+        // short-answer / subjective). They can't drive a chip.
+        return rsx! {};
+    }
+
+    rsx! {
+        div { class: "cf-question",
+            div { class: "cf-question__title", "{q_title}" }
+            div { class: "cf-question__options",
+                for (o_idx, label) in options.iter().enumerate() {
+                    QuestionOption {
+                        key: "{q_idx}-{o_idx}",
+                        space_id,
+                        q_idx,
+                        o_idx,
+                        label: label.clone(),
+                        correct: correct_indices.contains(&(o_idx as u32)),
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
 fn QuestionOption(
-    question_id: String,
-    option_id: String,
+    space_id: ReadSignal<SpacePartition>,
+    q_idx: usize,
+    o_idx: usize,
     label: String,
     correct: bool,
 ) -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
-    let mut ctrl = use_analyze_create()?;
+    let mut ctrl = use_analyze_create(space_id)?;
 
-    let token = format!("{}:{}", question_id, option_id);
+    let token = format!("{}:{}", q_idx, o_idx);
     let token_for_toggle = token.clone();
     let checked = ctrl.picked_sunji.read().contains(&token);
 
@@ -167,9 +289,60 @@ fn QuestionOption(
 }
 
 #[component]
-fn KeywordBlock() -> Element {
+fn FollowTargetsBlock(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
-    let mut ctrl = use_analyze_create()?;
+    let mut ctrl = use_analyze_create(space_id)?;
+    let follows = ctrl.follows.read().clone();
+    let targets = follows.items.clone();
+
+    if targets.is_empty() {
+        return rsx! {
+            div {
+                class: "cross-filter__chips-empty",
+                style: "padding: 20px 4px;",
+                "{tr.create_sunji_follow_empty}"
+            }
+        };
+    }
+
+    rsx! {
+        div { class: "cf-question",
+            div { class: "cf-question__title", "{tr.create_sunji_follow_title}" }
+            div { class: "cf-question__options",
+                for target in targets.iter() {
+                    {
+                        let pk_str = target.user_pk.to_string();
+                        let token_for_toggle = pk_str.clone();
+                        let label = if target.display_name.is_empty() {
+                            target.username.clone()
+                        } else {
+                            target.display_name.clone()
+                        };
+                        let checked = ctrl.picked_sunji.read().contains(&pk_str);
+                        rsx! {
+                            label { key: "follow-{pk_str}", class: "cf-option cf-option--inline",
+                                input {
+                                    r#type: "checkbox",
+                                    "data-sunji-id": "{pk_str}",
+                                    checked,
+                                    onchange: move |_| ctrl.toggle_sunji(token_for_toggle.clone()),
+                                }
+                                span { class: "cf-option__body",
+                                    span { class: "cf-option__title", "{label}" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn KeywordBlock(space_id: ReadSignal<SpacePartition>) -> Element {
+    let tr: SpaceAnalyzesAppTranslate = use_translate();
+    let mut ctrl = use_analyze_create(space_id)?;
 
     let value = ctrl.keyword_input.read().clone();
 
@@ -188,5 +361,26 @@ fn KeywordBlock() -> Element {
             }
             div { class: "cf-keyword-hint", "{tr.create_keyword_hint}" }
         }
+    }
+}
+
+// ── Helpers ──────────────────────────────────────────────────────
+
+fn options_of(question: &Question) -> Vec<String> {
+    match question {
+        Question::SingleChoice(q) | Question::MultipleChoice(q) => q.options.clone(),
+        Question::Checkbox(q) => q.options.clone(),
+        Question::Dropdown(q) => q.options.clone(),
+        _ => Vec::new(),
+    }
+}
+
+fn correct_indices_at(answers: &[QuizCorrectAnswer], idx: usize) -> Vec<u32> {
+    match answers.get(idx) {
+        Some(QuizCorrectAnswer::Single { answer: Some(v) }) => vec![*v as u32],
+        Some(QuizCorrectAnswer::Multiple { answers }) => {
+            answers.iter().map(|v| *v as u32).collect()
+        }
+        _ => Vec::new(),
     }
 }

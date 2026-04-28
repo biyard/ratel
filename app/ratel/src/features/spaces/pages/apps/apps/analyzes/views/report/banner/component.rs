@@ -8,14 +8,16 @@ use crate::features::spaces::pages::apps::apps::analyzes::*;
 pub fn ReportBanner(report: AnalyzeReport) -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
     let filter_count = report.filters.len();
+    let created = chrono::DateTime::<chrono::Utc>::from_timestamp_millis(report.created_at)
+        .map(|dt| dt.format("%Y.%m.%d %H:%M").to_string())
+        .unwrap_or_default();
     let meta = format!(
-        "{} {}{} · {} {} {}",
+        "{} {}{} · {} {}",
         tr.detail_meta_filter_count,
         filter_count,
         tr.detail_meta_filter_count_unit,
         tr.detail_meta_created_prefix,
-        report.created_at,
-        report.created_at_time,
+        created,
     );
     let is_empty = report.filters.is_empty();
 

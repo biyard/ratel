@@ -39,8 +39,8 @@ fn AnalyzesListArena(space_id: ReadSignal<SpacePartition>) -> Element {
     let space = use_space();
     let nav = use_navigator();
 
-    let ctrl = use_analyze_reports()?;
-    let reports = ctrl.reports.read().clone();
+    let ctrl = use_analyze_reports(space_id)?;
+    let reports = ctrl.reports.read().clone().items;
 
     let space_data = space();
     let space_logo = if space_data.logo.is_empty() {
@@ -250,8 +250,9 @@ fn SavedReportCard(report: AnalyzeReport, onclick: EventHandler<()>) -> Element 
     let tr: SpaceAnalyzesAppTranslate = use_translate();
     let status = report.status;
     let status_label = match status {
-        AnalyzeReportStatus::Done => tr.status_done.to_string(),
-        AnalyzeReportStatus::Running => tr.status_running.to_string(),
+        AnalyzeReportStatus::Finish => tr.status_finish.to_string(),
+        AnalyzeReportStatus::InProgress => tr.status_in_progress.to_string(),
+        AnalyzeReportStatus::Failed => tr.status_failed.to_string(),
     };
     let status_attr = status.as_str();
 
@@ -268,7 +269,7 @@ fn SavedReportCard(report: AnalyzeReport, onclick: EventHandler<()>) -> Element 
             span {
                 class: "report-card-large__status",
                 "data-status": "{status_attr}",
-                if matches!(status, AnalyzeReportStatus::Running) {
+                if matches!(status, AnalyzeReportStatus::InProgress) {
                     span { class: "report-card-large__status-dot" }
                 } else {
                     svg {

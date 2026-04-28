@@ -197,13 +197,17 @@ translate! {
         en: "Pick cross filters to build a new report",
         ko: "교차 필터를 선택해 새 보고서를 만듭니다",
     },
-    status_done: {
+    status_finish: {
         en: "Analysis complete",
         ko: "분석 완료",
     },
-    status_running: {
+    status_in_progress: {
         en: "Running",
         ko: "분석 중",
+    },
+    status_failed: {
+        en: "Failed",
+        ko: "실패",
     },
     chips_empty: {
         en: "No filters · all data",
@@ -573,6 +577,18 @@ translate! {
         en: "items",
         ko: "개",
     },
+    create_action_questions_unit: {
+        en: "questions",
+        ko: "문항",
+    },
+    create_sunji_follow_title: {
+        en: "Follow targets",
+        ko: "팔로우 타겟",
+    },
+    create_sunji_follow_empty: {
+        en: "No follow targets registered",
+        ko: "등록된 팔로우 타겟이 없습니다",
+    },
     create_sunji_back: {
         en: "← Pick again",
         ko: "← 다시 선택",
@@ -588,6 +604,10 @@ translate! {
     create_sunji_empty: {
         en: "This item has no options to pick.",
         ko: "이 항목에는 선택할 선지가 없습니다.",
+    },
+    create_sunji_loading: {
+        en: "Loading questions…",
+        ko: "문항을 불러오는 중…",
     },
     create_sunji_correct_badge: {
         en: "Correct",
