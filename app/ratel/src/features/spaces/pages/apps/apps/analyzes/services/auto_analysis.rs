@@ -165,7 +165,7 @@ async fn aggregate_polls(
                         }
                     }
                 } else {
-                    let indices = answer.to_option_indices();
+                    let indices = normalize_option_indices(question, &answer.to_option_indices());
                     if indices.is_empty() {
                         continue;
                     }
@@ -352,7 +352,7 @@ async fn aggregate_quizzes(
                         }
                     }
                 } else {
-                    let picked = answer.to_option_indices();
+                    let picked = normalize_option_indices(question, &answer.to_option_indices());
                     if picked.is_empty() {
                         continue;
                     }
@@ -518,6 +518,40 @@ async fn aggregate_follows(
 }
 
 // ── Helpers ───────────────────────────────────────────────────────
+
+/// Convert raw option indices from `Answer::to_option_indices()` into
+/// 0-based indices into the labels array `question_option_labels`
+/// returns.
+///
+/// All choice question types (`SingleChoice`, `MultipleChoice`,
+/// `Checkbox`, `Dropdown`) are already 0-based — pass through.
+///
+/// `LinearScale` is the broken case: `Answer::LinearScale.answer`
+/// stores the raw scale value (e.g. 1..=5 for a Likert), but the
+/// labels are sliced as `(min_value..=max_value)` and stored in
+/// option_counts of length `max - min + 1` indexed 0-based. The
+/// previous implementation used the raw value as the index, which
+/// shifted every count by `min_value` slots and dropped any answer
+/// equal to `max_value` entirely (out-of-bounds → silently lost).
+/// Subtracting `min_value` puts each scale point at the right slot.
+fn normalize_option_indices(
+    question: &crate::features::spaces::pages::actions::actions::poll::Question,
+    raw: &[u32],
+) -> Vec<u32> {
+    use crate::features::spaces::pages::actions::actions::poll::Question;
+    match question {
+        Question::LinearScale(q) => {
+            let min = q.min_value;
+            raw.iter()
+                .filter_map(|v| {
+                    let signed = *v as i64 - min as i64;
+                    if signed < 0 { None } else { Some(signed as u32) }
+                })
+                .collect()
+        }
+        _ => raw.to_vec(),
+    }
+}
 
 fn question_option_labels(
     question: &crate::features::spaces::pages::actions::actions::poll::Question,

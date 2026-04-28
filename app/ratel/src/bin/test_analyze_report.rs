@@ -24,7 +24,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     use app_shell::common::types::{EntityType, Partition};
     use app_shell::features::spaces::pages::apps::apps::analyzes::SpaceAnalyzeReport;
     use app_shell::features::spaces::pages::apps::apps::analyzes::services::auto_analysis;
-    use bdk::prelude::DynamoEntity;
 
     tracing_subscriber::fmt()
         .with_env_filter(

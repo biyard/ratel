@@ -863,6 +863,32 @@
   justify-content: flex-end;
   gap: 10px;
 }
+.analyze-arena.analyze-arena--detail .settings-running {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+  background: rgba(252, 179, 0, 0.08);
+  border: 1px solid rgba(252, 179, 0, 0.24);
+  border-radius: 8px;
+}
+.analyze-arena.analyze-arena--detail .settings-running::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-gold);
+  animation: settings-running-pulse 1.2s ease-in-out infinite;
+}
+@keyframes settings-running-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1); }
+}
 
 /* ── LDA topic table ────────────────────────────────────── */
 .analyze-arena.analyze-arena--detail .topic-table {

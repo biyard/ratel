@@ -7,6 +7,9 @@ pub use create_analyze_report::*;
 mod get_analyze_report;
 pub use get_analyze_report::*;
 
+mod update_discussion_topics;
+pub use update_discussion_topics::*;
+
 mod list_analyze_discussions;
 pub use list_analyze_discussions::*;
 

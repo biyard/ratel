@@ -20,7 +20,35 @@ use crate::common::utils::time::get_now_timestamp_millis;
 use crate::features::spaces::pages::apps::apps::analyzes::*;
 use std::collections::HashSet;
 
+/// Outer wrapper: catches every failure path inside the analysis
+/// pipeline and stamps `status=Failed` on the row before bubbling
+/// the error up. Without this, a transient DDB/CompUTE failure would
+/// leave the row stuck on `InProgress` forever — the UI would keep
+/// showing "분석 진행 중" indefinitely with no recovery path short
+/// of manually editing the row in the DDB console.
 pub async fn process_discussion_analysis(
+    cli: &aws_sdk_dynamodb::Client,
+    row: &SpaceAnalyzeDiscussionResult,
+) -> Result<()> {
+    match try_process_discussion_analysis(cli, row).await {
+        Ok(()) => Ok(()),
+        Err(e) => {
+            crate::error!(
+                "discussion_analysis failed for sk={} report={} discussion={}: {e}",
+                row.sk,
+                row.report_id,
+                row.discussion_id,
+            );
+            // Best-effort: try to flip status to Failed. If this also
+            // fails (e.g. DDB outage) the row stays InProgress; we
+            // accept that — operationally a rare double-failure case.
+            let _ = mark_failed(cli, row).await;
+            Err(e)
+        }
+    }
+}
+
+async fn try_process_discussion_analysis(
     cli: &aws_sdk_dynamodb::Client,
     row: &SpaceAnalyzeDiscussionResult,
 ) -> Result<()> {

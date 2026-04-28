@@ -14,10 +14,21 @@ pub fn QuizPanel() -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
     let ctrl = use_context::<UseAnalyzeReportDetail>();
     let detail = ctrl.detail.read().clone();
-    let aggregates = detail
+    let all_aggregates = detail
         .result
         .map(|r| r.quiz_aggregates)
         .unwrap_or_default();
+
+    let selected = ctrl.selected_quiz.read().clone();
+    let active_quiz_id = selected
+        .or_else(|| all_aggregates.first().map(|q| q.quiz_id.clone()));
+    let aggregates: Vec<QuizQuestionAggregate> = match active_quiz_id {
+        Some(ref id) => all_aggregates
+            .into_iter()
+            .filter(|q| q.quiz_id == *id)
+            .collect(),
+        None => Vec::new(),
+    };
 
     rsx! {
         section { class: "panel", "data-panel": "quiz", "data-active": "false",

@@ -20,6 +20,13 @@ pub struct UseAnalyzeReportDetail {
 
     pub detail: Loader<GetAnalyzeReportResponse>,
 
+    /// Active poll the sidebar has highlighted (and the panel
+    /// filters to). `None` falls back to "first poll in
+    /// poll_aggregates" so the panel always renders something
+    /// meaningful when the user hasn't picked yet.
+    pub selected_poll: Signal<Option<String>>,
+    pub selected_quiz: Signal<Option<String>>,
+
     /// Currently-active sidebar discussion id (plain string).
     /// `None` when nothing's selected yet.
     pub selected_discussion: Signal<Option<String>>,
@@ -54,12 +61,27 @@ pub fn use_analyze_report_detail(
         }
     })?;
 
+    let selected_poll = use_signal::<Option<String>>(|| None);
+    let selected_quiz = use_signal::<Option<String>>(|| None);
     let selected_discussion = use_signal::<Option<String>>(|| None);
 
+    // Resolve the active discussion the loader should query against:
+    // explicit user selection wins, otherwise fall back to the first
+    // discussion exposed by the detail payload. Without this fallback
+    // the loader silently returned empty on first page load —
+    // sidebar shows the first discussion visually selected but the
+    // signal was still `None`, so InProgress rows weren't surfaced
+    // until the user manually clicked the sidebar item.
     let discussion_results = use_loader(move || {
         let rid = report_id();
         let sid = space_id();
-        let did = selected_discussion.read().clone();
+        let explicit = selected_discussion.read().clone();
+        let detail_snapshot = detail.read().clone();
+        let fallback = detail_snapshot
+            .discussions
+            .first()
+            .map(|d| d.discussion_id.to_string());
+        let did = explicit.or(fallback);
         async move {
             let did = match did {
                 Some(d) if !d.is_empty() => d,
@@ -89,7 +111,14 @@ pub fn use_analyze_report_detail(
     let mut discussion_results_handle = discussion_results;
 
     let handle_run_discussion = use_action(move || async move {
-        let did = match selected_discussion.read().clone() {
+        let explicit = selected_discussion.read().clone();
+        let fallback = detail
+            .read()
+            .clone()
+            .discussions
+            .first()
+            .map(|d| d.discussion_id.to_string());
+        let did = match explicit.or(fallback) {
             Some(d) if !d.is_empty() => d,
             _ => return Ok::<(), crate::common::Error>(()),
         };
@@ -123,6 +152,8 @@ pub fn use_analyze_report_detail(
         report_id,
         space_id,
         detail,
+        selected_poll,
+        selected_quiz,
         selected_discussion,
         discussion_results,
         params,
