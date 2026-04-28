@@ -260,7 +260,7 @@ The feature is shippable when a tester acting as a creator can complete the enti
 
 ## Open questions
 
-- OQ-1: *Per-network compose variants in Phase 1.5?* Mockup `compose-with-crosspost.html` shows a single body driving all platforms. PM has indicated per-network override is a Phase 1.5 enhancement — confirm the Phase 1 cut keeps this simple. (No blocker for Stage 3 entry; the data model should leave room for a future `per_platform_overrides: Map<Platform, BodyOverride>` field on the syndication-job entity.)
+- ~~OQ-1: *Per-network compose variants in Phase 1.5?*~~ — **Resolved 2026-04-28** (see [docs/superpowers/specs/2026-04-28-cross-posting-design.md](../docs/superpowers/specs/2026-04-28-cross-posting-design.md#resolved-decisions)). Decision: a sidecar `PostSyndicationDirective` carries `enabled_platforms` + `platform_overrides` so Stage 1 can act as a factory; `Feed` stays free of per-platform fields. v1.5 adds `body_override: Option<String>` to `SyndicationJob` — UI/factory change only, no schema migration on `Feed`.
 
 ## References
 
