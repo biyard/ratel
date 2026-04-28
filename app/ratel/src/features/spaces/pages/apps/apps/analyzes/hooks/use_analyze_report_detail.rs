@@ -35,6 +35,13 @@ pub struct UseAnalyzeReportDetail {
     /// `None` when nothing's selected yet.
     pub selected_discussion: Signal<Option<String>>,
 
+    /// Which sidebar group's panel is currently visible — one of
+    /// "poll" / "quiz" / "discussion" / "follow". The sidebar reads
+    /// this so only the active group's selected item gets the
+    /// indicator dot. Without it, every group's first item lights up
+    /// because each falls back to "first" independently.
+    pub active_panel: Signal<String>,
+
     /// Per-discussion history loader. Re-fires whenever
     /// `selected_discussion` changes; caller reads `.items[0]` for
     /// the latest run.
@@ -74,6 +81,10 @@ pub fn use_analyze_report_detail(
     let selected_poll = use_signal::<Option<String>>(|| None);
     let selected_quiz = use_signal::<Option<String>>(|| None);
     let selected_discussion = use_signal::<Option<String>>(|| None);
+    // Mirrors the panel HTML's hardcoded `data-active="true"` —
+    // poll panel is the initial view, so its sidebar group is the
+    // initial active one.
+    let active_panel = use_signal::<String>(|| "poll".to_string());
 
     // Resolve the active discussion the loader should query against:
     // explicit user selection wins, otherwise fall back to the first
@@ -264,6 +275,7 @@ pub fn use_analyze_report_detail(
         selected_poll,
         selected_quiz,
         selected_discussion,
+        active_panel,
         discussion_results,
         params,
         handle_run_discussion,

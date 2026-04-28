@@ -63,23 +63,62 @@ fn DiscussionSettingsCard() -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
     let mut ctrl = use_context::<UseAnalyzeReportDetail>();
 
-    let params = ctrl.params.read().clone();
-    // Raw text the user is typing — keeps trailing commas / spaces
-    // intact while the user composes the list. Only parsed into the
-    // canonical `excluded_keywords` Vec on submit (see 확인 button
-    // below). Without this, every keystroke would split→join and the
-    // comma the user just pressed would vanish before they could type
-    // the next word.
-    let mut excluded_text = use_signal(|| params.excluded_keywords.join(", "));
-
-    // Keep the running flag derived from the latest result row so we
-    // can swap the action buttons to a "분석 중" indicator while the
-    // backend handler is processing.
+    // Latest analysis row drives the default lock state. While the
+    // row is `InProgress` the form is hard-locked — backend is busy,
+    // editing has no effect anyway. After `Finish` the form is
+    // soft-locked: inputs are disabled and show the row's stored
+    // params, BUT the 초기화 / 확인 buttons stay visible so the user
+    // can re-edit and re-run. Clicking 초기화 flips
+    // `is_editing` true and unlocks the form; clicking 확인 fires a
+    // new analysis and re-locks once the row turns over. `Failed` and
+    // "no row yet" stay editable from the start.
     let history = ctrl.discussion_results.read().clone();
-    let is_running = matches!(
-        history.items.first().map(|r| r.status.clone()),
+    let latest = history.items.first().cloned();
+    let mut is_editing = use_signal(|| false);
+    let row_running = matches!(
+        latest.as_ref().map(|r| r.status.clone()),
         Some(AnalyzeReportStatus::InProgress)
-    ) || ctrl.handle_run_discussion.pending();
+    );
+    let row_finished = matches!(
+        latest.as_ref().map(|r| r.status.clone()),
+        Some(AnalyzeReportStatus::Finish)
+    );
+    let is_running = row_running || ctrl.handle_run_discussion.pending();
+    // Effective lock: running always locks; finished locks only when
+    // the user hasn't asked to edit yet.
+    let locked = row_running || (row_finished && !*is_editing.read());
+
+    // Source of truth for the displayed values:
+    //   locked → the row's stored params (= what the backend ran with)
+    //   else   → the live signal the user is editing
+    let signal_params = ctrl.params.read().clone();
+    let params: DiscussionAnalysisParams = if locked {
+        latest
+            .as_ref()
+            .map(|r| r.params.clone())
+            .unwrap_or_else(|| signal_params.clone())
+    } else {
+        signal_params.clone()
+    };
+
+    // Raw text buffer for the excluded-keywords input. Mirrors the
+    // displayed params so locking instantly reflects the row's value.
+    // Without this, every keystroke would split→join and the comma
+    // the user just pressed would vanish before they could type the
+    // next word.
+    let mut excluded_text = use_signal(|| params.excluded_keywords.join(", "));
+    if locked {
+        let want = params.excluded_keywords.join(", ");
+        if *excluded_text.read() != want {
+            excluded_text.set(want);
+        }
+    }
+
+    // Reset counter — bumped on 초기화. Drives `key` on each input so
+    // the DOM nodes are torn down and rebuilt with the freshly-set
+    // signal values; without this, controlled inputs sometimes hold
+    // onto the typed text even after the underlying signal cleared.
+    let mut reset_key = use_signal(|| 0u32);
 
     rsx! {
         section { class: "card",
@@ -91,11 +130,13 @@ fn DiscussionSettingsCard() -> Element {
                 div { class: "field",
                     label { class: "field__label", "{tr.detail_discussion_lda_label}" }
                     input {
+                        key: "lda-{reset_key}",
                         class: "field__input",
                         r#type: "number",
                         min: "1",
                         max: "20",
                         value: "{params.num_topics}",
+                        disabled: locked,
                         oninput: move |evt| {
                             if let Ok(n) = evt.value().parse::<usize>() {
                                 ctrl.params.with_mut(|p| p.num_topics = n.clamp(1, 20));
@@ -107,11 +148,13 @@ fn DiscussionSettingsCard() -> Element {
                 div { class: "field",
                     label { class: "field__label", "{tr.detail_discussion_tfidf_label}" }
                     input {
+                        key: "tfidf-{reset_key}",
                         class: "field__input",
                         r#type: "number",
                         min: "1",
                         max: "20",
                         value: "{params.top_n_tfidf}",
+                        disabled: locked,
                         oninput: move |evt| {
                             if let Ok(n) = evt.value().parse::<usize>() {
                                 ctrl.params.with_mut(|p| p.top_n_tfidf = n.clamp(1, 20));
@@ -123,11 +166,13 @@ fn DiscussionSettingsCard() -> Element {
                 div { class: "field",
                     label { class: "field__label", "{tr.detail_discussion_network_label}" }
                     input {
+                        key: "network-{reset_key}",
                         class: "field__input",
                         r#type: "number",
                         min: "1",
                         max: "30",
                         value: "{params.top_n_network}",
+                        disabled: locked,
                         oninput: move |evt| {
                             if let Ok(n) = evt.value().parse::<usize>() {
                                 ctrl.params.with_mut(|p| p.top_n_network = n.clamp(1, 30));
@@ -139,10 +184,12 @@ fn DiscussionSettingsCard() -> Element {
                 div { class: "field",
                     label { class: "field__label", "{tr.detail_discussion_excluded_label}" }
                     input {
+                        key: "excluded-{reset_key}",
                         class: "field__input",
                         r#type: "text",
                         placeholder: "{tr.detail_discussion_excluded_placeholder}",
                         value: "{excluded_text}",
+                        disabled: locked,
                         oninput: move |evt| {
                             // Just buffer the raw string — parsing
                             // happens on submit so the user can type
@@ -171,6 +218,16 @@ fn DiscussionSettingsCard() -> Element {
                                     excluded_keywords: Vec::new(),
                                 });
                             excluded_text.set(String::new());
+                            // Unlock the form so the user can actually
+                            // edit the just-reset values when coming
+                            // off a `Finish` state.
+                            is_editing.set(true);
+                            // Force the four inputs to remount so their
+                            // displayed `value` snaps back to the freshly
+                            // reset signal — without the key bump
+                            // controlled `<input>` elements sometimes
+                            // hold onto whatever the user last typed.
+                            reset_key.with_mut(|k| *k = k.wrapping_add(1));
                         },
                         "{tr.detail_discussion_btn_reset}"
                     }
@@ -188,6 +245,10 @@ fn DiscussionSettingsCard() -> Element {
                                 .collect();
                             ctrl.params.with_mut(|p| p.excluded_keywords = parts);
                             ctrl.handle_run_discussion.call();
+                            // Re-lock once the run is queued — the new
+                            // row will drive `locked` again as soon as
+                            // the loader refreshes.
+                            is_editing.set(false);
                         },
                         "{tr.detail_discussion_btn_apply}"
                     }

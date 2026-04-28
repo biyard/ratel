@@ -105,6 +105,7 @@ pub fn ReportSidebar() -> Element {
     let selected_poll = ctrl.selected_poll.read().clone();
     let selected_quiz = ctrl.selected_quiz.read().clone();
     let selected_discussion = ctrl.selected_discussion.read().clone();
+    let active_panel = ctrl.active_panel.read().clone();
 
     // Group poll questions under their parent poll. The detail-page
     // sidebar surfaces one entry per *poll* (parent action), not per
@@ -121,7 +122,11 @@ pub fn ReportSidebar() -> Element {
     let poll_items: Vec<SbItem> = poll_groups
         .into_iter()
         .map(|g| {
-            let is_selected = active_poll.as_deref() == Some(g.id.as_str());
+            // Highlight the active poll only when the *poll* panel is
+            // the visible one. Otherwise the dot would also light up
+            // when the user is on the quiz / discussion panel.
+            let is_selected =
+                active_panel == "poll" && active_poll.as_deref() == Some(g.id.as_str());
             SbItem {
                 title: g.title,
                 meta: format!(
@@ -144,7 +149,8 @@ pub fn ReportSidebar() -> Element {
     let quiz_items: Vec<SbItem> = quiz_groups
         .into_iter()
         .map(|g| {
-            let is_selected = active_quiz.as_deref() == Some(g.id.as_str());
+            let is_selected =
+                active_panel == "quiz" && active_quiz.as_deref() == Some(g.id.as_str());
             SbItem {
                 title: g.title,
                 meta: format!(
@@ -171,7 +177,8 @@ pub fn ReportSidebar() -> Element {
         .iter()
         .map(|d| {
             let did = d.discussion_id.to_string();
-            let is_selected = active_discussion.as_deref() == Some(did.as_str());
+            let is_selected =
+                active_panel == "discussion" && active_discussion.as_deref() == Some(did.as_str());
             SbItem {
                 title: d.title.clone(),
                 meta: format!(
@@ -294,6 +301,11 @@ fn ReportSidebarGroup(group: SbGroup) -> Element {
                                 "data-target-panel": "{item.target}",
                                 "data-testid": "sb-item-{group.group}-{idx}",
                                 onclick: move |_| {
+                                    // Always switch the active panel so the
+                                    // sidebar's selected dot follows the panel
+                                    // currently in view (matches the JS-driven
+                                    // `data-active` swap).
+                                    ctrl.active_panel.set(target.to_string());
                                     if action_id.is_empty() {
                                         return;
                                     }
