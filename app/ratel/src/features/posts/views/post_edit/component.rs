@@ -1,13 +1,15 @@
 use dioxus::prelude::*;
 
 use super::i18n::PostEditTranslate;
+use super::posting_as::PostingAs;
 use crate::common::components::editor::Editor as RichEditor;
+use crate::common::contexts::use_team_context;
+use crate::common::types::{SpacePartition, TeamPartition, UserType};
 use crate::features::auth::hooks::use_user_context;
 use crate::features::posts::controllers::get_post::get_post_handler;
 use crate::features::posts::controllers::update_post::{update_post_handler, UpdatePostRequest};
 use crate::features::posts::controllers::{create_space_handler, CreateSpaceRequest};
 use crate::features::posts::models::Post;
-use crate::common::types::SpacePartition;
 use crate::features::posts::types::Visibility;
 use crate::features::posts::*;
 
@@ -32,15 +34,14 @@ enum PostKind {
 }
 
 #[component]
-pub fn PostEdit(post_id: FeedPartition) -> Element {
+pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
     let tr: PostEditTranslate = use_translate();
     let mut toast = use_toast();
     let nav = use_navigator();
     let mut popup = use_popup();
 
-    let loader_post_id = post_id.clone();
     let res = use_loader(move || {
-        let post_id = loader_post_id.clone();
+        let post_id = post_id();
         async move { get_post_handler(post_id).await }
     })?();
 
@@ -51,6 +52,8 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
     });
     let has_existing_space = existing_space_id.is_some();
     let initial_categories = post.categories.clone();
+    let initial_author_pk = post.user_pk.clone();
+    let initial_author_type = post.author_type.clone();
     let Post {
         title: init_title,
         html_contents,
@@ -58,8 +61,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
     } = post;
 
     let user_ctx = use_user_context();
-    let user_ctx_snapshot = user_ctx.read();
-    let (user_name, user_handle, user_avatar) = user_ctx_snapshot
+    let (user_name, user_handle, user_avatar) = user_ctx()
         .user
         .as_ref()
         .map(|u| {
@@ -75,14 +77,30 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
             };
             (display, u.username.clone(), avatar)
         })
-        .unwrap_or_else(|| ("You".to_string(), "".to_string(), DEFAULT_AVATAR.to_string()));
-    drop(user_ctx_snapshot);
+        .unwrap_or_else(|| {
+            (
+                "You".to_string(),
+                "".to_string(),
+                DEFAULT_AVATAR.to_string(),
+            )
+        });
 
     let user_label = if user_handle.is_empty() {
         user_name.clone()
     } else {
         format!("{user_name} · @{user_handle}")
     };
+
+    let team_ctx = use_team_context();
+    let teams_signal = team_ctx.teams;
+
+    // Selected author tracked as Option<String> (team pk). None = personal.
+    let initial_selected_team_pk: Option<String> = match (&initial_author_type, &initial_author_pk)
+    {
+        (UserType::Team, Partition::Team(id)) => Some(Partition::Team(id.clone()).to_string()),
+        _ => None,
+    };
+    let mut selected_team_pk = use_signal(move || initial_selected_team_pk.clone());
 
     let mut title = use_signal(move || init_title.clone());
     let mut content = use_signal(move || html_contents.clone());
@@ -127,7 +145,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
             }
             status.set(EditorStatus::Saving);
             match update_post_handler(
-                post_id,
+                post_id(),
                 UpdatePostRequest::Writing {
                     title: current_title.clone(),
                     content: current_content.clone(),
@@ -191,7 +209,6 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
         }
     });
 
-    let post_id_sig = use_signal(move || post_id.clone());
     let existing_space_id_sig = use_signal(move || existing_space_id.clone());
 
     let commit_publish = use_callback(move |_: ()| {
@@ -206,12 +223,11 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                 return;
             }
         }
-        let post_id = post_id_sig.peek().clone();
         if space_enabled() {
             spawn(async move {
                 status.set(EditorStatus::Publishing);
                 let publish_result = update_post_handler(
-                    post_id.clone(),
+                    post_id(),
                     UpdatePostRequest::Publish {
                         title: title(),
                         content: content(),
@@ -227,7 +243,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     status.set(EditorStatus::Unsaved);
                     return;
                 }
-                match create_space_handler(CreateSpaceRequest { post_id }).await {
+                match create_space_handler(CreateSpaceRequest { post_id: post_id() }).await {
                     Ok(resp) => {
                         nav.push(crate::Route::SpaceIndexPage {
                             space_id: resp.space_id,
@@ -246,7 +262,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
         spawn(async move {
             status.set(EditorStatus::Publishing);
             match update_post_handler(
-                post_id.clone(),
+                post_id(),
                 UpdatePostRequest::Publish {
                     title: title(),
                     content: content(),
@@ -259,7 +275,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
             .await
             {
                 Ok(_) => {
-                    nav.replace(crate::Route::PostDetail { post_id });
+                    nav.replace(crate::Route::PostDetail { post_id: post_id() });
                 }
                 Err(e) => {
                     dioxus::logger::tracing::error!("Publish failed: {:?}", e);
@@ -269,19 +285,17 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
         });
     });
 
-    let save_draft_post_id = post_id_sig;
     let commit_save_draft = use_callback(move |_: ()| {
         if status() == EditorStatus::Saving || status() == EditorStatus::Publishing {
             return;
         }
-        let post_id = save_draft_post_id.peek().clone();
         let current_title = title();
         let current_content = content();
         let current_cats = categories();
         spawn(async move {
             status.set(EditorStatus::Saving);
             match update_post_handler(
-                post_id,
+                post_id(),
                 UpdatePostRequest::Writing {
                     title: current_title.clone(),
                     content: current_content.clone(),
@@ -319,15 +333,45 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
         }
         current.push(tag);
         categories.set(current.clone());
-        mark_unsaved(&title(), &content(), &current, last_saved, status, save_version);
+        mark_unsaved(
+            &title(),
+            &content(),
+            &current,
+            last_saved,
+            status,
+            save_version,
+        );
     };
 
     let mut remove_tag = move |tag: String| {
         let mut current = categories();
         current.retain(|c| c != &tag);
         categories.set(current.clone());
-        mark_unsaved(&title(), &content(), &current, last_saved, status, save_version);
+        mark_unsaved(
+            &title(),
+            &content(),
+            &current,
+            last_saved,
+            status,
+            save_version,
+        );
     };
+
+    let switch_author = use_callback(move |team_pk: Option<String>| {
+        let team_pk_for_signal = team_pk.clone();
+        spawn(async move {
+            let team_id = team_pk.map(TeamPartition);
+            if let Err(e) =
+                update_post_handler(post_id(), UpdatePostRequest::Author { team_id }).await
+            {
+                dioxus::logger::tracing::error!("Failed to switch author: {:?}", e);
+                toast.error(e);
+                return;
+            }
+            selected_team_pk.set(team_pk_for_signal);
+            as_dropdown_open.set(false);
+        });
+    });
 
     rsx! {
         document::Link { rel: "preconnect", href: "https://fonts.googleapis.com" }
@@ -566,85 +610,14 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                         }
                     }
 
-                    // Posting As
-                    div { class: "side-card",
-                        div { class: "side-card__title",
-                            svg {
-                                view_box: "0 0 24 24",
-                                fill: "none",
-                                stroke: "currentColor",
-                                stroke_width: "2",
-                                stroke_linecap: "round",
-                                stroke_linejoin: "round",
-                                path { d: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" }
-                                circle { cx: "12", cy: "7", r: "4" }
-                            }
-                            "{tr.posting_as}"
-                        }
-                        div {
-                            class: "as-dropdown",
-                            id: "as-dropdown",
-                            "data-open": as_dropdown_open(),
-                            button {
-                                class: "as-dropdown__trigger",
-                                id: "as-dropdown-trigger",
-                                "aria-haspopup": "listbox",
-                                "aria-expanded": as_dropdown_open(),
-                                onclick: move |_| {
-                                    let next = !as_dropdown_open();
-                                    as_dropdown_open.set(next);
-                                },
-                                img {
-                                    class: "as-avatar",
-                                    src: "{user_avatar}",
-                                    alt: "",
-                                }
-                                div { class: "as-text",
-                                    span { class: "as-text__name", "{user_label}" }
-                                    span { class: "as-text__meta", "{tr.personal_feed}" }
-                                }
-                                span { class: "as-dropdown__chevron",
-                                    svg {
-                                        view_box: "0 0 24 24",
-                                        fill: "none",
-                                        stroke: "currentColor",
-                                        stroke_width: "2",
-                                        stroke_linecap: "round",
-                                        stroke_linejoin: "round",
-                                        polyline { points: "6 9 12 15 18 9" }
-                                    }
-                                }
-                            }
-                            div { class: "as-dropdown__menu", role: "listbox",
-                                div { class: "as-dropdown__group-label", "{tr.group_personal}" }
-                                button {
-                                    class: "as-dropdown__item",
-                                    role: "option",
-                                    "aria-selected": "true",
-                                    onclick: move |_| as_dropdown_open.set(false),
-                                    img {
-                                        class: "as-avatar",
-                                        src: "{user_avatar}",
-                                        alt: "",
-                                    }
-                                    div { class: "as-text",
-                                        span { class: "as-text__name", "{user_label}" }
-                                        span { class: "as-text__meta", "{tr.personal_feed}" }
-                                    }
-                                    span { class: "as-dropdown__check",
-                                        svg {
-                                            view_box: "0 0 24 24",
-                                            fill: "none",
-                                            stroke: "currentColor",
-                                            stroke_width: "3",
-                                            stroke_linecap: "round",
-                                            stroke_linejoin: "round",
-                                            polyline { points: "20 6 9 17 4 12" }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                    PostingAs {
+                        tr: tr.clone(),
+                        user_avatar: user_avatar.clone(),
+                        user_label: user_label.clone(),
+                        teams: teams_signal(),
+                        selected_team_pk: selected_team_pk(),
+                        open: as_dropdown_open,
+                        on_switch: switch_author,
                     }
 
                     // Enable Space

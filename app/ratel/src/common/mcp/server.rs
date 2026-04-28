@@ -570,8 +570,11 @@ impl RatelMcpServer {
         name = "list_teams",
         description = "List all teams the user belongs to with their role and permissions. Use team_id from the result as the team_id parameter in create_post to post under a team."
     )]
-    async fn list_teams(&self) -> McpResult {
-        crate::features::social::controllers::get_user_teams_handler_mcp_handler(&self.mcp_secret).await
+    async fn list_teams(
+        &self,
+        Parameters(req): Parameters<crate::features::social::controllers::GetUserTeamsHandlerMcpRequest>,
+    ) -> McpResult {
+        crate::features::social::controllers::get_user_teams_handler_mcp_handler(&self.mcp_secret, req).await
     }
 
     // ── Notification inbox tools ────────────────────────────────────

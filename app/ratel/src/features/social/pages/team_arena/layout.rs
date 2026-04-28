@@ -32,9 +32,7 @@ pub fn use_team_arena() -> TeamArenaContext {
 /// `SocialLayout` + `TeamSettingLayout` for team-scoped pages.
 #[component]
 pub fn TeamArenaLayout(username: String) -> Element {
-    crate::common::contexts::TeamContext::init();
     let user_ctx = crate::features::auth::hooks::use_user_context();
-    let mut team_ctx = crate::common::contexts::use_team_context();
 
     let active_tab = use_signal(|| TeamArenaTab::Home);
     let mut settings_open = use_signal(|| false);
@@ -59,19 +57,6 @@ pub fn TeamArenaLayout(username: String) -> Element {
 
     // Category filter signal consumed by TeamHome (carried over from SocialLayout).
     use_context_provider(|| Signal::new(Option::<String>::None));
-
-    // Hydrate team list into shared context (for switcher dropdown etc.)
-    let teams_future = use_server_future(move || async move {
-        crate::get_user_teams_handler(None)
-            .await
-            .map(|r| r.items)
-            .unwrap_or_default()
-    })?;
-    use_effect(move || {
-        if let Some(teams) = teams_future.value().read().clone() {
-            team_ctx.set_teams(teams);
-        }
-    });
 
     // Fetch the team record so we have display name, logo, and permissions.
     // Re-runs whenever `username` changes, `refresh_trigger` is bumped by a

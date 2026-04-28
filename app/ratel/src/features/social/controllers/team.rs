@@ -83,14 +83,19 @@ pub async fn create_team_handler(body: CreateTeamRequest) -> crate::features::so
 }
 
 #[mcp_tool(name = "list_teams", description = "List all teams the user belongs to with their role and permissions. Use team_id from the result as the team_id parameter in create_post to post under a team.")]
-#[post("/api/user-shell/teams/list", user: crate::features::auth::User)]
-pub async fn get_user_teams_handler() -> crate::features::social::Result<Vec<crate::common::contexts::TeamItem>> {
+#[post("/api/user-shell/teams/list?bookmark", user: crate::features::auth::User)]
+pub async fn get_user_teams_handler(
+    #[mcp(description = "Pagination bookmark from a previous response")]
+    bookmark: Option<String>,
+) -> crate::features::social::Result<crate::common::types::ListResponse<crate::common::contexts::TeamItem>> {
     let cli = crate::features::social::config::get().dynamodb();
     let user_pk = user.pk.clone();
 
     let sk_prefix = crate::common::types::EntityType::UserTeam(String::new()).to_string();
-    let opt = crate::features::auth::UserTeamQueryOption::builder().sk(sk_prefix);
-    let (user_teams, _): (Vec<crate::features::auth::UserTeam>, _) =
+    let opt = crate::features::auth::UserTeam::opt_with_bookmark(bookmark)
+        .sk(sk_prefix)
+        .limit(20);
+    let (user_teams, next_bookmark): (Vec<crate::features::auth::UserTeam>, _) =
         crate::features::auth::UserTeam::query(cli, &user_pk, opt).await?;
 
     let mut items: Vec<crate::common::contexts::TeamItem> = Vec::new();
@@ -136,5 +141,5 @@ pub async fn get_user_teams_handler() -> crate::features::social::Result<Vec<cra
         });
     }
 
-    Ok(items)
+    Ok((items, next_bookmark).into())
 }
