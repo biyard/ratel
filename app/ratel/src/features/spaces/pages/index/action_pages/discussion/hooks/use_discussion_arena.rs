@@ -82,7 +82,6 @@ pub struct UseDiscussionArena {
         InfiniteQuery<String, DiscussionCommentResponse, ListResponse<DiscussionCommentResponse>>,
     pub parent_loader: Loader<DiscussionCommentResponse>,
     pub replies_loader: Loader<ListResponse<DiscussionCommentResponse>>,
-    pub members_loader: Loader<ListResponse<SpaceMemberResponse>>,
     pub polled_new: Signal<Vec<DiscussionCommentResponse>>,
     pub last_seen_at: Signal<i64>,
     /// Bumped every poll tick so a `use_memo` over `comment_score` re-runs
@@ -231,6 +230,36 @@ pub fn use_discussion_arena(
         .await
     })?;
 
+    // Reply-aware mention priority needs the active thread's replies live.
+    // `replies_loader` above (use_loader) does not reliably re-run on
+    // `active_reply_thread` changes after SSR hydration — same race that
+    // broke `members_loader`. Drive a dedicated fetch from `use_effect`
+    // instead so the priority memo always sees current thread replies.
+    let mut thread_replies: Signal<Vec<DiscussionCommentResponse>> = use_signal(Vec::new);
+    use_effect(move || {
+        let id = active_reply_thread();
+        spawn(async move {
+            let items = match id {
+                None => Vec::new(),
+                Some(parent_id) => match list_replies(
+                    space_id(),
+                    discussion_id(),
+                    SpacePostCommentEntityType(parent_id),
+                    None,
+                )
+                .await
+                {
+                    Ok(r) => r.items,
+                    Err(e) => {
+                        crate::error!("thread_replies fetch failed: {e}");
+                        Vec::new()
+                    }
+                },
+            };
+            thread_replies.set(items);
+        });
+    });
+
     let mut polled_new: Signal<Vec<DiscussionCommentResponse>> = use_signal(Vec::new);
     let mut last_seen_at: Signal<i64> = use_signal(move || {
         comments_query
@@ -291,16 +320,32 @@ pub fn use_discussion_arena(
         });
     });
 
-    let members_loader = use_loader(move || async move {
-        match mention_query() {
-            None => Ok(ListResponse::<SpaceMemberResponse>::default()),
-            Some(q) => list_space_members(space_id(), None, Some(q)).await,
-        }
-    })?;
+    // `use_loader` does not reliably re-run on prop signal changes after SSR
+    // hydration in Dioxus 0.7 — confirmed empirically: even when
+    // `mention_query` flips from None to Some(""), the loader closure never
+    // fires post-hydration. Drive the fetch from `use_effect` (which does
+    // re-run reliably, as the debounce above demonstrates) and store
+    // results in a plain Signal that downstream `use_memo` reads.
+    let mut members_signal: Signal<Vec<SpaceMemberResponse>> = use_signal(Vec::new);
+    use_effect(move || {
+        let q = mention_query();
+        spawn(async move {
+            let items = match q {
+                None => Vec::new(),
+                Some(q) => match list_space_members(space_id(), None, Some(q)).await {
+                    Ok(r) => r.items,
+                    Err(e) => {
+                        crate::error!("mention members fetch failed: {e}");
+                        Vec::new()
+                    }
+                },
+            };
+            members_signal.set(items);
+        });
+    });
 
     let members_memo = use_memo(move || {
-        members_loader()
-            .items
+        members_signal()
             .into_iter()
             .map(|m| {
                 let pk: Partition = m.user_id.clone().into();
@@ -320,6 +365,43 @@ pub fn use_discussion_arena(
         let polled = polled_new();
         let base_sks: std::collections::HashSet<String> =
             base.iter().map(|c| c.sk.to_string()).collect();
+
+        // Reply mode: hoist parent comment author as primary, reply
+        // authors as the thread. Falls back to the discussion-wide
+        // ordering below if the parent isn't in the loaded base/polled
+        // set (very old thread scrolled past).
+        if let Some(parent_id) = active_reply_thread() {
+            let parent_sk_str =
+                EntityType::SpacePostComment(parent_id).to_string();
+            let parent = base
+                .iter()
+                .chain(polled.iter())
+                .find(|c| c.sk.to_string() == parent_sk_str);
+
+            if let Some(parent) = parent {
+                let replies = thread_replies();
+                let parent_tuple =
+                    (parent.author_pk.to_string(), parent.content.clone());
+                let reply_tuples: Vec<(String, String)> = replies
+                    .iter()
+                    .map(|r| (r.author_pk.to_string(), r.content.clone()))
+                    .collect();
+
+                let primary_ref = (parent_tuple.0.as_str(), parent_tuple.1.as_str());
+                let thread_refs: Vec<(&str, &str)> = reply_tuples
+                    .iter()
+                    .map(|(a, c)| (a.as_str(), c.as_str()))
+                    .collect();
+
+                return crate::common::utils::mention::build_mention_priority(
+                    Some(primary_ref),
+                    &thread_refs,
+                );
+            }
+        }
+
+        // Non-reply mode: every loaded participant gets equal-rank
+        // priority over non-participants (no single primary).
         let tuples: Vec<(String, String)> = base
             .iter()
             .chain(
@@ -504,7 +586,6 @@ pub fn use_discussion_arena(
         comments_query,
         parent_loader,
         replies_loader,
-        members_loader,
         polled_new,
         last_seen_at,
         sort_tick,

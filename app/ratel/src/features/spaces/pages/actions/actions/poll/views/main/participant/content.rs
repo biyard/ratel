@@ -92,7 +92,11 @@ pub fn PollContent(
                         .map(|i| answers_map.get(&i).cloned().unwrap_or_default())
                         .collect();
 
-                    let req = RespondPollRequest { answers: payload };
+                    let req = RespondPollRequest {
+                        answers: payload,
+                        client_ciphertext_json: None,
+                        client_voter_tag: None,
+                    };
 
                     match respond_poll(space_id(), poll_id(), req).await {
                         Ok(_) => {

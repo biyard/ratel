@@ -27,7 +27,6 @@ dioxus-translate-types = { path = "packages/dioxus-translate-types", version = "
 dioxus-translate-macro = { path = "packages/dioxus-translate-macro", version = "0.1.*" }
 by-macros = { path = "packages/by-macros", version = "0.6.*" }
 
-dioxus-components = { path = "app/interops/web-components" }
 icons = { path = "packages/icons" }
 
 bigdecimal = "0.4.7"

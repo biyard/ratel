@@ -30,6 +30,10 @@ pub enum DetailType {
     AiModeratorReplyIndex,
     ActivityScoreAggregate,
     SpaceStatusChangeEvent,
+    /// Fires on SPACE_ACTION MODIFY when status transitions from DESIGNING to
+    /// ONGOING. Drives participant fan-out (inbox + email) for newly-live
+    /// actions inside an Ongoing space.
+    SpaceActionStatusChange,
     PollXpRecord,
     QuizXpRecord,
     DiscussionXpRecord,
@@ -155,6 +159,12 @@ impl EventBridgeEnvelope {
                 let event: crate::common::models::space::SpaceStatusChangeEvent =
                     DetailType::parse_detail(&self.detail)?;
                 crate::features::spaces::space_common::services::handle_space_status_change(event)
+                    .await
+            }
+            DetailType::SpaceActionStatusChange => {
+                let action: crate::features::spaces::pages::actions::models::SpaceAction =
+                    DetailType::parse_detail(&self.detail)?;
+                crate::features::spaces::pages::actions::services::notify_action_ongoing(action)
                     .await
             }
             DetailType::PollXpRecord => {

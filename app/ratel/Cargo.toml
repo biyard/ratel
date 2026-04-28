@@ -84,7 +84,6 @@ thiserror = { workspace = true }
 # Dependencies from common
 by-macros = { workspace = true }
 dioxus-translate = { workspace = true }
-dioxus-components = { workspace = true }
 lucide-dioxus = { workspace = true }
 bdk = { workspace = true, optional = true }
 ssi = { version = "0.12.0", features = ["bbs"], optional = true }
@@ -120,7 +119,7 @@ rmcp = { version = "0.7.0", git = "https://github.com/modelcontextprotocol/rust-
 [features]
 default = []
 bypass = []
-web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen"]
+web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile"]
 server = [
@@ -168,7 +167,7 @@ server = [
 
 lambda = ["lambda_http", "lambda_runtime", "server"]
 layout_test = ["web"]
-local-dev = ["beta","bypass","dep:pulldown-cmark"]
+local-dev = ["beta","dep:pulldown-cmark"]
 beta = []
 futures = ["dep:futures"]
 lindera = ["dep:lindera"]

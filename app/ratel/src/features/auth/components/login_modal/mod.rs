@@ -115,6 +115,11 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
         // itself so custom-scheme redirects are treated as user-gesture.
         #[cfg(feature = "web")]
         {
+            use crate::features::auth::interop::init_firebase;
+
+            let fb_conf = crate::common::FirebaseConfig::default().into();
+            init_firebase(&fb_conf);
+
             if let Some(kind) = detect_in_app_browser() {
                 match kind {
                     InAppBrowser::KakaoTalk => {
@@ -144,8 +149,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                 // Send a stable per-install device id so the server can
                 // mint a refresh_token. Without it, the next app restart
                 // would 401 on every authenticated call.
-                let device_id =
-                    crate::features::auth::services::device_id::get_or_create().await;
+                let device_id = crate::features::auth::services::device_id::get_or_create().await;
                 let result = login_handler(LoginRequest::OAuth {
                     provider: OauthProvider::Google,
                     access_token: user_info.access_token,
@@ -157,7 +161,9 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                 match result {
                     Ok(user) => {
                         if let Some(token) = user.refresh_token.as_ref() {
-                            crate::features::auth::services::restore_session::save_refresh_token(token);
+                            crate::features::auth::services::restore_session::save_refresh_token(
+                                token,
+                            );
                         }
                         user_ctx.set(UserContext {
                             user: Some(user.user),
@@ -197,6 +203,10 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
 
         #[cfg(feature = "web")]
         {
+            use crate::features::auth::interop::wallet_connect_initialize;
+            let wc_conf = crate::common::WalletConnectConfig::default();
+            wallet_connect_initialize(&wc_conf);
+
             let connect_result = match wallet_connect().await {
                 Ok(r) => r,
                 Err(e) => {
@@ -260,8 +270,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
 
             wallet_step.set(WalletStep::Done);
 
-            let device_id =
-                crate::features::auth::services::device_id::get_or_create().await;
+            let device_id = crate::features::auth::services::device_id::get_or_create().await;
             let login_result = login_handler(LoginRequest::Wallet {
                 signature,
                 evm_address: connect_result.address.clone(),
@@ -321,7 +330,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
                             {tr.open_wallet}
                         }
                     }
-                
+
                 }
             } else if loading() {
                 div { class: "flex absolute inset-0 justify-center items-center w-full h-full bg-background/95",

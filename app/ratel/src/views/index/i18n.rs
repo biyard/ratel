@@ -38,6 +38,11 @@ translate! {
         ko: "Essence",
     },
 
+    my_ai: {
+        en: "My AI",
+        ko: "마이 AI",
+    },
+
     settings: {
         en: "Settings",
         ko: "설정",
