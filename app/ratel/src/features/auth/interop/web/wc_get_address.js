@@ -1,5 +1,5 @@
 try {
-  const addr = await window.ratel.auth.wallet.getAddress();
+  const addr = await window.walletConnect.getAddress();
   dioxus.send(addr === undefined ? null : addr);
 } catch (e) {
   dioxus.send(null);

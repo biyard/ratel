@@ -185,19 +185,13 @@ export function isConnected() {
 }
 
 if (typeof window !== "undefined") {
-  if (!window.ratel) {
-    window.ratel = {};
-  }
-
-  if (window.ratel.walletConnect) {
-    window.ratel.walletConnect = {
-      initialize,
-      connect,
-      disconnect,
-      getAddress,
-      openWalletApp,
-      isConnected,
-      signMessage,
-    };
-  }
+  window.walletConnect = {
+    initialize,
+    connect,
+    disconnect,
+    getAddress,
+    openWalletApp,
+    isConnected,
+    signMessage,
+  };
 }
