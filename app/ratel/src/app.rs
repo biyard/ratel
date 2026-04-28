@@ -52,11 +52,11 @@ pub fn App() -> Element {
         // side effect is populating `window.ratel`, which still happens
         // when loaded as a module.
         document::Script { r#type: "module", src: MAIN_JS }
+        document::Script { r#type: "module", src: asset!("/assets/wallet-connect.js") }
         document::Script { src: "https://cdn.portone.io/v2/browser-sdk.js" }
         document::Stylesheet { href: asset!("/assets/tailwind.css") }
 
         crate::common::Provider {}
-        AuthProvider {}
 
         Router::<Route> {}
     }
