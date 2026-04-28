@@ -73,7 +73,36 @@ fn DiscussionSettingsCard() -> Element {
     // new analysis and re-locks once the row turns over. `Failed` and
     // "no row yet" stay editable from the start.
     let history = ctrl.discussion_results.read().clone();
-    let latest = history.items.first().cloned();
+    // Resolve the discussion id the panel is currently showing.
+    // Mirrors the loader's fallback logic: if the user hasn't picked
+    // anything yet, the first discussion in the detail payload is the
+    // implicit selection. Anything else lets a stale fetch result —
+    // the previous discussion's row still hanging around while the
+    // new fetch is in flight — masquerade as the current selection.
+    let detail_for_did = ctrl.detail.read().clone();
+    let cur_did = ctrl
+        .selected_discussion
+        .read()
+        .clone()
+        .or_else(|| {
+            detail_for_did
+                .discussions
+                .first()
+                .map(|d| d.discussion_id.to_string())
+        });
+    // Gate `latest` by discussion id: ignore rows whose own
+    // `discussion_id` doesn't match the panel's current selection.
+    // Without this, switching A→B would briefly hand the locked
+    // branch A's row (because the per-discussion loader still holds
+    // A's data while B's fetch is in flight) and the if-locked block
+    // below would re-pull A's params into `excluded_text` —
+    // exactly the "이거, 그거 leaks across discussions" symptom.
+    let latest = history.items.first().cloned().filter(|r| {
+        cur_did
+            .as_deref()
+            .map(|d| r.discussion_id == d)
+            .unwrap_or(false)
+    });
     let mut is_editing = use_signal(|| false);
     let row_running = matches!(
         latest.as_ref().map(|r| r.status.clone()),
@@ -114,11 +143,41 @@ fn DiscussionSettingsCard() -> Element {
         }
     }
 
-    // Reset counter — bumped on 초기화. Drives `key` on each input so
-    // the DOM nodes are torn down and rebuilt with the freshly-set
-    // signal values; without this, controlled inputs sometimes hold
-    // onto the typed text even after the underlying signal cleared.
+    // Reset counter — bumped on 초기화 (and also on discussion
+    // switches below). Drives `key` on each input so the DOM nodes
+    // are torn down and rebuilt with the freshly-set signal values;
+    // without this, controlled inputs sometimes hold onto the typed
+    // text even after the underlying signal cleared.
     let mut reset_key = use_signal(|| 0u32);
+
+    // Each discussion has its own analysis settings. When the user
+    // switches sidebar discussions, snap the editable form back to
+    // defaults so an unsubmitted edit (or a stale `is_editing` flag)
+    // from the previous discussion doesn't leak. Locked rows
+    // re-derive their displayed values from the gated `latest` row
+    // above — this effect only governs the signal state that the
+    // editable branch reads.
+    //
+    // Track the previous did in a Signal so the reset fires exactly
+    // once per real change. Subscribing to `selected_discussion` via
+    // `use_effect` also works, but Dioxus 0.7 effects are scheduled
+    // post-render and the same render's if-locked block can fire
+    // first — gating `latest` (above) closes that race; the explicit
+    // diff here keeps the reset minimal and obvious.
+    let mut prev_did = use_signal::<Option<String>>(|| None);
+    let cur_for_reset = cur_did.clone();
+    if *prev_did.read() != cur_for_reset {
+        prev_did.set(cur_for_reset);
+        ctrl.params.set(DiscussionAnalysisParams {
+            num_topics: 10,
+            top_n_tfidf: 20,
+            top_n_network: 15,
+            excluded_keywords: Vec::new(),
+        });
+        excluded_text.set(String::new());
+        reset_key.with_mut(|k| *k = k.wrapping_add(1));
+        is_editing.set(false);
+    }
 
     rsx! {
         section { class: "card",

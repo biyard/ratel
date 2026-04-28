@@ -206,8 +206,6 @@ async fn match_discussion(
     cli: &aws_sdk_dynamodb::Client,
     filter: &AnalyzeReportFilter,
 ) -> Result<(HashSet<String>, i64)> {
-    use crate::features::spaces::pages::actions::actions::discussion::SpacePostComment;
-
     let post_pk = Partition::SpacePost(filter.item_id.clone());
     let keyword = filter.option_text.trim();
     if keyword.is_empty() {
@@ -215,28 +213,19 @@ async fn match_discussion(
     }
     let needle = keyword.to_lowercase();
 
-    let mut bookmark: Option<String> = None;
     let mut matched: HashSet<String> = HashSet::new();
     let mut total: i64 = 0;
-    let comment_sk = EntityType::SpacePostComment(String::default()).to_string();
 
-    loop {
-        let mut opt = SpacePostComment::opt().sk(comment_sk.clone()).limit(100);
-        if let Some(b) = bookmark.clone() {
-            opt = opt.bookmark(b);
+    // Walks top-level comments AND replies (`iter_post_comments`
+    // covers both prefixes). Same keyword-in-body semantic as before
+    // — just no longer reply-blind.
+    iter_post_comments(cli, post_pk, |row| {
+        total += 1;
+        if row.content.to_lowercase().contains(&needle) {
+            matched.insert(row.author_pk.to_string());
         }
-        let (rows, next) = SpacePostComment::query(cli, post_pk.clone(), opt).await?;
-        total += rows.len() as i64;
-        for row in rows {
-            if row.content.to_lowercase().contains(&needle) {
-                matched.insert(row.author_pk.to_string());
-            }
-        }
-        match next {
-            Some(b) => bookmark = Some(b),
-            None => break,
-        }
-    }
+    })
+    .await?;
 
     Ok((matched, total))
 }
@@ -282,4 +271,42 @@ async fn match_follow(
     }
 
     Ok((matched, total))
+}
+
+/// Walk every top-level comment AND reply on a post, invoking
+/// `visitor` for each row. Replies live under the same DDB partition
+/// as the parent post but use a different sk prefix
+/// (`SPACE_POST_COMMENT_REPLY#` vs `SPACE_POST_COMMENT#`), so a
+/// single `begins_with("SPACE_POST_COMMENT#")` filter — which the
+/// older callers in this module used — silently skipped every reply.
+/// Two paginated queries cover both prefixes; merging happens
+/// implicitly via the shared visitor closure.
+pub async fn iter_post_comments<F>(
+    cli: &aws_sdk_dynamodb::Client,
+    post_pk: Partition,
+    mut visitor: F,
+) -> Result<()>
+where
+    F: FnMut(crate::features::spaces::pages::actions::actions::discussion::SpacePostComment),
+{
+    use crate::features::spaces::pages::actions::actions::discussion::SpacePostComment;
+
+    for prefix in ["SPACE_POST_COMMENT#", "SPACE_POST_COMMENT_REPLY#"] {
+        let mut bookmark: Option<String> = None;
+        loop {
+            let mut opt = SpacePostComment::opt().sk(prefix.to_string()).limit(100);
+            if let Some(b) = bookmark.clone() {
+                opt = opt.bookmark(b);
+            }
+            let (rows, next) = SpacePostComment::query(cli, post_pk.clone(), opt).await?;
+            for row in rows {
+                visitor(row);
+            }
+            match next {
+                Some(b) => bookmark = Some(b),
+                None => break,
+            }
+        }
+    }
+    Ok(())
 }
