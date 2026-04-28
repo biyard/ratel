@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 
 use super::i18n::PostEditTranslate;
+use super::posting_as::PostingAs;
 use crate::common::components::editor::Editor as RichEditor;
 use crate::common::contexts::use_team_context;
 use crate::common::types::{SpacePartition, TeamPartition, UserType};
@@ -33,15 +34,14 @@ enum PostKind {
 }
 
 #[component]
-pub fn PostEdit(post_id: FeedPartition) -> Element {
+pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
     let tr: PostEditTranslate = use_translate();
     let mut toast = use_toast();
     let nav = use_navigator();
     let mut popup = use_popup();
 
-    let loader_post_id = post_id.clone();
     let res = use_loader(move || {
-        let post_id = loader_post_id.clone();
+        let post_id = post_id();
         async move { get_post_handler(post_id).await }
     })?();
 
@@ -97,7 +97,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
     // Selected author tracked as Option<String> (team pk). None = personal.
     let initial_selected_team_pk: Option<String> = match (&initial_author_type, &initial_author_pk)
     {
-        (UserType::Team, Partition::Team(id)) => Some(id.clone()),
+        (UserType::Team, Partition::Team(id)) => Some(Partition::Team(id.clone()).to_string()),
         _ => None,
     };
     let mut selected_team_pk = use_signal(move || initial_selected_team_pk.clone());
@@ -145,7 +145,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
             }
             status.set(EditorStatus::Saving);
             match update_post_handler(
-                post_id,
+                post_id(),
                 UpdatePostRequest::Writing {
                     title: current_title.clone(),
                     content: current_content.clone(),
@@ -209,7 +209,6 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
         }
     });
 
-    let post_id_sig = use_signal(move || post_id.clone());
     let existing_space_id_sig = use_signal(move || existing_space_id.clone());
 
     let commit_publish = use_callback(move |_: ()| {
@@ -224,12 +223,11 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                 return;
             }
         }
-        let post_id = post_id_sig.peek().clone();
         if space_enabled() {
             spawn(async move {
                 status.set(EditorStatus::Publishing);
                 let publish_result = update_post_handler(
-                    post_id.clone(),
+                    post_id(),
                     UpdatePostRequest::Publish {
                         title: title(),
                         content: content(),
@@ -245,7 +243,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                     status.set(EditorStatus::Unsaved);
                     return;
                 }
-                match create_space_handler(CreateSpaceRequest { post_id }).await {
+                match create_space_handler(CreateSpaceRequest { post_id: post_id() }).await {
                     Ok(resp) => {
                         nav.push(crate::Route::SpaceIndexPage {
                             space_id: resp.space_id,
@@ -264,7 +262,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
         spawn(async move {
             status.set(EditorStatus::Publishing);
             match update_post_handler(
-                post_id.clone(),
+                post_id(),
                 UpdatePostRequest::Publish {
                     title: title(),
                     content: content(),
@@ -277,7 +275,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
             .await
             {
                 Ok(_) => {
-                    nav.replace(crate::Route::PostDetail { post_id });
+                    nav.replace(crate::Route::PostDetail { post_id: post_id() });
                 }
                 Err(e) => {
                     dioxus::logger::tracing::error!("Publish failed: {:?}", e);
@@ -287,19 +285,17 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
         });
     });
 
-    let save_draft_post_id = post_id_sig;
     let commit_save_draft = use_callback(move |_: ()| {
         if status() == EditorStatus::Saving || status() == EditorStatus::Publishing {
             return;
         }
-        let post_id = save_draft_post_id.peek().clone();
         let current_title = title();
         let current_content = content();
         let current_cats = categories();
         spawn(async move {
             status.set(EditorStatus::Saving);
             match update_post_handler(
-                post_id,
+                post_id(),
                 UpdatePostRequest::Writing {
                     title: current_title.clone(),
                     content: current_content.clone(),
@@ -362,12 +358,11 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
     };
 
     let switch_author = use_callback(move |team_pk: Option<String>| {
-        let post_id = post_id_sig.peek().clone();
         let team_pk_for_signal = team_pk.clone();
         spawn(async move {
             let team_id = team_pk.map(TeamPartition);
             if let Err(e) =
-                update_post_handler(post_id, UpdatePostRequest::Author { team_id }).await
+                update_post_handler(post_id(), UpdatePostRequest::Author { team_id }).await
             {
                 dioxus::logger::tracing::error!("Failed to switch author: {:?}", e);
                 toast.error(e);
@@ -615,162 +610,14 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                         }
                     }
 
-                    // Posting As
-                    div { class: "side-card",
-                        div { class: "side-card__title",
-                            svg {
-                                view_box: "0 0 24 24",
-                                fill: "none",
-                                stroke: "currentColor",
-                                stroke_width: "2",
-                                stroke_linecap: "round",
-                                stroke_linejoin: "round",
-                                path { d: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" }
-                                circle { cx: "12", cy: "7", r: "4" }
-                            }
-                            "{tr.posting_as}"
-                        }
-                        {
-                            let selected_pk = selected_team_pk();
-                            let teams = teams_signal();
-                            let (trigger_avatar, trigger_name, trigger_meta, trigger_avatar_team) =
-                                match selected_pk
-                                .as_ref()
-                                .and_then(|pk| teams.iter().find(|t| &t.pk == pk).cloned())
-                            {
-                                Some(team) => {
-                                    let avatar = if team.profile_url.is_empty() {
-                                        DEFAULT_AVATAR.to_string()
-                                    } else {
-                                        team.profile_url.clone()
-                                    };
-                                    let name = if team.nickname.is_empty() {
-                                        team.username.clone()
-                                    } else {
-                                        team.nickname.clone()
-                                    };
-                                    (avatar, name, tr.team_meta.to_string(), true)
-                                }
-                                None => {
-                                    (
-                                        user_avatar.clone(),
-                                        user_label.clone(),
-                                        tr.personal_feed.to_string(),
-                                        false,
-                                    )
-                                }
-                            };
-                            rsx! {
-                                div {
-                                    class: "as-dropdown",
-                                    id: "as-dropdown",
-                                    "data-open": as_dropdown_open(),
-                                    button {
-                                        class: "as-dropdown__trigger",
-                                        id: "as-dropdown-trigger",
-                                        "aria-haspopup": "listbox",
-                                        "aria-expanded": as_dropdown_open(),
-                                        onclick: move |_| {
-                                            let next = !as_dropdown_open();
-                                            as_dropdown_open.set(next);
-                                        },
-                                        img {
-                                            class: if trigger_avatar_team { "as-avatar as-avatar--team" } else { "as-avatar" },
-                                            src: "{trigger_avatar}",
-                                            alt: "",
-                                        }
-                                        div { class: "as-text",
-                                            span { class: "as-text__name", "{trigger_name}" }
-                                            span { class: "as-text__meta", "{trigger_meta}" }
-                                        }
-                                        span { class: "as-dropdown__chevron",
-                                            svg {
-                                                view_box: "0 0 24 24",
-                                                fill: "none",
-                                                stroke: "currentColor",
-                                                stroke_width: "2",
-                                                stroke_linecap: "round",
-                                                stroke_linejoin: "round",
-                                                polyline { points: "6 9 12 15 18 9" }
-                                            }
-                                        }
-                                    }
-                                    div { class: "as-dropdown__menu", role: "listbox",
-                                        div { class: "as-dropdown__group-label", "{tr.group_personal}" }
-                                        button {
-                                            class: "as-dropdown__item",
-                                            role: "option",
-                                            "aria-selected": selected_pk.is_none(),
-                                            onclick: move |_| switch_author.call(None),
-                                            img { class: "as-avatar", src: "{user_avatar}", alt: "" }
-                                            div { class: "as-text",
-                                                span { class: "as-text__name", "{user_label}" }
-                                                span { class: "as-text__meta", "{tr.personal_feed}" }
-                                            }
-                                            span { class: "as-dropdown__check",
-                                                svg {
-                                                    view_box: "0 0 24 24",
-                                                    fill: "none",
-                                                    stroke: "currentColor",
-                                                    stroke_width: "3",
-                                                    stroke_linecap: "round",
-                                                    stroke_linejoin: "round",
-                                                    polyline { points: "20 6 9 17 4 12" }
-                                                }
-                                            }
-                                        }
-                                        if !teams.is_empty() {
-                                            div { class: "as-dropdown__group-label", "{tr.group_teams}" }
-                                            for team in teams.iter().cloned() {
-                                                {
-                                                    let team_pk = team.pk.clone();
-                                                    let team_pk_match = team.pk.clone();
-                                                    let is_selected = selected_pk
-                                                        .as_ref()
-                                                        .map(|pk| pk == &team_pk_match)
-                                                        .unwrap_or(false);
-                                                    let team_avatar = if team.profile_url.is_empty() {
-                                                        DEFAULT_AVATAR.to_string()
-                                                    } else {
-                                                        team.profile_url.clone()
-                                                    };
-                                                    let team_name = if team.nickname.is_empty() {
-                                                        team.username.clone()
-                                                    } else {
-                                                        team.nickname.clone()
-                                                    };
-                                                    rsx! {
-                                                        button {
-                                                            key: "{team_pk}",
-                                                            class: "as-dropdown__item",
-                                                            role: "option",
-                                                            "aria-selected": is_selected,
-                                                            onclick: move |_| switch_author.call(Some(team_pk.clone())),
-                                                            img { class: "as-avatar as-avatar--team", src: "{team_avatar}", alt: "" }
-                                                            div { class: "as-text",
-                                                                span { class: "as-text__name", "{team_name}" }
-                                                                span { class: "as-text__meta", "{tr.team_meta}" }
-                                                            }
-                                                            span { class: "as-dropdown__check",
-                                                                svg {
-                                                                    view_box: "0 0 24 24",
-                                                                    fill: "none",
-                                                                    stroke: "currentColor",
-                                                                    stroke_width: "3",
-                                                                    stroke_linecap: "round",
-                                                                    stroke_linejoin: "round",
-                                                                    polyline { points: "20 6 9 17 4 12" }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                    PostingAs {
+                        tr: tr.clone(),
+                        user_avatar: user_avatar.clone(),
+                        user_label: user_label.clone(),
+                        teams: teams_signal(),
+                        selected_team_pk: selected_team_pk(),
+                        open: as_dropdown_open,
+                        on_switch: switch_author,
                     }
 
                     // Enable Space
