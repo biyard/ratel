@@ -2,7 +2,6 @@ import teams from "./teams";
 import users from "./users";
 import membership from "./membership";
 import spaces from "./spaces";
-import auth from "./auth";
 import common from "./common";
 import tokens from "./tokens";
 
