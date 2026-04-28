@@ -215,6 +215,10 @@ pub enum EntityType {
     SpaceActivity(String), // SPACE_ACTIVITY#action_id#timestamp
     SpaceScore,
 
+    // Hot space ranking snapshot. PK: SPACE#{space_id}, SK: HotSpace.
+    // Row carries denormalized counts + WindowedRankKey on gsi1 for global ranking.
+    HotSpace,
+
     // Essence — user's knowledge graph entries. Each row is a reference to
     // something the user authored (Post, Poll, Quiz, PostComment,
     // DiscussionComment) or imported (Notion). pk = USER#{user_id}.
