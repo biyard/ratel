@@ -12,5 +12,8 @@ pub use dashboard::*;
 mod hot_space;
 pub use hot_space::*;
 
+mod user_hot_space;
+pub use user_hot_space::*;
+
 pub use space_email_verification::*;
 pub use space_invitation_member::*;
