@@ -25,3 +25,5 @@ pub mod me;
 pub mod notifications;
 
 pub mod sub_team;
+
+pub mod cross_posting;
