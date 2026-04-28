@@ -155,6 +155,32 @@ pub async fn handle_stream_record(
                 {
                     tracing::error!(error = %e, "stream: FollowXpRecord failed");
                 }
+            } else if sk.starts_with("SPACE_ANALYZE_REPORT#") {
+                // AnalyzeReportInProgress: kick off auto poll/quiz/follow
+                // analysis. Filter on INSERT only — Lambda's own status
+                // flip would otherwise re-trigger this branch via MODIFY.
+                let report = deserialize(image)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                if let Err(e) =
+                    crate::features::spaces::pages::apps::apps::analyzes::services::auto_analysis::process_analyze_report(cli, &report)
+                        .await
+                {
+                    tracing::error!(error = %e, "stream: AnalyzeReportInProgress failed");
+                }
+            } else if sk.starts_with("SPACE_ANALYZE_DISCUSSION_RESULT#") {
+                // AnalyzeDiscussionInProgress: discussion text analysis
+                // pipeline. INSERT-only filter on the pipe keeps the
+                // updater's MODIFY from re-triggering the handler.
+                let row = deserialize(image)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                if let Err(e) =
+                    crate::features::spaces::pages::apps::apps::analyzes::services::discussion_analysis::process_discussion_analysis(cli, &row)
+                        .await
+                {
+                    tracing::error!(error = %e, "stream: AnalyzeDiscussionInProgress failed");
+                }
             }
         }
         "MODIFY" => {

@@ -59,16 +59,21 @@
   position: relative;
   width: 100%;
   height: 100vh;
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* Fixed-shell pattern (mirrors views/report/style.css): the root is
+     a viewport-locked flex column with NO scrollbar of its own; the
+     inner `.arena` flex child is what actually scrolls. The previous
+     setup (root with `overflow-y: auto`) silently no-op'd because the
+     parent space-layout outlet is `flex-row` with its own overflow
+     handling — the root's intrinsic 100vh ended up clipped before its
+     scrollbar could ever activate. */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   isolation: isolate;
   background: var(--bg-void);
   color: var(--text-primary);
   font-family: var(--font-body);
-  /* Arena owns its own scrollbar — same pattern as
-     `pages/apps/apps/file/views/home/style.css`. */
+  align-self: flex-start;
 }
 
 .analyze-arena.analyze-arena--create .arena {
@@ -76,14 +81,18 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  /* Reserve space for the fixed footer so cards aren't hidden behind
-     it when scrolled to the bottom. */
+  /* `.arena` is the actual scroll container under the fixed-shell
+     pattern. `flex: 1; min-height: 0;` lets it fill the viewport-
+     locked root while still allowing its content to overflow into
+     its own scrollbar. `position: sticky` on `.arena-topbar` keys
+     off this scroll context so the breadcrumb stays pinned. */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Reserve space for the fixed footer so the last card isn't hidden
+     behind it when scrolled to the bottom. */
   padding-bottom: 96px;
-  /* Without `flex-shrink: 0`, the inner arena (a flex child of the
-     100vh root) gets squeezed to the root's main-axis size and the
-     root's `overflow-y: auto` never fires — the content silently
-     clips. Pin the arena to its content height so the root scrolls. */
-  flex-shrink: 0;
 }
 .analyze-arena.analyze-arena--create .arena::before {
   content: '';

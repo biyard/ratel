@@ -8,6 +8,11 @@ use crate::features::spaces::pages::apps::models::SpaceApp;
 pub struct AnalyzeDiscussionItem {
     pub discussion_id: SpacePostEntityType,
     pub title: String,
+    /// Total comments on the discussion. Surfaced on the analyze
+    /// detail sidebar's per-item meta line ("142 댓글 · 38명 참여").
+    /// Defaults to 0 when omitted by older clients.
+    #[serde(default)]
+    pub comment_count: i64,
 }
 
 #[get("/api/spaces/{space_id}/apps/analyzes/discussions?bookmark", role: SpaceUserRole)]
@@ -29,6 +34,7 @@ pub async fn list_analyze_discussions(
         .map(|post| AnalyzeDiscussionItem {
             discussion_id: post.sk.clone().into(),
             title: post.title.trim().to_string(),
+            comment_count: post.comments,
         })
         .collect();
 

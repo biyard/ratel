@@ -3,6 +3,7 @@ mod hooks;
 mod i18n;
 mod interop;
 mod models;
+pub mod services;
 mod types;
 mod views;
 
