@@ -63,14 +63,20 @@ Every page view should include `SeoMeta { title: "..." }` and use `translate!` f
 
 ## Feature Hooks & Actions
 
-Every feature with interactive state exposes a `UseFeatureName` controller hook that bundles its signals, loaders, queries, and actions. Components consume the hook — never the server-function `_handler` directly.
+Every feature with interactive state exposes a context (or `UseFeatureName` controller hook) that bundles its signals, loaders, queries, and mutations. Components consume the context — never the server-function `_handler` directly.
 
-- Mutations must be wrapped in `use_action(...)` and placed inside the controller. Components call them via `handle.call(input)`.
+Two mutation shapes, picked by what the UI does with the result:
+- **`async fn` method on the context (default).** For most button handlers — component does `ctx.do_thing(payload).await` and decides UX on `Ok`/`Err`. Keeps components UI-only and mutates loaders/signals through one structure.
+- **`use_action(...)` field on the controller.** Only when the UI binds directly to `.pending()` / `.value()` / `.error()` for spinners, disabled states, or last-result/last-error displays.
+
+Other rules:
 - Controller hook signature: `pub fn use_feature() -> std::result::Result<UseFeature, RenderError>` — context-cached via `try_use_context()` + `provide_root_context(...)`.
-- `Action::call(&mut self)` takes a mutable borrow, so destructure action fields as `mut handle_xxx`.
-- **See `conventions/hooks-and-actions.md` for full rules, examples, and folder layout.**
+- For the action shape: `Action::call(&mut self)` takes a mutable borrow, so destructure action fields as `mut handle_xxx`.
+- **See `conventions/hooks-and-actions.md` for full rules, both shapes, picking guide, and folder layout.**
 
-Reference implementation: `app/ratel/src/features/notifications/hooks/use_inbox.rs`.
+Reference implementations:
+- `async fn` method shape — `app/ratel/src/common/contexts/team_context.rs` + `app/ratel/src/components/team_creation_popup/mod.rs`
+- `use_action` shape — `app/ratel/src/features/notifications/hooks/use_inbox.rs`
 
 ## Data Loading with `use_loader`
 

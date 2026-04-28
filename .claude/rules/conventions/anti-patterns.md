@@ -41,20 +41,41 @@ fn NotificationPanel() -> Element {
     }
 }
 
-// GOOD — mutation lives in a UseFeature controller, component just calls the action
+// GOOD (default) — mutation lives as an `async fn` method on the context;
+// component awaits it and decides UX (close popup, navigate, toast).
+#[component]
+fn TeamCreationPopup() -> Element {
+    let mut team_ctx = use_team_context();
+    let mut popup    = use_popup();
+    let nav          = use_navigator();
+    rsx! {
+        TeamCreationForm {
+            on_submit: move |payload| async move {
+                if let Ok(team) = team_ctx.create_team(payload).await {
+                    popup.close();
+                    nav.push(Route::TeamHome { username: team.username });
+                }
+            },
+        }
+    }
+}
+
+// GOOD (when UI binds to lifecycle) — mutation is a use_action field, component
+// calls action.call() and reads .pending() / .error() to drive the UI.
 #[component]
 fn NotificationPanel() -> Element {
     let UseInbox { mut handle_mark_all, .. } = use_inbox()?;
     rsx! {
         button {
-            onclick: move |_| handle_mark_all.call(),
+            disabled: handle_mark_all.pending(),
+            onclick:  move |_| handle_mark_all.call(),
             "Mark all as read"
         }
     }
 }
 ```
 
-Every feature exposes a `UseFeatureName` hook that owns loaders, queries, and `use_action(...)` mutations. Components destructure from that hook and never import server `_handler` functions. See `conventions/hooks-and-actions.md`.
+Every feature exposes its mutations through a context (or `UseFeatureName` hook). Components either await an `async fn` method on the context (default for button handlers) or call a `use_action` field (when the UI binds to `.pending()` / `.value()` / `.error()`). Components never import server `_handler` functions. See `conventions/hooks-and-actions.md` § Rule 3 for the picking guide.
 
 ## Use-Action Closure Without Explicit `Ok` Type
 
