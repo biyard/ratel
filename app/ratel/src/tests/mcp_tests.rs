@@ -123,7 +123,7 @@ async fn test_mcp_tool_list_teams() {
     let team_username = format!("t{}", &uuid::Uuid::new_v4().simple().to_string()[..7]);
     let (status, _, resp) = crate::test_post! {
         app: ctx.app.clone(),
-        path: "/api/teams/create",
+        path: "/api/user-shell/teams/create",
         headers: ctx.test_user.1.clone(),
         body: {
             "body": {
@@ -142,7 +142,10 @@ async fn test_mcp_tool_list_teams() {
     assert_eq!(status, 200, "list_teams: {:?}", body);
 
     let content = extract_tool_content(&body);
-    let teams = content.as_array().expect("list_teams should return an array");
+    let teams = content
+        .get("items")
+        .and_then(|v| v.as_array())
+        .expect("list_teams should return a ListResponse with items array");
     assert!(
         !teams.is_empty(),
         "list_teams should return at least one team after creation: {:?}",
@@ -242,7 +245,7 @@ async fn create_test_team(ctx: &TestContext) -> String {
     // create_team_handler(body: CreateTeamRequest, ...) → send {"body": {...}}
     let (status, _, resp) = crate::test_post! {
         app: ctx.app.clone(),
-        path: "/api/teams/create",
+        path: "/api/user-shell/teams/create",
         headers: ctx.test_user.1.clone(),
         body: {
             "body": {
@@ -268,7 +271,10 @@ async fn get_team_id_by_username(
     assert_eq!(status, 200, "list_teams: {:?}", body);
 
     let content = extract_tool_content(&body);
-    let teams = content.as_array().expect("list_teams should return array");
+    let teams = content
+        .get("items")
+        .and_then(|v| v.as_array())
+        .expect("list_teams should return a ListResponse with items array");
     teams
         .iter()
         .find(|t| t.get("username").and_then(|v| v.as_str()) == Some(username))
