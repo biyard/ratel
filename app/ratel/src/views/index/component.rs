@@ -45,7 +45,7 @@ pub fn Index() -> Element {
     let mut teams_query = use_infinite_query(move |bookmark| async move {
         let logged_in = user_ctx().user.is_some();
         if logged_in {
-            crate::get_user_teams_handler(bookmark).await
+            crate::features::social::controllers::get_user_teams_handler(bookmark).await
         } else {
             Ok(ListResponse::<TeamItem>::default())
         }
