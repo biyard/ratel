@@ -2,7 +2,6 @@ use crate::*;
 
 #[component]
 pub fn AppLayout() -> Element {
-    TeamContext::init();
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let mut team_ctx = use_team_context();
     let mut notifications_open = use_signal(|| false);
@@ -11,7 +10,7 @@ pub fn AppLayout() -> Element {
     let _teams_loader = use_resource(move || async move {
         let user = user_ctx().user.clone();
         if user.is_some() {
-            match get_user_teams_handler(None).await {
+            match crate::features::social::controllers::get_user_teams_handler(None).await {
                 Ok(resp) => {
                     team_ctx.set_teams(resp.items);
                 }
