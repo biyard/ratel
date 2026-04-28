@@ -87,13 +87,64 @@ pub async fn get_analyze_report(
 
     // 3. Sidebar discussion list — re-uses `list_analyze_discussions`'s
     //    payload shape for symmetry with the create wizard's picker.
-    let discussions = fetch_discussion_candidates(cli, &space_pk).await?;
+    let mut discussions = fetch_discussion_candidates(cli, &space_pk).await?;
+
+    // 4. Decorate each discussion with cross-filter aware counts so
+    //    the sidebar can show "X 댓글 · Y명 참여" for the matched
+    //    audience instead of the raw post-level numbers. Empty
+    //    filter list = "everyone" (matched_count == comment_count).
+    let matched: std::collections::HashSet<String> = if report_row.filters.is_empty() {
+        services::intersection::list_participant_user_pks(cli, &space_pk)
+            .await?
+            .into_iter()
+            .map(|p| p.to_string())
+            .collect()
+    } else {
+        let (set, _) =
+            services::intersection::intersect_filters(cli, &space_pk, &report_row.filters).await?;
+        set
+    };
+    decorate_with_matched_counts(cli, &mut discussions, &matched).await?;
 
     Ok(GetAnalyzeReportResponse {
         report: report_dto,
         result: result_payload,
         discussions,
     })
+}
+
+/// Walk each discussion's comments once and tally the slice authored
+/// by users in `matched`. We're explicitly not concurrent here —
+/// space-wide discussion counts are typically a handful of posts,
+/// each with at most a few hundred comments, and serial keeps the
+/// memory + DDB-RCU footprint predictable.
+///
+/// Counts top-level comments AND replies — `iter_post_comments`
+/// walks both prefixes for us.
+#[cfg(feature = "server")]
+async fn decorate_with_matched_counts(
+    cli: &aws_sdk_dynamodb::Client,
+    items: &mut [AnalyzeDiscussionItem],
+    matched: &std::collections::HashSet<String>,
+) -> Result<()> {
+    use std::collections::HashSet;
+
+    for item in items.iter_mut() {
+        let post_pk: Partition = Partition::SpacePost(item.discussion_id.to_string());
+        let mut comment_count: i64 = 0;
+        let mut participants: HashSet<String> = HashSet::new();
+        services::intersection::iter_post_comments(cli, post_pk, |row| {
+            let author = row.author_pk.to_string();
+            if matched.contains(&author) {
+                comment_count += 1;
+                participants.insert(author);
+            }
+        })
+        .await?;
+        item.matched_comment_count = comment_count;
+        item.matched_participant_count = participants.len() as i64;
+    }
+    Ok(())
 }
 
 #[cfg(feature = "server")]
@@ -121,6 +172,8 @@ async fn fetch_discussion_candidates(
                 discussion_id: post.sk.clone().into(),
                 title: post.title.trim().to_string(),
                 comment_count: post.comments,
+                matched_comment_count: 0,
+                matched_participant_count: 0,
             });
         }
         match next {

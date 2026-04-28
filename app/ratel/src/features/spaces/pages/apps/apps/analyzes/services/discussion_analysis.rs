@@ -146,32 +146,20 @@ async fn load_matched_comments(
     discussion_id: &str,
     matched_users: &HashSet<String>,
 ) -> Result<Vec<String>> {
-    use crate::features::spaces::pages::actions::actions::discussion::SpacePostComment;
-
     let post_pk = Partition::SpacePost(discussion_id.to_string());
-    let comment_sk_prefix = EntityType::SpacePostComment(String::default()).to_string();
-
     let mut comments: Vec<String> = Vec::new();
-    let mut bookmark: Option<String> = None;
 
-    loop {
-        let mut opt = SpacePostComment::opt()
-            .sk(comment_sk_prefix.clone())
-            .limit(100);
-        if let Some(b) = bookmark.clone() {
-            opt = opt.bookmark(b);
+    // Pulls top-level + reply bodies. `iter_post_comments` covers
+    // both sk prefixes (`SPACE_POST_COMMENT#` and
+    // `SPACE_POST_COMMENT_REPLY#`) so the LDA / TF-IDF / network
+    // pipeline ingests every text the matched users contributed —
+    // not just root comments.
+    services::intersection::iter_post_comments(cli, post_pk, |row| {
+        if matched_users.contains(&row.author_pk.to_string()) && !row.content.trim().is_empty() {
+            comments.push(row.content);
         }
-        let (rows, next) = SpacePostComment::query(cli, post_pk.clone(), opt).await?;
-        for row in rows {
-            if matched_users.contains(&row.author_pk.to_string()) && !row.content.trim().is_empty() {
-                comments.push(row.content);
-            }
-        }
-        match next {
-            Some(b) => bookmark = Some(b),
-            None => break,
-        }
-    }
+    })
+    .await?;
 
     Ok(comments)
 }

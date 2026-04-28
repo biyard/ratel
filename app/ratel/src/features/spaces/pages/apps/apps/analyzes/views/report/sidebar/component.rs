@@ -182,10 +182,16 @@ pub fn ReportSidebar() -> Element {
             SbItem {
                 title: d.title.clone(),
                 meta: format!(
+                    // Both numbers are cross-filter aware:
+                    //   matched_comment_count    = comments authored by
+                    //                              users in the matched
+                    //                              set on this post
+                    //   matched_participant_count = distinct authors
+                    //                              from that set
                     "{} {} · {}명 {}",
-                    d.comment_count,
+                    d.matched_comment_count,
                     tr.detail_sb_item_meta_comments,
-                    respondent,
+                    d.matched_participant_count,
                     tr.detail_sb_item_meta_participants,
                 ),
                 target: "discussion",
