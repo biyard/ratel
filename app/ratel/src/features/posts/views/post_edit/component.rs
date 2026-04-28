@@ -2,12 +2,13 @@ use dioxus::prelude::*;
 
 use super::i18n::PostEditTranslate;
 use crate::common::components::editor::Editor as RichEditor;
+use crate::common::contexts::use_team_context;
+use crate::common::types::{SpacePartition, TeamPartition, UserType};
 use crate::features::auth::hooks::use_user_context;
 use crate::features::posts::controllers::get_post::get_post_handler;
 use crate::features::posts::controllers::update_post::{update_post_handler, UpdatePostRequest};
 use crate::features::posts::controllers::{create_space_handler, CreateSpaceRequest};
 use crate::features::posts::models::Post;
-use crate::common::types::SpacePartition;
 use crate::features::posts::types::Visibility;
 use crate::features::posts::*;
 
@@ -51,6 +52,8 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
     });
     let has_existing_space = existing_space_id.is_some();
     let initial_categories = post.categories.clone();
+    let initial_author_pk = post.user_pk.clone();
+    let initial_author_type = post.author_type.clone();
     let Post {
         title: init_title,
         html_contents,
@@ -58,8 +61,7 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
     } = post;
 
     let user_ctx = use_user_context();
-    let user_ctx_snapshot = user_ctx.read();
-    let (user_name, user_handle, user_avatar) = user_ctx_snapshot
+    let (user_name, user_handle, user_avatar) = user_ctx()
         .user
         .as_ref()
         .map(|u| {
@@ -75,14 +77,30 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
             };
             (display, u.username.clone(), avatar)
         })
-        .unwrap_or_else(|| ("You".to_string(), "".to_string(), DEFAULT_AVATAR.to_string()));
-    drop(user_ctx_snapshot);
+        .unwrap_or_else(|| {
+            (
+                "You".to_string(),
+                "".to_string(),
+                DEFAULT_AVATAR.to_string(),
+            )
+        });
 
     let user_label = if user_handle.is_empty() {
         user_name.clone()
     } else {
         format!("{user_name} · @{user_handle}")
     };
+
+    let team_ctx = use_team_context();
+    let teams_signal = team_ctx.teams;
+
+    // Selected author tracked as Option<String> (team pk). None = personal.
+    let initial_selected_team_pk: Option<String> = match (&initial_author_type, &initial_author_pk)
+    {
+        (UserType::Team, Partition::Team(id)) => Some(id.clone()),
+        _ => None,
+    };
+    let mut selected_team_pk = use_signal(move || initial_selected_team_pk.clone());
 
     let mut title = use_signal(move || init_title.clone());
     let mut content = use_signal(move || html_contents.clone());
@@ -319,15 +337,46 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
         }
         current.push(tag);
         categories.set(current.clone());
-        mark_unsaved(&title(), &content(), &current, last_saved, status, save_version);
+        mark_unsaved(
+            &title(),
+            &content(),
+            &current,
+            last_saved,
+            status,
+            save_version,
+        );
     };
 
     let mut remove_tag = move |tag: String| {
         let mut current = categories();
         current.retain(|c| c != &tag);
         categories.set(current.clone());
-        mark_unsaved(&title(), &content(), &current, last_saved, status, save_version);
+        mark_unsaved(
+            &title(),
+            &content(),
+            &current,
+            last_saved,
+            status,
+            save_version,
+        );
     };
+
+    let switch_author = use_callback(move |team_pk: Option<String>| {
+        let post_id = post_id_sig.peek().clone();
+        let team_pk_for_signal = team_pk.clone();
+        spawn(async move {
+            let team_id = team_pk.map(TeamPartition);
+            if let Err(e) =
+                update_post_handler(post_id, UpdatePostRequest::Author { team_id }).await
+            {
+                dioxus::logger::tracing::error!("Failed to switch author: {:?}", e);
+                toast.error(e);
+                return;
+            }
+            selected_team_pk.set(team_pk_for_signal);
+            as_dropdown_open.set(false);
+        });
+    });
 
     rsx! {
         document::Link { rel: "preconnect", href: "https://fonts.googleapis.com" }
@@ -581,65 +630,142 @@ pub fn PostEdit(post_id: FeedPartition) -> Element {
                             }
                             "{tr.posting_as}"
                         }
-                        div {
-                            class: "as-dropdown",
-                            id: "as-dropdown",
-                            "data-open": as_dropdown_open(),
-                            button {
-                                class: "as-dropdown__trigger",
-                                id: "as-dropdown-trigger",
-                                "aria-haspopup": "listbox",
-                                "aria-expanded": as_dropdown_open(),
-                                onclick: move |_| {
-                                    let next = !as_dropdown_open();
-                                    as_dropdown_open.set(next);
-                                },
-                                img {
-                                    class: "as-avatar",
-                                    src: "{user_avatar}",
-                                    alt: "",
+                        {
+                            let selected_pk = selected_team_pk();
+                            let teams = teams_signal();
+                            let (trigger_avatar, trigger_name, trigger_meta, trigger_avatar_team) =
+                                match selected_pk
+                                .as_ref()
+                                .and_then(|pk| teams.iter().find(|t| &t.pk == pk).cloned())
+                            {
+                                Some(team) => {
+                                    let avatar = if team.profile_url.is_empty() {
+                                        DEFAULT_AVATAR.to_string()
+                                    } else {
+                                        team.profile_url.clone()
+                                    };
+                                    let name = if team.nickname.is_empty() {
+                                        team.username.clone()
+                                    } else {
+                                        team.nickname.clone()
+                                    };
+                                    (avatar, name, tr.team_meta.to_string(), true)
                                 }
-                                div { class: "as-text",
-                                    span { class: "as-text__name", "{user_label}" }
-                                    span { class: "as-text__meta", "{tr.personal_feed}" }
+                                None => {
+                                    (
+                                        user_avatar.clone(),
+                                        user_label.clone(),
+                                        tr.personal_feed.to_string(),
+                                        false,
+                                    )
                                 }
-                                span { class: "as-dropdown__chevron",
-                                    svg {
-                                        view_box: "0 0 24 24",
-                                        fill: "none",
-                                        stroke: "currentColor",
-                                        stroke_width: "2",
-                                        stroke_linecap: "round",
-                                        stroke_linejoin: "round",
-                                        polyline { points: "6 9 12 15 18 9" }
+                            };
+                            rsx! {
+                                div {
+                                    class: "as-dropdown",
+                                    id: "as-dropdown",
+                                    "data-open": as_dropdown_open(),
+                                    button {
+                                        class: "as-dropdown__trigger",
+                                        id: "as-dropdown-trigger",
+                                        "aria-haspopup": "listbox",
+                                        "aria-expanded": as_dropdown_open(),
+                                        onclick: move |_| {
+                                            let next = !as_dropdown_open();
+                                            as_dropdown_open.set(next);
+                                        },
+                                        img {
+                                            class: if trigger_avatar_team { "as-avatar as-avatar--team" } else { "as-avatar" },
+                                            src: "{trigger_avatar}",
+                                            alt: "",
+                                        }
+                                        div { class: "as-text",
+                                            span { class: "as-text__name", "{trigger_name}" }
+                                            span { class: "as-text__meta", "{trigger_meta}" }
+                                        }
+                                        span { class: "as-dropdown__chevron",
+                                            svg {
+                                                view_box: "0 0 24 24",
+                                                fill: "none",
+                                                stroke: "currentColor",
+                                                stroke_width: "2",
+                                                stroke_linecap: "round",
+                                                stroke_linejoin: "round",
+                                                polyline { points: "6 9 12 15 18 9" }
+                                            }
+                                        }
                                     }
-                                }
-                            }
-                            div { class: "as-dropdown__menu", role: "listbox",
-                                div { class: "as-dropdown__group-label", "{tr.group_personal}" }
-                                button {
-                                    class: "as-dropdown__item",
-                                    role: "option",
-                                    "aria-selected": "true",
-                                    onclick: move |_| as_dropdown_open.set(false),
-                                    img {
-                                        class: "as-avatar",
-                                        src: "{user_avatar}",
-                                        alt: "",
-                                    }
-                                    div { class: "as-text",
-                                        span { class: "as-text__name", "{user_label}" }
-                                        span { class: "as-text__meta", "{tr.personal_feed}" }
-                                    }
-                                    span { class: "as-dropdown__check",
-                                        svg {
-                                            view_box: "0 0 24 24",
-                                            fill: "none",
-                                            stroke: "currentColor",
-                                            stroke_width: "3",
-                                            stroke_linecap: "round",
-                                            stroke_linejoin: "round",
-                                            polyline { points: "20 6 9 17 4 12" }
+                                    div { class: "as-dropdown__menu", role: "listbox",
+                                        div { class: "as-dropdown__group-label", "{tr.group_personal}" }
+                                        button {
+                                            class: "as-dropdown__item",
+                                            role: "option",
+                                            "aria-selected": selected_pk.is_none(),
+                                            onclick: move |_| switch_author.call(None),
+                                            img { class: "as-avatar", src: "{user_avatar}", alt: "" }
+                                            div { class: "as-text",
+                                                span { class: "as-text__name", "{user_label}" }
+                                                span { class: "as-text__meta", "{tr.personal_feed}" }
+                                            }
+                                            span { class: "as-dropdown__check",
+                                                svg {
+                                                    view_box: "0 0 24 24",
+                                                    fill: "none",
+                                                    stroke: "currentColor",
+                                                    stroke_width: "3",
+                                                    stroke_linecap: "round",
+                                                    stroke_linejoin: "round",
+                                                    polyline { points: "20 6 9 17 4 12" }
+                                                }
+                                            }
+                                        }
+                                        if !teams.is_empty() {
+                                            div { class: "as-dropdown__group-label", "{tr.group_teams}" }
+                                            for team in teams.iter().cloned() {
+                                                {
+                                                    let team_pk = team.pk.clone();
+                                                    let team_pk_match = team.pk.clone();
+                                                    let is_selected = selected_pk
+                                                        .as_ref()
+                                                        .map(|pk| pk == &team_pk_match)
+                                                        .unwrap_or(false);
+                                                    let team_avatar = if team.profile_url.is_empty() {
+                                                        DEFAULT_AVATAR.to_string()
+                                                    } else {
+                                                        team.profile_url.clone()
+                                                    };
+                                                    let team_name = if team.nickname.is_empty() {
+                                                        team.username.clone()
+                                                    } else {
+                                                        team.nickname.clone()
+                                                    };
+                                                    rsx! {
+                                                        button {
+                                                            key: "{team_pk}",
+                                                            class: "as-dropdown__item",
+                                                            role: "option",
+                                                            "aria-selected": is_selected,
+                                                            onclick: move |_| switch_author.call(Some(team_pk.clone())),
+                                                            img { class: "as-avatar as-avatar--team", src: "{team_avatar}", alt: "" }
+                                                            div { class: "as-text",
+                                                                span { class: "as-text__name", "{team_name}" }
+                                                                span { class: "as-text__meta", "{tr.team_meta}" }
+                                                            }
+                                                            span { class: "as-dropdown__check",
+                                                                svg {
+                                                                    view_box: "0 0 24 24",
+                                                                    fill: "none",
+                                                                    stroke: "currentColor",
+                                                                    stroke_width: "3",
+                                                                    stroke_linecap: "round",
+                                                                    stroke_linejoin: "round",
+                                                                    polyline { points: "20 6 9 17 4 12" }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
