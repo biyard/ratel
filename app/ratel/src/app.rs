@@ -56,7 +56,6 @@ pub fn App() -> Element {
         document::Stylesheet { href: asset!("/assets/tailwind.css") }
 
         crate::common::Provider {}
-        AuthProvider {}
 
         Router::<Route> {}
     }
