@@ -29,7 +29,7 @@ const BAR_COLORS: &[&str] = &[
 #[component]
 pub fn PollPanel() -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
-    let ctrl = use_context::<UseAnalyzeReportDetail>();
+    let mut ctrl = use_context::<UseAnalyzeReportDetail>();
     let detail = ctrl.detail.read().clone();
     let all_aggregates = detail
         .result
@@ -42,16 +42,54 @@ pub fn PollPanel() -> Element {
     let selected = ctrl.selected_poll.read().clone();
     let active_poll_id = selected
         .or_else(|| all_aggregates.first().map(|q| q.poll_id.clone()));
-    let aggregates: Vec<PollQuestionAggregate> = match active_poll_id {
-        Some(ref id) => all_aggregates
+    let aggregates: Vec<PollQuestionAggregate> = match active_poll_id.as_ref() {
+        Some(id) => all_aggregates
             .into_iter()
             .filter(|q| q.poll_id == *id)
             .collect(),
         None => Vec::new(),
     };
+    let export_target = active_poll_id.clone();
+    let export_disabled = export_target.is_none() || ctrl.handle_export_excel.pending();
 
     rsx! {
         section { class: "panel", "data-panel": "poll", "data-active": "true",
+            // Action toolbar — sits above the title, right-aligned.
+            // Lives outside `h1.main-title` so the title's chip+text
+            // baseline stays untouched and the button stack can grow
+            // (additional exports, filter resets, etc.) without
+            // re-flowing the heading.
+            div { class: "panel-toolbar",
+                button {
+                    class: "btn btn--primary panel-toolbar__action",
+                    r#type: "button",
+                    disabled: export_disabled,
+                    onclick: move |_| {
+                        if let Some(id) = export_target.clone() {
+                            ctrl.handle_export_excel.call(id);
+                        }
+                    },
+                    svg {
+                        width: "16",
+                        height: "16",
+                        view_box: "0 0 24 24",
+                        fill: "none",
+                        stroke: "currentColor",
+                        "stroke-width": "2",
+                        "stroke-linecap": "round",
+                        "stroke-linejoin": "round",
+                        path { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }
+                        polyline { points: "7 10 12 15 17 10" }
+                        line {
+                            x1: "12",
+                            y1: "15",
+                            x2: "12",
+                            y2: "3",
+                        }
+                    }
+                    "{tr.download_excel}"
+                }
+            }
             h1 { class: "main-title",
                 span { class: "main-title__chip main-title__chip--poll",
                     svg {

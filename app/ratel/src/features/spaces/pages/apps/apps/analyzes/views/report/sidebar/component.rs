@@ -210,7 +210,11 @@ pub fn ReportSidebar() -> Element {
         })
         .collect();
 
-    let groups = vec![
+    // Groups with zero items are hidden entirely — when a report has
+    // no poll/quiz/discussion/follow data, the matching sidebar bucket
+    // has no purpose. Showing an empty header just creates dead
+    // chrome.
+    let groups: Vec<SbGroup> = vec![
         SbGroup {
             group: "poll",
             label: tr.detail_group_poll.to_string(),
@@ -231,7 +235,10 @@ pub fn ReportSidebar() -> Element {
             label: tr.detail_group_follow.to_string(),
             items: follow_items,
         },
-    ];
+    ]
+    .into_iter()
+    .filter(|g| !g.items.is_empty())
+    .collect();
 
     rsx! {
         aside { class: "sidebar", "aria-label": "Analyze items",

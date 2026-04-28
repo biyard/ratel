@@ -10,7 +10,11 @@
 //! - `handle_run_discussion`: action that POSTs analyze_discussion +
 //!   refreshes the per-discussion history loader
 
+use crate::features::spaces::pages::actions::actions::poll::controllers::{
+    get_poll, get_poll_result,
+};
 use crate::features::spaces::pages::apps::apps::analyzes::*;
+use crate::features::spaces::pages::apps::apps::panels::list_panels;
 use crate::*;
 
 #[derive(Clone, Copy, DioxusController)]
@@ -41,6 +45,12 @@ pub struct UseAnalyzeReportDetail {
     pub params: Signal<DiscussionAnalysisParams>,
 
     pub handle_run_discussion: Action<(), ()>,
+
+    /// Per-poll Excel export. Loads raw poll + per-user result + panel
+    /// data on demand, runs the legacy builder, and pipes through the
+    /// JS download bridge. Input is the active poll id (sidebar's
+    /// selected poll).
+    pub handle_export_excel: Action<(String,), ()>,
 }
 
 #[track_caller]
@@ -148,6 +158,105 @@ pub fn use_analyze_report_detail(
         Ok::<(), crate::common::Error>(())
     });
 
+    let tr_for_excel: SpaceAnalyzesAppTranslate = use_translate();
+    let download_started_text = tr_for_excel.download_started.to_string();
+    let handle_export_excel = use_action(move |poll_id: String| {
+        let tr = tr_for_excel.clone();
+        let download_started = download_started_text.clone();
+        async move {
+            let mut toast = toast;
+            let sid = space_id();
+            let rid = report_id();
+            let pid: SpacePollEntityType = poll_id.into();
+            let poll_data = match get_poll(sid.clone(), pid.clone()).await {
+                Ok(v) => v,
+                Err(err) => {
+                    crate::error!("export_excel get_poll failed: {err}");
+                    toast.error(err);
+                    return Ok::<(), crate::common::Error>(());
+                }
+            };
+            let mut result_data = match get_poll_result(sid.clone(), pid).await {
+                Ok(v) => v,
+                Err(err) => {
+                    crate::error!("export_excel get_poll_result failed: {err}");
+                    toast.error(err);
+                    return Ok::<(), crate::common::Error>(());
+                }
+            };
+            let panels_data = match list_panels(sid.clone()).await {
+                Ok(v) => v,
+                Err(err) => {
+                    crate::error!("export_excel list_panels failed: {err}");
+                    toast.error(err);
+                    return Ok::<(), crate::common::Error>(());
+                }
+            };
+
+            // Cross-filter the per-user answer lists.
+            //
+            // Empty filter list → no retain runs, the workbook contains
+            // every respondent (= the same "전체" semantics the page
+            // shows when no chip is selected).
+            //
+            // Non-empty filters → call `get_matched_users` (server-side
+            // intersect across Poll/Quiz/Discussion/Follow filter
+            // sources) and keep only the answers whose user pk lands
+            // in that set.
+            let report = detail.read().clone().report;
+            let has_filters = !report.filters.is_empty();
+            if has_filters {
+                let report_id_typed: SpaceAnalyzeReportEntityType = rid.into();
+                let matched: std::collections::HashSet<String> =
+                    match get_matched_users(sid.clone(), report_id_typed).await {
+                        Ok(v) => v.into_iter().collect(),
+                        Err(err) => {
+                            crate::error!("export_excel get_matched_users failed: {err}");
+                            toast.error(err);
+                            return Ok::<(), crate::common::Error>(());
+                        }
+                    };
+                // `a.pk` is `Partition::SpacePollUserAnswer(...)` —
+                // a wrapper variant, NOT the user partition. The
+                // server-side intersection inserts the actual
+                // `Partition::User(...)` from `row.user_pk` (with a
+                // fallback to `row.pk` only when `user_pk` is None,
+                // which the row builders always populate). So the
+                // retain must compare against `a.user_pk`, not
+                // `a.pk`, otherwise every answer is filtered out
+                // because the wrapper format never matches.
+                result_data.sample_answers.retain(|a| {
+                    a.user_pk
+                        .as_ref()
+                        .is_some_and(|p| matched.contains(&p.to_string()))
+                });
+                result_data.final_answers.retain(|a| {
+                    a.user_pk
+                        .as_ref()
+                        .is_some_and(|p| matched.contains(&p.to_string()))
+                });
+            }
+
+            let excel = build_excel_data(&poll_data, &panels_data, &result_data, &tr);
+            match download_analyze_excel(DownloadAnalyzeExcelRequest {
+                file_name: build_excel_file_name(&sid),
+                sheet_name: "Responses".to_string(),
+                rows: excel.rows,
+                merges: excel.merges,
+            })
+            .await
+            {
+                Ok(_) => {
+                    toast.info(download_started);
+                }
+                Err(err) => {
+                    toast.error(err);
+                }
+            }
+            Ok::<(), crate::common::Error>(())
+        }
+    });
+
     Ok(use_context_provider(|| UseAnalyzeReportDetail {
         report_id,
         space_id,
@@ -158,5 +267,6 @@ pub fn use_analyze_report_detail(
         discussion_results,
         params,
         handle_run_discussion,
+        handle_export_excel,
     }))
 }
