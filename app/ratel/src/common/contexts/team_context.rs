@@ -108,10 +108,11 @@ impl TeamContext {
 
             Ok::<_, Error>(get_user_teams_handler(None).await.unwrap_or_default().items)
         })?;
+        let selected_index = use_signal(|| 0);
 
         let ctx = use_context_provider(move || TeamContext {
             teams,
-            selected_index: use_signal(|| 0),
+            selected_index,
         });
         Ok(ctx)
     }

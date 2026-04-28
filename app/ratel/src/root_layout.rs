@@ -3,6 +3,9 @@ use crate::*;
 
 #[component]
 pub fn RootLayout() -> Element {
+    crate::features::auth::Context::init()?;
+    crate::common::contexts::TeamContext::init()?;
+
     rsx! {
         ErrorBoundary {
             handle_error: move |error: ErrorContext| {
