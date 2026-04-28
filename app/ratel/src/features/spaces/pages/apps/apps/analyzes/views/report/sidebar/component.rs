@@ -1,20 +1,88 @@
 use super::super::*;
 use crate::features::spaces::pages::apps::apps::analyzes::*;
+use std::collections::BTreeMap;
 
-/// One sidebar item under a group. JS owns active state — clicking
-/// sets `aria-selected="true"` on this item, swaps `data-active` on
-/// the matching `<section class="panel">`. Dioxus only renders the
-/// initial state.
+/// Aggregated parent (poll / quiz) summary for the sidebar.
+struct ParentGroup {
+    id: String,
+    title: String,
+    question_count: usize,
+    /// Max respondent_count across the parent's questions. A single
+    /// scalar is more honest as a "people who touched this parent"
+    /// number than a sum (which would multi-count the same user when
+    /// they answered multiple questions of the same poll).
+    respondent_count: u32,
+}
+
+/// Group poll question aggregates by their parent poll. Order: by
+/// first appearance in the `poll_aggregates` vec — the auto-analysis
+/// service already orders them deterministically by (poll_id,
+/// question_idx), so this preserves that ordering.
+fn group_poll_aggregates(aggs: &[PollQuestionAggregate]) -> Vec<ParentGroup> {
+    let mut order: Vec<String> = Vec::new();
+    let mut by_id: BTreeMap<String, ParentGroup> = BTreeMap::new();
+    for q in aggs {
+        let entry = by_id.entry(q.poll_id.clone()).or_insert_with(|| {
+            order.push(q.poll_id.clone());
+            ParentGroup {
+                id: q.poll_id.clone(),
+                title: if q.poll_title.trim().is_empty() {
+                    q.poll_id.clone()
+                } else {
+                    q.poll_title.clone()
+                },
+                question_count: 0,
+                respondent_count: 0,
+            }
+        });
+        entry.question_count += 1;
+        if q.respondent_count > entry.respondent_count {
+            entry.respondent_count = q.respondent_count;
+        }
+    }
+    order.into_iter().filter_map(|id| by_id.remove(&id)).collect()
+}
+
+fn group_quiz_aggregates(aggs: &[QuizQuestionAggregate]) -> Vec<ParentGroup> {
+    let mut order: Vec<String> = Vec::new();
+    let mut by_id: BTreeMap<String, ParentGroup> = BTreeMap::new();
+    for q in aggs {
+        let entry = by_id.entry(q.quiz_id.clone()).or_insert_with(|| {
+            order.push(q.quiz_id.clone());
+            ParentGroup {
+                id: q.quiz_id.clone(),
+                title: if q.quiz_title.trim().is_empty() {
+                    q.quiz_id.clone()
+                } else {
+                    q.quiz_title.clone()
+                },
+                question_count: 0,
+                respondent_count: 0,
+            }
+        });
+        entry.question_count += 1;
+        if q.respondent_count > entry.respondent_count {
+            entry.respondent_count = q.respondent_count;
+        }
+    }
+    order.into_iter().filter_map(|id| by_id.remove(&id)).collect()
+}
+
+/// One sidebar item under a group. JS still owns visible-panel
+/// switching (via `data-target-panel`), but Dioxus owns *which item
+/// inside that panel is active* through the controller's
+/// `selected_*` signals — clicking an item stamps its `action_id`
+/// onto the matching signal so the panel re-renders filtered.
 #[derive(Clone, PartialEq)]
 pub struct SbItem {
     pub title: String,
     pub meta: String,
     pub target: &'static str,
     pub selected: bool,
-    /// Stable identifier for discussion items so the click handler
-    /// can stamp the selected discussion on the controller. Empty
-    /// for non-discussion targets.
-    pub discussion_id: String,
+    /// Action id this item refers to. Set for poll / quiz / discussion
+    /// items; empty for follow (the data model has no per-target
+    /// follow-action id today, so the panel shows everything).
+    pub action_id: String,
 }
 
 /// One ANALYZES group (poll / quiz / discussion / follow).
@@ -34,53 +102,76 @@ pub fn ReportSidebar() -> Element {
 
     let respondent = result.respondent_count;
 
-    // Poll items: one per (poll, question) the matched users
-    // answered. Title is the question, meta is "<N options> · <M명>
-    // 응답".
-    let poll_items: Vec<SbItem> = result
-        .poll_aggregates
-        .iter()
-        .map(|q| SbItem {
-            title: q.question_title.clone(),
-            meta: format!(
-                "{} {} · {}명 {}",
-                q.options.len(),
-                tr.detail_sb_item_meta_options,
-                q.respondent_count,
-                tr.detail_sb_item_meta_responses,
-            ),
-            target: "poll",
-            selected: false,
-            discussion_id: String::new(),
-        })
-        .collect();
-
-    let quiz_items: Vec<SbItem> = result
-        .quiz_aggregates
-        .iter()
-        .map(|q| SbItem {
-            title: q.question_title.clone(),
-            meta: format!(
-                "{} {} · {}/{}명 {}",
-                q.options.len(),
-                tr.detail_sb_item_meta_options,
-                q.correct_count,
-                q.respondent_count,
-                tr.detail_sb_item_meta_correct,
-            ),
-            target: "quiz",
-            selected: false,
-            discussion_id: String::new(),
-        })
-        .collect();
-
+    let selected_poll = ctrl.selected_poll.read().clone();
+    let selected_quiz = ctrl.selected_quiz.read().clone();
     let selected_discussion = ctrl.selected_discussion.read().clone();
+
+    // Group poll questions under their parent poll. The detail-page
+    // sidebar surfaces one entry per *poll* (parent action), not per
+    // question — clicking a poll filters the poll panel to that
+    // poll's questions only. Same for quiz, discussion, follow.
+    //
+    // `selected` flag is set when the controller's selection signal
+    // matches this group's id; falls back to "first item" so the
+    // panel always has *something* to render — see panel components
+    // for the matching default-selection logic.
+    let poll_groups = group_poll_aggregates(&result.poll_aggregates);
+    let first_poll_id = poll_groups.first().map(|g| g.id.clone());
+    let active_poll = selected_poll.clone().or(first_poll_id);
+    let poll_items: Vec<SbItem> = poll_groups
+        .into_iter()
+        .map(|g| {
+            let is_selected = active_poll.as_deref() == Some(g.id.as_str());
+            SbItem {
+                title: g.title,
+                meta: format!(
+                    "{} {} · {}명 {}",
+                    g.question_count,
+                    tr.detail_sb_item_meta_questions,
+                    g.respondent_count,
+                    tr.detail_sb_item_meta_responses,
+                ),
+                target: "poll",
+                selected: is_selected,
+                action_id: g.id,
+            }
+        })
+        .collect();
+
+    let quiz_groups = group_quiz_aggregates(&result.quiz_aggregates);
+    let first_quiz_id = quiz_groups.first().map(|g| g.id.clone());
+    let active_quiz = selected_quiz.clone().or(first_quiz_id);
+    let quiz_items: Vec<SbItem> = quiz_groups
+        .into_iter()
+        .map(|g| {
+            let is_selected = active_quiz.as_deref() == Some(g.id.as_str());
+            SbItem {
+                title: g.title,
+                meta: format!(
+                    "{} {} · {}명 {}",
+                    g.question_count,
+                    tr.detail_sb_item_meta_questions,
+                    g.respondent_count,
+                    tr.detail_sb_item_meta_attempts,
+                ),
+                target: "quiz",
+                selected: is_selected,
+                action_id: g.id,
+            }
+        })
+        .collect();
+
+    let first_discussion_id = detail
+        .discussions
+        .first()
+        .map(|d| d.discussion_id.to_string());
+    let active_discussion = selected_discussion.clone().or(first_discussion_id);
     let discussion_items: Vec<SbItem> = detail
         .discussions
         .iter()
         .map(|d| {
             let did = d.discussion_id.to_string();
-            let is_selected = selected_discussion.as_deref() == Some(did.as_str());
+            let is_selected = active_discussion.as_deref() == Some(did.as_str());
             SbItem {
                 title: d.title.clone(),
                 meta: format!(
@@ -92,7 +183,7 @@ pub fn ReportSidebar() -> Element {
                 ),
                 target: "discussion",
                 selected: is_selected,
-                discussion_id: did,
+                action_id: did,
             }
         })
         .collect();
@@ -114,7 +205,7 @@ pub fn ReportSidebar() -> Element {
                 ),
                 target: "follow",
                 selected: false,
-                discussion_id: String::new(),
+                action_id: String::new(),
             }
         })
         .collect();
@@ -185,8 +276,8 @@ fn ReportSidebarGroup(group: SbGroup) -> Element {
             div { class: "sb-group__list",
                 for (idx, item) in group.items.iter().enumerate() {
                     {
-                        let did = item.discussion_id.clone();
-                        let is_discussion = item.target == "discussion";
+                        let action_id = item.action_id.clone();
+                        let target = item.target;
                         rsx! {
                             button {
                                 key: "{group.group}-{idx}",
@@ -196,8 +287,16 @@ fn ReportSidebarGroup(group: SbGroup) -> Element {
                                 "data-target-panel": "{item.target}",
                                 "data-testid": "sb-item-{group.group}-{idx}",
                                 onclick: move |_| {
-                                    if is_discussion && !did.is_empty() {
-                                        ctrl.selected_discussion.set(Some(did.clone()));
+                                    if action_id.is_empty() {
+                                        return;
+                                    }
+                                    match target {
+                                        "poll" => ctrl.selected_poll.set(Some(action_id.clone())),
+                                        "quiz" => ctrl.selected_quiz.set(Some(action_id.clone())),
+                                        "discussion" => {
+                                            ctrl.selected_discussion.set(Some(action_id.clone()))
+                                        }
+                                        _ => {}
                                     }
                                 },
                                 span { class: "sb-item__indicator" }

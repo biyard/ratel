@@ -317,11 +317,11 @@ translate! {
     },
     detail_responses_unit: {
         en: "responses",
-        ko: "명 응답",
+        ko: "응답",
     },
     detail_attempts_unit: {
         en: "attempts",
-        ko: "명 응시",
+        ko: "응시",
     },
     detail_correct_rate_prefix: {
         en: "Correct rate",
@@ -424,16 +424,16 @@ translate! {
         ko: "확인",
     },
     detail_tfidf_card_title: {
-        en: "TF-IDF keywords (top 20)",
-        ko: "TF-IDF 키워드 (상위 20개)",
+        en: "TF-IDF keywords",
+        ko: "TF-IDF 키워드",
     },
     detail_tfidf_card_count: {
         en: "Score",
         ko: "Score",
     },
     detail_lda_card_title: {
-        en: "LDA topic modeling (10 topics)",
-        ko: "LDA 토픽 모델링 (10개 토픽)",
+        en: "LDA topic modeling",
+        ko: "LDA 토픽 모델링",
     },
     detail_lda_edit_label: {
         en: "Edit topic labels",
@@ -456,8 +456,8 @@ translate! {
         ko: "필터 토글:",
     },
     detail_network_card_title: {
-        en: "Text network (top 15 nodes)",
-        ko: "텍스트 네트워크 (상위 15개 노드)",
+        en: "Text network",
+        ko: "텍스트 네트워크",
     },
     detail_network_card_count: {
         en: "Co-occurrence",
@@ -582,6 +582,18 @@ translate! {
     detail_tfidf_card_count_suffix: {
         en: " terms",
         ko: "개 단어",
+    },
+    detail_lda_card_count_suffix: {
+        en: " topics",
+        ko: "개 토픽",
+    },
+    detail_network_card_count_suffix: {
+        en: " nodes",
+        ko: "개 노드",
+    },
+    detail_network_card_edge_suffix: {
+        en: " edges",
+        ko: "개 엣지",
     },
 
     // ── Arena CREATE wizard (Phase 2) ──────────────────────

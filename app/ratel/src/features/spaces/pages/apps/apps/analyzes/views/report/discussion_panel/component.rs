@@ -64,7 +64,22 @@ fn DiscussionSettingsCard() -> Element {
     let mut ctrl = use_context::<UseAnalyzeReportDetail>();
 
     let params = ctrl.params.read().clone();
-    let excluded_text = params.excluded_keywords.join(", ");
+    // Raw text the user is typing — keeps trailing commas / spaces
+    // intact while the user composes the list. Only parsed into the
+    // canonical `excluded_keywords` Vec on submit (see 확인 button
+    // below). Without this, every keystroke would split→join and the
+    // comma the user just pressed would vanish before they could type
+    // the next word.
+    let mut excluded_text = use_signal(|| params.excluded_keywords.join(", "));
+
+    // Keep the running flag derived from the latest result row so we
+    // can swap the action buttons to a "분석 중" indicator while the
+    // backend handler is processing.
+    let history = ctrl.discussion_results.read().clone();
+    let is_running = matches!(
+        history.items.first().map(|r| r.status.clone()),
+        Some(AnalyzeReportStatus::InProgress)
+    ) || ctrl.handle_run_discussion.pending();
 
     rsx! {
         section { class: "card",
@@ -129,38 +144,53 @@ fn DiscussionSettingsCard() -> Element {
                         placeholder: "{tr.detail_discussion_excluded_placeholder}",
                         value: "{excluded_text}",
                         oninput: move |evt| {
-                            let raw = evt.value();
-                            let parts: Vec<String> = raw
-                                .split(',')
-                                .map(|s| s.trim().to_string())
-                                .filter(|s| !s.is_empty())
-                                .collect();
-                            ctrl.params.with_mut(|p| p.excluded_keywords = parts);
+                            // Just buffer the raw string — parsing
+                            // happens on submit so the user can type
+                            // commas freely.
+                            excluded_text.set(evt.value());
                         },
                     }
                     span { class: "field__hint", "{tr.detail_discussion_excluded_hint}" }
                 }
             }
             div { class: "settings-foot",
-                button {
-                    class: "btn btn--ghost",
-                    r#type: "button",
-                    onclick: move |_| {
-                        ctrl.params
-                            .set(DiscussionAnalysisParams {
-                                num_topics: 10,
-                                top_n_tfidf: 20,
-                                top_n_network: 15,
-                                excluded_keywords: Vec::new(),
-                            });
-                    },
-                    "{tr.detail_discussion_btn_reset}"
-                }
-                button {
-                    class: "btn btn--primary",
-                    r#type: "button",
-                    onclick: move |_| ctrl.handle_run_discussion.call(),
-                    "{tr.detail_discussion_btn_apply}"
+                if is_running {
+                    span { class: "settings-running",
+                        "{tr.detail_discussion_running_title}"
+                    }
+                } else {
+                    button {
+                        class: "btn btn--ghost",
+                        r#type: "button",
+                        onclick: move |_| {
+                            ctrl.params
+                                .set(DiscussionAnalysisParams {
+                                    num_topics: 10,
+                                    top_n_tfidf: 20,
+                                    top_n_network: 15,
+                                    excluded_keywords: Vec::new(),
+                                });
+                            excluded_text.set(String::new());
+                        },
+                        "{tr.detail_discussion_btn_reset}"
+                    }
+                    button {
+                        class: "btn btn--primary",
+                        r#type: "button",
+                        onclick: move |_| {
+                            // Parse the raw text into canonical Vec<String>
+                            // exactly once, on submit.
+                            let parts: Vec<String> = excluded_text
+                                .read()
+                                .split(',')
+                                .map(|s| s.trim().to_string())
+                                .filter(|s| !s.is_empty())
+                                .collect();
+                            ctrl.params.with_mut(|p| p.excluded_keywords = parts);
+                            ctrl.handle_run_discussion.call();
+                        },
+                        "{tr.detail_discussion_btn_apply}"
+                    }
                 }
             }
         }
@@ -204,7 +234,7 @@ fn DiscussionResultsView(latest: Option<SpaceAnalyzeDiscussionResult>) -> Elemen
         },
         AnalyzeReportStatus::Finish => rsx! {
             TfidfCard { rows: row.tfidf_terms.clone() }
-            LdaCard { rows: row.topics.clone() }
+            LdaCard { row: row.clone() }
             NetworkCard {
                 nodes: row.network_nodes.clone(),
                 edges: row.network_edges.clone(),
@@ -253,56 +283,151 @@ fn TfidfCard(rows: Vec<TermScore>) -> Element {
 }
 
 #[component]
-fn LdaCard(rows: Vec<TopicRow>) -> Element {
+fn LdaCard(row: SpaceAnalyzeDiscussionResult) -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
+    let mut ctrl = use_context::<UseAnalyzeReportDetail>();
+    let mut toast = use_toast();
+
+    // Edit toggle + scratch buffer of new names. Keyed by the
+    // *current* topic label (whatever's in the row right now —
+    // could be the auto-generated `토픽_N` or a previously saved
+    // custom name). Cleared on save so the next edit cycle starts
+    // from the freshly-stored state.
+    let mut editing = use_signal(|| false);
+    let mut renames = use_signal::<std::collections::HashMap<String, String>>(
+        std::collections::HashMap::new,
+    );
+
+    let count = row.topics.len();
+    let space_id = ctrl.space_id;
+    let report_id = ctrl.report_id;
+    let row_for_save = row.clone();
+
+    let mut save_action = use_action(move |new_topics: Vec<TopicRow>| {
+        let row = row_for_save.clone();
+        async move {
+            let report_typed: SpaceAnalyzeReportEntityType = report_id().into();
+            let discussion_typed: FeedPartition = row.discussion_id.clone().into();
+            update_discussion_topics(
+                space_id(),
+                report_typed,
+                discussion_typed,
+                row.request_id.clone(),
+                UpdateDiscussionTopicsRequest { topics: new_topics },
+            )
+            .await?;
+            ctrl.discussion_results.restart();
+            Ok::<(), crate::common::Error>(())
+        }
+    });
+
+    let topics_for_save = row.topics.clone();
+    let renames_signal_for_save = renames;
+
     rsx! {
         section { class: "card",
             div { class: "card__head",
-                div { class: "card__title", "{tr.detail_lda_card_title}" }
+                div { class: "card__title",
+                    "{tr.detail_lda_card_title} ({count}{tr.detail_lda_card_count_suffix})"
+                }
+                button {
+                    class: "card__action",
+                    r#type: "button",
+                    "aria-pressed": "{editing}",
+                    onclick: move |_| {
+                        let next = !editing();
+                        editing.set(next);
+                        if !next {
+                            renames.write().clear();
+                        }
+                    },
+                    svg {
+                        view_box: "0 0 24 24",
+                        fill: "none",
+                        stroke: "currentColor",
+                        "stroke-width": "2",
+                        "stroke-linecap": "round",
+                        "stroke-linejoin": "round",
+                        path { d: "M12 20h9" }
+                        path { d: "M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" }
+                    }
+                }
             }
-            if rows.is_empty() {
+            if row.topics.is_empty() {
                 div { class: "card__hint", "{tr.detail_panel_empty_text_answers}" }
             } else {
                 div {
                     class: "topic-table",
                     id: "lda-table",
-                    "data-edit": "false",
+                    "data-edit": "{editing}",
                     div { class: "topic-table__head",
                         span { "{tr.detail_lda_col_topic}" }
                         span { "{tr.detail_lda_col_keywords}" }
-                        span { "aria-hidden": "true", "{tr.detail_lda_col_filter}" }
                     }
-                    for (idx, topic) in rows.iter().enumerate() {
+                    for (idx, topic) in row.topics.iter().enumerate() {
                         {
                             let kws = topic.keywords.join(", ");
+                            let original_id = topic.topic.clone();
+                            let display_name = renames
+                                .read()
+                                .get(&original_id)
+                                .cloned()
+                                .unwrap_or_else(|| original_id.clone());
+                            let id_for_input = original_id.clone();
                             rsx! {
                                 div { key: "lda-{idx}", class: "topic-table__row",
-                                    span { class: "topic-table__id", "{topic.topic}" }
+                                    span { class: "topic-table__id", "{display_name}" }
                                     input {
                                         class: "topic-table__id-input",
                                         r#type: "text",
-                                        value: "{topic.topic}",
+                                        value: "{display_name}",
+                                        oninput: move |evt| {
+                                            let val = evt.value();
+                                            let key = id_for_input.clone();
+                                            renames
+                                                .with_mut(|map| {
+                                                    if val.trim().is_empty() {
+                                                        map.remove(&key);
+                                                    } else {
+                                                        map.insert(key, val);
+                                                    }
+                                                });
+                                        },
                                     }
                                     span { class: "topic-table__keywords", "{kws}" }
-                                    button {
-                                        class: "topic-table__filter",
-                                        r#type: "button",
-                                        "aria-pressed": "false",
-                                        "data-filter-source": "discussion",
-                                        "data-filter-kind": "topic",
-                                        "data-filter-value": "{topic.topic}",
-                                        svg {
-                                            view_box: "0 0 24 24",
-                                            fill: "none",
-                                            stroke: "currentColor",
-                                            "stroke-width": "2",
-                                            "stroke-linecap": "round",
-                                            "stroke-linejoin": "round",
-                                            polygon { points: "22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" }
-                                        }
-                                    }
                                 }
                             }
+                        }
+                    }
+                }
+                // 저장 버튼 — 편집 모드일 때만 노출. 클릭 시 변경된 라벨을
+                // DB 에 PATCH 하고 카드를 결과 새로고침까지 끝낸 뒤 편집 모드 종료.
+                if editing() {
+                    div { class: "topic-table-foot",
+                        button {
+                            class: "btn btn--primary",
+                            r#type: "button",
+                            disabled: save_action.pending(),
+                            onclick: move |_| {
+                                let map = renames_signal_for_save.read().clone();
+                                let merged: Vec<TopicRow> = topics_for_save
+                                    .iter()
+                                    .map(|t| {
+                                        TopicRow {
+                                            topic: map
+                                                .get(&t.topic)
+                                                .cloned()
+                                                .unwrap_or_else(|| t.topic.clone()),
+                                            keywords: t.keywords.clone(),
+                                        }
+                                    })
+                                    .collect();
+                                save_action.call(merged);
+                                editing.set(false);
+                                renames.write().clear();
+                                toast.info("토픽 이름을 저장했습니다");
+                            },
+                            "저장"
                         }
                     }
                 }
@@ -319,35 +444,188 @@ fn NetworkCard(nodes: Vec<NetworkNode>, edges: Vec<NetworkEdge>) -> Element {
     rsx! {
         section { class: "card",
             div { class: "card__head",
-                div { class: "card__title", "{tr.detail_network_card_title}" }
-                span { class: "card__count", "{node_count} 노드 · {edge_count} 엣지" }
+                div { class: "card__title",
+                    "{tr.detail_network_card_title} ({node_count}{tr.detail_network_card_count_suffix})"
+                }
+                span { class: "card__count",
+                    "{node_count}{tr.detail_network_card_count_suffix} · {edge_count}{tr.detail_network_card_edge_suffix}"
+                }
             }
             if nodes.is_empty() {
                 div { class: "card__hint", "{tr.detail_panel_empty_text_answers}" }
             } else {
-                // Simplified rendering: top nodes as badges with weight,
-                // top edges as a list. The rich SVG visualisation in the
-                // mock relied on hand-positioned coordinates — surfacing
-                // the real numbers here is a fair stand-in until a
-                // force-directed renderer lands.
-                div { class: "network-summary",
-                    div { class: "network-nodes",
-                        for (idx, node) in nodes.iter().enumerate() {
-                            span {
-                                key: "node-{idx}",
-                                class: "network-node-chip",
-                                title: "{node.weight}",
-                                "{node.term}"
-                                span { class: "network-node-chip__weight", " · {node.weight}" }
+                div { class: "network-wrap",
+                    NetworkChart { nodes: nodes.clone(), edges: edges.clone() }
+                }
+            }
+        }
+    }
+}
+
+/// Force-directed layout SVG of the word co-occurrence graph
+/// (Fruchterman-Reingold). Heavy nodes find natural cluster centres,
+/// loose nodes drift to the periphery — same look as the second
+/// reference image the user shared (organic clusters, varied node
+/// sizing). Pure Rust, no JS engine.
+///
+/// Bubble radius scales with per-document frequency. Edge stroke
+/// width scales with co-occurrence weight. Initial layout is
+/// deterministic (no RNG) so successive renders of the same data
+/// always produce the same picture.
+#[component]
+fn NetworkChart(nodes: Vec<NetworkNode>, edges: Vec<NetworkEdge>) -> Element {
+    let n = nodes.len();
+    if n == 0 {
+        return rsx! {};
+    }
+
+    let width: f64 = 700.0;
+    let height: f64 = 580.0;
+    let max_node_w = nodes.iter().map(|n| n.weight).max().unwrap_or(1).max(1) as f64;
+    let max_edge_w = edges.iter().map(|e| e.weight).max().unwrap_or(1).max(1) as f64;
+
+    // term → index lookup so edges can resolve to position slots.
+    let term_idx: std::collections::HashMap<String, usize> = nodes
+        .iter()
+        .enumerate()
+        .map(|(i, node)| (node.term.clone(), i))
+        .collect();
+    let edge_pairs: Vec<(usize, usize, f64)> = edges
+        .iter()
+        .filter_map(|e| {
+            let i = *term_idx.get(&e.source)?;
+            let j = *term_idx.get(&e.target)?;
+            Some((i, j, e.weight as f64))
+        })
+        .collect();
+
+    // ── Fruchterman-Reingold ─────────────────────────────────
+    let mut pos: Vec<(f64, f64)> = (0..n)
+        .map(|i| {
+            // Deterministic spread + light per-index perturbation so
+            // simulation has somewhere to go (a perfect ring start
+            // settles too quickly into a near-perfect ring).
+            let theta =
+                (i as f64 / n as f64) * std::f64::consts::TAU - std::f64::consts::FRAC_PI_2;
+            let r = (width.min(height) / 2.0) * 0.45;
+            let cx = width / 2.0;
+            let cy = height / 2.0;
+            let perturb_x = (((i * 73 + 17) % 41) as f64) - 20.0;
+            let perturb_y = (((i * 113 + 31) % 41) as f64) - 20.0;
+            (
+                cx + r * theta.cos() + perturb_x,
+                cy + r * theta.sin() + perturb_y,
+            )
+        })
+        .collect();
+
+    let area = width * height;
+    let k = (area / n as f64).sqrt(); // ideal spring length
+    let mut t = width / 8.0; // temperature — limits per-iter movement
+    let cooling = 0.94;
+    let iterations = 120;
+
+    for _ in 0..iterations {
+        let mut disp = vec![(0.0_f64, 0.0_f64); n];
+
+        // Repulsive force between every pair: f = k^2 / d.
+        for v in 0..n {
+            for u in 0..n {
+                if u == v {
+                    continue;
+                }
+                let dx = pos[v].0 - pos[u].0;
+                let dy = pos[v].1 - pos[u].1;
+                let d = (dx * dx + dy * dy).sqrt().max(0.01);
+                let f = (k * k) / d;
+                disp[v].0 += (dx / d) * f;
+                disp[v].1 += (dy / d) * f;
+            }
+        }
+
+        // Attractive force along edges, weighted by co-occurrence:
+        // heavier edges pull harder so co-frequent terms cluster.
+        for (i, j, w) in &edge_pairs {
+            let dx = pos[*j].0 - pos[*i].0;
+            let dy = pos[*j].1 - pos[*i].1;
+            let d = (dx * dx + dy * dy).sqrt().max(0.01);
+            let weight_norm = w / max_edge_w;
+            let f = (d * d / k) * weight_norm;
+            disp[*i].0 += (dx / d) * f;
+            disp[*i].1 += (dy / d) * f;
+            disp[*j].0 -= (dx / d) * f;
+            disp[*j].1 -= (dy / d) * f;
+        }
+
+        // Apply, capped at temperature, clamped to viewport.
+        for v in 0..n {
+            let dx = disp[v].0;
+            let dy = disp[v].1;
+            let d = (dx * dx + dy * dy).sqrt();
+            if d > 0.0 {
+                let limit = d.min(t);
+                pos[v].0 += (dx / d) * limit;
+                pos[v].1 += (dy / d) * limit;
+            }
+            pos[v].0 = pos[v].0.clamp(50.0, width - 50.0);
+            pos[v].1 = pos[v].1.clamp(50.0, height - 50.0);
+        }
+
+        t *= cooling;
+    }
+
+    // ── Render ────────────────────────────────────────────────
+    rsx! {
+        svg {
+            class: "network-svg",
+            view_box: "0 0 700 580",
+            preserve_aspect_ratio: "xMidYMid meet",
+            "aria-label": "Word co-occurrence network",
+            // Edges first so bubbles paint on top.
+            g { class: "network-links",
+                for (idx, edge) in edges.iter().enumerate() {
+                    {
+                        let a = term_idx.get(&edge.source).map(|i| pos[*i]);
+                        let b = term_idx.get(&edge.target).map(|i| pos[*i]);
+                        match (a, b) {
+                            (Some((x1, y1)), Some((x2, y2))) => {
+                                let sw = 0.6 + (edge.weight as f64 / max_edge_w) * 2.4;
+                                rsx! {
+                                    line {
+                                        key: "edge-{idx}",
+                                        class: "network-link",
+                                        x1: "{x1:.1}",
+                                        y1: "{y1:.1}",
+                                        x2: "{x2:.1}",
+                                        y2: "{y2:.1}",
+                                        stroke_width: "{sw:.2}",
+                                    }
+                                }
                             }
+                            _ => rsx! {},
                         }
                     }
-                    if !edges.is_empty() {
-                        ul { class: "network-edges",
-                            for (idx, edge) in edges.iter().take(20).enumerate() {
-                                li { key: "edge-{idx}", class: "network-edge",
-                                    "{edge.source} ↔ {edge.target}"
-                                    span { class: "network-edge__weight", " ({edge.weight})" }
+                }
+            }
+            g { class: "network-nodes",
+                for (idx, node) in nodes.iter().enumerate() {
+                    {
+                        let (x, y) = pos[idx];
+                        // Bubble radius 14..38 px by per-document frequency.
+                        let r = 14.0 + (node.weight as f64 / max_node_w) * 24.0;
+                        rsx! {
+                            g { key: "node-{idx}",
+                                circle {
+                                    class: "network-bubble",
+                                    cx: "{x:.1}",
+                                    cy: "{y:.1}",
+                                    r: "{r:.1}",
+                                }
+                                text {
+                                    class: "network-bubble-text",
+                                    x: "{x:.1}",
+                                    y: "{y:.1}",
+                                    "{node.term}"
                                 }
                             }
                         }

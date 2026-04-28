@@ -31,10 +31,24 @@ pub fn PollPanel() -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
     let ctrl = use_context::<UseAnalyzeReportDetail>();
     let detail = ctrl.detail.read().clone();
-    let aggregates = detail
+    let all_aggregates = detail
         .result
         .map(|r| r.poll_aggregates)
         .unwrap_or_default();
+
+    // Filter to the sidebar-selected poll. Falls back to the first
+    // poll's id when nothing's selected yet so the panel always
+    // renders the active sidebar item.
+    let selected = ctrl.selected_poll.read().clone();
+    let active_poll_id = selected
+        .or_else(|| all_aggregates.first().map(|q| q.poll_id.clone()));
+    let aggregates: Vec<PollQuestionAggregate> = match active_poll_id {
+        Some(ref id) => all_aggregates
+            .into_iter()
+            .filter(|q| q.poll_id == *id)
+            .collect(),
+        None => Vec::new(),
+    };
 
     rsx! {
         section { class: "panel", "data-panel": "poll", "data-active": "true",

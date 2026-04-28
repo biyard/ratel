@@ -3,12 +3,15 @@
 //! `process_discussion_analysis(cli, &row)` directly.
 //!
 //! Usage:
-//!   cargo run --bin test_analyze_discussion --features server -- <space_uuid> <result_sk>
+//!   cargo run --bin test_analyze_discussion --features server -- \
+//!     <space_uuid> <report_id> <discussion_id_and_request_uuid>
 //!
-//! `<result_sk>` is the full `SpaceAnalyzeDiscussionResult` sort key.
+//! The `discussion_id_and_request_uuid` is the second tuple field of
+//! `EntityType::SpaceAnalyzeDiscussionResult(report_id, "{discussion_id}#{request_uuid}")`.
+//! In the DDB console it's everything after `SpaceAnalyzeDiscussionResult#{report_id}#`.
 //! Easiest way to get one: trigger an analyze run from the UI (which
-//! INSERTs the row), look it up in the DDB console, then re-run it
-//! locally with this binary to iterate on the analysis logic.
+//! INSERTs the row), copy the row's sk, then re-run it locally with
+//! this binary to iterate on the analysis logic.
 
 #[cfg(not(feature = "server"))]
 fn main() {
@@ -23,7 +26,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     use app_shell::common::types::{EntityType, Partition};
     use app_shell::features::spaces::pages::apps::apps::analyzes::SpaceAnalyzeDiscussionResult;
     use app_shell::features::spaces::pages::apps::apps::analyzes::services::discussion_analysis;
-    use bdk::prelude::DynamoEntity;
 
     tracing_subscriber::fmt()
         .with_env_filter(
@@ -32,29 +34,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .init();
 
+    let usage = "usage: test_analyze_discussion <space_uuid> <report_id> <discussion_id_and_request_uuid>";
     let mut args = std::env::args().skip(1);
-    let space_uuid = args
-        .next()
-        .ok_or("usage: test_analyze_discussion <space_uuid> <result_sk>")?;
-    let result_sk = args
-        .next()
-        .ok_or("usage: test_analyze_discussion <space_uuid> <result_sk>")?;
+    let space_uuid = args.next().ok_or(usage)?;
+    let report_id = args.next().ok_or(usage)?;
+    let discussion_request = args.next().ok_or(usage)?;
 
     let cfg = CommonConfig::default();
     let cli = cfg.dynamodb();
 
     let space_pk = Partition::Space(space_uuid.clone());
-    // `result_sk` is the canonical EntityType variant value (everything
-    // after the prefix). `from_str_with_prefix`-style helpers vary per
-    // codebase; the simplest path is constructing the variant manually
-    // since this binary only handles one entity type.
-    let stripped = result_sk
-        .strip_prefix("SpaceAnalyzeDiscussionResult#")
-        .unwrap_or(&result_sk)
-        .to_string();
-    let sk = EntityType::SpaceAnalyzeDiscussionResult(stripped);
+    let sk = EntityType::SpaceAnalyzeDiscussionResult(report_id.clone(), discussion_request.clone());
 
-    println!("Loading discussion-analysis row space={space_uuid} sk={result_sk} …");
+    println!("Loading discussion-analysis row space={space_uuid} report={report_id} disc#req={discussion_request} …");
     let row = SpaceAnalyzeDiscussionResult::get(cli, &space_pk, Some(sk))
         .await?
         .ok_or("discussion-analysis row not found")?;

@@ -102,37 +102,25 @@ async fn fetch_discussion_candidates(
     space_pk: &Partition,
 ) -> Result<Vec<AnalyzeDiscussionItem>> {
     use crate::features::spaces::pages::actions::actions::discussion::SpacePost;
-    use crate::features::spaces::pages::actions::models::SpaceAction;
-    use crate::features::spaces::pages::actions::types::SpaceActionType;
 
-    // Discussions are SpaceAction rows of type Discussion. Each
-    // associated SpacePost holds the comment_count we want for the
-    // sidebar meta line.
+    // Mirrors `list_analyze_discussions`: paginate through every
+    // `SpacePost` for the space (the discussion entity uses GSI3 to
+    // be queryable by space_pk + updated_at). Older paths via
+    // `SpaceAction::query` returned 0 because Discussion's canonical
+    // row lives on `SpacePost`, not on the generic `SpaceAction` sk.
     let mut bookmark: Option<String> = None;
     let mut items: Vec<AnalyzeDiscussionItem> = Vec::new();
-    let action_sk = EntityType::SpaceAction.to_string();
     loop {
-        let mut opt = SpaceAction::opt().sk(action_sk.clone()).limit(50);
-        if let Some(b) = bookmark.clone() {
-            opt = opt.bookmark(b);
-        }
-        let (rows, next) = SpaceAction::query(cli, space_pk.clone(), opt).await?;
-        for action in rows {
-            if !matches!(action.space_action_type, SpaceActionType::TopicDiscussion) {
-                continue;
-            }
-            let discussion_id_str = action.pk.1.clone();
-            // Comment count lives on SpacePost.
-            let post_pk = Partition::SpacePost(discussion_id_str.clone());
-            let post = SpacePost::get(cli, &post_pk, Some(EntityType::Post))
-                .await
-                .ok()
-                .flatten();
-            let comment_count = post.map(|p| p.comments).unwrap_or(0);
+        let opt = SpacePost::opt_with_bookmark(bookmark.clone())
+            .scan_index_forward(false)
+            .limit(50);
+        let (posts, next) =
+            SpacePost::find_by_space_ordered(cli, space_pk.clone(), opt).await?;
+        for post in posts {
             items.push(AnalyzeDiscussionItem {
-                discussion_id: discussion_id_str.into(),
-                title: action.title,
-                comment_count,
+                discussion_id: post.sk.clone().into(),
+                title: post.title.trim().to_string(),
+                comment_count: post.comments,
             });
         }
         match next {
@@ -165,8 +153,13 @@ pub async fn list_analyze_discussion_results(
 
     // Sk pattern: SPACE_ANALYZE_DISCUSSION_RESULT#{report_id}#{discussion_id}#{uuid}
     // begins_with prefix groups every history row for this pair.
+    // Use the canonical SCREAMING_SNAKE prefix that DynamoEnum
+    // emits — building it from the variant name (`PascalCase`) here
+    // would silently miss every row. We confirmed the on-disk shape
+    // by reading a row in the DDB console: it really is uppercase
+    // with underscores, matching the auto-analysis writes.
     let sk_prefix = format!(
-        "SpaceAnalyzeDiscussionResult#{}#{}#",
+        "SPACE_ANALYZE_DISCUSSION_RESULT#{}#{}#",
         report_id, discussion_id
     );
     let mut opt = SpaceAnalyzeDiscussionResult::opt()
