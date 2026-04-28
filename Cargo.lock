@@ -408,7 +408,6 @@ dependencies = [
  "chrono",
  "dioxus",
  "dioxus-cli-config",
- "dioxus-components",
  "dioxus-primitives",
  "dioxus-translate",
  "ethers",
@@ -4289,16 +4288,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d4ad73f0ff638cd27466d389cd57f0975f909b66130dc1c25d5212d4041e5352"
 dependencies = [
  "wasm-bindgen",
-]
-
-[[package]]
-name = "dioxus-components"
-version = "0.1.0"
-dependencies = [
- "dioxus",
- "serde",
- "serde_json",
- "web-sys",
 ]
 
 [[package]]

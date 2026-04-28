@@ -14,13 +14,8 @@ fn main() {
         .expect("failed to run npm install");
     assert!(status.success(), "npm install for ratel/common failed");
 
-    let build_cmd = match std::env::var("ENV").as_deref() {
-        Ok("dev") | Ok("local") => "build-dev",
-        _ => "build",
-    };
-
     let status = Command::new("npm")
-        .args(["run", build_cmd])
+        .args(["run", "build"])
         .env("ASSETS_DIR", &assets_dir)
         .current_dir(&js_dir)
         .status()
