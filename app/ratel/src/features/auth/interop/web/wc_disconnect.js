@@ -1,5 +1,5 @@
 try {
-  await window.ratel.auth.wallet.disconnect();
+  await window.walletConnect.disconnect();
   dioxus.send(true);
 } catch (e) {
   dioxus.send(false);
