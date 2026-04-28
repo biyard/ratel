@@ -22,7 +22,9 @@
     "@tiptap/extension-table-row": "^2.26.2",
     "@tiptap/extension-table-header": "^2.26.2",
     "@tiptap/extension-table-cell": "^2.26.2",
-    "firebase": "^11.0.0"
+    "firebase": "^11.0.0",
+    "@reown/appkit": "^1.8.19",
+    "@walletconnect/sign-client": "^2.23.7"
   },
   "devDependencies": {
     "tsx": "^4.19.0",
