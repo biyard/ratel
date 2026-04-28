@@ -124,5 +124,3 @@ pub use toggle::*;
 pub use toggle_group::*;
 pub use toolbar::*;
 pub use tooltip::*;
-
-pub use dioxus_components::*;

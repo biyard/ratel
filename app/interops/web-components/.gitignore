@@ -1,4 +1,0 @@
-assets/*.js
-
-# Remove Generated tailwind files
-assets/tailwind.css

@@ -1,6 +1,7 @@
 use crate::*;
 
 use crate::features::essence::EssenceSourcesPage;
+use crate::features::me::pages::MyAiPage;
 use crate::features::my_follower::MyFollowerPage;
 
 use crate::features::spaces::pages::dashboard::SpaceDashboardPage;
@@ -120,6 +121,9 @@ pub enum Route {
 
         #[route("/my-follower")]
         MyFollowerPage { },
+
+        #[route("/my-ai")]
+        MyAiPage { },
 
         #[nest("/admin")]
             #[layout(AdminLayout)]
