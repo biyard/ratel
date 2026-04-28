@@ -10,14 +10,18 @@ use crate::features::spaces::pages::apps::apps::analyzes::*;
 use crate::*;
 
 #[component]
-pub fn CrossFilterCard() -> Element {
+pub fn CrossFilterCard(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
-    let mut ctrl = use_analyze_create()?;
+    let mut ctrl = use_analyze_create(space_id)?;
 
     let add_state = ctrl.add_state.read().clone();
     let filters = ctrl.filters.read().clone();
     let picking_type = ctrl.picking_type.read().clone();
     let picked_item_id = ctrl.picked_item_id.read().clone();
+    let polls = ctrl.polls.read().clone();
+    let quizzes = ctrl.quizzes.read().clone();
+    let discussions = ctrl.discussions.read().clone();
+    let follows = ctrl.follows.read().clone();
 
     // The cross-filter collapses to a chips-only summary the moment the
     // cf-sunji card opens (see CSS rule scoped on `data-sunji-open`).
@@ -158,40 +162,28 @@ pub fn CrossFilterCard() -> Element {
                 }
                 div { class: "cf-action-grid",
                     ActionTile {
+                        space_id,
                         source: AnalyzeFilterSource::Poll,
                         label: tr.create_action_tile_poll.to_string(),
-                        count_text: format!(
-                            "{}{}",
-                            mock_action_count(AnalyzeFilterSource::Poll),
-                            tr.create_action_count_unit,
-                        ),
+                        count_text: format!("{}{}", polls.items.len(), tr.create_action_count_unit),
                     }
                     ActionTile {
+                        space_id,
                         source: AnalyzeFilterSource::Quiz,
                         label: tr.create_action_tile_quiz.to_string(),
-                        count_text: format!(
-                            "{}{}",
-                            mock_action_count(AnalyzeFilterSource::Quiz),
-                            tr.create_action_count_unit,
-                        ),
+                        count_text: format!("{}{}", quizzes.items.len(), tr.create_action_count_unit),
                     }
                     ActionTile {
+                        space_id,
                         source: AnalyzeFilterSource::Discussion,
                         label: tr.create_action_tile_discussion.to_string(),
-                        count_text: format!(
-                            "{}{}",
-                            mock_action_count(AnalyzeFilterSource::Discussion),
-                            tr.create_action_count_unit,
-                        ),
+                        count_text: format!("{}{}", discussions.items.len(), tr.create_action_count_unit),
                     }
                     ActionTile {
+                        space_id,
                         source: AnalyzeFilterSource::Follow,
                         label: tr.create_action_tile_follow.to_string(),
-                        count_text: format!(
-                            "{}{}",
-                            mock_action_count(AnalyzeFilterSource::Follow),
-                            tr.create_action_count_unit,
-                        ),
+                        count_text: format!("{}{}", follows.items.len(), tr.create_action_count_unit),
                     }
                 }
             }
@@ -213,15 +205,20 @@ pub fn CrossFilterCard() -> Element {
                         "{tr.create_cf_back_to_action}"
                     }
                 }
-                ItemsList {}
+                ItemsList { space_id }
             }
         }
     }
 }
 
 #[component]
-fn ActionTile(source: AnalyzeFilterSource, label: String, count_text: String) -> Element {
-    let mut ctrl = use_analyze_create()?;
+fn ActionTile(
+    space_id: ReadSignal<SpacePartition>,
+    source: AnalyzeFilterSource,
+    label: String,
+    count_text: String,
+) -> Element {
+    let mut ctrl = use_analyze_create(space_id)?;
     let action_attr = source.as_str();
 
     rsx! {
@@ -324,48 +321,101 @@ fn action_icon_svg(source: AnalyzeFilterSource) -> Element {
     }
 }
 
+/// One row in the picker radio list. Pre-flattened from each source's
+/// list loader so the rendering stays declarative.
+#[derive(Clone)]
+struct PickerRow {
+    id: String,
+    title: String,
+    meta: String,
+}
+
 #[component]
-fn ItemsList() -> Element {
-    let mut ctrl = use_analyze_create()?;
+fn ItemsList(space_id: ReadSignal<SpacePartition>) -> Element {
+    let tr: SpaceAnalyzesAppTranslate = use_translate();
+    let mut ctrl = use_analyze_create(space_id)?;
     let picking_type = ctrl.picking_type.read().clone();
     let picked_item_id = ctrl.picked_item_id.read().clone();
 
-    let items: Vec<AnalyzeActionItem> = picking_type
-        .map(mock_action_items)
-        .unwrap_or_default();
+    // Follow has no item layer — it jumps straight to the cf-sunji
+    // target list. Render an empty radio strip; cf-sunji owns the UI.
+    if matches!(picking_type, Some(AnalyzeFilterSource::Follow)) {
+        return rsx! {
+            div { class: "cf-options-list", id: "cf-options-list" }
+        };
+    }
+
+    let rows: Vec<PickerRow> = match picking_type {
+        Some(AnalyzeFilterSource::Poll) => ctrl
+            .polls
+            .read()
+            .items
+            .iter()
+            .map(|p| PickerRow {
+                id: p.poll_id.to_string(),
+                title: p.title.clone(),
+                meta: format!(
+                    "{} {}",
+                    p.questions_count, tr.create_action_questions_unit
+                ),
+            })
+            .collect(),
+        Some(AnalyzeFilterSource::Quiz) => ctrl
+            .quizzes
+            .read()
+            .items
+            .iter()
+            .map(|q| PickerRow {
+                id: q.quiz_id.to_string(),
+                title: q.title.clone(),
+                meta: format!(
+                    "{} {}",
+                    q.questions_count, tr.create_action_questions_unit
+                ),
+            })
+            .collect(),
+        Some(AnalyzeFilterSource::Discussion) => ctrl
+            .discussions
+            .read()
+            .items
+            .iter()
+            .map(|d| PickerRow {
+                id: d.discussion_id.to_string(),
+                title: d.title.clone(),
+                meta: String::new(),
+            })
+            .collect(),
+        _ => Vec::new(),
+    };
 
     rsx! {
         div { class: "cf-options-list", id: "cf-options-list",
-            for item in items.iter() {
+            for row in rows.iter() {
                 {
-                    let item_id = item.id.clone();
-                    let item_id_for_click = item_id.clone();
-                    let title = item.title.clone();
-                    let meta = item.meta.clone();
+                    let row_for_click = row.clone();
+                    let item_id = row.id.clone();
+                    let title = row.title.clone();
+                    let meta = row.meta.clone();
                     let checked = picked_item_id.as_deref() == Some(item_id.as_str());
                     rsx! {
                         label {
                             key: "{item_id}",
                             class: "cf-option",
                             "data-testid": "cf-item-{item_id}",
-                            // Bind on the label, not the input. `evt.checked()`
-                            // on a radio's onchange isn't reliable across
-                            // platforms — clicking the label always means
-                            // "pick this item", so dispatch directly.
-                            onclick: move |_| ctrl.pick_item(item_id_for_click.clone()),
+                            onclick: move |_| ctrl
+                                                            .pick_item(row_for_click.id.clone(), row_for_click.title.clone()),
                             input {
                                 r#type: "radio",
                                 name: "cf-item-pick",
                                 "data-item-id": "{item_id}",
                                 checked,
-                                // No-op handler — without it the radio
-                                // becomes uncontrolled and React-style
-                                // warnings show in the console.
                                 onchange: move |_| {},
                             }
                             span { class: "cf-option__body",
                                 span { class: "cf-option__title", "{title}" }
-                                span { class: "cf-option__meta", "{meta}" }
+                                if !meta.is_empty() {
+                                    span { class: "cf-option__meta", "{meta}" }
+                                }
                             }
                         }
                     }

@@ -151,6 +151,7 @@ pub enum EntityType {
     FileLink(String), // FileLink#{file_id}
     SpaceAnalyze,
     SpaceAnalyzeRequest(String),
+    SpaceAnalyzeReport(String), // SPACE_ANALYZE_REPORT#{ulid}
     SpaceDiscussion(String),
     SpaceDiscussionMember(String, String),
     SpaceDiscussionParticipant(String, String),

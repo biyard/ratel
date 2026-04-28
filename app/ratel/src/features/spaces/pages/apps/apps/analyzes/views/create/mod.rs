@@ -18,14 +18,12 @@ mod cross_filter;
 mod footer_create;
 mod footer_preview;
 mod preview_card;
-mod preview_records;
 
 pub use cf_sunji::*;
 pub use cross_filter::*;
 pub use footer_create::*;
 pub use footer_preview::*;
 pub use preview_card::*;
-pub use preview_records::*;
 
 use super::*;
 use crate::features::spaces::space_common::hooks::use_space;
@@ -41,7 +39,7 @@ pub fn SpaceAnalyzeCreatePage(space_id: ReadSignal<SpacePartition>) -> Element {
     let space = use_space();
     let nav = use_navigator();
 
-    let ctrl = use_analyze_create()?;
+    let ctrl = use_analyze_create(space_id)?;
     let mode = ctrl.mode.read().clone();
     let mode_attr = mode.as_str();
 
@@ -127,12 +125,12 @@ pub fn SpaceAnalyzeCreatePage(space_id: ReadSignal<SpacePartition>) -> Element {
                             match mode {
                                 CreateMode::Create => rsx! {
                                     div { class: "builder-create", "data-state": "create",
-                                        CrossFilterCard {}
-                                        CfSunjiCard {}
+                                        CrossFilterCard { space_id }
+                                        CfSunjiCard { space_id }
                                     }
                                 },
                                 CreateMode::Preview => rsx! {
-                                    PreviewCard {}
+                                    PreviewCard { space_id }
                                 },
                             }
                         }

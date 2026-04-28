@@ -9,8 +9,8 @@ use crate::*;
 #[component]
 pub fn FooterPreview(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
-    let mut ctrl = use_analyze_create()?;
-    let nav = use_navigator();
+    let mut ctrl = use_analyze_create(space_id)?;
+    let mut handle_submit = ctrl.handle_submit;
 
     let mode = ctrl.mode.read().clone();
     let visible = matches!(mode, CreateMode::Preview);
@@ -35,12 +35,7 @@ pub fn FooterPreview(space_id: ReadSignal<SpacePartition>) -> Element {
                     class: "btn btn--primary",
                     id: "preview-confirm",
                     "data-testid": "preview-confirm",
-                    onclick: move |_| {
-                        nav.push(Route::SpaceAnalyzeReportPage {
-                            space_id: space_id(),
-                            report_id: "1".to_string(),
-                        });
-                    },
+                    onclick: move |_| handle_submit.call(),
                     "{tr.create_footer_confirm}"
                 }
             }

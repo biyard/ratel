@@ -1,21 +1,28 @@
-//! PREVIEW step card — name input, chip summary, stat tiles, and the
-//! per-source merged record tables. Layout maps verbatim to
-//! `assets/design/analyze-create-arena.html` `.builder-create[data-state="preview"]`.
+//! PREVIEW step card — name input, chip summary, and the live count
+//! tiles (matched respondents + total source records). Pulls from the
+//! `preview` signal which `handle_compute_preview` populates when the
+//! user pressed 다음 in the previous step.
 
-use crate::features::spaces::pages::apps::apps::analyzes::views::create::*;
 use crate::features::spaces::pages::apps::apps::analyzes::*;
 use crate::*;
 
 #[component]
-pub fn PreviewCard() -> Element {
+pub fn PreviewCard(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
-    let mut ctrl = use_analyze_create()?;
+    let mut ctrl = use_analyze_create(space_id)?;
 
     let filters = ctrl.filters.read().clone();
     let preview_name = ctrl.preview_name.read().clone();
+    let preview = ctrl.preview.read().clone();
 
-    let respondents = pseudo_respondent_count(filters.len()).to_string();
-    let filter_count = filters.len().to_string();
+    let respondents = preview
+        .as_ref()
+        .map(|p| p.respondent_count.to_string())
+        .unwrap_or_else(|| "—".to_string());
+    let data_count = preview
+        .as_ref()
+        .map(|p| p.data_count.to_string())
+        .unwrap_or_else(|| "—".to_string());
 
     rsx! {
         div { class: "builder-create", "data-state": "preview",
@@ -91,16 +98,13 @@ pub fn PreviewCard() -> Element {
                 div { class: "preview-stat",
                     span {
                         class: "preview-stat__value",
-                        id: "preview-filter-count",
-                        "data-testid": "preview-filter-count",
-                        "{filter_count}"
+                        id: "preview-data-count",
+                        "data-testid": "preview-data-count",
+                        "{data_count}"
                     }
                     span { class: "preview-stat__label", "{tr.create_preview_stat_records}" }
                 }
             }
-
-            // ── Per-source merged record tables ─────────
-            PreviewRecords { filters: filters.clone() }
         }
     }
 }

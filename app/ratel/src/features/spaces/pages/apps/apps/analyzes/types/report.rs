@@ -1,32 +1,37 @@
-//! Mock report types and seed data for the analyzes arena LIST view.
+//! Report DTOs and helpers for the analyzes arena LIST view.
 //!
-//! Mirrors the `analyses` array in
-//! `app/ratel/assets/design/analyze-list-arena.html`. Once Phase 2/3
-//! lands, the mock module will be swapped for real server data without
-//! changing the consumer-side shape (the list view destructures the
-//! same fields).
+//! Status enum doubles as the DynamoDB-stored value on `SpaceAnalyzeReport`
+//! and the view-side status badge driver. The lowercase variants returned
+//! by `as_str()` feed `data-status` on the HTML mockup so the existing
+//! CSS picks up the badge styling unchanged.
 
 use std::fmt;
 
-/// Status badge shown on the top-left of a saved report card.
-///
-/// `Done` renders the green check + "분석 완료"; `Running` renders the
-/// pulsing dot + "분석 중". Maps directly onto the HTML mockup's
-/// `data-status` attribute, so the existing CSS picks up the badge
-/// styling for free.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+use serde::{Deserialize, Serialize};
+
+/// Lifecycle of a saved analyze report. `InProgress` is the initial state
+/// after submit — DynamoDB stream pipelines (LDA / TF-IDF / poll-quiz
+/// aggregation) flip it to `Finish` once analysis completes, or `Failed`
+/// on irrecoverable error.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[serde(rename_all = "snake_case")]
 pub enum AnalyzeReportStatus {
-    Running,
-    Done,
+    #[default]
+    InProgress,
+    Finish,
+    Failed,
 }
 
 impl AnalyzeReportStatus {
-    /// Lowercase string used in the `data-status` attribute (matches the
-    /// HTML mockup verbatim).
+    /// Lowercase string used in the `data-status` attribute. Kept aligned
+    /// with the HTML mockup CSS — `running` for in-progress, `done` for
+    /// finish — so existing styling renders without changes.
     pub fn as_str(&self) -> &'static str {
         match self {
-            AnalyzeReportStatus::Running => "running",
-            AnalyzeReportStatus::Done => "done",
+            AnalyzeReportStatus::InProgress => "running",
+            AnalyzeReportStatus::Finish => "done",
+            AnalyzeReportStatus::Failed => "failed",
         }
     }
 }
@@ -36,8 +41,11 @@ impl AnalyzeReportStatus {
 /// Determines the chip palette via `data-source` (cyan for poll, purple
 /// for quiz, blue for discussion, orange for follow). The lowercase
 /// string from `Display` is what the CSS selector matches.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[serde(rename_all = "snake_case")]
 pub enum AnalyzeFilterSource {
+    #[default]
     Poll,
     Quiz,
     Discussion,
@@ -66,9 +74,10 @@ impl fmt::Display for AnalyzeFilterSource {
 /// The mockup distinguishes a coloured `source` capsule (POLL / QUIZ /
 /// DISCUSSION / FOLLOW) from the longer `label` body that names the
 /// specific question or option. `item_id` / `question_id` / `option_id`
-/// are kept on the struct so that Phase-2 (CREATE) and Phase-3 (DETAIL)
-/// can round-trip the same values without redefining the type.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// are stored verbatim so the detail page can re-run the same matching
+/// logic against live response data without re-deriving anything.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct AnalyzeReportFilter {
     pub source: AnalyzeFilterSource,
     pub source_label: String,
@@ -81,28 +90,31 @@ pub struct AnalyzeReportFilter {
     pub correct: bool,
 }
 
-/// One saved analysis as displayed in the list carousel.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// One saved analysis as displayed in the list carousel and returned by
+/// `GET /api/spaces/{space_id}/apps/analyzes/reports`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct AnalyzeReport {
     pub id: String,
     pub name: String,
     pub status: AnalyzeReportStatus,
-    pub created_at: String,
-    pub created_at_time: String,
+    /// Unix timestamp in milliseconds. View-side date / time formatting
+    /// happens at render time so the wire format stays a single field.
+    pub created_at: i64,
     pub filters: Vec<AnalyzeReportFilter>,
 }
 
 /// Pre-seeded reports matching the demo `analyses` array in the HTML
-/// mockup. Real data starts empty; this is purely so the visual
-/// styling (status badge, chip palette) is exercised in dev.
+/// mockup. Used by the soon-to-be-removed detail page; the LIST view is
+/// already migrating to live server data. Removed in a follow-up
+/// stage once the DETAIL page is wired to `get_analyze_report`.
 pub fn mock_reports() -> Vec<AnalyzeReport> {
     vec![
         AnalyzeReport {
             id: "1".to_string(),
             name: "헌법 개정 의견 × 무고죄 인식 교차분석".to_string(),
-            status: AnalyzeReportStatus::Done,
-            created_at: "2026.04.20".to_string(),
-            created_at_time: "14:32".to_string(),
+            status: AnalyzeReportStatus::Finish,
+            created_at: 0,
             filters: vec![
                 AnalyzeReportFilter {
                     source: AnalyzeFilterSource::Poll,
@@ -131,9 +143,8 @@ pub fn mock_reports() -> Vec<AnalyzeReport> {
         AnalyzeReport {
             id: "2".to_string(),
             name: "헌법 상식 정답률 × 응답 패턴".to_string(),
-            status: AnalyzeReportStatus::Running,
-            created_at: "2026.04.27".to_string(),
-            created_at_time: "11:08".to_string(),
+            status: AnalyzeReportStatus::InProgress,
+            created_at: 0,
             filters: vec![
                 AnalyzeReportFilter {
                     source: AnalyzeFilterSource::Quiz,

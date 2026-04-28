@@ -1,21 +1,5 @@
 use crate::features::spaces::pages::apps::apps::analyzes::*;
 use crate::*;
-
-/// Controller for the Analyze REPORT detail arena.
-///
-/// The detail page is mostly read-only mock content (Phase 3 ships the
-/// arena split-panel result view). The only Dioxus-owned state is the
-/// resolved `AnalyzeReport` (looked up by `report_id` from `mock_reports()`,
-/// falling back to the first mock when nothing matches).
-///
-/// Sidebar item click → which panel is active is **JS-owned**: `script.js`
-/// reads `data-target-panel` on `.sb-item`, sets `data-active="true"` on
-/// the matching `<section class="panel">`, and toggles `aria-selected` on
-/// sb-items. Same goes for sb-group collapse, bar-row / tfidf-row /
-/// topic-table filter highlights — JS owns those too. Keeping that
-/// state out of Rust signals avoids round-tripping through the rerender
-/// loop, matches the home/script.js pattern, and lines up with the
-/// `pages/index/action_dashboard` carousel precedent.
 #[derive(Clone, Copy)]
 pub struct UseAnalyzeReportDetail {
     pub report: Signal<AnalyzeReport>,
@@ -43,9 +27,8 @@ pub fn use_analyze_report_detail(
             .unwrap_or_else(|| AnalyzeReport {
                 id: rid,
                 name: String::new(),
-                status: AnalyzeReportStatus::Done,
-                created_at: String::new(),
-                created_at_time: String::new(),
+                status: AnalyzeReportStatus::Finish,
+                created_at: 0,
                 filters: Vec::new(),
             })
     });

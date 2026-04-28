@@ -9,7 +9,8 @@ use crate::*;
 #[component]
 pub fn FooterCreate(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
-    let mut ctrl = use_analyze_create()?;
+    let mut ctrl = use_analyze_create(space_id)?;
+    let mut handle_compute_preview = ctrl.handle_compute_preview;
     let nav = use_navigator();
 
     let mode = ctrl.mode.read().clone();
@@ -40,7 +41,10 @@ pub fn FooterCreate(space_id: ReadSignal<SpacePartition>) -> Element {
                     class: "btn btn--primary",
                     id: "create-next",
                     "data-testid": "create-next",
-                    onclick: move |_| ctrl.goto_preview(),
+                    onclick: move |_| {
+                        handle_compute_preview.call();
+                        ctrl.goto_preview();
+                    },
                     "{tr.create_footer_next}"
                 }
             }
