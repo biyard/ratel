@@ -34,7 +34,11 @@ The hook must be idempotent across the component tree. The first caller builds a
 
 ```rust
 #[track_caller]
-pub fn use_inbox() -> std::result::Result<UseInbox, RenderError> {
+pub fn use_inbox() -> UseInbox {
+    use_context::<UseInbox>()
+}
+
+pub fn use_inbox_provider() -> std::result::Result<UseInbox, RenderError> {
     // 1. Reuse any controller already installed by a parent component.
     if let Some(ctx) = try_use_context::<UseInbox>() {
         return Ok(ctx);
@@ -64,18 +68,18 @@ pub fn use_inbox() -> std::result::Result<UseInbox, RenderError> {
         Ok::<(), crate::common::Error>(())
     });
 
-    // 4. Provide at the root so every consumer shares one instance.
-    Ok(provide_root_context(UseInbox {
+    Ok(use_context_provider(UseInbox {
         inbox, unread_only, unread_count,
         handle_item_click, handle_mark_all,
     }))
 }
+
 ```
 
 Rules:
 - Return type is always `std::result::Result<UseFeature, RenderError>` — `?` bubbles up into `#[component]` bodies naturally.
 - Tag with `#[track_caller]` so hook-ordering errors point at the real call site.
-- Always guard with `try_use_context::<UseFeature>()` → return existing instance if present, otherwise build and `provide_root_context(...)`.
+- Always guard with `try_use_context::<UseFeature>()` → return existing instance if present, otherwise build and `use_context_provider(...)`.
 - Do not accept args that change the shape of the controller (no `use_inbox(unread_only: bool)`). Store such toggles as `Signal<T>` fields and let the caller flip them.
 
 ## Rule 3: Wrap every mutation in either an `async fn` method on the context **or** `use_action`
