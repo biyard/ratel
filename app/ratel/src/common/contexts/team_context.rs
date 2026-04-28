@@ -10,10 +10,6 @@ use dioxus::{
 };
 
 use serde::{Deserialize, Serialize};
-use std::future::Future;
-use std::pin::Pin;
-
-type CallbackResult<T> = Pin<Box<dyn Future<Output = Result<T, Error>>>>;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct TeamItem {
