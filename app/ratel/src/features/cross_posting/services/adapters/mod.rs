@@ -19,6 +19,13 @@ use async_trait::async_trait;
 #[derive(Debug, Clone)]
 pub enum DecryptedCredentials {
     Bluesky {
+        /// `did:plc:...` — required as the `repo` parameter on every
+        /// `com.atproto.repo.*` call. Populated at connect time from
+        /// `createSession` response; persisted on
+        /// `SocialConnection.external_user_id`.
+        did: String,
+        /// `@user.bsky.social` style handle, used for building public
+        /// `https://bsky.app/profile/{handle}/post/{rkey}` URLs.
         handle: String,
         access_jwt: String,
         refresh_jwt: String,
@@ -47,6 +54,19 @@ impl ImageRef {
     pub fn from_s3(url: impl Into<String>) -> Self {
         Self { url: url.into() }
     }
+}
+
+/// Metadata for the rich-link card embedded on platforms that render one
+/// (currently Bluesky's `app.bsky.embed.external`). Adapters fall back to
+/// these fields when an OG-tag fetch from `backlink_url` fails or is
+/// disabled; LinkedIn / Threads adapters that auto-detect cards from URLs
+/// in the body may ignore some fields.
+#[derive(Debug, Clone)]
+pub struct LinkCard {
+    pub backlink_url: String,
+    pub fallback_title: String,
+    pub fallback_description: String,
+    pub fallback_thumb_url: Option<String>,
 }
 
 /// Result of a successful publish — used to populate
@@ -97,12 +117,16 @@ pub trait CrossPostAdapter: Send + Sync {
 
     /// Publish a single post to the platform. The body is already formatted
     /// (truncated, backlink appended) by the time it arrives here — the
-    /// adapter just sends it.
+    /// adapter just sends it. `link_card` carries the rich-link metadata
+    /// (backlink URL + fallback title/description/thumb) so platforms that
+    /// render explicit external embeds (Bluesky) can build them without
+    /// re-deriving from the body.
     async fn publish(
         &self,
         creds: DecryptedCredentials,
         formatted_body: String,
         images: Vec<ImageRef>,
+        link_card: LinkCard,
     ) -> Result<PublishedRef, PlatformError>;
 
     /// Fetch likes / comments / reposts for an existing platform post.
