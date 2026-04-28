@@ -16,7 +16,9 @@ pub fn ViewerPage(space_id: SpacePartition) -> Element {
         let space_pk = space_id.clone();
         let mut content = content.clone();
         spawn(async move {
-            if let Ok(resp) = crate::features::spaces::pages::report::controllers::get_analyze(space_pk).await {
+            if let Ok(resp) =
+                crate::features::spaces::pages::report::controllers::get_analyze(space_pk).await
+            {
                 if let Some(html) = resp.html_contents {
                     if !html.trim().is_empty() {
                         content.set(html);
@@ -27,15 +29,15 @@ pub fn ViewerPage(space_id: SpacePartition) -> Element {
     });
 
     rsx! {
-        div { class: "flex flex-col gap-4 w-full items-center",
-            div { class: "flex items-center justify-between w-full max-w-5xl",
-                Typo { variant: Variant::H1, weight: Weight::Extrabold, "{tr.title_editor}" }
+        div { class: "flex flex-col gap-4 items-center w-full",
+            div { class: "flex justify-between items-center w-full max-w-5xl",
+                h1 { "{tr.title_editor}" }
             }
-            div { class: "w-full max-w-5xl rounded-lg bg-card p-6 flex flex-col",
-                div { class: "flex items-center justify-end flex-shrink-0",
-                    div { class: "flex items-center gap-3" }
+            div { class: "flex flex-col p-6 w-full max-w-5xl rounded-lg bg-card",
+                div { class: "flex flex-shrink-0 justify-end items-center",
+                    div { class: "flex gap-3 items-center" }
                 }
-                div { class: "flex flex-col w-full min-h-0 flex-1 overflow-hidden",
+                div { class: "flex overflow-hidden flex-col flex-1 w-full min-h-0",
                     RichEditor {
                         class: "w-full h-fit",
                         content: content(),
