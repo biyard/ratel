@@ -6,7 +6,6 @@ use crate::common::types::{
 use crate::features::auth::User;
 use crate::features::posts::models::Post;
 use crate::features::spaces::space_common::controllers::HotSpaceResponse;
-use crate::features::timeline::models::{TimelineEntry, TimelineReason};
 
 async fn seed_space(ctx: &TestContext, author: &User, status: SpaceStatus) -> SpaceCommon {
     let id = uuid::Uuid::new_v4().to_string();
@@ -32,12 +31,46 @@ async fn seed_space(ctx: &TestContext, author: &User, status: SpaceStatus) -> Sp
         pk: post_pk,
         sk: EntityType::Post,
         title: format!("Test Space {}", space.pk),
-        space_pk: Some(space_pk),
+        space_pk: Some(space_pk.clone()),
         ..Default::default()
     };
     post.create(&ctx.ddb).await.unwrap();
 
+    // Hot stream is read-only; both the global rank table and the per-viewer
+    // UserHotSpace fanout are populated by `space_fanout::upsert_hot_space`.
+    // Production paths (publish / start / status changes) trigger this via
+    // stream events — here we call it directly so seeded spaces actually
+    // surface in /api/home/hot-spaces for any viewer in the fanout set.
+    crate::features::spaces::space_common::services::space_fanout::upsert_hot_space(
+        &ctx.ddb, &space_pk,
+    )
+    .await;
+
     space
+}
+
+/// Seed a follower → target relationship and re-run hot-space fanout so
+/// the follower shows up in the target's `UserHotSpace` rows. Used by the
+/// "logged-in viewer surfaces a fanned-out space" test.
+async fn seed_follow_and_refanout(
+    ctx: &TestContext,
+    follower: &User,
+    target: &User,
+    space_pk: &Partition,
+) {
+    let (follower_record, following_record) =
+        crate::common::models::auth::UserFollow::new_follow_records(
+            follower.pk.clone(),
+            target.pk.clone(),
+        );
+    follower_record.create(&ctx.ddb).await.unwrap();
+    following_record.create(&ctx.ddb).await.unwrap();
+
+    // Re-fanout so the new follower lands in this space's UserHotSpace set.
+    crate::features::spaces::space_common::services::space_fanout::upsert_hot_space(
+        &ctx.ddb, space_pk,
+    )
+    .await;
 }
 
 async fn seed_participant(
@@ -51,17 +84,6 @@ async fn seed_participant(
     sp.create(&ctx.ddb).await.unwrap();
 }
 
-async fn seed_timeline_entry(
-    ctx: &TestContext,
-    viewer: &User,
-    post_pk: &Partition,
-    author_pk: &Partition,
-    reason: TimelineReason,
-) {
-    let now = crate::common::utils::time::get_now_timestamp_millis();
-    let entry = TimelineEntry::new(&viewer.pk, post_pk, author_pk, now, reason);
-    entry.create(&ctx.ddb).await.unwrap();
-}
 
 fn space_id_str(pk: &Partition) -> String {
     Into::<SpacePartition>::into(pk.clone()).to_string()
@@ -222,21 +244,16 @@ async fn test_hot_spaces_logged_in_excludes_non_fanned_out_public_space() {
 
 #[tokio::test]
 async fn test_hot_spaces_logged_in_surfaces_following_entry() {
-    // Positive case for the fan-in path: a TimelineEntry with reason Following
-    // should resolve back to its SpaceCommon and surface the space in Hot.
+    // Positive case for the per-viewer fanout path: when the viewer follows
+    // the author, `space_fanout::upsert_hot_space` writes a UserHotSpace
+    // row in the viewer's namespace and the space surfaces in their Hot
+    // stream.
     let ctx = TestContext::setup().await;
     let author = ctx.test_user.0.clone();
     let (viewer, viewer_headers) = ctx.create_another_user().await;
 
     let space = seed_space(&ctx, &author, SpaceStatus::Ongoing).await;
-    seed_timeline_entry(
-        &ctx,
-        &viewer,
-        &space.post_pk,
-        &author.pk,
-        TimelineReason::Following,
-    )
-    .await;
+    seed_follow_and_refanout(&ctx, &viewer, &author, &space.pk).await;
 
     let (status, _, body) = crate::test_get! {
         app: ctx.app.clone(),
@@ -249,7 +266,7 @@ async fn test_hot_spaces_logged_in_surfaces_following_entry() {
     let target = space_id_str(&space.pk);
     assert!(
         body.items.iter().any(|i| i.space_id.to_string() == target),
-        "Following timeline entry should surface the space in Hot: {:?}",
+        "Following relationship should surface the space in Hot: {:?}",
         body.items
     );
 }

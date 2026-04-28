@@ -143,9 +143,7 @@ pub fn KrIcon(
 #[component]
 pub fn RewardsIcon() -> Element {
     rsx! {
-        icons::game::Trophy {
-            class: "size-6 transition-all [&>path]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80 [&>path]:fill-transparent",
-        }
+        icons::game::Trophy { class: "transition-all size-6 [&>path]:stroke-menu-text [&>path]:fill-transparent group-hover:[&>path]:stroke-menu-text/80" }
     }
 }
 
@@ -174,17 +172,14 @@ pub fn SignInIcon() -> Element {
 #[component]
 pub fn AdminIcon() -> Element {
     rsx! {
-        icons::settings::Settings {
-            class: "size-6 transition-all [&>path]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80 [&>circle]:stroke-menu-text group-hover:[&>circle]:stroke-menu-text/80",
-        }
+        icons::settings::Settings { class: "transition-all size-6 [&>path]:stroke-menu-text [&>circle]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80 group-hover:[&>circle]:stroke-menu-text/80" }
     }
 }
 
 #[component]
 pub fn CredentialsIcon() -> Element {
     rsx! {
-        icons::security::ShieldGood {
-            class: "size-6 transition-all [&>path]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80 [&>path]:fill-transparent",
-        }
+        icons::security::ShieldGood { class: "transition-all size-6 [&>path]:stroke-menu-text [&>path]:fill-transparent group-hover:[&>path]:stroke-menu-text/80" }
     }
 }
+

@@ -449,7 +449,7 @@
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  /* white-space: nowrap; */
   color: var(--dark, #f0f0f5) var(--light, #1a1a2e);
 }
 .poll-arena .question-card__desc {

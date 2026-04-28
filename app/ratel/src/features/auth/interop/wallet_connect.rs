@@ -1,6 +1,4 @@
-use wasm_bindgen::prelude::*;
-use wasm_bindgen_futures::JsFuture;
-use web_sys::js_sys::Promise;
+use dioxus::document::eval as dx_eval;
 
 use crate::features::auth::*;
 
@@ -16,33 +14,17 @@ pub fn wallet_connect_initialize(config: &crate::common::WalletConnectConfig) {
 
 // ── Wallet (WalletConnect) interop ────────────────────────────────────
 
-#[wasm_bindgen(js_namespace = ["window", "ratel", "auth", "wallet"])]
-extern "C" {
-    #[wasm_bindgen(js_name = initialize)]
-    pub fn wallet_initialize(
-        project_id: &str,
-        app_name: &str,
-        app_description: &str,
-        app_url: &str,
-    );
+pub fn wallet_initialize(project_id: &str, app_name: &str, app_description: &str, app_url: &str) {
+    let runner = dx_eval(include_str!("web/wc_init.js"));
 
-    #[wasm_bindgen(js_name = connect)]
-    fn wallet_connect_promise() -> Promise;
-
-    #[wasm_bindgen(js_name = signMessage)]
-    fn wallet_sign_message_promise(message: &str) -> Promise;
-
-    #[wasm_bindgen(js_name = getAddress)]
-    fn wallet_get_address_promise() -> Promise;
-
-    #[wasm_bindgen(js_name = disconnect)]
-    fn wallet_disconnect_promise() -> Promise;
-
-    #[wasm_bindgen(js_name = isConnected)]
-    pub fn wallet_is_connected() -> bool;
-
-    #[wasm_bindgen(js_name = openWalletApp)]
-    fn wallet_open_app_promise() -> Promise;
+    if let Err(e) = runner.send(serde_json::json!({
+        "projectId": project_id,
+        "appName": app_name,
+        "appDescription": app_description,
+        "appUrl": app_url,
+    })) {
+        error!("Failed to initialize WalletConnect: {:?}", e);
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -53,43 +35,63 @@ pub struct WalletConnectResult {
 
 /// Connect wallet via QR — returns address + chain_id, keeps session alive
 pub async fn wallet_connect() -> crate::common::Result<WalletConnectResult> {
-    let js_value = JsFuture::from(wallet_connect_promise())
+    let mut runner = dx_eval(include_str!("web/wc_connect.js"));
+    runner
+        .recv::<Option<WalletConnectResult>>()
         .await
-        .map_err(|_e| AuthError::WalletConnectFailed)?;
-
-    serde_wasm_bindgen::from_value(js_value)
-        .map_err(|_e| AuthError::WalletConnectFailed.into())
+        .map_err(|_| AuthError::WalletConnectFailed)?
+        .ok_or_else(|| AuthError::WalletConnectFailed.into())
 }
 
 /// Sign a message using the active session
 pub async fn wallet_sign_message(message: &str) -> crate::common::Result<String> {
-    let js_value = JsFuture::from(wallet_sign_message_promise(message))
+    let mut runner = dx_eval(include_str!("web/wc_sign_message.js"));
+    runner
+        .send(serde_json::json!(message))
+        .map_err(|_| AuthError::WalletConnectFailed)?;
+    runner
+        .recv::<Option<String>>()
         .await
-        .map_err(|_e| AuthError::WalletConnectFailed)?;
-
-    js_value
-        .as_string()
+        .map_err(|_| AuthError::WalletConnectFailed)?
         .ok_or_else(|| AuthError::WalletConnectFailed.into())
 }
 
 pub async fn wallet_get_address() -> crate::common::Result<Option<String>> {
-    let js_value = JsFuture::from(wallet_get_address_promise())
+    let mut runner = dx_eval(include_str!("web/wc_get_address.js"));
+    runner
+        .recv::<Option<String>>()
         .await
-        .map_err(|_e| AuthError::WalletConnectFailed)?;
-    Ok(js_value.as_string())
+        .map_err(|_| AuthError::WalletConnectFailed.into())
 }
 
 /// Open the wallet app (deep link or AppKit modal) for pending sign requests
 pub async fn wallet_open_app() -> crate::common::Result<()> {
-    JsFuture::from(wallet_open_app_promise())
+    let mut runner = dx_eval(include_str!("web/wc_open_app.js"));
+    let ok = runner
+        .recv::<bool>()
         .await
-        .map_err(|_e| AuthError::WalletConnectFailed)?;
-    Ok(())
+        .map_err(|_| AuthError::WalletConnectFailed)?;
+    if ok {
+        Ok(())
+    } else {
+        Err(AuthError::WalletConnectFailed.into())
+    }
 }
 
 pub async fn wallet_disconnect() -> crate::common::Result<()> {
-    JsFuture::from(wallet_disconnect_promise())
+    let mut runner = dx_eval(include_str!("web/wc_disconnect.js"));
+    let ok = runner
+        .recv::<bool>()
         .await
-        .map_err(|_e| AuthError::WalletConnectFailed)?;
-    Ok(())
+        .map_err(|_| AuthError::WalletConnectFailed)?;
+    if ok {
+        Ok(())
+    } else {
+        Err(AuthError::WalletConnectFailed.into())
+    }
+}
+
+pub async fn wallet_is_connected() -> bool {
+    let mut runner = dx_eval(include_str!("web/wc_is_connected.js"));
+    runner.recv::<bool>().await.unwrap_or(false)
 }

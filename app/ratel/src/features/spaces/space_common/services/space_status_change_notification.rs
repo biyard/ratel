@@ -59,10 +59,7 @@ pub async fn handle_space_status_change(event: SpaceStatusChangeEvent) -> Result
     let post = Post::get(cli, &post_pk, Some(&EntityType::Post))
         .await?
         .ok_or_else(|| {
-            tracing::error!(
-                "handle_space_status_change: post not found for {}",
-                post_pk
-            );
+            tracing::error!("handle_space_status_change: post not found for {}", post_pk);
             SpaceStatusChangeError::PostNotFound
         })?;
 
@@ -115,9 +112,7 @@ pub async fn handle_space_status_change(event: SpaceStatusChangeEvent) -> Result
             space_title: post.title.clone(),
         });
         if let Err(e) = notification.create(cli).await {
-            tracing::error!(
-                "handle_space_status_change: failed to create notification row: {e}"
-            );
+            tracing::error!("handle_space_status_change: failed to create notification row: {e}");
             // Continue; don't abort fan-out on a single failed chunk.
         }
     }
@@ -132,7 +127,7 @@ async fn load_space(
     Ok(SpaceCommon::get(cli, space_pk, Some(&EntityType::SpaceCommon)).await?)
 }
 
-async fn resolve_team_member_user_pks(
+pub(crate) async fn resolve_team_member_user_pks(
     cli: &aws_sdk_dynamodb::Client,
     team_pk: &Partition,
 ) -> Result<Vec<Partition>> {
@@ -173,34 +168,17 @@ async fn resolve_team_member_user_pks(
         .collect())
 }
 
-async fn resolve_space_participant_user_pks(
+pub(crate) async fn resolve_space_participant_user_pks(
     cli: &aws_sdk_dynamodb::Client,
     space_pk: &Partition,
 ) -> Result<Vec<Partition>> {
     use crate::common::models::space::SpaceParticipant;
 
     let mut user_pks: HashSet<String> = HashSet::new();
-
-    let mut bookmark: Option<String> = None;
-    for page in 0..MAX_PAGES {
-        let mut opt = SpaceParticipant::opt().limit(PAGE_SIZE);
-        if let Some(bm) = bookmark.as_ref() {
-            opt = opt.bookmark(bm.clone());
-        }
-        let (rows, next) = SpaceParticipant::find_by_space(cli, space_pk, opt).await?;
-        for row in rows {
-            user_pks.insert(row.user_pk.to_string());
-        }
-        match next {
-            Some(b) => bookmark = Some(b),
-            None => break,
-        }
-        if page + 1 == MAX_PAGES {
-            tracing::warn!(
-                space_pk = %space_pk,
-                "resolve_space_participant_user_pks: hit MAX_PAGES cap; additional participants truncated"
-            );
-        }
+    let mut opt = SpaceParticipant::opt_all();
+    let (rows, _next) = SpaceParticipant::find_by_space(cli, space_pk, opt).await?;
+    for row in rows {
+        user_pks.insert(row.user_pk.to_string());
     }
 
     Ok(user_pks
@@ -209,7 +187,7 @@ async fn resolve_space_participant_user_pks(
         .collect())
 }
 
-async fn resolve_emails(
+pub(crate) async fn resolve_emails(
     cli: &aws_sdk_dynamodb::Client,
     user_pks: Vec<Partition>,
 ) -> Result<Vec<String>> {
@@ -263,5 +241,6 @@ fn build_space_url(space_pk: &Partition) -> String {
         Partition::Space(id) => id.clone(),
         _ => String::new(),
     };
-    format!("https://ratel.foundation/spaces/{}", id)
+    let endpoint = crate::common::CommonConfig::default().env.web_endpoint();
+    format!("{}/spaces/{}", endpoint, id)
 }

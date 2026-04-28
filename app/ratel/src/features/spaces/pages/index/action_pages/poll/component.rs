@@ -43,6 +43,33 @@ translate! {
     credits_label: { en: "Credits", ko: "크레딧" },
     reward_label: { en: "Reward", ko: "보상" },
     begin_poll: { en: "Begin Poll", ko: "투표 시작" },
+    encrypted_secret_title: {
+        en: "Set up encrypted voting",
+        ko: "암호화 투표 설정",
+    },
+    encrypted_secret_description: {
+        en: "This poll's results are encrypted and stored on-chain. Set a password used to encrypt your vote. You can verify your ballot later with the same password.",
+        ko: "이 투표의 결과는 암호화되어 블록체인에 저장됩니다. 투표 결과를 암호화 하는데 사용할 비밀번호를 설정하세요. 동일한 비밀번호로 투표를 검증할 수 있습니다.",
+    },
+    encrypted_secret_placeholder: { en: "Password", ko: "비밀번호" },
+    encrypted_secret_continue: { en: "Continue", ko: "계속" },
+    encrypted_secret_cancel: { en: "Cancel", ko: "취소" },
+    encrypted_secret_required: {
+        en: "Encrypted polls require a password before submitting.",
+        ko: "암호화 투표는 제출 전에 비밀번호 설정이 필요합니다.",
+    },
+    encrypted_material_load_failed: {
+        en: "Failed to load encryption material.",
+        ko: "암호화 자료 로드에 실패했습니다.",
+    },
+    encrypted_material_loading: {
+        en: "Preparing encryption keys… this can take a few seconds.",
+        ko: "암호화 키를 준비 중입니다… 몇 초 걸릴 수 있어요.",
+    },
+    encrypted_secret_applying: {
+        en: "Securing your key…",
+        ko: "암호화 키를 저장하는 중…",
+    },
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -113,6 +140,67 @@ pub fn ActionPollViewer(
     let mut step = use_signal(|| PollStep::Overview);
     let mut show_confirm = use_signal(|| false);
 
+    let encryption_enabled = poll.encrypted_upload_enabled;
+    let mut encryption_material = use_signal(|| None::<VoteEncryptionMaterialResponse>);
+    let mut client_secret = use_signal(|| None::<String>);
+    let mut secret_input = use_signal(String::new);
+    let mut show_secret_modal = use_signal(|| false);
+    let mut loading_material = use_signal(|| false);
+    let mut applying_secret = use_signal(|| false);
+    let needs_secret = encryption_enabled && can_submit;
+
+    // Kick off the (slow) keygen request and decide whether to prompt the user.
+    // - If a session secret exists, prefill secret_input and skip the modal —
+    //   the second effect will auto-finalize once material arrives.
+    // - Otherwise, show the modal so the user can type a new password.
+    use_effect(move || {
+        if !needs_secret {
+            return;
+        }
+        spawn(async move {
+            let session_secret = load_session_vote_secret().await.unwrap_or_default();
+            if !session_secret.is_empty() && client_secret().is_none() {
+                secret_input.set(session_secret);
+            } else if client_secret().is_none() {
+                show_secret_modal.set(true);
+            }
+            if encryption_material().is_none() && !loading_material() {
+                loading_material.set(true);
+                match get_encryption_material(space_id(), poll_id()).await {
+                    Ok(m) => encryption_material.set(Some(m)),
+                    Err(_) => {
+                        toast.warn(tr.encrypted_material_load_failed.to_string());
+                    }
+                }
+                loading_material.set(false);
+            }
+        });
+    });
+
+    // When both material and a (session-derived) secret are present without
+    // the modal being shown, finalize automatically.
+    use_effect(move || {
+        if client_secret().is_some() || show_secret_modal() {
+            return;
+        }
+        let Some(material) = encryption_material() else {
+            return;
+        };
+        let secret = secret_input();
+        if secret.is_empty() {
+            return;
+        }
+        match build_stored_voter_key_from_encryption_material(&material, &secret) {
+            Ok(stored) => {
+                let _ = save_stored_voter_key(&stored);
+                client_secret.set(Some(secret));
+            }
+            Err(e) => {
+                toast.warn(e);
+            }
+        }
+    });
+
     // Pre-fill with defaults so `write()[idx] = ans` never panics even if
     // `my_response` has fewer entries than current questions.
     let initial_answers: Vec<Answer> = {
@@ -153,7 +241,35 @@ pub fn ActionPollViewer(
 
     let do_submit = Callback::new(move |_: ()| {
         spawn(async move {
-            let req = RespondPollRequest { answers: answers() };
+            let mut req = RespondPollRequest {
+                answers: answers(),
+                client_ciphertext_json: None,
+                client_voter_tag: None,
+            };
+
+            if encryption_enabled {
+                let material = encryption_material();
+                let secret = client_secret();
+                let now = crate::common::utils::time::get_now_timestamp_millis();
+                match (material, secret) {
+                    (Some(m), Some(_)) => match encrypt_answers_for_canister(&m, &answers(), now) {
+                        Ok(enc) => {
+                            req.client_ciphertext_json = Some(enc.ciphertext_json);
+                            req.client_voter_tag = Some(enc.voter_tag);
+                        }
+                        Err(e) => {
+                            toast.warn(e);
+                            return;
+                        }
+                    },
+                    _ => {
+                        toast.warn(tr.encrypted_secret_required.to_string());
+                        show_secret_modal.set(true);
+                        return;
+                    }
+                }
+            }
+
             match respond_poll(space_id(), poll_id(), req).await {
                 Ok(_) => {
                     space_ctx.ranking.restart();
@@ -673,6 +789,102 @@ pub fn ActionPollViewer(
                                         },
                                         {tr.submit_confirm_action}
                                     }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ─── Encrypted-vote Secret Setup Modal ───
+            if show_secret_modal() {
+                div { class: "poll-confirm-overlay",
+                    div {
+                        class: "poll-confirm-modal",
+                        onclick: move |e| e.stop_propagation(),
+                        h3 { class: "poll-confirm-modal__title", {tr.encrypted_secret_title} }
+                        p { class: "poll-confirm-modal__desc", {tr.encrypted_secret_description} }
+                        input {
+                            "data-testid": "poll-encrypted-secret-input",
+                            r#type: "password",
+                            placeholder: "{tr.encrypted_secret_placeholder}",
+                            value: "{secret_input()}",
+                            disabled: applying_secret(),
+                            style: "width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--color-card-border, #2a2a3a); background: var(--color-input-box-bg, #0c0c1a); color: var(--color-text-primary, #f0f0f5); font-size: 14px; margin: 12px 0;",
+                            oninput: move |evt| secret_input.set(evt.value()),
+                        }
+                        if loading_material() && encryption_material().is_none() {
+                            div {
+                                style: "display: flex; align-items: center; gap: 8px; color: var(--color-foreground-muted, #8888a8); font-size: 13px; margin: 4px 0 12px;",
+                                "data-testid": "poll-encrypted-material-loading",
+                                span { style: "display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;" }
+                                {tr.encrypted_material_loading}
+                            }
+                        }
+                        if applying_secret() {
+                            div {
+                                style: "display: flex; align-items: center; gap: 8px; color: var(--color-foreground-muted, #8888a8); font-size: 13px; margin: 4px 0 12px;",
+                                "data-testid": "poll-encrypted-secret-applying",
+                                span { style: "display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;" }
+                                {tr.encrypted_secret_applying}
+                            }
+                        }
+                        style { "@keyframes spin {{ to {{ transform: rotate(360deg); }} }}" }
+                        div { class: "poll-confirm-modal__actions",
+                            button {
+                                class: "poll-btn poll-btn--back",
+                                disabled: applying_secret(),
+                                onclick: move |_| {
+                                    secret_input.set(String::new());
+                                    show_secret_modal.set(false);
+                                    if let Some(mut ov) = overlay {
+                                        ov.0.set(None);
+                                    } else {
+                                        nav.push(crate::Route::SpaceIndexPage {
+                                            space_id: space_id(),
+                                        });
+                                    }
+                                },
+                                {tr.encrypted_secret_cancel}
+                            }
+                            button {
+                                class: "poll-btn poll-btn--submit",
+                                "data-testid": "poll-encrypted-secret-continue",
+                                disabled: secret_input().is_empty() || loading_material() || encryption_material().is_none()
+                                    || applying_secret(),
+                                onclick: move |_| async move {
+                                    let s = secret_input();
+                                    if s.is_empty() {
+                                        return;
+                                    }
+                                    let Some(material) = encryption_material() else {
+                                        toast.warn(tr.encrypted_material_load_failed.to_string());
+                                        return;
+                                    };
+                                    applying_secret.set(true);
+                                    // Yield once so the disabled/“Applying…”
+                                    // state paints before PBKDF2 blocks the
+                                    // main thread for a few seconds.
+                                    crate::common::utils::time::sleep(std::time::Duration::from_millis(0)).await;
+                                    let result = build_stored_voter_key_from_encryption_material(&material, &s);
+                                    match result {
+                                        Ok(stored) => {
+                                            let _ = save_stored_voter_key(&stored);
+                                            save_session_vote_secret(&s);
+                                            client_secret.set(Some(s));
+                                            secret_input.set(String::new());
+                                            show_secret_modal.set(false);
+                                        }
+                                        Err(e) => {
+                                            toast.warn(e);
+                                        }
+                                    }
+                                    applying_secret.set(false);
+                                },
+                                if applying_secret() {
+                                    {tr.encrypted_secret_applying}
+                                } else {
+                                    {tr.encrypted_secret_continue}
                                 }
                             }
                         }

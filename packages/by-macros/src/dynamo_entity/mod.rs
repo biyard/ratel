@@ -1434,31 +1434,37 @@ fn generate_struct_impl(
                         ])
                     })
                     .collect::<Vec<_>>();
-
-                let keys_and_attributes = aws_sdk_dynamodb::types::KeysAndAttributes::builder()
-                    .set_keys(Some(keys))
-                    .consistent_read(false)
-                    .build()
-                    .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
-
+                let mut items = vec![];
                 let table_name = Self::table_name();
 
-                let response = cli
-                    .batch_get_item()
-                    .request_items(table_name, keys_and_attributes)
-                    .send()
-                    .await
-                    .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+                for chunk in keys.chunks(100) {
+                    let keys_and_attributes = aws_sdk_dynamodb::types::KeysAndAttributes::builder()
+                        .set_keys(Some(chunk.to_vec()))
+                        .consistent_read(false)
+                        .build()
+                        .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
 
-                let items = if let Some(responses) = response.responses() {
-                    if let Some(items) = responses.get(table_name) {
-                        serde_dynamo::from_items(items.to_vec())?
+
+                    let response = cli
+                        .batch_get_item()
+                        .request_items(table_name, keys_and_attributes)
+                        .send()
+                        .await
+                        .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+                    let res: Vec<Self> = if let Some(responses) = response.responses() {
+                        if let Some(items) = responses.get(table_name) {
+                            serde_dynamo::from_items(items.to_vec())?
+                        } else {
+                            vec![]
+                        }
                     } else {
                         vec![]
-                    }
-                } else {
-                    vec![]
-                };
+                    };
+
+                    items.extend(res);
+                }
+
 
                 Ok(items)
             }
