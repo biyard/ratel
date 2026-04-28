@@ -22,13 +22,6 @@ fn main() {
         .expect("failed to run npm build");
     assert!(status.success(), "npm build for ratel/common failed");
 
-    std::fs::create_dir_all(&assets_dir).expect("failed to create assets directory");
-    std::fs::copy(
-        js_dir.join("dist/main.js"),
-        assets_dir.join("ratel-app-shell.js"),
-    )
-    .expect("failed to copy dist/main.js to assets/ratel-app-shell.js");
-
     println!("cargo:rerun-if-changed={}", "build.rs");
     println!("cargo:rerun-if-changed={}", js_dir.join("src").display());
 }
