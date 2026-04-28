@@ -1,15 +1,19 @@
-use dioxus::{
-    fullstack::{Loader, Loading},
-    prelude::*,
-};
-use serde::{Deserialize, Serialize};
-
 use crate::{
     auth::use_user_context,
     common::{types::UserType, Error},
     posts::types::TeamGroupPermissions,
     social::controllers::{create_team_handler, get_user_teams_handler, CreateTeamRequest},
 };
+use dioxus::{
+    fullstack::{Loader, Loading},
+    prelude::*,
+};
+
+use serde::{Deserialize, Serialize};
+use std::future::Future;
+use std::pin::Pin;
+
+type CallbackResult<T> = Pin<Box<dyn Future<Output = Result<T, Error>>>>;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct TeamItem {
@@ -47,13 +51,55 @@ impl TeamItem {
 pub struct TeamContext {
     pub teams: Loader<Vec<TeamItem>>,
     pub selected_index: Signal<usize>,
-    pub create_team_action: Action<(CreateTeamRequest,), TeamItem>,
 }
 
 impl TeamContext {
-    pub fn init() {
+    pub async fn create_team(
+        &mut self,
+        payload: crate::common::TeamCreationPayload,
+    ) -> crate::Result<TeamItem> {
+        let crate::common::TeamCreationPayload {
+            profile_url,
+            username,
+            nickname,
+            description,
+        } = payload;
+
+        let req = CreateTeamRequest {
+            username: username.clone(),
+            nickname: nickname.clone(),
+            profile_url: profile_url.clone(),
+            description: description.clone(),
+        };
+        let response = create_team_handler(req.clone()).await?;
+        let permissions: Vec<u8> = TeamGroupPermissions::all()
+            .0
+            .into_iter()
+            .map(|p| p as u8)
+            .collect();
+        let CreateTeamRequest {
+            profile_url,
+            username,
+            nickname,
+            description,
+        } = req;
+        let team_item = TeamItem {
+            pk: response.team_pk.clone(),
+            nickname: nickname.clone(),
+            username: username.clone(),
+            profile_url: profile_url.clone(),
+            user_type: UserType::Team,
+            permissions: permissions.clone(),
+            description: description.clone(),
+        };
+        self.teams.push(team_item.clone());
+
+        Ok(team_item)
+    }
+
+    pub fn init() -> Result<Self, Loading> {
         let user_ctx = use_user_context();
-        let mut teams = use_loader(move || async move {
+        let teams = use_loader(move || async move {
             let logged_in = user_ctx().is_logged_in();
 
             if !logged_in {
@@ -63,41 +109,11 @@ impl TeamContext {
             Ok::<_, Error>(get_user_teams_handler(None).await.unwrap_or_default().items)
         })?;
 
-        let create_team_action = use_action(move |req: CreateTeamRequest| async move {
-            match create_team_handler(req.clone()).await {
-                Ok(response) => {
-                    let permissions: Vec<u8> = TeamGroupPermissions::all()
-                        .0
-                        .into_iter()
-                        .map(|p| p as u8)
-                        .collect();
-                    let CreateTeamRequest {
-                        profile_url,
-                        username,
-                        nickname,
-                        description,
-                    } = req;
-                    let team_item = TeamItem {
-                        pk: response.team_pk.clone(),
-                        nickname: nickname.clone(),
-                        username: username.clone(),
-                        profile_url: profile_url.clone(),
-                        user_type: UserType::Team,
-                        permissions: permissions.clone(),
-                        description: description.clone(),
-                    };
-                    teams.push(team_item.clone());
-                    Ok(team_item)
-                }
-                Err(e) => Err(e),
-            }
-        });
-
-        use_context_provider(move || TeamContext {
+        let ctx = use_context_provider(move || TeamContext {
             teams,
             selected_index: use_signal(|| 0),
-            create_team_action,
         });
+        Ok(ctx)
     }
 
     pub fn set_teams(&mut self, teams: Vec<TeamItem>) {
