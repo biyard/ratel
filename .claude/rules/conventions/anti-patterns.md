@@ -266,6 +266,54 @@ fn update_poll(space_pk: Partition, poll_sk: EntityType)
 fn update_poll(space_id: SpacePartition, poll_id: SpacePollEntityType)
 ```
 
+## JS Interop — Direct `wasm_bindgen` Object Binding
+
+```rust
+// BAD — direct object binding to a runtime JS namespace via extern "C".
+// Forces wasm_bindgen + web-sys + serde-wasm-bindgen onto the dep graph,
+// breaks non-web targets without cfg gates, and silently drifts when the
+// JS module renames `signMessage`.
+#[wasm_bindgen(js_namespace = ["window", "ratel", "auth", "wallet"])]
+extern "C" {
+    #[wasm_bindgen(js_name = signMessage)]
+    fn wallet_sign_message_promise(message: &str) -> Promise;
+}
+
+pub async fn wallet_sign_message(message: &str) -> Result<String> {
+    let v = JsFuture::from(wallet_sign_message_promise(message))
+        .await
+        .map_err(|_| AuthError::WalletConnectFailed)?;
+    v.as_string().ok_or_else(|| AuthError::WalletConnectFailed.into())
+}
+
+// GOOD — one tiny driver script per call, JSON over dioxus.recv()/send().
+// Compiles on every target, no extern "C", no JsValue downcasting.
+use dioxus::document::eval as dx_eval;
+
+pub async fn wallet_sign_message(message: &str) -> Result<String> {
+    let mut runner = dx_eval (include_str!("web/wc_sign_message.js"));
+    runner.send(serde_json::json!(message))
+        .map_err(|_| AuthError::WalletConnectFailed)?;
+    runner.recv::<Option<String>>()
+        .await
+        .map_err(|_| AuthError::WalletConnectFailed)?
+        .ok_or_else(|| AuthError::WalletConnectFailed.into())
+}
+```
+
+```js
+// web/wc_sign_message.js
+const message = await dioxus.recv();
+try {
+  const sig = await window.ratel.auth.wallet.signMessage(message);
+  dioxus.send(sig);
+} catch (e) {
+  dioxus.send(null);
+}
+```
+
+Direct `#[wasm_bindgen(js_namespace = [...])] extern "C" { ... }` blocks are an anti-pattern. Use the `dioxus::document::eval` channel pattern with a per-call JS driver in a sibling `web/` directory. See `conventions/dioxus-app.md` § JS Interop. Reference migration: `app/ratel/src/features/auth/interop/wallet_connect.rs` (good) vs `app/ratel/src/features/auth/interop/web.rs` (legacy, pending migration).
+
 ## i18n
 
 ```rust
