@@ -21,6 +21,7 @@ fn main() {
 
     let status = Command::new("npm")
         .args(["run", build_cmd])
+        .env("ASSETS_DIR", &assets_dir)
         .current_dir(&js_dir)
         .status()
         .expect("failed to run npm build");
