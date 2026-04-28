@@ -187,6 +187,29 @@
 .home-arena .hud-btn--signin:hover svg {
   color: #6eedd8;
 }
+
+/* My AI HUD button — cyan/violet so it reads as an external
+   integration affordance distinct from the gold action buttons. */
+.home-arena .hud-btn--ai {
+  background: linear-gradient(
+    135deg,
+    rgba(34, 211, 238, 0.10),
+    rgba(129, 140, 248, 0.08)
+  );
+  border-color: rgba(34, 211, 238, 0.28);
+}
+.home-arena .hud-btn--ai svg {
+  color: #22d3ee;
+}
+.home-arena .hud-btn--ai:hover {
+  border-color: rgba(34, 211, 238, 0.45);
+  box-shadow: 0 0 22px rgba(34, 211, 238, 0.22);
+}
+.home-arena .hud-btn--ai:hover svg {
+  color: #22d3ee;
+  filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.6));
+}
+
 .home-arena .hud-btn__label {
   position: absolute;
   top: calc(100% + 8px);
