@@ -52,7 +52,52 @@ pub struct TeamContext {
 
 impl TeamContext {
     pub fn init() {
-        let _ = provide_team_context();
+        let user_ctx = use_user_context();
+        let mut teams = use_loader(move || async move {
+            let logged_in = user_ctx().is_logged_in();
+
+            if !logged_in {
+                return Ok(Vec::new());
+            }
+
+            Ok::<_, Error>(get_user_teams_handler(None).await.unwrap_or_default().items)
+        })?;
+
+        let create_team_action = use_action(move |req: CreateTeamRequest| async move {
+            match create_team_handler(req.clone()).await {
+                Ok(response) => {
+                    let permissions: Vec<u8> = TeamGroupPermissions::all()
+                        .0
+                        .into_iter()
+                        .map(|p| p as u8)
+                        .collect();
+                    let CreateTeamRequest {
+                        profile_url,
+                        username,
+                        nickname,
+                        description,
+                    } = req;
+                    let team_item = TeamItem {
+                        pk: response.team_pk.clone(),
+                        nickname: nickname.clone(),
+                        username: username.clone(),
+                        profile_url: profile_url.clone(),
+                        user_type: UserType::Team,
+                        permissions: permissions.clone(),
+                        description: description.clone(),
+                    };
+                    teams.push(team_item.clone());
+                    Ok(team_item)
+                }
+                Err(e) => Err(e),
+            }
+        });
+
+        use_context_provider(move || TeamContext {
+            teams,
+            selected_index: use_signal(|| 0),
+            create_team_action,
+        });
     }
 
     pub fn set_teams(&mut self, teams: Vec<TeamItem>) {
@@ -80,55 +125,4 @@ impl TeamContext {
 #[track_caller]
 pub fn use_team_context() -> TeamContext {
     use_context::<TeamContext>()
-}
-
-pub fn provide_team_context() -> Result<TeamContext, Loading> {
-    let user_ctx = use_user_context();
-    let mut teams = use_loader(move || async move {
-        let logged_in = user_ctx().is_logged_in();
-
-        if !logged_in {
-            return Ok(Vec::new());
-        }
-
-        Ok::<_, Error>(get_user_teams_handler(None).await.unwrap_or_default().items)
-    })?;
-
-    let create_team_action = use_action(move |req: CreateTeamRequest| async move {
-        match create_team_handler(req.clone()).await {
-            Ok(response) => {
-                let permissions: Vec<u8> = TeamGroupPermissions::all()
-                    .0
-                    .into_iter()
-                    .map(|p| p as u8)
-                    .collect();
-                let CreateTeamRequest {
-                    profile_url,
-                    username,
-                    nickname,
-                    description,
-                } = req;
-                let team_item = TeamItem {
-                    pk: response.team_pk.clone(),
-                    nickname: nickname.clone(),
-                    username: username.clone(),
-                    profile_url: profile_url.clone(),
-                    user_type: UserType::Team,
-                    permissions: permissions.clone(),
-                    description: description.clone(),
-                };
-                teams.push(team_item.clone());
-                Ok(team_item)
-            }
-            Err(e) => Err(e),
-        }
-    });
-
-    let ctx = use_context_provider(move || TeamContext {
-        teams,
-        selected_index: use_signal(|| 0),
-        create_team_action,
-    });
-
-    Ok(ctx)
 }
