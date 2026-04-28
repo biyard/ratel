@@ -1,71 +1,13 @@
 use crate::features::spaces::pages::apps::apps::analyzes::*;
 
-#[derive(Clone, PartialEq)]
-struct FollowRow {
-    name: &'static str,
-    handle: &'static str,
-    avatar_seed: &'static str,
-    rate_pct: &'static str,
-    rate_label: &'static str,
-    count_text: &'static str,
-}
-
-/// Follow panel — one card with a list of follow targets, each with a
-/// horizontal bar showing completion %. Mockup data 1:1.
 #[component]
 pub fn FollowPanel() -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
-
-    let rows: Vec<FollowRow> = vec![
-        FollowRow {
-            name: "김변호 변호사",
-            handle: "@kimlaw",
-            avatar_seed: "lawyer1",
-            rate_pct: "90.5%",
-            rate_label: "90.5%",
-            count_text: "38 / 42",
-        },
-        FollowRow {
-            name: "박판사 판사",
-            handle: "@parkjudge",
-            avatar_seed: "lawyer2",
-            rate_pct: "76.2%",
-            rate_label: "76.2%",
-            count_text: "32 / 42",
-        },
-        FollowRow {
-            name: "이검사 검사",
-            handle: "@leeprosec",
-            avatar_seed: "lawyer3",
-            rate_pct: "64.3%",
-            rate_label: "64.3%",
-            count_text: "27 / 42",
-        },
-        FollowRow {
-            name: "최교수 법학교수",
-            handle: "@choiprof",
-            avatar_seed: "lawyer4",
-            rate_pct: "52.4%",
-            rate_label: "52.4%",
-            count_text: "22 / 42",
-        },
-        FollowRow {
-            name: "정법사 변호사",
-            handle: "@jeonglaw",
-            avatar_seed: "lawyer5",
-            rate_pct: "45.2%",
-            rate_label: "45.2%",
-            count_text: "19 / 42",
-        },
-        FollowRow {
-            name: "한기자 법조 기자",
-            handle: "@hanreporter",
-            avatar_seed: "lawyer6",
-            rate_pct: "28.6%",
-            rate_label: "28.6%",
-            count_text: "12 / 42",
-        },
-    ];
+    let ctrl = use_context::<UseAnalyzeReportDetail>();
+    let detail = ctrl.detail.read().clone();
+    let result = detail.result.unwrap_or_default();
+    let respondent = result.respondent_count.max(1);
+    let aggregates = result.follow_aggregates;
 
     rsx! {
         section { class: "panel", "data-panel": "follow", "data-active": "false",
@@ -101,7 +43,7 @@ pub fn FollowPanel() -> Element {
             section { class: "card",
                 div { class: "card__head",
                     div { class: "card__title", "{tr.detail_follow_card_title}" }
-                    span { class: "card__count", "{tr.detail_follow_count_text}" }
+                    span { class: "card__count", "{respondent}명 {tr.detail_sb_item_meta_participants}" }
                 }
                 div { class: "follow-legend",
                     span { class: "follow-legend__item",
@@ -113,9 +55,17 @@ pub fn FollowPanel() -> Element {
                         "{tr.detail_follow_legend_miss}"
                     }
                 }
-                div { class: "follow-list",
-                    for (idx, row) in rows.iter().enumerate() {
-                        FollowRowEl { key: "follow-{idx}", row: row.clone() }
+                if aggregates.is_empty() {
+                    div { class: "card__hint", "{tr.detail_panel_empty_follow}" }
+                } else {
+                    div { class: "follow-list",
+                        for (idx, t) in aggregates.iter().enumerate() {
+                            FollowTargetRow {
+                                key: "follow-{idx}-{t.user_pk}",
+                                target: t.clone(),
+                                respondent_total: respondent,
+                            }
+                        }
                     }
                 }
             }
@@ -124,27 +74,44 @@ pub fn FollowPanel() -> Element {
 }
 
 #[component]
-fn FollowRowEl(row: FollowRow) -> Element {
-    let avatar = format!(
-        "https://api.dicebear.com/7.x/personas/svg?seed={}",
-        row.avatar_seed
-    );
-    let bar_style = format!("width: {};", row.rate_pct);
+fn FollowTargetRow(target: FollowTargetAggregate, respondent_total: i64) -> Element {
+    let total = respondent_total.max(1) as f64;
+    let pct = (target.count as f64 / total * 100.0).clamp(0.0, 100.0);
+    let bar_style = format!("width: {:.1}%;", pct);
+    let display = if target.display_name.is_empty() {
+        target.username.clone()
+    } else {
+        target.display_name.clone()
+    };
+    let handle = if target.username.is_empty() {
+        String::new()
+    } else {
+        format!("@{}", target.username)
+    };
+    let avatar = if target.profile_url.is_empty() {
+        format!(
+            "https://api.dicebear.com/7.x/personas/svg?seed={}",
+            target.user_pk
+        )
+    } else {
+        target.profile_url.clone()
+    };
+
     rsx! {
         div { class: "follow-row",
             div { class: "follow-row__user",
                 img { class: "follow-row__avatar", src: "{avatar}", alt: "" }
                 div { class: "follow-row__meta",
-                    span { class: "follow-row__name", "{row.name}" }
-                    span { class: "follow-row__handle", "{row.handle}" }
+                    span { class: "follow-row__name", "{display}" }
+                    span { class: "follow-row__handle", "{handle}" }
                 }
             }
             div { class: "follow-row__bar",
                 div { class: "follow-row__bar-done", style: "{bar_style}" }
             }
             div { class: "follow-row__stats",
-                span { class: "follow-row__rate", "{row.rate_label}" }
-                span { class: "follow-row__count", "{row.count_text}" }
+                span { class: "follow-row__rate", "{pct:.1}%" }
+                span { class: "follow-row__count", "{target.count} / {respondent_total}" }
             }
         }
     }

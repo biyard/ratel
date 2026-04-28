@@ -1,5 +1,11 @@
+mod analyze_discussion;
+pub use analyze_discussion::*;
+
 mod create_analyze_report;
 pub use create_analyze_report::*;
+
+mod get_analyze_report;
+pub use get_analyze_report::*;
 
 mod list_analyze_discussions;
 pub use list_analyze_discussions::*;

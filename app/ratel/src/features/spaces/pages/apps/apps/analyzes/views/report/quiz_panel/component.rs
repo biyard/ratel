@@ -1,141 +1,23 @@
 use super::super::*;
 use crate::features::spaces::pages::apps::apps::analyzes::*;
 
-/// Quiz panel — same shape as poll, with one extra signal: the
-/// correct option in each question gets a green accent + ✓ check.
+const BAR_COLORS: &[&str] = &[
+    "var(--c1)",
+    "var(--c2)",
+    "var(--c3)",
+    "var(--c4)",
+    "var(--c5)",
+];
+
 #[component]
 pub fn QuizPanel() -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
-
-    let q1: Vec<BarItem> = vec![
-        BarItem {
-            label: "1".into(),
-            value: "7명 · 41 (47.7%)".into(),
-            width: "47.7%",
-            color: "var(--c1)",
-            group: "quiz-q1",
-            group_label: "재판관 수",
-            filter_value: "7명".into(),
-            correct: false,
-            correct_text: false,
-        },
-        BarItem {
-            label: "2".into(),
-            value: "9명 · 19 (22.1%) · 정답".into(),
-            width: "22.1%",
-            color: "var(--quiz-correct)",
-            group: "quiz-q1",
-            group_label: "재판관 수",
-            filter_value: "9명 (정답)".into(),
-            correct: true,
-            correct_text: true,
-        },
-        BarItem {
-            label: "3".into(),
-            value: "11명 · 17 (19.8%)".into(),
-            width: "19.8%",
-            color: "var(--c2)",
-            group: "quiz-q1",
-            group_label: "재판관 수",
-            filter_value: "11명".into(),
-            correct: false,
-            correct_text: false,
-        },
-        BarItem {
-            label: "4".into(),
-            value: "13명 · 9 (10.5%)".into(),
-            width: "10.5%",
-            color: "var(--c4)",
-            group: "quiz-q1",
-            group_label: "재판관 수",
-            filter_value: "13명".into(),
-            correct: false,
-            correct_text: false,
-        },
-    ];
-
-    let q2: Vec<BarItem> = vec![
-        BarItem {
-            label: "1".into(),
-            value: "국회 · 76 (88.4%) · 정답".into(),
-            width: "88.4%",
-            color: "var(--quiz-correct)",
-            group: "quiz-q2",
-            group_label: "입법권",
-            filter_value: "국회 (정답)".into(),
-            correct: true,
-            correct_text: true,
-        },
-        BarItem {
-            label: "2".into(),
-            value: "정부 · 6 (7.0%)".into(),
-            width: "7.0%",
-            color: "var(--c1)",
-            group: "quiz-q2",
-            group_label: "입법권",
-            filter_value: "정부".into(),
-            correct: false,
-            correct_text: false,
-        },
-        BarItem {
-            label: "3".into(),
-            value: "대통령 · 3 (3.5%)".into(),
-            width: "3.5%",
-            color: "var(--c2)",
-            group: "quiz-q2",
-            group_label: "입법권",
-            filter_value: "대통령".into(),
-            correct: false,
-            correct_text: false,
-        },
-        BarItem {
-            label: "4".into(),
-            value: "법원 · 1 (1.2%)".into(),
-            width: "1.2%",
-            color: "var(--c4)",
-            group: "quiz-q2",
-            group_label: "입법권",
-            filter_value: "법원".into(),
-            correct: false,
-            correct_text: false,
-        },
-    ];
-
-    let q3: Vec<BarItem> = vec![
-        BarItem {
-            label: "1".into(),
-            value: "대한민국은 민주공화국이다 · 81 (94.2%) · 정답".into(),
-            width: "94.2%",
-            color: "var(--quiz-correct)",
-            group: "quiz-q3",
-            group_label: "헌법 제1조",
-            filter_value: "민주공화국 (정답)".into(),
-            correct: true,
-            correct_text: true,
-        },
-        BarItem {
-            label: "2".into(),
-            value: "대한민국의 영토는 한반도 · 3 (3.5%)".into(),
-            width: "3.5%",
-            color: "var(--c1)",
-            group: "quiz-q3",
-            group_label: "헌법 제1조",
-            filter_value: "영토는 한반도".into(),
-            correct: false,
-            correct_text: false,
-        },
-        BarItem {
-            label: "3".into(),
-            value: "모든 국민은 인간으로서의 존엄 · 2 (2.3%)".into(),
-            width: "2.3%",
-            color: "var(--c2)",
-            group: "quiz-q3",
-            group_label: "헌법 제1조",
-            filter_value: "인간 존엄".into(),
-            correct: false,
-            correct_text: false,
-        },
-    ];
+    let ctrl = use_context::<UseAnalyzeReportDetail>();
+    let detail = ctrl.detail.read().clone();
+    let aggregates = detail
+        .result
+        .map(|r| r.quiz_aggregates)
+        .unwrap_or_default();
 
     rsx! {
         section { class: "panel", "data-panel": "quiz", "data-active": "false",
@@ -162,68 +44,91 @@ pub fn QuizPanel() -> Element {
                 span { "data-quiz-title": true, "{tr.detail_quiz_title}" }
             }
 
-            // Card 1 — quiz with hint
-            section { class: "card",
-                div { class: "card__head",
-                    div { class: "card__title", "{tr.detail_quiz_card1_title}" }
-                    span { class: "card__count",
-                        "86명 {tr.detail_attempts_unit} · {tr.detail_correct_rate_prefix} 22%"
+            if aggregates.is_empty() {
+                section { class: "card",
+                    div { class: "card__head",
+                        div { class: "card__title", "{tr.detail_panel_empty_title}" }
                     }
+                    div { class: "card__hint", "{tr.detail_panel_empty_quiz}" }
                 }
-                span { class: "card__hint",
-                    svg {
-                        view_box: "0 0 24 24",
-                        fill: "none",
-                        stroke: "currentColor",
-                        "stroke-width": "2",
-                        "stroke-linecap": "round",
-                        "stroke-linejoin": "round",
-                        polygon { points: "22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" }
-                    }
-                    "{tr.detail_card_hint_quiz}"
-                }
-                div { class: "bar-chart",
-                    for (idx, item) in q1.iter().enumerate() {
-                        BarRow {
-                            key: "quiz-q1-{idx}",
-                            source: "quiz",
-                            item: item.clone(),
-                        }
+            } else {
+                for (q_idx, q) in aggregates.iter().enumerate() {
+                    QuizQuestionCard {
+                        key: "quiz-q-{q_idx}-{q.quiz_id}",
+                        question: q.clone(),
                     }
                 }
             }
+        }
+    }
+}
 
-            // Card 2 — quiz
-            section { class: "card",
-                div { class: "card__head",
-                    div { class: "card__title", "{tr.detail_quiz_card2_title}" }
-                    span { class: "card__count",
-                        "86명 {tr.detail_attempts_unit} · {tr.detail_correct_rate_prefix} 88%"
-                    }
+#[component]
+fn QuizQuestionCard(question: QuizQuestionAggregate) -> Element {
+    let tr: SpaceAnalyzesAppTranslate = use_translate();
+
+    let total = question.respondent_count.max(1) as f64;
+    let group_id = format!("quiz-q-{}-{}", question.quiz_id, question.question_idx);
+    let correct_set: std::collections::HashSet<u32> = question.correct_indices.iter().copied().collect();
+    let correct_pct = if question.respondent_count == 0 {
+        0
+    } else {
+        ((question.correct_count as f64 / question.respondent_count as f64) * 100.0).round() as u32
+    };
+
+    let bars: Vec<BarItem> = question
+        .options
+        .iter()
+        .enumerate()
+        .map(|(idx, opt)| {
+            let pct = (opt.count as f64 / total * 100.0).clamp(0.0, 100.0);
+            let is_correct = correct_set.contains(&(idx as u32));
+            let suffix = if is_correct {
+                format!(" · {}", tr.create_sunji_correct_badge)
+            } else {
+                String::new()
+            };
+            BarItem {
+                label: format!("{}", idx + 1),
+                value: format!("{} · {} ({:.1}%){}", opt.label, opt.count, pct, suffix),
+                width: format!("{:.1}%", pct),
+                color: if is_correct {
+                    "var(--quiz-correct)"
+                } else {
+                    BAR_COLORS[idx % BAR_COLORS.len()]
+                },
+                group: group_id.clone(),
+                group_label: question.question_title.clone(),
+                filter_value: opt.label.clone(),
+                correct: is_correct,
+                correct_text: is_correct,
+            }
+        })
+        .collect();
+
+    rsx! {
+        section { class: "card",
+            div { class: "card__head",
+                div { class: "card__title", "{question.question_title}" }
+                span { class: "card__count",
+                    "{question.respondent_count}명 {tr.detail_attempts_unit} · {tr.detail_correct_rate_prefix} {correct_pct}%"
                 }
-                div { class: "bar-chart",
-                    for (idx, item) in q2.iter().enumerate() {
-                        BarRow {
-                            key: "quiz-q2-{idx}",
-                            source: "quiz",
-                            item: item.clone(),
+            }
+            if bars.is_empty() {
+                if question.text_answers.is_empty() {
+                    div { class: "card__hint", "{tr.detail_panel_empty_text_answers}" }
+                } else {
+                    div { class: "text-list",
+                        for (idx, txt) in question.text_answers.iter().enumerate() {
+                            div { key: "txt-{idx}", class: "text-item", "{txt}" }
                         }
                     }
                 }
-            }
-
-            // Card 3 — quiz
-            section { class: "card",
-                div { class: "card__head",
-                    div { class: "card__title", "{tr.detail_quiz_card3_title}" }
-                    span { class: "card__count",
-                        "86명 {tr.detail_attempts_unit} · {tr.detail_correct_rate_prefix} 94%"
-                    }
-                }
+            } else {
                 div { class: "bar-chart",
-                    for (idx, item) in q3.iter().enumerate() {
+                    for (idx, item) in bars.iter().enumerate() {
                         BarRow {
-                            key: "quiz-q3-{idx}",
+                            key: "{group_id}-{idx}",
                             source: "quiz",
                             item: item.clone(),
                         }

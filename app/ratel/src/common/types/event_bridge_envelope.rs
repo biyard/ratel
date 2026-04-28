@@ -57,6 +57,19 @@ pub enum DetailType {
     /// broadcast fan-out: create a pinned Post in every recognized sub-team
     /// feed and notify each member.
     SubTeamAnnouncementPublished,
+    /// Fires on `SpaceAnalyzeReport` INSERT (status=InProgress). The
+    /// handler runs the auto poll/quiz/follow aggregations against the
+    /// report's matched-user intersection, persists a sibling
+    /// `SpaceAnalyzeReportResult` row, then flips the parent report's
+    /// status to Finish.
+    AnalyzeReportInProgress,
+    /// Fires on `SpaceAnalyzeDiscussionResult` INSERT (status=InProgress).
+    /// Handler loads the matched users' comments on the target
+    /// discussion, runs lindera + Gibbs LDA + TF-IDF + text-network,
+    /// then updates the SAME row with results and `status=Finish`.
+    /// Filter pinned to INSERT keeps Lambda's own update from
+    /// re-triggering itself.
+    AnalyzeDiscussionInProgress,
     #[serde(other)]
     Unknown,
 }
@@ -258,6 +271,20 @@ impl EventBridgeEnvelope {
                 let cfg = crate::common::CommonConfig::default();
                 let cli = cfg.dynamodb();
                 crate::features::sub_team::services::announcement_fanout::handle_announcement_published(cli, announcement).await
+            }
+            DetailType::AnalyzeReportInProgress => {
+                let report: crate::features::spaces::pages::apps::apps::analyzes::SpaceAnalyzeReport =
+                    DetailType::parse_detail(&self.detail)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                crate::features::spaces::pages::apps::apps::analyzes::services::auto_analysis::process_analyze_report(cli, &report).await
+            }
+            DetailType::AnalyzeDiscussionInProgress => {
+                let row: crate::features::spaces::pages::apps::apps::analyzes::SpaceAnalyzeDiscussionResult =
+                    DetailType::parse_detail(&self.detail)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                crate::features::spaces::pages::apps::apps::analyzes::services::discussion_analysis::process_discussion_analysis(cli, &row).await
             }
             DetailType::Unknown => {
                 tracing::warn!(

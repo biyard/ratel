@@ -43,13 +43,13 @@ pub fn SpaceAnalyzeReportPage(
     space_id: ReadSignal<SpacePartition>,
     report_id: ReadSignal<String>,
 ) -> Element {
-    let _sid = space_id;
     let tr: SpaceAnalyzesAppTranslate = use_translate();
     let space = use_space();
     let nav = use_navigator();
-    let ctrl = use_analyze_report_detail(report_id)?;
+    let ctrl = use_analyze_report_detail(report_id, space_id)?;
 
-    let report = ctrl.report.read().clone();
+    let detail = ctrl.detail.read().clone();
+    let report = detail.report.clone();
     let space_data = space();
     let space_logo = if space_data.logo.is_empty() {
         DEFAULT_SPACE_LOGO.to_string()

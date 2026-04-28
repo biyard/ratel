@@ -213,6 +213,10 @@ translate! {
         en: "No filters · all data",
         ko: "필터 없음 · 전체 데이터",
     },
+    list_card_pending_toast: {
+        en: "Analysis is still running. Please try again once it's complete.",
+        ko: "분석이 진행 중입니다. 완료된 뒤 다시 시도해주세요.",
+    },
     arrow_prev_label: {
         en: "Previous card",
         ko: "이전 카드",
@@ -510,6 +514,74 @@ translate! {
     detail_sb_item_meta_targets: {
         en: "targets",
         ko: "타겟",
+    },
+    detail_sb_item_meta_options: {
+        en: "options",
+        ko: "선지",
+    },
+    detail_sb_item_meta_correct: {
+        en: "correct",
+        ko: "정답",
+    },
+    detail_sb_item_meta_followers: {
+        en: "followers",
+        ko: "팔로워",
+    },
+    detail_panel_empty_title: {
+        en: "No data yet",
+        ko: "데이터 없음",
+    },
+    detail_panel_empty_poll: {
+        en: "Matched respondents haven't answered any poll questions yet.",
+        ko: "응답자들이 답한 설문 문항이 아직 없습니다.",
+    },
+    detail_panel_empty_quiz: {
+        en: "Matched respondents haven't attempted any quizzes yet.",
+        ko: "응답자들이 응시한 퀴즈가 아직 없습니다.",
+    },
+    detail_panel_empty_follow: {
+        en: "No follow targets are followed by the matched respondents yet.",
+        ko: "응답자들이 팔로우한 타겟이 아직 없습니다.",
+    },
+    detail_panel_empty_text_answers: {
+        en: "No text responses recorded.",
+        ko: "수집된 텍스트 응답이 없습니다.",
+    },
+    detail_discussion_pick_title: {
+        en: "Pick a discussion",
+        ko: "토론을 선택하세요",
+    },
+    detail_discussion_pick_hint: {
+        en: "Choose a discussion in the sidebar to configure and run the text analysis pipeline.",
+        ko: "왼쪽 사이드바에서 토론을 선택하면 분석 설정을 진행할 수 있습니다.",
+    },
+    detail_discussion_no_run_title: {
+        en: "Not analysed yet",
+        ko: "아직 분석되지 않음",
+    },
+    detail_discussion_no_run_hint: {
+        en: "Set the parameters above and press 확인 to run the LDA / TF-IDF / network analysis.",
+        ko: "위에서 파라미터를 설정한 뒤 확인을 누르면 LDA / TF-IDF / 네트워크 분석이 실행됩니다.",
+    },
+    detail_discussion_running_title: {
+        en: "Analysis in progress",
+        ko: "분석 진행 중",
+    },
+    detail_discussion_running_hint: {
+        en: "The analysis pipeline is running. This page will refresh once results are ready.",
+        ko: "분석이 진행 중입니다. 완료되면 결과가 표시됩니다.",
+    },
+    detail_discussion_failed_title: {
+        en: "Analysis failed",
+        ko: "분석 실패",
+    },
+    detail_discussion_failed_hint: {
+        en: "Something went wrong while running the analysis. Adjust the parameters and try again.",
+        ko: "분석 도중 문제가 발생했습니다. 파라미터를 조정한 뒤 다시 시도해주세요.",
+    },
+    detail_tfidf_card_count_suffix: {
+        en: " terms",
+        ko: "개 단어",
     },
 
     // ── Arena CREATE wizard (Phase 2) ──────────────────────

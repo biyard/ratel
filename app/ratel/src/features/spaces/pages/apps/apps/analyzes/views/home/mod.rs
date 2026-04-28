@@ -162,6 +162,9 @@ fn AnalyzesListArena(space_id: ReadSignal<SpacePartition>) -> Element {
                                             for rep in reports.iter() {
                                                 {
                                                     let report_id = rep.id.clone();
+                                                    let status = rep.status;
+                                                    let mut toast = use_toast();
+                                                    let pending_msg = tr.list_card_pending_toast.to_string();
                                                     rsx! {
                                                         div {
                                                             key: "{rep.id}",
@@ -170,10 +173,14 @@ fn AnalyzesListArena(space_id: ReadSignal<SpacePartition>) -> Element {
                                                             SavedReportCard {
                                                                 report: rep.clone(),
                                                                 onclick: move |_| {
-                                                                    nav.push(Route::SpaceAnalyzeReportPage {
-                                                                        space_id: space_id(),
-                                                                        report_id: report_id.clone(),
-                                                                    });
+                                                                    if matches!(status, AnalyzeReportStatus::Finish) {
+                                                                        nav.push(Route::SpaceAnalyzeReportPage {
+                                                                            space_id: space_id(),
+                                                                            report_id: report_id.clone(),
+                                                                        });
+                                                                    } else {
+                                                                        toast.info(pending_msg.clone());
+                                                                    }
                                                                 },
                                                             }
                                                         }

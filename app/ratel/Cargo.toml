@@ -36,6 +36,9 @@ regex = { version = "1" }
 ethers = { version = "=2.0.14", optional = true }
 names = { version = "0.14.0", optional = true }
 rand = { version = "0.10" }
+rand_chacha = { version = "0.9", optional = true }
+once_cell = { version = "1" }
+lindera = { version = "3", default-features = false, features = ["embed-ko-dic"], optional = true }
 futures = { version = "0.3", optional = true }
 urlencoding = { version = "2" }
 tokio = { workspace = true, optional = true }
@@ -138,6 +141,8 @@ server = [
   "ethers",
   "futures",
   "hex",
+  "lindera",
+  "rand_chacha",
   "hmac",
   "ic-agent",
   "k256",
@@ -166,6 +171,8 @@ layout_test = ["web"]
 local-dev = ["beta","bypass","dep:pulldown-cmark"]
 beta = []
 futures = ["dep:futures"]
+lindera = ["dep:lindera"]
+rand_chacha = ["dep:rand_chacha"]
 
 # Android-only: route tracing events into logcat so they show up in `adb logcat`.
 # Without this, Rust `tracing::info!` / `error!` calls silently vanish on device

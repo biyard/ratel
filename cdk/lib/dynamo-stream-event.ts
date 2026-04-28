@@ -1488,5 +1488,110 @@ export class DynamoStreamEventStack extends Stack {
       },
       targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
     });
+
+    // ── Pipe: AnalyzeReport Insert → AnalyzeReportInProgress ─────────
+    // Fires when a new SpaceAnalyzeReport row is inserted with
+    // status=in_progress. The Lambda runs the auto poll/quiz/follow
+    // aggregations against the report's matched-user intersection,
+    // persists a sibling SpaceAnalyzeReportResult, then flips the
+    // parent report's status to Finish. INSERT-only so the status
+    // flip itself doesn't loop the pipeline.
+    new pipes.CfnPipe(this, "AnalyzeReportInProgressPipe", {
+      name: `ratel-${stage}-analyze-report-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 1,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SPACE_ANALYZE_REPORT#" }] },
+                    status: { S: ["in_progress"] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "AnalyzeReportInProgress",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    new events.Rule(this, "AnalyzeReportInProgressRule", {
+      eventBus,
+      description:
+        "Route analyze-report insert events to app-shell for auto poll/quiz/follow analysis",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["AnalyzeReportInProgress"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe: AnalyzeDiscussionResult Insert → AnalyzeDiscussionInProgress ──
+    // Fires when the user submits a new discussion analysis request via
+    // the detail page form. The Lambda runs the lindera + LDA + TF-IDF +
+    // text-network pipeline against the matched users' comments on the
+    // target discussion, then updates the SAME row with results and
+    // status=Finish. INSERT-only filter — the result-write update is a
+    // MODIFY and would otherwise re-trigger the handler.
+    new pipes.CfnPipe(this, "AnalyzeDiscussionInProgressPipe", {
+      name: `ratel-${stage}-analyze-discussion-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 1,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SPACE_ANALYZE_DISCUSSION_RESULT#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "AnalyzeDiscussionInProgress",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    new events.Rule(this, "AnalyzeDiscussionInProgressRule", {
+      eventBus,
+      description:
+        "Route analyze-discussion insert events to app-shell for text analysis",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["AnalyzeDiscussionInProgress"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
   }
 }

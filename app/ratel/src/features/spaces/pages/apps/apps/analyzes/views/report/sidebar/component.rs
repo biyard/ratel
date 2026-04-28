@@ -11,6 +11,10 @@ pub struct SbItem {
     pub meta: String,
     pub target: &'static str,
     pub selected: bool,
+    /// Stable identifier for discussion items so the click handler
+    /// can stamp the selected discussion on the controller. Empty
+    /// for non-discussion targets.
+    pub discussion_id: String,
 }
 
 /// One ANALYZES group (poll / quiz / discussion / follow).
@@ -24,82 +28,117 @@ pub struct SbGroup {
 #[component]
 pub fn ReportSidebar() -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
+    let ctrl = use_context::<UseAnalyzeReportDetail>();
+    let detail = ctrl.detail.read().clone();
+    let result = detail.result.unwrap_or_default();
 
-    // Mock content — verbatim from `analyze-detail-arena.html`.
-    // Specialised per-action data (questions counts, comment counts) is
-    // hardcoded here to match the design file 1:1; nothing comes from the
-    // loaded `AnalyzeReport.filters`. Real data fetching is out of scope
-    // for this Phase-3 visual port.
+    let respondent = result.respondent_count;
+
+    // Poll items: one per (poll, question) the matched users
+    // answered. Title is the question, meta is "<N options> · <M명>
+    // 응답".
+    let poll_items: Vec<SbItem> = result
+        .poll_aggregates
+        .iter()
+        .map(|q| SbItem {
+            title: q.question_title.clone(),
+            meta: format!(
+                "{} {} · {}명 {}",
+                q.options.len(),
+                tr.detail_sb_item_meta_options,
+                q.respondent_count,
+                tr.detail_sb_item_meta_responses,
+            ),
+            target: "poll",
+            selected: false,
+            discussion_id: String::new(),
+        })
+        .collect();
+
+    let quiz_items: Vec<SbItem> = result
+        .quiz_aggregates
+        .iter()
+        .map(|q| SbItem {
+            title: q.question_title.clone(),
+            meta: format!(
+                "{} {} · {}/{}명 {}",
+                q.options.len(),
+                tr.detail_sb_item_meta_options,
+                q.correct_count,
+                q.respondent_count,
+                tr.detail_sb_item_meta_correct,
+            ),
+            target: "quiz",
+            selected: false,
+            discussion_id: String::new(),
+        })
+        .collect();
+
+    let selected_discussion = ctrl.selected_discussion.read().clone();
+    let discussion_items: Vec<SbItem> = detail
+        .discussions
+        .iter()
+        .map(|d| {
+            let did = d.discussion_id.to_string();
+            let is_selected = selected_discussion.as_deref() == Some(did.as_str());
+            SbItem {
+                title: d.title.clone(),
+                meta: format!(
+                    "{} {} · {}명 {}",
+                    d.comment_count,
+                    tr.detail_sb_item_meta_comments,
+                    respondent,
+                    tr.detail_sb_item_meta_participants,
+                ),
+                target: "discussion",
+                selected: is_selected,
+                discussion_id: did,
+            }
+        })
+        .collect();
+
+    let follow_items: Vec<SbItem> = result
+        .follow_aggregates
+        .iter()
+        .map(|f| {
+            let label = if f.display_name.is_empty() {
+                f.username.clone()
+            } else {
+                f.display_name.clone()
+            };
+            SbItem {
+                title: label,
+                meta: format!(
+                    "{} {}",
+                    f.count, tr.detail_sb_item_meta_followers,
+                ),
+                target: "follow",
+                selected: false,
+                discussion_id: String::new(),
+            }
+        })
+        .collect();
+
     let groups = vec![
         SbGroup {
             group: "poll",
             label: tr.detail_group_poll.to_string(),
-            items: vec![
-                SbItem {
-                    title: "귀하는 현재 대한민국 헌법을 개정하는 것이 필요하다고 생각하십니까?".to_string(),
-                    meta: format!("5 {} · 128명 {}", tr.detail_sb_item_meta_questions, tr.detail_sb_item_meta_responses),
-                    target: "poll",
-                    selected: true,
-                },
-                SbItem {
-                    title: "공직 선거 연령 하향에 찬성하십니까?".to_string(),
-                    meta: format!("3 {} · 94명 {}", tr.detail_sb_item_meta_questions, tr.detail_sb_item_meta_responses),
-                    target: "poll",
-                    selected: false,
-                },
-                SbItem {
-                    title: "사법부 독립성 강화 방안 우선순위".to_string(),
-                    meta: format!("7 {} · 71명 {}", tr.detail_sb_item_meta_questions, tr.detail_sb_item_meta_responses),
-                    target: "poll",
-                    selected: false,
-                },
-            ],
+            items: poll_items,
         },
         SbGroup {
             group: "quiz",
             label: tr.detail_group_quiz.to_string(),
-            items: vec![
-                SbItem {
-                    title: "헌법 기본 상식 퀴즈".to_string(),
-                    meta: format!("10 {} · 86명 {}", tr.detail_sb_item_meta_questions, tr.detail_sb_item_meta_attempts),
-                    target: "quiz",
-                    selected: false,
-                },
-                SbItem {
-                    title: "법률 용어 이해도 테스트".to_string(),
-                    meta: format!("8 {} · 47명 {}", tr.detail_sb_item_meta_questions, tr.detail_sb_item_meta_attempts),
-                    target: "quiz",
-                    selected: false,
-                },
-            ],
+            items: quiz_items,
         },
         SbGroup {
             group: "discussion",
             label: tr.detail_group_discussion.to_string(),
-            items: vec![
-                SbItem {
-                    title: "비동의 강간죄 도입에 대해서 어떻게 생각하십니까?".to_string(),
-                    meta: format!("142 {} · 38명 {}", tr.detail_sb_item_meta_comments, tr.detail_sb_item_meta_participants),
-                    target: "discussion",
-                    selected: false,
-                },
-                SbItem {
-                    title: "무고죄 형량 강화에 대한 시민 의견".to_string(),
-                    meta: format!("87 {} · 24명 {}", tr.detail_sb_item_meta_comments, tr.detail_sb_item_meta_participants),
-                    target: "discussion",
-                    selected: false,
-                },
-            ],
+            items: discussion_items,
         },
         SbGroup {
             group: "follow",
             label: tr.detail_group_follow.to_string(),
-            items: vec![SbItem {
-                title: "법률 전문가 팔로우 캠페인".to_string(),
-                meta: format!("12 {} · 42명 {}", tr.detail_sb_item_meta_targets, tr.detail_sb_item_meta_participants),
-                target: "follow",
-                selected: false,
-            }],
+            items: follow_items,
         },
     ];
 
@@ -119,6 +158,8 @@ pub fn ReportSidebar() -> Element {
 fn ReportSidebarGroup(group: SbGroup) -> Element {
     let count = group.items.len();
     let class = format!("sb-group sb-group--{}", group.group);
+    let mut ctrl = use_context::<UseAnalyzeReportDetail>();
+
     rsx! {
         div {
             class: "{class}",
@@ -143,17 +184,28 @@ fn ReportSidebarGroup(group: SbGroup) -> Element {
             }
             div { class: "sb-group__list",
                 for (idx, item) in group.items.iter().enumerate() {
-                    button {
-                        key: "{group.group}-{idx}",
-                        class: "sb-item",
-                        r#type: "button",
-                        "aria-selected": "{item.selected}",
-                        "data-target-panel": "{item.target}",
-                        "data-testid": "sb-item-{group.group}-{idx}",
-                        span { class: "sb-item__indicator" }
-                        div { class: "sb-item__body",
-                            span { class: "sb-item__title", "{item.title}" }
-                            span { class: "sb-item__meta", "{item.meta}" }
+                    {
+                        let did = item.discussion_id.clone();
+                        let is_discussion = item.target == "discussion";
+                        rsx! {
+                            button {
+                                key: "{group.group}-{idx}",
+                                class: "sb-item",
+                                r#type: "button",
+                                "aria-selected": "{item.selected}",
+                                "data-target-panel": "{item.target}",
+                                "data-testid": "sb-item-{group.group}-{idx}",
+                                onclick: move |_| {
+                                    if is_discussion && !did.is_empty() {
+                                        ctrl.selected_discussion.set(Some(did.clone()));
+                                    }
+                                },
+                                span { class: "sb-item__indicator" }
+                                div { class: "sb-item__body",
+                                    span { class: "sb-item__title", "{item.title}" }
+                                    span { class: "sb-item__meta", "{item.meta}" }
+                                }
+                            }
                         }
                     }
                 }
