@@ -18,8 +18,8 @@ pub fn App() -> Element {
     use_context_provider(|| PopupService::new());
     ToastService::init();
     ThemeService::init();
-    let _ = crate::features::auth::Context::init()?;
-    crate::common::contexts::TeamContext::init();
+    let _ = crate::features::auth::Context::init();
+    let _ = crate::common::contexts::TeamContext::init();
     // Hydrate language + cached user session from the WebView's
     // localStorage and keep them in sync on every change. Must run after
     // `Context::init` so we don't overwrite a server-validated user with
