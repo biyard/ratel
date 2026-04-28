@@ -183,3 +183,21 @@ export async function openWalletApp() {
 export function isConnected() {
   return !!activeSession && !!connectedAddress;
 }
+
+if (typeof window !== "undefined") {
+  if (!window.ratel) {
+    window.ratel = {};
+  }
+
+  if (window.ratel.walletConnect) {
+    window.ratel.walletConnect = {
+      initialize,
+      connect,
+      disconnect,
+      getAddress,
+      openWalletApp,
+      isConnected,
+      signMessage,
+    };
+  }
+}
