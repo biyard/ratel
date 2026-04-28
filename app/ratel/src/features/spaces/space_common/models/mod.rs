@@ -9,5 +9,8 @@ pub use space_reward_response::*;
 pub mod dashboard;
 pub use dashboard::*;
 
+mod hot_space;
+pub use hot_space::*;
+
 pub use space_email_verification::*;
 pub use space_invitation_member::*;
