@@ -10,8 +10,9 @@ use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::social::pages::team_arena::ArenaTeamCreationPopup;
 use crate::features::spaces::pages::index::SettingsPanel;
 use crate::features::spaces::space_common::controllers::{
-    list_hot_spaces_handler, list_my_home_spaces_handler, HotSpaceHeat, HotSpaceResponse,
+    list_hot_spaces_handler, list_my_home_spaces_handler, HotSpaceResponse,
 };
+use crate::features::spaces::space_common::models::HotSpaceHeat;
 use crate::me::use_my_spaces;
 use crate::*;
 
