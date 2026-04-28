@@ -10,6 +10,9 @@ pub use get_analyze_report::*;
 mod update_discussion_topics;
 pub use update_discussion_topics::*;
 
+mod get_matched_users;
+pub use get_matched_users::*;
+
 mod list_analyze_discussions;
 pub use list_analyze_discussions::*;
 

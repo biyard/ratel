@@ -566,6 +566,13 @@
 }
 .analyze-arena.analyze-arena--detail .panel-toolbar > .filter-select-wrap { flex-shrink: 0; }
 .analyze-arena.analyze-arena--detail .panel-toolbar .btn { flex-shrink: 0; }
+/* Single right-aligned action (e.g. poll panel "엑셀 다운로드"). The
+   parent `.panel-toolbar` is `space-between`, so a sole child lands
+   on the left by default — `margin-left: auto` pushes it to the
+   right edge without changing the parent rule. */
+.analyze-arena.analyze-arena--detail .panel-toolbar__action {
+  margin-left: auto;
+}
 
 .analyze-arena.analyze-arena--detail .filter-select-wrap {
   position: relative;
