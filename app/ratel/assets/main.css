@@ -33883,3 +33883,667 @@ body.comments-panel-resizing {
   }
 }
 
+
+/* === src/features/spaces/pages/apps/apps/analyzes/views/home === */
+/* Analyze arena — LIST view (Phase 1).
+   Class names match `assets/design/analyze-list-arena.html` verbatim
+   (`.arena`, `.split`, `.builder-list`, `.report-carousel`, etc.).
+   Colors use the project's space-toggle pattern so they respect
+   `data-theme`. The host wrapper `.analyze-arena` scopes the variables
+   so they don't leak into surrounding pages. */
+
+.analyze-arena {
+  --bg-void: var(--dark, #06060e) var(--light, #f5f5fb);
+  --bg-glass: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, rgba(255, 255, 255, 0.75));
+  --border-subtle: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(10, 10, 30, 0.08));
+  --border-strong: var(--dark, rgba(255, 255, 255, 0.12)) var(--light, rgba(10, 10, 30, 0.16));
+  --text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
+  --text-muted: var(--dark, #8888a8) var(--light, #5b5b75);
+  --text-dim: var(--dark, #55556a) var(--light, #9898ad);
+  --surface-soft: var(--dark, rgba(255, 255, 255, 0.02)) var(--light, rgba(10, 10, 30, 0.03));
+  --surface-hover: var(--dark, rgba(255, 255, 255, 0.04)) var(--light, rgba(10, 10, 30, 0.05));
+  --glow-aura-a: var(--dark, rgba(6, 182, 212, 0.05)) var(--light, rgba(6, 182, 212, 0.08));
+  --glow-aura-b: var(--dark, rgba(252, 179, 0, 0.03)) var(--light, rgba(252, 179, 0, 0.06));
+
+  --accent-gold: #fcb300;
+  --accent-teal: #6eedd8;
+
+  --analyze-color: #06b6d4;
+  --analyze-bg: rgba(6, 182, 212, 0.10);
+  --analyze-border: rgba(6, 182, 212, 0.24);
+  --analyze-glow: rgba(6, 182, 212, 0.16);
+
+  --poll-color: #06b6d4;
+  --poll-bg: rgba(6, 182, 212, 0.10);
+  --poll-border: rgba(6, 182, 212, 0.24);
+  --quiz-color: #a855f7;
+  --quiz-bg: rgba(168, 85, 247, 0.10);
+  --quiz-border: rgba(168, 85, 247, 0.24);
+  --discussion-color: #60a5fa;
+  --discussion-bg: rgba(96, 165, 250, 0.10);
+  --discussion-border: rgba(96, 165, 250, 0.24);
+  --follow-color: #f97316;
+  --follow-bg: rgba(249, 115, 22, 0.10);
+  --follow-border: rgba(249, 115, 22, 0.24);
+
+  --quiz-correct: #22c55e;
+  --quiz-correct-soft: rgba(34, 197, 94, 0.12);
+
+  --font-display: 'Orbitron', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  /* Arena owns its own scrollbar — same pattern as
+     `pages/apps/apps/file/views/home/style.css`. */
+}
+
+.analyze-arena .arena {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.analyze-arena .arena::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 20%, var(--glow-aura-a), transparent 60%),
+    radial-gradient(ellipse 120% 100% at 50% 120%, var(--glow-aura-b), transparent 50%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── Topbar ──────────────────────────────────────────────── */
+.analyze-arena .arena-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  gap: 16px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.analyze-arena .arena-topbar__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+.analyze-arena .back-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.analyze-arena .back-btn:hover {
+  border-color: rgba(252, 179, 0, 0.3);
+  color: var(--accent-gold);
+}
+.analyze-arena .back-btn svg {
+  width: 16px;
+  height: 16px;
+}
+.analyze-arena .arena-topbar__logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  object-fit: cover;
+  border: 1px solid rgba(252, 179, 0, 0.15);
+  flex-shrink: 0;
+}
+.analyze-arena .breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.analyze-arena .breadcrumb__item {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.analyze-arena .breadcrumb__sep {
+  color: var(--text-dim);
+  font-size: 10px;
+}
+.analyze-arena .breadcrumb__current {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.analyze-arena .type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--analyze-bg);
+  color: var(--analyze-color);
+  border: 1px solid var(--analyze-border);
+}
+.analyze-arena .type-badge svg {
+  width: 13px;
+  height: 13px;
+}
+.analyze-arena .topbar-title {
+  flex: 1;
+  min-width: 180px;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 6px 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 760px) {
+  .analyze-arena .arena-topbar { padding: 12px 14px; gap: 10px; }
+  .analyze-arena .breadcrumb,
+  .analyze-arena .type-badge { display: none; }
+  .analyze-arena .topbar-title { min-width: 0; font-size: 13px; padding: 0; }
+}
+
+/* ── Split layout (LIST mode = single full-width column) ──── */
+.analyze-arena .split {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  padding: 24px 24px 80px;
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+}
+.analyze-arena .main {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+@media (max-width: 760px) {
+  .analyze-arena .split { padding: 14px; gap: 14px; }
+}
+
+/* ── Builder + List header ──────────────────────────────── */
+.analyze-arena .analyze-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.analyze-arena .builder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: calc(100vh - 200px);
+}
+.analyze-arena .builder-list > .report-carousel {
+  flex: 1;
+}
+.analyze-arena .builder-list-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.analyze-arena .builder-list-head h2 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 0.04em;
+}
+.analyze-arena .builder-list-head__count {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border-subtle);
+}
+.analyze-arena .builder-hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ── Carousel (peek-style, 100vw breakout) ──────────────── */
+.analyze-arena .report-carousel {
+  position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  min-height: 480px;
+}
+.analyze-arena .report-carousel__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--surface-soft);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  z-index: 10;
+}
+.analyze-arena .report-carousel__arrow--prev { left: 24px; }
+.analyze-arena .report-carousel__arrow--next { right: 24px; }
+.analyze-arena .report-carousel__arrow svg { width: 18px; height: 18px; }
+.analyze-arena .report-carousel__arrow:hover:not(:disabled) {
+  border-color: var(--analyze-border);
+  color: var(--analyze-color);
+}
+.analyze-arena .report-carousel__arrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.analyze-arena .report-carousel__viewport {
+  width: 100%;
+  max-width: none;
+  overflow: hidden;
+  /* Soft horizontal fade so peek cards dissolve at the edges. */
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%);
+}
+/* Native horizontal scroll-snap. The track scrolls; cards snap to
+   centre. JS listens for scroll events to drive the active highlight
+   and disabled state. Scrollbars are hidden — visual peek + dots are
+   the navigation hint. */
+.analyze-arena .report-carousel__track {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  height: 460px;
+  padding: 0 calc(50% - 220px); /* lead/trail padding so first/last centre */
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.analyze-arena .report-carousel__track::-webkit-scrollbar { display: none; }
+.analyze-arena .report-carousel__slide {
+  flex-shrink: 0;
+  width: 440px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  scroll-snap-align: center;
+  transition: opacity 0.3s, transform 0.3s;
+  opacity: 0.4;
+  pointer-events: none;
+}
+.analyze-arena .report-carousel__slide.is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Report card variants ───────────────────────────────── */
+.analyze-arena .report-card-large {
+  position: relative;
+  width: 100%;
+  min-height: 420px;
+  border-radius: 24px;
+  padding: 50px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  text-align: center;
+  color: var(--text-primary);
+}
+.analyze-arena .report-card-large--new {
+  background: linear-gradient(180deg, rgba(252, 179, 0, 0.08), rgba(252, 179, 0, 0.02));
+  border: 2px dashed var(--analyze-border);
+}
+.analyze-arena .report-card-large--new:hover {
+  border-color: var(--accent-gold);
+  background: linear-gradient(180deg, rgba(252, 179, 0, 0.16), rgba(252, 179, 0, 0.04));
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(252, 179, 0, 0.18);
+}
+.analyze-arena .report-card-large--saved {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(18px);
+}
+.analyze-arena .report-card-large--saved:hover {
+  border-color: var(--analyze-border);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(6, 182, 212, 0.18);
+}
+/* Pending / failed cards are not navigable yet — soften them and
+   swap the cursor so users see they're not interactive. The click
+   handler still fires (it surfaces a toast), but the visual cue is
+   that the card is "not ready" rather than fully clickable. */
+.analyze-arena .report-card-large--saved[data-status="running"],
+.analyze-arena .report-card-large--saved[data-status="failed"] {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+.analyze-arena .report-card-large--saved[data-status="running"]:hover,
+.analyze-arena .report-card-large--saved[data-status="failed"]:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--border-subtle);
+}
+.analyze-arena .report-carousel__slide.is-active .report-card-large--saved {
+  border-color: rgba(6, 182, 212, 0.26);
+  box-shadow:
+    0 0 40px rgba(6, 182, 212, 0.14),
+    0 0 80px rgba(6, 182, 212, 0.06),
+    0 4px 20px rgba(0, 0, 0, 0.25);
+}
+.analyze-arena .report-carousel__slide.is-active .report-card-large--new {
+  border-color: var(--accent-gold);
+  box-shadow:
+    0 0 40px rgba(252, 179, 0, 0.16),
+    0 0 80px rgba(252, 179, 0, 0.06),
+    0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.analyze-arena .report-card-large__icon {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: rgba(252, 179, 0, 0.06);
+  color: var(--accent-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(252, 179, 0, 0.32);
+  box-shadow:
+    0 0 24px rgba(252, 179, 0, 0.28),
+    inset 0 0 16px rgba(252, 179, 0, 0.10);
+}
+.analyze-arena .report-card-large__icon svg { width: 44px; height: 44px; }
+.analyze-arena .report-card-large__icon--saved {
+  background: rgba(6, 182, 212, 0.06);
+  color: var(--analyze-color);
+  border: 1px solid rgba(6, 182, 212, 0.32);
+  box-shadow:
+    0 0 24px rgba(6, 182, 212, 0.26),
+    inset 0 0 16px rgba(6, 182, 212, 0.10);
+}
+.analyze-arena .report-card-large__icon--saved svg { width: 36px; height: 36px; }
+
+.analyze-arena .report-card-large__title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  word-break: break-word;
+}
+.analyze-arena .report-card-large__desc {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  max-width: 320px;
+}
+
+.analyze-arena .report-card-large__status {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid;
+}
+.analyze-arena .report-card-large__status[data-status="done"] {
+  color: var(--quiz-correct);
+  background: var(--quiz-correct-soft);
+  border-color: rgba(34, 197, 94, 0.32);
+}
+.analyze-arena .report-card-large__status[data-status="done"] svg {
+  width: 12px;
+  height: 12px;
+}
+.analyze-arena .report-card-large__status[data-status="running"] {
+  color: var(--accent-gold);
+  background: rgba(252, 179, 0, 0.10);
+  border-color: rgba(252, 179, 0, 0.32);
+}
+.analyze-arena .report-card-large__status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-gold);
+  box-shadow: 0 0 6px var(--accent-gold);
+  animation: rcl-pulse 1.4s ease-in-out infinite;
+}
+@keyframes rcl-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(1.25); }
+}
+
+.analyze-arena .report-card-large__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  width: 100%;
+  max-width: 380px;
+  margin-top: auto;
+}
+.analyze-arena .report-card-large__chips-empty {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.analyze-arena .report-card-large__chip {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 100px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+  max-width: 100%;
+}
+.analyze-arena .report-card-large__chip-source {
+  padding: 4px 9px;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+}
+.analyze-arena .report-card-large__chip[data-source="poll"] .report-card-large__chip-source {
+  background: var(--poll-bg);
+  color: var(--poll-color);
+}
+.analyze-arena .report-card-large__chip[data-source="quiz"] .report-card-large__chip-source {
+  background: var(--quiz-bg);
+  color: var(--quiz-color);
+}
+.analyze-arena .report-card-large__chip[data-source="discussion"] .report-card-large__chip-source {
+  background: var(--discussion-bg);
+  color: var(--discussion-color);
+}
+.analyze-arena .report-card-large__chip[data-source="follow"] .report-card-large__chip-source {
+  background: var(--follow-bg);
+  color: var(--follow-color);
+}
+.analyze-arena .report-card-large__chip-text {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+/* ── Carousel dots ──────────────────────────────────────── */
+.analyze-arena .report-carousel__dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 0 4px;
+}
+.analyze-arena .report-carousel__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.analyze-arena .report-carousel__dot[data-active="true"] {
+  width: 24px;
+  border-radius: 100px;
+  background: var(--analyze-color);
+}
+
+/* ── Mobile / responsive ────────────────────────────────────
+   Carousel slide width + card padding shrink under 760px.
+   `script.js` reads the rendered slide width on every reposition
+   and resize, so no JS-side pixel constants need updating. */
+@media (max-width: 760px) {
+  .analyze-arena .builder-list-head h2 { font-size: 18px; }
+  .analyze-arena .builder-hint { font-size: 12px; }
+
+  .analyze-arena .report-carousel { min-height: 440px; }
+  .analyze-arena .report-carousel__track {
+    height: 400px;
+    gap: 18px;
+    /* Lead/trail padding centres the first / last card on mobile. */
+    padding: 0 calc(50% - 140px);
+  }
+  .analyze-arena .report-carousel__slide { width: 280px; }
+  .analyze-arena .report-carousel__arrow {
+    width: 38px; height: 38px;
+  }
+  .analyze-arena .report-carousel__arrow--prev { left: 8px; }
+  .analyze-arena .report-carousel__arrow--next { right: 8px; }
+  .analyze-arena .report-carousel__arrow svg { width: 14px; height: 14px; }
+  /* On narrow screens the soft fade eats too much of the viewport;
+     soften the mask so the active card stays fully visible. */
+  .analyze-arena .report-carousel__viewport {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
+  }
+
+  .analyze-arena .report-card-large {
+    min-height: 360px;
+    padding: 36px 22px;
+    gap: 14px;
+  }
+  .analyze-arena .report-card-large__icon { width: 72px; height: 72px; }
+  .analyze-arena .report-card-large__icon svg { width: 32px; height: 32px; }
+  .analyze-arena .report-card-large__icon--saved svg { width: 28px; height: 28px; }
+  .analyze-arena .report-card-large__title { font-size: 17px; }
+  .analyze-arena .report-card-large__desc { font-size: 12px; max-width: 100%; }
+  .analyze-arena .report-card-large__chip-text { max-width: 140px; font-size: 10px; }
+  .analyze-arena .report-card-large__status {
+    top: 12px; left: 12px;
+    padding: 3px 8px;
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .analyze-arena .report-carousel__track {
+    height: 380px;
+    gap: 14px;
+    padding: 0 calc(50% - 120px);
+  }
+  .analyze-arena .report-carousel__slide { width: 240px; }
+  /* Hide arrows on phones — touch swipe + dots are the primary nav. */
+  .analyze-arena .report-carousel__arrow { display: none; }
+  .analyze-arena .report-card-large {
+    min-height: 340px;
+    padding: 28px 18px;
+  }
+  .analyze-arena .report-card-large__title { font-size: 15px; }
+  .analyze-arena .report-card-large__icon { width: 64px; height: 64px; }
+  .analyze-arena .report-card-large__icon svg { width: 28px; height: 28px; }
+}
+
+/* ── Viewer (no-access) ─────────────────────────────────── */
+.analyze-arena .arena-viewer {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 64px 28px;
+  text-align: center;
+}
+.analyze-arena .arena-viewer__title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
