@@ -151,6 +151,9 @@ pub enum EntityType {
     FileLink(String), // FileLink#{file_id}
     SpaceAnalyze,
     SpaceAnalyzeRequest(String),
+    SpaceAnalyzeReport(String), // SPACE_ANALYZE_REPORT#{ulid}
+    SpaceAnalyzeReportResult(String), // SPACE_ANALYZE_REPORT_RESULT#{report_id} — poll/quiz/follow aggregations, 1:1 with report
+    SpaceAnalyzeDiscussionResult(String, String), // SPACE_ANALYZE_DISCUSSION_RESULT#{report_id}#{discussion_id_and_request_uuid} — second field is "{discussion_id}#{request_uuid}" composite so begins_with by (report_id, discussion_id) groups history together
     SpaceDiscussion(String),
     SpaceDiscussionMember(String, String),
     SpaceDiscussionParticipant(String, String),
