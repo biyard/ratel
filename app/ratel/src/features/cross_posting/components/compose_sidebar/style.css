@@ -1,0 +1,359 @@
+/*
+ * Compose-time cross-post sidebar — extracted from
+ * `app/ratel/assets/design/cross-posting/compose-with-crosspost.html`.
+ *
+ * Phase 1A: dark-only token set (mirrors the connections-page treatment);
+ * `var(--dark, ...) var(--light, ...)` migration is deferred to the 1D
+ * polish PR per `conventions/styling.md` § Space Toggle Pattern.
+ *
+ * The mockup leaves selectors flat. We keep them flat (not scoped under
+ * `.crosspost`) on purpose: this CSS only loads inside the post-edit
+ * shell, the post-edit shell never co-mounts the connections-page
+ * `.switch`, and prefixing every selector would diverge from the
+ * `html-first-components.md` "preserve mockup class names" rule.
+ */
+
+.crosspost {
+  --bg-glass: rgba(12, 12, 26, 0.65);
+  --bg-input: rgba(255, 255, 255, 0.025);
+  --bg-input-focus: rgba(255, 255, 255, 0.04);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --text-primary: #f0f0f5;
+  --text-muted: #8888a8;
+  --text-dim: #55556a;
+  --accent-gold: #fcb300;
+  --accent-teal: #6eedd8;
+  --accent-coral: #ef4444;
+  --accent-green: #22c55e;
+  --bsky: #0a85ff;
+  --linkedin: #0a66c2;
+  --font-display: 'Orbitron', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-self: start;
+  position: sticky;
+  top: 84px;
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+}
+.crosspost::-webkit-scrollbar { width: 4px; }
+.crosspost::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+}
+
+/* ─── Head ───────────────────────────────────────── */
+.crosspost-head {
+  padding: 4px 2px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.crosspost-head__eyebrow {
+  font-family: var(--font-display);
+  font-size: 9px; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.crosspost-head__title {
+  font-family: var(--font-display);
+  font-size: 17px; font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  display: flex; align-items: center; gap: 10px;
+}
+.crosspost-head__title-accent {
+  background: linear-gradient(135deg, var(--bsky), var(--accent-teal));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.crosspost-head__sub {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ─── Reach summary ──────────────────────────────── */
+.reach-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(252, 179, 0, 0.06), rgba(110, 237, 216, 0.04));
+  border: 1px solid rgba(252, 179, 0, 0.15);
+}
+.reach-summary__left { display: flex; flex-direction: column; gap: 3px; }
+.reach-summary__label {
+  font-family: var(--font-display);
+  font-size: 9px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.reach-summary__value {
+  font-family: var(--font-display);
+  font-size: 15px; font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--accent-gold);
+}
+.reach-summary__value strong { color: var(--text-primary); }
+.reach-summary__icons { display: flex; }
+.reach-chip {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid #0a0a12;
+  margin-left: -8px;
+  transition: all 0.25s;
+}
+.reach-chip:first-child { margin-left: 0; }
+.reach-chip--bsky { background: #0a85ff; }
+.reach-chip--linkedin { background: #0a66c2; }
+.reach-chip--threads {
+  background: #0a0a0a;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.reach-chip[data-off="true"] { opacity: 0.25; filter: grayscale(0.8); }
+.reach-chip svg { width: 14px; height: 14px; color: #fff; }
+
+/* ─── Per-platform card ──────────────────────────── */
+.pp-card {
+  position: relative;
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+.pp-card[data-enabled="false"][data-connected="true"] {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+}
+.pp-card[data-enabled="true"] { border-color: rgba(255, 255, 255, 0.10); }
+.pp-card[data-connected="false"] {
+  border-style: dashed;
+  border-color: var(--border-strong);
+  background: rgba(6, 6, 14, 0.35);
+}
+
+.pp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.pp-card[data-connected="false"] .pp-head { border-bottom: none; }
+.pp-head__left { display: flex; align-items: center; gap: 10px; }
+.pp-logo {
+  width: 28px; height: 28px;
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.pp-logo--bsky { background: linear-gradient(135deg, #0a85ff, #1da1f2); }
+.pp-logo--linkedin { background: #0a66c2; }
+.pp-logo--threads {
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.pp-logo svg { width: 15px; height: 15px; color: #fff; }
+.pp-name {
+  font-family: var(--font-display);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: var(--text-primary);
+}
+.pp-name__handle {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0; text-transform: none;
+  color: var(--text-dim);
+  margin-top: 1px;
+}
+.pp-name__status {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0; text-transform: none;
+  color: var(--accent-coral);
+  margin-top: 1px;
+}
+.pp-card[data-connected="false"] .pp-head__switch { display: none; }
+
+.switch {
+  position: relative;
+  width: 34px; height: 20px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: all 0.25s;
+  flex-shrink: 0;
+  padding: 0;
+}
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: all 0.25s;
+}
+.switch[aria-checked="true"] {
+  background: rgba(252, 179, 0, 0.30);
+  border-color: rgba(252, 179, 0, 0.40);
+}
+.switch[aria-checked="true"]::after {
+  transform: translateX(14px);
+  background: var(--accent-gold);
+}
+.pp-card[data-platform="bluesky"] .switch[aria-checked="true"] {
+  background: rgba(10, 133, 255, 0.30);
+  border-color: rgba(10, 133, 255, 0.45);
+}
+.pp-card[data-platform="bluesky"] .switch[aria-checked="true"]::after { background: #0a85ff; }
+.pp-card[data-platform="linkedin"] .switch[aria-checked="true"] {
+  background: rgba(10, 102, 194, 0.30);
+  border-color: rgba(10, 102, 194, 0.45);
+}
+.pp-card[data-platform="linkedin"] .switch[aria-checked="true"]::after { background: #0a66c2; }
+.pp-card[data-platform="threads"] .switch[aria-checked="true"] {
+  background: rgba(245, 245, 245, 0.20);
+  border-color: rgba(245, 245, 245, 0.30);
+}
+.pp-card[data-platform="threads"] .switch[aria-checked="true"]::after { background: #f5f5f5; }
+
+/* ─── Connect CTA (disconnected card) ────────────── */
+.connect-cta {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+.connect-cta__hint {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 4px 8px;
+}
+.connect-cta__btn {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-family: var(--font-display);
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.connect-cta__btn svg { width: 13px; height: 13px; }
+.pp-card[data-platform="bluesky"] .connect-cta__btn {
+  background: linear-gradient(135deg, #0a85ff, #1da1f2);
+  color: #fff;
+  box-shadow: 0 2px 14px rgba(10, 133, 255, 0.25);
+}
+.pp-card[data-platform="bluesky"] .connect-cta__btn:hover {
+  box-shadow: 0 4px 22px rgba(10, 133, 255, 0.40);
+  transform: translateY(-1px);
+}
+.pp-card[data-platform="linkedin"] .connect-cta__btn {
+  background: #0a66c2;
+  color: #fff;
+  box-shadow: 0 2px 14px rgba(10, 102, 194, 0.25);
+}
+.pp-card[data-platform="linkedin"] .connect-cta__btn:hover {
+  box-shadow: 0 4px 22px rgba(10, 102, 194, 0.40);
+  transform: translateY(-1px);
+}
+.pp-card[data-platform="threads"] .connect-cta__btn {
+  background: #fff;
+  color: #0a0a0a;
+}
+.pp-card[data-platform="threads"] .connect-cta__btn:hover {
+  background: #f0f0f0;
+  transform: translateY(-1px);
+}
+
+/* ─── Per-platform footer (char count + warning) ── */
+.pp-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border-subtle);
+  background: rgba(0, 0, 0, 0.15);
+}
+.pp-foot__count {
+  font-family: var(--font-display);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  display: flex; align-items: center; gap: 6px;
+}
+.pp-foot__count strong {
+  color: var(--text-muted);
+  font-weight: 800;
+}
+.pp-foot__count[data-state="warn"] strong { color: var(--accent-gold); }
+.pp-foot__count[data-state="over"] strong { color: var(--accent-coral); }
+.pp-foot__count-bar {
+  position: relative;
+  width: 28px; height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+.pp-foot__count-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 2px;
+  background: var(--accent-teal);
+  transition: width 0.2s ease, background 0.2s ease;
+}
+.pp-foot__count[data-state="warn"] .pp-foot__count-bar-fill { background: var(--accent-gold); }
+.pp-foot__count[data-state="over"] .pp-foot__count-bar-fill { background: var(--accent-coral); }
+.pp-foot__badges { display: flex; gap: 6px; }
+.pp-badge {
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-family: var(--font-display);
+  font-size: 8.5px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.pp-badge svg { width: 9px; height: 9px; }
+.pp-badge--truncated {
+  background: rgba(252, 179, 0, 0.10);
+  color: var(--accent-gold);
+  border: 1px solid rgba(252, 179, 0, 0.22);
+}
+.pp-badge--ok {
+  background: rgba(34, 197, 94, 0.08);
+  color: var(--accent-green);
+  border: 1px solid rgba(34, 197, 94, 0.20);
+}
+
+/* Hide sidebar on small screens — design uses a compact bottom toggle
+   on mobile per the post-edit shell; embedding on phones is deferred. */
+@media (max-width: 720px) {
+  .crosspost { position: static; max-height: none; }
+}

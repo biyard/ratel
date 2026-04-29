@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use std::collections::HashMap;
 
 use super::i18n::PostEditTranslate;
 use super::posting_as::PostingAs;
@@ -6,6 +7,10 @@ use crate::common::components::editor::Editor as RichEditor;
 use crate::common::contexts::use_team_context;
 use crate::common::types::{SpacePartition, TeamPartition, UserType};
 use crate::features::auth::hooks::use_user_context;
+use crate::features::cross_posting::components::CrossPostSidebar;
+use crate::features::cross_posting::hooks::{use_provide_cross_posting, UseCrossPosting};
+use crate::features::cross_posting::models::ConnectionStatus;
+use crate::features::cross_posting::types::{ConnectionResponse, SocialPlatform};
 use crate::features::posts::controllers::get_post::get_post_handler;
 use crate::features::posts::controllers::update_post::{update_post_handler, UpdatePostRequest};
 use crate::features::posts::controllers::{create_space_handler, CreateSpaceRequest};
@@ -209,6 +214,24 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
         }
     });
 
+    // Cross-posting controller — installs the `UseCrossPosting` provider
+    // for the compose sidebar (per-post platform toggles + reach summary)
+    // and also lets the publish action read the resolved enabled set.
+    let UseCrossPosting {
+        connections: cp_connections,
+        per_post_enabled,
+        ..
+    } = use_provide_cross_posting()?;
+
+    // Cross-post connect button on a disconnected platform card → send the
+    // user to Settings → Connections (Bluesky modal lives there). Username
+    // comes from the auth context already loaded above.
+    let cp_username = user_handle.clone();
+    let on_cp_connect = move |_platform: SocialPlatform| {
+        nav.push(crate::Route::UserSettingsConnectionsPage {
+            username: cp_username.clone(),
+        });
+    };
     let existing_space_id_sig = use_signal(move || existing_space_id.clone());
 
     let commit_publish = use_callback(move |_: ()| {
@@ -223,6 +246,10 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                 return;
             }
         }
+        // Resolve cross-post enabled platforms BEFORE entering the spawned
+        // future — keep all reactive reads on the synchronous path.
+        let enabled_platforms_for_space =
+            resolve_enabled_platforms(visibility(), &cp_connections(), &per_post_enabled());
         if space_enabled() {
             spawn(async move {
                 status.set(EditorStatus::Publishing);
@@ -235,7 +262,7 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                         publish: true,
                         visibility: Some(visibility()),
                         categories: Some(categories()),
-                        enabled_platforms: None,
+                        enabled_platforms: enabled_platforms_for_space,
                         platform_overrides: None,
                     },
                 )
@@ -261,6 +288,8 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
             return;
         }
         let vis = visibility();
+        let enabled_platforms_for_post =
+            resolve_enabled_platforms(vis.clone(), &cp_connections(), &per_post_enabled());
         spawn(async move {
             status.set(EditorStatus::Publishing);
             match update_post_handler(
@@ -272,7 +301,7 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                     publish: true,
                     visibility: Some(vis),
                     categories: Some(categories()),
-                    enabled_platforms: None,
+                    enabled_platforms: enabled_platforms_for_post,
                     platform_overrides: None,
                 },
             )
@@ -822,6 +851,11 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                         }
                         "{tr.discard_draft}"
                     }
+
+                    // ── Cross-post sidebar (FR-9 #50: public posts only) ──
+                    if matches!(visibility(), Visibility::Public) {
+                        CrossPostSidebar { content, on_connect_request: on_cp_connect }
+                    }
                 }
             }
 
@@ -1037,4 +1071,40 @@ fn mark_unsaved(
         status.set(EditorStatus::Unsaved);
         *save_version.write() += 1;
     }
+}
+
+/// Resolve `enabled_platforms` for `UpdatePostRequest::Publish` from the
+/// compose-time cross-posting state. Returns `None` for Ratel-only paths
+/// (non-public visibility, no connected platforms, or all toggles off) —
+/// the publish handler then skips writing the `PostSyndicationDirective`,
+/// which is the kill switch for syndication (FR-9 #50).
+///
+/// Per-post overrides win over the persistent `auto_post_enabled` flag
+/// only when the user has explicitly toggled the platform — otherwise the
+/// persistent flag is the default per AC-9.
+fn resolve_enabled_platforms(
+    vis: Visibility,
+    connections: &[ConnectionResponse],
+    overrides: &HashMap<SocialPlatform, bool>,
+) -> Option<Vec<SocialPlatform>> {
+    if !matches!(vis, Visibility::Public) {
+        return None;
+    }
+    let enabled: Vec<SocialPlatform> = [
+        SocialPlatform::Bluesky,
+        SocialPlatform::LinkedIn,
+        SocialPlatform::Threads,
+    ]
+    .into_iter()
+    .filter(|p| {
+        let Some(c) = connections.iter().find(|c| c.platform == *p) else {
+            return false;
+        };
+        if c.status != ConnectionStatus::Connected {
+            return false;
+        }
+        overrides.get(p).copied().unwrap_or(c.auto_post_enabled)
+    })
+    .collect();
+    if enabled.is_empty() { None } else { Some(enabled) }
 }
