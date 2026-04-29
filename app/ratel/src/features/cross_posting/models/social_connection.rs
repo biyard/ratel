@@ -24,11 +24,15 @@ pub struct SocialConnection {
     pub external_handle: String,
     pub external_user_id: String,
 
-    /// KMS-encrypted credential blob. Bluesky: app-password session JWTs.
+    /// AEAD-sealed credential blob (`crate::common::utils::aead::seal`).
+    /// Bluesky: app-password session JWTs (accessJwt + refreshJwt + did).
     /// LinkedIn / Threads: OAuth access + refresh tokens.
-    /// Decrypted only inside the dispatcher Lambda.
+    /// Decrypted only inside the dispatcher Lambda. The blob's first byte
+    /// carries the key version so two-key rotation works without an
+    /// auxiliary discriminator field. Phase 1 uses envvar-managed AES-256-GCM;
+    /// future migration to AWS KMS is documented in the design doc's
+    /// "Credential encryption" section.
     pub credential_ciphertext: Vec<u8>,
-    pub credential_kms_key_id: String,
 
     /// `Some` for OAuth tokens (LinkedIn ~60d, Threads long-lived w/ refresh),
     /// `None` for Bluesky app passwords (which do not expire).
