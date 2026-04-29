@@ -1,0 +1,193 @@
+/* Shared records-table styles. Loaded by `RecordsTable` directly so
+   the same component works inside both the dedicated records page
+   (.analyze-arena--records) and the CREATE wizard's preview card
+   (.analyze-arena--create) without per-host duplication.
+   No host class on these rules — they stand alone. Dioxus dedupes
+   `document::Stylesheet { href }` by URL so loading from two
+   components doesn't double-inject. */
+
+.records-table-wrap {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  /* Horizontal scroll inside the wrapper so wide tables (especially
+     discussion with its long comment column) stay usable on mobile
+     without wrapping every cell into a vertical mess. The min-width
+     on `.records-table` below forces the table wider than narrow
+     viewports, which is what triggers the scroll. */
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: rgba(255, 255, 255, 0.02);
+}
+[data-theme="light"] .records-table-wrap {
+  border-color: rgba(10, 10, 30, 0.08);
+  background: rgba(10, 10, 30, 0.03);
+}
+
+.records-table {
+  width: 100%;
+  /* Force a comfortable minimum so long Korean text doesn't squeeze
+     into one-character-per-line columns. Drops the wrapper into
+     overflow-x mode below this breakpoint. */
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 13px;
+  /* Fixed layout so the explicit `:nth-child` widths below are
+     authoritative. With `table-layout: auto` the browser falls back
+     to content-driven widths and the split header/body tables drift
+     out of alignment. */
+  table-layout: fixed;
+}
+.records-table thead tr {
+  background: transparent;
+}
+[data-theme="light"] .records-table thead tr {
+  background: transparent;
+}
+.records-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dark, #8888a8) var(--light, #5b5b75);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+[data-theme="light"] .records-table th {
+  border-bottom-color: rgba(10, 10, 30, 0.08);
+}
+.records-table td {
+  padding: 12px 16px;
+  color: var(--dark, #f0f0f5) var(--light, #12121a);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: top;
+  /* Korean-friendly wrapping: don't break inside CJK runs unless a
+     space appears. Keeps "계엄·국회·통제·강화·토론" on one row
+     instead of stacking each char vertically. */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+[data-theme="light"] .records-table td {
+  border-bottom-color: rgba(10, 10, 30, 0.08);
+}
+.records-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.records-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+[data-theme="light"] .records-table tbody tr:hover {
+  background: rgba(10, 10, 30, 0.04);
+}
+
+.records-cell-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 160px;
+  /* Keep username + handle on a single visual line so the user
+     column doesn't push other columns around. */
+  white-space: nowrap;
+}
+
+/* Per-source column hints. Browser's auto layout otherwise gives
+   the post-title column ~10% of the table when the comment column
+   is long, which is what produced the "계엄·국회·통제·강화·토론"
+   one-character-per-line look. Setting a 1st-column user width and
+   a real minimum on the post column fixes both. */
+/* Per-source column widths. Every column has an explicit width so
+   the split-table layout (header table + body table) lines up
+   identically — auto-distributed columns drift between the two
+   tables when their content widths differ, which is what causes
+   the "헤더와 본문 컬럼이 어긋나는" alignment bug. Both `th:nth-child`
+   and `td:nth-child` get the same width so the rule applies to
+   both tables regardless of which one wraps the cell. */
+
+/* Poll / Quiz: user (200px) + question (50% of remainder) + answer (50% of remainder) */
+.records-table-wrap[data-source="poll"] .records-table th:nth-child(1),
+.records-table-wrap[data-source="poll"] .records-table td:nth-child(1),
+.records-table-wrap[data-source="quiz"] .records-table th:nth-child(1),
+.records-table-wrap[data-source="quiz"] .records-table td:nth-child(1) {
+  width: 200px;
+}
+.records-table-wrap[data-source="poll"] .records-table th:nth-child(2),
+.records-table-wrap[data-source="poll"] .records-table td:nth-child(2),
+.records-table-wrap[data-source="quiz"] .records-table th:nth-child(2),
+.records-table-wrap[data-source="quiz"] .records-table td:nth-child(2) {
+  width: calc((100% - 200px) * 0.5);
+}
+.records-table-wrap[data-source="poll"] .records-table th:nth-child(3),
+.records-table-wrap[data-source="poll"] .records-table td:nth-child(3),
+.records-table-wrap[data-source="quiz"] .records-table th:nth-child(3),
+.records-table-wrap[data-source="quiz"] .records-table td:nth-child(3) {
+  width: calc((100% - 200px) * 0.5);
+}
+
+/* Discussion: user (200px) + post title (240px) + comment (rest) */
+.records-table-wrap[data-source="discussion"] .records-table th:nth-child(1),
+.records-table-wrap[data-source="discussion"] .records-table td:nth-child(1) {
+  width: 200px;
+}
+.records-table-wrap[data-source="discussion"] .records-table th:nth-child(2),
+.records-table-wrap[data-source="discussion"] .records-table td:nth-child(2) {
+  width: 240px;
+}
+.records-table-wrap[data-source="discussion"] .records-table th:nth-child(3),
+.records-table-wrap[data-source="discussion"] .records-table td:nth-child(3) {
+  width: calc(100% - 200px - 240px);
+}
+
+/* Follow: user (200px) + target (rest) */
+.records-table-wrap[data-source="follow"] .records-table th:nth-child(1),
+.records-table-wrap[data-source="follow"] .records-table td:nth-child(1) {
+  width: 200px;
+}
+.records-table-wrap[data-source="follow"] .records-table th:nth-child(2),
+.records-table-wrap[data-source="follow"] .records-table td:nth-child(2) {
+  width: calc(100% - 200px);
+}
+
+/* Participants (preview-card no-filter sample): single user column */
+.records-table-wrap[data-source="participants"] .records-table th:nth-child(1),
+.records-table-wrap[data-source="participants"] .records-table td:nth-child(1) {
+  width: 100%;
+}
+.records-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.04);
+}
+.records-avatar-fallback {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--dark, #8888a8) var(--light, #5b5b75);
+  background: rgba(255, 255, 255, 0.04);
+  flex-shrink: 0;
+}
+[data-theme="light"] .records-avatar,
+[data-theme="light"] .records-avatar-fallback {
+  background: rgba(10, 10, 30, 0.04);
+}
+.records-user-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.records-user-name {
+  font-size: 13px;
+  color: var(--dark, #f0f0f5) var(--light, #12121a);
+}
+.records-user-handle {
+  font-size: 11px;
+  color: var(--dark, #8888a8) var(--light, #5b5b75);
+}

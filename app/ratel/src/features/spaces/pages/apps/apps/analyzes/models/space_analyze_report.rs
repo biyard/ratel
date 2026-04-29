@@ -37,6 +37,16 @@ pub struct SpaceAnalyzeReport {
     /// finishes; `0` while `status == InProgress`.
     #[serde(default)]
     pub respondent_count: i64,
+
+    /// Frozen pointers to the underlying records that fed into the
+    /// matching at report-save time. Drives the "사용된 데이터
+    /// 확인하기" detail page; preview returns a sample from the same
+    /// list before persisting. Capped per filter
+    /// (`services::intersection::PER_FILTER_RECORD_CAP`) so a high-volume
+    /// filter doesn't blow past the DynamoDB 400KB per-item ceiling.
+    /// Each ref carries its `filter_idx` pointing back into `filters`.
+    #[serde(default)]
+    pub matched_records: Vec<MatchedRecordRef>,
 }
 
 #[cfg(feature = "server")]
@@ -45,6 +55,7 @@ impl SpaceAnalyzeReport {
         space_pk: SpacePartition,
         name: String,
         filters: Vec<AnalyzeReportFilter>,
+        matched_records: Vec<MatchedRecordRef>,
     ) -> Self {
         use crate::common::utils::time::get_now_timestamp_millis;
 
@@ -61,6 +72,7 @@ impl SpaceAnalyzeReport {
             status: AnalyzeReportStatus::InProgress,
             filters,
             respondent_count: 0,
+            matched_records,
         }
     }
 

@@ -58,7 +58,24 @@ pub async fn create_analyze_report(
         }
     }
 
-    let report = SpaceAnalyzeReport::new(space_id, trimmed_name.to_string(), req.filters);
+    // Run the same matching the preview API uses, but capture the row
+    // refs alongside the count so the records page can hydrate them
+    // later. Empty filters → no records to capture (the empty-filter
+    // case is rejected by the wizard's Next button anyway).
+    let matched_records = if req.filters.is_empty() {
+        Vec::new()
+    } else {
+        let (_intersection, _data_count, records) =
+            services::intersection::intersect_filters(cli, &space_pk, &req.filters).await?;
+        records
+    };
+
+    let report = SpaceAnalyzeReport::new(
+        space_id,
+        trimmed_name.to_string(),
+        req.filters,
+        matched_records,
+    );
     let report_id = match &report.sk {
         EntityType::SpaceAnalyzeReport(id) => id.clone(),
         _ => String::new(),

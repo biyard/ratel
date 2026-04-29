@@ -1,7 +1,10 @@
 //! PREVIEW step card — name input, chip summary, and the live count
 //! tiles (matched respondents + total source records). Pulls from the
 //! `preview` signal which `handle_compute_preview` populates when the
-//! user pressed 다음 in the previous step.
+//! user pressed 다음 in the previous step. Below the tiles we group
+//! the response's `sample_records` by `filter_idx` and render a tiny
+//! `RecordsTable` per chip so the user can recognize which raw rows
+//! the analysis will consume before pressing 보고서 생성.
 
 use crate::features::spaces::pages::apps::apps::analyzes::*;
 use crate::*;
@@ -23,6 +26,10 @@ pub fn PreviewCard(space_id: ReadSignal<SpacePartition>) -> Element {
         .as_ref()
         .map(|p| p.data_count.to_string())
         .unwrap_or_else(|| "—".to_string());
+    let sample_records: Vec<AnalyzeRecordRow> = preview
+        .as_ref()
+        .map(|p| p.sample_records.clone())
+        .unwrap_or_default();
 
     rsx! {
         div { class: "builder-create", "data-state": "preview",
@@ -85,7 +92,10 @@ pub fn PreviewCard(space_id: ReadSignal<SpacePartition>) -> Element {
             }
 
             // ── Stat tiles ──────────────────────────────
-            div { class: "preview-stats",
+            // Empty filter list: only the respondent_count tile is
+            // meaningful (data_count would always be 0), so collapse
+            // to a single full-width tile via the `--solo` modifier.
+            div { class: if filters.is_empty() { "preview-stats preview-stats--solo" } else { "preview-stats" },
                 div { class: "preview-stat",
                     span {
                         class: "preview-stat__value",
@@ -95,14 +105,70 @@ pub fn PreviewCard(space_id: ReadSignal<SpacePartition>) -> Element {
                     }
                     span { class: "preview-stat__label", "{tr.create_preview_stat_respondents}" }
                 }
-                div { class: "preview-stat",
-                    span {
-                        class: "preview-stat__value",
-                        id: "preview-data-count",
-                        "data-testid": "preview-data-count",
-                        "{data_count}"
+                if !filters.is_empty() {
+                    div { class: "preview-stat",
+                        span {
+                            class: "preview-stat__value",
+                            id: "preview-data-count",
+                            "data-testid": "preview-data-count",
+                            "{data_count}"
+                        }
+                        span { class: "preview-stat__label", "{tr.create_preview_stat_records}" }
                     }
-                    span { class: "preview-stat__label", "{tr.create_preview_stat_records}" }
+                }
+            }
+
+            // ── Sample raw-data tables (one per filter chip) ──
+            // Only shown when at least one chip is active. The "전체"
+            // branch (no chips) intentionally hides this section
+            // because there's no per-source frame to draw under.
+            if !filters.is_empty() {
+                span { class: "builder-label", "{tr.create_preview_records_label}" }
+                span { class: "builder-hint", "{tr.create_preview_records_limit_hint}" }
+                if sample_records.is_empty() {
+                    span { class: "builder-hint", "{tr.create_preview_records_empty}" }
+                } else {
+                    div { class: "preview-records-groups",
+                        for (idx, f) in filters.iter().enumerate() {
+                            {
+                                let idx_u32 = idx as u32;
+                                let group: Vec<AnalyzeRecordRow> = sample_records
+                                    .iter()
+                                    .filter(|r| r.filter_idx == idx_u32)
+                                    .cloned()
+                                    .collect();
+                                let src = f.source.as_str();
+                                let badge = f.source_label.clone();
+                                let label = f.label.clone();
+                                let is_empty = group.is_empty();
+                                let body = match is_empty {
+                                    true => rsx! {
+                                        div { class: "preview-records-group__empty",
+                                            "{tr.records_empty}"
+                                        }
+                                    },
+                                    false => rsx! {
+                                        RecordsTable { source: f.source, rows: group }
+                                    },
+                                };
+                                rsx! {
+                                    div {
+                                        key: "preview-records-group-{idx}",
+                                        class: "preview-records-group",
+                                        div { class: "preview-records-group__head",
+                                            span {
+                                                class: "preview-chip",
+                                                "data-source": "{src}",
+                                                span { class: "preview-chip__source", "{badge}" }
+                                                span { "{label}" }
+                                            }
+                                        }
+                                        {body}
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
