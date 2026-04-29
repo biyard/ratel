@@ -105,8 +105,9 @@ pub fn truncate_override(body: String, backlink: &str, limit: usize) -> String {
 /// Strip HTML tags from rich-text body. Lightweight tag stripper — does NOT
 /// fully parse HTML; just removes anything between `<` and `>` and decodes a
 /// small set of common entities. Sufficient because Ratel's rich-text editor
-/// produces well-formed HTML.
-fn strip_html(html: &str) -> String {
+/// produces well-formed HTML. Re-used by the dispatcher to build the
+/// fallback description on Bluesky's rich-link card.
+pub fn strip_html(html: &str) -> String {
     let mut out = String::with_capacity(html.len());
     let mut in_tag = false;
     for c in html.chars() {
