@@ -1,0 +1,1376 @@
+/* Analyze arena — DETAIL view (Phase 3).
+   Class names match `assets/design/analyze-detail-arena.html` verbatim
+   (`.split`, `.builder-result`, `.panel`, `.card`, `.bar-row`,
+   `.tfidf-row`, `.topic-table`, `.sidebar`, `.sb-group`, `.sb-item`,
+   etc.). All colors go through the space-toggle `var(--dark, …)
+   var(--light, …)` pattern so the page respects `data-theme`. The host
+   wrapper `.analyze-arena.analyze-arena--detail.analyze-arena--detail` scopes the variables so
+   they don't leak into surrounding pages.
+
+   Note: the foundation block (host vars + topbar + arena background) is
+   re-declared here even though the LIST view already declares them —
+   this view is loaded as its own route (split CSS asset per
+   `views/report/`) and the LIST stylesheet isn't on the page. Keeping
+   them in sync with `views/home/style.css` is a manual job. */
+
+.analyze-arena.analyze-arena--detail {
+  --bg-void: var(--dark, #06060e) var(--light, #f5f5fb);
+  --bg-glass: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, rgba(255, 255, 255, 0.75));
+  --bg-glass-hover: var(--dark, rgba(20, 20, 40, 0.80)) var(--light, rgba(255, 255, 255, 0.95));
+  --border-subtle: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(10, 10, 30, 0.08));
+  --border-strong: var(--dark, rgba(255, 255, 255, 0.12)) var(--light, rgba(10, 10, 30, 0.16));
+  --text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
+  --text-muted: var(--dark, #8888a8) var(--light, #5b5b75);
+  --text-dim: var(--dark, #55556a) var(--light, #9898ad);
+  --surface-soft: var(--dark, rgba(255, 255, 255, 0.02)) var(--light, rgba(10, 10, 30, 0.03));
+  --surface-hover: var(--dark, rgba(255, 255, 255, 0.04)) var(--light, rgba(10, 10, 30, 0.05));
+  --glow-aura-a: var(--dark, rgba(6, 182, 212, 0.05)) var(--light, rgba(6, 182, 212, 0.08));
+  --glow-aura-b: var(--dark, rgba(252, 179, 0, 0.03)) var(--light, rgba(252, 179, 0, 0.06));
+  --panel-bg: var(--dark, rgba(12, 12, 26, 1)) var(--light, rgba(255, 255, 255, 1));
+  --input-bg: var(--dark, rgba(255, 255, 255, 0.02)) var(--light, rgba(10, 10, 30, 0.02));
+  --input-border: var(--dark, rgba(255, 255, 255, 0.08)) var(--light, rgba(10, 10, 30, 0.10));
+  --bar-track: var(--dark, rgba(255, 255, 255, 0.04)) var(--light, rgba(10, 10, 30, 0.06));
+  --bubble-fill: var(--dark, rgba(173, 197, 220, 0.85)) var(--light, rgba(96, 142, 188, 0.85));
+  --bubble-stroke: var(--dark, rgba(255, 255, 255, 0.10)) var(--light, rgba(10, 10, 30, 0.12));
+  --bubble-text: var(--dark, #0c0c1a) var(--light, #ffffff);
+  --network-link: var(--dark, rgba(255, 255, 255, 0.10)) var(--light, rgba(10, 10, 30, 0.16));
+
+  --accent-gold: #fcb300;
+  --accent-teal: #6eedd8;
+  --accent-red: #ef4444;
+
+  --analyze-color: #06b6d4;
+  --analyze-bg: rgba(6, 182, 212, 0.10);
+  --analyze-border: rgba(6, 182, 212, 0.24);
+  --analyze-glow: rgba(6, 182, 212, 0.16);
+
+  --poll-color: #06b6d4;
+  --poll-bg: rgba(6, 182, 212, 0.10);
+  --poll-border: rgba(6, 182, 212, 0.24);
+  --quiz-color: #a855f7;
+  --quiz-bg: rgba(168, 85, 247, 0.10);
+  --quiz-border: rgba(168, 85, 247, 0.24);
+  --discussion-color: #60a5fa;
+  --discussion-bg: rgba(96, 165, 250, 0.10);
+  --discussion-border: rgba(96, 165, 250, 0.24);
+  --follow-color: #f97316;
+  --follow-bg: rgba(249, 115, 22, 0.10);
+  --follow-border: rgba(249, 115, 22, 0.24);
+
+  --c1: #f97316;
+  --c2: #6366f1;
+  --c3: #22c55e;
+  --c4: #3b82f6;
+  --c5: #8b5cf6;
+  --c6: #eab308;
+
+  --bar-fill: #4f7aa3;
+  --bar-fill-strong: #5d8cba;
+
+  --quiz-correct: #22c55e;
+  --quiz-correct-soft: rgba(34, 197, 94, 0.12);
+
+  --font-display: 'Orbitron', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  /* Fixed-shell layout: the arena is locked to viewport height
+     and does NOT scroll itself. Topbar (row 1 of .arena flex col)
+     stays at top; .split fills the remaining space with a grid
+     where the banner is row 1 and sidebar+main share row 2. Only
+     `.main` (and `.sidebar` if items overflow) scrolls. */
+}
+
+.analyze-arena.analyze-arena--detail .arena {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.analyze-arena.analyze-arena--detail .arena::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 20%, var(--glow-aura-a), transparent 60%),
+    radial-gradient(ellipse 120% 100% at 50% 120%, var(--glow-aura-b), transparent 50%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── Topbar ──────────────────────────────────────────────── */
+.analyze-arena.analyze-arena--detail .arena-topbar {
+  position: relative;
+  z-index: 30;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  gap: 16px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.analyze-arena.analyze-arena--detail .arena-topbar__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+.analyze-arena.analyze-arena--detail .back-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.analyze-arena.analyze-arena--detail .back-btn:hover {
+  border-color: rgba(252, 179, 0, 0.3);
+  color: var(--accent-gold);
+}
+.analyze-arena.analyze-arena--detail .back-btn svg {
+  width: 16px;
+  height: 16px;
+}
+.analyze-arena.analyze-arena--detail .arena-topbar__logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  object-fit: cover;
+  border: 1px solid rgba(252, 179, 0, 0.15);
+  flex-shrink: 0;
+}
+.analyze-arena.analyze-arena--detail .breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.analyze-arena.analyze-arena--detail .breadcrumb__item {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.analyze-arena.analyze-arena--detail .breadcrumb__sep {
+  color: var(--text-dim);
+  font-size: 10px;
+}
+.analyze-arena.analyze-arena--detail .breadcrumb__current {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.analyze-arena.analyze-arena--detail .type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--analyze-bg);
+  color: var(--analyze-color);
+  border: 1px solid var(--analyze-border);
+}
+.analyze-arena.analyze-arena--detail .type-badge svg {
+  width: 13px;
+  height: 13px;
+}
+.analyze-arena.analyze-arena--detail .topbar-title {
+  flex: 1;
+  min-width: 180px;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 6px 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 760px) {
+  .analyze-arena.analyze-arena--detail .arena-topbar { padding: 12px 14px; gap: 10px; }
+  .analyze-arena.analyze-arena--detail .breadcrumb,
+  .analyze-arena.analyze-arena--detail .type-badge { display: none; }
+  .analyze-arena.analyze-arena--detail .topbar-title { min-width: 0; font-size: 13px; padding: 0; }
+}
+
+/* ── Split layout — RESULT mode ──────────────────────────────
+   row 1: banner banner   (.builder-result, full-width)
+   row 2: sidebar main    (ANALYZES + active panel — `1fr` so it
+                          fills the remaining viewport height)
+   Banner pinned by row 1, sidebar fills its cell (own internal
+   scroll if items overflow), main is the user-visible scrollable
+   area. */
+.analyze-arena.analyze-arena--detail .split {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    "banner  banner"
+    "sidebar main";
+  gap: 18px;
+  padding: 24px;
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+  overflow: hidden;
+}
+.analyze-arena.analyze-arena--detail .split > .builder-result { grid-area: banner; }
+.analyze-arena.analyze-arena--detail .split > .sidebar {
+  grid-area: sidebar;
+  min-height: 0;
+}
+.analyze-arena.analyze-arena--detail .split > .main {
+  grid-area: main;
+  min-height: 0;
+  min-width: 0;
+}
+@media (max-width: 1100px) {
+  /* Below 1100px → revert to page-level scroll on the arena. */
+  .analyze-arena.analyze-arena--detail {
+    height: auto;
+    overflow-y: auto;
+  }
+  .analyze-arena.analyze-arena--detail .arena { flex: none; min-height: 0; }
+  .analyze-arena.analyze-arena--detail .split {
+    flex: none;
+    min-height: 0;
+    overflow: visible;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "banner"
+      "sidebar"
+      "main";
+  }
+  .analyze-arena.analyze-arena--detail .split > .sidebar,
+  .analyze-arena.analyze-arena--detail .split > .main {
+    overflow: visible;
+    height: auto;
+    max-height: none;
+  }
+}
+@media (max-width: 760px) {
+  .analyze-arena.analyze-arena--detail .split { padding: 14px; gap: 14px; }
+}
+
+/* ── Builder-result banner ─────────────────────────────────
+   Lives in row 1 of the grid. The fixed-shell layout pins it
+   above the sidebar/main row — no sticky needed. */
+.analyze-arena.analyze-arena--detail .builder-result {
+  position: relative;
+  z-index: 20;
+  background:
+    linear-gradient(180deg, rgba(252, 179, 0, 0.06), transparent 70%),
+    var(--bg-glass);
+  border: 1px solid var(--analyze-border);
+  border-radius: 18px;
+  padding: 16px 20px;
+  backdrop-filter: blur(18px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.analyze-arena.analyze-arena--detail .builder-result__chips-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.analyze-arena.analyze-arena--detail .builder-result__topline {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.analyze-arena.analyze-arena--detail .builder-result__label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.analyze-arena.analyze-arena--detail .builder-result__meta {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+.analyze-arena.analyze-arena--detail .builder-result__topline-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+/* "사용된 데이터 확인하기" CTA — small ghost-style button matching the
+   detail banner aesthetic. Stays muted by default and warms to the
+   gold accent on hover so it doesn't fight the chip strip below. */
+.analyze-arena.analyze-arena--detail .builder-result__records-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.analyze-arena.analyze-arena--detail .builder-result__records-btn:hover {
+  background: rgba(252, 179, 0, 0.08);
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+.analyze-arena.analyze-arena--detail .builder-result__records-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Preview chip strip inside the banner. */
+.analyze-arena.analyze-arena--detail .preview-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border-subtle);
+  min-height: 56px;
+  align-items: center;
+}
+.analyze-arena.analyze-arena--detail .preview-chips__empty {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-dim);
+}
+/* Outer chip: subtle surface tone — distinct from page bg but
+   neutral. Inner pill: source-tinted background + matching text
+   colour. The pill is what carries the source identity; the rest
+   of the chip stays neutral so the main label reads cleanly. */
+.analyze-arena.analyze-arena--detail .preview-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 5px;
+  border-radius: 100px;
+  font-size: 12px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+.analyze-arena.analyze-arena--detail .preview-chip__source {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 100px;
+  min-width: 72px;
+  text-align: center;
+  display: inline-block;
+}
+.analyze-arena.analyze-arena--detail .preview-chip[data-source="poll"] .preview-chip__source {
+  background: var(--poll-bg);
+  color: var(--poll-color);
+}
+.analyze-arena.analyze-arena--detail .preview-chip[data-source="quiz"] .preview-chip__source {
+  background: var(--quiz-bg);
+  color: var(--quiz-color);
+}
+.analyze-arena.analyze-arena--detail .preview-chip[data-source="discussion"] .preview-chip__source {
+  background: var(--discussion-bg);
+  color: var(--discussion-color);
+}
+.analyze-arena.analyze-arena--detail .preview-chip[data-source="follow"] .preview-chip__source {
+  background: var(--follow-bg);
+  color: var(--follow-color);
+}
+
+/* DETAIL is a read-only saved-report view — bar / tfidf / topic
+   filter buttons stay rendered (the visual is part of the snapshot)
+   but they shouldn't look or act clickable. JS no longer binds click
+   handlers on these; CSS removes hover affordances and the click
+   target itself for full a11y consistency. */
+.analyze-arena.analyze-arena--detail button.bar-row[data-filter-source],
+.analyze-arena.analyze-arena--detail button.tfidf-row[data-filter-source],
+.analyze-arena.analyze-arena--detail .topic-table__filter[data-filter-source] {
+  cursor: default !important;
+  pointer-events: none;
+}
+.analyze-arena.analyze-arena--detail .preview-chip__group {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* ── Main column ─────────────────────────────────────────── */
+.analyze-arena.analyze-arena--detail .main {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  /* User-visible scroll: panel content is taller than the cell,
+     overflow-y: auto kicks in. The cell's height is definite
+     thanks to the fixed-shell flex chain on `.analyze-arena.analyze-arena--detail`,
+     `.arena`, and `.split`. */
+  height: 100%;
+  overflow-y: auto;
+}
+
+.analyze-arena.analyze-arena--detail .main-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.analyze-arena.analyze-arena--detail .main-title__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.analyze-arena.analyze-arena--detail .main-title__chip--poll {
+  background: var(--poll-bg);
+  color: var(--poll-color);
+  border: 1px solid var(--poll-border);
+}
+.analyze-arena.analyze-arena--detail .main-title__chip--quiz {
+  background: var(--quiz-bg);
+  color: var(--quiz-color);
+  border: 1px solid var(--quiz-border);
+}
+.analyze-arena.analyze-arena--detail .main-title__chip--discussion {
+  background: var(--discussion-bg);
+  color: var(--discussion-color);
+  border: 1px solid var(--discussion-border);
+}
+.analyze-arena.analyze-arena--detail .main-title__chip--follow {
+  background: var(--follow-bg);
+  color: var(--follow-color);
+  border: 1px solid var(--follow-border);
+}
+.analyze-arena.analyze-arena--detail .main-title__chip svg { width: 12px; height: 12px; }
+
+/* ── Panels — only one is visible at a time ──────────────── */
+.analyze-arena.analyze-arena--detail .panel {
+  display: none;
+  flex-direction: column;
+  gap: 18px;
+}
+.analyze-arena.analyze-arena--detail .panel[data-active="true"] { display: flex; }
+
+/* ── Card primitive ──────────────────────────────────────── */
+.analyze-arena.analyze-arena--detail .card {
+  background: var(--bg-glass);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+@media (max-width: 760px) {
+  .analyze-arena.analyze-arena--detail .card { padding: 16px; gap: 12px; }
+}
+.analyze-arena.analyze-arena--detail .card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.analyze-arena.analyze-arena--detail .card__title {
+  min-width: 0;
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.analyze-arena.analyze-arena--detail .card__count {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: var(--analyze-bg);
+  border: 1px solid var(--analyze-border);
+  color: var(--analyze-color);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.analyze-arena.analyze-arena--detail .card__action {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.analyze-arena.analyze-arena--detail .card__action:hover {
+  border-color: var(--analyze-border);
+  color: var(--analyze-color);
+}
+.analyze-arena.analyze-arena--detail .card__action svg { width: 14px; height: 14px; }
+.analyze-arena.analyze-arena--detail .card__hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--surface-soft);
+  border: 1px dashed var(--border-subtle);
+  align-self: flex-start;
+}
+.analyze-arena.analyze-arena--detail .card__hint svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: var(--analyze-color);
+}
+
+/* ── Panel toolbar ───────────────────────────────────────── */
+.analyze-arena.analyze-arena--detail .panel-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.analyze-arena.analyze-arena--detail .panel-toolbar > .filter-select-wrap { flex-shrink: 0; }
+.analyze-arena.analyze-arena--detail .panel-toolbar .btn { flex-shrink: 0; }
+/* Single right-aligned action (e.g. poll panel "엑셀 다운로드"). The
+   parent `.panel-toolbar` is `space-between`, so a sole child lands
+   on the left by default — `margin-left: auto` pushes it to the
+   right edge without changing the parent rule. */
+.analyze-arena.analyze-arena--detail .panel-toolbar__action {
+  margin-left: auto;
+}
+
+.analyze-arena.analyze-arena--detail .filter-select-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.analyze-arena.analyze-arena--detail .filter-select {
+  appearance: none;
+  -webkit-appearance: none;
+  min-width: 160px;
+  padding: 9px 32px 9px 12px;
+  border-radius: 10px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s;
+}
+.analyze-arena.analyze-arena--detail .filter-select:hover { border-color: var(--analyze-border); }
+.analyze-arena.analyze-arena--detail .filter-select:focus {
+  border-color: var(--analyze-border);
+  box-shadow: 0 0 0 3px var(--analyze-glow);
+}
+.analyze-arena.analyze-arena--detail .filter-select-wrap::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  transform: translateY(-75%) rotate(45deg);
+  pointer-events: none;
+}
+
+.analyze-arena.analyze-arena--detail .btn {
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.analyze-arena.analyze-arena--detail .btn svg { width: 14px; height: 14px; }
+.analyze-arena.analyze-arena--detail .btn--ghost {
+  background: var(--surface-soft);
+  color: var(--text-muted);
+}
+.analyze-arena.analyze-arena--detail .btn--ghost:hover {
+  border-color: var(--analyze-border);
+  color: var(--text-primary);
+}
+.analyze-arena.analyze-arena--detail .btn--primary {
+  background: linear-gradient(135deg, var(--accent-gold), #e5a200);
+  border: none;
+  color: #0a0a0a;
+  box-shadow: 0 2px 12px rgba(252, 179, 0, 0.25);
+}
+.analyze-arena.analyze-arena--detail .btn--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(252, 179, 0, 0.4);
+}
+
+/* ── Bar chart (Poll / Quiz) ─────────────────────────────── */
+.analyze-arena.analyze-arena--detail .bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.analyze-arena.analyze-arena--detail .bar-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+.analyze-arena.analyze-arena--detail .bar-row__label {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: center;
+}
+.analyze-arena.analyze-arena--detail .bar-row__track {
+  position: relative;
+  height: 12px;
+  width: 100%;
+  border-radius: 100px;
+  background: var(--bar-track);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+.analyze-arena.analyze-arena--detail .bar-row__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 100px;
+  transition: width 0.3s ease;
+}
+.analyze-arena.analyze-arena--detail .bar-row__value {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  min-width: 96px;
+  text-align: right;
+}
+.analyze-arena.analyze-arena--detail .bar-row[data-correct="true"] .bar-row__label,
+.analyze-arena.analyze-arena--detail .bar-row[data-correct="true"] .bar-row__value {
+  color: var(--quiz-correct);
+}
+.analyze-arena.analyze-arena--detail .bar-row__check {
+  display: inline-block;
+  margin-right: 4px;
+  color: var(--quiz-correct);
+  font-weight: 800;
+}
+
+/* Bar-row interactive (filter source) */
+.analyze-arena.analyze-arena--detail button.bar-row[data-filter-source] {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+  padding: 6px;
+  margin: -6px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.analyze-arena.analyze-arena--detail button.bar-row[data-filter-source]:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-subtle);
+}
+.analyze-arena.analyze-arena--detail button.bar-row[data-filter-source][aria-pressed="true"] {
+  background: var(--analyze-bg);
+  border-color: var(--analyze-border);
+}
+.analyze-arena.analyze-arena--detail button.bar-row[data-filter-source][aria-pressed="true"] .bar-row__label {
+  color: var(--analyze-color);
+}
+.analyze-arena.analyze-arena--detail button.bar-row[data-filter-source][aria-pressed="true"] .bar-row__label::before {
+  content: '✓ ';
+  font-weight: 800;
+}
+.analyze-arena.analyze-arena--detail button.bar-row[data-filter-source="quiz"][aria-pressed="true"] {
+  background: var(--quiz-bg);
+  border-color: var(--quiz-border);
+}
+.analyze-arena.analyze-arena--detail button.bar-row[data-filter-source="quiz"][aria-pressed="true"] .bar-row__label {
+  color: var(--quiz-color);
+}
+
+/* ── Subjective text answers ─────────────────────────────── */
+.analyze-arena.analyze-arena--detail .text-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.analyze-arena.analyze-arena--detail .text-item {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+/* ── Discussion: TF-IDF chart ────────────────────────────── */
+.analyze-arena.analyze-arena--detail .tfidf-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.analyze-arena.analyze-arena--detail .tfidf-row {
+  display: grid;
+  grid-template-columns: 96px 1fr 56px;
+  align-items: center;
+  gap: 10px;
+}
+.analyze-arena.analyze-arena--detail .tfidf-row__keyword {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.analyze-arena.analyze-arena--detail .tfidf-row__track {
+  position: relative;
+  height: 18px;
+  width: 100%;
+  border-radius: 5px;
+  background: var(--bar-track);
+  overflow: hidden;
+}
+.analyze-arena.analyze-arena--detail .tfidf-row__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--bar-fill), var(--bar-fill-strong));
+  transition: width 0.3s ease;
+}
+.analyze-arena.analyze-arena--detail .tfidf-row__value {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: right;
+}
+.analyze-arena.analyze-arena--detail button.tfidf-row[data-filter-source] {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.analyze-arena.analyze-arena--detail button.tfidf-row[data-filter-source]:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-subtle);
+}
+.analyze-arena.analyze-arena--detail button.tfidf-row[data-filter-source][aria-pressed="true"] {
+  background: var(--discussion-bg);
+  border-color: var(--discussion-border);
+}
+.analyze-arena.analyze-arena--detail button.tfidf-row[data-filter-source][aria-pressed="true"] .tfidf-row__keyword {
+  color: var(--discussion-color);
+  font-weight: 700;
+}
+.analyze-arena.analyze-arena--detail button.tfidf-row[data-filter-source][aria-pressed="true"] .tfidf-row__keyword::before {
+  content: '✓ ';
+  font-weight: 800;
+}
+
+/* ── Discussion settings grid ───────────────────────────── */
+.analyze-arena.analyze-arena--detail .settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+.analyze-arena.analyze-arena--detail .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.analyze-arena.analyze-arena--detail .field__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.analyze-arena.analyze-arena--detail .field__hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.analyze-arena.analyze-arena--detail .field__input {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  outline: none;
+  transition: all 0.15s;
+}
+.analyze-arena.analyze-arena--detail .field__input:focus {
+  border-color: var(--analyze-border);
+  box-shadow: 0 0 0 3px var(--analyze-glow);
+}
+.analyze-arena.analyze-arena--detail .settings-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.analyze-arena.analyze-arena--detail .settings-running {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+  background: rgba(252, 179, 0, 0.08);
+  border: 1px solid rgba(252, 179, 0, 0.24);
+  border-radius: 8px;
+}
+.analyze-arena.analyze-arena--detail .settings-running::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-gold);
+  animation: settings-running-pulse 1.2s ease-in-out infinite;
+}
+@keyframes settings-running-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+/* ── LDA topic table ────────────────────────────────────── */
+.analyze-arena.analyze-arena--detail .topic-table {
+  display: flex;
+  flex-direction: column;
+}
+.analyze-arena.analyze-arena--detail .topic-table__head {
+  display: grid;
+  grid-template-columns: 90px 1fr 36px;
+  gap: 12px;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.analyze-arena.analyze-arena--detail .topic-table__row {
+  display: grid;
+  grid-template-columns: 90px 1fr 36px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.15s;
+  position: relative;
+}
+.analyze-arena.analyze-arena--detail .topic-table__row:hover { background: var(--surface-soft); }
+.analyze-arena.analyze-arena--detail .topic-table__row:last-child { border-bottom: none; }
+.analyze-arena.analyze-arena--detail .topic-table__id {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.04em;
+}
+.analyze-arena.analyze-arena--detail .topic-table__id-input {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  outline: none;
+  transition: all 0.15s;
+  display: none;
+}
+.analyze-arena.analyze-arena--detail .topic-table__id-input:focus {
+  border-color: var(--analyze-border);
+  box-shadow: 0 0 0 3px var(--analyze-glow);
+}
+.analyze-arena.analyze-arena--detail .topic-table[data-edit="true"] .topic-table__id { display: none; }
+.analyze-arena.analyze-arena--detail .topic-table[data-edit="true"] .topic-table__id-input { display: block; }
+.analyze-arena.analyze-arena--detail .topic-table__keywords {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  word-break: keep-all;
+}
+.analyze-arena.analyze-arena--detail .topic-table__filter {
+  grid-column: 3 / 4;
+  justify-self: end;
+  align-self: center;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.analyze-arena.analyze-arena--detail .topic-table__filter svg { width: 13px; height: 13px; }
+.analyze-arena.analyze-arena--detail .topic-table__filter:hover {
+  border-color: var(--discussion-border);
+  color: var(--discussion-color);
+}
+.analyze-arena.analyze-arena--detail .topic-table__filter[aria-pressed="true"] {
+  background: var(--discussion-bg);
+  border-color: var(--discussion-border);
+  color: var(--discussion-color);
+}
+
+/* ── Text Network (Discussion) ──────────────────────────── */
+.analyze-arena.analyze-arena--detail .network-wrap {
+  width: 100%;
+  aspect-ratio: 35 / 29;
+  max-height: 460px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+.analyze-arena.analyze-arena--detail .network-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.analyze-arena.analyze-arena--detail .network-bubble {
+  fill: var(--bubble-fill);
+  stroke: var(--bubble-stroke);
+  stroke-width: 1;
+}
+.analyze-arena.analyze-arena--detail .network-bubble-text {
+  fill: var(--bubble-text);
+  font-family: var(--font-body);
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+.analyze-arena.analyze-arena--detail .network-link {
+  stroke: var(--network-link);
+  stroke-width: 1;
+  fill: none;
+}
+
+/* ── Follow panel ───────────────────────────────────────── */
+.analyze-arena.analyze-arena--detail .follow-legend {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 4px 0;
+}
+.analyze-arena.analyze-arena--detail .follow-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.analyze-arena.analyze-arena--detail .follow-legend__swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+.analyze-arena.analyze-arena--detail .follow-legend__swatch--done { background: var(--follow-color); }
+.analyze-arena.analyze-arena--detail .follow-legend__swatch--miss {
+  background: var(--bar-track);
+  border: 1px solid var(--border-subtle);
+}
+
+.analyze-arena.analyze-arena--detail .follow-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.analyze-arena.analyze-arena--detail .follow-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr) 110px;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 6px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.analyze-arena.analyze-arena--detail .follow-row:last-child { border-bottom: none; }
+.analyze-arena.analyze-arena--detail .follow-row__user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.analyze-arena.analyze-arena--detail .follow-row__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+.analyze-arena.analyze-arena--detail .follow-row__meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.analyze-arena.analyze-arena--detail .follow-row__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.analyze-arena.analyze-arena--detail .follow-row__handle {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.analyze-arena.analyze-arena--detail .follow-row__bar {
+  position: relative;
+  height: 18px;
+  width: 100%;
+  border-radius: 5px;
+  background: var(--bar-track);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+.analyze-arena.analyze-arena--detail .follow-row__bar-done {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, var(--follow-color), #ea580c);
+  transition: width 0.3s ease;
+}
+.analyze-arena.analyze-arena--detail .follow-row__stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.analyze-arena.analyze-arena--detail .follow-row__rate {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--follow-color);
+}
+.analyze-arena.analyze-arena--detail .follow-row__count {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+@media (max-width: 760px) {
+  .analyze-arena.analyze-arena--detail .follow-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .analyze-arena.analyze-arena--detail .follow-row__stats {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+/* ── Sidebar (right column on desktop) ──────────────────── */
+.analyze-arena.analyze-arena--detail .sidebar {
+  /* Sidebar fills its grid cell. Cell height is bounded by the
+     `.split`'s `minmax(0, 1fr)` row (which is bounded by parent
+     `.arena`'s flex chain back up to the arena's `100vh`). When
+     ANALYZES list overflows, sidebar's own `overflow-y: auto`
+     kicks in. The grid pins it — no sticky positioning. */
+  align-self: stretch;
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--bg-glass);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.analyze-arena.analyze-arena--detail .sidebar__head {
+  padding: 4px 6px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 6px;
+}
+.analyze-arena.analyze-arena--detail .sidebar__head-label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.analyze-arena.analyze-arena--detail .sb-group {
+  display: flex;
+  flex-direction: column;
+}
+.analyze-arena.analyze-arena--detail .sb-group__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 6px 8px;
+  cursor: pointer;
+  user-select: none;
+}
+.analyze-arena.analyze-arena--detail .sb-group__head-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.analyze-arena.analyze-arena--detail .sb-group__icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.analyze-arena.analyze-arena--detail .sb-group__icon svg { width: 14px; height: 14px; }
+.analyze-arena.analyze-arena--detail .sb-group--poll .sb-group__icon {
+  background: var(--poll-bg);
+  color: var(--poll-color);
+  border: 1px solid var(--poll-border);
+}
+.analyze-arena.analyze-arena--detail .sb-group--quiz .sb-group__icon {
+  background: var(--quiz-bg);
+  color: var(--quiz-color);
+  border: 1px solid var(--quiz-border);
+}
+.analyze-arena.analyze-arena--detail .sb-group--discussion .sb-group__icon {
+  background: var(--discussion-bg);
+  color: var(--discussion-color);
+  border: 1px solid var(--discussion-border);
+}
+.analyze-arena.analyze-arena--detail .sb-group--follow .sb-group__icon {
+  background: var(--follow-bg);
+  color: var(--follow-color);
+  border: 1px solid var(--follow-border);
+}
+.analyze-arena.analyze-arena--detail .sb-group__label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+.analyze-arena.analyze-arena--detail .sb-group__count {
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border-subtle);
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.analyze-arena.analyze-arena--detail .sb-group__chevron {
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+.analyze-arena.analyze-arena--detail .sb-group[data-collapsed="true"] .sb-group__chevron {
+  transform: rotate(-90deg);
+}
+.analyze-arena.analyze-arena--detail .sb-group[data-collapsed="true"] .sb-group__list { display: none; }
+.analyze-arena.analyze-arena--detail .sb-group__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.analyze-arena.analyze-arena--detail .sb-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+  width: 100%;
+}
+.analyze-arena.analyze-arena--detail .sb-item:hover {
+  background: var(--surface-soft);
+  border-color: var(--border-subtle);
+}
+.analyze-arena.analyze-arena--detail .sb-item[aria-selected="true"] {
+  background: var(--analyze-bg);
+  border-color: var(--analyze-border);
+}
+.analyze-arena.analyze-arena--detail .sb-item__indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-top: 7px;
+  flex-shrink: 0;
+  background: var(--text-dim);
+  transition: all 0.15s;
+}
+.analyze-arena.analyze-arena--detail .sb-item[aria-selected="true"] .sb-item__indicator {
+  background: var(--analyze-color);
+  box-shadow: 0 0 8px var(--analyze-color);
+}
+.analyze-arena.analyze-arena--detail .sb-item__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.analyze-arena.analyze-arena--detail .sb-item__title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.analyze-arena.analyze-arena--detail .sb-item[aria-selected="true"] .sb-item__title {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.analyze-arena.analyze-arena--detail .sb-item__meta {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+/* ── Mobile cascades ────────────────────────────────────── */
+@media (max-width: 600px) {
+  .analyze-arena.analyze-arena--detail .card { padding: 14px; gap: 10px; }
+  .analyze-arena.analyze-arena--detail .main-title { font-size: 17px; gap: 8px; }
+  .analyze-arena.analyze-arena--detail .bar-row {
+    grid-template-columns: 22px 1fr auto;
+    gap: 8px;
+  }
+  .analyze-arena.analyze-arena--detail .bar-row__value {
+    font-size: 11px;
+    min-width: 80px;
+  }
+  .analyze-arena.analyze-arena--detail .tfidf-row {
+    grid-template-columns: 80px 1fr 48px;
+    gap: 8px;
+  }
+  .analyze-arena.analyze-arena--detail .topic-table__head,
+  .analyze-arena.analyze-arena--detail .topic-table__row {
+    grid-template-columns: 70px 1fr 32px;
+    gap: 8px;
+  }
+}

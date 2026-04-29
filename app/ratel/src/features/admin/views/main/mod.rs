@@ -7,9 +7,10 @@ use crate::common::RewardUserBehavior;
 use crate::common::hooks::use_infinite_query;
 use crate::common::utils::format::format_with_commas;
 use crate::features::admin::controllers::{
-    CreateGlobalRewardRequest, GrantEnterpriseMembershipRequest, MembershipGrantTargetType,
-    RewardResponse, UpdateGlobalRewardRequest, create_reward, grant_enterprise_membership,
-    list_enterprise_memberships, list_rewards, update_reward,
+    AnalyzeQuotaResponse, CreateGlobalRewardRequest, GrantEnterpriseMembershipRequest,
+    MembershipGrantTargetType, RewardResponse, UpdateAnalyzeQuotaRequest, UpdateGlobalRewardRequest,
+    create_reward, get_analyze_quota, grant_enterprise_membership, list_enterprise_memberships,
+    list_rewards, update_analyze_quota, update_reward,
 };
 use crate::features::admin::models::reward_types::{
     ConditionType, RewardConditionExt, RewardPeriodExt, RewardUserBehaviorExt,
@@ -180,207 +181,189 @@ pub fn AdminMainPage() -> Element {
     let grant_message_value = grant_message();
 
     rsx! {
-        div { class: "py-6 px-4 mx-auto w-full max-w-desktop",
-            // Header
-            div { class: "flex justify-between items-center mb-6",
-                h1 { class: "text-2xl font-bold text-text-primary", "{tr.title}" }
-                button {
-                    class: "py-2 px-4 text-white bg-blue-600 rounded-lg transition-colors hover:bg-blue-700 disabled:opacity-50",
-                    onclick: open_create_form,
-                    "{tr.add_reward}"
+        div { class: "admin-arena__container",
+            // ── Analyze quota section (arena card) ──────────
+            AnalyzeQuotaSection {}
+
+            // ── Reward management section (arena card) ──────────
+            section { class: "admin-arena__section",
+                div { class: "admin-arena__section-actions",
+                    span { class: "admin-arena__section-actions-title", "{tr.title}" }
+                    button {
+                        class: "admin-arena__btn",
+                        r#type: "button",
+                        onclick: open_create_form,
+                        "{tr.add_reward}"
+                    }
                 }
-            }
 
-            // Modal overlay
-            if show_form_val {
-                div {
-                    class: "flex fixed inset-0 z-50 justify-center items-center bg-black/50",
-                    onclick: close_form,
+                // Modal overlay (reward create / edit)
+                if show_form_val {
                     div {
-                        class: "p-6 mx-4 w-full max-w-md rounded-lg border bg-bg border-card-border",
-                        onclick: move |e| e.stop_propagation(),
+                        class: "admin-arena__modal-overlay",
+                        onclick: close_form,
+                        div {
+                            class: "admin-arena__modal",
+                            onclick: move |e| e.stop_propagation(),
 
-                        h2 { class: "mb-4 text-lg font-semibold text-text-primary",
-                            if is_editing {
-                                "{tr.edit_reward}"
-                            } else {
-                                "{tr.add_reward}"
-                            }
-                        }
-
-                        // Behavior select
-                        div { class: "mb-4",
-                            label { class: "block mb-1 text-sm font-medium text-text-secondary",
-                                "{tr.action_label}"
-                            }
-                            select {
-                                class: "py-2 px-3 w-full rounded-lg border bg-bg border-card-border text-text-primary",
-                                disabled: is_editing,
-                                onchange: move |e| {
-                                    if let Ok(b) = e.value().parse::<RewardUserBehavior>() {
-                                        form_behavior.set(b);
-                                    }
-                                },
-                                for behavior in RewardUserBehavior::all() {
-                                    option {
-                                        value: "{behavior}",
-                                        selected: *form_behavior.read() == behavior,
-                                        "{behavior.label()}"
-                                    }
+                            h2 { class: "admin-arena__modal-title",
+                                if is_editing {
+                                    "{tr.edit_reward}"
+                                } else {
+                                    "{tr.add_reward}"
                                 }
                             }
-                        }
 
-                        // Points input
-                        div { class: "mb-4",
-                            label { class: "block mb-1 text-sm font-medium text-text-secondary",
-                                "{tr.point}"
-                            }
-                            input {
-                                r#type: "number",
-                                class: "py-2 px-3 w-full rounded-lg border bg-bg border-card-border text-text-primary",
-                                value: "{form_point}",
-                                onchange: move |e| {
-                                    if let Ok(v) = e.value().parse::<i64>() {
-                                        form_point.set(v);
-                                    }
-                                },
-                            }
-                        }
-
-                        // Period select
-                        div { class: "mb-4",
-                            label { class: "block mb-1 text-sm font-medium text-text-secondary",
-                                "{tr.period}"
-                            }
-                            select {
-                                class: "py-2 px-3 w-full rounded-lg border bg-bg border-card-border text-text-primary",
-                                onchange: move |e| {
-                                    if let Ok(p) = e.value().parse::<RewardPeriod>() {
-                                        form_period.set(p);
-                                    }
-                                },
-                                for period in RewardPeriod::all() {
-                                    option {
-                                        value: "{period}",
-                                        selected: *form_period.read() == period,
-                                        "{period.label()}"
+                            // Behavior select
+                            div { class: "admin-arena__form admin-arena__form--stretch mb-4",
+                                label { class: "admin-arena__form-label", "{tr.action_label}" }
+                                select {
+                                    class: "admin-arena__form-select",
+                                    disabled: is_editing,
+                                    onchange: move |e| {
+                                        if let Ok(b) = e.value().parse::<RewardUserBehavior>() {
+                                            form_behavior.set(b);
+                                        }
+                                    },
+                                    for behavior in RewardUserBehavior::all() {
+                                        option {
+                                            value: "{behavior}",
+                                            selected: *form_behavior.read() == behavior,
+                                            "{behavior.label()}"
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        // Condition select
-                        div { class: "mb-4",
-                            label { class: "block mb-1 text-sm font-medium text-text-secondary",
-                                "{tr.condition}"
-                            }
-                            select {
-                                class: "py-2 px-3 w-full rounded-lg border bg-bg border-card-border text-text-primary",
-                                onchange: move |e| {
-                                    let val = e.value();
-                                    let ct = match val.as_str() {
-                                        "MaxClaims" => ConditionType::MaxClaims,
-                                        "MaxPoints" => ConditionType::MaxPoints,
-                                        "MaxUserClaims" => ConditionType::MaxUserClaims,
-                                        "MaxUserPoints" => ConditionType::MaxUserPoints,
-                                        _ => ConditionType::None,
-                                    };
-                                    form_condition_type.set(ct);
-                                },
-                                option {
-                                    value: "None",
-                                    selected: current_condition_type == ConditionType::None,
-                                    "None"
-                                }
-                                option {
-                                    value: "MaxClaims",
-                                    selected: current_condition_type == ConditionType::MaxClaims,
-                                    "Max Claims"
-                                }
-                                option {
-                                    value: "MaxPoints",
-                                    selected: current_condition_type == ConditionType::MaxPoints,
-                                    "Max Points"
-                                }
-                                option {
-                                    value: "MaxUserClaims",
-                                    selected: current_condition_type == ConditionType::MaxUserClaims,
-                                    "Max User Claims"
-                                }
-                                option {
-                                    value: "MaxUserPoints",
-                                    selected: current_condition_type == ConditionType::MaxUserPoints,
-                                    "Max User Points"
-                                }
-                            }
-                        }
-
-                        // Condition value input (conditional)
-                        if show_condition_value {
-                            div { class: "mb-4",
-                                label { class: "block mb-1 text-sm font-medium text-text-secondary",
-                                    "{tr.condition_value}"
-                                }
+                            // Points input
+                            div { class: "admin-arena__form admin-arena__form--stretch mb-4",
+                                label { class: "admin-arena__form-label", "{tr.point}" }
                                 input {
                                     r#type: "number",
-                                    class: "py-2 px-3 w-full rounded-lg border bg-bg border-card-border text-text-primary",
-                                    value: "{form_condition_value}",
+                                    class: "admin-arena__form-input",
+                                    value: "{form_point}",
                                     onchange: move |e| {
                                         if let Ok(v) = e.value().parse::<i64>() {
-                                            form_condition_value.set(v);
+                                            form_point.set(v);
                                         }
                                     },
                                 }
                             }
-                        }
 
-                        // Buttons
-                        div { class: "flex gap-3 justify-end mt-6",
-                            button {
-                                class: "py-2 px-4 rounded-lg border transition-colors border-card-border text-text-primary hover:bg-card-border",
-                                onclick: close_form,
-                                "{tr.cancel}"
+                            // Period select
+                            div { class: "admin-arena__form admin-arena__form--stretch mb-4",
+                                label { class: "admin-arena__form-label", "{tr.period}" }
+                                select {
+                                    class: "admin-arena__form-select",
+                                    onchange: move |e| {
+                                        if let Ok(p) = e.value().parse::<RewardPeriod>() {
+                                            form_period.set(p);
+                                        }
+                                    },
+                                    for period in RewardPeriod::all() {
+                                        option {
+                                            value: "{period}",
+                                            selected: *form_period.read() == period,
+                                            "{period.label()}"
+                                        }
+                                    }
+                                }
                             }
-                            button {
-                                class: "py-2 px-4 text-white bg-blue-600 rounded-lg transition-colors hover:bg-blue-700 disabled:opacity-50",
-                                disabled: is_submitting_val,
-                                onclick: on_submit,
-                                "{tr.save}"
+
+                            // Condition select
+                            div { class: "admin-arena__form admin-arena__form--stretch mb-4",
+                                label { class: "admin-arena__form-label", "{tr.condition}" }
+                                select {
+                                    class: "admin-arena__form-select",
+                                    onchange: move |e| {
+                                        let val = e.value();
+                                        let ct = match val.as_str() {
+                                            "MaxClaims" => ConditionType::MaxClaims,
+                                            "MaxPoints" => ConditionType::MaxPoints,
+                                            "MaxUserClaims" => ConditionType::MaxUserClaims,
+                                            "MaxUserPoints" => ConditionType::MaxUserPoints,
+                                            _ => ConditionType::None,
+                                        };
+                                        form_condition_type.set(ct);
+                                    },
+                                    option {
+                                        value: "None",
+                                        selected: current_condition_type == ConditionType::None,
+                                        "None"
+                                    }
+                                    option {
+                                        value: "MaxClaims",
+                                        selected: current_condition_type == ConditionType::MaxClaims,
+                                        "Max Claims"
+                                    }
+                                    option {
+                                        value: "MaxPoints",
+                                        selected: current_condition_type == ConditionType::MaxPoints,
+                                        "Max Points"
+                                    }
+                                    option {
+                                        value: "MaxUserClaims",
+                                        selected: current_condition_type == ConditionType::MaxUserClaims,
+                                        "Max User Claims"
+                                    }
+                                    option {
+                                        value: "MaxUserPoints",
+                                        selected: current_condition_type == ConditionType::MaxUserPoints,
+                                        "Max User Points"
+                                    }
+                                }
+                            }
+
+                            // Condition value input (conditional)
+                            if show_condition_value {
+                                div { class: "admin-arena__form admin-arena__form--stretch mb-4",
+                                    label { class: "admin-arena__form-label", "{tr.condition_value}" }
+                                    input {
+                                        r#type: "number",
+                                        class: "admin-arena__form-input",
+                                        value: "{form_condition_value}",
+                                        onchange: move |e| {
+                                            if let Ok(v) = e.value().parse::<i64>() {
+                                                form_condition_value.set(v);
+                                            }
+                                        },
+                                    }
+                                }
+                            }
+
+                            // Buttons
+                            div { class: "admin-arena__modal-actions",
+                                button {
+                                    class: "admin-arena__btn admin-arena__btn--ghost",
+                                    onclick: close_form,
+                                    "{tr.cancel}"
+                                }
+                                button {
+                                    class: "admin-arena__btn",
+                                    disabled: is_submitting_val,
+                                    onclick: on_submit,
+                                    "{tr.save}"
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            // Rewards table
-            div { class: "overflow-hidden rounded-lg border bg-bg border-card-border",
-                div { class: "py-3 px-4 border-b border-card-border",
-                    span { class: "text-sm font-medium text-text-primary", "{tr.tab_rules}" }
-                }
+                // Rewards table
+                div { class: "admin-arena__table-wrap",
+                    div { class: "admin-arena__table-head", "{tr.tab_rules}" }
 
-                if rewards.is_empty() {
-                    div { class: "py-8 px-4 text-center text-text-secondary", "{tr.no_rewards}" }
-                } else {
-                    div { class: "overflow-x-auto",
-                        table { class: "w-full text-sm",
+                    if rewards.is_empty() {
+                        div { class: "admin-arena__table-empty", "{tr.no_rewards}" }
+                    } else {
+                        table { class: "admin-arena__table",
                             thead {
-                                tr { class: "border-b border-card-border bg-card-border/30",
-                                    th { class: "py-3 px-4 font-medium text-left text-text-secondary",
-                                        "{tr.action_label}"
-                                    }
-                                    th { class: "py-3 px-4 font-medium text-left text-text-secondary",
-                                        "{tr.point}"
-                                    }
-                                    th { class: "py-3 px-4 font-medium text-left text-text-secondary",
-                                        "{tr.period}"
-                                    }
-                                    th { class: "py-3 px-4 font-medium text-left text-text-secondary",
-                                        "{tr.condition}"
-                                    }
-                                    th { class: "py-3 px-4 font-medium text-left text-text-secondary",
-                                        "{tr.actions}"
-                                    }
+                                tr {
+                                    th { "{tr.action_label}" }
+                                    th { "{tr.point}" }
+                                    th { "{tr.period}" }
+                                    th { "{tr.condition}" }
+                                    th { "{tr.actions}" }
                                 }
                             }
                             tbody {
@@ -388,16 +371,14 @@ pub fn AdminMainPage() -> Element {
                                     {
                                         let reward_clone = reward.clone();
                                         rsx! {
-                                            tr { class: "border-b transition-colors border-card-border hover:bg-card-border/10",
-                                                td { class: "py-3 px-4 text-text-primary", "{reward.reward_behavior.label()}" }
-                                                td { class: "py-3 px-4 text-text-primary",
-                                                    "{format_with_commas(reward.point)}"
-                                                }
-                                                td { class: "py-3 px-4 text-text-primary", "{reward.period.label()}" }
-                                                td { class: "py-3 px-4 text-text-primary", "{reward.condition.label()}" }
-                                                td { class: "py-3 px-4",
+                                            tr {
+                                                td { "{reward.reward_behavior.label()}" }
+                                                td { "{format_with_commas(reward.point)}" }
+                                                td { "{reward.period.label()}" }
+                                                td { "{reward.condition.label()}" }
+                                                td {
                                                     button {
-                                                        class: "text-sm font-medium text-blue-500 hover:text-blue-400",
+                                                        class: "admin-arena__table-link",
                                                         onclick: move |_| open_edit_form(reward_clone.clone()),
                                                         "{tr.edit}"
                                                     }
@@ -412,127 +393,209 @@ pub fn AdminMainPage() -> Element {
                 }
             }
 
-            div { class: "mt-6 rounded-lg border bg-bg border-card-border",
-                div { class: "py-3 px-4 border-b border-card-border",
-                    span { class: "text-sm font-medium text-text-primary", "{tr.enterprise_title}" }
+            // ── Enterprise membership grant section (arena card) ─
+            section { class: "admin-arena__section",
+                div { class: "admin-arena__section-head",
+                    span { class: "admin-arena__section-title", "{tr.enterprise_title}" }
                 }
-                div { class: "p-4",
-                    p { class: "mb-4 text-sm text-text-secondary", "{tr.enterprise_description}" }
+                p { class: "admin-arena__section-description", "{tr.enterprise_description}" }
 
-                    div { class: "grid grid-cols-1 gap-4 md:grid-cols-[180px_1fr_auto]",
-                        div {
-                            label { class: "block mb-1 text-sm font-medium text-text-secondary",
-                                "{tr.target_type}"
-                            }
-                            select {
-                                class: "py-2 px-3 w-full rounded-lg border bg-bg border-card-border text-text-primary",
-                                value: match grant_target_type_value {
-                                    MembershipGrantTargetType::User => "user",
-                                    MembershipGrantTargetType::Team => "team",
-                                },
-                                onchange: move |e| {
-                                    let value = e.value();
-                                    if value == "team" {
-                                        grant_target_type.set(MembershipGrantTargetType::Team);
-                                    } else {
-                                        grant_target_type.set(MembershipGrantTargetType::User);
-                                    }
-                                },
-                                option { value: "user", "{tr.target_user}" }
-                                option { value: "team", "{tr.target_team}" }
-                            }
-                        }
-
-                        div {
-                            label { class: "block mb-1 text-sm font-medium text-text-secondary",
-                                "{tr.username}"
-                            }
-                            Input {
-                                value: grant_username_value,
-                                placeholder: tr.username_placeholder,
-                                oninput: move |e: Event<FormData>| grant_username.set(e.value()),
-                            }
-                        }
-
-                        div { class: "flex items-end",
-                            Button {
-                                style: ButtonStyle::Primary,
-                                disabled: grant_submitting_value,
-                                onclick: on_grant_enterprise,
-                                "{tr.grant_enterprise}"
-                            }
-                        }
-                    }
-
-                    if let Some((message, ok)) = grant_message_value {
-                        p {
-                            class: if ok {
-                                "mt-4 text-sm text-primary"
-                            } else {
-                                "mt-4 text-sm text-destructive"
+                div { class: "admin-arena__grant-grid",
+                    div { class: "admin-arena__form-field",
+                        label { class: "admin-arena__form-label", "{tr.target_type}" }
+                        select {
+                            class: "admin-arena__form-select",
+                            value: match grant_target_type_value {
+                                MembershipGrantTargetType::User => "user",
+                                MembershipGrantTargetType::Team => "team",
                             },
-                            "{message}"
+                            onchange: move |e| {
+                                let value = e.value();
+                                if value == "team" {
+                                    grant_target_type.set(MembershipGrantTargetType::Team);
+                                } else {
+                                    grant_target_type.set(MembershipGrantTargetType::User);
+                                }
+                            },
+                            option { value: "user", "{tr.target_user}" }
+                            option { value: "team", "{tr.target_team}" }
                         }
                     }
 
-                    div { class: "mt-6 pt-6 border-t border-card-border",
-                        h3 { class: "mb-3 text-sm font-medium text-text-primary",
-                            "{tr.enterprise_granted_list}"
+                    div { class: "admin-arena__form-field",
+                        label { class: "admin-arena__form-label", "{tr.username}" }
+                        input {
+                            class: "admin-arena__form-input",
+                            r#type: "text",
+                            value: "{grant_username_value}",
+                            placeholder: tr.username_placeholder,
+                            oninput: move |e: Event<FormData>| grant_username.set(e.value()),
                         }
+                    }
 
-                        if enterprise_memberships.is_empty() {
-                            if enterprise_memberships_query.is_loading() {
-                                p { class: "text-sm text-text-secondary", "{tr.loading}" }
-                            } else {
-                                p { class: "text-sm text-text-secondary",
-                                    "{tr.enterprise_granted_empty}"
-                                }
-                            }
+                    button {
+                        class: "admin-arena__btn",
+                        r#type: "button",
+                        disabled: grant_submitting_value,
+                        onclick: on_grant_enterprise,
+                        "{tr.grant_enterprise}"
+                    }
+                }
+
+                if let Some((message, ok)) = grant_message_value {
+                    p { class: if ok { "admin-arena__status admin-arena__status--ok mt-4" } else { "admin-arena__status admin-arena__status--err mt-4" },
+                        "{message}"
+                    }
+                }
+
+                div { class: "admin-arena__subsection",
+                    h3 { class: "admin-arena__subsection-title", "{tr.enterprise_granted_list}" }
+
+                    if enterprise_memberships.is_empty() {
+                        if enterprise_memberships_query.is_loading() {
+                            div { class: "admin-arena__table-empty", "{tr.loading}" }
                         } else {
-                            div { class: "overflow-x-auto rounded-lg border border-card-border",
-                                table { class: "w-full text-sm",
-                                    thead {
-                                        tr { class: "border-b border-card-border bg-card-border/30",
-                                            th { class: "py-3 px-4 font-medium text-left text-text-secondary",
-                                                "{tr.target_type}"
-                                            }
-                                            th { class: "py-3 px-4 font-medium text-left text-text-secondary",
-                                                "{tr.username}"
-                                            }
-                                            th { class: "py-3 px-4 font-medium text-left text-text-secondary",
-                                                "{tr.granted_credits}"
-                                            }
-                                            th { class: "py-3 px-4 font-medium text-left text-text-secondary",
-                                                "{tr.max_credit}"
-                                            }
-                                        }
+                            div { class: "admin-arena__table-empty", "{tr.enterprise_granted_empty}" }
+                        }
+                    } else {
+                        div { class: "admin-arena__table-wrap",
+                            table { class: "admin-arena__table",
+                                thead {
+                                    tr {
+                                        th { "{tr.target_type}" }
+                                        th { "{tr.username}" }
+                                        th { "{tr.granted_credits}" }
+                                        th { "{tr.max_credit}" }
                                     }
-                                    tbody {
-                                        for item in enterprise_memberships {
-                                            tr { key: "{item.username}", class: "border-b border-card-border last:border-b-0",
-                                                td { class: "py-3 px-4 text-text-primary",
-                                                    match item.target_type {
-                                                        MembershipGrantTargetType::User => tr.target_user.to_string(),
-                                                        MembershipGrantTargetType::Team => tr.target_team.to_string(),
-                                                    }
-                                                }
-                                                td { class: "py-3 px-4 text-text-primary", "{item.username}" }
-                                                td { class: "py-3 px-4 text-text-primary",
-                                                    "{format_with_commas(item.remaining_credits)}"
-                                                }
-                                                td { class: "py-3 px-4 text-text-primary",
-                                                    "{format_with_commas(item.max_credits_per_space)}"
+                                }
+                                tbody {
+                                    for item in enterprise_memberships {
+                                        tr { key: "{item.username}",
+                                            td {
+                                                match item.target_type {
+                                                    MembershipGrantTargetType::User => tr.target_user.to_string(),
+                                                    MembershipGrantTargetType::Team => tr.target_team.to_string(),
                                                 }
                                             }
+                                            td { "{item.username}" }
+                                            td { "{format_with_commas(item.remaining_credits)}" }
+                                            td { "{format_with_commas(item.max_credits_per_space)}" }
                                         }
                                     }
                                 }
                             }
-
-                            if enterprise_memberships_query.has_more() {
-                                {enterprise_memberships_query.more_element()}
-                            }
                         }
+
+                        if enterprise_memberships_query.has_more() {
+                            {enterprise_memberships_query.more_element()}
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Tunes the `AnalyzeQuotaConfig.non_enterprise_limit` from the admin
+/// page. Lazily loads the row, falls back to the hardcoded default
+/// (currently 2) when no row exists yet, and upserts on save.
+#[component]
+fn AnalyzeQuotaSection() -> Element {
+    let mut quota_resource = use_server_future(move || async move { get_analyze_quota().await })?;
+    let value = quota_resource.value();
+    let mut input_limit = use_signal(|| 2i64);
+    let mut saving = use_signal(|| false);
+    let mut message = use_signal::<Option<(String, bool)>>(|| None);
+
+    // Sync the input with the loaded value once the resource resolves.
+    // Re-syncs whenever the resource reloads (e.g. after a save).
+    let mut last_loaded = use_signal::<Option<i64>>(|| None);
+    if let Some(Ok(resp)) = value.read().as_ref() {
+        if last_loaded.read().as_ref() != Some(&resp.non_enterprise_limit) {
+            last_loaded.set(Some(resp.non_enterprise_limit));
+            input_limit.set(resp.non_enterprise_limit);
+        }
+    }
+
+    let on_save = move |_| {
+        let limit = input_limit();
+        if limit < 0 {
+            message.set(Some(("0 이상의 값을 입력하세요".to_string(), false)));
+            return;
+        }
+        saving.set(true);
+        message.set(None);
+        spawn(async move {
+            let result = update_analyze_quota(UpdateAnalyzeQuotaRequest {
+                non_enterprise_limit: limit,
+            })
+            .await;
+            saving.set(false);
+            match result {
+                Ok(_) => {
+                    message.set(Some(("저장되었습니다".to_string(), true)));
+                    quota_resource.restart();
+                }
+                Err(err) => {
+                    message.set(Some((format!("저장 실패: {err}"), false)));
+                }
+            }
+        });
+    };
+
+    let exists = matches!(value.read().as_ref(), Some(Ok(r)) if r.exists);
+    let saving_val = saving();
+    let message_val = message();
+
+    rsx! {
+        section { class: "admin-arena__section",
+            div { class: "admin-arena__section-head",
+                span { class: "admin-arena__section-title", "분석 페이지 생성 한도" }
+                span { class: "admin-arena__section-meta",
+                    if exists {
+                        "DB 저장됨"
+                    } else {
+                        "기본값 사용 중"
+                    }
+                }
+            }
+            div { class: "admin-arena__form admin-arena__form--stretch",
+                label {
+                    class: "admin-arena__form-label",
+                    r#for: "analyze-quota-limit",
+                    "스페이스당 한도 (Non-Enterprise)"
+                }
+                div { class: "admin-arena__form-row",
+                    input {
+                        id: "analyze-quota-limit",
+                        class: "admin-arena__form-input",
+                        r#type: "number",
+                        min: "0",
+                        value: "{input_limit}",
+                        oninput: move |evt| {
+                            if let Ok(v) = evt.value().parse::<i64>() {
+                                input_limit.set(v);
+                            }
+                        },
+                    }
+                    button {
+                        class: "admin-arena__btn",
+                        r#type: "button",
+                        disabled: saving_val,
+                        onclick: on_save,
+                        if saving_val {
+                            "저장 중…"
+                        } else {
+                            "저장"
+                        }
+                    }
+                }
+                span { class: "admin-arena__form-hint",
+                    "Enterprise 등급은 무제한 — 이 값과 무관"
+                }
+                if let Some((text, ok)) = message_val {
+                    span { class: if ok { "admin-arena__status admin-arena__status--ok" } else { "admin-arena__status admin-arena__status--err" },
+                        "{text}"
                     }
                 }
             }
