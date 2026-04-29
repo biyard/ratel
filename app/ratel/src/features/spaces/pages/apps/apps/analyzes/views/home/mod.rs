@@ -4,16 +4,11 @@ use crate::features::spaces::space_common::providers::use_space_context;
 
 const DEFAULT_SPACE_LOGO: &str = "https://metadata.ratel.foundation/logos/logo-symbol.png";
 
-/// Public entrypoint for the Analyzes list page. Creators get the full
-/// arena list; other roles see a minimal "no access" state.
-///
-/// Gates on the *real* role from `SpaceContextProvider::role`, not the
-/// derived `current_role` that `use_space_role()` exposes. Once a
-/// Space transitions to `Ongoing`, `current_role` intentionally
-/// swaps Creator → Participant so the creator can experience the
-/// participant view (see `space_context_provider.rs`). The analyze
-/// surface is creator-only regardless of that toggle, so read the
-/// underlying role instead.
+/// Public entrypoint. Creators get the carousel; everyone else gets a
+/// minimal "no access" splash. Reads the *real* role from
+/// `SpaceContextProvider`, not the derived `current_role` (which
+/// flips Creator → Participant once a space is Ongoing) — analyze is
+/// always a creator-only surface.
 #[component]
 pub fn SpaceAnalyzesAppPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let mut ctx = use_space_context();
@@ -30,29 +25,22 @@ pub fn SpaceAnalyzesAppPage(space_id: ReadSignal<SpacePartition>) -> Element {
     }
 }
 
+/// LIST arena. Dioxus renders the markup; `script.js` owns every
+/// piece of carousel UX (native horizontal scroll-snap, prev/next
+/// buttons, dot navigation, ArrowLeft/ArrowRight keyboard, and the
+/// `.is-active` highlight that follows the centered card). This
+/// mirrors the `pages/index/action_dashboard` carousel — same scroll
+/// container, same MutationObserver bind-once boot, same JS-owned
+/// active-class toggling. Card click handlers stay in Dioxus so route
+/// pushes go through `Route::*` enum variants, not string URLs.
 #[component]
 fn AnalyzesListArena(space_id: ReadSignal<SpacePartition>) -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
     let space = use_space();
     let nav = use_navigator();
 
-    let UseSpaceAnalyzes { mut polls, .. } = use_space_analyzes(space_id)?;
-
-    let poll_items = polls.items();
-    let poll_count = poll_items.len();
-    let polls_has_more = polls.has_more();
-    let polls_is_loading = polls.is_loading();
-
-    // Discussions section — gated to `local-dev` builds, matching the
-    // pre-arena implementation. The cfg attribute can't sit directly on
-    // a component call inside `rsx!`, so we stash each variant into a
-    // value and reference it below.
-    #[cfg(feature = "local-dev")]
-    let discussions_section = rsx! {
-        DiscussionsSection { space_id }
-    };
-    #[cfg(not(feature = "local-dev"))]
-    let discussions_section = rsx! {};
+    let ctrl = use_analyze_reports(space_id)?;
+    let reports = ctrl.reports.read().clone().items;
 
     let space_data = space();
     let space_logo = if space_data.logo.is_empty() {
@@ -62,328 +50,324 @@ fn AnalyzesListArena(space_id: ReadSignal<SpacePartition>) -> Element {
     };
     let space_title = space_data.title.clone();
 
+    let count_label = format!("{} {}", reports.len(), tr.list_count_unit);
+
     rsx! {
         document::Stylesheet { href: asset!("./style.css") }
+        document::Script { defer: true, src: asset!("./script.js") }
 
-        div { class: "space-analyzes-arena",
-            // ── Topbar ───────────────────────────────────────────
-            header { class: "saz-topbar", role: "banner",
-                div { class: "saz-topbar__left",
-                    button {
-                        r#type: "button",
-                        class: "saz-back-btn",
-                        "aria-label": "Back",
-                        "data-testid": "topbar-back",
-                        onclick: move |_| {
-                            nav.go_back();
-                        },
-                        svg {
-                            view_box: "0 0 24 24",
-                            fill: "none",
-                            stroke: "currentColor",
-                            "stroke-width": "2",
-                            "stroke-linecap": "round",
-                            "stroke-linejoin": "round",
-                            path { d: "M19 12H5" }
-                            path { d: "M12 19l-7-7 7-7" }
-                        }
-                    }
-                    img {
-                        class: "saz-topbar__logo",
-                        alt: "Space logo",
-                        src: "{space_logo}",
-                    }
-                    nav { class: "saz-breadcrumb",
-                        span { class: "saz-breadcrumb__item", "{space_title}" }
-                        span { class: "saz-breadcrumb__sep", "›" }
-                        span { class: "saz-breadcrumb__item", "Apps" }
-                        span { class: "saz-breadcrumb__sep", "›" }
-                        span { class: "saz-breadcrumb__item saz-breadcrumb__current",
-                            "{tr.page_title}"
-                        }
-                    }
-                    span { class: "saz-type-badge", "data-testid": "type-badge",
-                        svg {
-                            view_box: "0 0 24 24",
-                            fill: "none",
-                            stroke: "currentColor",
-                            "stroke-width": "2",
-                            "stroke-linecap": "round",
-                            "stroke-linejoin": "round",
-                            line {
-                                x1: "18",
-                                y1: "20",
-                                x2: "18",
-                                y2: "10",
-                            }
-                            line {
-                                x1: "12",
-                                y1: "20",
-                                x2: "12",
-                                y2: "4",
-                            }
-                            line {
-                                x1: "6",
-                                y1: "20",
-                                x2: "6",
-                                y2: "14",
+        div { class: "analyze-arena",
+            div { class: "arena",
+                // ── Topbar ───────────────────────────────────
+                header { class: "arena-topbar", role: "banner",
+                    div { class: "arena-topbar__left",
+                        button {
+                            r#type: "button",
+                            class: "back-btn",
+                            "aria-label": "Back",
+                            "data-testid": "topbar-back",
+                            onclick: move |_| {
+                                nav.go_back();
+                            },
+                            svg {
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                "stroke-width": "2",
+                                "stroke-linecap": "round",
+                                "stroke-linejoin": "round",
+                                path { d: "M19 12H5" }
+                                path { d: "M12 19l-7-7 7-7" }
                             }
                         }
-                        "{tr.page_title}"
+                        img {
+                            class: "arena-topbar__logo",
+                            alt: "Space logo",
+                            src: "{space_logo}",
+                        }
+                        nav { class: "breadcrumb",
+                            span { class: "breadcrumb__item", "{space_title}" }
+                            span { class: "breadcrumb__sep", "›" }
+                            span { class: "breadcrumb__item", "{tr.arena_breadcrumb_apps}" }
+                            span { class: "breadcrumb__sep", "›" }
+                            span { class: "breadcrumb__item breadcrumb__current",
+                                "{tr.arena_breadcrumb_current}"
+                            }
+                        }
+                        span { class: "type-badge", "data-testid": "type-badge",
+                            svg {
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                "stroke-width": "2",
+                                "stroke-linecap": "round",
+                                "stroke-linejoin": "round",
+                                path { d: "M3 3v18h18" }
+                                path { d: "M7 14l4-4 4 4 5-5" }
+                            }
+                            "{tr.arena_breadcrumb_current}"
+                        }
+                        span { class: "topbar-title", id: "arena-title", "{tr.arena_topbar_title}" }
                     }
-                    span { class: "saz-topbar-title", "{tr.poll_section_title}" }
                 }
-            }
 
-            // ── Body ─────────────────────────────────────────────
-            main { class: "saz-body",
-                // Polls section — always visible.
-                section { class: "saz-section", "data-testid": "section-polls",
-                    div { class: "saz-section__head",
-                        div { class: "saz-section__title",
-                            span { class: "saz-section__label", "{tr.poll_section_title}" }
-                            span { class: "saz-section__count", "data-testid": "polls-count",
-                                strong { "{poll_count}" }
-                                " {tr.questions}"
-                            }
-                        }
-                    }
+                // ── Body ────────────────────────────────────
+                div { class: "split", "data-mode": "list",
+                    main { class: "main",
+                        section {
+                            class: "analyze-builder",
+                            id: "analyze-builder",
+                            "data-mode": "list",
 
-                    if poll_items.is_empty() {
-                        div { class: "saz-empty", "data-testid": "polls-empty",
-                            span { class: "saz-empty__icon",
-                                svg {
-                                    view_box: "0 0 24 24",
-                                    fill: "none",
-                                    stroke: "currentColor",
-                                    "stroke-width": "1.8",
-                                    "stroke-linecap": "round",
-                                    "stroke-linejoin": "round",
-                                    line {
-                                        x1: "18",
-                                        y1: "20",
-                                        x2: "18",
-                                        y2: "10",
-                                    }
-                                    line {
-                                        x1: "12",
-                                        y1: "20",
-                                        x2: "12",
-                                        y2: "4",
-                                    }
-                                    line {
-                                        x1: "6",
-                                        y1: "20",
-                                        x2: "6",
-                                        y2: "14",
+                            div { class: "builder-list", "data-state": "list",
+                                div { class: "builder-list-head",
+                                    h2 { "{tr.list_heading}" }
+                                    span {
+                                        class: "builder-list-head__count",
+                                        id: "report-count",
+                                        "data-testid": "report-count",
+                                        "{count_label}"
                                     }
                                 }
-                            }
-                            span { class: "saz-empty__title", "{tr.no_polls}" }
-                        }
-                    } else {
-                        div { class: "saz-list", "data-testid": "polls-list",
-                            for poll in poll_items.iter() {
-                                if poll.questions_count > 0 {
-                                    {
-                                        let poll_id = poll.poll_id.clone();
-                                        let title = poll.title.clone();
-                                        let questions_count = poll.questions_count;
-                                        let questions = tr.questions.to_string();
-                                        rsx! {
+                                p { class: "builder-hint", "{tr.list_hint}" }
+
+                                // Carousel — Dioxus renders structure
+                                // only; script.js handles scroll-snap,
+                                // prev/next/dot clicks, and keyboard.
+                                div { class: "report-carousel",
+                                    button {
+                                        r#type: "button",
+                                        class: "report-carousel__arrow report-carousel__arrow--prev",
+                                        id: "report-prev",
+                                        "data-testid": "report-prev",
+                                        "aria-label": "{tr.arrow_prev_label}",
+                                        svg {
+                                            view_box: "0 0 24 24",
+                                            fill: "none",
+                                            stroke: "currentColor",
+                                            "stroke-width": "2.4",
+                                            "stroke-linecap": "round",
+                                            "stroke-linejoin": "round",
+                                            polyline { points: "15 18 9 12 15 6" }
+                                        }
+                                    }
+
+                                    div {
+                                        class: "report-carousel__viewport",
+                                        id: "report-viewport",
+                                        div {
+                                            class: "report-carousel__track",
+                                            id: "report-track",
+                                            // Saved-report slides
+                                            for rep in reports.iter() {
+                                                {
+                                                    let report_id = rep.id.clone();
+                                                    let status = rep.status;
+                                                    let mut toast = use_toast();
+                                                    let pending_msg = tr.list_card_pending_toast.to_string();
+                                                    rsx! {
+                                                        div {
+                                                            key: "{rep.id}",
+                                                            class: "report-carousel__slide",
+                                                            "data-card-type": "saved",
+                                                            SavedReportCard {
+                                                                report: rep.clone(),
+                                                                onclick: move |_| {
+                                                                    if matches!(status, AnalyzeReportStatus::Finish) {
+                                                                        nav.push(Route::SpaceAnalyzeReportPage {
+                                                                            space_id: space_id(),
+                                                                            report_id: report_id.clone(),
+                                                                        });
+                                                                    } else {
+                                                                        toast.info(pending_msg.clone());
+                                                                    }
+                                                                },
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            // "+ new" slide — always last
                                             div {
-                                                key: "{poll.poll_id}",
-                                                class: "saz-card",
-                                                "data-testid": "poll-card",
-                                                div { class: "saz-card__icon saz-card__icon--poll",
-                                                    svg {
-                                                        view_box: "0 0 24 24",
-                                                        fill: "none",
-                                                        stroke: "currentColor",
-                                                        "stroke-width": "1.8",
-                                                        "stroke-linecap": "round",
-                                                        "stroke-linejoin": "round",
-                                                        line {
-                                                            x1: "18",
-                                                            y1: "20",
-                                                            x2: "18",
-                                                            y2: "10",
-                                                        }
-                                                        line {
-                                                            x1: "12",
-                                                            y1: "20",
-                                                            x2: "12",
-                                                            y2: "4",
-                                                        }
-                                                        line {
-                                                            x1: "6",
-                                                            y1: "20",
-                                                            x2: "6",
-                                                            y2: "14",
-                                                        }
-                                                    }
-                                                }
-                                                div { class: "saz-card__body",
-                                                    div { class: "saz-card__meta",
-                                                        span { class: "saz-card__type", "Poll" }
-                                                        span { class: "saz-card__count saz-card__count--poll",
-                                                            "{questions_count} {questions}"
-                                                        }
-                                                    }
-                                                    span { class: "saz-card__title", "{title}" }
-                                                }
-                                                div { class: "saz-card__action",
-                                                    button {
-                                                        r#type: "button",
-                                                        class: "saz-btn-accent",
-                                                        "data-testid": "poll-view-btn",
-                                                        onclick: move |_| {
-                                                            nav.push(Route::SpaceAnalyzeDetailPage {
-                                                                space_id: space_id(),
-                                                                poll_id: poll_id.clone(),
-                                                            });
-                                                        },
-                                                        "{tr.view_analyze}"
-                                                    }
+                                                key: "plus",
+                                                class: "report-carousel__slide",
+                                                "data-card-type": "new",
+                                                NewReportCard {
+                                                    onclick: move |_| {
+                                                        nav.push(Route::SpaceAnalyzeCreatePage {
+                                                            space_id: space_id(),
+                                                        });
+                                                    },
                                                 }
                                             }
                                         }
                                     }
-                                }
-                            }
-                        }
 
-                        if polls_has_more {
-                            button {
-                                r#type: "button",
-                                class: "saz-load-more",
-                                "data-testid": "polls-load-more",
-                                disabled: polls_is_loading,
-                                onclick: move |_| {
-                                    polls.next();
-                                },
-                                "{tr.more}"
+                                    button {
+                                        r#type: "button",
+                                        class: "report-carousel__arrow report-carousel__arrow--next",
+                                        id: "report-next",
+                                        "data-testid": "report-next",
+                                        "aria-label": "{tr.arrow_next_label}",
+                                        svg {
+                                            view_box: "0 0 24 24",
+                                            fill: "none",
+                                            stroke: "currentColor",
+                                            "stroke-width": "2.4",
+                                            "stroke-linecap": "round",
+                                            "stroke-linejoin": "round",
+                                            polyline { points: "9 18 15 12 9 6" }
+                                        }
+                                    }
+                                }
+
+                                // Dots — one per slide. JS owns
+                                // click handlers and the .active class.
+                                div {
+                                    class: "report-carousel__dots",
+                                    id: "report-dots",
+                                    for rep in reports.iter() {
+                                        button {
+                                            key: "dot-{rep.id}",
+                                            r#type: "button",
+                                            class: "report-carousel__dot",
+                                            "data-testid": "report-dot-{rep.id}",
+                                            "aria-label": "{tr.dot_report_label_prefix}",
+                                        }
+                                    }
+                                    button {
+                                        key: "dot-plus",
+                                        r#type: "button",
+                                        class: "report-carousel__dot",
+                                        "data-testid": "report-dot-new",
+                                        "aria-label": "{tr.dot_new_label}",
+                                    }
+                                }
                             }
                         }
                     }
                 }
-
-                // Discussions section — only rendered in local-dev
-                // builds (see the cfg-gated value above).
-                {discussions_section}
             }
         }
     }
 }
 
-/// Local-dev-only section. Isolated into its own component so the hook
-/// call that reads `discussions` is never compiled in production.
-#[cfg(feature = "local-dev")]
 #[component]
-fn DiscussionsSection(space_id: ReadSignal<SpacePartition>) -> Element {
+fn SavedReportCard(report: AnalyzeReport, onclick: EventHandler<()>) -> Element {
     let tr: SpaceAnalyzesAppTranslate = use_translate();
-    let nav = use_navigator();
-    let UseSpaceAnalyzes {
-        mut discussions, ..
-    } = use_space_analyzes(space_id)?;
-
-    let items = discussions.items();
-    let count = items.len();
-    let has_more = discussions.has_more();
-    let is_loading = discussions.is_loading();
+    let status = report.status;
+    let status_label = match status {
+        AnalyzeReportStatus::Finish => tr.status_finish.to_string(),
+        AnalyzeReportStatus::InProgress => tr.status_in_progress.to_string(),
+        AnalyzeReportStatus::Failed => tr.status_failed.to_string(),
+    };
+    let status_attr = status.as_str();
 
     rsx! {
-        section { class: "saz-section", "data-testid": "section-discussions",
-            div { class: "saz-section__head",
-                div { class: "saz-section__title",
-                    span { class: "saz-section__label", "{tr.discussion_section_title}" }
-                    span { class: "saz-section__count", "data-testid": "discussions-count",
-                        strong { "{count}" }
-                        " {tr.discussion_section_title}"
+        button {
+            r#type: "button",
+            class: "report-card-large report-card-large--saved",
+            "data-report-id": "{report.id}",
+            "data-status": "{status_attr}",
+            "data-testid": "report-card-{report.id}",
+            onclick: move |_| onclick.call(()),
+
+            // Status badge — top-left
+            span {
+                class: "report-card-large__status",
+                "data-status": "{status_attr}",
+                if matches!(status, AnalyzeReportStatus::InProgress) {
+                    span { class: "report-card-large__status-dot" }
+                } else {
+                    svg {
+                        view_box: "0 0 24 24",
+                        fill: "none",
+                        stroke: "currentColor",
+                        "stroke-width": "2.4",
+                        "stroke-linecap": "round",
+                        "stroke-linejoin": "round",
+                        polyline { points: "20 6 9 17 4 12" }
                     }
                 }
+                "{status_label}"
             }
 
-            if items.is_empty() {
-                div { class: "saz-empty", "data-testid": "discussions-empty",
-                    span { class: "saz-empty__icon",
-                        svg {
-                            view_box: "0 0 24 24",
-                            fill: "none",
-                            stroke: "currentColor",
-                            "stroke-width": "1.8",
-                            "stroke-linecap": "round",
-                            "stroke-linejoin": "round",
-                            path { d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" }
-                        }
-                    }
-                    span { class: "saz-empty__title", "{tr.no_discussions}" }
+            // Saved-card icon — cyan analyze chip
+            span { class: "report-card-large__icon report-card-large__icon--saved",
+                svg {
+                    view_box: "0 0 24 24",
+                    fill: "none",
+                    stroke: "currentColor",
+                    "stroke-width": "2.4",
+                    "stroke-linecap": "round",
+                    "stroke-linejoin": "round",
+                    path { d: "M3 3v18h18" }
+                    path { d: "M7 14l4-4 4 4 5-5" }
+                }
+            }
+            span { class: "report-card-large__title", "{report.name}" }
+
+            // Filter chips — bottom of card
+            if report.filters.is_empty() {
+                div { class: "report-card-large__chips",
+                    span { class: "report-card-large__chips-empty", "{tr.chips_empty}" }
                 }
             } else {
-                div { class: "saz-list", "data-testid": "discussions-list",
-                    for discussion in items.iter() {
+                div { class: "report-card-large__chips",
+                    for f in report.filters.iter() {
                         {
-                            let discussion_id = discussion.discussion_id.clone();
-                            let title = if discussion.title.trim().is_empty() {
-                                tr.untitled_discussion.to_string()
-                            } else {
-                                discussion.title.clone()
-                            };
+                            let src = f.source.as_str();
+                            let label_upper = f.source_label.to_uppercase();
                             rsx! {
-                                div {
-                                    key: "{discussion.discussion_id}",
-                                    class: "saz-card",
-                                    "data-testid": "discussion-card",
-                                    div { class: "saz-card__icon saz-card__icon--discussion",
-                                        svg {
-                                            view_box: "0 0 24 24",
-                                            fill: "none",
-                                            stroke: "currentColor",
-                                            "stroke-width": "1.8",
-                                            "stroke-linecap": "round",
-                                            "stroke-linejoin": "round",
-                                            path { d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" }
-                                        }
-                                    }
-                                    div { class: "saz-card__body",
-                                        div { class: "saz-card__meta",
-                                            span { class: "saz-card__type", "Discussion" }
-                                        }
-                                        span { class: "saz-card__title", "{title}" }
-                                    }
-                                    div { class: "saz-card__action",
-                                        button {
-                                            r#type: "button",
-                                            class: "saz-btn-accent",
-                                            "data-testid": "discussion-view-btn",
-                                            onclick: move |_| {
-                                                nav.push(Route::SpaceAnalyzeDiscussionPage {
-                                                    space_id: space_id(),
-                                                    discussion_id: discussion_id.clone(),
-                                                });
-                                            },
-                                            "{tr.view_analyze}"
-                                        }
-                                    }
+                                span {
+                                    key: "chip-{f.item_id}-{f.option_id}",
+                                    class: "report-card-large__chip",
+                                    "data-source": "{src}",
+                                    span { class: "report-card-large__chip-source", "{label_upper}" }
+                                    span { class: "report-card-large__chip-text", "{f.label}" }
                                 }
                             }
                         }
                     }
                 }
+            }
+        }
+    }
+}
 
-                if has_more {
-                    button {
-                        r#type: "button",
-                        class: "saz-load-more",
-                        "data-testid": "discussions-load-more",
-                        disabled: is_loading,
-                        onclick: move |_| {
-                            discussions.next();
-                        },
-                        "{tr.more}"
+#[component]
+fn NewReportCard(onclick: EventHandler<()>) -> Element {
+    let tr: SpaceAnalyzesAppTranslate = use_translate();
+    rsx! {
+        button {
+            r#type: "button",
+            class: "report-card-large report-card-large--new",
+            "data-testid": "report-card-new",
+            onclick: move |_| onclick.call(()),
+
+            span { class: "report-card-large__icon",
+                svg {
+                    view_box: "0 0 24 24",
+                    fill: "none",
+                    stroke: "currentColor",
+                    "stroke-width": "1.8",
+                    "stroke-linecap": "round",
+                    line {
+                        x1: "12",
+                        y1: "5",
+                        x2: "12",
+                        y2: "19",
+                    }
+                    line {
+                        x1: "5",
+                        y1: "12",
+                        x2: "19",
+                        y2: "12",
                     }
                 }
             }
+            span { class: "report-card-large__title", "{tr.new_analysis_title}" }
+            span { class: "report-card-large__desc", "{tr.new_analysis_desc}" }
         }
     }
 }
@@ -392,10 +376,9 @@ fn DiscussionsSection(space_id: ReadSignal<SpacePartition>) -> Element {
 fn ViewerEmpty() -> Element {
     rsx! {
         document::Stylesheet { href: asset!("./style.css") }
-
-        div { class: "space-analyzes-arena",
-            div { class: "saz-viewer",
-                span { class: "saz-viewer__title", "No access" }
+        div { class: "analyze-arena",
+            div { class: "arena-viewer",
+                span { class: "arena-viewer__title", "No access" }
             }
         }
     }
