@@ -16,6 +16,7 @@ use crate::features::spaces::pages::apps::apps::rewards::views::HomePage as Spac
 use crate::features::spaces::pages::apps::apps::analyzes::SpaceAnalyzeCreatePage;
 use crate::features::spaces::pages::apps::apps::analyzes::SpaceAnalyzeDetailPage;
 use crate::features::spaces::pages::apps::apps::analyzes::SpaceAnalyzeDiscussionPage;
+use crate::features::spaces::pages::apps::apps::analyzes::SpaceAnalyzeRecordsPage;
 use crate::features::spaces::pages::apps::apps::analyzes::SpaceAnalyzeReportPage;
 use crate::features::spaces::pages::apps::apps::analyzes::SpaceAnalyzesAppPage;
 use crate::features::spaces::pages::apps::apps::file::SpaceFileAppPage;
@@ -265,6 +266,9 @@ pub enum Route {
 
                         #[route("/analyzes/report/:report_id")]
                         SpaceAnalyzeReportPage { space_id: SpacePartition, report_id: String },
+
+                        #[route("/analyzes/report/:report_id/records")]
+                        SpaceAnalyzeRecordsPage { space_id: SpacePartition, report_id: String },
 
                         #[route("/analyzes/poll/:poll_id")]
                         SpaceAnalyzeDetailPage { space_id: SpacePartition, poll_id: SpacePollEntityType },

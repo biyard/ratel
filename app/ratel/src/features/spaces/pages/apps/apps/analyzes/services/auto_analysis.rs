@@ -47,7 +47,7 @@ pub async fn process_analyze_report(
             .map(|p| p.to_string())
             .collect()
     } else {
-        let (set, _) =
+        let (set, _, _) =
             services::intersection::intersect_filters(cli, &space_pk, &report.filters).await?;
         set
     };

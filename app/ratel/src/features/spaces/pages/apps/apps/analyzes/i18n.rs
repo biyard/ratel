@@ -491,6 +491,62 @@ translate! {
         en: "Back",
         ko: "뒤로",
     },
+    detail_records_btn: {
+        en: "View raw data",
+        ko: "사용된 데이터 확인하기",
+    },
+    records_page_title: {
+        en: "Raw records",
+        ko: "사용된 raw 데이터",
+    },
+    records_page_hint: {
+        en: "Frozen at report-save time. Click a chip to filter.",
+        ko: "보고서 저장 시점에 frozen된 데이터입니다. 칩을 눌러 필터링하세요.",
+    },
+    records_empty: {
+        en: "No matched records for this filter.",
+        ko: "이 필터에 매칭된 데이터가 없어요.",
+    },
+    records_col_user: {
+        en: "User",
+        ko: "사용자",
+    },
+    records_col_question: {
+        en: "Question",
+        ko: "문항",
+    },
+    records_col_answer: {
+        en: "Answer",
+        ko: "응답",
+    },
+    records_col_post_title: {
+        en: "Post",
+        ko: "글",
+    },
+    records_col_comment: {
+        en: "Comment",
+        ko: "코멘트",
+    },
+    records_col_target: {
+        en: "Followed",
+        ko: "팔로우 대상",
+    },
+    records_load_more: {
+        en: "Load more",
+        ko: "더 불러오기",
+    },
+    create_preview_records_label: {
+        en: "Sample raw data",
+        ko: "사용된 데이터 샘플",
+    },
+    create_preview_records_limit_hint: {
+        en: "Preview shows up to 50 records per filter.",
+        ko: "preview는 필터당 최대 50개의 데이터만 표시됩니다.",
+    },
+    create_preview_records_empty: {
+        en: "No matched records yet — press Next to load.",
+        ko: "아직 매칭된 데이터가 없어요 — 다음을 눌러 불러오세요.",
+    },
     detail_sb_item_meta_questions: {
         en: "questions",
         ko: "문항",

@@ -77,7 +77,7 @@ async fn try_process_discussion_analysis(
             .map(|p| p.to_string())
             .collect()
     } else {
-        let (set, _) =
+        let (set, _, _) =
             services::intersection::intersect_filters(cli, &space_pk, &report.filters).await?;
         set
     };
