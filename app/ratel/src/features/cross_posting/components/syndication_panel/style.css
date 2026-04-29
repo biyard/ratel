@@ -1,0 +1,305 @@
+/*
+ * Post-detail Syndication panel — extracted from
+ * `app/ratel/assets/design/cross-posting/post-detail-syndicated.html`.
+ *
+ * Phase 1A: dark-only token set (mirrors connections-page / compose-sidebar);
+ * `var(--dark, ...) var(--light, ...)` migration deferred to the 1D polish PR
+ * per `conventions/styling.md` § Space Toggle Pattern.
+ *
+ * Mockup class names preserved (`.syn`, `.syn-head`, `.syn-stats`, `.syn-card`,
+ * `.status-pill`, `.engage`, `.mini-btn`). The panel only renders for the post
+ * author, so co-mounting concerns with the connections-page `.status-pill` /
+ * `.switch` don't apply.
+ */
+
+.syn {
+  --bg-glass: rgba(12, 12, 26, 0.65);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --text-primary: #f0f0f5;
+  --text-muted: #8888a8;
+  --text-dim: #55556a;
+  --accent-gold: #fcb300;
+  --accent-teal: #6eedd8;
+  --accent-coral: #ef4444;
+  --accent-green: #22c55e;
+  --font-display: 'Orbitron', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+}
+
+/* ─── Header ─────────────────────────────────────── */
+.syn-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.syn-head__title {
+  font-family: var(--font-display);
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-muted);
+  display: flex; align-items: center; gap: 10px;
+}
+.syn-head__title::before {
+  content: '';
+  width: 4px; height: 14px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--accent-gold), transparent);
+}
+.syn-head__summary {
+  font-family: var(--font-display);
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.syn-head__summary strong {
+  color: var(--accent-teal);
+  font-weight: 700;
+}
+
+/* ─── Stats strip ────────────────────────────────── */
+.syn-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 18px;
+  border-radius: 16px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+}
+.syn-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 12px;
+  border-left: 1px solid var(--border-subtle);
+}
+.syn-stat:first-child { border-left: none; }
+.syn-stat__value {
+  font-family: var(--font-display);
+  font-size: 22px; font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+.syn-stat__value--accent { color: var(--accent-teal); }
+.syn-stat__label {
+  font-family: var(--font-display);
+  font-size: 9.5px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* ─── Per-platform cards ─────────────────────────── */
+.syn-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.syn-card {
+  position: relative;
+  border-radius: 14px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+.syn-card:hover { border-color: rgba(255, 255, 255, 0.10); }
+.syn-card[data-status="success"] { border-color: rgba(34, 197, 94, 0.16); }
+.syn-card[data-status="pending"] { border-color: rgba(252, 179, 0, 0.16); }
+.syn-card[data-status="failed"] { border-color: rgba(239, 68, 68, 0.18); }
+.syn-card[data-status="skipped"] { opacity: 0.55; }
+
+.syn-card__body {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  padding: 14px 16px;
+  align-items: center;
+}
+
+.syn-logo {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.syn-logo--bsky { background: linear-gradient(135deg, #0a85ff, #1da1f2); }
+.syn-logo--linkedin { background: #0a66c2; }
+.syn-logo--threads {
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.syn-logo svg { width: 18px; height: 18px; color: #fff; }
+
+.syn-card__main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.syn-card__name-row {
+  display: flex; align-items: center; gap: 10px;
+}
+.syn-card__name {
+  font-family: var(--font-display);
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+}
+
+/* Status pills (panel-local — connections-page has its own). */
+.status-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-family: var(--font-display);
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  border: 1px solid transparent;
+}
+.status-pill::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+}
+.status-pill--success {
+  background: rgba(34, 197, 94, 0.08);
+  color: var(--accent-green);
+  border-color: rgba(34, 197, 94, 0.20);
+}
+.status-pill--success::before {
+  background: var(--accent-green);
+  box-shadow: 0 0 6px var(--accent-green);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+.status-pill--pending {
+  background: rgba(252, 179, 0, 0.08);
+  color: var(--accent-gold);
+  border-color: rgba(252, 179, 0, 0.20);
+}
+.status-pill--pending::before {
+  background: var(--accent-gold);
+  animation: pulse-dot 1.2s ease-in-out infinite;
+}
+.status-pill--failed {
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--accent-coral);
+  border-color: rgba(239, 68, 68, 0.20);
+}
+.status-pill--failed::before { background: var(--accent-coral); }
+.status-pill--skipped {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-dim);
+  border-color: rgba(255, 255, 255, 0.10);
+}
+.status-pill--skipped::before { background: var(--text-dim); }
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.syn-card__sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.syn-card__sub-item {
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.syn-card__sub-item svg {
+  width: 12px; height: 12px;
+  color: var(--text-dim);
+}
+.syn-card__sub-item strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.syn-card__err {
+  font-size: 12px;
+  color: var(--accent-coral);
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.syn-card__err svg { width: 12px; height: 12px; }
+.syn-card__err strong { color: var(--accent-coral); }
+
+.syn-card__actions {
+  display: flex; gap: 6px;
+}
+.mini-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.mini-btn:hover {
+  border-color: rgba(252, 179, 0, 0.22);
+  color: var(--accent-gold);
+}
+.mini-btn svg { width: 10px; height: 10px; }
+.mini-btn--retry {
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.20);
+  color: var(--accent-coral);
+}
+.mini-btn--retry:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--accent-coral);
+  border-color: rgba(239, 68, 68, 0.30);
+}
+.mini-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.syn-card__engagement {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border-subtle);
+  background: rgba(0, 0, 0, 0.18);
+  flex-wrap: wrap;
+}
+.engage {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.engage svg {
+  width: 12px; height: 12px;
+  color: var(--text-dim);
+}
+.engage strong {
+  color: var(--text-primary);
+  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 12.5px;
+}
+
+@media (max-width: 720px) {
+  .syn-stats { padding: 14px; }
+  .syn-stat__value { font-size: 18px; }
+  .syn-card__body { grid-template-columns: auto 1fr; padding: 14px; }
+  .syn-card__actions { grid-column: 1 / -1; justify-content: flex-end; }
+}
+@media (max-width: 500px) {
+  .syn-stats { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .syn-stat:nth-child(3) { border-left: none; }
+}

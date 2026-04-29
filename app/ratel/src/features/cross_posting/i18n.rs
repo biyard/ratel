@@ -122,3 +122,30 @@ translate! {
     connect_btn_linkedin: { en: "Connect LinkedIn", ko: "LinkedIn 연결" },
     connect_btn_threads: { en: "Connect Threads", ko: "Threads 연결" },
 }
+
+translate! {
+    SyndicationPanelTranslate;
+
+    title: { en: "Syndication", ko: "확장 게시" },
+    summary_succeeded: { en: "succeeded", ko: "성공" },
+    summary_failed_suffix: { en: "failed", ko: "실패" },
+
+    stat_likes: { en: "Likes", ko: "좋아요" },
+    stat_comments: { en: "Comments", ko: "댓글" },
+    stat_reposts: { en: "Reposts", ko: "재게시" },
+
+    status_published: { en: "Published", ko: "게시됨" },
+    status_pending: { en: "Pending", ko: "대기 중" },
+    status_failed: { en: "Failed", ko: "실패" },
+    status_skipped: { en: "Skipped", ko: "건너뜀" },
+
+    queued_hint: { en: "Queued — awaiting dispatch", ko: "대기열 — 곧 발송됩니다" },
+    attempts_label: { en: "Attempt", ko: "시도" },
+
+    btn_view: { en: "View", ko: "열기" },
+    btn_retry: { en: "Retry now", ko: "재시도" },
+
+    engage_likes: { en: "likes", ko: "좋아요" },
+    engage_comments: { en: "comments", ko: "댓글" },
+    engage_reposts: { en: "reposts", ko: "재게시" },
+}
