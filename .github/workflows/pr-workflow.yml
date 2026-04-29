@@ -40,6 +40,22 @@ jobs:
         working-directory: app/ratel
 
     steps:
+      # GitHub-hosted runners ship with ~14GB free, which Rust's
+      # `target/` plus our docker images push past on big jobs (the
+      # 2026.04 incident dumped a `No space left on device` from the
+      # runner's own log writer mid-job). Strip the preinstalled
+      # tooling we never use to free ~30GB before anything else runs.
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: false
+          swap-storage: true
+
       - uses: actions/checkout@v6
 
       - name: Restore cache
@@ -95,6 +111,17 @@ jobs:
       image: ${{ steps.build.outputs.image }}
 
     steps:
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: false
+          swap-storage: true
+
       - uses: actions/checkout@v6
 
       - name: Restore cache
@@ -171,6 +198,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: false
+          swap-storage: true
+
       - uses: actions/checkout@v6
 
       - name: Restore cache
