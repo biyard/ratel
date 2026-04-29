@@ -235,6 +235,8 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                         publish: true,
                         visibility: Some(visibility()),
                         categories: Some(categories()),
+                        enabled_platforms: None,
+                        platform_overrides: None,
                     },
                 )
                 .await;
@@ -270,6 +272,8 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                     publish: true,
                     visibility: Some(vis),
                     categories: Some(categories()),
+                    enabled_platforms: None,
+                    platform_overrides: None,
                 },
             )
             .await
