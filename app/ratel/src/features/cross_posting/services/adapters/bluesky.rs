@@ -150,6 +150,65 @@ impl CrossPostAdapter for BlueskyAdapter {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// Connect-time session creation (called from the connect controller, NOT
+// the dispatcher trait — the trait is for ongoing publish/fetch only).
+// ─────────────────────────────────────────────────────────────────────────
+
+/// Newly-issued Bluesky session, returned to the connect controller for
+/// AEAD-sealing into `SocialConnection.credential_ciphertext`.
+#[derive(Clone)]
+pub struct BlueskySession {
+    pub did: String,
+    pub handle: String,
+    pub access_jwt: String,
+    pub refresh_jwt: String,
+}
+
+#[derive(serde::Deserialize)]
+struct CreateSessionResponse {
+    #[serde(rename = "accessJwt")]
+    access_jwt: String,
+    #[serde(rename = "refreshJwt")]
+    refresh_jwt: String,
+    handle: String,
+    did: String,
+}
+
+impl BlueskyAdapter {
+    /// Validate `(identifier, app_password)` against Bluesky and return
+    /// the issued session tokens. The plaintext app_password is never
+    /// persisted; only the resulting JWTs (sealed via the credentials
+    /// helper) are stored.
+    pub async fn create_session(
+        &self,
+        identifier: &str,
+        app_password: &str,
+    ) -> Result<BlueskySession, PlatformError> {
+        let url = format!("{}/xrpc/com.atproto.server.createSession", self.pds_host);
+        let req_body =
+            serde_json::json!({ "identifier": identifier, "password": app_password });
+        let resp = self
+            .client
+            .post(&url)
+            .json(&req_body)
+            .send()
+            .await
+            .map_err(map_transport_error)?;
+        let resp = check_status(resp).await?;
+        let parsed: CreateSessionResponse = resp
+            .json()
+            .await
+            .map_err(|e| PlatformError::Unknown(format!("createSession parse: {e}")))?;
+        Ok(BlueskySession {
+            did: parsed.did,
+            handle: parsed.handle,
+            access_jwt: parsed.access_jwt,
+            refresh_jwt: parsed.refresh_jwt,
+        })
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // HTTP helpers (instance methods so we share self.client / self.pds_host)
 // ─────────────────────────────────────────────────────────────────────────
 

@@ -1,6 +1,7 @@
 //! Server-only services for the cross-posting pipeline.
 
 pub mod adapters;
+pub mod credentials;
 pub mod format;
 pub mod shard;
 
