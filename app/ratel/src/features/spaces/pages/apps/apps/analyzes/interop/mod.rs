@@ -1,3 +1,14 @@
+//! JS interop for the Analyze app — Excel export + chart helpers.
+//!
+//! Mirrors `features/auth/interop/wallet_connect.rs`: each public fn
+//! drives a tiny `web/<name>.js` script via `dioxus::document::eval`.
+//! `dx_eval` is platform-agnostic (no-op outside web), so no
+//! per-target cfg gates are needed at the call site.
+//! Direct `wasm_bindgen(js_namespace = […]) extern "C"` mappings are
+//! an anti-pattern — see `conventions/anti-patterns.md`.
+
+use dioxus::document::eval as dx_eval;
+
 use crate::features::spaces::pages::apps::apps::analyzes::*;
 use crate::features::spaces::pages::apps::types::SpaceAppError;
 
@@ -37,91 +48,51 @@ pub struct RenderAnalyzePieChartRequest {
     pub entries: Vec<AnalyzeChartDatum>,
 }
 
-#[cfg(not(feature = "server"))]
-use crate::common::wasm_bindgen::prelude::*;
-#[cfg(not(feature = "server"))]
-use crate::common::wasm_bindgen_futures::JsFuture;
-#[cfg(not(feature = "server"))]
-use crate::common::web_sys::js_sys::{Promise, Reflect, JSON};
+// ── Excel export ──────────────────────────────────────────────────
 
-#[cfg(not(feature = "server"))]
-#[wasm_bindgen(js_namespace = ["window", "ratel", "spaces", "apps", "analyzes"])]
-extern "C" {
-    #[wasm_bindgen(js_name = downloadExcel, catch)]
-    fn download_excel_js(req: &JsValue) -> std::result::Result<Promise, JsValue>;
-
-    #[wasm_bindgen(js_name = renderBarChart, catch)]
-    fn render_bar_chart_js(req: &JsValue) -> std::result::Result<(), JsValue>;
-
-    #[wasm_bindgen(js_name = renderPieChart, catch)]
-    fn render_pie_chart_js(req: &JsValue) -> std::result::Result<(), JsValue>;
-}
-
-#[cfg(not(feature = "server"))]
 pub async fn download_analyze_excel(req: DownloadAnalyzeExcelRequest) -> Result<()> {
-    let js_req = crate::common::serde_wasm_bindgen::to_value(&req)
-        .map_err(|_err| SpaceAppError::ExcelExportFailed)?;
-
-    let promise = download_excel_js(&js_req).map_err(|_err| SpaceAppError::ExcelExportFailed)?;
-    JsFuture::from(promise)
+    let mut runner = dx_eval(include_str!("web/download_excel.js"));
+    runner
+        .send(serde_json::to_value(&req).map_err(|_| SpaceAppError::ExcelExportFailed)?)
+        .map_err(|_| SpaceAppError::ExcelExportFailed)?;
+    let ok = runner
+        .recv::<Option<bool>>()
         .await
-        .map_err(|_err| SpaceAppError::ExcelExportFailed)?;
-
-    Ok(())
-}
-
-#[cfg(not(feature = "server"))]
-pub fn render_analyze_bar_chart(req: &RenderAnalyzeBarChartRequest) -> Result<()> {
-    let js_req = crate::common::serde_wasm_bindgen::to_value(req)
-        .map_err(|_err| SpaceAppError::ChartRenderFailed)?;
-
-    render_bar_chart_js(&js_req).map_err(|_err| SpaceAppError::ChartRenderFailed)?;
-    Ok(())
-}
-
-#[cfg(feature = "server")]
-pub fn render_analyze_bar_chart(_req: &RenderAnalyzeBarChartRequest) -> Result<()> {
-    Ok(())
-}
-
-#[cfg(not(feature = "server"))]
-pub fn render_analyze_pie_chart(req: &RenderAnalyzePieChartRequest) -> Result<()> {
-    let js_req = crate::common::serde_wasm_bindgen::to_value(req)
-        .map_err(|_err| SpaceAppError::ChartRenderFailed)?;
-
-    render_pie_chart_js(&js_req).map_err(|_err| SpaceAppError::ChartRenderFailed)?;
-    Ok(())
-}
-
-#[cfg(feature = "server")]
-pub fn render_analyze_pie_chart(_req: &RenderAnalyzePieChartRequest) -> Result<()> {
-    Ok(())
-}
-
-#[cfg(feature = "server")]
-pub async fn download_analyze_excel(_req: DownloadAnalyzeExcelRequest) -> Result<()> {
-    Err(SpaceAppError::UnsupportedOnServer.into())
-}
-
-#[cfg(not(feature = "server"))]
-fn format_js_error(err: JsValue) -> String {
-    if let Some(message) = err.as_string() {
-        return message;
+        .map_err(|_| SpaceAppError::ExcelExportFailed)?;
+    match ok {
+        Some(true) => Ok(()),
+        _ => Err(SpaceAppError::ExcelExportFailed.into()),
     }
+}
 
-    if err.is_object() {
-        if let Ok(message) = Reflect::get(&err, &JsValue::from_str("message")) {
-            if let Some(message) = message.as_string() {
-                return message;
-            }
-        }
+// ── Chart helpers (placeholders — call sites land with the chart UI) ─
+
+pub async fn render_analyze_bar_chart(req: &RenderAnalyzeBarChartRequest) -> Result<()> {
+    let mut runner = dx_eval(include_str!("web/render_bar_chart.js"));
+    runner
+        .send(serde_json::to_value(req).map_err(|_| SpaceAppError::ChartRenderFailed)?)
+        .map_err(|_| SpaceAppError::ChartRenderFailed)?;
+    let ok = runner
+        .recv::<Option<bool>>()
+        .await
+        .map_err(|_| SpaceAppError::ChartRenderFailed)?;
+    match ok {
+        Some(true) => Ok(()),
+        _ => Err(SpaceAppError::ChartRenderFailed.into()),
     }
+}
 
-    if let Ok(json) = JSON::stringify(&err) {
-        if let Some(message) = json.as_string() {
-            return message;
-        }
+pub async fn render_analyze_pie_chart(req: &RenderAnalyzePieChartRequest) -> Result<()> {
+    let mut runner = dx_eval(include_str!("web/render_pie_chart.js"));
+    runner
+        .send(serde_json::to_value(req).map_err(|_| SpaceAppError::ChartRenderFailed)?)
+        .map_err(|_| SpaceAppError::ChartRenderFailed)?;
+    let ok = runner
+        .recv::<Option<bool>>()
+        .await
+        .map_err(|_| SpaceAppError::ChartRenderFailed)?;
+    match ok {
+        Some(true) => Ok(()),
+        _ => Err(SpaceAppError::ChartRenderFailed.into()),
     }
-
-    "Unknown error".to_string()
 }
