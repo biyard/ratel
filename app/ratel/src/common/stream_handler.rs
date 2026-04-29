@@ -177,6 +177,18 @@ pub async fn handle_stream_record(
                 {
                     tracing::error!(error = %e, "stream: AnalyzeDiscussionInProgress failed");
                 }
+            } else if sk.starts_with("SYNDICATION_JOB#") {
+                // Cross-posting Stage 2: dispatch newly-enqueued jobs.
+                // Mirrors the CDK CrossPostingStage2Pipe filter
+                // (state=pending) so local-dev behaviour matches Lambda.
+                if get_string_field(image, "state").as_deref() == Some("pending") {
+                    let job = deserialize(image)?;
+                    if let Err(e) =
+                        crate::features::cross_posting::services::dispatcher::handle_syndication_job_ready(job).await
+                    {
+                        tracing::error!(error = %e, "stream: SyndicationJobReady (INSERT) failed");
+                    }
+                }
             }
         }
         "MODIFY" => {
@@ -230,6 +242,36 @@ pub async fn handle_stream_record(
                         crate::features::timeline::services::fan_out_timeline_entries(post2).await
                     {
                         tracing::error!(error = %e, "stream: TimelineUpdate failed");
+                    }
+
+                    // Cross-posting Stage 1 factory — only on the
+                    // Draft→Published transition with PUBLIC visibility.
+                    // Mirrors the CDK CrossPostingStage1Pipe filter
+                    // (OldImage.status anything-but PUBLISHED + NewImage
+                    // status=PUBLISHED + visibility=PUBLIC).
+                    let old_status = old_image
+                        .and_then(|i| get_string_field(i, "status"))
+                        .unwrap_or_default();
+                    let visibility = get_string_field(image, "visibility").unwrap_or_default();
+                    if old_status != "PUBLISHED" && visibility == "PUBLIC" {
+                        let post3 = deserialize(image)?;
+                        if let Err(e) =
+                            crate::features::cross_posting::services::factory::handle_post_published_for_syndication(post3).await
+                        {
+                            tracing::error!(error = %e, "stream: PostPublishedForSyndication failed");
+                        }
+                    }
+                }
+            } else if sk.starts_with("SYNDICATION_JOB#") {
+                // Cross-posting Stage 2: re-dispatch on retry sweeper /
+                // user-initiated retry that flips state back to pending.
+                // Same filter as the INSERT branch above.
+                if get_string_field(image, "state").as_deref() == Some("pending") {
+                    let job = deserialize(image)?;
+                    if let Err(e) =
+                        crate::features::cross_posting::services::dispatcher::handle_syndication_job_ready(job).await
+                    {
+                        tracing::error!(error = %e, "stream: SyndicationJobReady (MODIFY) failed");
                     }
                 }
             } else if sk == "SPACE_COMMON" {
