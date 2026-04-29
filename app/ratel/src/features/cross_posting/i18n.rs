@@ -88,3 +88,37 @@ translate! {
     btn_cancel: { en: "Cancel", ko: "취소" },
     btn_connect: { en: "Connect", ko: "연결하기" },
 }
+
+translate! {
+    ComposeSidebarTranslate;
+
+    eyebrow: { en: "Syndication", ko: "확장 게시" },
+    title: { en: "Cross-post", ko: "크로스포스트" },
+    sub: {
+        en: "Publish once. Reach every network your audience lives on.",
+        ko: "한 번 발행하면 청중이 머무는 모든 네트워크에 닿습니다.",
+    },
+
+    reaching: { en: "Reaching", ko: "도달 범위" },
+    networks_suffix: { en: "networks", ko: "개 네트워크" },
+
+    not_connected: { en: "Not connected", ko: "연결 안 됨" },
+    truncated_badge: { en: "Truncated", ko: "잘림" },
+
+    connect_hint_bluesky: {
+        en: "Connect Bluesky to cross-post to the AT Protocol network.",
+        ko: "Bluesky 를 연결해 AT Protocol 네트워크에 크로스포스트하세요.",
+    },
+    connect_hint_linkedin: {
+        en: "Connect LinkedIn to reach your professional network.",
+        ko: "LinkedIn 을 연결해 비즈니스 네트워크에 도달하세요.",
+    },
+    connect_hint_threads: {
+        en: "Connect Threads to reach Meta's audience with every post.",
+        ko: "Threads 를 연결해 Meta 의 사용자에게 모든 게시물을 전달하세요.",
+    },
+
+    connect_btn_bluesky: { en: "Connect Bluesky", ko: "Bluesky 연결" },
+    connect_btn_linkedin: { en: "Connect LinkedIn", ko: "LinkedIn 연결" },
+    connect_btn_threads: { en: "Connect Threads", ko: "Threads 연결" },
+}
