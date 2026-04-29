@@ -1,10 +1,18 @@
 use crate::common::*;
 use crate::features::auth::User;
 use crate::features::cross_posting::models::{ConnectionStatus, SocialConnection};
-use crate::features::cross_posting::services::adapters::{BlueskyAdapter, DecryptedCredentials};
-use crate::features::cross_posting::services::credentials::seal_credentials;
 use crate::features::cross_posting::types::{
     ConnectBlueskyRequest, ConnectionResponse, CrossPostingError, SocialPlatform,
+};
+
+// `services` is server-only (it pulls reqwest + aws-sdk-* etc.), so the
+// imports must be cfg-gated. The handler body is server-only via the
+// `#[post(...)]` macro, which generates a thin client-side stub for web
+// builds — the body never reaches the web compile path.
+#[cfg(feature = "server")]
+use crate::features::cross_posting::services::{
+    adapters::{BlueskyAdapter, DecryptedCredentials},
+    credentials::seal_credentials,
 };
 
 #[post("/api/cross-posting/connections/bluesky", user: User)]
