@@ -34,6 +34,15 @@ pub fn Index() -> Element {
         .map(|u| u.username.clone())
         .unwrap_or_default();
     let has_user = user_ctx().user.is_some();
+    // Admin users get a shield button next to Settings in the topbar
+    // HUD that jumps straight to `/admin/`. Non-admins see nothing —
+    // mirrors the team_arena topbar so admin tooling is one click away
+    // from the home arena instead of a manually-typed URL.
+    let is_admin = user_ctx()
+        .user
+        .as_ref()
+        .map(|u| matches!(u.user_type, UserType::Admin))
+        .unwrap_or(false);
     let mut settings_open = use_signal(|| false);
     let mut teams_open = use_signal(|| false);
     let mut notifications_open = use_signal(|| false);
@@ -509,6 +518,30 @@ pub fn Index() -> Element {
                                 path { d: "M15.5 16.5V19C15.5 20.1046 14.6046 21 13.5 21H6.5C5.39543 21 4.5 20.1046 4.5 19V5C4.5 3.89543 5.39543 3 6.5 3H13.5C14.6046 3 15.5 3.89543 15.5 5V8.0625M20.5 12L9.5 12M9.5 12L12 14.5M9.5 12L12 9.5" }
                             }
                             span { class: "hud-btn__label", "{t.sign_in}" }
+                        }
+                    }
+                    if is_admin {
+                        button {
+                            class: "hud-btn",
+                            aria_label: "Admin",
+                            "data-testid": "home-btn-admin",
+                            onclick: move |_| {
+                                nav.push(Route::AdminMainPage {});
+                            },
+                            svg {
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "1.6",
+                                view_box: "0 0 24 24",
+                                xmlns: "http://www.w3.org/2000/svg",
+                                // Plain shield — read at a glance as "elevated
+                                // permissions" without the checkmark used by
+                                // the credentials button next to it.
+                                path { d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" }
+                            }
+                            span { class: "hud-btn__label", "Admin" }
                         }
                     }
                     button {
