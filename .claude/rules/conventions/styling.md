@@ -4,6 +4,47 @@ globs: ["app/ratel/**/*.rs", "app/ratel/tailwind.css", "app/ratel/assets/tailwin
 
 # Styling Conventions
 
+## Rule: All custom CSS lives in `app/ratel/assets/main.css`
+
+There is exactly **one** stylesheet for component CSS in the app: `app/ratel/assets/main.css`. It is loaded once globally from `app.rs` and is the only place new component styles may go.
+
+### Why
+- Per-component `style.css` files loaded via `document::Stylesheet { href: asset!("./style.css") }` unload during route/component transitions, causing **flashes of unstyled content (FOUC)** on SPA navigation.
+- On 2026-04-19 (and again on 2026-04-30) all per-component stylesheets were consolidated into `main.css`. Reintroducing the per-component pattern brings the FOUC bug back.
+- Full-page reloads don't hit the bug because the server-rendered HTML already has every stylesheet in `<head>`. SPA route changes do — they re-render only the matched route, so per-component `<link>` tags get torn down and re-fetched.
+
+### How to apply
+
+1. **Append new styles to `app/ratel/assets/main.css`** under a section marker showing the source path:
+
+   ```css
+   /* === src/features/<module>/pages/<page>/<component> === */
+   .my-component { ... }
+   ```
+
+2. **Use unique class names.** Everything shares one global namespace — prefix with the component name (BEM-like) to avoid collisions: `.my-component__title`, `.my-component--active`.
+
+3. **Prefer Tailwind utility classes in RSX first.** Only fall back to `main.css` for what Tailwind cannot express:
+   - `@keyframes` animations
+   - Pseudo-element tricks (`::before`, `::after` content)
+   - `data-*` / `aria-*` attribute selectors for state-driven styling
+   - Complex selectors (`:has()`, sibling selectors, child counters)
+
+4. **Never create per-component `style.css` files** under `src/`. Never write `document::Stylesheet { href: asset!("./style.css") }` in a component.
+
+5. **External stylesheets and font links go in `app.rs`** — global once, never per-page. Google Fonts (Orbitron, Outfit), `dx-components-theme.css`, `tailwind.css`, and `main.css` are all loaded from `app.rs`. Per-page `document::Link { rel: "preconnect", ... }` blocks are an anti-pattern.
+
+6. **If you find a stray `style.css`** or a `document::Stylesheet { href: asset!("./...style.css") }`, migrate the CSS into `main.css` under a section marker and remove the link.
+
+### Allowed `document::Link` / `document::Stylesheet` use
+
+| Where | What | Allowed? |
+|---|---|---|
+| `app.rs` | `MAIN_CSS`, `tailwind.css`, `dx-components-theme.css`, Google Fonts, favicon | ✅ Yes — global, loaded once |
+| `seo_meta/mod.rs` | `rel: "canonical"` | ✅ Yes — SEO metadata, not CSS |
+| Any component or page | `document::Stylesheet { href: asset!("./style.css") }` | ❌ No — causes FOUC |
+| Any component or page | Google Fonts / external stylesheet `<link>` | ❌ No — hoist to `app.rs` |
+
 ## Rule: Semantic color tokens only — never Tailwind palette colors
 
 ```
@@ -61,11 +102,12 @@ Define CSS variables in `tailwind.css` with the space toggle pattern, never use 
 - Token definitions: `app/ratel/tailwind.css` + `app/ratel/assets/tailwind-colors.css`
 - Component theme: `app/ratel/assets/dx-components-theme.css`
 
-### Space Toggle Pattern (for custom CSS files)
+### Space Toggle Pattern (for sections inside `main.css`)
 
-In component `style.css` files (HTML-first pattern), use the space toggle for dark/light colors:
+When you need a custom CSS rule in `main.css`, use the space toggle for any color that differs between dark and light themes:
 
 ```css
+/* === src/features/<module>/<component> === */
 .my-component {
   --comp-bg: var(--dark, #0c0c1a) var(--light, #ffffff);
   --comp-text: var(--dark, #f0f0f5) var(--light, #12121a);
@@ -76,7 +118,7 @@ In component `style.css` files (HTML-first pattern), use the space toggle for da
 }
 ```
 
-This leverages `--dark` / `--light` custom properties from `dx-components-theme.css`. Never hardcode colors in component CSS — always provide both dark and light values.
+This leverages `--dark` / `--light` custom properties from `dx-components-theme.css`. Never hardcode a single color value when the color should differ between themes — always provide both dark and light values via the toggle.
 
 ## Breakpoints
 
