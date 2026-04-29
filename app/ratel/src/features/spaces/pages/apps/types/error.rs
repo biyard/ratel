@@ -44,6 +44,13 @@ pub enum SpaceAppError {
     #[translate(en = "Failed to render chart", ko = "차트 렌더링에 실패했습니다.")]
     ChartRenderFailed,
 
+    #[error("analyze quota exceeded")]
+    #[translate(
+        en = "Your plan reached the analyze report limit for this space. Upgrade to Enterprise for unlimited reports.",
+        ko = "현재 플랜의 스페이스당 분석 페이지 생성 한도에 도달했습니다. Enterprise 로 업그레이드하시면 무제한 생성 가능합니다."
+    )]
+    AnalyzeQuotaExceeded,
+
     #[error("copy text failed")]
     #[translate(en = "Failed to copy text", ko = "텍스트 복사에 실패했습니다.")]
     CopyTextFailed,
@@ -113,6 +120,8 @@ impl SpaceAppError {
             | SpaceAppError::IncentiveAddressRequired
             | SpaceAppError::IncentiveChainRequired
             | SpaceAppError::UnsupportedOnServer => StatusCode::BAD_REQUEST,
+
+            SpaceAppError::AnalyzeQuotaExceeded => StatusCode::FORBIDDEN,
 
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }

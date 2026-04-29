@@ -201,6 +201,10 @@ pub enum EntityType {
     Reward,
     SpaceReward,
 
+    /// Sort key for the singleton AnalyzeQuotaConfig row
+    /// (`pk = AnalyzeQuotaConfig`).
+    AnalyzeQuotaConfig,
+
     ContentReport,
 
     Category(String), // CATEGORY#${name}

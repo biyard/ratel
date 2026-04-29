@@ -329,6 +329,37 @@
   letter-spacing: 0.08em;
   color: var(--text-muted);
 }
+.analyze-arena.analyze-arena--detail .builder-result__topline-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+/* "사용된 데이터 확인하기" CTA — small ghost-style button matching the
+   detail banner aesthetic. Stays muted by default and warms to the
+   gold accent on hover so it doesn't fight the chip strip below. */
+.analyze-arena.analyze-arena--detail .builder-result__records-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.analyze-arena.analyze-arena--detail .builder-result__records-btn:hover {
+  background: rgba(252, 179, 0, 0.08);
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+.analyze-arena.analyze-arena--detail .builder-result__records-btn svg {
+  width: 14px;
+  height: 14px;
+}
 
 /* Preview chip strip inside the banner. */
 .analyze-arena.analyze-arena--detail .preview-chips {
@@ -370,6 +401,9 @@
   text-transform: uppercase;
   padding: 2px 8px;
   border-radius: 100px;
+  min-width: 72px;
+  text-align: center;
+  display: inline-block;
 }
 .analyze-arena.analyze-arena--detail .preview-chip[data-source="poll"] .preview-chip__source {
   background: var(--poll-bg);
