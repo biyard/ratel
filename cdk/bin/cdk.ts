@@ -191,4 +191,8 @@ new DynamoStreamEventStack(app, `ratel-${env}-stream-ap-northeast-2`, {
   },
   stage: env,
   lambdaFunction: ap_northeast_2_lambda.lambdaFunction,
+  // Route the analyze pipeline rules to the dedicated higher-memory
+  // Lambda created alongside the API Lambda in the same regional
+  // stack. Falls back transparently when undefined.
+  analyzeLambdaFunction: ap_northeast_2_lambda.analyzeLambdaFunction,
 });

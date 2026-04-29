@@ -27,16 +27,42 @@ pub fn SpaceAppsPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let mut toast = use_toast();
     let installed_types: Vec<SpaceAppType> = space_apps.iter().map(|app| app.app_type).collect();
 
+    // FIXME: Hide the Analyzes app from the
+    // Production tier while it's still being validated against
+    // dev/local data. The EventBridge + analyze Lambda infra is
+    // already wired up in CDK so the gating only suppresses the
+    // install card in the settings panel — flip this off (= delete
+    // the `allow_app` filter call below) once the app has soaked
+    // through dev/staging and is cleared for prod release.
+    //
+    // Surfaces on:
+    //   - local
+    //   - dev
+    //   - staging
+    // Hidden on:
+    //   - prod / production  (Environment::Production)
+    let env = Environment::default();
+    let allow_app = move |app_type: &SpaceAppType| -> bool {
+        match (env, app_type) {
+            (Environment::Production, SpaceAppType::Analyzes) => false,
+            _ => true,
+        }
+    };
+
     let installed_apps: Vec<SpaceAppType> = SpaceAppType::VARIANTS
         .into_iter()
         .copied()
-        .filter(|app_type| app_type.is_default() || installed_types.contains(app_type))
+        .filter(|app_type| {
+            allow_app(app_type) && (app_type.is_default() || installed_types.contains(app_type))
+        })
         .collect();
 
     let available_apps: Vec<SpaceAppType> = SpaceAppType::VARIANTS
         .into_iter()
         .copied()
-        .filter(|app_type| !app_type.is_default() && !installed_types.contains(app_type))
+        .filter(|app_type| {
+            allow_app(app_type) && !app_type.is_default() && !installed_types.contains(app_type)
+        })
         .collect();
 
     let mut in_progress = use_signal(|| Option::<SpaceAppType>::None);

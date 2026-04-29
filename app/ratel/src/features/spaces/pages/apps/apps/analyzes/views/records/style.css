@@ -1,0 +1,401 @@
+/* Records page — minimal arena chrome reused from the DETAIL view
+   (.analyze-arena.analyze-arena--detail) plus a per-source table.
+   Keep tokens scoped under the same host class so dark/light theme
+   cascades from `<html data-theme>` exactly like the detail page. */
+
+.analyze-arena.analyze-arena--records {
+  --bg-void: var(--dark, #06060e) var(--light, #f5f5fb);
+  --bg-glass: var(--dark, rgba(12, 12, 26, 0.65))
+    var(--light, rgba(255, 255, 255, 0.75));
+  --border-subtle: var(--dark, rgba(255, 255, 255, 0.06))
+    var(--light, rgba(10, 10, 30, 0.08));
+  --border-strong: var(--dark, rgba(255, 255, 255, 0.12))
+    var(--light, rgba(10, 10, 30, 0.16));
+  --text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
+  --text-muted: var(--dark, #8888a8) var(--light, #5b5b75);
+  --surface-soft: var(--dark, rgba(255, 255, 255, 0.02))
+    var(--light, rgba(10, 10, 30, 0.03));
+  --surface-hover: var(--dark, rgba(255, 255, 255, 0.04))
+    var(--light, rgba(10, 10, 30, 0.05));
+  /* Panel surface — slightly lighter than `--bg-void` so the sticky
+     thead reads as part of the table card instead of as a black
+     bar bolted on top. Same value the detail view uses. */
+  --panel-bg: var(--dark, #0c0c1a) var(--light, #ffffff);
+  --text-dim: var(--dark, #55556a) var(--light, #9898ad);
+  --accent-gold: #fcb300;
+
+  --poll-color: #06b6d4;
+  --poll-bg: rgba(6, 182, 212, 0.10);
+  --poll-border: rgba(6, 182, 212, 0.24);
+  --quiz-color: #a855f7;
+  --quiz-bg: rgba(168, 85, 247, 0.10);
+  --quiz-border: rgba(168, 85, 247, 0.24);
+  --discussion-color: #60a5fa;
+  --discussion-bg: rgba(96, 165, 250, 0.10);
+  --discussion-border: rgba(96, 165, 250, 0.24);
+  --follow-color: #f97316;
+  --follow-bg: rgba(249, 115, 22, 0.10);
+  --follow-border: rgba(249, 115, 22, 0.24);
+
+  --font-display: "Orbitron", sans-serif;
+  --font-body: "Outfit", sans-serif;
+
+  /* Fixed-shell layout: the page itself does not scroll. The arena
+     is locked to viewport height, the topbar pins at the top, and
+     only the table-wrap below scrolls vertically. Mirrors the
+     detail page's app-shell rhythm so the chrome stays put while
+     the user pages through hundreds of frozen records. */
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+  align-self: flex-start;
+}
+
+/* Soft orb wash, matches the detail aesthetic. */
+.analyze-arena.analyze-arena--records::before {
+  content: "";
+  position: fixed;
+  inset: -10%;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(252, 179, 0, 0.06), transparent 45%),
+    radial-gradient(circle at 80% 22%, rgba(110, 237, 216, 0.05), transparent 45%),
+    radial-gradient(circle at 50% 90%, rgba(96, 165, 250, 0.06), transparent 50%);
+  filter: blur(60px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.analyze-arena--records .arena {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Topbar (mirrors detail) ──────────────────────────────────── */
+.analyze-arena--records .arena-topbar {
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.analyze-arena--records .back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.analyze-arena--records .back-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent-gold);
+}
+.analyze-arena--records .back-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.4;
+}
+/* Topbar logo + breadcrumb + title — kept in lockstep with the
+   detail page's `.analyze-arena--detail` block so navigating from
+   one to the other doesn't change the chrome's visual rhythm. */
+.analyze-arena--records .arena-topbar__logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  object-fit: cover;
+  border: 1px solid rgba(252, 179, 0, 0.15);
+  flex-shrink: 0;
+}
+.analyze-arena--records .breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.analyze-arena--records .breadcrumb__item {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.analyze-arena--records .breadcrumb__sep {
+  color: var(--text-dim);
+  font-size: 10px;
+}
+.analyze-arena--records .breadcrumb__current {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.analyze-arena--records .topbar-title {
+  flex: 1;
+  min-width: 180px;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 6px 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 760px) {
+  .analyze-arena--records .arena-topbar {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .analyze-arena--records .breadcrumb {
+    display: none;
+  }
+  .analyze-arena--records .topbar-title {
+    min-width: 0;
+    font-size: 13px;
+    padding: 0;
+  }
+}
+
+/* ── Body container ───────────────────────────────────────────── */
+/* Fills the remaining space below the topbar and clips itself —
+   only the inner `.records-table-wrap` is allowed to scroll, so the
+   page-head + chip strip stay anchored while the user scrolls
+   through frozen rows. */
+.analyze-arena--records .records-body {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 28px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+}
+/* Pin the static header bits at their natural height so only the
+   wrap takes the slack — otherwise flex's default `1` shrink factor
+   would squeeze the chip strip when the table grows. */
+.analyze-arena--records .records-head,
+.analyze-arena--records .records-chips,
+.analyze-arena--records .records-loadmore {
+  flex: 0 0 auto;
+}
+
+.analyze-arena--records .records-head h1 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin: 0 0 6px;
+  color: var(--text-primary);
+}
+.analyze-arena--records .records-head p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ── Filter chip strip (clickable tabs) ───────────────────────── */
+.analyze-arena--records .records-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+.analyze-arena--records .records-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.analyze-arena--records .records-chip:hover {
+  background: var(--surface-hover);
+}
+.analyze-arena--records .records-chip[aria-pressed="true"] {
+  border-color: var(--accent-gold);
+  background: rgba(252, 179, 0, 0.08);
+}
+.analyze-arena--records .records-chip__source {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  /* Equal width across POLL / QUIZ / DISCUSSION / FOLLOW so the
+     chip body lines up regardless of source. */
+  min-width: 80px;
+  text-align: center;
+  display: inline-block;
+}
+.analyze-arena--records .records-chip[data-source="poll"] .records-chip__source {
+  color: var(--poll-color);
+  background: var(--poll-bg);
+  border: 1px solid var(--poll-border);
+}
+.analyze-arena--records .records-chip[data-source="quiz"] .records-chip__source {
+  color: var(--quiz-color);
+  background: var(--quiz-bg);
+  border: 1px solid var(--quiz-border);
+}
+.analyze-arena--records .records-chip[data-source="discussion"] .records-chip__source {
+  color: var(--discussion-color);
+  background: var(--discussion-bg);
+  border: 1px solid var(--discussion-border);
+}
+.analyze-arena--records .records-chip[data-source="follow"] .records-chip__source {
+  color: var(--follow-color);
+  background: var(--follow-bg);
+  border: 1px solid var(--follow-border);
+}
+
+/* Table-specific styles live in `table.css` — loaded by the
+   `RecordsTable` component itself so the same component works inside
+   both this page and the CREATE wizard's preview card. */
+
+/* Overrides for fixed-shell mode: the wrap is the scroll ancestor
+   for both axes (preview card uses the same class but with horizontal-
+   only scroll, so we don't change `table.css`). The thead column
+   labels sticky to top: 0 of the wrap, masking rows scrolling under
+   them with the host's solid `--bg-void`. Empty state and load-more
+   sit OUTSIDE the wrap so the chip strip and the load-more button
+   remain visible while the user scrolls. */
+/* Wrap is now a flex column hosting two split tables — a static
+   header table and a scrollable body table — so the scrollbar
+   never crosses the header. Both tables share `table-layout:
+   fixed` and the same `data-source`-keyed column widths, which
+   keeps the header columns lined up with the body columns even
+   though they're separate `<table>` elements. */
+.analyze-arena--records .records-table-wrap {
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--panel-bg);
+}
+
+.analyze-arena--records .records-table-header {
+  flex: 0 0 auto;
+  /* Reserve a 10px gutter on the right to match the body's
+     `scrollbar-gutter: stable` — without this the header's content
+     width is `wrap_w` while the body's content area is
+     `wrap_w - 10px`, and the columns would slip out of alignment. */
+  padding-right: 10px;
+  box-sizing: border-box;
+  /* If the table is wider than the wrap (forced by `min-width:
+     720px`), let the wrap's flex layout handle horizontal overflow
+     via the body — the header silently clips to keep its top edge
+     clean. */
+  overflow: hidden;
+}
+
+.analyze-arena--records .records-table-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: auto;
+  /* Always reserve the scrollbar gutter so the body's content area
+     width stays constant whether the data fits on one screen or
+     not — otherwise short result sets would mis-align with the
+     header (which permanently reserves 10px). */
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) var(--panel-bg);
+}
+.analyze-arena--records .records-table-body::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.analyze-arena--records .records-table-body::-webkit-scrollbar-track {
+  background: var(--panel-bg);
+}
+.analyze-arena--records .records-table-body::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+  border: 2px solid var(--panel-bg);
+  background-clip: padding-box;
+}
+.analyze-arena--records .records-table-body::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-dim);
+  background-clip: padding-box;
+}
+
+/* Both tables fill their containers and share fixed column widths
+   so the explicit `:nth-child` widths in `table.css` actually take
+   effect (without `table-layout: fixed`, browsers fall back to
+   content-driven widths and the two tables drift apart). */
+.analyze-arena--records .records-table {
+  width: 100%;
+  table-layout: fixed;
+  /* Override the `min-width: 720px` from `table.css` — the records
+     page uses the wrap's flex layout instead, and forcing 720px
+     here would cause horizontal overflow only on the body, leaving
+     the header out of sync. */
+  min-width: 0;
+}
+
+.analyze-arena--records .records-empty {
+  padding: 48px 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.analyze-arena--records .records-loadmore {
+  display: flex;
+  justify-content: center;
+  padding: 4px;
+}
+.analyze-arena--records .records-loadmore-btn {
+  padding: 8px 18px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.analyze-arena--records .records-loadmore-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent-gold);
+}
+.analyze-arena--records .records-loadmore-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Preview-card sample tables share these record bits, so we
+       tag them with a separate host class for cleaner overrides. */

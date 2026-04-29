@@ -18,7 +18,6 @@ if (typeof window !== "undefined") {
     },
     membership,
     spaces,
-    auth,
     common,
     tokens,
     user_credential: users.credential,
