@@ -74,6 +74,11 @@ pub enum DetailType {
     /// Filter pinned to INSERT keeps Lambda's own update from
     /// re-triggering itself.
     AnalyzeDiscussionInProgress,
+    /// Fires on Post MODIFY when status transitions Draft → Published with
+    /// visibility=Public. Drives Stage 1 of the cross-posting pipeline:
+    /// reads the PostSyndicationDirective sidecar and bakes one
+    /// SyndicationJob row per (enabled_platforms ∩ connected) platform.
+    PostPublishedForSyndication,
     #[serde(other)]
     Unknown,
 }
@@ -352,6 +357,11 @@ impl EventBridgeEnvelope {
                 let cfg = crate::common::CommonConfig::default();
                 let cli = cfg.dynamodb();
                 crate::features::spaces::pages::apps::apps::analyzes::services::discussion_analysis::process_discussion_analysis(cli, &row).await
+            }
+            DetailType::PostPublishedForSyndication => {
+                let post: crate::features::posts::models::Post =
+                    DetailType::parse_detail(&self.detail)?;
+                crate::features::cross_posting::services::factory::handle_post_published_for_syndication(post).await
             }
             DetailType::Unknown => {
                 tracing::warn!(

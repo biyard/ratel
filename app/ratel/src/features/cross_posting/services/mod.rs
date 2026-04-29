@@ -2,12 +2,13 @@
 
 pub mod adapters;
 pub mod credentials;
+pub mod factory;
 pub mod format;
 pub mod shard;
 
 pub use adapters::*;
 
 // To be added in subsequent PRs:
-//   - dispatcher.rs    Stage 2 lock-pattern dispatcher
+//   - dispatcher.rs    Stage 2 lock-pattern dispatcher (PR C2)
 //   - retry_sweeper.rs Stage 3 (1D)
 //   - engagement.rs    Stage 4 adaptive sweeper (1D)
