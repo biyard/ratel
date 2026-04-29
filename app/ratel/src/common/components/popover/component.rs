@@ -6,7 +6,6 @@ use dioxus_primitives::popover::{
 #[component]
 pub fn PopoverRoot(props: PopoverRootProps) -> Element {
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         popover::PopoverRoot {
             class: "flex flex-1 w-full popover grow",
             is_modal: props.is_modal,

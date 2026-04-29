@@ -53,7 +53,6 @@ pub fn OverviewPanel(
     });
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
 
         div {
             class: "overview-panel",

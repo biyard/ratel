@@ -127,7 +127,6 @@ pub fn ActionDashboard(
     });
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         document::Script { defer: true, src: asset!("./script.js") }
 
         div { class: "quest-label",

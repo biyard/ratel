@@ -326,7 +326,6 @@ pub fn DateAndTimePicker(
     };
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         div { class: "flex items-center w-full @container",
             div { class: "flex flex-row gap-4 items-center w-full @max-mobile:flex-col",
                 div { class: "flex flex-row flex-1 gap-4 items-center min-w-0 @max-mobile:flex-col @max-mobile:w-full",
@@ -451,7 +450,6 @@ pub fn DateRangePicker(props: DateRangePickerProps) -> Element {
 #[component]
 pub fn DatePickerInput(#[props(default)] date: String) -> Element {
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         div { class: "flex-1 w-full grow date-picker-group @max-mobile:w-full",
             DatePickerPopoverTrigger {
                 div { class: "flex flex-row justify-between items-center w-full min-w-0 h-8 rounded-[8px] @max-mobile:w-full",

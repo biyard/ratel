@@ -15,7 +15,6 @@ pub fn PollLinearScale(
     };
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         div { class: "scale-wrap",
             div { class: "scale-labels",
                 span { class: "scale-label scale-label--min", {question.min_label} }

@@ -56,39 +56,6 @@ pub fn SpaceIndexPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let notifications_open = active_panel() == ActivePanel::Notifications;
 
     rsx! {
-        document::Link { rel: "preconnect", href: "https://fonts.googleapis.com" }
-        document::Link {
-            rel: "preconnect",
-            href: "https://fonts.gstatic.com",
-            crossorigin: "anonymous",
-        }
-        document::Link {
-            rel: "preload",
-            href: "https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap",
-            r#as: "style",
-        }
-        document::Stylesheet { href: "https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" }
-        document::Stylesheet { href: asset!("./style.css") }
-        // Preload sub-component CSS to prevent flash of unstyled content
-        document::Stylesheet { href: asset!("./arena_topbar/style.css") }
-        document::Stylesheet { href: asset!("./arena_viewer/style.css") }
-        document::Stylesheet { href: asset!("./prerequisite_card/style.css") }
-        document::Stylesheet { href: asset!("./action_dashboard/style.css") }
-        document::Stylesheet { href: asset!("./action_pages/poll/style.css") }
-        document::Stylesheet { href: asset!("./action_pages/quiz/style.css") }
-        document::Stylesheet { href: asset!("./action_pages/discussion/style.css") }
-        // Slide-in panels — preloaded here so the CSS is already cached
-        // when the child components mount on SPA navigation. Without
-        // these, the panel `<div>` renders in the DOM before its
-        // stylesheet finishes fetching, so `position: absolute;
-        // z-index: 25` isn't applied and the panel visually collapses
-        // into normal flow underneath the HUD topbar. Full-page reloads
-        // don't hit this race because the server-rendered HTML already
-        // has every stylesheet in `<head>`.
-        document::Stylesheet { href: asset!("./overview_panel/style.css") }
-        document::Stylesheet { href: asset!("./leaderboard_panel/style.css") }
-        document::Stylesheet { href: asset!("./settings_panel/style.css") }
-
         div { class: "arena", "data-testid": "space-index-page",
             ArenaTopbar {
                 logo: logo.clone(),
