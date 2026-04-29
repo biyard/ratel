@@ -1,0 +1,211 @@
+/*
+ * Bluesky app-password connect modal. State-controlled by Dioxus
+ * Signal<bool> via the `data-open` attribute (no JS). The
+ * mockup's open/close is mirrored here through CSS-only transitions.
+ *
+ * Phase 1A: dark-only token set (mirrors connections_page/style.css);
+ * dual `var(--dark, ...) var(--light, ...)` migration deferred.
+ */
+.bsky-modal-backdrop {
+  --bsky-bg-glass: rgba(12, 12, 26, 0.96);
+  --bsky-border-subtle: rgba(255, 255, 255, 0.06);
+  --bsky-border-strong: rgba(255, 255, 255, 0.12);
+  --bsky-text-primary: #f0f0f5;
+  --bsky-text-muted: #8888a8;
+  --bsky-text-dim: #55556a;
+  --bsky-bg-input: rgba(255, 255, 255, 0.025);
+  --bsky-bg-input-focus: rgba(255, 255, 255, 0.04);
+  --bsky-blue: #0a85ff;
+  --bsky-coral: #ef4444;
+  --bsky-teal: #6eedd8;
+  --bsky-font-display: 'Orbitron', sans-serif;
+  --bsky-font-body: 'Outfit', sans-serif;
+
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0);
+  pointer-events: none;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.25s ease;
+  padding: 20px;
+}
+.bsky-modal-backdrop[data-open="true"] {
+  background: rgba(6, 6, 14, 0.72);
+  pointer-events: auto;
+  backdrop-filter: blur(8px);
+}
+
+.bsky-modal {
+  width: 100%;
+  max-width: 480px;
+  background: var(--bsky-bg-glass);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--bsky-border-strong);
+  border-radius: 20px;
+  padding: 0;
+  overflow: hidden;
+  transform: translateY(20px) scale(0.96);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: var(--bsky-font-body);
+  color: var(--bsky-text-primary);
+}
+.bsky-modal-backdrop[data-open="true"] .bsky-modal {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.bsky-modal__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--bsky-border-subtle);
+  position: relative;
+}
+.bsky-modal__logo {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0a85ff, #1da1f2);
+  display: flex; align-items: center; justify-content: center;
+}
+.bsky-modal__logo svg { width: 22px; height: 22px; color: #fff; }
+.bsky-modal__head-body { flex: 1; }
+.bsky-modal__head-title {
+  font-family: var(--bsky-font-display);
+  font-size: 15px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--bsky-text-primary);
+}
+.bsky-modal__head-sub {
+  font-size: 12px;
+  color: var(--bsky-text-muted);
+  margin-top: 2px;
+}
+.bsky-modal__close {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--bsky-border-subtle);
+  color: var(--bsky-text-muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+  transition: all 0.2s;
+}
+.bsky-modal__close:hover {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--bsky-coral);
+}
+.bsky-modal__close svg { width: 14px; height: 14px; }
+
+.bsky-modal__body {
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.bsky-modal__info {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(10, 133, 255, 0.06);
+  border: 1px solid rgba(10, 133, 255, 0.18);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--bsky-text-muted);
+  display: flex;
+  gap: 10px;
+}
+.bsky-modal__info svg {
+  width: 16px; height: 16px;
+  flex-shrink: 0;
+  color: var(--bsky-blue);
+  margin-top: 1px;
+}
+.bsky-modal__info a { color: var(--bsky-blue); text-decoration: none; }
+.bsky-modal__info a:hover { text-decoration: underline; }
+
+.bsky-field { display: flex; flex-direction: column; gap: 6px; }
+.bsky-field__label {
+  font-family: var(--bsky-font-display);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--bsky-text-dim);
+  display: flex; align-items: center; gap: 6px;
+}
+.bsky-field__label svg { width: 11px; height: 11px; }
+.bsky-field__input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 11px;
+  background: var(--bsky-bg-input);
+  border: 1px solid var(--bsky-border-subtle);
+  font-family: var(--bsky-font-body);
+  font-size: 14px;
+  color: var(--bsky-text-primary);
+  outline: none;
+  transition: all 0.2s ease;
+}
+.bsky-field__input:focus {
+  border-color: rgba(10, 133, 255, 0.35);
+  background: var(--bsky-bg-input-focus);
+}
+.bsky-field__input::placeholder { color: var(--bsky-text-dim); }
+.bsky-field__hint {
+  font-size: 11.5px;
+  color: var(--bsky-text-dim);
+  line-height: 1.5;
+}
+.bsky-field__hint code {
+  font-family: var(--bsky-font-display);
+  color: var(--bsky-teal);
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(110, 237, 216, 0.06);
+  font-size: 10.5px;
+}
+
+.bsky-modal__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--bsky-border-subtle);
+  background: rgba(0, 0, 0, 0.20);
+}
+.bsky-modal__foot-hint {
+  font-size: 11px;
+  color: var(--bsky-text-dim);
+}
+.bsky-modal__actions { display: flex; gap: 8px; }
+.bsky-modal__btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-family: var(--bsky-font-display);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: 1px solid transparent;
+}
+.bsky-modal__btn svg { width: 12px; height: 12px; }
+.bsky-modal__btn--cancel {
+  background: transparent;
+  border-color: var(--bsky-border-subtle);
+  color: var(--bsky-text-muted);
+}
+.bsky-modal__btn--cancel:hover {
+  border-color: var(--bsky-border-strong);
+  color: var(--bsky-text-primary);
+}
+.bsky-modal__btn--primary {
+  background: linear-gradient(135deg, #0a85ff, #1da1f2);
+  color: #fff;
+  box-shadow: 0 2px 14px rgba(10, 133, 255, 0.30);
+}
+.bsky-modal__btn--primary:disabled { opacity: 0.5; cursor: not-allowed; }
