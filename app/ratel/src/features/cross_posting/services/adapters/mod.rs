@@ -13,10 +13,16 @@ use crate::features::cross_posting::types::SocialPlatform;
 use async_trait::async_trait;
 
 /// Decrypted credentials for a single platform connection. Produced by
-/// the dispatcher's KMS-decrypt step from `SocialConnection.credential_ciphertext`
-/// — the plaintext lives only inside the Lambda's stack frame for the
-/// duration of one publish / fetch call.
-#[derive(Debug, Clone)]
+/// the dispatcher's AEAD-decrypt step from
+/// `SocialConnection.credential_ciphertext` — the plaintext lives only
+/// inside the Lambda's stack frame for the duration of one publish /
+/// fetch call. Serialize/Deserialize are required so the value can be
+/// JSON-encoded into the sealed blob (see `services/credentials.rs`).
+///
+/// **Debug must NEVER be derived** on this type — accidental
+/// `tracing::debug!("{:?}", creds)` would dump the secret to logs. If
+/// debug printing is needed, implement Debug manually with redaction.
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub enum DecryptedCredentials {
     Bluesky {
         /// `did:plc:...` — required as the `repo` parameter on every

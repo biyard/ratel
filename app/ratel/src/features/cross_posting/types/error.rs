@@ -11,6 +11,14 @@ pub enum CrossPostingError {
     #[translate(en = "Failed to connect account", ko = "계정 연결에 실패했습니다")]
     ConnectFailed,
 
+    #[error("list failed")]
+    #[translate(en = "Failed to load connections", ko = "연결 목록을 불러오지 못했습니다")]
+    ListFailed,
+
+    #[error("update failed")]
+    #[translate(en = "Failed to update connection", ko = "연결 업데이트에 실패했습니다")]
+    UpdateFailed,
+
     #[error("invalid bluesky credentials")]
     #[translate(
         en = "Invalid Bluesky handle or app password",
@@ -64,7 +72,9 @@ impl CrossPostingError {
             | CrossPostingError::OAuthStateMismatch
             | CrossPostingError::ThreadsRequiresInstagramProfessional
             | CrossPostingError::RetryNotAllowed => StatusCode::BAD_REQUEST,
-            CrossPostingError::ConnectFailed => StatusCode::INTERNAL_SERVER_ERROR,
+            CrossPostingError::ConnectFailed
+            | CrossPostingError::ListFailed
+            | CrossPostingError::UpdateFailed => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }
