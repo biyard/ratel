@@ -35,7 +35,6 @@ pub fn WaitingCard(prereqs: Vec<SpaceActionSummary>) -> Element {
     let seconds = remaining_secs() % 60;
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "waiting-card", "data-testid": "card-waiting",
 

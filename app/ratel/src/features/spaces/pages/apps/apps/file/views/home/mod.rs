@@ -155,7 +155,6 @@ pub fn SpaceFileAppPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let displayed_count = displayed_files.len();
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "space-files-arena",
             // ── Arena topbar ────────────────────────────

@@ -35,7 +35,6 @@ pub fn TeamSubTeamApplicationStatusPage(username: String) -> Element {
 
     rsx! {
         SeoMeta { title: "{tr.status_page_title}" }
-        document::Stylesheet { href: asset!("./style.css") }
         StatusBody { username: username.clone(), team_display: team_display.clone() }
     }
 }

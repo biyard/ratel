@@ -25,7 +25,6 @@ pub fn PollMultipleChoice(
     let allow_other = question.allow_other.unwrap_or(false);
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         div { class: "options-multi",
             for (opt_idx , option) in question.options.iter().enumerate() {
                 {

@@ -22,7 +22,6 @@ pub fn EssenceControls() -> Element {
     let kbd_label = if is_mac { "⌘ K" } else { "Ctrl K" };
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         section { class: "essence-controls",
             label { class: "essence-search",
                 svg {

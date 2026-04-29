@@ -31,7 +31,6 @@ pub fn Editor(props: EditorProps) -> Element {
     let extra_class = props.class.clone();
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         document::Script { defer: true, src: asset!("./script.js") }
 
         div {

@@ -16,7 +16,6 @@ pub fn SettingsPanel(
     let is_logged_in = user_ctx.read().user.is_some();
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
 
         div {
             class: "settings-panel",

@@ -35,7 +35,6 @@ pub fn NotificationItem(
     let rel = relative_time(now, data.created_at, &tr);
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         button {
             class: "notification-item",
             "aria-relevant": "{is_unread}",

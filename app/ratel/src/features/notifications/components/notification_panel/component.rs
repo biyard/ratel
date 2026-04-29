@@ -19,7 +19,6 @@ pub fn NotificationPanel(open: bool, on_close: EventHandler<()>) -> Element {
     } = use_inbox();
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         div {
             class: "notification-panel",
             "data-open": "{open}",

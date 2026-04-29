@@ -67,7 +67,6 @@ pub struct AvatarProps {
 #[component]
 pub fn Avatar(props: AvatarProps) -> Element {
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
 
         avatar::Avatar {
             class: "avatar {props.size.to_class()} {props.shape.to_class()}",

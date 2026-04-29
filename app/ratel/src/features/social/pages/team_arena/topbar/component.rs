@@ -121,7 +121,6 @@ pub fn ArenaTopbar(
     };
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "arena-topbar",
             div { class: "arena-topbar__brand",

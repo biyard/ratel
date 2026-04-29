@@ -14,7 +14,6 @@ pub fn EssenceSourcesPage() -> Element {
     let _hook = use_essence_sources()?;
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         document::Script { defer: true, src: asset!("./script.js") }
         SeoMeta { title: "{tr.seo_title}" }
 

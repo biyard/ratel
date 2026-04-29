@@ -63,7 +63,6 @@ pub fn EssenceSourcesTable() -> Element {
     let mut go_to_page = hook.go_to_page;
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         section { class: "essence-sources",
             header { class: "essence-src-head",
                 span {}

@@ -38,7 +38,6 @@ pub fn FollowActionCard(
     let outstanding = resolve_outstanding_actions(&action, &all_actions);
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         div {
             class: "quest-card quest-card--follow",
             "data-type": "follow",
