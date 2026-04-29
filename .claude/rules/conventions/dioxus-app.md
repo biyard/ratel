@@ -51,6 +51,20 @@ pub const MY_ASSET: Asset = asset!("/assets/filename.ext");
 // In RSX: img { src: MY_ASSET }
 ```
 
+## Stylesheets
+
+- **All component CSS goes in `app/ratel/assets/main.css`** — loaded once globally from `app.rs`
+- **Never** write `document::Stylesheet { href: asset!("./style.css") }` in a component — per-component stylesheets unload on SPA route changes and cause flashes of unstyled content (FOUC)
+- **Never** create per-component `style.css` files under `src/`
+- External stylesheets (Google Fonts, etc.) are declared **only in `app.rs`**
+- Append new component styles to `main.css` under a section marker:
+  ```css
+  /* === src/features/<module>/<page>/<component> === */
+  .my-component { ... }
+  ```
+- Use unique, component-scoped class names — `main.css` is one global namespace
+- Full rules: `conventions/styling.md` § "All custom CSS lives in `app/ratel/assets/main.css`"
+
 ## Views
 
 Every page view should include `SeoMeta { title: "..." }` and use `translate!` for all strings.

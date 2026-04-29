@@ -353,26 +353,58 @@ status.translate(&lang())
 
 ## HTML-First Components
 
-### Using `document::Link` for stylesheets
+### Per-component `style.css` and `document::Stylesheet` in components
 
 ```rust
+// BAD — per-component stylesheet causes FOUC on SPA route changes
+#[component]
+pub fn MyComponent() -> Element {
+    rsx! {
+        document::Stylesheet { href: asset!("./style.css") }
+        // ...
+    }
+}
+
 // BAD — preload + stylesheet Link pair for the same CSS asset
 document::Link { rel: "preload", href: asset!("./style.css"), r#as: "style" }
 document::Link { rel: "stylesheet", href: asset!("./style.css") }
 
-// BAD — plain stylesheet Link
-document::Link { rel: "stylesheet", href: asset!("./style.css") }
+// BAD — Google Fonts (or any external CSS) declared per-page
+#[component]
+pub fn MyPage() -> Element {
+    rsx! {
+        document::Link { rel: "preconnect", href: "https://fonts.googleapis.com" }
+        document::Stylesheet { href: "https://fonts.googleapis.com/css2?family=Outfit..." }
+        // ...
+    }
+}
 
-// GOOD — single Stylesheet component injects into <head> and dedupes
-document::Stylesheet { href: asset!("./style.css") }
+// GOOD — append the rules to app/ratel/assets/main.css and let app.rs
+// load it once globally; component RSX has no document::Stylesheet at all.
+#[component]
+pub fn MyComponent() -> Element {
+    rsx! {
+        // No document::Stylesheet here — main.css is loaded globally in app.rs.
+        div { class: "my-component", /* ... */ }
+    }
+}
 ```
 
-`document::Stylesheet` is the dedicated component for CSS — it injects into
-`<head>`, dedupes by href across re-renders, and handles SSR/CSR
-hydration correctly. The legacy `document::Link { rel: "preload", … }`
-+ `document::Link { rel: "stylesheet", … }` pair is a workaround from
-before `Stylesheet` existed; it duplicates the asset in the DOM and
-fights the framework's dedupe logic.
+```css
+/* app/ratel/assets/main.css */
+/* === src/features/<module>/pages/<page>/<component> === */
+.my-component {
+  --comp-bg: var(--dark, #0c0c1a) var(--light, #ffffff);
+  background: var(--comp-bg);
+}
+```
+
+Why this is an anti-pattern:
+- Per-component stylesheets loaded via `document::Stylesheet` / `document::Link` **unload during SPA route changes**, causing flashes of unstyled content (FOUC). Full-page reloads don't hit this because the server-rendered HTML already has every stylesheet in `<head>`.
+- The single global `main.css` loaded from `app.rs` stays in `<head>` for the entire session — no remount, no re-fetch, no FOUC.
+- External stylesheets (Google Fonts, Tiptap themes, etc.) follow the same rule: declare them **once in `app.rs`**, not per-page.
+- Allowed exceptions: `app.rs` itself (loads `main.css`, `dx-components-theme.css`, `tailwind.css`, Google Fonts, favicon), and `seo_meta/mod.rs` (`rel: "canonical"`).
+- See `conventions/styling.md` § "All custom CSS lives in `app/ratel/assets/main.css`" for full rules.
 
 ### Missing `defer` on Script
 
