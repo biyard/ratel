@@ -30,7 +30,7 @@ pub async fn list_actions(
     let space_pk: Partition = space_pk.into();
 
     let (space_actions, _) =
-        SpaceAction::find_by_space(cli, &space_pk, SpaceAction::opt().oldest())
+        SpaceAction::find_by_space(cli, &space_pk, SpaceAction::opt_all().oldest())
             .await
             .map_err(|e| {
                 crate::error!("failed to load actions: {e:?}");
@@ -43,18 +43,15 @@ pub async fn list_actions(
     let discussion_keys: Vec<(Partition, EntityType)> = actions
         .iter()
         .filter(|a| a.action_type == SpaceActionType::TopicDiscussion)
-        .map(|a| {
-            (
-                space_pk.clone(),
-                EntityType::SpacePost(a.action_id.clone()),
-            )
-        })
+        .map(|a| (space_pk.clone(), EntityType::SpacePost(a.action_id.clone())))
         .collect();
     if !discussion_keys.is_empty() {
-        let posts = SpacePost::batch_get(cli, discussion_keys).await.map_err(|e| {
-            crate::error!("failed to batch_get discussion posts: {e:?}");
-            SpaceActionError::ActionLoadFailed
-        })?;
+        let posts = SpacePost::batch_get(cli, discussion_keys)
+            .await
+            .map_err(|e| {
+                crate::error!("failed to batch_get discussion posts: {e:?}");
+                SpaceActionError::ActionLoadFailed
+            })?;
         let count_by_id: std::collections::HashMap<String, i64> = posts
             .into_iter()
             .filter_map(|p| match &p.sk {
@@ -64,12 +61,8 @@ pub async fn list_actions(
             .collect();
         for action in actions.iter_mut() {
             if action.action_type == SpaceActionType::TopicDiscussion {
-                action.comment_count = Some(
-                    count_by_id
-                        .get(&action.action_id)
-                        .copied()
-                        .unwrap_or(0),
-                );
+                action.comment_count =
+                    Some(count_by_id.get(&action.action_id).copied().unwrap_or(0));
             }
         }
     }

@@ -362,7 +362,7 @@ fn PostCard(index: usize, post: PostResponse) -> Element {
             if !post.categories.is_empty() {
                 div { class: "post-card__chips",
                     for c in post.categories.iter() {
-                        span { key: "{c}", class: "post-card__chip", "#{c}" }
+                        span { key: "{post.pk}-{c}", class: "post-card__chip", "#{c}" }
                     }
                 }
             }
