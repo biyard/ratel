@@ -48,8 +48,7 @@ pub struct SocialConnection {
     pub external_handle: String,          // "@user.bsky.social" / linkedin URN / threads username
     pub external_user_id: String,         // platform-side stable id (used for dedupe / refresh)
 
-    pub credential_ciphertext: Vec<u8>,   // KMS-encrypted blob (app password OR oauth tokens)
-    pub credential_kms_key_id: String,
+    pub credential_ciphertext: Vec<u8>,   // AEAD-sealed blob (see "Credential storage" note)
     pub token_expires_at: Option<i64>,    // Some for OAuth, None for Bluesky app password
 
     pub auto_post_enabled: bool,          // FR-3 #17 per-platform toggle (default true)
@@ -66,8 +65,38 @@ pub enum ConnectionStatus { Connected, AuthExpired, Revoked }
 
 Notes:
 - **One connection per user per platform** (FR-1 #1, non-goal "no multi-account-per-platform"). `sk` uses the platform name so a second connect attempt overwrites cleanly.
-- **Credential storage.** KMS-encrypted blob; the only path that decrypts is the dispatcher Lambda. The plain credentials never appear on a response DTO.
+- **Credential storage.** Phase 1 uses **AEAD (AES-256-GCM) with the data key supplied via environment variable** rather than AWS KMS. This is a deviation from the original FR-1 #6 wording (which mandates KMS); decision recorded 2026-04-29. Rationale, key management, and the migration path back to KMS are documented in the *"Credential encryption"* subsection below. Soft-deleted connections (Revoked) zero the ciphertext field — historical resolution of `(author_user_id, platform)` still works because the row keeps the handle / external_user_id.
 - **Revoke = soft delete.** We zero out `credential_ciphertext` and set `status = Revoked` rather than delete the row, so historical "posted via …" rendering on past syndicated posts can still resolve the platform handle. Past `SyndicationJob` rows look up the connection by `(author_user_id, platform)` (no foreign-key denormalization on the job side); the soft-deleted row keeps that lookup answerable.
+
+#### Credential encryption (Phase 1: envvar AEAD)
+
+**Decision (2026-04-29)**: Phase 1 uses AES-256-GCM with the data key delivered via environment variable, not AWS KMS. The roadmap spec (FR-1 #6) mandates KMS — this deviation is explicit and time-boxed; the migration path is preserved.
+
+**Cipher**: `aes-gcm` crate, AES-256-GCM. Sealed blob layout (single `Vec<u8>` stored on `SocialConnection.credential_ciphertext`):
+
+```
+byte 0          : key version (matches the version label on the envvar that minted this blob)
+bytes 1..13     : 96-bit nonce (random per seal call)
+bytes 13..      : ciphertext + 16-byte AES-GCM authentication tag
+```
+
+**Key delivery** (matches existing ratel secret pattern — see `BBS_BLS_*`, `KAIA_*`, `P256_*` in `.github/workflows/prod-workflow.yml`):
+
+| Env | Source | Form |
+|---|---|---|
+| Local dev | `.env` (gitignored) — value pinned in 1Password | `CROSS_POSTING_DATA_KEY=v1:<base64-no-pad 32 bytes>` |
+| CI (PR test) | GitHub Secrets `DEV_CROSS_POSTING_DATA_KEY` → workflow `env:` | same form |
+| Staging / Prod | GitHub Secrets `DEV_/PROD_CROSS_POSTING_DATA_KEY` → workflow `env:` → ECS task definition / Lambda env var | same form |
+
+**Two-key support for rotation**: a second envvar `CROSS_POSTING_DATA_KEY_PREVIOUS` is honored on `open()` paths only. New writes always use `CURRENT`. During a rotation transition (operator publishes new CURRENT, demotes previous CURRENT to PREVIOUS), `open()` falls back to PREVIOUS for blobs whose version byte matches. Once an offline backfill re-seals all rows under the new CURRENT version, the operator removes PREVIOUS.
+
+**Disaster recovery**: prod CURRENT key is also held in 1Password (admin-only vault). If GitHub Secrets are accidentally deleted, the key can be re-uploaded; without this backup, all stored credentials are unrecoverable and every connected user must reconnect.
+
+**Rotation policy (Phase 1)**: no scheduled cadence. Trigger conditions:
+- Suspected leak (CI dump, dev offboarding with elevated trust, etc.) — immediate
+- Compliance push (SOC2 etc.) — driven by external requirement
+
+**Migration to KMS (later)**: a `cipher_scheme` discriminator is *not* added now — the version byte already serves the same purpose. Migrating to KMS later means a new aead module that wraps `kms:Encrypt`/`kms:Decrypt` and a dual-read `open()` until all rows are KMS-sealed. Estimated cost: ~2-3 engineer days, zero downtime, ~$0.09 in KMS calls for backfilling typical Phase 1 row counts. Spec FR-1 #6 will be re-satisfied at that point.
 
 ### `PostSyndicationDirective` — sidecar that keeps `Post` clean
 
@@ -440,7 +469,7 @@ Two layers per FR-9 + FR-6:
 
 ### Bluesky (1A)
 
-- **Auth**: app password flow. UI modal collects `handle` + `app_password`; server calls `com.atproto.server.createSession` to validate; on success store the returned `accessJwt` + `refreshJwt` (KMS-encrypted) and the validated handle.
+- **Auth**: app password flow. UI modal collects `handle` + `app_password`; server calls `com.atproto.server.createSession` to validate; on success store the returned `accessJwt` + `refreshJwt` (AEAD-sealed via `crate::common::utils::aead::seal`) and the validated handle.
 - **Publish**: `com.atproto.repo.createRecord` with `app.bsky.feed.post` collection. Embed images via `com.atproto.repo.uploadBlob` first.
 - **Rich-link embed**: a plain backlink URL inside the post body does not produce a card preview on Bluesky clients. The adapter attaches an `app.bsky.embed.external` embed (title, description, thumb) so the syndicated copy renders as a rich link card. Metadata is pulled from the Ratel post's OG tags via a one-shot HTTP fetch of the canonical URL; fallback when extraction fails: `title = post.title`, `description = first 200 chars of stripped html_contents`, `thumb = post.urls.first().cloned()` (when present).
 - **Refresh**: refresh on each publish if access token < 30s from expiry; refresh failure → `auth_expired`.
@@ -448,7 +477,7 @@ Two layers per FR-9 + FR-6:
 
 ### LinkedIn (1B)
 
-- **Auth**: OAuth 2.0 authorization code, scopes `r_liteprofile w_member_social`. Callback exchanges code for tokens; stored KMS-encrypted with refresh token + 60-day expiry.
+- **Auth**: OAuth 2.0 authorization code, scopes `r_liteprofile w_member_social`. Callback exchanges code for tokens; AEAD-sealed alongside the refresh token + 60-day expiry.
 - **Publish**: `POST /v2/ugcPosts` with `lifecycleState=PUBLISHED`. Image: `/v2/assets?action=registerUpload` then upload.
 - **Refresh**: ~7 days before expiry, dispatcher proactively refreshes; on 401 mark `auth_expired` and notify (FR-5 #35).
 
