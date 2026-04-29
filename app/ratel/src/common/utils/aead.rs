@@ -24,12 +24,19 @@
 //! with the same form is honored on `open()` paths to support rotation
 //! transitions (new writes always go through CURRENT).
 //!
+//! Per the existing Ratel pattern (see `KAIA_FEEPAYER_KEY`,
+//! `TELEGRAM_TOKEN`, `BBS_BLS_*`, etc.), envvar values are read via
+//! `option_env!()` at **compile time** and baked into the binary —
+//! Cargo automatically rebuilds when the value changes. AWS Lambda
+//! runtime does not need a separate env var configured on the function.
+//!
 //! ## API layers
 //!
 //! - **Low-level**: [`seal_with_key`] / [`open_with_keys`] take explicit
 //!   key material. Used by tests.
-//! - **High-level**: [`seal`] / [`open`] read keys from the process
-//!   environment via a [`OnceLock`] cache. Used by feature code.
+//! - **High-level**: [`seal`] / [`open`] read keys from compile-time
+//!   `option_env!()` values via a [`OnceLock`] cache for parsed
+//!   [`KeyMaterial`]. Used by feature code.
 
 use aes_gcm::{
     AeadCore, Aes256Gcm, KeyInit,
@@ -198,17 +205,22 @@ fn keys() -> Result<&'static (KeyMaterial, Option<KeyMaterial>), &'static AeadEr
 }
 
 fn load_keys_from_env() -> Result<(KeyMaterial, Option<KeyMaterial>), AeadError> {
-    let current_raw = std::env::var(ENV_CURRENT)
-        .ok()
+    // option_env! is a compile-time macro: the values seen here are baked
+    // into the binary at `cargo build` time from the build process's env.
+    // The github-actions workflow exports CROSS_POSTING_DATA_KEY{,_PREVIOUS}
+    // for the build step; local dev sources `app/ratel/env.sh` (gitignored
+    // per-developer file). Cargo auto-rebuilds when these values change.
+    let current_raw = option_env!("CROSS_POSTING_DATA_KEY")
         .filter(|v| !v.is_empty())
         .ok_or(AeadError::EnvvarMissing(ENV_CURRENT))?;
-    let current = KeyMaterial::from_envvar_value(ENV_CURRENT, &current_raw)?;
+    let current = KeyMaterial::from_envvar_value(ENV_CURRENT, current_raw)?;
 
-    // GitHub Actions evaluates `${{ secrets.X }}` to an empty string when
-    // X is not registered. Treat empty string the same as unset so PREVIOUS
-    // remains genuinely optional in workflow files.
-    let previous = match std::env::var(ENV_PREVIOUS).ok().filter(|v| !v.is_empty()) {
-        Some(v) => Some(KeyMaterial::from_envvar_value(ENV_PREVIOUS, &v)?),
+    // Empty values are treated as unset so PREVIOUS stays genuinely optional —
+    // GitHub Actions evaluates `${{ secrets.X }}` to "" when X is not
+    // registered, and the option_env! result for an unset env is None
+    // (which we Option::filter back to None for the empty case too).
+    let previous = match option_env!("CROSS_POSTING_DATA_KEY_PREVIOUS").filter(|v| !v.is_empty()) {
+        Some(v) => Some(KeyMaterial::from_envvar_value(ENV_PREVIOUS, v)?),
         None => None,
     };
 
