@@ -47,6 +47,13 @@ export interface RegionalLambdaStackProps extends StackProps {
 
 export class RegionalLambdaStack extends Stack {
   readonly lambdaFunction: lambda.Function;
+  /// Optional dedicated Lambda for the analyze pipeline. Lives only
+  /// in the regions that wire up `DynamoStreamEventStack` (currently
+  /// ap-northeast-2). Same binary as `lambdaFunction` but with bigger
+  /// memory + timeout so the lindera + LDA + TF-IDF + text-network
+  /// chain has headroom; isolating it from API traffic also stops a
+  /// stuck analysis from crowding HTTP cold-start budget.
+  readonly analyzeLambdaFunction?: lambda.Function;
 
   constructor(scope: Construct, id: string, props: RegionalLambdaStackProps) {
     super(scope, id, { ...props, crossRegionReferences: true });
@@ -122,6 +129,57 @@ export class RegionalLambdaStack extends Stack {
         resources: ["*"],
       }),
     );
+
+    // ── Analyze Lambda ─────────────────────────────────────────────
+    // Dedicated function for the EventBridge-driven analyze pipeline
+    // (auto poll/quiz/follow aggregation + LDA / TF-IDF / text-network
+    // for discussions). Same `bootstrap` binary as the API Lambda
+    // — `bootstrap` self-routes between API Gateway and EventBridge
+    // events — but configured with substantially more memory and a
+    // 5-minute timeout so the lindera ko-dic load + Gibbs sampling
+    // doesn't get killed. Splitting it out also keeps any analyze
+    // hang or OOM from cascading into HTTP cold starts.
+    //
+    // Mirrors the API Lambda's VPC + role context exactly. Reuses the
+    // same code asset, so deploys produce one binary upload that both
+    // functions reference.
+    const analyzeLambda = new lambda.Function(this, "AnalyzeFunction", {
+      runtime: lambda.Runtime.PROVIDED_AL2023,
+      architecture: lambda.Architecture.X86_64,
+      code: lambda.Code.fromAsset(".build/app-shell"),
+      handler: "bootstrap",
+      environment,
+      memorySize: 1024,
+      timeout: cdk.Duration.minutes(5),
+      ...(props.vpc && props.sharedSecurityGroup
+        ? {
+            allowPublicSubnet: true,
+            vpc: props.vpc,
+            vpcSubnets: {
+              subnetType: ec2.SubnetType.PUBLIC,
+              availabilityZones: [
+                "ap-northeast-2a",
+                "ap-northeast-2b",
+                "ap-northeast-2c",
+              ],
+            },
+            securityGroups: [props.sharedSecurityGroup],
+          }
+        : {}),
+    });
+    // Bedrock parity — analyze never calls Bedrock today, but
+    // permitting it costs nothing and matches API behaviour so a
+    // future analyzer that wants summarisation doesn't hit a 403.
+    analyzeLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: [
+          "bedrock:InvokeModel",
+          "bedrock:InvokeModelWithResponseStream",
+        ],
+        resources: ["*"],
+      }),
+    );
+    this.analyzeLambdaFunction = analyzeLambda;
 
     const lambdaIntegration = new HttpLambdaIntegration(
       "LambdaIntegration",

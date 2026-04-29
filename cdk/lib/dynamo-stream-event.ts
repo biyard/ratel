@@ -12,7 +12,15 @@ import { Construct } from "constructs";
 
 export interface DynamoStreamEventStackProps extends StackProps {
   stage: string;
+  /// Default Lambda for every stream-driven rule (timeline fan-out,
+  /// notifications, badges, …).
   lambdaFunction: lambda.Function;
+  /// Optional dedicated Lambda for the two analyze rules
+  /// (`AnalyzeReportInProgressRule` and
+  /// `AnalyzeDiscussionInProgressRule`). When omitted both fall back
+  /// to `lambdaFunction` — matches the pre-split behaviour. Provided
+  /// in regions that wire up a bigger-memory analyze Lambda.
+  analyzeLambdaFunction?: lambda.Function;
 }
 
 export class DynamoStreamEventStack extends Stack {
@@ -24,6 +32,10 @@ export class DynamoStreamEventStack extends Stack {
     super(scope, id, props);
 
     const { stage } = props;
+    // Resolves to the dedicated analyze Lambda when one was passed in,
+    // otherwise reuses the API Lambda (legacy single-Lambda layout).
+    const analyzeLambdaFunction =
+      props.analyzeLambdaFunction ?? props.lambdaFunction;
 
     // Import the existing EventBridge bus
     const eventBus = events.EventBus.fromEventBusName(
@@ -1586,12 +1598,12 @@ export class DynamoStreamEventStack extends Stack {
     new events.Rule(this, "AnalyzeReportInProgressRule", {
       eventBus,
       description:
-        "Route analyze-report insert events to app-shell for auto poll/quiz/follow analysis",
+        "Route analyze-report insert events to the analyze Lambda for auto poll/quiz/follow analysis",
       eventPattern: {
         source: ["ratel.dynamodb.stream"],
         detailType: ["AnalyzeReportInProgress"],
       },
-      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+      targets: [new eventsTargets.LambdaFunction(analyzeLambdaFunction)],
     });
 
     // ── Pipe: AnalyzeDiscussionResult Insert → AnalyzeDiscussionInProgress ──
@@ -1638,12 +1650,12 @@ export class DynamoStreamEventStack extends Stack {
     new events.Rule(this, "AnalyzeDiscussionInProgressRule", {
       eventBus,
       description:
-        "Route analyze-discussion insert events to app-shell for text analysis",
+        "Route analyze-discussion insert events to the analyze Lambda for LDA / TF-IDF / network analysis",
       eventPattern: {
         source: ["ratel.dynamodb.stream"],
         detailType: ["AnalyzeDiscussionInProgress"],
       },
-      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+      targets: [new eventsTargets.LambdaFunction(analyzeLambdaFunction)],
     });
   }
 }
