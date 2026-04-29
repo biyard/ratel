@@ -126,7 +126,7 @@ pub fn SpaceAnalyzeReportPage(
                 // ── Body ────────────────────────────────────
                 div { class: "split", "data-mode": "result",
                     // Banner — full-width, spans both columns in result mode
-                    ReportBanner { report: report.clone() }
+                    ReportBanner { report: report.clone(), space_id }
 
                     // Main column — all four panels live here. JS owns
                     // which is visible via `data-active`.

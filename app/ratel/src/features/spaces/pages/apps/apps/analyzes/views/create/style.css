@@ -888,6 +888,14 @@
   text-transform: uppercase;
   padding: 2px 7px;
   border-radius: 100px;
+  /* Equal width across POLL / QUIZ / DISCUSSION / FOLLOW so the
+     left edge of every chip's body label lines up regardless of
+     which source produced it. `min-width` is the longest source
+     ("DISCUSSION") at the chip's font size; centering keeps shorter
+     labels balanced inside the same footprint. */
+  min-width: 72px;
+  text-align: center;
+  display: inline-block;
 }
 .analyze-arena.analyze-arena--create .preview-chip[data-source="poll"] .preview-chip__source {
   background: var(--poll-bg);
@@ -911,6 +919,11 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 10px;
+}
+/* Empty-filter case: only the respondent_count tile is shown, and
+   we want it filling the full row instead of a 140px island. */
+.analyze-arena.analyze-arena--create .preview-stats--solo {
+  grid-template-columns: 1fr;
 }
 .analyze-arena.analyze-arena--create .preview-stat {
   padding: 14px 16px;
@@ -937,7 +950,45 @@
   color: var(--text-muted);
 }
 
-/* ── Preview records (per-source merged tables) ─────── */
+/* ── Preview sample records (one group per chip) ─────
+   Sits below the count tiles in PreviewCard. Each group renders a
+   chip header + the shared `RecordsTable` component (which loads its
+   own un-host-scoped table.css). */
+.analyze-arena.analyze-arena--create .preview-records-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 4px;
+}
+.analyze-arena.analyze-arena--create .preview-records-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.analyze-arena.analyze-arena--create .preview-records-group__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.analyze-arena.analyze-arena--create .preview-records-group__count {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+.analyze-arena.analyze-arena--create .preview-records-group__empty {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 12px 14px;
+  border: 1px dashed var(--border-subtle);
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+/* ── Preview records (per-source merged tables, legacy) ─────── */
 .analyze-arena.analyze-arena--create .preview-records {
   display: flex;
   flex-direction: column;

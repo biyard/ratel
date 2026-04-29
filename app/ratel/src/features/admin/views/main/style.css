@@ -1,0 +1,422 @@
+/* Admin arena — list-style chrome shared by every admin page.
+   Token names mirror the analyze / space arena style.css family so
+   they read consistently when read together. Scoped under
+   `.admin-arena` so the variables don't leak into surrounding pages. */
+
+.admin-arena {
+  --bg-void: var(--dark, #06060e) var(--light, #f5f5fb);
+  --bg-glass: var(--dark, rgba(12, 12, 26, 0.65))
+    var(--light, rgba(255, 255, 255, 0.75));
+  --bg-card: var(--dark, rgba(20, 20, 36, 0.55))
+    var(--light, rgba(255, 255, 255, 0.85));
+  --border-soft: var(--dark, rgba(255, 255, 255, 0.06))
+    var(--light, rgba(10, 10, 30, 0.08));
+  --border-strong: var(--dark, rgba(255, 255, 255, 0.12))
+    var(--light, rgba(10, 10, 30, 0.16));
+  --text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
+  --text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+  --accent-gold: #fcb300;
+  --accent-teal: #6eedd8;
+  --accent-violet: var(--dark, #8b5cf6) var(--light, #7c3aed);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--font-body, system-ui, -apple-system, sans-serif);
+}
+
+/* Soft orb wash behind everything — gives depth without animations. */
+.admin-arena::before {
+  content: "";
+  position: fixed;
+  inset: -10%;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(252, 179, 0, 0.08), transparent 45%),
+    radial-gradient(circle at 80% 22%, rgba(110, 237, 216, 0.06), transparent 45%),
+    radial-gradient(circle at 50% 90%, rgba(139, 92, 246, 0.07), transparent 50%);
+  filter: blur(60px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.admin-arena__topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.admin-arena__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.admin-arena__back:hover {
+  background: var(--bg-card);
+  border-color: var(--accent-gold);
+}
+.admin-arena__back svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.4;
+}
+
+.admin-arena__title {
+  font-family: var(--font-display, "Orbitron", sans-serif);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+}
+
+.admin-arena__container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.admin-arena__section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  padding: 20px 24px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+}
+
+.admin-arena__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.admin-arena__section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.admin-arena__section-title::before {
+  content: "";
+  width: 6px;
+  height: 18px;
+  border-radius: 3px;
+  background: var(--accent-gold);
+}
+
+.admin-arena__section-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.admin-arena__form {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.admin-arena__form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.admin-arena__form-label {
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.admin-arena__form-input {
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-size: 14px;
+  min-width: 120px;
+}
+.admin-arena__form-input:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 3px rgba(252, 179, 0, 0.18);
+}
+.admin-arena__form-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Stretchy form: label + (input + inline button) row + hint below.
+   Used by the analyze-quota section so the input fills the section
+   width and the button sits aligned with the input top, instead of
+   the bottom-aligned `align-items: end` flex used elsewhere. */
+.admin-arena__form--stretch {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: stretch;
+}
+.admin-arena__form--stretch .admin-arena__form-row {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+}
+.admin-arena__form--stretch .admin-arena__form-input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+.admin-arena__form--stretch .admin-arena__btn {
+  flex: 0 0 auto;
+}
+
+.admin-arena__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent-gold);
+  color: #0c0c1a;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 120ms ease;
+}
+.admin-arena__btn:hover {
+  opacity: 0.9;
+}
+.admin-arena__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.admin-arena__btn--ghost {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+}
+
+.admin-arena__status {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.admin-arena__status--ok {
+  color: var(--accent-teal);
+}
+.admin-arena__status--err {
+  color: #ef4444;
+}
+
+/* Section header row: title + accent-gold action button on the right.
+   Used for the rewards header where "Add Reward" lives next to the
+   title. Keeps the same dot-prefix accent as `.admin-arena__section-title`. */
+.admin-arena__section-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.admin-arena__section-actions-title {
+  font-family: var(--font-display, "Orbitron", sans-serif);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.admin-arena__section-actions-title::before {
+  content: "";
+  width: 6px;
+  height: 20px;
+  border-radius: 3px;
+  background: var(--accent-gold);
+}
+
+/* Arena-style table — replaces the plain Tailwind tables that used to
+   sit in the rewards / granted-memberships sections. */
+.admin-arena__table-wrap {
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.18);
+}
+.admin-arena__table-head {
+  padding: 12px 16px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-soft);
+  background: rgba(255, 255, 255, 0.02);
+}
+.admin-arena__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.admin-arena__table thead tr {
+  background: rgba(255, 255, 255, 0.03);
+}
+.admin-arena__table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-soft);
+}
+.admin-arena__table td {
+  padding: 12px 16px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-soft);
+}
+.admin-arena__table tbody tr:last-child td {
+  border-bottom: none;
+}
+.admin-arena__table tbody tr {
+  transition: background 120ms ease;
+}
+.admin-arena__table tbody tr:hover {
+  background: rgba(252, 179, 0, 0.04);
+}
+.admin-arena__table-empty {
+  padding: 32px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.admin-arena__table-link {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--accent-gold);
+  font-size: 13px;
+  font-weight: 600;
+  transition: opacity 120ms ease;
+}
+.admin-arena__table-link:hover {
+  opacity: 0.8;
+}
+
+/* Enterprise grant inline form — 3-column grid that matches the
+   stretchy spacing of the analyze quota section. */
+.admin-arena__grant-grid {
+  display: grid;
+  grid-template-columns: 180px 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+@media (max-width: 768px) {
+  .admin-arena__grant-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.admin-arena__form-select {
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-size: 14px;
+  width: 100%;
+}
+.admin-arena__form-select:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 3px rgba(252, 179, 0, 0.18);
+}
+.admin-arena__section-description {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.admin-arena__subsection {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-soft);
+}
+.admin-arena__subsection-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+/* Modal (reward edit/create form). Uses the same glass token palette
+   so it doesn't fall back to the bare Tailwind look. */
+.admin-arena__modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.admin-arena__modal {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 16px;
+  padding: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+.admin-arena__modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+.admin-arena__modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}

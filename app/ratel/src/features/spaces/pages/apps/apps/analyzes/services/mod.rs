@@ -13,4 +13,6 @@ pub mod discussion_analysis;
 #[cfg(feature = "server")]
 pub mod intersection;
 #[cfg(feature = "server")]
+pub mod record_hydrate;
+#[cfg(feature = "server")]
 pub mod text_pipeline;

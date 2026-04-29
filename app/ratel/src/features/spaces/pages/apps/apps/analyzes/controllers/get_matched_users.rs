@@ -44,7 +44,7 @@ pub async fn get_matched_users(
             .map(|p| p.to_string())
             .collect()
     } else {
-        let (set, _) =
+        let (set, _, _) =
             services::intersection::intersect_filters(cli, &space_pk, &report.filters)
                 .await
                 .map_err(|e| {

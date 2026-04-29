@@ -25,6 +25,9 @@ pub use list_analyze_polls::*;
 mod list_analyze_quizzes;
 pub use list_analyze_quizzes::*;
 
+mod list_analyze_records;
+pub use list_analyze_records::*;
+
 mod list_analyze_reports;
 pub use list_analyze_reports::*;
 
