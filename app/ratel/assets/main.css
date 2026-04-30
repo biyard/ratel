@@ -36188,3 +36188,240 @@ body.comments-panel-resizing {
   .onboarding-benefits { grid-template-columns: 1fr; gap: 14px; }
   .onboarding-page { padding: 36px 18px; }
 }
+
+/* === src/features/posts/views/post_detail (signed-out backlink-landing) === */
+/* AC-17 / AC-18 — referral banner, brand bar, and subscribe CTA visible
+   only when the post-detail viewer is anonymous. Class names are
+   `pd-*` to live alongside the existing post-detail rules without
+   conflict. */
+
+.pd-refer-bar {
+  --pd-refer-bg-from: var(--dark, rgba(10,133,255,0.14)) var(--light, rgba(10,133,255,0.10));
+  --pd-refer-bg-to: var(--dark, rgba(10,133,255,0.05)) var(--light, rgba(10,133,255,0.04));
+  --pd-refer-border: var(--dark, rgba(10,133,255,0.25)) var(--light, rgba(10,133,255,0.30));
+  --pd-refer-text: var(--dark, #f0f0f5) var(--light, #12121a);
+  --pd-refer-text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+  --pd-refer-bsky-bg: #0a85ff;
+
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: none;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 20px;
+  background: linear-gradient(180deg, var(--pd-refer-bg-from), var(--pd-refer-bg-to));
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--pd-refer-border);
+  color: var(--pd-refer-text-muted);
+}
+.pd-refer-bar[data-show="true"] { display: flex; }
+.pd-refer-bar__icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: var(--pd-refer-bsky-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+}
+.pd-refer-bar__icon svg { width: 14px; height: 14px; }
+.pd-refer-bar__text {
+  display: none;
+  flex: 1;
+  font-size: 12.5px;
+  color: var(--pd-refer-text-muted);
+  min-width: 0;
+}
+.pd-refer-bar[data-platform="bluesky"] .pd-refer-bar__text--bluesky { display: block; }
+.pd-refer-bar[data-platform="linkedin"] .pd-refer-bar__text--linkedin { display: block; }
+.pd-refer-bar[data-platform="threads"] .pd-refer-bar__text--threads { display: block; }
+/* Tier-3 (no platform) → fall back to generic. */
+.pd-refer-bar[data-tier="3"] .pd-refer-bar__text--generic { display: block; }
+.pd-refer-bar__close {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--pd-refer-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s;
+}
+.pd-refer-bar__close:hover {
+  color: var(--pd-refer-text);
+  background: var(--dark, rgba(255,255,255,0.04)) var(--light, rgba(0,0,0,0.04));
+}
+.pd-refer-bar__close svg { width: 14px; height: 14px; }
+
+.pd-brand-bar {
+  --pd-brand-bg: var(--dark, rgba(6,6,14,0.50)) var(--light, rgba(255,255,255,0.85));
+  --pd-brand-border: var(--dark, rgba(255,255,255,0.06)) var(--light, rgba(0,0,0,0.08));
+  --pd-brand-text: var(--dark, #f0f0f5) var(--light, #12121a);
+  --pd-brand-text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  border-bottom: 1px solid var(--pd-brand-border);
+  background: var(--pd-brand-bg);
+  backdrop-filter: blur(16px);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  /* If the referral bar is visible above, push the brand bar below it. */
+}
+.pd-refer-bar[data-show="true"] + .pd-brand-bar { top: 48px; }
+.pd-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pd-brand-text);
+  text-decoration: none;
+}
+.pd-brand__dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #fcb300, #6eedd8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0a0a0a;
+  font-size: 11px;
+  font-weight: 900;
+}
+.pd-brand-bar__actions { display: flex; gap: 8px; }
+.pd-brand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: 1px solid var(--pd-brand-border);
+  background: transparent;
+  color: var(--pd-brand-text-muted);
+  text-decoration: none;
+}
+.pd-brand-btn:hover {
+  border-color: rgba(252, 179, 0, 0.25);
+  color: #fcb300;
+}
+.pd-brand-btn--primary {
+  background: linear-gradient(135deg, #fcb300, #e5a200);
+  color: #0a0a0a;
+  border-color: transparent;
+  box-shadow: 0 2px 14px rgba(252, 179, 0, 0.20);
+}
+.pd-brand-btn--primary:hover {
+  color: #0a0a0a;
+  box-shadow: 0 4px 22px rgba(252, 179, 0, 0.35);
+}
+.pd-brand-btn--primary svg { width: 12px; height: 12px; }
+
+.pd-subscribe-cta {
+  --pd-cta-bg-from: var(--dark, rgba(252,179,0,0.05)) var(--light, rgba(252,179,0,0.08));
+  --pd-cta-bg-to: var(--dark, rgba(110,237,216,0.03)) var(--light, rgba(110,237,216,0.05));
+  --pd-cta-border: var(--dark, rgba(252,179,0,0.18)) var(--light, rgba(252,179,0,0.25));
+  --pd-cta-text: var(--dark, #f0f0f5) var(--light, #12121a);
+  --pd-cta-text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+  --pd-cta-ghost-border: var(--dark, rgba(255,255,255,0.12)) var(--light, rgba(0,0,0,0.16));
+
+  margin: 32px 0 8px;
+  padding: 28px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--pd-cta-bg-from), var(--pd-cta-bg-to));
+  border: 1px solid var(--pd-cta-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: center;
+  align-items: center;
+}
+.pd-subscribe-cta__eyebrow {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #fcb300;
+}
+.pd-subscribe-cta__title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--pd-cta-text);
+  margin: 0;
+}
+.pd-subscribe-cta__sub {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--pd-cta-text-muted);
+  max-width: 480px;
+  margin: 0;
+}
+.pd-subscribe-cta__row { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; justify-content: center; }
+.pd-subscribe-cta__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: 12px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  border: 1px solid transparent;
+}
+.pd-subscribe-cta__btn svg { width: 13px; height: 13px; }
+.pd-subscribe-cta__btn--primary {
+  background: linear-gradient(135deg, #fcb300, #e5a200);
+  color: #0a0a0a;
+  box-shadow: 0 4px 20px rgba(252, 179, 0, 0.28);
+}
+.pd-subscribe-cta__btn--primary:hover {
+  box-shadow: 0 6px 30px rgba(252, 179, 0, 0.45);
+  transform: translateY(-1px);
+  color: #0a0a0a;
+}
+.pd-subscribe-cta__btn--ghost {
+  background: transparent;
+  border-color: var(--pd-cta-ghost-border);
+  color: var(--pd-cta-text-muted);
+}
+.pd-subscribe-cta__btn--ghost:hover {
+  color: var(--pd-cta-text);
+  border-color: var(--dark, rgba(255,255,255,0.25)) var(--light, rgba(0,0,0,0.30));
+}
+
+@media (max-width: 720px) {
+  .pd-refer-bar { padding: 8px 14px; gap: 10px; }
+  .pd-refer-bar__text { font-size: 11.5px; }
+  .pd-brand-bar { padding: 12px 16px; }
+  .pd-subscribe-cta { padding: 22px 18px; }
+  .pd-subscribe-cta__title { font-size: 18px; }
+}
