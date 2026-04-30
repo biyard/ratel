@@ -16,10 +16,8 @@ use crate::features::cross_posting::types::{SocialPlatform, SyndicationJobView};
 /// Retry is allowed only on Failed; the back-end re-validates this.
 #[component]
 pub fn SyndicationPanel(post_id: FeedPartition) -> Element {
-    let UseSyndicationPanel {
-        panel,
-        mut handle_retry,
-    } = use_syndication_panel(post_id)?;
+    let mut sp = use_syndication_panel(post_id)?;
+    let UseSyndicationPanel { panel, .. } = sp;
     let t: SyndicationPanelTranslate = use_translate();
 
     let Some(data) = panel() else {
@@ -53,8 +51,6 @@ pub fn SyndicationPanel(post_id: FeedPartition) -> Element {
         .sum();
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
-
         section { class: "syn",
             div { class: "syn-head",
                 span { class: "syn-head__title", "{t.title}" }
@@ -89,7 +85,9 @@ pub fn SyndicationPanel(post_id: FeedPartition) -> Element {
                     SyndicationCard {
                         key: "{job.platform}",
                         job: job.clone(),
-                        on_retry: move |p: SocialPlatform| handle_retry.call(p),
+                        on_retry: move |p: SocialPlatform| async move {
+                            let _ = sp.retry(p).await;
+                        },
                     }
                 }
             }

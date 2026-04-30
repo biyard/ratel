@@ -51,12 +51,11 @@ pub fn CrossPostSidebar(
     let char_count = strip_html(&content()).chars().count();
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
-
         // Root is a `div` (not `aside`) — the parent post-edit shell already
         // wraps the right-rail in an `aside.side-panel`, and HTML5 prefers
         // not to nest `<aside>` for non-tangential content. Mockup class
         // names (`crosspost`, `crosspost-head`, `pp-card`, …) are preserved.
+        // CSS lives globally in `app/ratel/assets/main.css` (FOUC convention).
         div { class: "crosspost",
             div { class: "crosspost-head",
                 span { class: "crosspost-head__eyebrow", "{t.eyebrow}" }

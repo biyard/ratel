@@ -26,8 +26,6 @@ pub fn BlueskyConnectModal(
     let submit_disabled = handle().trim().is_empty() || app_password().trim().is_empty();
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
-
         div {
             class: "bsky-modal-backdrop",
             "data-open": "{open()}",
