@@ -6815,7 +6815,11 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   --accent-violet: #818cf8;
 
   position: relative;
-  min-height: 100vh;
+  /* Body has `overflow: hidden` on desktop (tailwind.css), so this
+     arena owns its own scroll container. */
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   isolation: isolate;
@@ -34618,7 +34622,11 @@ body.comments-panel-resizing {
   --font-body: 'Outfit', sans-serif;
 
   position: relative;
-  min-height: 100vh;
+  /* Body has `overflow: hidden` on desktop (tailwind.css), so this
+     arena owns its own scroll container. */
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   isolation: isolate;
@@ -35853,7 +35861,12 @@ body.comments-panel-resizing {
   --onb-input: var(--dark, rgba(255,255,255,0.025)) var(--light, rgba(0,0,0,0.03));
 
   position: relative;
-  min-height: 100vh;
+  /* Body has `overflow: hidden` on desktop (tailwind.css), so this
+     arena owns its own scroll container — same pattern as
+     `.essence-sources-arena` / `.connections-arena`. */
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   isolation: isolate;
