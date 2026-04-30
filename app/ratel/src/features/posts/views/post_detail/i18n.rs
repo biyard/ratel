@@ -35,4 +35,38 @@ translate! {
         en: "Integration will launch soon",
         ko: "연동 준비 중입니다",
     },
+
+    // AC-17/18 — signed-out backlink-landing additions.
+    refer_close_aria: { en: "Close", ko: "닫기" },
+    refer_text_bluesky: {
+        en: "You arrived from Bluesky — see the full thinking and subscribe to the author on Ratel.",
+        ko: "Bluesky 에서 오셨군요. Ratel 에서 글 전체를 읽고 작성자를 구독해 보세요.",
+    },
+    refer_text_linkedin: {
+        en: "You arrived from LinkedIn — see the full thinking and subscribe to the author on Ratel.",
+        ko: "LinkedIn 에서 오셨군요. Ratel 에서 글 전체를 읽고 작성자를 구독해 보세요.",
+    },
+    refer_text_threads: {
+        en: "You arrived from Threads — see the full thinking and subscribe to the author on Ratel.",
+        ko: "Threads 에서 오셨군요. Ratel 에서 글 전체를 읽고 작성자를 구독해 보세요.",
+    },
+    refer_text_generic: {
+        en: "You're reading this on Ratel — every post is a queryable surface, not just a feed item.",
+        ko: "이 글은 Ratel 에서 읽고 계십니다. 모든 글은 단순 피드가 아닌 쿼리 가능한 자산입니다.",
+    },
+
+    brand_signin: { en: "Sign in", ko: "로그인" },
+    brand_get_started: { en: "Get started", ko: "시작하기" },
+
+    subscribe_cta_eyebrow: { en: "Want more from this author?", ko: "이 작성자의 글이 더 궁금하신가요?" },
+    subscribe_cta_title: {
+        en: "Create a free Ratel account to follow them.",
+        ko: "Ratel 계정을 무료로 만들어 팔로우해 보세요.",
+    },
+    subscribe_cta_sub: {
+        en: "Reading is always free. Connect your social accounts to bring your own audience along.",
+        ko: "읽기는 항상 무료입니다. 소셜 계정을 연결해 자신의 독자도 함께 데려와 보세요.",
+    },
+    subscribe_cta_primary: { en: "Create free account", ko: "무료 계정 만들기" },
+    subscribe_cta_secondary: { en: "I have an account", ko: "이미 계정이 있어요" },
 }
