@@ -6,7 +6,6 @@ use dioxus_primitives::accordion::{
 #[component]
 pub fn Accordion(props: AccordionProps) -> Element {
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         accordion::Accordion {
             class: "accordion",
             width: "15rem",

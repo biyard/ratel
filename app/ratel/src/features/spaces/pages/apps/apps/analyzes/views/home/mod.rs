@@ -53,7 +53,6 @@ fn AnalyzesListArena(space_id: ReadSignal<SpacePartition>) -> Element {
     let count_label = format!("{} {}", reports.len(), tr.list_count_unit);
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         document::Script { defer: true, src: asset!("./script.js") }
 
         div { class: "analyze-arena",
@@ -375,7 +374,6 @@ fn NewReportCard(onclick: EventHandler<()>) -> Element {
 #[component]
 fn ViewerEmpty() -> Element {
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         div { class: "analyze-arena",
             div { class: "arena-viewer",
                 span { class: "arena-viewer__title", "No access" }

@@ -7,7 +7,6 @@ pub fn EssenceTopbar() -> Element {
     let nav = use_navigator();
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         div { class: "essence-topbar",
             div { class: "essence-topbar__left",
                 button {

@@ -7,7 +7,6 @@ pub fn ViewerPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let _ = space_id;
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "space-panels-arena",
             div { class: "spa-viewer",

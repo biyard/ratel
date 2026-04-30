@@ -152,7 +152,6 @@ pub fn ActionRewardSetting(
     };
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         div { class: "arena-reward",
             // ── Header strip ─────────
             div { class: "arena-reward__head",
