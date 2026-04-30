@@ -1,6 +1,8 @@
 use crate::common::*;
+use crate::features::cross_posting::types::SocialPlatform;
 use crate::features::notifications::i18n::NotificationsTranslate;
 use dioxus_translate::Language;
+use std::str::FromStr;
 
 impl InboxPayload {
     pub fn get_contents(
@@ -144,6 +146,27 @@ impl InboxPayload {
                 String::new(),
                 None,
             ),
+            InboxPayload::CrossPostingFailed {
+                platform,
+                error_category,
+                ..
+            } => {
+                let platform_display = SocialPlatform::from_str(platform)
+                    .map(|p| p.display_name().to_string())
+                    .unwrap_or_else(|_| platform.clone());
+                let title = tr
+                    .xpost_failed_title
+                    .replace("{platform}", &platform_display);
+                let body_template = match error_category.as_str() {
+                    "network_error" => tr.xpost_failed_network,
+                    "rate_limited" => tr.xpost_failed_rate_limit,
+                    "auth_expired" => tr.xpost_failed_auth_expired,
+                    "content_rejected" => tr.xpost_failed_content_rejected,
+                    _ => tr.xpost_failed_unknown,
+                };
+                let body = body_template.replace("{platform}", &platform_display);
+                (title, body, None)
+            }
         }
     }
 }
