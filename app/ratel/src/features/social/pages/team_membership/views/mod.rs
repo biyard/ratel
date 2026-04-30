@@ -85,7 +85,6 @@ pub fn Home(username: ReadSignal<String>) -> Element {
 
     let Some(membership): Option<TeamMembershipResponse> = membership_resource() else {
         return rsx! {
-            document::Stylesheet { href: asset!("./style.css") }
             div { class: "tm-status-page",
                 div { class: "hero",
                     h1 { class: "hero__title",
@@ -126,7 +125,6 @@ pub fn Home(username: ReadSignal<String>) -> Element {
     };
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "tm-status-page",
             // Section label

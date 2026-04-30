@@ -154,7 +154,6 @@ pub fn QuizArenaPage(
     };
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "quiz-arena",
 

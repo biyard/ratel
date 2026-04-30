@@ -6,9 +6,17 @@ use crate::common::types::{
 use crate::features::auth::User;
 use crate::features::posts::models::Post;
 use crate::features::spaces::space_common::controllers::HotSpaceResponse;
-use crate::features::timeline::models::{TimelineEntry, TimelineReason};
 
-async fn seed_space(ctx: &TestContext, author: &User, status: SpaceStatus) -> SpaceCommon {
+/// Seed enough participants on the SpaceCommon row to clear the Hot tab's
+/// participant gate (`MIN_PARTICIPANTS_FOR_HOT`). Tests opting in pass a
+/// number ≥ that threshold; tests verifying the gate's lower bound pass
+/// something below it.
+async fn seed_space_with_participants(
+    ctx: &TestContext,
+    author: &User,
+    status: SpaceStatus,
+    participants: i64,
+) -> SpaceCommon {
     let id = uuid::Uuid::new_v4().to_string();
     let now = crate::common::utils::time::get_now_timestamp_millis();
     let space_pk = Partition::Space(id.clone());
@@ -26,18 +34,34 @@ async fn seed_space(ctx: &TestContext, author: &User, status: SpaceStatus) -> Sp
     space.user_pk = author.pk.clone();
     space.author_display_name = author.display_name.clone();
     space.author_username = author.username.clone();
+    space.participants = participants;
     space.create(&ctx.ddb).await.unwrap();
 
     let post = Post {
         pk: post_pk,
         sk: EntityType::Post,
         title: format!("Test Space {}", space.pk),
-        space_pk: Some(space_pk),
+        space_pk: Some(space_pk.clone()),
         ..Default::default()
     };
     post.create(&ctx.ddb).await.unwrap();
 
+    // The Hot stream is read-only; rows are written by
+    // `space_fanout::upsert_hot_space`. Production paths trigger this via
+    // EventBridge — here we call it directly so seeded spaces actually
+    // surface (or stay hidden, when below the participant gate).
+    crate::features::spaces::space_common::services::space_fanout::upsert_hot_space(
+        &ctx.ddb, &space_pk,
+    )
+    .await;
+
     space
+}
+
+/// Convenience: seed a space well above the participant gate so it's eligible
+/// for the Hot tab without callers having to know the threshold.
+async fn seed_space(ctx: &TestContext, author: &User, status: SpaceStatus) -> SpaceCommon {
+    seed_space_with_participants(ctx, author, status, 50).await
 }
 
 async fn seed_participant(
@@ -49,18 +73,6 @@ async fn seed_participant(
     let mut sp = SpaceParticipant::new_non_anonymous(space_pk.clone(), user.clone());
     sp.last_activity_at = last_activity_at;
     sp.create(&ctx.ddb).await.unwrap();
-}
-
-async fn seed_timeline_entry(
-    ctx: &TestContext,
-    viewer: &User,
-    post_pk: &Partition,
-    author_pk: &Partition,
-    reason: TimelineReason,
-) {
-    let now = crate::common::utils::time::get_now_timestamp_millis();
-    let entry = TimelineEntry::new(&viewer.pk, post_pk, author_pk, now, reason);
-    entry.create(&ctx.ddb).await.unwrap();
 }
 
 fn space_id_str(pk: &Partition) -> String {
@@ -176,8 +188,10 @@ async fn test_my_spaces_requires_auth() {
 
 // ----- Hot Spaces --------------------------------------------------------
 
+/// Anonymous viewers see the global Hot stream — every eligible space
+/// surfaces regardless of viewer identity.
 #[tokio::test]
-async fn test_hot_spaces_logged_out_uses_public_fallback() {
+async fn test_hot_spaces_anonymous_sees_global_stream() {
     let ctx = TestContext::setup().await;
     let author = ctx.test_user.0.clone();
 
@@ -193,50 +207,21 @@ async fn test_hot_spaces_logged_out_uses_public_fallback() {
     let target = space_id_str(&space.pk);
     assert!(
         body.items.iter().any(|i| i.space_id.to_string() == target),
-        "anon fallback should include the public space: {:?}",
+        "anon viewer should see the public space: {:?}",
         body.items
     );
 }
 
+/// Logged-in viewers see the same stream as anonymous ones — there is no
+/// per-viewer fanout. A viewer with no relationship to the author still
+/// sees the space because the Hot tab is global.
 #[tokio::test]
-async fn test_hot_spaces_logged_in_excludes_non_fanned_out_public_space() {
+async fn test_hot_spaces_logged_in_sees_same_stream_as_anonymous() {
     let ctx = TestContext::setup().await;
     let author = ctx.test_user.0.clone();
     let (_viewer, viewer_headers) = ctx.create_another_user().await;
 
-    let _public_space = seed_space(&ctx, &author, SpaceStatus::Ongoing).await;
-
-    let (status, _, body) = crate::test_get! {
-        app: ctx.app.clone(),
-        path: "/api/home/hot-spaces",
-        headers: viewer_headers,
-        response_type: crate::common::types::ListResponse<HotSpaceResponse>,
-    };
-    assert_eq!(status, 200, "hot-spaces: {:?}", body);
-    assert!(
-        body.items.is_empty(),
-        "viewer outside the fan-out graph must see no Hot spaces: {:?}",
-        body.items
-    );
-}
-
-#[tokio::test]
-async fn test_hot_spaces_logged_in_surfaces_following_entry() {
-    // Positive case for the fan-in path: a TimelineEntry with reason Following
-    // should resolve back to its SpaceCommon and surface the space in Hot.
-    let ctx = TestContext::setup().await;
-    let author = ctx.test_user.0.clone();
-    let (viewer, viewer_headers) = ctx.create_another_user().await;
-
     let space = seed_space(&ctx, &author, SpaceStatus::Ongoing).await;
-    seed_timeline_entry(
-        &ctx,
-        &viewer,
-        &space.post_pk,
-        &author.pk,
-        TimelineReason::Following,
-    )
-    .await;
 
     let (status, _, body) = crate::test_get! {
         app: ctx.app.clone(),
@@ -249,7 +234,32 @@ async fn test_hot_spaces_logged_in_surfaces_following_entry() {
     let target = space_id_str(&space.pk);
     assert!(
         body.items.iter().any(|i| i.space_id.to_string() == target),
-        "Following timeline entry should surface the space in Hot: {:?}",
+        "logged-in viewer should see the global Hot stream: {:?}",
+        body.items
+    );
+}
+
+/// Spaces below the participant gate must NOT surface in the Hot tab —
+/// the gate is what prevents empty/test spaces from polluting the stream.
+#[tokio::test]
+async fn test_hot_spaces_excludes_low_participant_space() {
+    let ctx = TestContext::setup().await;
+    let author = ctx.test_user.0.clone();
+
+    // 1 participant — well below the gate.
+    let space = seed_space_with_participants(&ctx, &author, SpaceStatus::Ongoing, 1).await;
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: "/api/home/hot-spaces",
+        response_type: crate::common::types::ListResponse<HotSpaceResponse>,
+    };
+    assert_eq!(status, 200, "hot-spaces: {:?}", body);
+
+    let target = space_id_str(&space.pk);
+    assert!(
+        body.items.iter().all(|i| i.space_id.to_string() != target),
+        "space with <MIN_PARTICIPANTS_FOR_HOT participants must not surface: {:?}",
         body.items
     );
 }

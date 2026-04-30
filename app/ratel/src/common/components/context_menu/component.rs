@@ -6,7 +6,6 @@ use dioxus_primitives::context_menu::{
 #[component]
 pub fn ContextMenu(props: ContextMenuProps) -> Element {
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         context_menu::ContextMenu {
             disabled: props.disabled,
             open: props.open,

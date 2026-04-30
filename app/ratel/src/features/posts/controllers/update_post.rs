@@ -35,6 +35,9 @@ pub enum UpdatePostRequest {
     ArtworkMetadata {
         metadata: Vec<PostArtworkMetadata>,
     },
+    Author {
+        team_id: Option<TeamPartition>,
+    },
 }
 
 #[mcp_tool(
@@ -142,6 +145,45 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
         UpdatePostRequest::PostType { r#type } => {
             post.post_type = r#type.clone();
             vec![updater.with_post_type(r#type).transact_write_item()]
+        }
+        UpdatePostRequest::Author { team_id } => {
+            let author: Author = if let Some(team_id) = team_id {
+                let team_pk: Partition = team_id.into();
+                Team::get_permitted_team(
+                    cli,
+                    team_pk,
+                    user.pk.clone(),
+                    TeamGroupPermission::PostWrite,
+                )
+                .await?
+                .into()
+            } else {
+                let user_pk = user.pk.clone();
+                let full_user = crate::features::auth::User::get(
+                    cli,
+                    user_pk,
+                    Some(EntityType::User),
+                )
+                .await?
+                .ok_or::<Error>(PostError::NotAccessible.into())?;
+                full_user.into()
+            };
+
+            post.user_pk = author.pk.clone();
+            post.author_display_name = author.display_name.clone();
+            post.author_profile_url = author.profile_url.clone();
+            post.author_username = author.username.clone();
+            post.author_type = author.user_type.clone();
+
+            vec![
+                updater
+                    .with_user_pk(author.pk)
+                    .with_author_display_name(author.display_name)
+                    .with_author_profile_url(author.profile_url)
+                    .with_author_username(author.username)
+                    .with_author_type(author.user_type)
+                    .transact_write_item(),
+            ]
         }
         UpdatePostRequest::ArtworkMetadata {
             metadata: next_metadata,

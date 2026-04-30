@@ -151,6 +151,9 @@ pub enum EntityType {
     FileLink(String), // FileLink#{file_id}
     SpaceAnalyze,
     SpaceAnalyzeRequest(String),
+    SpaceAnalyzeReport(String), // SPACE_ANALYZE_REPORT#{ulid}
+    SpaceAnalyzeReportResult(String), // SPACE_ANALYZE_REPORT_RESULT#{report_id} — poll/quiz/follow aggregations, 1:1 with report
+    SpaceAnalyzeDiscussionResult(String, String), // SPACE_ANALYZE_DISCUSSION_RESULT#{report_id}#{discussion_id_and_request_uuid} — second field is "{discussion_id}#{request_uuid}" composite so begins_with by (report_id, discussion_id) groups history together
     SpaceDiscussion(String),
     SpaceDiscussionMember(String, String),
     SpaceDiscussionParticipant(String, String),
@@ -198,6 +201,10 @@ pub enum EntityType {
     Reward,
     SpaceReward,
 
+    /// Sort key for the singleton AnalyzeQuotaConfig row
+    /// (`pk = AnalyzeQuotaConfig`).
+    AnalyzeQuotaConfig,
+
     ContentReport,
 
     Category(String), // CATEGORY#${name}
@@ -214,6 +221,11 @@ pub enum EntityType {
     // Activity
     SpaceActivity(String), // SPACE_ACTIVITY#action_id#timestamp
     SpaceScore,
+
+    // Hot space ranking snapshot. PK: SPACE#{space_id}, SK: HotSpace.
+    // Row carries denormalized counts + WindowedRankKey on gsi1 for global
+    // ranking. Single shared stream — every viewer sees the same Hot tab.
+    HotSpace,
 
     // Essence — user's knowledge graph entries. Each row is a reference to
     // something the user authored (Post, Poll, Quiz, PostComment,

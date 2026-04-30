@@ -4,7 +4,6 @@ use dioxus_primitives::toggle_group::{self, ToggleGroupProps, ToggleItemProps};
 #[component]
 pub fn ToggleGroup(props: ToggleGroupProps) -> Element {
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         toggle_group::ToggleGroup {
             class: "toggle-group",
             default_pressed: props.default_pressed,

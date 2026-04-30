@@ -61,6 +61,19 @@ pub enum DetailType {
     /// broadcast fan-out: create a pinned Post in every recognized sub-team
     /// feed and notify each member.
     SubTeamAnnouncementPublished,
+    /// Fires on `SpaceAnalyzeReport` INSERT (status=InProgress). The
+    /// handler runs the auto poll/quiz/follow aggregations against the
+    /// report's matched-user intersection, persists a sibling
+    /// `SpaceAnalyzeReportResult` row, then flips the parent report's
+    /// status to Finish.
+    AnalyzeReportInProgress,
+    /// Fires on `SpaceAnalyzeDiscussionResult` INSERT (status=InProgress).
+    /// Handler loads the matched users' comments on the target
+    /// discussion, runs lindera + Gibbs LDA + TF-IDF + text-network,
+    /// then updates the SAME row with results and `status=Finish`.
+    /// Filter pinned to INSERT keeps Lambda's own update from
+    /// re-triggering itself.
+    AnalyzeDiscussionInProgress,
     #[serde(other)]
     Unknown,
 }
@@ -105,10 +118,12 @@ impl EventBridgeEnvelope {
                 .await
             }
             DetailType::PopularSpaceUpdate => {
-                crate::features::timeline::services::fan_out_popular_space(
-                    DetailType::parse_detail(&self.detail)?,
-                )
-                .await
+                let space: crate::common::models::space::SpaceCommon =
+                    DetailType::parse_detail(&self.detail)?;
+                let space_pk = space.pk.clone();
+                let r = crate::features::timeline::services::fan_out_popular_space(space).await;
+                fanout_hot_space(&space_pk).await;
+                r
             }
             DetailType::NotificationSend => {
                 let notification: crate::common::models::notification::Notification =
@@ -139,36 +154,67 @@ impl EventBridgeEnvelope {
                 crate::features::rag::qdrant::indexers::reply_indexer::index_reply(comment).await
             }
             DetailType::ActivityScoreAggregate => {
-                let activity = DetailType::parse_detail(&self.detail)?;
-                crate::features::activity::services::aggregate_score(activity).await
+                let activity: crate::features::activity::models::SpaceActivity =
+                    DetailType::parse_detail(&self.detail)?;
+                let space_pk = activity.space_pk.clone();
+                let r = crate::features::activity::services::aggregate_score(activity).await;
+                fanout_hot_space(&space_pk).await;
+                r
             }
             DetailType::SpaceStatusChangeEvent => {
                 let event: crate::common::models::space::SpaceStatusChangeEvent =
                     DetailType::parse_detail(&self.detail)?;
-                crate::features::spaces::space_common::services::handle_space_status_change(event)
-                    .await
+                let space_pk = event.space_pk.clone();
+                let r =
+                    crate::features::spaces::space_common::services::handle_space_status_change(
+                        event,
+                    )
+                    .await;
+                fanout_hot_space(&space_pk).await;
+                r
             }
             DetailType::SpaceActionStatusChange => {
                 let action: crate::features::spaces::pages::actions::models::SpaceAction =
                     DetailType::parse_detail(&self.detail)?;
-                crate::features::spaces::pages::actions::services::notify_action_ongoing(action)
-                    .await
+                let space_pk = action.space_pk.clone();
+                let r = crate::features::spaces::pages::actions::services::notify_action_ongoing(
+                    action,
+                )
+                .await;
+                fanout_hot_space(&space_pk).await;
+                r
             }
             DetailType::PollXpRecord => {
-                let answer = DetailType::parse_detail(&self.detail)?;
-                crate::features::activity::services::handle_poll_xp(answer).await
+                let answer: crate::features::spaces::pages::actions::actions::poll::SpacePollUserAnswer =
+                    DetailType::parse_detail(&self.detail)?;
+                let space_pk = space_pk_from_id_str(answer.space_id.as_deref());
+                let r = crate::features::activity::services::handle_poll_xp(answer).await;
+                fanout_if_some(space_pk.as_ref()).await;
+                r
             }
             DetailType::QuizXpRecord => {
-                let attempt = DetailType::parse_detail(&self.detail)?;
-                crate::features::activity::services::handle_quiz_xp(attempt).await
+                let attempt: crate::features::spaces::pages::actions::actions::quiz::SpaceQuizAttempt =
+                    DetailType::parse_detail(&self.detail)?;
+                let space_pk = space_pk_from_id_str(attempt.space_id.as_deref());
+                let r = crate::features::activity::services::handle_quiz_xp(attempt).await;
+                fanout_if_some(space_pk.as_ref()).await;
+                r
             }
             DetailType::DiscussionXpRecord => {
-                let comment = DetailType::parse_detail(&self.detail)?;
-                crate::features::activity::services::handle_discussion_xp(comment).await
+                let comment: crate::features::spaces::pages::actions::actions::discussion::SpacePostComment =
+                    DetailType::parse_detail(&self.detail)?;
+                let space_pk = comment.space_pk.clone();
+                let r = crate::features::activity::services::handle_discussion_xp(comment).await;
+                fanout_if_some(space_pk.as_ref()).await;
+                r
             }
             DetailType::FollowXpRecord => {
-                let follow = DetailType::parse_detail(&self.detail)?;
-                crate::features::activity::services::handle_follow_xp(follow).await
+                let follow: crate::common::models::auth::UserFollow =
+                    DetailType::parse_detail(&self.detail)?;
+                let space_pk = space_pk_from_id_str(follow.space_id.as_deref());
+                let r = crate::features::activity::services::handle_follow_xp(follow).await;
+                fanout_if_some(space_pk.as_ref()).await;
+                r
             }
             DetailType::EssenceIndexPost => {
                 let post: crate::features::posts::models::Post =
@@ -187,33 +233,44 @@ impl EventBridgeEnvelope {
             DetailType::EssenceIndexDiscussionComment => {
                 let comment: crate::features::spaces::pages::actions::actions::discussion::SpacePostComment =
                     DetailType::parse_detail(&self.detail)?;
+                let space_pk = comment.space_pk.clone();
                 let cfg = crate::common::CommonConfig::default();
                 let cli = cfg.dynamodb();
-                crate::features::essence::services::index_discussion_comment(cli, &comment).await
+                let r =
+                    crate::features::essence::services::index_discussion_comment(cli, &comment)
+                        .await;
+                fanout_if_some(space_pk.as_ref()).await;
+                r
             }
             DetailType::EssenceIndexPoll => {
                 let poll: crate::features::spaces::pages::actions::actions::poll::SpacePoll =
                     DetailType::parse_detail(&self.detail)?;
+                let space_pk = poll.pk.clone();
                 let cfg = crate::common::CommonConfig::default();
                 let cli = cfg.dynamodb();
-                crate::features::essence::services::index_poll(cli, &poll).await
+                let r = crate::features::essence::services::index_poll(cli, &poll).await;
+                fanout_hot_space(&space_pk).await;
+                r
             }
             DetailType::EssenceIndexQuiz => {
                 let quiz: crate::features::spaces::pages::actions::actions::quiz::SpaceQuiz =
                     DetailType::parse_detail(&self.detail)?;
+                let space_pk = quiz.pk.clone();
                 let cfg = crate::common::CommonConfig::default();
                 let cli = cfg.dynamodb();
-                crate::features::essence::services::index_quiz(cli, &quiz).await
+                let r = crate::features::essence::services::index_quiz(cli, &quiz).await;
+                fanout_hot_space(&space_pk).await;
+                r
             }
             DetailType::EssenceActionMetadataUpdate => {
                 use crate::features::spaces::pages::actions::actions::quiz::SpaceQuiz;
                 use crate::features::spaces::pages::actions::models::SpaceAction;
                 use crate::features::spaces::pages::actions::types::SpaceActionType;
                 let action: SpaceAction = DetailType::parse_detail(&self.detail)?;
-                if matches!(action.space_action_type, SpaceActionType::Quiz) {
+                let space_pk: crate::common::types::Partition = action.pk.0.clone().into();
+                let r = if matches!(action.space_action_type, SpaceActionType::Quiz) {
                     let cfg = crate::common::CommonConfig::default();
                     let cli = cfg.dynamodb();
-                    let space_pk: crate::common::types::Partition = action.pk.0.clone().into();
                     let quiz_sk =
                         crate::common::types::EntityType::SpaceQuiz(action.pk.1.clone());
                     match SpaceQuiz::get(cli, &space_pk, Some(quiz_sk)).await {
@@ -225,7 +282,9 @@ impl EventBridgeEnvelope {
                     }
                 } else {
                     Ok(())
-                }
+                };
+                fanout_hot_space(&space_pk).await;
+                r
             }
             DetailType::EssenceDeletePost => {
                 let post: crate::features::posts::models::Post =
@@ -244,23 +303,34 @@ impl EventBridgeEnvelope {
             DetailType::EssenceDeleteDiscussionComment => {
                 let comment: crate::features::spaces::pages::actions::actions::discussion::SpacePostComment =
                     DetailType::parse_detail(&self.detail)?;
+                let space_pk = comment.space_pk.clone();
                 let cfg = crate::common::CommonConfig::default();
                 let cli = cfg.dynamodb();
-                crate::features::essence::services::detach_discussion_comment(cli, &comment).await
+                let r =
+                    crate::features::essence::services::detach_discussion_comment(cli, &comment)
+                        .await;
+                fanout_if_some(space_pk.as_ref()).await;
+                r
             }
             DetailType::EssenceDeletePoll => {
                 let poll: crate::features::spaces::pages::actions::actions::poll::SpacePoll =
                     DetailType::parse_detail(&self.detail)?;
+                let space_pk = poll.pk.clone();
                 let cfg = crate::common::CommonConfig::default();
                 let cli = cfg.dynamodb();
-                crate::features::essence::services::detach_poll(cli, &poll).await
+                let r = crate::features::essence::services::detach_poll(cli, &poll).await;
+                fanout_hot_space(&space_pk).await;
+                r
             }
             DetailType::EssenceDeleteQuiz => {
                 let quiz: crate::features::spaces::pages::actions::actions::quiz::SpaceQuiz =
                     DetailType::parse_detail(&self.detail)?;
+                let space_pk = quiz.pk.clone();
                 let cfg = crate::common::CommonConfig::default();
                 let cli = cfg.dynamodb();
-                crate::features::essence::services::detach_quiz(cli, &quiz).await
+                let r = crate::features::essence::services::detach_quiz(cli, &quiz).await;
+                fanout_hot_space(&space_pk).await;
+                r
             }
             DetailType::SubTeamAnnouncementPublished => {
                 let announcement: crate::features::sub_team::models::SubTeamAnnouncement =
@@ -268,6 +338,20 @@ impl EventBridgeEnvelope {
                 let cfg = crate::common::CommonConfig::default();
                 let cli = cfg.dynamodb();
                 crate::features::sub_team::services::announcement_fanout::handle_announcement_published(cli, announcement).await
+            }
+            DetailType::AnalyzeReportInProgress => {
+                let report: crate::features::spaces::pages::apps::apps::analyzes::SpaceAnalyzeReport =
+                    DetailType::parse_detail(&self.detail)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                crate::features::spaces::pages::apps::apps::analyzes::services::auto_analysis::process_analyze_report(cli, &report).await
+            }
+            DetailType::AnalyzeDiscussionInProgress => {
+                let row: crate::features::spaces::pages::apps::apps::analyzes::SpaceAnalyzeDiscussionResult =
+                    DetailType::parse_detail(&self.detail)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                crate::features::spaces::pages::apps::apps::analyzes::services::discussion_analysis::process_discussion_analysis(cli, &row).await
             }
             DetailType::Unknown => {
                 tracing::warn!(
@@ -291,4 +375,31 @@ impl EventBridgeEnvelope {
 
         Ok(())
     }
+}
+
+/// Re-snapshot HotSpace (and per-viewer rows) for `space_pk`. Best-effort —
+/// `services::space_fanout::upsert_hot_space` swallows its own errors so a
+/// fanout miss never blocks the envelope handler that triggered us.
+#[cfg(feature = "lambda")]
+async fn fanout_hot_space(space_pk: &crate::common::types::Partition) {
+    let cfg = crate::common::CommonConfig::default();
+    let cli = cfg.dynamodb();
+    crate::features::spaces::space_common::services::upsert_hot_space(cli, space_pk).await;
+}
+
+#[cfg(feature = "lambda")]
+async fn fanout_if_some(space_pk: Option<&crate::common::types::Partition>) {
+    if let Some(pk) = space_pk {
+        fanout_hot_space(pk).await;
+    }
+}
+
+/// XP records carry the space id as a bare string (not a `Partition`); rebuild
+/// the `Partition::Space` form for fanout. Empty/None inputs return None so
+/// callers can skip cleanly.
+#[cfg(feature = "lambda")]
+fn space_pk_from_id_str(space_id: Option<&str>) -> Option<crate::common::types::Partition> {
+    space_id
+        .filter(|s| !s.is_empty())
+        .map(|s| crate::common::types::Partition::Space(s.to_string()))
 }

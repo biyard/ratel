@@ -18,8 +18,6 @@ pub fn App() -> Element {
     use_context_provider(|| PopupService::new());
     ToastService::init();
     ThemeService::init();
-    let _ = crate::features::auth::Context::init()?;
-    crate::common::contexts::TeamContext::init();
     // Hydrate language + cached user session from the WebView's
     // localStorage and keep them in sync on every change. Must run after
     // `Context::init` so we don't overwrite a server-validated user with
@@ -43,6 +41,13 @@ pub fn App() -> Element {
 
     rsx! {
         document::Link { rel: "icon", href: crate::common::assets::FAVICON }
+        document::Link { rel: "preconnect", href: "https://fonts.googleapis.com" }
+        document::Link {
+            rel: "preconnect",
+            href: "https://fonts.gstatic.com",
+            crossorigin: "anonymous",
+        }
+        document::Stylesheet { href: "https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" }
         document::Stylesheet { href: MAIN_CSS }
         document::Stylesheet { href: asset!("/assets/dx-components-theme.css") }
         // Loaded as a module: Dioxus's `asset!()` post-processes JS into
@@ -52,11 +57,11 @@ pub fn App() -> Element {
         // side effect is populating `window.ratel`, which still happens
         // when loaded as a module.
         document::Script { r#type: "module", src: MAIN_JS }
+        document::Script { r#type: "module", src: asset!("/assets/wallet-connect.js") }
         document::Script { src: "https://cdn.portone.io/v2/browser-sdk.js" }
         document::Stylesheet { href: asset!("/assets/tailwind.css") }
 
         crate::common::Provider {}
-        AuthProvider {}
 
         Router::<Route> {}
     }

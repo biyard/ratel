@@ -61,7 +61,7 @@ pub fn ArenaTopbar(
     // up to the global ErrorBoundary ("먼저 로그인 해주세요" overlay).
     let mut teams_query = use_infinite_query(move |bookmark| async move {
         if has_user {
-            crate::get_user_teams_handler(bookmark).await
+            crate::features::social::controllers::get_user_teams_handler(bookmark).await
         } else {
             Ok(crate::common::types::ListResponse::<crate::common::contexts::TeamItem>::default())
         }
@@ -121,7 +121,6 @@ pub fn ArenaTopbar(
     };
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "arena-topbar",
             div { class: "arena-topbar__brand",

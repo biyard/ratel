@@ -3,7 +3,8 @@ use crate::*;
 
 #[component]
 pub fn RootLayout() -> Element {
-    TeamContext::init();
+    crate::features::auth::Context::init()?;
+    crate::common::contexts::TeamContext::init()?;
 
     rsx! {
         ErrorBoundary {
@@ -24,9 +25,7 @@ pub fn RootLayout() -> Element {
             // The hooks inside Bootstrap read login state reactively and
             // no-op on the network side when the viewer is logged out,
             // so this is safe for anonymous traffic too.
-            SuspenseBoundary {
-                NotificationsBootstrap {}
-            }
+            SuspenseBoundary { NotificationsBootstrap {} }
         }
         PopupZone {}
         ToastProvider {}
