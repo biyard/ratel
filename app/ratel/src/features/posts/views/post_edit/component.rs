@@ -15,7 +15,7 @@ use crate::features::posts::controllers::get_post::get_post_handler;
 use crate::features::posts::controllers::update_post::{update_post_handler, UpdatePostRequest};
 use crate::features::posts::controllers::{create_space_handler, CreateSpaceRequest};
 use crate::features::posts::models::Post;
-use crate::features::posts::types::Visibility;
+use crate::features::posts::types::{PostStatus, Visibility};
 use crate::features::posts::*;
 
 const TITLE_MAX_LENGTH: usize = 80;
@@ -59,6 +59,12 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
     let initial_categories = post.categories.clone();
     let initial_author_pk = post.user_pk.clone();
     let initial_author_type = post.author_type.clone();
+    let initial_visibility = post.visibility.unwrap_or(Visibility::Public);
+    // Was this post already publicly published before the user opened the
+    // editor? If so and the user toggles to Private, AC-20 says we must
+    // surface the "syndicated copies remain visible" notice.
+    let already_published_public =
+        post.status == PostStatus::Published && initial_visibility == Visibility::Public;
     let Post {
         title: init_title,
         html_contents,
@@ -119,7 +125,7 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
     let mut tag_input = use_signal(String::new);
 
     let mut post_kind = use_signal(|| PostKind::Post);
-    let mut visibility = use_signal(|| Visibility::Public);
+    let mut visibility = use_signal(move || initial_visibility);
     let mut space_enabled = use_signal(move || has_existing_space);
     let mut drawer_open = use_signal(|| false);
     let mut as_dropdown_open = use_signal(|| false);
@@ -825,6 +831,21 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                                     path { d: "M7 11V7a5 5 0 0 1 10 0v4" }
                                 }
                                 span { "{tr.visibility_private}" }
+                            }
+                        }
+                        // AC-20: warn the author that flipping a publicly-syndicated
+                        // post to Private only hides the Ratel copy — external
+                        // copies remain on each connected platform.
+                        if already_published_public && matches!(visibility(), Visibility::Private) {
+                            div {
+                                class: "syndication-remain-notice",
+                                role: "note",
+                                div { class: "syndication-remain-notice__title",
+                                    "{tr.visibility_syndicated_remain_title}"
+                                }
+                                div { class: "syndication-remain-notice__body",
+                                    "{tr.visibility_syndicated_remain_body}"
+                                }
                             }
                         }
                     }
