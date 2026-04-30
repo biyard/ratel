@@ -57,6 +57,28 @@ pub enum CrossPostingError {
         ko = "이 외부 게시 패널을 볼 권한이 없습니다"
     )]
     NotAuthorized,
+
+    /// Stage 2 dispatcher couldn't acquire / contend the per-job lock
+    /// (unexpected DynamoDB error path — `ConditionalCheckFailedException`
+    /// itself is handled as "lock held elsewhere", not surfaced here).
+    /// Server-only — never user-facing; the surface is logged and the
+    /// EventBridge retry policy decides what to do next.
+    #[error("dispatch lock acquisition failed")]
+    #[translate(
+        en = "Dispatch lock acquisition failed",
+        ko = "발송 잠금 획득에 실패했습니다"
+    )]
+    DispatchLockFailed,
+
+    /// Stage 2 dispatcher couldn't write the terminal-state row
+    /// (`commit_skipped` / `commit_published` / `commit_failed`). Same
+    /// server-side path as `DispatchLockFailed` — surfaced via logs only.
+    #[error("commit failed")]
+    #[translate(
+        en = "Failed to commit syndication state",
+        ko = "외부 게시 상태 저장에 실패했습니다"
+    )]
+    CommitFailed,
 }
 
 #[cfg(feature = "server")]
@@ -74,7 +96,9 @@ impl CrossPostingError {
             | CrossPostingError::RetryNotAllowed => StatusCode::BAD_REQUEST,
             CrossPostingError::ConnectFailed
             | CrossPostingError::ListFailed
-            | CrossPostingError::UpdateFailed => StatusCode::INTERNAL_SERVER_ERROR,
+            | CrossPostingError::UpdateFailed
+            | CrossPostingError::DispatchLockFailed
+            | CrossPostingError::CommitFailed => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }

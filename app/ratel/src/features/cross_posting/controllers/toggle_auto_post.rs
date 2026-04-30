@@ -4,19 +4,15 @@ use crate::features::cross_posting::models::SocialConnection;
 use crate::features::cross_posting::types::{
     ConnectionResponse, CrossPostingError, SocialPlatform, ToggleAutoPostRequest,
 };
-use std::str::FromStr;
 
 #[patch("/api/cross-posting/connections/{platform}", user: User)]
 pub async fn toggle_auto_post_handler(
-    platform: String,
+    platform: SocialPlatform,
     req: ToggleAutoPostRequest,
 ) -> Result<ConnectionResponse> {
-    let platform: SocialPlatform = SocialPlatform::from_str(&platform)
-        .map_err(|_| CrossPostingError::ConnectionNotFound)?;
-
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
-    let sk: EntityType = EntityType::SocialConnection(platform.to_string());
+    let sk = EntityType::SocialConnection(platform.to_string());
     let now = crate::common::utils::time::now();
 
     let existing = SocialConnection::get(cli, user.pk.clone(), Some(sk.clone()))

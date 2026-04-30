@@ -45,7 +45,10 @@ impl BlueskyAdapter {
     }
 
     pub fn with_host(host: impl Into<String>) -> Self {
-        Self { pds_host: host.into(), client: reqwest::Client::new() }
+        Self {
+            pds_host: host.into(),
+            client: reqwest::Client::new(),
+        }
     }
 }
 

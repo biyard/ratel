@@ -44,7 +44,7 @@ impl UseSyndicationPanel {
     /// successful retry flips the row to `Pending` and back to `Published`
     /// without any further client coordination.
     pub async fn retry(&mut self, platform: SocialPlatform) -> crate::common::Result<()> {
-        retry_job_handler(FeedPartition((self.post_id)()), platform.to_string()).await?;
+        retry_job_handler(FeedPartition((self.post_id)()), platform).await?;
         self.panel.restart();
         Ok(())
     }

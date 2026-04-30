@@ -83,7 +83,7 @@ impl UseCrossPosting {
         enabled: bool,
     ) -> crate::common::Result<()> {
         toggle_auto_post_handler(
-            platform.to_string(),
+            platform,
             ToggleAutoPostRequest {
                 auto_post_enabled: enabled,
             },
@@ -95,7 +95,7 @@ impl UseCrossPosting {
 
     /// Disconnect (soft-delete: status=Revoked, ciphertext zeroed).
     pub async fn disconnect(&mut self, platform: SocialPlatform) -> crate::common::Result<()> {
-        disconnect_handler(platform.to_string()).await?;
+        disconnect_handler(platform).await?;
         self.connections.restart();
         Ok(())
     }

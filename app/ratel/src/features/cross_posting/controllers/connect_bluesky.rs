@@ -51,7 +51,7 @@ pub async fn connect_bluesky_handler(req: ConnectBlueskyRequest) -> Result<Conne
     // history continues uninterrupted across token-expiry-driven re-auth.
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
-    let sk: EntityType = EntityType::SocialConnection(SocialPlatform::Bluesky.to_string());
+    let sk = EntityType::SocialConnection(SocialPlatform::Bluesky.to_string());
     let now = crate::common::utils::time::now();
 
     let existing = SocialConnection::get(cli, user.pk.clone(), Some(sk.clone()))
@@ -64,7 +64,10 @@ pub async fn connect_bluesky_handler(req: ConnectBlueskyRequest) -> Result<Conne
     let row = SocialConnection {
         pk: user.pk.clone(),
         sk: sk.clone(),
-        platform_status: format!("{}#{}", SocialPlatform::Bluesky, ConnectionStatus::Connected),
+        platform_status: SocialConnection::platform_status_key(
+            SocialPlatform::Bluesky,
+            ConnectionStatus::Connected,
+        ),
         platform: SocialPlatform::Bluesky,
         status: ConnectionStatus::Connected,
         external_handle: session.handle,
