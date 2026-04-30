@@ -44,7 +44,11 @@ pub fn CrossPostSidebar(
         .find(|c| c.platform == SocialPlatform::Threads)
         .cloned();
 
-    let char_count = content().chars().count();
+    // Match `post_edit`'s `re-char-count` value (which strips HTML tags)
+    // so the editor's footer count and the sidebar's per-platform footer
+    // never disagree. Without strip_html the sidebar would over-count by
+    // every `<p>`, `<br>`, etc. the rich editor inserts.
+    let char_count = strip_html(&content()).chars().count();
 
     rsx! {
         document::Stylesheet { href: asset!("./style.css") }
@@ -332,4 +336,21 @@ fn PlatformCard(
             }
         }
     }
+}
+
+/// Strip HTML tags so the sidebar's character count matches the
+/// `.re-char-count` footer in `post_edit` (which does the same).
+/// Mirrors the private helper in `post_edit/component.rs:1078`.
+fn strip_html(html: &str) -> String {
+    let mut result = String::new();
+    let mut in_tag = false;
+    for ch in html.chars() {
+        match ch {
+            '<' => in_tag = true,
+            '>' => in_tag = false,
+            _ if !in_tag => result.push(ch),
+            _ => {}
+        }
+    }
+    result
 }
