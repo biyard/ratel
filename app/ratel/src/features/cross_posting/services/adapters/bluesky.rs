@@ -147,6 +147,31 @@ impl CrossPostAdapter for BlueskyAdapter {
 
         Ok(scan_for_backlink(&resp, backlink_url, &handle))
     }
+
+    /// Bluesky implementation of FR-5 #35: rotate the session via
+    /// `com.atproto.server.refreshSession` using the long-lived
+    /// `refreshJwt`. The trait contract is *pure* — no DB writes here.
+    /// Caller (dispatcher) re-seals and persists onto `SocialConnection`.
+    async fn try_refresh_credentials(
+        &self,
+        creds: DecryptedCredentials,
+    ) -> Result<DecryptedCredentials, PlatformError> {
+        let refresh_jwt = match &creds {
+            DecryptedCredentials::Bluesky { refresh_jwt, .. } => refresh_jwt.clone(),
+            _ => {
+                return Err(PlatformError::Unknown(
+                    "Bluesky adapter received non-Bluesky credentials for refresh".into(),
+                ));
+            }
+        };
+        let session = self.refresh_session(&refresh_jwt).await?;
+        Ok(DecryptedCredentials::Bluesky {
+            did: session.did,
+            handle: session.handle,
+            access_jwt: session.access_jwt,
+            refresh_jwt: session.refresh_jwt,
+        })
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────

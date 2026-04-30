@@ -153,4 +153,31 @@ pub trait CrossPostAdapter: Send + Sync {
         creds: DecryptedCredentials,
         backlink_url: &str,
     ) -> Result<Option<PublishedRef>, PlatformError>;
+
+    /// Rotate platform credentials when the access token expired but a
+    /// long-lived refresh token is still valid (FR-5 #35). Per platform:
+    ///   - Bluesky: `com.atproto.server.refreshSession` (refreshJwt → new
+    ///     accessJwt + refreshJwt). 90-day refresh TTL.
+    ///   - LinkedIn (1B): OAuth `/oauth/v2/accessToken`
+    ///     (`grant_type=refresh_token`). 365-day refresh TTL, no rotation.
+    ///   - Threads (1C): Meta `/refresh_access_token` extending the
+    ///     long-lived 60-day token in place.
+    ///
+    /// The default impl is the *credentials-not-rotatable* path — adapters
+    /// that don't (yet) know how to refresh propagate the original
+    /// AuthExpired error so the dispatcher commits Failed and asks the user
+    /// to reconnect via the inbox CTA.
+    ///
+    /// On success, the dispatcher re-seals the returned blob and persists
+    /// it onto `SocialConnection.credential_ciphertext` before retrying
+    /// publish — so this method MUST be pure (no DB writes from inside).
+    async fn try_refresh_credentials(
+        &self,
+        creds: DecryptedCredentials,
+    ) -> Result<DecryptedCredentials, PlatformError> {
+        let _ = creds;
+        Err(PlatformError::AuthExpired(
+            "credential refresh not implemented for this adapter".into(),
+        ))
+    }
 }
