@@ -8443,9 +8443,7 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   align-items: center;
   justify-content: space-between;
   padding: 12px 28px;
-  background: var(--dark, rgba(6, 6, 14, 0.86)) var(--light, rgba(244, 243, 239, 0.90));
   backdrop-filter: blur(20px);
-  border-top: 1px solid var(--border-subtle);
 }
 .bottom-bar__left {
   display: flex;
