@@ -1766,5 +1766,30 @@ export class DynamoStreamEventStack extends Stack {
       },
       targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
     });
+
+    // ── Schedule: Cross-posting Stage 3 retry sweeper (every 1 min) ──
+    // CloudWatch schedule fires app-shell with detailType="SyndicationRetrySweep"
+    // (synthesized as a constant input). The Lambda's `proc()` matches
+    // that variant and invokes `sweeper::run_retry_sweep`, which fans out
+    // 4 parallel queries against `find_due_jobs` GSI and resets due rows
+    // back to Pending. Pipe filter on Stage 2 (`state=pending`) re-fires
+    // the dispatcher.
+    //
+    // 1 min cadence is the design's minimum retry latency floor (FR-5 #34
+    // backoff schedule starts at 60s).
+    new events.Rule(this, "CrossPostingRetrySweepSchedule", {
+      schedule: events.Schedule.rate(cdk.Duration.minutes(1)),
+      description:
+        "Trigger cross-posting Stage 3 retry sweeper every minute",
+      targets: [
+        new eventsTargets.LambdaFunction(props.lambdaFunction, {
+          event: events.RuleTargetInput.fromObject({
+            source: "ratel.cross-posting.schedule",
+            "detail-type": "SyndicationRetrySweep",
+            detail: {},
+          }),
+        }),
+      ],
+    });
   }
 }
