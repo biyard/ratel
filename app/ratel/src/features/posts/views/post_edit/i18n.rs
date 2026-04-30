@@ -144,6 +144,14 @@ translate! {
         en: "Private",
         ko: "비공개",
     },
+    visibility_syndicated_remain_title: {
+        en: "Syndicated copies stay visible",
+        ko: "이미 발행된 사본은 그대로 남습니다",
+    },
+    visibility_syndicated_remain_body: {
+        en: "Switching to Private hides this post on Ratel, but copies already cross-posted to external networks remain visible. Delete them on each platform if you need them removed.",
+        ko: "비공개로 전환하면 Ratel에서는 글이 숨겨지지만, 외부 네트워크에 이미 발행된 크로스포스트 사본은 그대로 표시됩니다. 필요하다면 각 플랫폼에서 직접 삭제해주세요.",
+    },
 
     discard_draft: {
         en: "Discard Draft",

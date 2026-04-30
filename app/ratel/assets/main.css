@@ -8395,6 +8395,32 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
 .vis-opt[aria-selected="true"] svg,
 .vis-opt[aria-selected="true"] span { color: var(--accent-gold); }
 
+/* AC-20: notice shown when an already-published public post is being switched
+   to Private. Lives next to the visibility toggle. */
+.syndication-remain-notice {
+  --srn-bg: var(--dark, rgba(252, 179, 0, 0.06)) var(--light, rgba(252, 179, 0, 0.10));
+  --srn-border: var(--dark, rgba(252, 179, 0, 0.25)) var(--light, rgba(252, 179, 0, 0.30));
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--srn-bg);
+  border: 1px solid var(--srn-border);
+}
+.syndication-remain-notice__title {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+  margin-bottom: 4px;
+}
+.syndication-remain-notice__body {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
 .switch {
   position: relative;
   width: 34px;
