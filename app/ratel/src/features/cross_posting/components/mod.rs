@@ -12,6 +12,7 @@
 pub mod bluesky_connect_modal;
 pub mod compose_sidebar;
 pub mod connections_page;
+pub mod onboarding_page;
 pub mod syndication_panel;
 
 // Explicit re-exports — glob would clash on internal helpers like
@@ -21,4 +22,5 @@ pub mod syndication_panel;
 pub use bluesky_connect_modal::BlueskyConnectModal;
 pub use compose_sidebar::CrossPostSidebar;
 pub use connections_page::ConnectionsPage;
+pub use onboarding_page::OnboardingPage;
 pub use syndication_panel::SyndicationPanel;

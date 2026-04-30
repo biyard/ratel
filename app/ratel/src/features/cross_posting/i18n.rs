@@ -149,3 +149,53 @@ translate! {
     engage_comments: { en: "comments", ko: "댓글" },
     engage_reposts: { en: "reposts", ko: "재게시" },
 }
+
+translate! {
+    OnboardingPageTranslate;
+
+    // Topbar
+    topbar_skip: { en: "Skip for now →", ko: "나중에 →" },
+
+    // Hero
+    eyebrow: { en: "Connect your networks · Optional", ko: "네트워크 연결 · 선택" },
+    title_lead: { en: "Your first post reaches", ko: "첫 게시글 한 번에" },
+    title_accent: { en: "three networks instantly.", ko: "세 네트워크에 도달합니다." },
+    sub: {
+        en: "Connect the social accounts you want Ratel to cross-post to. Every post becomes a link back to your home, bringing new subscribers in.",
+        ko: "Ratel 이 자동 크로스포스팅할 소셜 계정을 연결하세요. 모든 글이 본진으로 돌아오는 백링크가 됩니다.",
+    },
+
+    // Platform rows — reuse status / btn copy from ConnectionsPageTranslate.
+    bluesky_meta_default: { en: "AT Protocol · 300 chars", ko: "AT Protocol · 300자" },
+    linkedin_meta: { en: "Your professional network · 3,000 chars", ko: "전문 네트워크 · 3,000자" },
+    threads_meta: { en: "Meta · ~275M users · 500 chars", ko: "Meta · 약 2.75억 명 · 500자" },
+    coming_soon: { en: "Coming soon", ko: "곧 출시" },
+
+    // Benefits
+    benefit_auto_label: { en: "Auto-sync", ko: "자동 동기화" },
+    benefit_auto_hint: {
+        en: "Every Ratel post publishes to your connected networks in 2–3 seconds.",
+        ko: "Ratel 글이 연결된 네트워크에 2~3초 안에 자동 발행됩니다.",
+    },
+    benefit_backlinks_label: { en: "Backlinks", ko: "백링크" },
+    benefit_backlinks_hint: {
+        en: "Each cross-post links to Ratel, turning external readers into subscribers.",
+        ko: "각 크로스포스트가 Ratel 백링크가 되어 외부 독자를 구독자로 전환합니다.",
+    },
+    benefit_secure_label: { en: "Secure", ko: "보안" },
+    benefit_secure_hint: {
+        en: "KMS-encrypted tokens · revocable from the platform or Ratel anytime.",
+        ko: "토큰은 KMS 암호화 · 플랫폼이나 Ratel 에서 언제든 폐기 가능.",
+    },
+
+    // CTA
+    cta_skip: { en: "Skip", ko: "건너뛰기" },
+    cta_continue: { en: "Continue", ko: "계속" },
+
+    // Footer note
+    footer_note_pro_tip: { en: "Pro tip:", ko: "팁:" },
+    footer_note_body: {
+        en: "Creators who connect 2+ networks get 3.4× more subscribers in their first 30 days.",
+        ko: "2개 이상의 네트워크를 연결한 크리에이터는 첫 30일에 3.4배 더 많은 구독자를 얻습니다.",
+    },
+}
