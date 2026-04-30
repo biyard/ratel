@@ -36451,8 +36451,10 @@ body.comments-panel-resizing {
   flex-direction: column;
   gap: 16px;
   align-self: start;
-  position: sticky;
-  top: 128px;
+  /* No sticky positioning — short articles made the cards look "pinned"
+     from the start since they immediately reached the sticky offset.
+     Letting the side column scroll with the article gives a calmer
+     reading experience. */
 }
 
 .pd-house-card {
