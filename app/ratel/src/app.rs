@@ -41,6 +41,13 @@ pub fn App() -> Element {
 
     rsx! {
         document::Link { rel: "icon", href: crate::common::assets::FAVICON }
+        document::Link { rel: "preconnect", href: "https://fonts.googleapis.com" }
+        document::Link {
+            rel: "preconnect",
+            href: "https://fonts.gstatic.com",
+            crossorigin: "anonymous",
+        }
+        document::Stylesheet { href: "https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" }
         document::Stylesheet { href: MAIN_CSS }
         document::Stylesheet { href: asset!("/assets/dx-components-theme.css") }
         // Loaded as a module: Dioxus's `asset!()` post-processes JS into

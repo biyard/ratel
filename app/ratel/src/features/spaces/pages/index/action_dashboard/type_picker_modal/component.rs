@@ -14,7 +14,6 @@ pub fn TypePickerModal(
     }
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
 
         div {
             class: "type-sheet open",

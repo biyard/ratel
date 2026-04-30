@@ -4,7 +4,6 @@ use dioxus_primitives::toolbar::{self, ToolbarButtonProps, ToolbarProps, Toolbar
 #[component]
 pub fn Toolbar(props: ToolbarProps) -> Element {
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         toolbar::Toolbar {
             class: "toolbar",
             aria_label: props.aria_label,

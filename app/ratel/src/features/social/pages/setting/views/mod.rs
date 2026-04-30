@@ -48,7 +48,6 @@ pub fn Home(username: String) -> Element {
 
     if !can_edit {
         return rsx! {
-            document::Stylesheet { href: asset!("./style.css") }
             div { class: "ts-page",
                 div { class: "ts-card",
                     p { style: "color: var(--text-muted); font-size: 13px; text-align: center; padding: 40px 20px;",
@@ -181,7 +180,6 @@ pub fn Home(username: String) -> Element {
     };
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "ts-section-label",
             span { class: "ts-section-label__dash" }

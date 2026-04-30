@@ -6,7 +6,6 @@ use dioxus_primitives::hover_card::{
 #[component]
 pub fn HoverCard(props: HoverCardProps) -> Element {
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         hover_card::HoverCard {
             class: "hover-card",
             open: props.open,

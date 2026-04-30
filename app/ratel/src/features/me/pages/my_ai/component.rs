@@ -102,7 +102,6 @@ pub fn MyAiPage() -> Element {
 
     rsx! {
         SeoMeta { title: "{tr.page_title}" }
-        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "my-ai",
             // ── Topbar ───────────────────────────────

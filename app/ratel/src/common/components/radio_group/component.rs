@@ -4,7 +4,6 @@ use dioxus_primitives::radio_group::{self, RadioGroupProps, RadioItemProps};
 #[component]
 pub fn RadioGroup(props: RadioGroupProps) -> Element {
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         radio_group::RadioGroup {
             class: "radio-group",
             value: props.value,

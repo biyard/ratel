@@ -30,7 +30,6 @@ pub fn TeamSubTeamDetailPage(username: String, sub_team_id: String) -> Element {
 
     rsx! {
         SeoMeta { title: "Sub-team · {tr.tab_sub_teams}" }
-        document::Stylesheet { href: asset!("./style.css") }
 
         DetailView { username: username.clone(), sub_team_id: sub_team_id.clone() }
     }

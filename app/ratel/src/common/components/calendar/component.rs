@@ -8,7 +8,6 @@ use dioxus_primitives::calendar::{
 #[component]
 pub fn Calendar(props: CalendarProps) -> Element {
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         calendar::Calendar {
             class: "calendar",
             selected_date: props.selected_date,
@@ -33,7 +32,6 @@ pub fn Calendar(props: CalendarProps) -> Element {
 #[component]
 pub fn RangeCalendar(props: RangeCalendarProps) -> Element {
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         calendar::RangeCalendar {
             class: "calendar",
             selected_range: props.selected_range,

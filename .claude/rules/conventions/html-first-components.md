@@ -4,33 +4,32 @@ Build Dioxus components by designing in HTML/CSS/JS first, then converting to RS
 
 ## File Structure
 
-Pages and their sub-components each own their assets. The page `mod.rs` is the entry point; sub-components live in named subdirectories with the same structure:
+Pages and their sub-components each own their Rust + JS, but **all CSS lives in the central `app/ratel/assets/main.css`**. The page `mod.rs` is the entry point; sub-components live in named subdirectories:
 
 ```
 <page_dir>/
 ├── mod.rs              # Page module: registers sub-components, re-exports
 ├── component.rs        # Page-level Dioxus component
-├── style.css           # Page-level styles (arena, portal, HUD, etc.)
 ├── script.js           # Page-level JS helpers (optional)
 ├── i18n.rs             # Translations shared across the page
 ├── page.html           # Source HTML (kept as reference, not compiled)
 ├── <sub_component>/
 │   ├── mod.rs          # Sub-component module
 │   ├── component.rs    # Sub-component Dioxus component
-│   └── style.css       # Sub-component styles (loaded via own asset!())
+│   └── script.js       # (optional) sub-component JS
 ├── <another_component>/
 │   ├── mod.rs
-│   ├── component.rs
-│   └── style.css
+│   └── component.rs
 └── ...
 ```
 
 ### Key rules
-- Each sub-component loads its own `style.css` via `document::Stylesheet { href: asset!("./style.css") }` inside its component
-- CSS for a sub-component lives in that sub-component's directory, not in the parent
+- **No `style.css` files inside `src/`.** All component CSS goes in `app/ratel/assets/main.css` under a section marker (`/* === src/features/<module>/<page>/<component> === */`).
+- **No `document::Stylesheet { href: asset!("./style.css") }` inside components.** `main.css` is loaded once globally from `app.rs`; per-component links cause FOUC on SPA navigation.
 - The page `mod.rs` declares sub-component modules and re-exports them for use in `component.rs`
 - i18n is shared at the page level — sub-components import from the parent via `use crate::features::<module>::pages::<page>::*`
 - Extract a sub-component when it is self-contained (own panel, modal, card) and > ~50 lines of RSX
+- See `conventions/styling.md` § "All custom CSS lives in `app/ratel/assets/main.css`" for the full rationale.
 
 ### Page `mod.rs` pattern
 
@@ -65,7 +64,8 @@ pub fn MySubComponent(open: bool, on_close: EventHandler<()>) -> Element {
     let tr: PageTranslate = use_translate();
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
+        // No document::Stylesheet here — component CSS lives in
+        // app/ratel/assets/main.css and is loaded globally from app.rs.
         // ... RSX
     }
 }
@@ -87,7 +87,9 @@ HTML mockups in `docs/design/`:
 ```
 1. Write HTML mockup (docs/design/<name>.html)
 2. Approve design with user — iterate in browser
-3. Split into page.html + style.css + script.js in component directory
+3. Keep page.html as a reference; extract its <style> block into a new
+   section of app/ratel/assets/main.css under a section marker; keep its
+   <script> block as a sibling script.js if needed
 4. Run: dx translate -f page.html
 5. Paste RSX output into component.rs
 6. Replace static IDs/text with signals + translate!
@@ -97,9 +99,11 @@ HTML mockups in `docs/design/`:
 
 ## Asset Loading
 
+CSS is loaded globally via `app.rs` — components do **not** declare their own stylesheets. JS scripts can be loaded per-component:
+
 ```rust
 rsx! {
-    document::Stylesheet { href: asset!("./style.css") }
+    // No document::Stylesheet — main.css is loaded globally in app.rs.
     document::Script { defer: true, src: asset!("./script.js") }
     // ... component RSX
 }
@@ -125,9 +129,10 @@ rsx! {
 
 Use the space toggle pattern (`var(--dark, ...) var(--light, ...)`) for all colors that differ between themes. This leverages the `--dark` / `--light` custom properties set on `html[data-theme]` in `dx-components-theme.css`.
 
-Define component-scoped CSS variables at the root element of each component:
+Define component-scoped CSS variables at the root element of each component (inside `app/ratel/assets/main.css`):
 
 ```css
+/* === src/features/<module>/<component> === */
 .my-component {
   --comp-bg: var(--dark, #0c0c1a) var(--light, #ffffff);
   --comp-text: var(--dark, #f0f0f5) var(--light, #12121a);
@@ -143,8 +148,10 @@ Define component-scoped CSS variables at the root element of each component:
 ```
 
 ### Rules
+- **All component CSS lives in `app/ratel/assets/main.css`** — never per-component `style.css` files
 - **Never hardcode colors** — always use `var(--dark, ...) var(--light, ...)` for anything that should change between themes
 - Define variables on the component's root element, then reference them in child selectors
+- Use unique class names — every rule shares one global namespace; prefix with the component name
 - Accent colors that stay the same in both themes (e.g. `#fcb300` gold) can be used directly
 - Reference: `app/ratel/assets/dx-components-theme.css` for the global pattern
 

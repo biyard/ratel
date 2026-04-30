@@ -17,7 +17,6 @@ pub fn ArenaTeamCreationPopup() -> Element {
     let close_popup = move |_| popup.close();
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
 
         div {
             class: "arena-create-team",
