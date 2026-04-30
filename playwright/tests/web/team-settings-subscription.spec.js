@@ -28,7 +28,7 @@ test.describe.serial(
       // Team creation is setup for this suite; the renewed home arena no
       // longer exposes a profile-dropdown "Create Team" path, so drive it
       // through the same REST endpoint the form submits to.
-      const res = await page.request.post("/api/teams/create", {
+      const res = await page.request.post("/api/user-shell/teams/create", {
         data: {
           body: {
             username: teamUsername,

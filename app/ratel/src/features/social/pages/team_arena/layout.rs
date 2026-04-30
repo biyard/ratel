@@ -32,9 +32,7 @@ pub fn use_team_arena() -> TeamArenaContext {
 /// `SocialLayout` + `TeamSettingLayout` for team-scoped pages.
 #[component]
 pub fn TeamArenaLayout(username: String) -> Element {
-    crate::common::contexts::TeamContext::init();
     let user_ctx = crate::features::auth::hooks::use_user_context();
-    let mut team_ctx = crate::common::contexts::use_team_context();
 
     let active_tab = use_signal(|| TeamArenaTab::Home);
     let mut settings_open = use_signal(|| false);
@@ -59,19 +57,6 @@ pub fn TeamArenaLayout(username: String) -> Element {
 
     // Category filter signal consumed by TeamHome (carried over from SocialLayout).
     use_context_provider(|| Signal::new(Option::<String>::None));
-
-    // Hydrate team list into shared context (for switcher dropdown etc.)
-    let teams_future = use_server_future(move || async move {
-        crate::get_user_teams_handler(None)
-            .await
-            .map(|r| r.items)
-            .unwrap_or_default()
-    })?;
-    use_effect(move || {
-        if let Some(teams) = teams_future.value().read().clone() {
-            team_ctx.set_teams(teams);
-        }
-    });
 
     // Fetch the team record so we have display name, logo, and permissions.
     // Re-runs whenever `username` changes, `refresh_trigger` is bumped by a
@@ -210,14 +195,6 @@ pub fn TeamArenaLayout(username: String) -> Element {
     });
 
     rsx! {
-        document::Link { rel: "preconnect", href: "https://fonts.googleapis.com" }
-        document::Link {
-            rel: "preconnect",
-            href: "https://fonts.gstatic.com",
-            crossorigin: "anonymous",
-        }
-        document::Stylesheet { href: "https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" }
-        document::Stylesheet { href: asset!("./style.css") }
         document::Script { defer: true, src: asset!("./script.js") }
 
         div { class: "team-arena", "data-testid": "team-arena-layout",

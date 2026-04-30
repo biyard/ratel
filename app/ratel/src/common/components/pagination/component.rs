@@ -39,7 +39,6 @@ pub fn Pagination(
     children: Element,
 ) -> Element {
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         nav {
             class: "pagination",
             "data-slot": "pagination",

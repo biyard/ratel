@@ -18,7 +18,6 @@ pub fn ParticipateCard(
     let panel_requirements = ctx.panel_requirements();
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
 
         if show_consent() {
             ConsentModal {

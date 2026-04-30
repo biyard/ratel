@@ -11,7 +11,6 @@ pub fn NotificationBell(onclick: EventHandler<()>, #[props(default)] class: Stri
     };
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         button {
             class: "notification-bell {class}",
             "aria-label": "Notifications",

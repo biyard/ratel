@@ -48,7 +48,6 @@ pub fn Home(username: String) -> Element {
 
     if !can_edit {
         return rsx! {
-            document::Stylesheet { href: asset!("./style.css") }
             div { class: "ts-page",
                 div { class: "ts-card",
                     p { style: "color: var(--text-muted); font-size: 13px; text-align: center; padding: 40px 20px;",
@@ -142,7 +141,7 @@ pub fn Home(username: String) -> Element {
                         team_resource.restart();
                         // Refresh team switcher dropdown so the new name/logo
                         // appear immediately across the topbar/dropdown.
-                        if let Ok(resp) = crate::get_user_teams_handler(None).await {
+                        if let Ok(resp) = crate::features::social::controllers::get_user_teams_handler(None).await {
                             team_ctx.set_teams(resp.items);
                         }
                         // Force the arena layout to refetch the team profile
@@ -181,7 +180,6 @@ pub fn Home(username: String) -> Element {
     };
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "ts-section-label",
             span { class: "ts-section-label__dash" }

@@ -22,34 +22,37 @@ Workflow for converting existing HTML/CSS/JS into Dioxus RSX components. Use whe
 
 - Identify the page-level component and potential sub-components
 - Extract a sub-component when a section is self-contained (panel, modal, card) and > ~50 lines of RSX
-- Map HTML sections to the file structure:
+- Map HTML sections to the file structure (no per-component `style.css` — all CSS goes in central `app/ratel/assets/main.css`):
 
 ```
 app/ratel/src/features/<module>/pages/<page>/
 ├── mod.rs              # Page module: registers sub-components, re-exports
 ├── component.rs        # Page-level Dioxus component
-├── style.css           # Page-level styles
 ├── script.js           # JS helpers (optional)
 ├── i18n.rs             # Translations (EN + KO)
 ├── page.html           # Original HTML (kept as reference)
 ├── <sub_component>/
 │   ├── mod.rs
-│   ├── component.rs
-│   └── style.css
+│   └── component.rs
 ```
 
-- **References**: conventions/html-first-components.md, conventions/feature-module-structure.md
+- **References**: conventions/html-first-components.md, conventions/feature-module-structure.md, conventions/styling.md (§ "All custom CSS lives in `app/ratel/assets/main.css`")
 
 ## Step 3: Separate HTML, CSS, JS
 
-Split the HTML file into three concerns in the component directory:
+Split the HTML file into three concerns. CSS goes into the central `app/ratel/assets/main.css`; JS optionally goes alongside the component:
 
-### CSS (`style.css`)
+### CSS (append to `app/ratel/assets/main.css`)
 - Extract all styles from `<style>` blocks and inline styles
-- Use CSS classes with BEM-like naming (`.block__element--modifier`)
+- Append to `app/ratel/assets/main.css` under a section marker showing the source path:
+  ```css
+  /* === src/features/<module>/pages/<page>/<component> === */
+  .my-component { ... }
+  ```
+- Use **unique class names** with BEM-like or component-scoped prefixes (`.my-component__title`, `.my-component--active`) — `main.css` is one global namespace, so collisions are real
 - Use `data-*` / `aria-*` attribute selectors for Dioxus-controlled state (`[data-open="true"]`)
 - Use CSS classes (`.active`, `.open`) for JS-controlled state (scroll, animations)
-- Avoid Tailwind utilities in CSS files — Tailwind is for RSX `class:` attributes only
+- Avoid Tailwind utilities inside `main.css` — Tailwind is for RSX `class:` attributes only
 - Use space toggle for dark/light theme colors:
   ```css
   .my-component {
@@ -57,6 +60,7 @@ Split the HTML file into three concerns in the component directory:
     --comp-text: var(--dark, #f0f0f5) var(--light, #12121a);
   }
   ```
+- **Never create a per-component `style.css` file** under `src/`. **Never write `document::Stylesheet { href: asset!("./style.css") }`** in a component — it causes FOUC on SPA navigation. See `conventions/styling.md`.
 
 ### JS (`script.js`) — only if needed
 - Register helpers on `window.ratel.<module>` namespace
@@ -124,16 +128,18 @@ dx translate -f <path>/page.html
 
 ## Step 7: Load Assets in Component
 
+CSS is loaded globally from `app.rs` via `app/ratel/assets/main.css` — **no `document::Stylesheet` in components**. Only optional per-component scripts are loaded here:
+
 ```rust
 rsx! {
-    document::Stylesheet { href: asset!("./style.css") }
+    // No document::Stylesheet — main.css is loaded globally from app.rs.
     document::Script { defer: true, src: asset!("./script.js") }  // only if JS exists
     // ... component RSX
 }
 ```
 
-- Each sub-component loads its own `style.css` via its own `document::Stylesheet`
 - Always use `defer: true` on `document::Script`
+- External CSS (Google Fonts, etc.) goes in `app.rs`, never per-page
 
 ## Step 8: Create i18n Translations
 
@@ -180,14 +186,16 @@ cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' cargo chec
 ## Checklist
 
 - [ ] Original HTML preserved as `page.html` reference
-- [ ] CSS extracted to `style.css` with space toggle for dark/light
+- [ ] CSS appended to `app/ratel/assets/main.css` under `/* === <source path> === */` marker, with space toggle for dark/light
+- [ ] No per-component `style.css` files exist under `src/`
+- [ ] No `document::Stylesheet { href: asset!("./style.css") }` in any component
 - [ ] JS (if any) extracted to `script.js` with MutationObserver pattern
 - [ ] Class names and IDs match HTML exactly
+- [ ] Class names are unique (component-scoped or BEM-like prefix) — no collisions in the global `main.css` namespace
 - [ ] All text uses `translate!` macro
 - [ ] Raw HTML elements replaced with project primitives (`Button`, `Input`, `Row`, `Col`)
 - [ ] Semantic color tokens used (no raw Tailwind palette colors)
 - [ ] `defer: true` on all `document::Script` tags
-- [ ] Sub-components each load their own `style.css`
 - [ ] Module registered in parent `mod.rs`
 - [ ] `rustywind` + `dx fmt` applied
 - [ ] `dx check --features web` passes

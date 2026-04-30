@@ -55,7 +55,6 @@ pub fn Home(username: ReadSignal<String>) -> Element {
     let total_comments: i64 = items.iter().map(|p| p.comments).sum();
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         document::Script { defer: true, src: asset!("./script.js") }
 
         div { class: "home-arena", "data-testid": "team-home-arena",
@@ -362,7 +361,7 @@ fn PostCard(index: usize, post: PostResponse) -> Element {
             if !post.categories.is_empty() {
                 div { class: "post-card__chips",
                     for c in post.categories.iter() {
-                        span { key: "{c}", class: "post-card__chip", "#{c}" }
+                        span { key: "{post.pk}-{c}", class: "post-card__chip", "#{c}" }
                     }
                 }
             }

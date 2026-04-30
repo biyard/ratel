@@ -1,6 +1,6 @@
 use super::*;
 use crate::common::{
-    components::{editor::Editor as RichEditor, Button, ButtonStyle, Typo, Variant, Weight},
+    components::{editor::Editor as RichEditor, Button, ButtonStyle},
     icons::{edit::Edit1, other_devices::Save},
 };
 use dioxus::prelude::spawn;
@@ -41,9 +41,9 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
     });
 
     rsx! {
-        div { class: "flex flex-col gap-4 w-full items-center",
-            div { class: "flex items-center justify-between w-full max-w-5xl gap-2",
-                Typo { variant: Variant::H1, weight: Weight::Extrabold, "{tr.title_editor}" }
+        div { class: "flex flex-col gap-4 items-center w-full",
+            div { class: "flex gap-2 justify-between items-center w-full max-w-5xl",
+                h1 { "{tr.title_editor}" }
                 Button {
                     style: ButtonStyle::Secondary,
                     onclick: move |_| {
@@ -78,14 +78,14 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
                 }
             }
             if let Some(message) = error() {
-                div { class: "text-red-500 w-full max-w-5xl", "{tr.generate_failed}: {message}" }
+                div { class: "w-full max-w-5xl text-red-500", "{tr.generate_failed}: {message}" }
             }
-            div { class: "w-full max-w-5xl rounded-lg bg-card p-6 flex flex-col",
-                div { class: "flex items-center justify-end flex-shrink-0",
-                    div { class: "flex items-center gap-3",
+            div { class: "flex flex-col p-6 w-full max-w-5xl rounded-lg bg-card",
+                div { class: "flex flex-shrink-0 justify-end items-center",
+                    div { class: "flex gap-3 items-center",
                         if !editable() {
                             button {
-                                class: "cursor-pointer w-5 h-5 [&>path]:stroke-1",
+                                class: "w-5 h-5 cursor-pointer [&>path]:stroke-1",
                                 aria_label: tr.btn_edit,
                                 onclick: move |_| {
                                     if is_loading() || is_saving() {
@@ -97,7 +97,7 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
                             }
                         } else {
                             button {
-                                class: "cursor-pointer w-5 h-5 [&>path]:stroke-1",
+                                class: "w-5 h-5 cursor-pointer [&>path]:stroke-1",
                                 aria_label: tr.btn_save,
                                 onclick: move |_| {
                                     if is_loading() || is_saving() {
@@ -130,7 +130,7 @@ pub fn CreatorPage(space_id: SpacePartition) -> Element {
                         }
                     }
                 }
-                div { class: "flex flex-col w-full min-h-0 flex-1 overflow-hidden",
+                div { class: "flex overflow-hidden flex-col flex-1 w-full min-h-0",
                     RichEditor {
                         class: "w-full h-fit",
                         content: content(),

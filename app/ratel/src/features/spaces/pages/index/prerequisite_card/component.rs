@@ -30,7 +30,6 @@ pub fn PrerequisiteCard(space_id: ReadSignal<SpacePartition>) -> Element {
     };
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
 
         div { class: "prereq-card", "data-testid": "card-prerequisite",
             span { class: "prereq-card__heading", "{tr.prereq_heading}" }

@@ -47,7 +47,6 @@ fn render_compose(username: String, announcement_id: Option<String>) -> Element 
 
     rsx! {
         SeoMeta { title: "{tr.broadcast_compose}" }
-        document::Stylesheet { href: asset!("./style.css") }
         ComposeForm {
             username: username.clone(),
             team_display: team_display.clone(),

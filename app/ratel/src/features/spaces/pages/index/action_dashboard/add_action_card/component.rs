@@ -5,7 +5,6 @@ pub fn AddActionCard(on_click: EventHandler<()>) -> Element {
     let tr: SpaceViewerTranslate = use_translate();
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
 
         button {
             aria_label: "{tr.create_action}",

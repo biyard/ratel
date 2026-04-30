@@ -4,7 +4,6 @@ use dioxus_primitives::checkbox::{self, CheckboxProps};
 #[component]
 pub fn Checkbox(props: CheckboxProps) -> Element {
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         checkbox::Checkbox {
             class: "checkbox",
             checked: props.checked,

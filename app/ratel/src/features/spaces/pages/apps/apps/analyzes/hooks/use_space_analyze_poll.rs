@@ -146,11 +146,11 @@ pub fn humanize_group_value(value: &str, tr: &SpaceAnalyzesAppTranslate) -> Stri
     }
 }
 
-fn build_excel_file_name(space_id: &SpacePartition) -> String {
+pub fn build_excel_file_name(space_id: &SpacePartition) -> String {
     format!("{}-analysis.xlsx", space_id)
 }
 
-fn build_excel_data(
+pub fn build_excel_data(
     poll: &PollResponse,
     panels: &[SpacePanelQuotaResponse],
     result: &PollResultResponse,

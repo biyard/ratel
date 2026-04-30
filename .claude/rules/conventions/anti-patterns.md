@@ -41,20 +41,41 @@ fn NotificationPanel() -> Element {
     }
 }
 
-// GOOD — mutation lives in a UseFeature controller, component just calls the action
+// GOOD (default) — mutation lives as an `async fn` method on the context;
+// component awaits it and decides UX (close popup, navigate, toast).
+#[component]
+fn TeamCreationPopup() -> Element {
+    let mut team_ctx = use_team_context();
+    let mut popup    = use_popup();
+    let nav          = use_navigator();
+    rsx! {
+        TeamCreationForm {
+            on_submit: move |payload| async move {
+                if let Ok(team) = team_ctx.create_team(payload).await {
+                    popup.close();
+                    nav.push(Route::TeamHome { username: team.username });
+                }
+            },
+        }
+    }
+}
+
+// GOOD (when UI binds to lifecycle) — mutation is a use_action field, component
+// calls action.call() and reads .pending() / .error() to drive the UI.
 #[component]
 fn NotificationPanel() -> Element {
     let UseInbox { mut handle_mark_all, .. } = use_inbox()?;
     rsx! {
         button {
-            onclick: move |_| handle_mark_all.call(),
+            disabled: handle_mark_all.pending(),
+            onclick:  move |_| handle_mark_all.call(),
             "Mark all as read"
         }
     }
 }
 ```
 
-Every feature exposes a `UseFeatureName` hook that owns loaders, queries, and `use_action(...)` mutations. Components destructure from that hook and never import server `_handler` functions. See `conventions/hooks-and-actions.md`.
+Every feature exposes its mutations through a context (or `UseFeatureName` hook). Components either await an `async fn` method on the context (default for button handlers) or call a `use_action` field (when the UI binds to `.pending()` / `.value()` / `.error()`). Components never import server `_handler` functions. See `conventions/hooks-and-actions.md` § Rule 3 for the picking guide.
 
 ## Use-Action Closure Without Explicit `Ok` Type
 
@@ -266,6 +287,54 @@ fn update_poll(space_pk: Partition, poll_sk: EntityType)
 fn update_poll(space_id: SpacePartition, poll_id: SpacePollEntityType)
 ```
 
+## JS Interop — Direct `wasm_bindgen` Object Binding
+
+```rust
+// BAD — direct object binding to a runtime JS namespace via extern "C".
+// Forces wasm_bindgen + web-sys + serde-wasm-bindgen onto the dep graph,
+// breaks non-web targets without cfg gates, and silently drifts when the
+// JS module renames `signMessage`.
+#[wasm_bindgen(js_namespace = ["window", "ratel", "auth", "wallet"])]
+extern "C" {
+    #[wasm_bindgen(js_name = signMessage)]
+    fn wallet_sign_message_promise(message: &str) -> Promise;
+}
+
+pub async fn wallet_sign_message(message: &str) -> Result<String> {
+    let v = JsFuture::from(wallet_sign_message_promise(message))
+        .await
+        .map_err(|_| AuthError::WalletConnectFailed)?;
+    v.as_string().ok_or_else(|| AuthError::WalletConnectFailed.into())
+}
+
+// GOOD — one tiny driver script per call, JSON over dioxus.recv()/send().
+// Compiles on every target, no extern "C", no JsValue downcasting.
+use dioxus::document::eval as dx_eval;
+
+pub async fn wallet_sign_message(message: &str) -> Result<String> {
+    let mut runner = dx_eval (include_str!("web/wc_sign_message.js"));
+    runner.send(serde_json::json!(message))
+        .map_err(|_| AuthError::WalletConnectFailed)?;
+    runner.recv::<Option<String>>()
+        .await
+        .map_err(|_| AuthError::WalletConnectFailed)?
+        .ok_or_else(|| AuthError::WalletConnectFailed.into())
+}
+```
+
+```js
+// web/wc_sign_message.js
+const message = await dioxus.recv();
+try {
+  const sig = await window.ratel.auth.wallet.signMessage(message);
+  dioxus.send(sig);
+} catch (e) {
+  dioxus.send(null);
+}
+```
+
+Direct `#[wasm_bindgen(js_namespace = [...])] extern "C" { ... }` blocks are an anti-pattern. Use the `dioxus::document::eval` channel pattern with a per-call JS driver in a sibling `web/` directory. See `conventions/dioxus-app.md` § JS Interop. Reference migration: `app/ratel/src/features/auth/interop/wallet_connect.rs` (good) vs `app/ratel/src/features/auth/interop/web.rs` (legacy, pending migration).
+
 ## i18n
 
 ```rust
@@ -284,26 +353,58 @@ status.translate(&lang())
 
 ## HTML-First Components
 
-### Using `document::Link` for stylesheets
+### Per-component `style.css` and `document::Stylesheet` in components
 
 ```rust
+// BAD — per-component stylesheet causes FOUC on SPA route changes
+#[component]
+pub fn MyComponent() -> Element {
+    rsx! {
+        document::Stylesheet { href: asset!("./style.css") }
+        // ...
+    }
+}
+
 // BAD — preload + stylesheet Link pair for the same CSS asset
 document::Link { rel: "preload", href: asset!("./style.css"), r#as: "style" }
 document::Link { rel: "stylesheet", href: asset!("./style.css") }
 
-// BAD — plain stylesheet Link
-document::Link { rel: "stylesheet", href: asset!("./style.css") }
+// BAD — Google Fonts (or any external CSS) declared per-page
+#[component]
+pub fn MyPage() -> Element {
+    rsx! {
+        document::Link { rel: "preconnect", href: "https://fonts.googleapis.com" }
+        document::Stylesheet { href: "https://fonts.googleapis.com/css2?family=Outfit..." }
+        // ...
+    }
+}
 
-// GOOD — single Stylesheet component injects into <head> and dedupes
-document::Stylesheet { href: asset!("./style.css") }
+// GOOD — append the rules to app/ratel/assets/main.css and let app.rs
+// load it once globally; component RSX has no document::Stylesheet at all.
+#[component]
+pub fn MyComponent() -> Element {
+    rsx! {
+        // No document::Stylesheet here — main.css is loaded globally in app.rs.
+        div { class: "my-component", /* ... */ }
+    }
+}
 ```
 
-`document::Stylesheet` is the dedicated component for CSS — it injects into
-`<head>`, dedupes by href across re-renders, and handles SSR/CSR
-hydration correctly. The legacy `document::Link { rel: "preload", … }`
-+ `document::Link { rel: "stylesheet", … }` pair is a workaround from
-before `Stylesheet` existed; it duplicates the asset in the DOM and
-fights the framework's dedupe logic.
+```css
+/* app/ratel/assets/main.css */
+/* === src/features/<module>/pages/<page>/<component> === */
+.my-component {
+  --comp-bg: var(--dark, #0c0c1a) var(--light, #ffffff);
+  background: var(--comp-bg);
+}
+```
+
+Why this is an anti-pattern:
+- Per-component stylesheets loaded via `document::Stylesheet` / `document::Link` **unload during SPA route changes**, causing flashes of unstyled content (FOUC). Full-page reloads don't hit this because the server-rendered HTML already has every stylesheet in `<head>`.
+- The single global `main.css` loaded from `app.rs` stays in `<head>` for the entire session — no remount, no re-fetch, no FOUC.
+- External stylesheets (Google Fonts, Tiptap themes, etc.) follow the same rule: declare them **once in `app.rs`**, not per-page.
+- Allowed exceptions: `app.rs` itself (loads `main.css`, `dx-components-theme.css`, `tailwind.css`, Google Fonts, favicon), and `seo_meta/mod.rs` (`rel: "canonical"`).
+- See `conventions/styling.md` § "All custom CSS lives in `app/ratel/assets/main.css`" for full rules.
 
 ### Missing `defer` on Script
 

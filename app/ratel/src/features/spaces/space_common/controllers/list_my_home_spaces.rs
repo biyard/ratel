@@ -2,7 +2,8 @@
 // The denormalized-count follow-up (SpaceActionCount entity) in
 // docs/superpowers/plans/2026-04-21-hot-spaces-ranking.md removes it.
 
-use super::list_hot_spaces::{HotSpaceHeat, HotSpaceResponse};
+use super::list_hot_spaces::HotSpaceResponse;
+use crate::features::spaces::space_common::models::HotSpaceHeat;
 use crate::common::*;
 #[cfg(feature = "server")]
 use crate::common::models::space::{SpaceCommon, SpaceParticipant};

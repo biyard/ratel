@@ -247,7 +247,6 @@ pub fn SubscriptionPage(username: ReadSignal<String>) -> Element {
     });
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         document::Script { src: "https://cdn.portone.io/v2/browser-sdk.js" }
 
         div { class: "ts-sub-page",

@@ -282,5 +282,7 @@ pub async fn update_space(
         }
     }
 
+    crate::features::spaces::space_common::services::upsert_hot_space(dynamo, &space_pk).await;
+
     Ok(UpdateSpaceResponse::from(updated_space))
 }

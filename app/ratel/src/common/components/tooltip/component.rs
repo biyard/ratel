@@ -4,7 +4,6 @@ use dioxus_primitives::tooltip::{self, TooltipContentProps, TooltipProps, Toolti
 #[component]
 pub fn Tooltip(props: TooltipProps) -> Element {
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         tooltip::Tooltip {
             class: "tooltip",
             disabled: props.disabled,

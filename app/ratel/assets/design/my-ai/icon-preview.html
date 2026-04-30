@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — My AI Icon Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-violet:#818cf8;--accent-cyan:#22d3ee;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+    }
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+
+    .arena{position:relative;min-height:100vh;display:flex;flex-direction:column;isolation:isolate;padding:60px 28px;gap:60px}
+    .arena::before{
+      content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 30%, rgba(34,211,238,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse 120% 100% at 50% 120%, rgba(252,179,0,0.04) 0%, transparent 50%);
+    }
+
+    .preview-section{max-width:1080px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:18px}
+    .preview-section h2{
+      font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.2em;
+      text-transform:uppercase;color:var(--text-dim);
+    }
+    .preview-section .desc{font-size:13px;color:var(--text-muted);max-width:680px;line-height:1.55}
+
+    /* ─── Topbar mock (matches arena_topbar) ────────────── */
+    .arena-topbar{
+      position:relative;display:flex;align-items:center;justify-content:space-between;
+      padding:20px 28px;border-radius:16px;
+      background:var(--bg-glass);backdrop-filter:blur(20px);
+      border:1px solid var(--border-subtle);
+    }
+    .arena-topbar__brand{display:flex;align-items:center;gap:14px;min-width:0;flex:1}
+    .arena-topbar__logo{
+      width:40px;height:40px;border-radius:10px;
+      background:linear-gradient(135deg,#fcb300,#ef4444);
+      border:1px solid rgba(252,179,0,0.15);
+      box-shadow:0 2px 12px rgba(0,0,0,0.3);
+    }
+    .arena-topbar__title{
+      font-family:var(--font-display);font-weight:700;font-size:16px;letter-spacing:0.06em;
+      text-transform:uppercase;color:var(--text-primary);
+    }
+    .arena-topbar__status{
+      display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;
+      background:rgba(110,237,216,0.08);border:1px solid rgba(110,237,216,0.15);
+      font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
+      color:#6eedd8;margin-left:12px;white-space:nowrap;
+    }
+    .arena-topbar__status::before{content:'';width:5px;height:5px;border-radius:50%;background:#6eedd8;box-shadow:0 0 6px #6eedd8}
+    .arena-topbar__role{
+      display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;
+      background:rgba(252,179,0,0.08);border:1px solid rgba(252,179,0,0.18);
+      font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+      color:#fcb300;margin-left:8px;
+    }
+    .arena-topbar__role svg{width:12px;height:12px}
+
+    .arena-topbar__actions{display:flex;gap:10px}
+
+    .hud-btn{
+      width:40px;height:40px;border-radius:10px;
+      background:var(--bg-glass);backdrop-filter:blur(16px);
+      border:1px solid var(--border-subtle);
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;transition:all 0.25s ease;padding:0;position:relative;
+    }
+    .hud-btn:hover{background:var(--bg-glass-hover);border-color:rgba(252,179,0,0.2);box-shadow:0 0 20px rgba(252,179,0,0.08)}
+    .hud-btn svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+    .hud-btn:hover svg{color:var(--accent-gold)}
+    .hud-btn[aria-pressed="true"]{background:rgba(252,179,0,0.12);border-color:rgba(252,179,0,0.3)}
+    .hud-btn[aria-pressed="true"] svg{color:var(--accent-gold)}
+
+    .hud-btn .tooltip{
+      position:absolute;bottom:-32px;right:0;padding:4px 10px;
+      background:#0c0c1a;border:1px solid var(--border-subtle);border-radius:6px;
+      font-size:11px;color:var(--text-muted);white-space:nowrap;
+      opacity:0;pointer-events:none;transform:translateY(-4px);transition:all 0.2s ease;
+    }
+    .hud-btn:hover .tooltip{opacity:1;transform:translateY(0)}
+
+    /* ─── My-AI specific button variants ─────────────────── */
+    .hud-btn--ai{
+      position:relative;
+      border-color:rgba(34,211,238,0.18);
+      background:linear-gradient(135deg,rgba(34,211,238,0.05),rgba(129,140,248,0.05));
+    }
+    .hud-btn--ai svg{color:#22d3ee}
+    .hud-btn--ai:hover{
+      border-color:rgba(34,211,238,0.4);
+      box-shadow:0 0 24px rgba(34,211,238,0.15);
+    }
+    .hud-btn--ai:hover svg{color:#22d3ee;filter:drop-shadow(0 0 6px rgba(34,211,238,0.6))}
+
+    /* Subtle pulse so the new affordance is discoverable */
+    .hud-btn--ai::after{
+      content:'';position:absolute;inset:-1px;border-radius:11px;
+      border:1px solid rgba(34,211,238,0.4);
+      opacity:0;animation:ai-pulse 3s ease-in-out infinite;pointer-events:none;
+    }
+    @keyframes ai-pulse{
+      0%,100%{opacity:0;transform:scale(1)}
+      50%{opacity:0.6;transform:scale(1.08)}
+    }
+
+    /* Connection status dot (live/offline) */
+    .hud-btn__dot{
+      position:absolute;top:-3px;right:-3px;width:10px;height:10px;border-radius:50%;
+      background:#22c55e;box-shadow:0 0 6px #22c55e;
+      border:2px solid var(--bg-void);
+    }
+    .hud-btn__dot--off{background:var(--text-dim);box-shadow:none}
+
+    /* ─── Standalone variant grid ───────────────────────── */
+    .variants{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:18px;
+      padding:32px;border-radius:18px;background:var(--bg-glass);
+      backdrop-filter:blur(16px);border:1px solid var(--border-subtle);
+    }
+    .variant{display:flex;flex-direction:column;align-items:center;gap:14px}
+    .variant-label{
+      font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.14em;
+      text-transform:uppercase;color:var(--text-dim);text-align:center;
+    }
+    .variant-cta{font-size:11px;color:var(--text-muted);text-align:center;line-height:1.4}
+    .variant .hud-btn{width:56px;height:56px;border-radius:14px}
+    .variant .hud-btn svg{width:24px;height:24px}
+
+    /* Larger demo */
+    .demo-card{
+      padding:24px;border-radius:14px;background:var(--bg-glass);
+      backdrop-filter:blur(16px);border:1px solid var(--border-subtle);
+      display:flex;align-items:center;gap:18px;
+    }
+    .demo-card__copy{flex:1;display:flex;flex-direction:column;gap:4px}
+    .demo-card__title{
+      font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:0.10em;
+      text-transform:uppercase;color:var(--text-primary);
+    }
+    .demo-card__sub{font-size:12px;color:var(--text-muted);line-height:1.45}
+  </style>
+</head>
+<body>
+  <div class="arena">
+
+    <!-- ─── Section 1: In-context inside arena topbar ─────────────────────── -->
+    <section class="preview-section">
+      <h2>1 · In-context · Arena topbar</h2>
+      <p class="desc">
+        The new <strong>My AI</strong> button sits between the like button and the panel toggles
+        on the arena topbar. It uses a cyan/violet gradient outline so it reads as a distinct
+        "external connection" affordance vs. the gold panel-toggles. A small green dot in the
+        top-right corner signals that the user has an MCP secret generated and the endpoint is live.
+      </p>
+
+      <div class="arena-topbar">
+        <div class="arena-topbar__brand">
+          <div class="arena-topbar__logo"></div>
+          <span class="arena-topbar__title">Ratel · Demo Space</span>
+          <span class="arena-topbar__status">Live</span>
+          <span class="arena-topbar__role">
+            <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/>
+            </svg>
+            Admin
+          </span>
+        </div>
+        <div class="arena-topbar__actions">
+          <!-- Home -->
+          <button class="hud-btn" aria-label="Home">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          </button>
+          <!-- Like -->
+          <button class="hud-btn" aria-label="Like">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/>
+            </svg>
+          </button>
+
+          <!-- ★ NEW: My AI button -->
+          <button class="hud-btn hud-btn--ai" aria-label="My AI">
+            <svg fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <!-- 4-point sparkle / AI mark -->
+              <path d="M12 3 13.6 9.4 20 11l-6.4 1.6L12 19l-1.6-6.4L4 11l6.4-1.6L12 3Z"/>
+              <path d="M19 4 19.7 6.3 22 7l-2.3 0.7L19 10l-0.7-2.3L16 7l2.3-0.7L19 4Z" stroke-width="1.2" opacity="0.7"/>
+            </svg>
+            <span class="hud-btn__dot" aria-hidden="true"></span>
+            <span class="tooltip">My AI</span>
+          </button>
+
+          <!-- Overview -->
+          <button class="hud-btn" aria-label="Overview">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </button>
+          <!-- Leaderboard -->
+          <button class="hud-btn" aria-label="Leaderboard">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="17" r="5"/><path d="M8 7h8"/><path d="M11 12 5.12 2.2"/>
+            </svg>
+          </button>
+          <!-- Settings -->
+          <button class="hud-btn" aria-label="Settings">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Section 2: States ─────────────────────────────── -->
+    <section class="preview-section">
+      <h2>2 · Button states</h2>
+      <p class="desc">
+        Three states: <strong>connected</strong> (token generated, dot is green),
+        <strong>not connected</strong> (no secret yet, dot is dim), and
+        <strong>active</strong> (currently on the My AI page — gold pressed style, matches
+        existing panel toggles).
+      </p>
+
+      <div class="variants">
+        <div class="variant">
+          <button class="hud-btn hud-btn--ai" aria-label="My AI">
+            <svg fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3 13.6 9.4 20 11l-6.4 1.6L12 19l-1.6-6.4L4 11l6.4-1.6L12 3Z"/>
+              <path d="M19 4 19.7 6.3 22 7l-2.3 0.7L19 10l-0.7-2.3L16 7l2.3-0.7L19 4Z" stroke-width="1.2" opacity="0.7"/>
+            </svg>
+            <span class="hud-btn__dot"></span>
+          </button>
+          <div class="variant-label">Connected</div>
+          <div class="variant-cta">User has an active MCP secret. Click to copy or regenerate.</div>
+        </div>
+
+        <div class="variant">
+          <button class="hud-btn hud-btn--ai" aria-label="My AI">
+            <svg fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3 13.6 9.4 20 11l-6.4 1.6L12 19l-1.6-6.4L4 11l6.4-1.6L12 3Z"/>
+              <path d="M19 4 19.7 6.3 22 7l-2.3 0.7L19 10l-0.7-2.3L16 7l2.3-0.7L19 4Z" stroke-width="1.2" opacity="0.7"/>
+            </svg>
+            <span class="hud-btn__dot hud-btn__dot--off"></span>
+          </button>
+          <div class="variant-label">Not connected</div>
+          <div class="variant-cta">No MCP secret generated yet. Page will prompt to generate one.</div>
+        </div>
+
+        <div class="variant">
+          <button class="hud-btn hud-btn--ai" aria-label="My AI" aria-pressed="true">
+            <svg fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3 13.6 9.4 20 11l-6.4 1.6L12 19l-1.6-6.4L4 11l6.4-1.6L12 3Z"/>
+              <path d="M19 4 19.7 6.3 22 7l-2.3 0.7L19 10l-0.7-2.3L16 7l2.3-0.7L19 4Z" stroke-width="1.2" opacity="0.7"/>
+            </svg>
+          </button>
+          <div class="variant-label">Active route</div>
+          <div class="variant-cta">When the user is on /my-ai, button uses the standard pressed style.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Section 3: Behavior summary ────────────────────── -->
+    <section class="preview-section">
+      <h2>3 · Behavior</h2>
+      <div class="demo-card">
+        <button class="hud-btn hud-btn--ai" style="width:48px;height:48px;border-radius:12px">
+          <svg fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px">
+            <path d="M12 3 13.6 9.4 20 11l-6.4 1.6L12 19l-1.6-6.4L4 11l6.4-1.6L12 3Z"/>
+            <path d="M19 4 19.7 6.3 22 7l-2.3 0.7L19 10l-0.7-2.3L16 7l2.3-0.7L19 4Z" stroke-width="1.2" opacity="0.7"/>
+          </svg>
+          <span class="hud-btn__dot"></span>
+        </button>
+        <div class="demo-card__copy">
+          <div class="demo-card__title">My AI · Click target</div>
+          <div class="demo-card__sub">
+            On click the topbar navigates to <code style="color:#22d3ee;font-family:var(--font-display);font-size:11px">/my-ai</code>.
+            The <em>My AI</em> page (next file) shows the user's MCP server URL, copy/regenerate
+            actions, and a tabbed setup guide for Claude Code, Claude Desktop, Cursor, and a
+            generic JSON-RPC config.
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

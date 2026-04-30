@@ -88,6 +88,10 @@ pub enum Partition {
 
     Reward, // For space rewards, SPACE#{space_id}##REWARD
 
+    /// Singleton config row controlling the analyze-page creation
+    /// quota for non-enterprise tiers. One row per deployment.
+    AnalyzeQuotaConfig,
+
     Report(String),
 
     UserReward(String),        // USER_REWARD#{user_id}

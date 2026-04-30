@@ -33,7 +33,6 @@ pub fn ParentHudPanel(username: String) -> Element {
     };
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         div { class: "parent-panel-wrap",
             button {
                 class: "hud-btn hud-btn--parent",

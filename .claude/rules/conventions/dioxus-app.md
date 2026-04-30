@@ -51,6 +51,20 @@ pub const MY_ASSET: Asset = asset!("/assets/filename.ext");
 // In RSX: img { src: MY_ASSET }
 ```
 
+## Stylesheets
+
+- **All component CSS goes in `app/ratel/assets/main.css`** — loaded once globally from `app.rs`
+- **Never** write `document::Stylesheet { href: asset!("./style.css") }` in a component — per-component stylesheets unload on SPA route changes and cause flashes of unstyled content (FOUC)
+- **Never** create per-component `style.css` files under `src/`
+- External stylesheets (Google Fonts, etc.) are declared **only in `app.rs`**
+- Append new component styles to `main.css` under a section marker:
+  ```css
+  /* === src/features/<module>/<page>/<component> === */
+  .my-component { ... }
+  ```
+- Use unique, component-scoped class names — `main.css` is one global namespace
+- Full rules: `conventions/styling.md` § "All custom CSS lives in `app/ratel/assets/main.css`"
+
 ## Views
 
 Every page view should include `SeoMeta { title: "..." }` and use `translate!` for all strings.
@@ -63,14 +77,20 @@ Every page view should include `SeoMeta { title: "..." }` and use `translate!` f
 
 ## Feature Hooks & Actions
 
-Every feature with interactive state exposes a `UseFeatureName` controller hook that bundles its signals, loaders, queries, and actions. Components consume the hook — never the server-function `_handler` directly.
+Every feature with interactive state exposes a context (or `UseFeatureName` controller hook) that bundles its signals, loaders, queries, and mutations. Components consume the context — never the server-function `_handler` directly.
 
-- Mutations must be wrapped in `use_action(...)` and placed inside the controller. Components call them via `handle.call(input)`.
+Two mutation shapes, picked by what the UI does with the result:
+- **`async fn` method on the context (default).** For most button handlers — component does `ctx.do_thing(payload).await` and decides UX on `Ok`/`Err`. Keeps components UI-only and mutates loaders/signals through one structure.
+- **`use_action(...)` field on the controller.** Only when the UI binds directly to `.pending()` / `.value()` / `.error()` for spinners, disabled states, or last-result/last-error displays.
+
+Other rules:
 - Controller hook signature: `pub fn use_feature() -> std::result::Result<UseFeature, RenderError>` — context-cached via `try_use_context()` + `provide_root_context(...)`.
-- `Action::call(&mut self)` takes a mutable borrow, so destructure action fields as `mut handle_xxx`.
-- **See `conventions/hooks-and-actions.md` for full rules, examples, and folder layout.**
+- For the action shape: `Action::call(&mut self)` takes a mutable borrow, so destructure action fields as `mut handle_xxx`.
+- **See `conventions/hooks-and-actions.md` for full rules, both shapes, picking guide, and folder layout.**
 
-Reference implementation: `app/ratel/src/features/notifications/hooks/use_inbox.rs`.
+Reference implementations:
+- `async fn` method shape — `app/ratel/src/common/contexts/team_context.rs` + `app/ratel/src/components/team_creation_popup/mod.rs`
+- `use_action` shape — `app/ratel/src/features/notifications/hooks/use_inbox.rs`
 
 ## Data Loading with `use_loader`
 
@@ -138,18 +158,101 @@ Never call `popup.close()` or navigate away before `.await` points — Dioxus dr
 
 ## JS Interop
 
-Guard all `wasm_bindgen` calls with `#[cfg(not(feature = "server"))]` — JS is unavailable during SSR.
+Two patterns exist for calling JavaScript from Dioxus. **Prefer the `dioxus::document::eval` channel pattern.** The `wasm_bindgen` extern pattern is treated as an anti-pattern for new code and should be migrated when touched.
 
-Three layers: JS source → register on `window.ratel.<module>` → Rust `#[wasm_bindgen(js_namespace = [...])]`.
+Both patterns share the same JS source contract: helpers are registered on the `window.ratel.<module>` namespace from a JS file loaded via `asset!()` or bundled into the page.
+
+### Preferred: `dioxus::document::eval` channel
+
+Each JS call gets its own tiny driver script in a sibling `web/` directory. The script reads args via `dioxus.recv()` and returns results via `dioxus.send(...)`. The Rust side calls `dx_eval(include_str!("web/<name>.js"))` and exchanges JSON over the resulting handle.
+
+Reference: `app/ratel/src/features/auth/interop/wallet_connect.rs` + `app/ratel/src/features/auth/interop/web/`.
 
 ```rust
-#[wasm_bindgen(js_namespace = ["window", "ratel", "common", "theme"])]
-extern "C" {
-    pub fn load_theme() -> Option<String>;
+use dioxus::document::eval as dx_eval;
+
+pub async fn wallet_sign_message(message: &str) -> crate::common::Result<String> {
+    let mut runner = dx_eval(include_str!("web/wc_sign_message.js"));
+    runner
+        .send(serde_json::json!(message))
+        .map_err(|_| AuthError::WalletConnectFailed)?;
+    runner
+        .recv::<Option<String>>()
+        .await
+        .map_err(|_| AuthError::WalletConnectFailed)?
+        .ok_or_else(|| AuthError::WalletConnectFailed.into())
 }
 ```
 
-Namespace must match exactly. JS files in `app/ratel/assets/` for `asset!()` macro.
+```js
+// web/wc_sign_message.js
+const message = await dioxus.recv();
+try {
+  const sig = await window.ratel.auth.wallet.signMessage(message);
+  dioxus.send(sig);
+} catch (e) {
+  dioxus.send(null);
+}
+```
+
+Why this is preferred:
+- **No `wasm_bindgen` / `web-sys` / `js-sys` / `serde-wasm-bindgen` plumbing** — args/returns are plain JSON
+- **Compiles on every target** — the `dioxus::document::eval` runner is a no-op outside web; no per-platform `cfg` gates at the call site
+- **One JS file per call** — the Rust signature and the JS body live next to each other and can change together
+- **No global `extern "C"` block** that has to stay in lockstep with a JS namespace path
+- **Failure modes are explicit** — `runner.recv::<T>()` returns `Result`, no opaque `JsValue` to downcast
+
+Notes:
+- The runner is async by nature, so even synchronous-looking calls (e.g. `wallet_is_connected`) become `async fn`
+- Always serialize the request body with `serde_json::json!(...)` and deserialize the response with `runner.recv::<T>()` where `T: Deserialize`
+- Use `Option<T>` for fallible JS calls and have the JS catch + `dioxus.send(null)` on failure — keeps error mapping in one place
+
+### Anti-pattern: direct `wasm_bindgen` extern bindings
+
+Direct object binding via `#[wasm_bindgen(js_namespace = [...])] extern "C" { ... }` is an anti-pattern.
+
+```rust
+// BAD — extern block forces wasm_bindgen / web-sys / serde-wasm-bindgen
+// onto the dependency graph, breaks non-web targets without cfg gates,
+// and couples the Rust signature to a global JS namespace path that
+// drifts silently when the JS module is renamed.
+#[wasm_bindgen(js_namespace = ["window", "ratel", "auth", "wallet"])]
+extern "C" {
+    #[wasm_bindgen(js_name = signMessage)]
+    fn wallet_sign_message_promise(message: &str) -> Promise;
+}
+
+pub async fn wallet_sign_message(message: &str) -> crate::common::Result<String> {
+    let js_value = JsFuture::from(wallet_sign_message_promise(message))
+        .await
+        .map_err(|_e| AuthError::WalletConnectFailed)?;
+    js_value
+        .as_string()
+        .ok_or_else(|| AuthError::WalletConnectFailed.into())
+}
+```
+
+Problems:
+- Direct object binding via `#[wasm_bindgen(js_namespace = [...])]` is a **compile-time** contract against runtime JS — a typo or rename only fails at JS load time, not at `cargo check`
+- `extern "C"` blocks must be `#[cfg(not(feature = "server"))]`-gated everywhere, and wrappers around them must be gated again at every call site
+- Forces `JsFuture::from(...)` + `serde_wasm_bindgen::from_value(...)` boilerplate at every call
+- Pulls `wasm_bindgen` / `wasm-bindgen-futures` / `web-sys` / `js-sys` / `serde-wasm-bindgen` into the dependency graph just to bridge two JSON values
+
+When you encounter an existing `#[wasm_bindgen] extern "C"` block, treat it as legacy and migrate it to the channel pattern when you touch the surrounding code. Reference migration: `wallet_connect.rs` (after) vs `web.rs` (before, still pending migration).
+
+### Layout
+
+```
+features/<module>/interop/
+├── mod.rs                 # pub use of platform/web modules
+├── <topic>.rs             # Rust API: pub async fn that calls dx_eval
+└── web/
+    ├── <topic>_init.js
+    ├── <topic>_<action_a>.js
+    └── <topic>_<action_b>.js
+```
+
+One JS file per call keeps `include_str!` references stable and lets each driver have its own try/catch.
 
 ## Accessibility
 

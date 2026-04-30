@@ -6,7 +6,6 @@ pub fn MeetEditorView() -> Element {
     let tr: MeetActionTranslate = use_translate();
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
 
         SeoMeta { title: "{tr.page_title}" }
 

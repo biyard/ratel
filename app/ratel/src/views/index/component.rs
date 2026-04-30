@@ -10,8 +10,9 @@ use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::social::pages::team_arena::ArenaTeamCreationPopup;
 use crate::features::spaces::pages::index::SettingsPanel;
 use crate::features::spaces::space_common::controllers::{
-    list_hot_spaces_handler, list_my_home_spaces_handler, HotSpaceHeat, HotSpaceResponse,
+    list_hot_spaces_handler, list_my_home_spaces_handler, HotSpaceResponse,
 };
+use crate::features::spaces::space_common::models::HotSpaceHeat;
 use crate::me::use_my_spaces;
 use crate::*;
 
@@ -33,6 +34,15 @@ pub fn Index() -> Element {
         .map(|u| u.username.clone())
         .unwrap_or_default();
     let has_user = user_ctx().user.is_some();
+    // Admin users get a shield button next to Settings in the topbar
+    // HUD that jumps straight to `/admin/`. Non-admins see nothing —
+    // mirrors the team_arena topbar so admin tooling is one click away
+    // from the home arena instead of a manually-typed URL.
+    let is_admin = user_ctx()
+        .user
+        .as_ref()
+        .map(|u| matches!(u.user_type, UserType::Admin))
+        .unwrap_or(false);
     let mut settings_open = use_signal(|| false);
     let mut teams_open = use_signal(|| false);
     let mut notifications_open = use_signal(|| false);
@@ -44,7 +54,7 @@ pub fn Index() -> Element {
     let mut teams_query = use_infinite_query(move |bookmark| async move {
         let logged_in = user_ctx().user.is_some();
         if logged_in {
-            crate::get_user_teams_handler(bookmark).await
+            crate::features::social::controllers::get_user_teams_handler(bookmark).await
         } else {
             Ok(ListResponse::<TeamItem>::default())
         }
@@ -190,14 +200,6 @@ pub fn Index() -> Element {
             keywords,
         }
 
-        document::Link { rel: "preconnect", href: "https://fonts.googleapis.com" }
-        document::Link {
-            rel: "preconnect",
-            href: "https://fonts.gstatic.com",
-            crossorigin: "anonymous",
-        }
-        document::Stylesheet { href: "https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" }
-        document::Stylesheet { href: asset!("./style.css") }
         document::Script { defer: true, src: asset!("./script.js") }
 
         div { class: "home-arena",
@@ -298,6 +300,7 @@ pub fn Index() -> Element {
                         }
                         span { class: "hud-btn__label", "{t.rewards}" }
                     }
+
                     button {
                         class: "hud-btn",
                         aria_label: "{t.credentials}",
@@ -315,6 +318,43 @@ pub fn Index() -> Element {
                             path { d: "m9 12 2 2 4-4" }
                         }
                         span { class: "hud-btn__label", "{t.credentials}" }
+                    }
+                    // My AI — opens the personal MCP endpoint page so an
+                    // AI agent (Claude Code, Cursor, etc.) can be wired up
+                    // to act on the user's behalf. Cyan accent so it reads
+                    // as an external integration affordance distinct from
+                    // the gold action buttons.
+                    button {
+                        class: "hud-btn hud-btn--ai",
+                        aria_label: "{t.my_ai}",
+                        "data-testid": "home-btn-my-ai",
+                        onclick: move |_| {
+                            if !has_user {
+                                popup
+                                    .open(rsx! {
+                                    LoginModal { on_success: on_login_success }
+                                })
+                                .with_title("Start building your Essence");
+                                return;
+                            }
+                            nav.push(Route::MyAiPage {});
+                        },
+                        svg {
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            stroke_width: "1.6",
+                            view_box: "0 0 24 24",
+                            xmlns: "http://www.w3.org/2000/svg",
+                            path { d: "M12 3 13.6 9.4 20 11l-6.4 1.6L12 19l-1.6-6.4L4 11l6.4-1.6L12 3Z" }
+                            path {
+                                d: "M19 4 19.7 6.3 22 7l-2.3 0.7L19 10l-0.7-2.3L16 7l2.3-0.7L19 4Z",
+                                opacity: "0.7",
+                                stroke_width: "1.2",
+                            }
+                        }
+                        span { class: "hud-btn__label", "{t.my_ai}" }
                     }
                     button {
                         class: "hud-btn",
@@ -380,16 +420,9 @@ pub fn Index() -> Element {
                                     // bounded dropdown. Detect near-bottom directly via
                                     // onscroll + JS so pagination triggers reliably.
                                     onscroll: move |_| {
-                                        let js = r#"
-                                                                                                                                                                                                                                                                                                                                                                                                            const el = document.getElementById('home-teams-dd-list');
-                                                                                                                                                                                                                                                                                                                                                                                                            if (!el) { dioxus.send(false); return; }
-                                                                                                                                                                                                                                                                                                                                                                                                            const nearBottom =
-                                                                                                                                                                                                                                                                                                                                                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
-                                                                                                                                                                                                                                                                                                                                                                                                            dioxus.send(nearBottom);
-                                                                                                                                                                                                                                                                                                                                                                                                        "#;
                                         let mut ctrl = teams_query;
                                         spawn(async move {
-                                            let mut eval = document::eval(js);
+                                            let mut eval = document::eval(include_str!("./web/team-list.js"));
                                             if let Ok(near_bottom) = eval.recv::<bool>().await {
                                                 if near_bottom && ctrl.has_more() && !ctrl.is_loading() {
                                                     ctrl.next();
@@ -477,6 +510,30 @@ pub fn Index() -> Element {
                                 path { d: "M15.5 16.5V19C15.5 20.1046 14.6046 21 13.5 21H6.5C5.39543 21 4.5 20.1046 4.5 19V5C4.5 3.89543 5.39543 3 6.5 3H13.5C14.6046 3 15.5 3.89543 15.5 5V8.0625M20.5 12L9.5 12M9.5 12L12 14.5M9.5 12L12 9.5" }
                             }
                             span { class: "hud-btn__label", "{t.sign_in}" }
+                        }
+                    }
+                    if is_admin {
+                        button {
+                            class: "hud-btn",
+                            aria_label: "Admin",
+                            "data-testid": "home-btn-admin",
+                            onclick: move |_| {
+                                nav.push(Route::AdminMainPage {});
+                            },
+                            svg {
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "1.6",
+                                view_box: "0 0 24 24",
+                                xmlns: "http://www.w3.org/2000/svg",
+                                // Plain shield — read at a glance as "elevated
+                                // permissions" without the checkmark used by
+                                // the credentials button next to it.
+                                path { d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" }
+                            }
+                            span { class: "hud-btn__label", "Admin" }
                         }
                     }
                     button {
@@ -629,28 +686,28 @@ pub fn Index() -> Element {
                         }
                     }
                 }
-                        // button {
-            //     class: "browse-btn",
-            //     "data-testid": "home-btn-browse",
-            //     onclick: go_browse_all,
-            //     svg {
-            //         fill: "none",
-            //         stroke: "currentColor",
-            //         stroke_linecap: "round",
-            //         stroke_linejoin: "round",
-            //         stroke_width: "2",
-            //         view_box: "0 0 24 24",
-            //         xmlns: "http://www.w3.org/2000/svg",
-            //         circle { cx: "11", cy: "11", r: "8" }
-            //         line {
-            //             x1: "21",
-            //             y1: "21",
-            //             x2: "16.65",
-            //             y2: "16.65",
-            //         }
-            //     }
-            //     "{t.browse_all}"
-            // }
+                // button {
+                //     class: "browse-btn",
+                //     "data-testid": "home-btn-browse",
+                //     onclick: go_browse_all,
+                //     svg {
+                //         fill: "none",
+                //         stroke: "currentColor",
+                //         stroke_linecap: "round",
+                //         stroke_linejoin: "round",
+                //         stroke_width: "2",
+                //         view_box: "0 0 24 24",
+                //         xmlns: "http://www.w3.org/2000/svg",
+                //         circle { cx: "11", cy: "11", r: "8" }
+                //         line {
+                //             x1: "21",
+                //             y1: "21",
+                //             x2: "16.65",
+                //             y2: "16.65",
+                //         }
+                //     }
+                //     "{t.browse_all}"
+                // }
             }
 
             // SETTINGS PANEL — same component as Space Arena

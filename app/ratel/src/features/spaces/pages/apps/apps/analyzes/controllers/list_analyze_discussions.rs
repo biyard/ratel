@@ -8,6 +8,25 @@ use crate::features::spaces::pages::apps::models::SpaceApp;
 pub struct AnalyzeDiscussionItem {
     pub discussion_id: SpacePostEntityType,
     pub title: String,
+    /// Total comments on the discussion (unfiltered). Kept for the
+    /// list page that doesn't apply cross filters.
+    /// Defaults to 0 when omitted by older clients.
+    #[serde(default)]
+    pub comment_count: i64,
+
+    /// Comments authored by users in the report's cross-filter
+    /// matched set. Equals `comment_count` when the report has no
+    /// filters. Populated by `get_analyze_report`; the bare
+    /// `list_analyze_discussions` endpoint leaves this at 0.
+    #[serde(default)]
+    pub matched_comment_count: i64,
+
+    /// Distinct authors (from the matched set) who commented on the
+    /// discussion. Same fallback semantics as
+    /// `matched_comment_count` — 0 from the bare list endpoint,
+    /// populated by `get_analyze_report`.
+    #[serde(default)]
+    pub matched_participant_count: i64,
 }
 
 #[get("/api/spaces/{space_id}/apps/analyzes/discussions?bookmark", role: SpaceUserRole)]
@@ -29,6 +48,9 @@ pub async fn list_analyze_discussions(
         .map(|post| AnalyzeDiscussionItem {
             discussion_id: post.sk.clone().into(),
             title: post.title.trim().to_string(),
+            comment_count: post.comments,
+            matched_comment_count: 0,
+            matched_participant_count: 0,
         })
         .collect();
 

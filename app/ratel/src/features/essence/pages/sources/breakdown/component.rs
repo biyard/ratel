@@ -63,7 +63,6 @@ pub fn EssenceBreakdown() -> Element {
     let counts = breakdown();
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         section { class: "essence-breakdown",
             KindCard {
                 kind: KindFilter::All,
