@@ -8,7 +8,7 @@ use crate::common::contexts::use_team_context;
 use crate::common::types::{SpacePartition, TeamPartition, UserType};
 use crate::features::auth::hooks::use_user_context;
 use crate::features::cross_posting::components::CrossPostSidebar;
-use crate::features::cross_posting::hooks::{use_provide_cross_posting, UseCrossPosting};
+use crate::features::cross_posting::hooks::{use_cross_posting_provider, UseCrossPosting};
 use crate::features::cross_posting::models::ConnectionStatus;
 use crate::features::cross_posting::types::{ConnectionResponse, SocialPlatform};
 use crate::features::posts::controllers::get_post::get_post_handler;
@@ -221,7 +221,7 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
         connections: cp_connections,
         per_post_enabled,
         ..
-    } = use_provide_cross_posting()?;
+    } = use_cross_posting_provider()?;
 
     // Cross-post connect button on a disconnected platform card → send the
     // user to Settings → Connections (Bluesky modal lives there). Username

@@ -1,27 +1,23 @@
 //! `UseCrossPosting` controller hook.
 //!
-//! Per `conventions/hooks-and-actions.md`, every interactive feature
-//! exposes a single controller bundling its loaders, signals, and
-//! actions. Components destructure from this hook — they MUST NOT
-//! call server-function `_handler`s directly.
+//! Per `conventions/hooks-and-actions.md`:
 //!
-//! ## Two-function pattern (UseInbox precedent)
+//! - **Two-function pattern** — provider installs context, consumer reads it
+//!   back. The earlier "single function with `try_use_context` early-return"
+//!   pattern violated Dioxus's rules of hooks (first render registered every
+//!   hook slot, subsequent renders bailed via the cache and registered zero,
+//!   producing slot-mismatch panics). Splitting keeps the call sequence stable.
+//!     - [`use_cross_posting_provider`] — runs every signal / loader and
+//!       installs `UseCrossPosting` via `use_context_provider`. Call **once**
+//!       from a long-lived ancestor (Settings/Connections page or post-edit).
+//!     - [`use_cross_posting`] — pure `use_context` read, safe from any
+//!       transient component.
 //!
-//! Dioxus's rules of hooks require the hook-call sequence to be
-//! identical across re-renders. The earlier "single function with
-//! `try_use_context` early-return" pattern (still shown in
-//! `hooks-and-actions.md`) violated this — first render registered
-//! every hook slot, second render bailed out via context-cache and
-//! registered zero. Splitting installer / consumer keeps the
-//! sequence stable.
-//!
-//! - [`use_provide_cross_posting`] — runs every signal / loader /
-//!   action and installs the `UseCrossPosting` value via
-//!   `use_context_provider`. Call **exactly once** from a long-lived
-//!   ancestor (e.g. the Settings/Connections page route, or a
-//!   ComposeBootstrap if used inside compose).
-//! - [`use_cross_posting`] — pure context read. Safe from any
-//!   transient component. Panics if no ancestor provided.
+//! - **Mutations are `async fn` methods on the controller**, not
+//!   `use_action` fields. Components `await` the result and decide UX
+//!   (close popup, toast, navigate). The few legitimate `use_action`
+//!   cases are when UI binds to `.pending()` / `.error()` / `.value()`
+//!   directly — none of cross-posting's button handlers do that.
 
 use crate::common::*;
 use crate::features::cross_posting::controllers::{
@@ -63,35 +59,64 @@ pub struct UseCrossPosting {
     /// Drives the compose sidebar's "Reaching N networks" summary and
     /// the Publish button's "Publish to N" label.
     pub reach_count: Memo<usize>,
-
-    // ── Actions (mutations that hit the server) ───────────────────────
-
-    /// Bluesky app-password connect. Inputs: (handle, app_password).
-    /// Discards the app_password after `createSession`; only the
-    /// returned session JWTs are persisted (AEAD-sealed).
-    pub handle_connect_bluesky: Action<(String, String), ()>,
-
-    /// Toggle `auto_post_enabled` on an existing connection. Inputs:
-    /// (platform, new_value).
-    pub handle_toggle_auto_post: Action<(SocialPlatform, bool), ()>,
-
-    /// Disconnect (soft-delete: status=Revoked, ciphertext zeroed).
-    /// Inputs: (platform,).
-    pub handle_disconnect: Action<(SocialPlatform,), ()>,
 }
 
-/// Installer — runs every cross-posting hook in this scope and installs
+impl UseCrossPosting {
+    /// Bluesky app-password connect. Discards the app_password after
+    /// `createSession`; only the returned session JWTs are persisted
+    /// (AEAD-sealed). Refreshes the connections loader on success so the
+    /// Settings page row flips to "Connected" without a manual refetch.
+    pub async fn connect_bluesky(
+        &mut self,
+        handle: String,
+        app_password: String,
+    ) -> crate::common::Result<()> {
+        connect_bluesky_handler(ConnectBlueskyRequest { handle, app_password }).await?;
+        self.connections.restart();
+        Ok(())
+    }
+
+    /// Toggle `auto_post_enabled` on an existing connection.
+    pub async fn toggle_auto_post(
+        &mut self,
+        platform: SocialPlatform,
+        enabled: bool,
+    ) -> crate::common::Result<()> {
+        toggle_auto_post_handler(
+            platform.to_string(),
+            ToggleAutoPostRequest {
+                auto_post_enabled: enabled,
+            },
+        )
+        .await?;
+        self.connections.restart();
+        Ok(())
+    }
+
+    /// Disconnect (soft-delete: status=Revoked, ciphertext zeroed).
+    pub async fn disconnect(&mut self, platform: SocialPlatform) -> crate::common::Result<()> {
+        disconnect_handler(platform.to_string()).await?;
+        self.connections.restart();
+        Ok(())
+    }
+}
+
+/// Provider — runs every cross-posting signal / loader once and installs
 /// the resulting `UseCrossPosting` via `use_context_provider`. Call
 /// exactly once from a long-lived ancestor; consumer components use
 /// [`use_cross_posting`].
 #[track_caller]
-pub fn use_provide_cross_posting() -> std::result::Result<UseCrossPosting, RenderError> {
+pub fn use_cross_posting_provider() -> std::result::Result<UseCrossPosting, RenderError> {
+    if let Some(ctx) = try_use_context::<UseCrossPosting>() {
+        return Ok(ctx);
+    }
+
     // Read login state reactively so the connections loader re-runs on
     // login/logout. Logged-out users see an empty list without hitting
     // the API, mirroring the inbox-loader pattern.
     let user_ctx = crate::features::auth::hooks::use_user_context();
 
-    let mut connections = use_loader(move || {
+    let connections = use_loader(move || {
         let logged_in = user_ctx().is_logged_in();
         async move {
             if !logged_in {
@@ -113,45 +138,18 @@ pub fn use_provide_cross_posting() -> std::result::Result<UseCrossPosting, Rende
 
     let reach_count = use_memo(move || per_post_enabled().values().filter(|v| **v).count());
 
-    let handle_connect_bluesky = use_action(move |handle: String, app_password: String| async move {
-        connect_bluesky_handler(ConnectBlueskyRequest { handle, app_password }).await?;
-        connections.restart();
-        Ok::<(), crate::common::Error>(())
-    });
-
-    let handle_toggle_auto_post =
-        use_action(move |platform: SocialPlatform, enabled: bool| async move {
-            toggle_auto_post_handler(
-                platform.to_string(),
-                ToggleAutoPostRequest { auto_post_enabled: enabled },
-            )
-            .await?;
-            connections.restart();
-            Ok::<(), crate::common::Error>(())
-        });
-
-    let handle_disconnect = use_action(move |platform: SocialPlatform| async move {
-        disconnect_handler(platform.to_string()).await?;
-        connections.restart();
-        Ok::<(), crate::common::Error>(())
-    });
-
     Ok(use_context_provider(|| UseCrossPosting {
         connections,
         connected_count,
         posts_this_month,
         per_post_enabled,
         reach_count,
-        handle_connect_bluesky,
-        handle_toggle_auto_post,
-        handle_disconnect,
     }))
 }
 
 /// Consumer — reads the `UseCrossPosting` controller that an ancestor
-/// installed via [`use_provide_cross_posting`]. Pure context read (one
-/// stable hook slot). Panics if no ancestor provided — indicating a
-/// missing installer in the route tree.
+/// installed via [`use_cross_posting_provider`]. Pure context read (one
+/// stable hook slot). Panics if no ancestor provided.
 #[track_caller]
 pub fn use_cross_posting() -> UseCrossPosting {
     use_context::<UseCrossPosting>()
