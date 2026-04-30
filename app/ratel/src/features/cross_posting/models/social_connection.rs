@@ -51,6 +51,17 @@ pub struct SocialConnection {
     pub updated_at: i64,
 }
 
+impl SocialConnection {
+    /// Build the sparse-GSI sort key for `(platform, status)` —
+    /// `"{platform}#{status}"`. Centralised so connect / disconnect /
+    /// dispatcher all produce the same key shape; manual `format!`-ing
+    /// at call sites is forbidden because a typo silently misroutes a
+    /// row off the gsi1 sweep.
+    pub fn platform_status_key(platform: SocialPlatform, status: ConnectionStatus) -> String {
+        format!("{platform}#{status}")
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, strum::Display)]
 #[cfg_attr(feature = "server", derive(JsonSchema))]
 #[serde(rename_all = "snake_case")]

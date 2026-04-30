@@ -3,7 +3,6 @@ use crate::features::auth::User;
 use crate::features::cross_posting::models::{JobState, SyndicationJob};
 use crate::features::cross_posting::types::{CrossPostingError, SocialPlatform};
 use crate::features::posts::models::Post;
-use std::str::FromStr;
 
 /// Author-initiated retry of a single `SyndicationJob` (FR-7 #44).
 ///
@@ -24,10 +23,7 @@ use std::str::FromStr;
 /// the 3-attempt budget was removed when failure handling moved to inline
 /// retry + inbox notification, so the counter is purely informational now.
 #[post("/api/cross-posting/posts/{post_id}/jobs/{platform}/retry", user: User)]
-pub async fn retry_job_handler(post_id: FeedPartition, platform: String) -> Result<()> {
-    let platform: SocialPlatform = SocialPlatform::from_str(&platform)
-        .map_err(|_| CrossPostingError::SyndicationJobNotFound)?;
-
+pub async fn retry_job_handler(post_id: FeedPartition, platform: SocialPlatform) -> Result<()> {
     let conf = crate::features::posts::config::get();
     let cli = conf.dynamodb();
 

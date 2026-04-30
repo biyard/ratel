@@ -47,7 +47,7 @@ use crate::features::cross_posting::services::adapters::{
     PublishedRef,
 };
 use crate::features::cross_posting::services::{credentials, format, shard};
-use crate::features::cross_posting::types::SocialPlatform;
+use crate::features::cross_posting::types::{CrossPostingError, SocialPlatform};
 use crate::features::posts::models::Post;
 use crate::features::posts::types::{PostStatus, Visibility};
 use aws_sdk_dynamodb::Client as DynamoClient;
@@ -340,7 +340,6 @@ pub async fn handle_syndication_job_ready(job: SyndicationJob) -> Result<()> {
     }
 
     // ── (6) Commit terminal state ──────────────────────────────────────
-    let _ = now_secs; // unused after dropping retry-sweeper backoff math
     match result {
         Ok(published) => {
             tracing::info!(
@@ -454,7 +453,7 @@ async fn try_acquire_lock(
                 return Ok(None);
             }
             tracing::error!(error = %svc, "dispatcher: try_acquire_lock unexpected DynamoDB error");
-            Err(crate::common::Error::Internal)
+            Err(CrossPostingError::DispatchLockFailed.into())
         }
     }
 }
@@ -489,7 +488,7 @@ async fn commit_skipped(
         .map(|_| ())
         .map_err(|e| {
             tracing::error!(error = %e.into_service_error(), "dispatcher: commit_skipped failed");
-            crate::common::Error::Internal
+            CrossPostingError::CommitFailed.into()
         })
 }
 
@@ -546,7 +545,7 @@ async fn commit_published_with_body_len(
         .map(|_| ())
         .map_err(|e| {
             tracing::error!(error = %e.into_service_error(), "dispatcher: commit_published failed");
-            crate::common::Error::Internal
+            CrossPostingError::CommitFailed.into()
         })
 }
 
@@ -590,7 +589,7 @@ async fn commit_failed(
         .map(|_| ())
         .map_err(|e| {
             tracing::error!(error = %e.into_service_error(), "dispatcher: commit_failed failed");
-            crate::common::Error::Internal
+            CrossPostingError::CommitFailed.into()
         })
 }
 

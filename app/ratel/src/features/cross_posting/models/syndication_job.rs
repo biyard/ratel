@@ -44,11 +44,14 @@ pub struct SyndicationJob {
     pub engagement_shard: Option<String>,
 
     /// GSI1 sort key (Number type so DynamoDB range comparators (`<=`)
-    /// work directly). Only meaningful when `dispatch_shard.is_some()`.
+    /// work directly). Only meaningful when `dispatch_shard.is_some()`;
+    /// when the shard is `None` (terminal state) this stays at `0` and
+    /// the row is absent from the GSI anyway, so the value is never read.
     #[dynamo(index = "gsi1", sk)]
     pub next_attempt_at: i64,
 
-    /// GSI2 sort key. Only meaningful when `engagement_shard.is_some()`.
+    /// GSI2 sort key. Same `0`-when-shard-is-`None` convention as
+    /// `next_attempt_at`.
     #[dynamo(index = "gsi2", sk)]
     pub engagement_next_at: i64,
 
