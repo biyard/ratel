@@ -36431,6 +36431,222 @@ body.comments-panel-resizing {
   border-color: var(--dark, rgba(255,255,255,0.25)) var(--light, rgba(0,0,0,0.30));
 }
 
+/* Backlink-landing 2-column grid (desktop). The page itself owns the
+   layout — when signed-out we expand it to grid 1fr 340px so the
+   article + aside sit side-by-side; subscribe-cta spans full width
+   below them. Signed-in viewers see the original single-column flow. */
+.post-arena[data-signed-out="true"] .page {
+  max-width: 1180px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 32px;
+  align-items: start;
+}
+.post-arena[data-signed-out="true"] .page > .pd-subscribe-cta {
+  grid-column: 1 / -1;
+}
+
+.pd-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-self: start;
+  position: sticky;
+  top: 128px;
+}
+
+.pd-house-card {
+  --pd-house-bg-from: var(--dark, rgba(12,12,26,0.85)) var(--light, rgba(255,255,255,0.85));
+  --pd-house-bg-to: var(--dark, rgba(20,20,40,0.75)) var(--light, rgba(248,248,252,0.78));
+  --pd-house-border: var(--dark, rgba(252,179,0,0.18)) var(--light, rgba(252,179,0,0.30));
+  --pd-house-text: var(--dark, #f0f0f5) var(--light, #12121a);
+  --pd-house-text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+  --pd-house-text-dim: var(--dark, #55556a) var(--light, #989aae);
+  --pd-house-divider: var(--dark, rgba(255,255,255,0.06)) var(--light, rgba(0,0,0,0.06));
+
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--pd-house-bg-from), var(--pd-house-bg-to));
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--pd-house-border);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pd-house-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 100% 0%, rgba(252, 179, 0, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 60% at 0% 100%, rgba(110, 237, 216, 0.08) 0%, transparent 55%);
+  pointer-events: none;
+}
+.pd-house-card > * { position: relative; z-index: 1; }
+
+.pd-house-card__eyebrow {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #fcb300;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pd-house-card__eyebrow svg { width: 12px; height: 12px; }
+
+.pd-house-card__hero {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pd-house-card__hero-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fcb300, #6eedd8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  color: #0a0a0a;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.pd-house-card__hero-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.pd-house-card__hero-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.pd-house-card__hero-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--pd-house-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pd-house-card__hero-sub {
+  font-size: 12px;
+  color: var(--pd-house-text-muted);
+}
+
+.pd-house-card__pitch {
+  font-size: 13px;
+  color: var(--pd-house-text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.pd-house-card__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fcb300, #e5a200);
+  color: #0a0a0a;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 20px rgba(252, 179, 0, 0.30);
+  text-decoration: none;
+}
+.pd-house-card__cta:hover {
+  box-shadow: 0 6px 30px rgba(252, 179, 0, 0.45);
+  transform: translateY(-1px);
+  color: #0a0a0a;
+}
+.pd-house-card__cta svg { width: 13px; height: 13px; }
+
+.pd-house-card__note {
+  font-size: 11.5px;
+  color: var(--pd-house-text-dim);
+  text-align: center;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.pd-mcp-card {
+  --pd-mcp-bg: var(--dark, rgba(12,12,26,0.65)) var(--light, rgba(255,255,255,0.78));
+  --pd-mcp-border: var(--dark, rgba(255,255,255,0.06)) var(--light, rgba(0,0,0,0.08));
+  --pd-mcp-text: var(--dark, #f0f0f5) var(--light, #12121a);
+  --pd-mcp-text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+
+  border-radius: 16px;
+  background: var(--pd-mcp-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--pd-mcp-border);
+  padding: 16px;
+}
+.pd-mcp-card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.pd-mcp-card__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: rgba(129, 140, 248, 0.10);
+  border: 1px solid rgba(129, 140, 248, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #818cf8;
+}
+.pd-mcp-card__icon svg { width: 16px; height: 16px; }
+.pd-mcp-card__title {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pd-mcp-text);
+}
+.pd-mcp-card__body {
+  font-size: 12.5px;
+  color: var(--pd-mcp-text-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+.pd-mcp-card__body code {
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(110, 237, 216, 0.06);
+  color: #6eedd8;
+}
+
+@media (max-width: 1024px) {
+  .post-arena[data-signed-out="true"] .page {
+    grid-template-columns: 1fr;
+  }
+  .pd-side { position: static; }
+}
+
 @media (max-width: 720px) {
   .pd-refer-bar { padding: 8px 14px; gap: 10px; }
   .pd-refer-bar__text { font-size: 11.5px; }
