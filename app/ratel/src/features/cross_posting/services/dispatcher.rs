@@ -43,7 +43,8 @@ use crate::features::cross_posting::models::{
     ConnectionStatus, ErrorCategory, JobState, LOCK_TTL_SEC, SocialConnection, SyndicationJob,
 };
 use crate::features::cross_posting::services::adapters::{
-    BlueskyAdapter, CrossPostAdapter, ImageRef, LinkCard, PlatformError, PublishedRef,
+    BlueskyAdapter, CrossPostAdapter, DecryptedCredentials, ImageRef, LinkCard, PlatformError,
+    PublishedRef,
 };
 use crate::features::cross_posting::services::{credentials, format, shard};
 use crate::features::cross_posting::types::SocialPlatform;
@@ -251,23 +252,70 @@ pub async fn handle_syndication_job_ready(job: SyndicationJob) -> Result<()> {
     let link_card = build_link_card(&post, &job);
 
     // ── (5) Publish — inline retry once on retryable failures ────────
-    // First attempt. If it fails with a transient/retryable category we
-    // retry once inside the same lock. Two attempts max per dispatch
-    // invocation; further retries require user action.
+    // First attempt. If it fails we may retry once within the same lock:
+    //   * AuthExpired → call `refreshSession` to rotate the Bluesky access
+    //     token, persist the new ciphertext on `SocialConnection`, then
+    //     retry publish with the rotated creds. spec FR-5 #35.
+    //   * Other retryable categories (network / rate-limit / unknown) →
+    //     retry with the same creds.
+    // If both attempts fail, commit terminal Failed below.
+    let mut current_creds = creds;
     let mut result = adapter
-        .publish(creds.clone(), body.clone(), images.clone(), link_card.clone())
+        .publish(
+            current_creds.clone(),
+            body.clone(),
+            images.clone(),
+            link_card.clone(),
+        )
         .await;
 
     if let Err(err) = &result {
         let category = classify_platform_error(err);
-        if is_retryable(category) {
+        if matches!(category, ErrorCategory::AuthExpired) {
+            tracing::warn!(
+                pk = ?job.pk,
+                platform = ?job.platform,
+                "dispatcher: publish hit AuthExpired — attempting Bluesky refreshSession",
+            );
+            match try_refresh_bluesky_credentials(cli, &adapter, &connection, &current_creds).await {
+                Ok(refreshed) => {
+                    tracing::info!(
+                        pk = ?job.pk,
+                        platform = ?job.platform,
+                        "dispatcher: refreshSession ok — retrying publish with rotated tokens",
+                    );
+                    current_creds = refreshed;
+                    result = adapter
+                        .publish(
+                            current_creds.clone(),
+                            body.clone(),
+                            images.clone(),
+                            link_card.clone(),
+                        )
+                        .await;
+                }
+                Err(refresh_err) => {
+                    tracing::warn!(
+                        pk = ?job.pk,
+                        platform = ?job.platform,
+                        error = %refresh_err,
+                        "dispatcher: refreshSession failed — leaving publish error as AuthExpired",
+                    );
+                    // Drop through; `result` keeps the original AuthExpired
+                    // error which `commit_failed` + `notify_failure` will
+                    // route to Settings → Connections.
+                }
+            }
+        } else if is_retryable(category) {
             tracing::warn!(
                 pk = ?job.pk,
                 platform = ?job.platform,
                 ?category,
                 "dispatcher: first publish failed (retryable) — retrying inline"
             );
-            result = adapter.publish(creds, body, images, link_card).await;
+            result = adapter
+                .publish(current_creds, body, images, link_card)
+                .await;
         }
     }
 
@@ -629,4 +677,49 @@ fn post_id_inner(pk: &Partition) -> String {
 fn table_name() -> String {
     let prefix = option_env!("DYNAMO_TABLE_PREFIX").unwrap_or("ratel-local");
     format!("{prefix}-main")
+}
+
+/// Rotate the Bluesky `accessJwt` via `refreshSession` and persist the new
+/// pair onto `SocialConnection.credential_ciphertext`. Called by the
+/// dispatcher when the first publish attempt fails with `AuthExpired` —
+/// avoids forcing the user to manually reconnect every time the short-TTL
+/// access token expires (the long-TTL refresh token covers ~90 days). Only
+/// `AuthExpired` from the refresh call itself is terminal; on success we
+/// return the new creds for the publish retry.
+async fn try_refresh_bluesky_credentials(
+    cli: &DynamoClient,
+    adapter: &BlueskyAdapter,
+    connection: &SocialConnection,
+    creds: &DecryptedCredentials,
+) -> std::result::Result<DecryptedCredentials, PlatformError> {
+    let refresh_jwt = match creds {
+        DecryptedCredentials::Bluesky { refresh_jwt, .. } => refresh_jwt.clone(),
+        _ => {
+            return Err(PlatformError::Unknown(
+                "non-bluesky credentials do not support refreshSession yet".into(),
+            ));
+        }
+    };
+
+    let session = adapter.refresh_session(&refresh_jwt).await?;
+    let new_creds = DecryptedCredentials::Bluesky {
+        did: session.did,
+        handle: session.handle,
+        access_jwt: session.access_jwt,
+        refresh_jwt: session.refresh_jwt,
+    };
+
+    let sealed = credentials::seal_credentials(&new_creds)
+        .map_err(|e| PlatformError::Unknown(format!("seal after refresh failed: {e}")))?;
+
+    SocialConnection::updater(connection.pk.clone(), connection.sk.clone())
+        .with_credential_ciphertext(sealed)
+        .with_updated_at(time::now())
+        .execute(cli)
+        .await
+        .map_err(|e| {
+            PlatformError::Unknown(format!("SocialConnection update after refresh: {e}"))
+        })?;
+
+    Ok(new_creds)
 }

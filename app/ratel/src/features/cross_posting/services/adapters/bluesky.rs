@@ -206,6 +206,44 @@ impl BlueskyAdapter {
             refresh_jwt: parsed.refresh_jwt,
         })
     }
+
+    /// Rotate an expired `accessJwt` using the long-lived `refreshJwt`
+    /// (~90-day TTL on Bluesky). Endpoint is auth'd by the refresh token
+    /// itself in the bearer slot, not by the access token. The response
+    /// usually carries a fresh `refreshJwt` too — callers should always
+    /// persist both fields back into `SocialConnection.credential_ciphertext`
+    /// so a future refresh has the latest token.
+    ///
+    /// Failure modes:
+    /// - `AuthExpired` — the refresh token itself is expired or revoked.
+    ///   Caller surfaces "reconnect required" UX.
+    /// - `NetworkError` / `Unknown` — transport / parsing failures; caller
+    ///   may retry the publish path or fail the job depending on policy.
+    pub async fn refresh_session(
+        &self,
+        refresh_jwt: &str,
+    ) -> Result<BlueskySession, PlatformError> {
+        let url = format!("{}/xrpc/com.atproto.server.refreshSession", self.pds_host);
+        // refreshSession authenticates via the refresh JWT (Bearer), no body.
+        let resp = self
+            .client
+            .post(&url)
+            .bearer_auth(refresh_jwt)
+            .send()
+            .await
+            .map_err(map_transport_error)?;
+        let resp = check_status(resp).await?;
+        let parsed: CreateSessionResponse = resp
+            .json()
+            .await
+            .map_err(|e| PlatformError::Unknown(format!("refreshSession parse: {e}")))?;
+        Ok(BlueskySession {
+            did: parsed.did,
+            handle: parsed.handle,
+            access_jwt: parsed.access_jwt,
+            refresh_jwt: parsed.refresh_jwt,
+        })
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────
