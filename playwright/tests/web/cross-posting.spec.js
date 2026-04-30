@@ -83,17 +83,24 @@ test.describe.serial("Cross-posting Phase 1A — compose sidebar", () => {
   });
 
   test("Disconnected platforms render the Connect CTA", async ({ page }) => {
+    // The seeded test user (user1) may carry over an actual Bluesky
+    // SocialConnection from prior local exploration of the cross-posting
+    // flow, which would push the card into the connected-switch branch
+    // instead of the connect-CTA branch. Reset Bluesky to disconnected
+    // before asserting. The disconnect handler is idempotent — a second
+    // DELETE on an already-Revoked row is a no-op success
+    // (see disconnect.rs comment).
+    await page.request.delete("/api/cross-posting/connections/bluesky");
+
     await goto(page, `/posts/${postId}/edit`);
 
     // Restore Public visibility so the sidebar mounts again.
     await click(page, { text: "Public" });
     await expect(page.locator(".crosspost").first()).toBeVisible();
 
-    // The pre-auth user has no `SocialConnection` rows seeded (Playwright
-    // can't seed one until the BYPASS_PLATFORM_API=mock harness lands —
-    // see notes at the top of this file). With no connection, every card
-    // falls through to the `connect-cta` branch in
-    // `compose_sidebar/component.rs`.
+    // With no Connected SocialConnection row, every card falls through
+    // to the `connect-cta` branch in `compose_sidebar/component.rs`
+    // (`if c.status != ConnectionStatus::Connected`).
     await expect(
       page.locator('.pp-card[data-platform="bluesky"] .connect-cta__btn')
     ).toBeVisible();
@@ -148,15 +155,24 @@ test.describe.serial("Cross-posting Phase 1D — visibility notice (AC-20)", () 
     // editor's "already-published-public" guard reads `post.status` and
     // `post.visibility` from the loaded post — both must be set for the
     // notice to render when we toggle to Private below.
+    //
+    // Two server-function quirks hit this PUT:
+    //   1. Handler signature `update_post_handler(post_id, req: UpdatePostRequest)`
+    //      makes the Dioxus macro wrap the JSON body as
+    //      `{ "req": <UpdatePostRequest> }`.
+    //   2. `UpdatePostRequest` is `#[serde(untagged)]`, so we send the
+    //      Publish variant's fields flat (NOT under a "Publish" key) — the
+    //      first variant whose required fields match wins. With
+    //      `title + content + publish` present, serde picks `Publish`.
     const publish = await page.request.put(`/api/posts/${postId}`, {
       data: {
-        Publish: {
+        req: {
           publish: true,
-          industry_id: 0,
           title: "Cross-posting AC-20 fixture",
           content: "<p>This is the AC-20 verification post body.</p>",
+          visibility: "public",
           categories: [],
-          urls: [],
+          image_urls: [],
         },
       },
     });
@@ -196,15 +212,16 @@ test.describe.serial("Cross-posting Phase 1D — public backlink landing (AC-17,
     const pk = (await create.json()).post_pk;
     postId = pk.includes("#") ? pk.split("#")[1] : pk;
 
+    // Same untagged-enum + req-wrapping shape as the AC-20 setup above.
     const publish = await page.request.put(`/api/posts/${postId}`, {
       data: {
-        Publish: {
+        req: {
           publish: true,
-          industry_id: 0,
           title: "AC-17 public landing fixture",
           content: "<p>Anonymous viewers should see this without sign-up.</p>",
+          visibility: "public",
           categories: [],
-          urls: [],
+          image_urls: [],
         },
       },
     });
