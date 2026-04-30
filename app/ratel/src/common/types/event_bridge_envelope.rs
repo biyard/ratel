@@ -85,6 +85,12 @@ pub enum DetailType {
     /// post visibility, then calls the platform adapter and commits the
     /// terminal state with retry-policy classification.
     SyndicationJobReady,
+    /// Fires every 1 minute (CloudWatch schedule rule). Drives Stage 3
+    /// — fan out one query per shard against the `find_due_jobs` GSI,
+    /// reset due rows back to `Pending` so the dispatcher Pipe re-fires
+    /// them. Payload is empty (`detail` ignored) since the work is
+    /// driven by DDB scans, not the event itself.
+    SyndicationRetrySweep,
     #[serde(other)]
     Unknown,
 }
@@ -373,6 +379,10 @@ impl EventBridgeEnvelope {
                 let job: crate::features::cross_posting::models::SyndicationJob =
                     DetailType::parse_detail(&self.detail)?;
                 crate::features::cross_posting::services::dispatcher::handle_syndication_job_ready(job).await
+            }
+            DetailType::SyndicationRetrySweep => {
+                // Scheduled every 1 minute; payload ignored.
+                crate::features::cross_posting::services::sweeper::run_retry_sweep().await
             }
             DetailType::Unknown => {
                 tracing::warn!(

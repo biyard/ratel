@@ -6,9 +6,10 @@ pub mod dispatcher;
 pub mod factory;
 pub mod format;
 pub mod shard;
+pub mod sweeper;
+pub mod sweeper_poller;
 
 pub use adapters::*;
 
 // To be added in subsequent PRs:
-//   - retry_sweeper.rs Stage 3 (1D)
 //   - engagement.rs    Stage 4 adaptive sweeper (1D)
