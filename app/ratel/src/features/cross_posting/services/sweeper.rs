@@ -72,6 +72,14 @@ async fn sweep_shard(
     // `opt.sk` as a `begins_with` clause — design needs `<=` on the
     // numeric `next_attempt_at`. Drop down to the raw SDK so we can use
     // a range comparator and keep the row count minimal.
+    //
+    // The macro stores `gsi1_sk` as a 20-char zero-padded string of
+    // `(next_attempt_at - i64::MIN)` so DynamoDB's lexicographic string
+    // comparator preserves numeric ordering. We must encode the `:now`
+    // bound the same way; `generate_sk_for_find_due_jobs` is the
+    // public encoder the macro emits for exactly this purpose.
+    let now_padded = SyndicationJob::generate_sk_for_find_due_jobs(now_secs);
+
     let resp = cli
         .query()
         .table_name(SyndicationJob::table_name())
@@ -80,7 +88,7 @@ async fn sweep_shard(
         .expression_attribute_names("#pk", "gsi1_pk")
         .expression_attribute_names("#sk", "gsi1_sk")
         .expression_attribute_values(":shard", AV::S(shard.to_string()))
-        .expression_attribute_values(":now", AV::N(now_secs.to_string()))
+        .expression_attribute_values(":now", AV::S(now_padded))
         .send()
         .await
         .map_err(|e| {
