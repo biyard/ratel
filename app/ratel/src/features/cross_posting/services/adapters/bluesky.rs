@@ -446,6 +446,28 @@ async fn check_status(resp: reqwest::Response) -> Result<reqwest::Response, Plat
 
 fn classify_http_error(status: reqwest::StatusCode, body: &str) -> PlatformError {
     let msg = format!("status={status} body={body}");
+
+    // AT Protocol returns several auth-class errors with HTTP 400 instead of
+    // 401/403 — `ExpiredToken`, `InvalidToken`, `AuthRequired`,
+    // `AccountTakedown` all come back as `400 Bad Request` with the real
+    // reason in the body's `"error"` field. Status alone would misclassify
+    // these as `ContentRejected`, sending the user to the post-detail Retry
+    // CTA when they actually need to reconnect under Settings → Connections.
+    // Inspect the body envelope first; fall back to the status map.
+    if let Ok(envelope) = serde_json::from_str::<serde_json::Value>(body) {
+        if let Some(err_code) = envelope.get("error").and_then(|v| v.as_str()) {
+            const AUTH_ERROR_CODES: &[&str] = &[
+                "ExpiredToken",
+                "InvalidToken",
+                "AuthRequired",
+                "AccountTakedown",
+            ];
+            if AUTH_ERROR_CODES.contains(&err_code) {
+                return PlatformError::AuthExpired(msg);
+            }
+        }
+    }
+
     match status.as_u16() {
         401 | 403 => PlatformError::AuthExpired(msg),
         429 => PlatformError::RateLimited(msg),
@@ -765,6 +787,25 @@ mod tests {
     fn classify_400_as_content_rejected() {
         let err = classify_http_error(reqwest::StatusCode::BAD_REQUEST, "bad input");
         assert!(matches!(err, PlatformError::ContentRejected(_)));
+    }
+
+    #[test]
+    fn classify_400_with_expired_token_as_auth_expired() {
+        // AT Protocol returns auth-class errors with HTTP 400 — body's
+        // `error` field is what actually carries the bucket.
+        let body = r#"{"error":"ExpiredToken","message":"Token has expired"}"#;
+        let err = classify_http_error(reqwest::StatusCode::BAD_REQUEST, body);
+        assert!(
+            matches!(err, PlatformError::AuthExpired(_)),
+            "expected AuthExpired, got {err:?}"
+        );
+    }
+
+    #[test]
+    fn classify_400_with_invalid_token_as_auth_expired() {
+        let body = r#"{"error":"InvalidToken","message":"bad sig"}"#;
+        let err = classify_http_error(reqwest::StatusCode::BAD_REQUEST, body);
+        assert!(matches!(err, PlatformError::AuthExpired(_)));
     }
 
     #[test]
