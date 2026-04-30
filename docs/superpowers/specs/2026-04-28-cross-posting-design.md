@@ -256,7 +256,7 @@ All controllers under `app/ratel/src/features/cross_posting/controllers/`. Sessi
 | Method | Path | Purpose | Auth |
 |---|---|---|---|
 | GET | `/api/cross-posting/connections` | List user's connections (status, handles, counts, toggles) | Session |
-| POST | `/api/cross-posting/connections/bluesky` | Connect via app-password (handle + app password in body) | Session |
+| POST | `/api/cross-posting/connections/bluesky/connect` | Connect via app-password (handle + app password in body). Routed under `/connect` to avoid shadowing the `{platform}` PATCH/DELETE routes — see implementation comment in `connect_bluesky.rs`. | Session |
 | GET | `/api/cross-posting/oauth/{platform}/start` | Begin OAuth (returns redirect URL) | Session |
 | GET | `/api/cross-posting/oauth/{platform}/callback` | OAuth callback (stores tokens, redirects to settings or interstitial) | OAuth state |
 | PATCH | `/api/cross-posting/connections/{platform}` | Toggle `auto_post_enabled` | Session |
