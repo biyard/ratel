@@ -19,6 +19,10 @@ pub enum InboxKind {
     SubTeamDeregistered,
     SubTeamLeftParent,
     SubTeamParentDeleted,
+    /// Cross-posting Stage 2 dispatcher reported a failure. The author
+    /// can click through to the post-detail page and hit "Retry now".
+    /// `auth_expired` failures route to Settings → Connections instead.
+    CrossPostingFailed,
 }
 
 impl Default for InboxKind {
@@ -44,6 +48,7 @@ impl InboxKind {
             InboxKind::SubTeamDeregistered => "STTERM_DREG",
             InboxKind::SubTeamLeftParent => "STTERM_LEAVE",
             InboxKind::SubTeamParentDeleted => "STTERM_PDEL",
+            InboxKind::CrossPostingFailed => "XPOST_FAIL",
         }
     }
 }
@@ -149,6 +154,17 @@ pub enum InboxPayload {
         former_parent_team_name: String,
         cta_url: String,
     },
+    /// Stage 2 dispatch produced a terminal failure. `cta_url` resolves
+    /// to the post-detail page (so the author can hit Retry from the
+    /// Syndication panel) for retryable categories, or to Settings →
+    /// Connections for `auth_expired` (the user must reconnect first).
+    CrossPostingFailed {
+        post_id: String,
+        platform: String,
+        error_category: String,
+        error_message: Option<String>,
+        cta_url: String,
+    },
 }
 
 impl InboxPayload {
@@ -168,6 +184,7 @@ impl InboxPayload {
             InboxPayload::SubTeamDeregistered { cta_url, .. } => cta_url,
             InboxPayload::SubTeamLeftParent { cta_url, .. } => cta_url,
             InboxPayload::SubTeamParentDeleted { cta_url, .. } => cta_url,
+            InboxPayload::CrossPostingFailed { cta_url, .. } => cta_url,
         }
     }
 }
@@ -214,6 +231,7 @@ impl InboxPayload {
             InboxPayload::SubTeamDeregistered { .. } => InboxKind::SubTeamDeregistered,
             InboxPayload::SubTeamLeftParent { .. } => InboxKind::SubTeamLeftParent,
             InboxPayload::SubTeamParentDeleted { .. } => InboxKind::SubTeamParentDeleted,
+            InboxPayload::CrossPostingFailed { .. } => InboxKind::CrossPostingFailed,
         }
     }
 }

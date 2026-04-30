@@ -6,10 +6,9 @@ pub mod dispatcher;
 pub mod factory;
 pub mod format;
 pub mod shard;
-pub mod sweeper;
-pub mod sweeper_poller;
-
 pub use adapters::*;
 
-// To be added in subsequent PRs:
-//   - engagement.rs    Stage 4 adaptive sweeper (1D)
+// Phase 1A+1D scope: failed jobs notify the author and surface a manual
+// Retry CTA on the post-detail panel. We do NOT auto-retry — see the
+// design doc § "Stage 3 (manual retry + notification)" for the spec
+// rewrite. Stage 4 (adaptive engagement scheduler) is still pending.

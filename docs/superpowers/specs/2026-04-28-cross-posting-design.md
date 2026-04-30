@@ -4,7 +4,18 @@
 **Design**: [app/ratel/assets/design/cross-posting/](../../../app/ratel/assets/design/cross-posting/)
 **Author / Date**: doyooon · 2026-04-28
 **Reviewers / Review date**: doyooon · 2026-04-28
-**Status**: Approved (2026-04-28)
+**Status**: Approved (2026-04-28) — amended 2026-04-30 (failure-handling policy)
+
+## Changelog
+
+- **2026-04-30 — Failure handling: notification + manual retry (no auto-retry sweeper).** The spec's FR-5 #34 mandate of *"1m / 10m / 1h auto-retry"* is **superseded**. Stage 3 (CloudWatch retry sweeper) is removed entirely. Replacement policy:
+  - **Inline retry once.** The Stage 2 dispatcher retries the platform API exactly once when the first attempt fails with a retryable category (`network_error`, `rate_limited`, `unknown`).
+  - **No background re-dispatch.** If the inline retry also fails (or the failure is non-retryable — `auth_expired`, `content_rejected`), the job commits to `Failed` immediately and `dispatch_shard` is removed from the GSI.
+  - **Inbox notification.** On terminal failure the dispatcher emits an `InboxKind::CrossPostingFailed` notification to the post's author. Per-category copy in `features/notifications/i18n.rs` (EN+KO) routes the user to either the post-detail panel (retry CTA) or Settings → Connections (`auth_expired`).
+  - **Manual retry.** The post-detail panel's existing `Retry now` action is the only path to re-attempt a Failed job. AC-24's "auto retry stages" assertion is replaced by "inbox notification + inline-retry-once" coverage.
+  - **Stage 4 (engagement scheduler) is unaffected** — engagement refresh remains in Phase 1D scope, just without a sibling retry sweeper.
+
+  Phase 1D scope now drops "3-attempt retry sweeper" (no longer exists) and adds "inbox CrossPostingFailed notification copy". The "왜 1A~1C 는 production 에 노출되지 않는가" rationale below is **no longer accurate** — 1A becomes prod-eligible once Phase 1D's onboarding interstitial / landing polish ship; the missing sweeper no longer blocks prod rollout because spec FR-5 #34 has been amended.
 
 ## Summary
 

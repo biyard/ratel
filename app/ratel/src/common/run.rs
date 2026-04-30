@@ -73,10 +73,6 @@ fn serve(app: fn() -> Element) {
         {
             tracing::info!("Starting local-dev DynamoDB Stream poller");
             crate::common::stream_poller::spawn_stream_poller();
-
-            // Cross-posting Stage 3 retry sweeper — replaces the prod
-            // CloudWatch schedule rule for local-dev.
-            crate::features::cross_posting::services::sweeper_poller::spawn_retry_sweeper();
         }
 
         #[cfg(feature = "local-dev")]

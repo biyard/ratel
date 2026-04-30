@@ -23,15 +23,22 @@
 //!    :my_lock_id` prevents a stolen-lock holder from overwriting the
 //!    legitimate finisher.
 //!
-//! Failure classification → retry policy (FR-5 #34):
-//! - Retryable (`RateLimited` / `NetworkError` / `Unknown`): up to 3
-//!   retries at 1m / 10m / 1h backoff via `dispatch_shard` sparse GSI
-//!   (Stage 3 sweeper picks them up — wired in 1D).
-//! - Non-retryable (`AuthExpired` / `ContentRejected`): terminal Failed
-//!   immediately; user must reconnect or manually retry.
+//! Failure handling (revised from the original design doc spec):
+//! - First attempt fails → **inline retry once** within the same lock.
+//!   Catches transient `IncompleteMessage` / one-shot `RateLimited`
+//!   without spawning a separate retry pipeline.
+//! - If the inline retry also fails → commit terminal Failed and post
+//!   an inbox notification to the author. The Syndication panel's
+//!   "Retry now" CTA is the only path back into Pending.
+//! - There is **no automatic retry sweeper** (Stage 3 was removed in
+//!   favour of notifications). `AuthExpired` failures route the
+//!   notification CTA to Settings → Connections instead of the post
+//!   detail.
 
-use crate::common::*;
+use crate::common::models::notification::UserInboxNotification;
+use crate::common::types::InboxPayload;
 use crate::common::utils::time;
+use crate::common::*;
 use crate::features::cross_posting::models::{
     ConnectionStatus, ErrorCategory, JobState, LOCK_TTL_SEC, SocialConnection, SyndicationJob,
 };
@@ -45,11 +52,6 @@ use crate::features::posts::types::{PostStatus, Visibility};
 use aws_sdk_dynamodb::Client as DynamoClient;
 use aws_sdk_dynamodb::types::AttributeValue as AV;
 use uuid::Uuid;
-
-/// Backoff schedule for auto-retries (FR-5 #34): 1 min / 10 min / 1 h.
-/// Index = `new_attempts - 1` after a failure. Length implicitly bounds
-/// the total retry count to 3 (1 initial + 3 retries = 4 total calls).
-const RETRY_BACKOFF_SEC: [i64; 3] = [60, 600, 3600];
 
 /// Stage 2 entry point. Called from `EventBridgeEnvelope::proc` on
 /// `DetailType::SyndicationJobReady`.
@@ -117,18 +119,21 @@ pub async fn handle_syndication_job_ready(job: SyndicationJob) -> Result<()> {
             tracing::warn!(
                 pk = ?job.pk,
                 platform = ?job.platform,
-                "dispatcher: platform not implemented in Phase 1A — marking Failed (terminal)"
+                "dispatcher: platform not implemented in Phase 1A — marking Failed"
             );
-            commit_failed_terminal(
+            let msg = "platform adapter not implemented in Phase 1A".to_string();
+            commit_failed(
                 cli,
                 &table,
                 &job,
                 &lock_id,
                 ErrorCategory::Unknown,
-                "platform adapter not implemented in Phase 1A",
+                &msg,
+                job.attempts.saturating_add(1),
                 now,
             )
             .await?;
+            notify_failure(cli, &job, ErrorCategory::Unknown, Some(msg)).await;
             return Ok(());
         }
     };
@@ -149,30 +154,36 @@ pub async fn handle_syndication_job_ready(job: SyndicationJob) -> Result<()> {
         Some(c) if c.status == ConnectionStatus::Connected => c,
         Some(_) => {
             // Revoked / AuthExpired connection — non-retryable.
-            commit_failed_terminal(
+            let msg = "connection no longer Connected (revoked or auth-expired)".to_string();
+            commit_failed(
                 cli,
                 &table,
                 &job,
                 &lock_id,
                 ErrorCategory::AuthExpired,
-                "connection no longer Connected (revoked or auth-expired)",
+                &msg,
+                job.attempts.saturating_add(1),
                 now,
             )
             .await?;
+            notify_failure(cli, &job, ErrorCategory::AuthExpired, Some(msg)).await;
             return Ok(());
         }
         None => {
             // Connection deleted between Stage 1 and Stage 2 — terminal.
-            commit_failed_terminal(
+            let msg = "SocialConnection row not found".to_string();
+            commit_failed(
                 cli,
                 &table,
                 &job,
                 &lock_id,
                 ErrorCategory::AuthExpired,
-                "SocialConnection row not found",
+                &msg,
+                job.attempts.saturating_add(1),
                 now,
             )
             .await?;
+            notify_failure(cli, &job, ErrorCategory::AuthExpired, Some(msg)).await;
             return Ok(());
         }
     };
@@ -181,16 +192,19 @@ pub async fn handle_syndication_job_ready(job: SyndicationJob) -> Result<()> {
         Ok(c) => c,
         Err(e) => {
             tracing::error!(error = %e, "dispatcher: credential decrypt failed");
-            commit_failed_terminal(
+            let msg = "credential decrypt failed".to_string();
+            commit_failed(
                 cli,
                 &table,
                 &job,
                 &lock_id,
                 ErrorCategory::AuthExpired,
-                "credential decrypt failed",
+                &msg,
+                job.attempts.saturating_add(1),
                 now,
             )
             .await?;
+            notify_failure(cli, &job, ErrorCategory::AuthExpired, Some(msg)).await;
             return Ok(());
         }
     };
@@ -236,10 +250,29 @@ pub async fn handle_syndication_job_ready(job: SyndicationJob) -> Result<()> {
     let body_len = body.chars().count() as i32;
     let link_card = build_link_card(&post, &job);
 
-    // ── (5) Publish ────────────────────────────────────────────────────
-    let result = adapter.publish(creds, body, images, link_card).await;
+    // ── (5) Publish — inline retry once on retryable failures ────────
+    // First attempt. If it fails with a transient/retryable category we
+    // retry once inside the same lock. Two attempts max per dispatch
+    // invocation; further retries require user action.
+    let mut result = adapter
+        .publish(creds.clone(), body.clone(), images.clone(), link_card.clone())
+        .await;
+
+    if let Err(err) = &result {
+        let category = classify_platform_error(err);
+        if is_retryable(category) {
+            tracing::warn!(
+                pk = ?job.pk,
+                platform = ?job.platform,
+                ?category,
+                "dispatcher: first publish failed (retryable) — retrying inline"
+            );
+            result = adapter.publish(creds, body, images, link_card).await;
+        }
+    }
 
     // ── (6) Commit terminal state ──────────────────────────────────────
+    let _ = now_secs; // unused after dropping retry-sweeper backoff math
     match result {
         Ok(published) => {
             tracing::info!(
@@ -254,49 +287,19 @@ pub async fn handle_syndication_job_ready(job: SyndicationJob) -> Result<()> {
         }
         Err(err) => {
             let category = classify_platform_error(&err);
-            let retryable = is_retryable(category);
             let new_attempts = job.attempts.saturating_add(1);
-            let exhausted = (new_attempts as usize) > RETRY_BACKOFF_SEC.len();
-
             let msg = format!("{err}");
 
-            if retryable && !exhausted {
-                let backoff = RETRY_BACKOFF_SEC[(new_attempts as usize) - 1];
-                let next_attempt_at = now_secs + backoff;
-                let dispatch_shard = shard::shard_for(&post_id_inner(&job.pk));
-                tracing::warn!(
-                    pk = ?job.pk,
-                    platform = ?job.platform,
-                    ?category,
-                    attempts = new_attempts,
-                    next_attempt_at,
-                    "dispatcher: publish failed; scheduling retry"
-                );
-                commit_failed_retryable(
-                    cli,
-                    &table,
-                    &job,
-                    &lock_id,
-                    category,
-                    &msg,
-                    new_attempts,
-                    &dispatch_shard,
-                    next_attempt_at,
-                    now,
-                )
-                .await?;
-            } else {
-                tracing::error!(
-                    pk = ?job.pk,
-                    platform = ?job.platform,
-                    ?category,
-                    attempts = new_attempts,
-                    retryable,
-                    "dispatcher: publish failed (terminal)"
-                );
-                commit_failed_terminal(cli, &table, &job, &lock_id, category, &msg, now).await?;
-            }
+            tracing::error!(
+                pk = ?job.pk,
+                platform = ?job.platform,
+                ?category,
+                attempts = new_attempts,
+                "dispatcher: publish failed after inline retry"
+            );
 
+            commit_failed(cli, &table, &job, &lock_id, category, &msg, new_attempts, now).await?;
+            notify_failure(cli, &job, category, Some(msg)).await;
             Ok(())
         }
     }
@@ -479,7 +482,12 @@ async fn commit_published_with_body_len(
         })
 }
 
-async fn commit_failed_retryable(
+/// Commit a terminal Failed state (retry-sweeper-free model). The row
+/// stays in the panel with `last_error_*` populated so the user's
+/// "Retry now" CTA on the post-detail panel can flip it back to
+/// Pending; the inbox notification (`notify_failure`) is the user-
+/// visible signal that this happened.
+async fn commit_failed(
     cli: &DynamoClient,
     table: &str,
     job: &SyndicationJob,
@@ -487,8 +495,6 @@ async fn commit_failed_retryable(
     category: ErrorCategory,
     message: &str,
     new_attempts: u8,
-    dispatch_shard: &str,
-    next_attempt_at_secs: i64,
     now_ms: i64,
 ) -> Result<()> {
     cli.update_item()
@@ -500,10 +506,8 @@ async fn commit_failed_retryable(
                 attempts = :attempts, \
                 last_error_category = :cat, \
                 last_error_message = :msg, \
-                dispatch_shard = :shard, \
-                next_attempt_at = :next_at, \
                 updated_at = :now \
-             REMOVE dispatch_lock_id, lock_acquired_at",
+             REMOVE dispatch_shard, engagement_shard, dispatch_lock_id, lock_acquired_at",
         )
         .condition_expression("dispatch_lock_id = :my_lock_id")
         .expression_attribute_names("#state", "state")
@@ -511,53 +515,53 @@ async fn commit_failed_retryable(
         .expression_attribute_values(":attempts", AV::N(new_attempts.to_string()))
         .expression_attribute_values(":cat", AV::S(error_category_str(category).into()))
         .expression_attribute_values(":msg", AV::S(message.to_string()))
-        .expression_attribute_values(":shard", AV::S(dispatch_shard.to_string()))
-        .expression_attribute_values(":next_at", AV::N(next_attempt_at_secs.to_string()))
         .expression_attribute_values(":my_lock_id", AV::S(lock_id.to_string()))
         .expression_attribute_values(":now", AV::N(now_ms.to_string()))
         .send()
         .await
         .map(|_| ())
         .map_err(|e| {
-            tracing::error!(error = %e.into_service_error(), "dispatcher: commit_failed_retryable failed");
+            tracing::error!(error = %e.into_service_error(), "dispatcher: commit_failed failed");
             crate::common::Error::Internal
         })
 }
 
-async fn commit_failed_terminal(
+/// Best-effort inbox notification for the post author. Errors here MUST
+/// NOT block dispatch — the row state is already correct on DynamoDB,
+/// the worst case is the user not seeing the bell ring.
+///
+/// `cta_url`:
+/// - `AuthExpired` → `/{post_owner_username}/settings/connections` would
+///   need a user lookup we don't have here, so we fall back to the
+///   post-detail page; the panel's per-platform card handles
+///   AuthExpired by hiding "Retry now" and surfacing a Reconnect hint.
+/// - everything else → `/posts/{post_id}` so the author can hit "Retry
+///   now" directly from the Syndication panel.
+async fn notify_failure(
     cli: &DynamoClient,
-    table: &str,
     job: &SyndicationJob,
-    lock_id: &str,
     category: ErrorCategory,
-    message: &str,
-    now_ms: i64,
-) -> Result<()> {
-    cli.update_item()
-        .table_name(table)
-        .key("pk", AV::S(job.pk.to_string()))
-        .key("sk", AV::S(job.sk.to_string()))
-        .update_expression(
-            "SET #state = :state, \
-                last_error_category = :cat, \
-                last_error_message = :msg, \
-                updated_at = :now \
-             REMOVE dispatch_shard, engagement_shard, dispatch_lock_id, lock_acquired_at",
-        )
-        .condition_expression("dispatch_lock_id = :my_lock_id")
-        .expression_attribute_names("#state", "state")
-        .expression_attribute_values(":state", AV::S(job_state_str(JobState::Failed).into()))
-        .expression_attribute_values(":cat", AV::S(error_category_str(category).into()))
-        .expression_attribute_values(":msg", AV::S(message.to_string()))
-        .expression_attribute_values(":my_lock_id", AV::S(lock_id.to_string()))
-        .expression_attribute_values(":now", AV::N(now_ms.to_string()))
-        .send()
-        .await
-        .map(|_| ())
-        .map_err(|e| {
-            tracing::error!(error = %e.into_service_error(), "dispatcher: commit_failed_terminal failed");
-            crate::common::Error::Internal
-        })
+    error_message: Option<String>,
+) {
+    let post_id = post_id_inner(&job.pk).to_string();
+    let cta_url = format!("/posts/{}", post_id);
+
+    let payload = InboxPayload::CrossPostingFailed {
+        post_id,
+        platform: job.platform.to_string(),
+        error_category: error_category_str(category).to_string(),
+        error_message,
+        cta_url,
+    };
+
+    let inbox = UserInboxNotification::new(job.author_user_id.clone(), payload);
+    if let Err(e) = inbox.create(cli).await {
+        tracing::warn!(
+            pk = ?job.pk,
+            error = %e,
+            "dispatcher: inbox notification failed (non-fatal)"
+        );
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────
