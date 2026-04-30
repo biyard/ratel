@@ -1,8 +1,6 @@
 use crate::common::*;
 use crate::features::cross_posting::components::bluesky_connect_modal::BlueskyConnectModal;
-use crate::features::cross_posting::hooks::{
-    UseCrossPosting, use_cross_posting, use_provide_cross_posting,
-};
+use crate::features::cross_posting::hooks::{use_cross_posting_provider, UseCrossPosting};
 use crate::features::cross_posting::i18n::ConnectionsPageTranslate;
 use crate::features::cross_posting::models::ConnectionStatus;
 use crate::features::cross_posting::types::{ConnectionResponse, SocialPlatform};
@@ -11,23 +9,21 @@ use crate::features::cross_posting::types::{ConnectionResponse, SocialPlatform};
 ///
 /// Phase 1A: Bluesky is the only fully-wired platform. LinkedIn, Threads,
 /// and Farcaster render as static "Coming soon" cards. The connect /
-/// disconnect / auto-post-toggle actions all flow through the
-/// `UseCrossPosting` controller hook installed at the page root.
+/// disconnect / auto-post-toggle actions all flow through `async fn`
+/// methods on the `UseCrossPosting` controller installed at the page root.
 #[component]
 pub fn ConnectionsPage(username: String) -> Element {
     let _ = username; // Currently unused — controller scopes by session user_pk
-    use_provide_cross_posting()?;
+    let mut cp = use_cross_posting_provider()?;
     let UseCrossPosting {
         connections,
         connected_count,
         posts_this_month,
-        mut handle_connect_bluesky,
-        mut handle_toggle_auto_post,
-        mut handle_disconnect,
         ..
-    } = use_cross_posting();
+    } = cp;
 
     let mut modal_open = use_signal(|| false);
+    let mut toast = use_toast();
     let nav = use_navigator();
     let t: ConnectionsPageTranslate = use_translate();
 
@@ -42,14 +38,15 @@ pub fn ConnectionsPage(username: String) -> Element {
         .unwrap_or(false);
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         SeoMeta { title: "{t.title}" }
 
         BlueskyConnectModal {
             open: modal_open,
-            on_submit: move |args: (String, String)| {
-                let (handle, app_password) = args;
-                handle_connect_bluesky.call(handle, app_password);
+            on_submit: move |(handle, app_password): (String, String)| async move {
+                if let Err(e) = cp.connect_bluesky(handle, app_password).await {
+                    toast.error(e);
+                    return;
+                }
                 modal_open.set(false);
             },
         }
@@ -191,7 +188,11 @@ pub fn ConnectionsPage(username: String) -> Element {
                                 if bsky_connected {
                                     button {
                                         class: "connections-btn connections-btn--ghost",
-                                        onclick: move |_| handle_disconnect.call(SocialPlatform::Bluesky),
+                                        onclick: move |_| async move {
+                                            if let Err(e) = cp.disconnect(SocialPlatform::Bluesky).await {
+                                                toast.error(e);
+                                            }
+                                        },
                                         "{t.btn_disconnect}"
                                     }
                                 } else {
@@ -220,7 +221,11 @@ pub fn ConnectionsPage(username: String) -> Element {
                                                     class: "switch",
                                                     "aria-checked": "{auto_post}",
                                                     "aria-label": "{t.auto_post}",
-                                                    onclick: move |_| handle_toggle_auto_post.call(SocialPlatform::Bluesky, !auto_post),
+                                                    onclick: move |_| async move {
+                                                        if let Err(e) = cp.toggle_auto_post(SocialPlatform::Bluesky, !auto_post).await {
+                                                            toast.error(e);
+                                                        }
+                                                    },
                                                 }
                                             }
                                         }
