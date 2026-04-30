@@ -5,20 +5,24 @@ use crate::features::cross_posting::types::{CrossPostingError, SocialPlatform};
 use crate::features::posts::models::Post;
 use std::str::FromStr;
 
-/// Author-initiated retry of a single failed `SyndicationJob` (FR-7 #44).
-/// Resets the job to `Pending` and clears the retry-queue shard / attempt
+/// Author-initiated retry of a single `SyndicationJob` (FR-7 #44).
+///
+/// Resets the job to `Pending` and clears the dispatch shard / next-attempt
 /// timestamp. The MODIFY event re-enters Stage 2 via the same Pipe filter
 /// (`state=Pending`) — no special re-enqueue path needed.
 ///
-/// `attempts` is intentionally NOT reset: a user-initiated retry counts
-/// against the same 3-attempt budget as the auto-retry sweeper. To grant
-/// fresh attempts, the user reconnects the platform (which writes a new
-/// directive on the next publish, creating a new job row).
+/// `Published` is the only blocked state — re-publishing an already-published
+/// job risks double posting on the platform. Every other state retries:
+///   - `Failed` (any category, including `auth_expired`) — user-initiated.
+///   - `Pending` — covers stuck rows where the dispatcher Lambda died
+///     mid-flight or EventBridge dropped the event; UI exposes this so the
+///     author isn't dependent on infra recovery.
+///   - `Skipped` — privacy guard re-runs in the dispatcher; if the post is
+///     still private the row settles back to Skipped (idempotent no-op).
 ///
-/// Phase 1 caveat: Stage 2 dispatcher is wired in PR C — until then,
-/// retries land the row in `Pending` state but no actual platform call
-/// happens. This endpoint ships now so the UI button can render against
-/// real data; the back-end picks up automatically once PR C deploys.
+/// `attempts` is reset to 0 — the auto-retry sweeper that previously owned
+/// the 3-attempt budget was removed when failure handling moved to inline
+/// retry + inbox notification, so the counter is purely informational now.
 #[post("/api/cross-posting/posts/{post_id}/jobs/{platform}/retry", user: User)]
 pub async fn retry_job_handler(post_id: FeedPartition, platform: String) -> Result<()> {
     let platform: SocialPlatform = SocialPlatform::from_str(&platform)
@@ -50,7 +54,7 @@ pub async fn retry_job_handler(post_id: FeedPartition, platform: String) -> Resu
         })?
         .ok_or(CrossPostingError::SyndicationJobNotFound)?;
 
-    if job.state != JobState::Failed {
+    if job.state == JobState::Published {
         return Err(CrossPostingError::RetryNotAllowed.into());
     }
 
@@ -61,6 +65,7 @@ pub async fn retry_job_handler(post_id: FeedPartition, platform: String) -> Resu
     // Stage 2 via the SyndicationJob MODIFY → Pipe filter on `state=Pending`.
     SyndicationJob::updater(post_pk, sk)
         .with_state(JobState::Pending)
+        .with_attempts(0)
         .remove_dispatch_shard()
         .with_next_attempt_at(0)
         .with_updated_at(now)

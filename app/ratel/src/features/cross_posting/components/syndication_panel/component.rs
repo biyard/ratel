@@ -1,7 +1,7 @@
 use crate::common::*;
 use crate::features::cross_posting::hooks::{UseSyndicationPanel, use_syndication_panel};
 use crate::features::cross_posting::i18n::SyndicationPanelTranslate;
-use crate::features::cross_posting::models::{ErrorCategory, JobState};
+use crate::features::cross_posting::models::JobState;
 use crate::features::cross_posting::types::{SocialPlatform, SyndicationJobView};
 
 /// Author-only post-detail panel.
@@ -188,6 +188,11 @@ fn SyndicationCard(job: SyndicationJobView, on_retry: EventHandler<SocialPlatfor
                     }
                 }
                 div { class: "syn-card__actions",
+                    // Published → External "View" link to the platform post.
+                    // Anything else (Pending stuck, Failed of any category,
+                    // Skipped) → author-initiated Retry. Backend re-validates
+                    // the state; the only block is on Published rows so we
+                    // don't double-post.
                     if job.state == JobState::Published {
                         if let Some(url) = job.external_post_url.as_ref() {
                             a {
@@ -208,11 +213,7 @@ fn SyndicationCard(job: SyndicationJobView, on_retry: EventHandler<SocialPlatfor
                                 "{t.btn_view}"
                             }
                         }
-                    } else if job.state == JobState::Failed
-                        && !matches!(job.last_error_category, Some(ErrorCategory::AuthExpired))
-                    {
-                        // AuthExpired → user must reconnect (no retry CTA);
-                        // other failure categories allow author-initiated retry.
+                    } else {
                         button {
                             class: "mini-btn mini-btn--retry",
                             onclick: move |_| on_retry.call(platform),
