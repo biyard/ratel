@@ -337,9 +337,21 @@ async fn try_acquire_lock(
         .update_expression(
             "SET dispatch_lock_id = :lock_id, lock_acquired_at = :now, updated_at = :now_ms",
         )
+        // `attribute_type(field, "NULL")` covers the case where Stage 1
+        // factory wrote the SyndicationJob with `dispatch_lock_id:
+        // Option<String> = None`, which DynamoEntity serializes as an
+        // explicit `Null(true)` attribute (not a missing attribute). Without
+        // this branch the brand-new job's first lock-acquire would always
+        // fail ConditionalCheckFailed because:
+        //   - `attribute_not_exists(dispatch_lock_id)` is false (the
+        //     attribute is present, just NULL-typed)
+        //   - `lock_acquired_at < :ttl_threshold` is false (also NULL,
+        //     which can't be compared to a Number)
         .condition_expression(
             "#state = :pending AND \
-             (attribute_not_exists(dispatch_lock_id) OR lock_acquired_at < :ttl_threshold)",
+             (attribute_not_exists(dispatch_lock_id) \
+              OR attribute_type(dispatch_lock_id, :null_type) \
+              OR lock_acquired_at < :ttl_threshold)",
         )
         .expression_attribute_names("#state", "state")
         .expression_attribute_values(":lock_id", AV::S(lock_id.to_string()))
@@ -347,6 +359,7 @@ async fn try_acquire_lock(
         .expression_attribute_values(":now_ms", AV::N((now_secs * 1000).to_string()))
         .expression_attribute_values(":pending", AV::S(job_state_str(JobState::Pending).into()))
         .expression_attribute_values(":ttl_threshold", AV::N(ttl_threshold.to_string()))
+        .expression_attribute_values(":null_type", AV::S("NULL".to_string()))
         .return_values(aws_sdk_dynamodb::types::ReturnValue::AllOld)
         .send()
         .await;
