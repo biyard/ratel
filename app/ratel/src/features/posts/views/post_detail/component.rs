@@ -340,6 +340,85 @@ pub fn PostDetail(post_id: FeedPartition) -> Element {
                     SyndicationPanel { post_id: post_id.clone() }
                 }
 
+                // AC-17 — backlink-landing sidebar (anonymous viewers).
+                // Essence House subscribe card + MCP info card sit next to
+                // the article on desktop (grid 1fr 340px) and stack below
+                // on tablet/mobile via media query in main.css.
+                if is_signed_out {
+                    aside { class: "pd-side",
+                        div { class: "pd-house-card",
+                            span { class: "pd-house-card__eyebrow",
+                                svg {
+                                    view_box: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_width: "2",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    path { d: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" }
+                                    polyline { points: "9 22 9 12 15 12 15 22" }
+                                }
+                                "{tr.house_card_eyebrow}"
+                            }
+                            div { class: "pd-house-card__hero",
+                                span { class: "pd-house-card__hero-avatar",
+                                    if !author_avatar.is_empty() {
+                                        img { src: "{author_avatar}", alt: "" }
+                                    } else {
+                                        "{author_initial}"
+                                    }
+                                }
+                                div { class: "pd-house-card__hero-body",
+                                    span { class: "pd-house-card__hero-title",
+                                        "{author_name}{tr.house_card_hero_title_suffix}"
+                                    }
+                                    span { class: "pd-house-card__hero-sub", "{tr.house_card_hero_sub}" }
+                                }
+                            }
+                            p { class: "pd-house-card__pitch", "{tr.house_card_pitch}" }
+                            Link {
+                                to: Route::Index {},
+                                class: "pd-house-card__cta",
+                                "data-testid": "post-house-subscribe",
+                                "{tr.house_card_cta}"
+                                svg {
+                                    view_box: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_width: "2.5",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    polyline { points: "5 12 19 12" }
+                                    polyline { points: "12 5 19 12 12 19" }
+                                }
+                            }
+                            p { class: "pd-house-card__note", "{tr.house_card_note}" }
+                        }
+                        div { class: "pd-mcp-card",
+                            div { class: "pd-mcp-card__head",
+                                span { class: "pd-mcp-card__icon",
+                                    svg {
+                                        view_box: "0 0 24 24",
+                                        fill: "none",
+                                        stroke: "currentColor",
+                                        stroke_width: "2",
+                                        stroke_linecap: "round",
+                                        stroke_linejoin: "round",
+                                        polyline { points: "16 18 22 12 16 6" }
+                                        polyline { points: "8 6 2 12 8 18" }
+                                    }
+                                }
+                                span { class: "pd-mcp-card__title", "{tr.mcp_card_title}" }
+                            }
+                            p { class: "pd-mcp-card__body",
+                                "{tr.mcp_card_body_lead} "
+                                code { "{tr.mcp_card_body_endpoint}" }
+                                " {tr.mcp_card_body_tail}"
+                            }
+                        }
+                    }
+                }
+
                 // AC-17 — subscribe / sign-up CTA for anonymous viewers.
                 // Spec FR-8 #46–48: read access stays free; nothing forces
                 // sign-up. The CTA links to home where LoginModal handles

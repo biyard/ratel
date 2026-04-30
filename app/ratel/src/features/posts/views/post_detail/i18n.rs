@@ -69,4 +69,30 @@ translate! {
     },
     subscribe_cta_primary: { en: "Create free account", ko: "무료 계정 만들기" },
     subscribe_cta_secondary: { en: "I have an account", ko: "이미 계정이 있어요" },
+
+    // Sidebar — Essence House card.
+    house_card_eyebrow: { en: "Essence House", ko: "에센스 하우스" },
+    house_card_hero_title_suffix: { en: "'s House", ko: "님의 하우스" },
+    house_card_hero_sub: { en: "Author on Ratel", ko: "Ratel 작성자" },
+    house_card_pitch: {
+        en: "Subscribe to follow this author and get every new Ratel post — queryable from ChatGPT, Claude Desktop, or any MCP client.",
+        ko: "이 작성자를 구독하면 Ratel 새 글을 모두 받아볼 수 있고, ChatGPT / Claude Desktop / MCP 클라이언트에서도 쿼리 가능합니다.",
+    },
+    house_card_cta: { en: "Subscribe to House", ko: "하우스 구독" },
+    house_card_note: {
+        en: "One unified MCP endpoint across every House you subscribe to. Cancel anytime.",
+        ko: "구독한 모든 하우스에 단일 MCP 엔드포인트로 접근. 언제든 취소 가능.",
+    },
+
+    // Sidebar — MCP info card.
+    mcp_card_title: { en: "MCP-ready", ko: "MCP 지원" },
+    mcp_card_body_lead: {
+        en: "Register",
+        ko: "ChatGPT 또는 Claude Desktop 에",
+    },
+    mcp_card_body_endpoint: { en: "mcp.ratel.foundation", ko: "mcp.ratel.foundation" },
+    mcp_card_body_tail: {
+        en: "in ChatGPT or Claude Desktop. One endpoint, every subscribed House — query across minds like a single corpus.",
+        ko: "을 등록하세요. 구독한 모든 하우스를 단일 코퍼스처럼 한 엔드포인트에서 쿼리할 수 있습니다.",
+    },
 }
