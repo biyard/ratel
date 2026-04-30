@@ -15,7 +15,12 @@ use crate::features::cross_posting::services::{
     credentials::seal_credentials,
 };
 
-#[post("/api/cross-posting/connections/bluesky", user: User)]
+// Routed under `/connections/bluesky/connect` rather than the bare
+// `/connections/bluesky` so the literal segment doesn't shadow the
+// `{platform}` param routes that toggle / disconnect register on the
+// same prefix (axum picks literal > param, which would force PATCH and
+// DELETE on `bluesky` into a 405).
+#[post("/api/cross-posting/connections/bluesky/connect", user: User)]
 pub async fn connect_bluesky_handler(req: ConnectBlueskyRequest) -> Result<ConnectionResponse> {
     let handle = req.handle.trim();
     let app_password = req.app_password.trim();
