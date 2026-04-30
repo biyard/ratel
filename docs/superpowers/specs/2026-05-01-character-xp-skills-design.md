@@ -120,29 +120,32 @@ Character XP / Skills are always read by `(user_pk, *)` — pure pk-prefix looku
 ## 4. Leveling math
 
 ```
-xp_required(L→L+1)     = round(C · L³)               where C = 50
-total_xp_at_level(L)   = sum of xp_required(0→1..L−1→L)
-sp_granted_at_level(L) = 5 · L
+xp_required(L→L+1)     = round(C · L³)               where C = 100
+total_xp_at_level(L)   = C · (L−1)² · L² / 4         (closed form)
+sp_granted_at_level(L) = L                           (1 SP per level)
 
 skill_cost(n→n+1)      = 5 + n                       (5, 6, 7, ..., 14)
 total_to_max(skill)    = sum of skill_cost(0..9)     = 5+6+...+14 = 95
 ```
 
-**Worked numbers** (with `C = 50`, see Q7 in the roadmap spec):
+`C = 100` is calibrated against the observed 10-day activity window (avg participant ≈ 360k SpaceXP, top participants ≈ 650k). The original draft used `C = 50`, which put the avg participant at L20 in ~7 weeks — too fast for the new SP=1/level grant rate. See Q7 / Q8 in the roadmap spec.
 
-| Char Level | Cumulative XP needed | Total SP granted | Can max # skills (95 SP each) |
-|---|---|---|---|
-| 1 | 0 | 5 | 0 |
-| 5 | ~3,750 | 25 | 0 |
-| 10 | ~30,000 | 50 | 0 |
-| 19 | ~206,550 | 95 | 1 |
-| 30 | ~810,000 | 150 | 1 (with 55 SP spare) |
-| 38 | ~1,651,650 | 190 | 2 |
+**Worked numbers** (`C = 100`, SP = `L`, avg participant earns ≈ 36k XP/day):
 
-Tuning levers, all single constants in one file:
-- `C` (XP curve steepness) — dial after first-week telemetry of typical user XP/day.
-- SP-per-level (currently 5) — dial if first-week feedback says progression is too slow / fast.
-- Per-skill max level (currently 10) and triangular base (5) — dial if Money Tree at +50% feels overpowered.
+| Char Level | Cumulative XP | Time (avg) | Total SP | Affordable skill build |
+|---|---|---|---|---|
+| 1  | 0          | day 0    | 1   | — |
+| 5  | 10,000     | ~7h      | 5   | one skill at L1 (5 SP) |
+| 10 | 202,500    | ~5d      | 10  | both skills at L1 (10 SP) |
+| 16 | 843,750    | ~3.5w    | 16  | MoneyTree L2 + Ranker L1 (5+6+5 = 16 SP) |
+| 23 | 3,025,000  | ~3 mo    | 23  | both skills at L2 (5+6+5+6 = 22 SP, 1 spare) |
+| 33 | 14,191,875 | ~13 mo   | 33  | one skill at L5 (5+6+7+8+9 = 35 SP — close, needs L34) |
+| 95 | 1,989,061k | many yr  | 95  | one skill maxed at L10 (95 SP) |
+
+Tuning levers (single constants in `app/ratel/src/features/character/leveling.rs`):
+- `C` (XP curve steepness) — dial after first-week telemetry. `C = 75` is a faster early game, `C = 150` is a slower one.
+- SP-per-level (currently `1`) — dial if early gating feels too tight.
+- Per-skill `max_level` (currently `10`) and triangular base (`5`) — dial if Money Tree at +50% caps overpowered.
 
 ## 5. Event flow detail
 
@@ -350,6 +353,7 @@ Roughly the order Stage 3 would execute, per `.claude/rules/workflows/develop-a-
 | Q4 | Skill respec | not in MVP | yes |
 | Q5 | Public level visibility | yes, level only | yes |
 | Q6 | Sweeper cap (v2) | +50% / 60% total | yes (v2) |
-| Q7 | SP grant rate per level | 5 SP/level (max 1 skill at L19) | yes |
+| Q7 | SP grant rate per level | **1 SP/level** (PO directive — long endgame) | yes |
+| Q8 | XP curve `C` | **`C = 100`** (calibrated against 10-day data: avg 360k, top 650k) | yes |
 
 If you override any of these, the spec change is one-line in `roadmap/character-xp-skills.md` and (for Q1, Q2, Q5) one paragraph in this doc.

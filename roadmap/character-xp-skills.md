@@ -52,8 +52,8 @@ Numbered, testable. Each SHALL be verifiable by an automated test or a documente
 1. The system SHALL maintain a per-user **Character XP** counter that is the **sum of `SpaceScore.total_score` across every space the user has ever participated in**.
 2. When a `SpaceScore` row is created or updated for a user (currently driven by the DynamoDB Stream → `aggregate_score` pipeline), the system SHALL increment the same user's Character XP by the **delta** (`new_total_score − old_total_score`), never by the absolute value.
 3. The Character XP increment SHALL run inside the same stream-handler dispatch as `aggregate_score`, so a user's per-space rank and account-level progression update on the same event.
-4. The system SHALL derive **Character Level** from Character XP via a fixed cubic curve: `xp_required(L) = round(C · L³)` where `C` is a tunable constant chosen so that level 5 ≈ a typical first-time participant's first-week activity. Levels start at 1.
-5. The system SHALL grant **Skill Points** on each level-up. Total skill points granted at level `L` SHALL be `5 × L` (5 SP per level, including the first). With this rate, a user can fully max one skill at level 19 (95 SP) and two skills at level 38 (190 SP). (Note: this is the *granting* curve. The *spending* curve is separate — see §"Skill points: spending". See also Q7.)
+4. The system SHALL derive **Character Level** from Character XP via a fixed cubic curve: `xp_required(L→L+1) = round(C · L³)` where `C = 100`. Levels start at 1. The constant `C = 100` is calibrated against observed real activity (10-day window: avg participant ≈ 360k SpaceXP, top participants ≈ 650k); under this curve, the avg participant reaches ≈ L13 in 10 days and ≈ L17 in 1 month, while a top participant reaches ≈ L15 in 10 days. (Tunable single constant; see §"Open questions".)
+5. The system SHALL grant **Skill Points** on each level-up. Total skill points granted at level `L` SHALL be `L` (1 SP per level, including the first). With this rate, a user can buy a single L1 skill at character level 5, two L1 skills at level 10, and reaches the long endgame of one fully maxed skill at level 95. (Note: this is the *granting* curve. The *spending* curve is separate — see §"Skill points: spending". See also Q7.)
 6. Character XP and the derived Level / Skill Point totals SHALL be **idempotent** on stream replay: re-processing the same `SpaceScore` MODIFY event SHALL NOT double-count XP. (Implementation: store last-seen `total_score` per (user, space) and compute delta from stored value.)
 
 ### Skill points: spending
@@ -93,7 +93,7 @@ Numbered, testable. Each SHALL be verifiable by an automated test or a documente
 
 - [ ] Earning XP in a space (e.g., voting in a poll) increases `CharacterXp.total_xp` by the same delta as `SpaceScore.total_score`.
 - [ ] Stream replay of the same `SpaceScore` MODIFY event does not double-count Character XP.
-- [ ] Crossing a level threshold grants the correct number of new skill points (`5 × L` total at level L, i.e., +5 SP per level).
+- [ ] Crossing a level threshold grants the correct number of new skill points (`L` total at level L, i.e., +1 SP per level).
 - [ ] Spending 5 SP on Money Tree raises it to level 1; the next claim breakdown shows the 5% bonus and `User.points` is credited the boosted amount.
 - [ ] Spending 5 SP on Ranker raises it to level 1; the next `SpaceActivity` recorded has its `additional_score` boosted by 5% before aggregation.
 - [ ] Attempting to advance a skill above level 10 is rejected.
@@ -150,8 +150,18 @@ These are the items we want PO sign-off on before Stage 2 design starts. Each li
    - This is v2 territory — answer is not blocking MVP, but please confirm direction.
 
 7. **(Q7) SP grant rate per character level.**
-   - **Recommended: 5 SP per level (`total = 5 × L`).** With triangular skill cost (5+n), this lets a user max one skill at L19 and two skills at L38, which feels achievable on a multi-month account horizon. The original draft had `4 + L` (1 SP/level after the first), which would have required L91 to max even one skill — too slow.
-   - **PO override would be:** larger grant (e.g., 10 SP/level → max 1 skill at L10) for a faster early game, or smaller grant (e.g., 3 SP/level) for a slower / more long-term progression.
+   - **Decided: 1 SP per level (`total_sp_granted = L`).** PO directive. With triangular skill cost (5+n), this gives:
+     - L5 → first skill at L1 (5 SP, ~7h for avg participant)
+     - L10 → both skills at L1 (10 SP, ~5 days)
+     - L16 → MoneyTree L2 + Ranker L1 (16 SP, ~3.5 weeks)
+     - L23 → both skills at L2 (22 SP, ~3 months)
+     - L95 → one skill maxed at L10 (true endgame)
+   - This intentionally makes higher skill tiers a long-horizon goal, so a participant who has been around for a year has a tangible mechanical edge over a one-month account.
+   - **PO override would be:** larger grant if telemetry shows the early game feels too gated.
+
+8. **(Q8) XP curve steepness `C`.**
+   - **Decided: `C = 100`.** Calibrated against the 10-day observation (avg 360k, top 650k). Under this curve avg participants reach L13 / L17 / L20 at 10d / 1mo / 3mo respectively. Original draft used `C = 50`, which put avg participants at L20 inside ~7 weeks — felt too fast given the new SP=1/level rate.
+   - **PO override would be:** raise to `C = 150` (slower) if early levels feel too generous after first-week telemetry, or drop to `C = 75` (faster) if the L5 first-skill threshold is hit too early.
 
 ## References
 
