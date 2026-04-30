@@ -116,4 +116,161 @@ test.describe.serial("Cross-posting Phase 1A — compose sidebar", () => {
   // is exercised in the unit-level `compose_sidebar` render path; this
   // skipped entry is the placeholder so future PRs can drop the `.skip()`.
   test.skip("Body > 300 chars triggers Bluesky truncation warning (AC-10)", () => {});
+
+  test("Already-seen onboarding interstitial bounces to home (AC-4b)", async ({
+    page,
+  }) => {
+    // The seeded test user (set up in `user.auth.setup.js`) has logged in
+    // before, so by the time this test runs they have already gone
+    // through onboarding (or skipped it) at least once. AC-4b: hitting
+    // `/onboarding/connections` directly must NOT pin them on the page —
+    // the OnboardingPage's `use_effect` reads `User.interstitial_seen` and
+    // navigator.replace's home.
+    //
+    // We check the post-redirect URL rather than asserting on home-page
+    // content because the rest of `Index {}` rendering varies by feature
+    // flags / data; the navigator.replace itself is the contract.
+    await goto(page, "/onboarding/connections");
+    await expect(page).toHaveURL(/\/$|\/\?/, { timeout: 10000 });
+  });
+});
+
+test.describe.serial("Cross-posting Phase 1D — visibility notice (AC-20)", () => {
+  let postId;
+
+  test("Setup: create + publish a public post via REST", async ({ page }) => {
+    const create = await page.request.post("/api/posts", { data: {} });
+    expect(create.ok(), `create draft: ${await create.text()}`).toBeTruthy();
+    const pk = (await create.json()).post_pk;
+    postId = pk.includes("#") ? pk.split("#")[1] : pk;
+
+    // Publish the draft so its server status flips to Published. The
+    // editor's "already-published-public" guard reads `post.status` and
+    // `post.visibility` from the loaded post — both must be set for the
+    // notice to render when we toggle to Private below.
+    const publish = await page.request.put(`/api/posts/${postId}`, {
+      data: {
+        Publish: {
+          publish: true,
+          industry_id: 0,
+          title: "Cross-posting AC-20 fixture",
+          content: "<p>This is the AC-20 verification post body.</p>",
+          categories: [],
+          urls: [],
+        },
+      },
+    });
+    expect(publish.ok(), `publish: ${await publish.text()}`).toBeTruthy();
+  });
+
+  test("Flipping public→private surfaces the syndicated-copies notice", async ({
+    page,
+  }) => {
+    await goto(page, `/posts/${postId}/edit`);
+
+    // The publish step above set visibility=Public, so the toggle starts
+    // selected on Public. Click Private to trigger the notice.
+    await click(page, { text: "Private" });
+
+    // `.syndication-remain-notice` is rendered only when:
+    //   * post.status == Published AND
+    //   * initial visibility was Public AND
+    //   * user has just toggled to Private
+    await expect(page.locator(".syndication-remain-notice")).toBeVisible();
+    await expect(
+      page.locator(".syndication-remain-notice__title")
+    ).toContainText(/Syndicated copies stay visible|이미 발행된 사본은 그대로 남습니다/);
+
+    // Toggling back to Public should hide the notice.
+    await click(page, { text: "Public" });
+    await expect(page.locator(".syndication-remain-notice")).toBeHidden();
+  });
+});
+
+test.describe.serial("Cross-posting Phase 1D — public backlink landing (AC-17, 18)", () => {
+  let postId;
+
+  test("Setup: publish a public post we can land on", async ({ page }) => {
+    const create = await page.request.post("/api/posts", { data: {} });
+    expect(create.ok(), `create draft: ${await create.text()}`).toBeTruthy();
+    const pk = (await create.json()).post_pk;
+    postId = pk.includes("#") ? pk.split("#")[1] : pk;
+
+    const publish = await page.request.put(`/api/posts/${postId}`, {
+      data: {
+        Publish: {
+          publish: true,
+          industry_id: 0,
+          title: "AC-17 public landing fixture",
+          content: "<p>Anonymous viewers should see this without sign-up.</p>",
+          categories: [],
+          urls: [],
+        },
+      },
+    });
+    expect(publish.ok(), `publish: ${await publish.text()}`).toBeTruthy();
+  });
+
+  test("Anonymous viewer sees brand bar + subscribe CTA, no Edit topbar (AC-17)", async ({
+    browser,
+  }) => {
+    // Fresh context with empty storage so the viewer is signed-out.
+    const ctx = await browser.newContext({
+      storageState: { cookies: [], origins: [] },
+    });
+    const page = await ctx.newPage();
+    try {
+      await goto(page, `/posts/${postId}`);
+
+      // Brand bar with sign-in / get-started replaces the author topbar.
+      await expect(page.getByTestId("post-brand-signin")).toBeVisible();
+      await expect(page.getByTestId("post-brand-get-started")).toBeVisible();
+
+      // Subscribe CTA at the article footer.
+      await expect(page.getByTestId("post-subscribe-primary")).toBeVisible();
+      await expect(page.getByTestId("post-subscribe-secondary")).toBeVisible();
+
+      // Edit / Share author topbar must be hidden.
+      await expect(page.locator(".arena-topbar")).toBeHidden();
+    } finally {
+      await ctx.close();
+    }
+  });
+
+  test("Bluesky utm_source shows the tier-1 banner (AC-18)", async ({
+    browser,
+  }) => {
+    const ctx = await browser.newContext({
+      storageState: { cookies: [], origins: [] },
+    });
+    const page = await ctx.newPage();
+    try {
+      await goto(page, `/posts/${postId}?utm_source=bluesky`);
+
+      const bar = page.getByTestId("post-refer-bar");
+      await expect(bar).toHaveAttribute("data-show", "true", { timeout: 5000 });
+      await expect(bar).toHaveAttribute("data-platform", "bluesky");
+    } finally {
+      await ctx.close();
+    }
+  });
+
+  test("No utm_source / no referrer keeps the banner hidden", async ({
+    browser,
+  }) => {
+    const ctx = await browser.newContext({
+      storageState: { cookies: [], origins: [] },
+    });
+    const page = await ctx.newPage();
+    try {
+      await goto(page, `/posts/${postId}`);
+      const bar = page.getByTestId("post-refer-bar");
+      // The bar element exists in the DOM (rendered for signed-out viewers)
+      // but JS classification leaves data-show="false" when there's no
+      // referrer and no utm_source.
+      await expect(bar).toHaveAttribute("data-show", "false");
+    } finally {
+      await ctx.close();
+    }
+  });
 });
