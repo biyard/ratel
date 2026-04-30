@@ -275,15 +275,35 @@ pub async fn handle_syndication_job_ready(job: SyndicationJob) -> Result<()> {
             tracing::warn!(
                 pk = ?job.pk,
                 platform = ?job.platform,
-                "dispatcher: publish hit AuthExpired — attempting Bluesky refreshSession",
+                "dispatcher: publish hit AuthExpired — attempting credential refresh",
             );
-            match try_refresh_bluesky_credentials(cli, &adapter, &connection, &current_creds).await {
+            // Trait dispatch — each adapter knows its own refresh API
+            // (Bluesky refreshSession, LinkedIn OAuth refresh, Threads
+            // long-lived token extension). Adapters that don't support
+            // refresh fall through the default impl and return AuthExpired,
+            // collapsing this branch to the same Failed commit below.
+            match adapter.try_refresh_credentials(current_creds.clone()).await {
                 Ok(refreshed) => {
-                    tracing::info!(
-                        pk = ?job.pk,
-                        platform = ?job.platform,
-                        "dispatcher: refreshSession ok — retrying publish with rotated tokens",
-                    );
+                    if let Err(persist_err) =
+                        persist_refreshed_credentials(cli, &connection, &refreshed).await
+                    {
+                        // DB write failed but we have the new tokens in hand;
+                        // proceed with the publish anyway. Worst case the next
+                        // publish will hit AuthExpired again and refresh
+                        // re-runs (refresh APIs are typically idempotent).
+                        tracing::warn!(
+                            pk = ?job.pk,
+                            platform = ?job.platform,
+                            error = %persist_err,
+                            "dispatcher: refreshed creds but persist failed — proceeding with rotated tokens",
+                        );
+                    } else {
+                        tracing::info!(
+                            pk = ?job.pk,
+                            platform = ?job.platform,
+                            "dispatcher: credential refresh ok — retrying publish with rotated tokens",
+                        );
+                    }
                     current_creds = refreshed;
                     result = adapter
                         .publish(
@@ -299,7 +319,7 @@ pub async fn handle_syndication_job_ready(job: SyndicationJob) -> Result<()> {
                         pk = ?job.pk,
                         platform = ?job.platform,
                         error = %refresh_err,
-                        "dispatcher: refreshSession failed — leaving publish error as AuthExpired",
+                        "dispatcher: credential refresh failed — leaving publish error as AuthExpired",
                     );
                     // Drop through; `result` keeps the original AuthExpired
                     // error which `commit_failed` + `notify_failure` will
@@ -679,37 +699,15 @@ fn table_name() -> String {
     format!("{prefix}-main")
 }
 
-/// Rotate the Bluesky `accessJwt` via `refreshSession` and persist the new
-/// pair onto `SocialConnection.credential_ciphertext`. Called by the
-/// dispatcher when the first publish attempt fails with `AuthExpired` —
-/// avoids forcing the user to manually reconnect every time the short-TTL
-/// access token expires (the long-TTL refresh token covers ~90 days). Only
-/// `AuthExpired` from the refresh call itself is terminal; on success we
-/// return the new creds for the publish retry.
-async fn try_refresh_bluesky_credentials(
+/// AEAD-seal rotated credentials and persist them onto
+/// `SocialConnection.credential_ciphertext`. Platform-agnostic: the actual
+/// refresh call lives on `CrossPostAdapter::try_refresh_credentials`.
+async fn persist_refreshed_credentials(
     cli: &DynamoClient,
-    adapter: &BlueskyAdapter,
     connection: &SocialConnection,
-    creds: &DecryptedCredentials,
-) -> std::result::Result<DecryptedCredentials, PlatformError> {
-    let refresh_jwt = match creds {
-        DecryptedCredentials::Bluesky { refresh_jwt, .. } => refresh_jwt.clone(),
-        _ => {
-            return Err(PlatformError::Unknown(
-                "non-bluesky credentials do not support refreshSession yet".into(),
-            ));
-        }
-    };
-
-    let session = adapter.refresh_session(&refresh_jwt).await?;
-    let new_creds = DecryptedCredentials::Bluesky {
-        did: session.did,
-        handle: session.handle,
-        access_jwt: session.access_jwt,
-        refresh_jwt: session.refresh_jwt,
-    };
-
-    let sealed = credentials::seal_credentials(&new_creds)
+    new_creds: &DecryptedCredentials,
+) -> std::result::Result<(), PlatformError> {
+    let sealed = credentials::seal_credentials(new_creds)
         .map_err(|e| PlatformError::Unknown(format!("seal after refresh failed: {e}")))?;
 
     SocialConnection::updater(connection.pk.clone(), connection.sk.clone())
@@ -721,5 +719,5 @@ async fn try_refresh_bluesky_credentials(
             PlatformError::Unknown(format!("SocialConnection update after refresh: {e}"))
         })?;
 
-    Ok(new_creds)
+    Ok(())
 }
