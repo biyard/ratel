@@ -78,7 +78,10 @@ pub async fn connect_bluesky_handler(req: ConnectBlueskyRequest) -> Result<Conne
         updated_at: now,
     };
 
-    row.create(cli).await.map_err(|e| {
+    // `upsert` instead of `create` so reconnect after a Disconnect (which
+    // soft-deletes by flipping status=Revoked) overwrites the existing
+    // row — `create`'s `attribute_not_exists(pk)` condition would fail.
+    row.upsert(cli).await.map_err(|e| {
         crate::error!("connect_bluesky persist failed: {e}");
         CrossPostingError::ConnectFailed
     })?;
