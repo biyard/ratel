@@ -139,9 +139,9 @@ Worked example: an action with `base_score = 100` and `additional_score = 50` re
 - [x] The backfill produces the same `CharacterXp.total_xp` whether run once or three times.
 - [x] Starting the server without `MIGRATE=true` does NOT run the backfill, even if `LastBackfillVersion.version` is less than the latest migration's required version.
 - [x] Starting the server with `MIGRATE=true` after the backfill has already run (i.e., `LastBackfillVersion.version >= 1`) is a no-op — the backfill is not re-executed.
-- [ ] The `/me/character` page shows total XP, level, XP to next level, and unspent SP, all updating live as new activities post.
-- [ ] A user with no past activity who is brand new sees Level 1 and 0 unspent SP after the level-up bookkeeping (i.e., they get their level-1 SP grant on first appearance).
-- [ ] A user can see their Character Level on another user's public profile (assuming Open Question 5 resolves "yes").
+- [x] The `/me/character` page shows total XP, level, XP to next level, and unspent SP, all updating live as new activities post.
+- [x] A user with no past activity who is brand new sees Level 1 and 0 unspent SP after the level-up bookkeeping (i.e., they get their level-1 SP grant on first appearance).
+- [x] A user can see their Character Level on another user's public profile (assuming Open Question 5 resolves "yes").
 
 ## Constraints
 
