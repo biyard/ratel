@@ -34884,3 +34884,77 @@ body.comments-panel-resizing {
   font-variant-numeric: tabular-nums;
   font-family: var(--font-display);
 }
+
+/* === src/features/character/components/level_chip === */
+.character-level-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 22px;
+  border-radius: 14px;
+  background: radial-gradient(ellipse 100% 100% at 50% 0%, rgba(252, 179, 0, 0.12) 0%, rgba(252, 179, 0, 0.04) 70%, transparent 100%);
+  border: 1px solid rgba(252, 179, 0, 0.25);
+  box-shadow: 0 0 24px rgba(252, 179, 0, 0.10), inset 0 0 16px rgba(252, 179, 0, 0.04);
+  cursor: default;
+}
+.character-level-chip__label {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: var(--accent-gold);
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.character-level-chip__num {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--accent-gold);
+  text-shadow: 0 0 18px rgba(252, 179, 0, 0.4);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.character-level-chip__sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Inline-mini variant — small badge alongside username for tight layouts */
+.level-badge-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 7px;
+  background: rgba(252, 179, 0, 0.10);
+  border: 1px solid rgba(252, 179, 0, 0.22);
+  color: var(--accent-gold);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  vertical-align: middle;
+}
+.level-badge-mini::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent-gold);
+  box-shadow: 0 0 6px var(--accent-gold);
+}
+
+/* Brand-new account fallback (level 1) */
+.character-level-chip[data-level="1"] {
+  background: rgba(255, 255, 255, 0.025);
+  border-color: var(--border-subtle);
+  box-shadow: none;
+}
+.character-level-chip[data-level="1"] .character-level-chip__label { color: var(--text-muted); }
+.character-level-chip[data-level="1"] .character-level-chip__num {
+  color: var(--text-dim);
+  text-shadow: none;
+}
