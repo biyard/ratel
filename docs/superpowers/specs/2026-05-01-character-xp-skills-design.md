@@ -59,7 +59,7 @@ pub struct CharacterXp {
 
     pub total_xp: i64,           // monotonic
     pub level: i32,              // derived, denormalized for fast read
-    pub total_sp_granted: i32,   // 5 + (level-1), monotonic
+    pub total_sp_granted: i32,   // = level (1 SP per character level)
     pub total_sp_spent: i32,     // sum of skill costs paid
     // unspent_sp = total_sp_granted - total_sp_spent (computed, not stored)
 }
@@ -111,41 +111,77 @@ pub enum SkillId {
 CharacterXp,
 CharacterXpSource(String),    // space_id (no prefix; SubPartition wraps SpacePartition)
 CharacterSkill(String),       // skill_id ("money_tree", "ranker", ...)
+LastBackfillVersion,          // singleton, paired with Partition::Migration
 ```
 
-### 3.3 GSI considerations
+### 3.3 Migration framework entity
+
+```rust
+// app/ratel/src/common/models/migration/last_backfill_version.rs
+#[derive(DynamoEntity, ...)]
+pub struct LastBackfillVersion {
+    pub pk: Partition,           // Partition::Migration  (singleton)
+    pub sk: EntityType,          // EntityType::LastBackfillVersion
+
+    pub version: i64,            // last successfully completed migration's required_version
+    pub updated_at: i64,
+}
+
+#[cfg(feature = "server")]
+impl LastBackfillVersion {
+    /// Atomic increment via conditional update — `version` only advances if the
+    /// caller's `expected` matches the stored value. Prevents two replicas from
+    /// double-running the same migration.
+    pub async fn advance_to(
+        cli: &aws_sdk_dynamodb::Client,
+        expected: i64,
+        new_version: i64,
+    ) -> Result<()> { /* … conditional update on version == expected … */ }
+}
+```
+
+### 3.4 GSI considerations
 
 Character XP / Skills are always read by `(user_pk, *)` — pure pk-prefix lookups on the main table. **No new GSIs needed.** Profile-view lookups for "show me everyone's level" are explicitly out of scope (no leaderboard). If we later want a "top N by level" page, we can add a GSI then.
 
 ## 4. Leveling math
 
 ```
-xp_required(L→L+1)     = round(C · L³)               where C = 100
-total_xp_at_level(L)   = C · (L−1)² · L² / 4         (closed form)
+xp_required(L→L+1)     = round(C · L²)               where C = 600
+total_xp_at_level(L)   = C · (L−1) · L · (2L−1) / 6  (closed form)
 sp_granted_at_level(L) = L                           (1 SP per level)
 
-skill_cost(n→n+1)      = 5 + n                       (5, 6, 7, ..., 14)
-total_to_max(skill)    = sum of skill_cost(0..9)     = 5+6+...+14 = 95
+skill_cost(n→n+1)      = 5 + n                       (5, 6, 7, 8, 9, 10)
+total_to_max(skill)    = sum of skill_cost(0..5)     = 5+6+7+8+9+10 = 45
+max_skill_level        = 6                           (cap multiplier +30% at L6)
 ```
 
-`C = 100` is calibrated against the observed 10-day activity window (avg participant ≈ 360k SpaceXP, top participants ≈ 650k). The original draft used `C = 50`, which put the avg participant at L20 in ~7 weeks — too fast for the new SP=1/level grant rate. See Q7 / Q8 in the roadmap spec.
+The shape is **quadratic** (was cubic in earlier drafts). The cubic was so steep that even L50 was decades for the avg participant; quadratic flattens the late-game tail. `C = 600` is calibrated against the observed 10-day activity window (avg participant ≈ 360k SpaceXP, top participants ≈ 650k). See Q7/Q8/Q9 in the roadmap spec.
 
-**Worked numbers** (`C = 100`, SP = `L`, avg participant earns ≈ 36k XP/day):
+**Worked numbers** (`C = 600`, quadratic curve, SP = `L`, avg ≈ 36k XP/day, top ≈ 65k XP/day):
 
-| Char Level | Cumulative XP | Time (avg) | Total SP | Affordable skill build |
+| Char Level | Cumulative XP | Time (avg / top) | Total SP | Affordable skill build |
 |---|---|---|---|---|
-| 1  | 0          | day 0    | 1   | — |
-| 5  | 10,000     | ~7h      | 5   | one skill at L1 (5 SP) |
-| 10 | 202,500    | ~5d      | 10  | both skills at L1 (10 SP) |
-| 16 | 843,750    | ~3.5w    | 16  | MoneyTree L2 + Ranker L1 (5+6+5 = 16 SP) |
-| 23 | 3,025,000  | ~3 mo    | 23  | both skills at L2 (5+6+5+6 = 22 SP, 1 spare) |
-| 33 | 14,191,875 | ~13 mo   | 33  | one skill at L5 (5+6+7+8+9 = 35 SP — close, needs L34) |
-| 95 | 1,989,061k | many yr  | 95  | one skill maxed at L10 (95 SP) |
+| L1  | 0           | day 0           | 1   | — (need 5 SP for first skill) |
+| L5  | 18,000      | <1 day / <1 day | 5   | one skill at L1 (5 SP) |
+| L10 | 171,000     | ~5 d / ~3 d     | 10  | both skills at L1 (10 SP) |
+| L16 | 754,800     | ~3 w / ~12 d    | 16  | MoneyTree L2 + Ranker L1 (5+6+5 = 16 SP) |
+| L20 | 1,482,000   | ~6 w / ~3 w     | 20  | both skills at L2 (5+6+5+6 = 22 SP — needs L22) |
+| L22 | 1,981,200   | ~7.5 w / ~4 w   | 22  | both skills at L2 (22 SP) |
+| L30 | 5,133,000   | ~5 mo / ~2.5 mo | 30  | one skill at L4 (5+6+7+8 = 26 SP), 4 SP spare |
+| L36 | 9,234,000   | ~8.5 mo / ~5 mo | 36  | both skills at L3 (5+6+7+5+6+7 = 36 SP) ✓ |
+| L45 | 18,216,000  | ~17 mo / ~9 mo  | 45  | **one skill maxed at L6 (45 SP)** ← MVP endgame |
+| L50 | 24,255,000  | ~22 mo / ~12 mo | 50  | one maxed + the other at L1 (45+5 = 50 SP) |
+| L75 | 82,769,250  | ~6.3 yr / ~3.5 yr | 75 | one maxed + other at L4 (45+26 = 71 SP), 4 spare |
+| L90 | 143,040,750 | ~11 yr / ~6 yr  | 90  | **both skills maxed (45+45 = 90 SP)** ← true endgame |
+
+Reading the table: a typical user gets the first skill in under a day, both skills at L1 inside a week, both at L2 in ~2 months, max one skill in ~17 months. A top participant moves through these milestones at roughly 55% of the avg-participant time.
 
 Tuning levers (single constants in `app/ratel/src/features/character/leveling.rs`):
-- `C` (XP curve steepness) — dial after first-week telemetry. `C = 75` is a faster early game, `C = 150` is a slower one.
+- `C` (XP curve scale) — dial after first-week telemetry. `C = 400` is a faster early-mid game, `C = 900` is a slower one.
+- Curve **shape** (quadratic vs. cubic) — bigger lever than `C`; switching back to cubic effectively shuts off the late game.
 - SP-per-level (currently `1`) — dial if early gating feels too tight.
-- Per-skill `max_level` (currently `10`) and triangular base (`5`) — dial if Money Tree at +50% caps overpowered.
+- Per-skill `max_level` (currently `6`) and triangular base (`5`) — `max_level = 10` brings back +50% cap; `max_level = 4` brings cost-to-max down to 26 SP for a much faster endgame.
 
 ## 5. Event flow detail
 
@@ -224,14 +260,62 @@ Handler logic:
    - `CharacterXp.total_sp_spent += cost`
 6. Return new state.
 
-### 5.5 Backfill
+### 5.5 Backfill via versioned migration framework
 
-Admin migration at `app/ratel/src/features/admin/controllers/migrations/backfill_character_xp.rs`:
+Backfills are no longer admin endpoints; they're **versioned migrations** run automatically on server startup, gated by an `MIGRATE=true` env var.
 
-1. Scan GSI on `SpaceScore` (existing `find_by_space_rank` index).
-2. Group by `user_pk`; sum `total_score`.
-3. For each user: upsert `CharacterXp { total_xp = sum, level = derive(sum), total_sp_granted = derive(level), total_sp_spent = 0 }` and write a `CharacterXpSource` row per space the user appeared in with `last_seen_score = SpaceScore.total_score`.
-4. Idempotent: re-running computes the same XP and the same `last_seen_score`, so no further deltas accumulate post-backfill.
+**Layout**:
+
+```
+app/ratel/src/common/migrations/
+├── mod.rs                            // run_migrations() entry point
+├── runner.rs                         // version-gated dispatch
+└── m001_backfill_character_xp.rs     // first migration (required_version = 1)
+```
+
+**Runner** (`runner.rs`):
+
+```rust
+pub async fn run_migrations(cli: &aws_sdk_dynamodb::Client) -> Result<()> {
+    if std::env::var("MIGRATE").as_deref() != Ok("true") {
+        tracing::info!("MIGRATE not set — skipping migrations");
+        return Ok(());
+    }
+
+    let doc = LastBackfillVersion::get(cli, &Partition::Migration, Some(EntityType::LastBackfillVersion))
+        .await?
+        .unwrap_or_default();
+
+    if doc.version < 1 {
+        tracing::info!("running migration 001: backfill_character_xp");
+        m001_backfill_character_xp::run(cli).await?;
+        LastBackfillVersion::advance_to(cli, doc.version, 1).await?;
+    }
+
+    // Future migrations stack additively:
+    // if doc.version < 2 { m002_xxx::run(cli).await?; LastBackfillVersion::advance_to(cli, 1, 2).await?; }
+
+    Ok(())
+}
+```
+
+**Wired** at server bootstrap in `app/ratel/src/main.rs` (or wherever `axum::serve` is set up), before starting the HTTP listener.
+
+**Migration 001 — backfill_character_xp** (`m001_backfill_character_xp.rs`):
+
+1. Scan `SpaceScore` via the existing `find_by_space_rank` GSI, paginated.
+2. Group rows by `user_pk`; sum `total_score`.
+3. For each user: upsert `CharacterXp { total_xp = sum, level = derive(sum), total_sp_granted = level, total_sp_spent = 0 }`. **Upsert, not increment** — re-running converges, never accumulates.
+4. For each `(user, space)` pair seen: upsert `CharacterXpSource { last_seen_score = score.total_score }`.
+5. `total_sp_spent = 0` is correct for backfilled users — no skill points have been spent yet because the spend endpoint didn't exist before this deploy.
+
+**Idempotency contracts**:
+
+- Within a single run that crashes mid-way: re-running re-reads `SpaceScore` and writes the same target state. No partial-progress markers.
+- Across deploys: `LastBackfillVersion.version` advances only after the migration completes successfully. A crash mid-migration leaves `version` unchanged, so the next `MIGRATE=true` deploy re-runs from the start.
+- Across replicas in the same release: the conditional `advance_to(expected, new)` ensures only one replica wins the version bump. The losing replica skips because `doc.version == 1` on its read after losing the race.
+
+**Operational rule**: Set `MIGRATE=true` on **exactly one** instance per release (typically a one-shot Lambda or a single ECS task) to avoid contention on the scan. The conditional version bump is a safety net, not the primary contention guard.
 
 ## 6. API surface
 
@@ -240,7 +324,8 @@ Admin migration at `app/ratel/src/features/admin/controllers/migrations/backfill
 | GET | `/api/me/character` | User session | Returns `CharacterXp` + all `CharacterSkill` rows + computed `unspent_sp` and `xp_to_next_level` |
 | GET | `/api/users/:username/character` | Public (or User session) | Public view: returns level only (Q5 = yes) |
 | POST | `/api/me/skills/:skill_id/level-up` | User session | Spends SP to advance skill |
-| POST | `/api/admin/migrations/backfill-character-xp` | Admin | One-time backfill |
+
+Backfill is **not** an HTTP endpoint — it runs at server startup under `MIGRATE=true`. See §5.5.
 
 All path params use SubPartition types per `conventions/server-functions.md`.
 
@@ -312,7 +397,10 @@ UI mockups in HTML/CSS are produced in **Stage 2** (`app/ratel/assets/design/cha
 | `test_ranker_boost_applied_to_activity` | After level 1, new `SpaceActivity.total_score` = `base + additional × 1.05` |
 | `test_get_character_unauth_self_route_rejected` | `/api/me/character` requires session |
 | `test_get_character_public_route_returns_level_only` | `/api/users/:username/character` omits SP and skill build |
-| `test_backfill_idempotent` | Running backfill twice produces same `CharacterXp.total_xp` |
+| `test_backfill_idempotent` | Running migration 001 twice produces same `CharacterXp.total_xp` |
+| `test_migrate_unset_skips` | Server start with `MIGRATE` unset does not advance `LastBackfillVersion.version` |
+| `test_migrate_already_at_version` | Server start with `MIGRATE=true` and `version >= 1` does not re-run migration 001 |
+| `test_migrate_replica_race` | Two concurrent `advance_to(0, 1)` calls — exactly one succeeds, the other returns the conditional-update conflict |
 
 ### 8.2 Playwright E2E (`playwright/tests/web/character-progression.spec.js`)
 
@@ -333,15 +421,15 @@ Extend existing space-flow scenario:
 
 Roughly the order Stage 3 would execute, per `.claude/rules/workflows/develop-a-new-feature.md`:
 
-1. EntityType variants + `CharacterXp` / `CharacterXpSource` / `CharacterSkill` models.
-2. `apply_character_xp_delta` service + `stream_handler.rs` SPACE_SCORE# branch.
-3. `level_up_handler` + `get_character_handler` + DTO.
-4. Money Tree wrapping in `SpaceReward::award`.
-5. Ranker wrapping in `SpaceActivity::new_with_dedup`.
-6. Backfill admin migration.
+1. EntityType variants + `CharacterXp` / `CharacterXpSource` / `CharacterSkill` / `LastBackfillVersion` models.
+2. Migration framework: `common/migrations/runner.rs` + `m001_backfill_character_xp.rs`, wired at startup with `MIGRATE=true` gate.
+3. `apply_character_xp_delta` service + `stream_handler.rs` SPACE_SCORE# branch.
+4. `level_up_handler` + `get_character_handler` + DTO.
+5. Money Tree wrapping in `SpaceReward::award`.
+6. Ranker wrapping in `SpaceActivity::new_with_dedup`.
 7. `UseCharacter` controller hook.
 8. RSX components from Stage 2 mockups.
-9. Tests (server fn + Playwright).
+9. Tests (server fn + Playwright + migration replica race).
 
 ## Decisions needing PO sign-off (summary)
 
@@ -354,6 +442,7 @@ Roughly the order Stage 3 would execute, per `.claude/rules/workflows/develop-a-
 | Q5 | Public level visibility | yes, level only | yes |
 | Q6 | Sweeper cap (v2) | +50% / 60% total | yes (v2) |
 | Q7 | SP grant rate per level | **1 SP/level** (PO directive — long endgame) | yes |
-| Q8 | XP curve `C` | **`C = 100`** (calibrated against 10-day data: avg 360k, top 650k) | yes |
+| Q8 | XP curve shape + `C` | **quadratic, `C = 600`** (PO directive — cubic was multi-decade endgame) | yes |
+| Q9 | Max skill level | **6** (cost-to-max = 45 SP, multiplier cap +30%) | yes |
 
 If you override any of these, the spec change is one-line in `roadmap/character-xp-skills.md` and (for Q1, Q2, Q5) one paragraph in this doc.
