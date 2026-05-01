@@ -59,6 +59,7 @@ translate! {
     btn_connect: { en: "Connect", ko: "연결하기" },
     btn_disconnect: { en: "Disconnect", ko: "연결 해제" },
     btn_notify: { en: "Notify me", ko: "출시 알림" },
+    btn_back_aria: { en: "Back", ko: "뒤로" },
 }
 
 translate! {
@@ -153,6 +154,9 @@ translate! {
 translate! {
     OnboardingPageTranslate;
 
+    // SeoMeta
+    seo_title: { en: "Connect your networks · Ratel", ko: "네트워크 연결 · Ratel" },
+
     // Topbar
     topbar_skip: { en: "Skip for now →", ko: "나중에 →" },
 
@@ -167,9 +171,15 @@ translate! {
 
     // Platform rows — reuse status / btn copy from ConnectionsPageTranslate.
     bluesky_meta_default: { en: "AT Protocol · 300 chars", ko: "AT Protocol · 300자" },
+    bluesky_meta_connected_suffix: {
+        en: " — AT Protocol · 300 chars",
+        ko: " — AT Protocol · 300자",
+    },
     linkedin_meta: { en: "Your professional network · 3,000 chars", ko: "전문 네트워크 · 3,000자" },
     threads_meta: { en: "Meta · ~275M users · 500 chars", ko: "Meta · 약 2.75억 명 · 500자" },
     coming_soon: { en: "Coming soon", ko: "곧 출시" },
+    status_connected: { en: "Connected", ko: "연결됨" },
+    btn_connect: { en: "Connect", ko: "연결" },
 
     // Benefits
     benefit_auto_label: { en: "Auto-sync", ko: "자동 동기화" },

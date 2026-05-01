@@ -19,6 +19,7 @@ pub fn SyndicationPanel(post_id: FeedPartition) -> Element {
     let mut sp = use_syndication_panel(post_id)?;
     let UseSyndicationPanel { panel, .. } = sp;
     let t: SyndicationPanelTranslate = use_translate();
+    let mut toast = use_toast();
 
     let Some(data) = panel() else {
         return rsx! {};
@@ -86,7 +87,9 @@ pub fn SyndicationPanel(post_id: FeedPartition) -> Element {
                         key: "{job.platform}",
                         job: job.clone(),
                         on_retry: move |p: SocialPlatform| async move {
-                            let _ = sp.retry(p).await;
+                            if let Err(e) = sp.retry(p).await {
+                                toast.error(e);
+                            }
                         },
                     }
                 }

@@ -57,7 +57,7 @@ pub fn ConnectionsPage(username: String) -> Element {
                 div { class: "arena-topbar__left",
                     button {
                         class: "back-btn",
-                        "aria-label": "Back",
+                        "aria-label": "{t.btn_back_aria}",
                         onclick: move |_| {
                             nav.go_back();
                         },
