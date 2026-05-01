@@ -52,42 +52,45 @@ Numbered, testable. Each SHALL be verifiable by an automated test or a documente
 1. The system SHALL maintain a per-user **Character XP** counter that is the **sum of `SpaceScore.total_score` across every space the user has ever participated in**.
 2. When a `SpaceScore` row is created or updated for a user (currently driven by the DynamoDB Stream → `aggregate_score` pipeline), the system SHALL increment the same user's Character XP by the **delta** (`new_total_score − old_total_score`), never by the absolute value.
 3. The Character XP increment SHALL run inside the same stream-handler dispatch as `aggregate_score`, so a user's per-space rank and account-level progression update on the same event.
-4. The system SHALL derive **Character Level** from Character XP via a fixed cubic curve: `xp_required(L→L+1) = round(C · L³)` where `C = 100`. Levels start at 1. The constant `C = 100` is calibrated against observed real activity (10-day window: avg participant ≈ 360k SpaceXP, top participants ≈ 650k); under this curve, the avg participant reaches ≈ L13 in 10 days and ≈ L17 in 1 month, while a top participant reaches ≈ L15 in 10 days. (Tunable single constant; see §"Open questions".)
-5. The system SHALL grant **Skill Points** on each level-up. Total skill points granted at level `L` SHALL be `L` (1 SP per level, including the first). With this rate, a user can buy a single L1 skill at character level 5, two L1 skills at level 10, and reaches the long endgame of one fully maxed skill at level 95. (Note: this is the *granting* curve. The *spending* curve is separate — see §"Skill points: spending". See also Q7.)
+4. The system SHALL derive **Character Level** from Character XP via a fixed quadratic curve: `xp_required(L→L+1) = round(C · L²)` where `C = 600`. Levels start at 1. The cubic curve from earlier drafts grew so steep that even L50 was multi-decade for a typical participant; quadratic with `C = 600` calibrates against the observed 10-day window (avg participant ≈ 360k SpaceXP, top ≈ 650k) so that an avg participant reaches L10 in ~5 days, L30 in ~5 months, and the max-one-skill milestone of L45 in ~17 months. (Tunable single constant; see §"Open questions".)
+5. The system SHALL grant **Skill Points** on each level-up. Total skill points granted at level `L` SHALL be `L` (1 SP per level, including the first). With this rate, a user can buy a single L1 skill at character level 5, two L1 skills at level 10, and reaches the endgame of one fully maxed skill at level 45 (cost 45 SP under the new max-skill-level cap). (Note: this is the *granting* curve. The *spending* curve is separate — see §"Skill points: spending". See also Q7.)
 6. Character XP and the derived Level / Skill Point totals SHALL be **idempotent** on stream replay: re-processing the same `SpaceScore` MODIFY event SHALL NOT double-count XP. (Implementation: store last-seen `total_score` per (user, space) and compute delta from stored value.)
 
 ### Skill points: spending
 
-7. Each skill SHALL have a maximum level of 10.
-8. The cost to advance a skill from level `n` to level `n+1` SHALL follow a triangular curve: `cost(n→n+1) = 5 + n` (so 5 SP for level 1, 6 SP for level 2, ..., 14 SP for level 10). Total cost to max one skill SHALL be **95 SP**.
+7. Each skill SHALL have a maximum level of **6**.
+8. The cost to advance a skill from level `n` to level `n+1` SHALL follow a triangular curve: `cost(n→n+1) = 5 + n` (so 5 SP for level 1, 6 SP for level 2, ..., 10 SP for level 6). Total cost to max one skill SHALL be **45 SP**.
 9. The system SHALL prevent spending below 0 skill points and SHALL prevent advancing a skill above its max level.
 10. A user SHALL NOT be able to refund / unspend a skill point in MVP. (See Open Question 4.)
 
 ### Skill: Money Tree (RatelPoint earning multiplier)
 
 11. The system SHALL apply a **Money Tree multiplier** to RatelPoint amounts the user receives from any `SpaceReward::award` payout the user is the recipient of (`target_pk == user.pk`).
-12. The multiplier SHALL be `1 + 0.05 · skill_level` (i.e., +5% per level, capped at +50% at level 10), applied multiplicatively to `space_reward.point × space_reward.credits` *before* the amount is recorded in `UserReward.total_points` and `User.points`.
+12. The multiplier SHALL be `1 + 0.05 · skill_level` (i.e., +5% per level, capped at +30% at level 6), applied multiplicatively to `space_reward.point × space_reward.credits` *before* the amount is recorded in `UserReward.total_points` and `User.points`.
 13. The multiplier SHALL be visible to the user in the reward claim breakdown ("base 10,000 + 25% Money Tree = 12,500").
 14. The multiplier SHALL NOT apply to the **creator's owner-bonus** payout. Money Tree affects only the participant's primary payout.
 
 ### Skill: Ranker (XP earning multiplier)
 
 15. The system SHALL apply a **Ranker multiplier** to the `total_score` of every new `SpaceActivity` row the user records.
-16. The multiplier SHALL be `1 + 0.05 · skill_level` (same curve as Money Tree).
+16. The multiplier SHALL be `1 + 0.05 · skill_level` (same curve as Money Tree, cap +30% at level 6).
 17. The multiplier SHALL apply to the activity's `additional_score` portion only, leaving `base_score` unchanged so that *which actions are valuable* remains a creator-side decision and Ranker only changes *how much* a participant earns from the same action set.
    *(Recommended — see §Q1 below.)*
 18. Ranker SHALL NOT apply retroactively to existing `SpaceScore.total_score` values.
 
 ### Backfill
 
-19. On first deploy, the system SHALL run a one-time backfill that, for every existing `SpaceScore` row, sums `total_score` per user and seeds the user's `CharacterXp.total_xp`. The backfill SHALL be idempotent (re-running produces the same result) and runnable as an admin migration.
+19. On first deploy, the system SHALL run a one-time backfill that, for every existing `SpaceScore` row, sums `total_score` per user and seeds the user's `CharacterXp.total_xp` and per-(user, space) `CharacterXpSource.last_seen_score`. The backfill SHALL be idempotent (re-running produces the same result).
+20. Backfills SHALL be governed by a **versioned migration framework** rooted in a singleton DynamoDB row, `LastBackfillVersion { version: i64 }`. On server startup, when `MIGRATE=true` is set in the environment, each migration whose `required_version` is greater than the stored `version` SHALL run, and after completion the stored `version` SHALL be advanced to that migration's number. Migrations SHALL run in monotonically increasing version order.
+21. When `MIGRATE` is unset or not equal to `"true"`, no migration SHALL execute. (This ensures only one designated deploy/instance per release runs the backfill, even in multi-replica deployments.)
+22. Backfill code MUST be idempotent on re-execution within a single startup as well as across restarts: a partial run that crashes mid-way must converge on the correct state when re-run, even if the version row has not yet been advanced. (Implementation: the backfill scans `SpaceScore`, computes per-user totals, and *upserts* `CharacterXp` + `CharacterXpSource` — never blindly increments.)
 
 ### UI
 
-20. There SHALL be a new page at `/me/character` (Open Question 2) showing: total Character XP, current Level, XP to next level (progress bar), unspent Skill Points, and the Skill Tree.
-21. The Skill Tree view SHALL list every skill with: name, description, current level / max level, "next level cost", and a "Level up" button enabled only when the user has enough unspent SP.
-22. The Character page SHALL be reachable from the user's existing profile (a "Character" tab next to "Posts" / "Spaces" / "Rewards" — exact placement decided at Stage 2 design).
-23. After spending a skill point, the UI SHALL reflect the new skill level, new SP balance, and any earning-rate changes (e.g., updated Money Tree percentage in the reward breakdown) without a page reload.
+23. There SHALL be a new page at `/me/character` (Open Question 2) showing: total Character XP, current Level, XP to next level (progress bar), unspent Skill Points, and the Skill Tree.
+24. The Skill Tree view SHALL list every skill with: name, description, current level / max level, "next level cost", and a "Level up" button enabled only when the user has enough unspent SP.
+25. The Character page SHALL be reachable from the user's existing profile (a "Character" tab next to "Posts" / "Spaces" / "Rewards" — exact placement decided at Stage 2 design).
+26. After spending a skill point, the UI SHALL reflect the new skill level, new SP balance, and any earning-rate changes (e.g., updated Money Tree percentage in the reward breakdown) without a page reload.
 
 ## Acceptance criteria
 
@@ -96,9 +99,11 @@ Numbered, testable. Each SHALL be verifiable by an automated test or a documente
 - [ ] Crossing a level threshold grants the correct number of new skill points (`L` total at level L, i.e., +1 SP per level).
 - [ ] Spending 5 SP on Money Tree raises it to level 1; the next claim breakdown shows the 5% bonus and `User.points` is credited the boosted amount.
 - [ ] Spending 5 SP on Ranker raises it to level 1; the next `SpaceActivity` recorded has its `additional_score` boosted by 5% before aggregation.
-- [ ] Attempting to advance a skill above level 10 is rejected.
+- [ ] Attempting to advance a skill above level 6 is rejected.
 - [ ] Attempting to spend more SP than the user has is rejected.
-- [ ] The backfill admin migration produces the same `CharacterXp.total_xp` whether run once or three times.
+- [ ] The backfill produces the same `CharacterXp.total_xp` whether run once or three times.
+- [ ] Starting the server without `MIGRATE=true` does NOT run the backfill, even if `LastBackfillVersion.version` is less than the latest migration's required version.
+- [ ] Starting the server with `MIGRATE=true` after the backfill has already run (i.e., `LastBackfillVersion.version >= 1`) is a no-op — the backfill is not re-executed.
 - [ ] The `/me/character` page shows total XP, level, XP to next level, and unspent SP, all updating live as new activities post.
 - [ ] A user with no past activity who is brand new sees Level 1 and 0 unspent SP after the level-up bookkeeping (i.e., they get their level-1 SP grant on first appearance).
 - [ ] A user can see their Character Level on another user's public profile (assuming Open Question 5 resolves "yes").
@@ -159,9 +164,13 @@ These are the items we want PO sign-off on before Stage 2 design starts. Each li
    - This intentionally makes higher skill tiers a long-horizon goal, so a participant who has been around for a year has a tangible mechanical edge over a one-month account.
    - **PO override would be:** larger grant if telemetry shows the early game feels too gated.
 
-8. **(Q8) XP curve steepness `C`.**
-   - **Decided: `C = 100`.** Calibrated against the 10-day observation (avg 360k, top 650k). Under this curve avg participants reach L13 / L17 / L20 at 10d / 1mo / 3mo respectively. Original draft used `C = 50`, which put avg participants at L20 inside ~7 weeks — felt too fast given the new SP=1/level rate.
-   - **PO override would be:** raise to `C = 150` (slower) if early levels feel too generous after first-week telemetry, or drop to `C = 75` (faster) if the L5 first-skill threshold is hit too early.
+8. **(Q8) XP curve steepness and shape.**
+   - **Decided: quadratic `C · L²` with `C = 600`.** PO directive — original cubic `C · L³` made even L50 a multi-decade goal for an avg participant. Quadratic flattens the late-game tail enough that one-skill-max (L45) is a year-and-a-half goal for an avg participant and ~9 months for a top participant. See worked-numbers table in §"Leveling math" of the design doc.
+   - **PO override would be:** raise to `C = 900` (slower) or drop to `C = 400` (faster) after first-week telemetry. The shape (quadratic) is the bigger lever; the multiplier `C` is fine-tuning.
+
+9. **(Q9) Max skill level.**
+   - **Decided: 6 (down from 10).** PO directive — paired with the L50-target endgame. Triangular cost (5+n) for n=0..5 gives total 45 SP to max one skill. Multiplier cap stays at +5%/lv → +30% at level 6.
+   - **PO override would be:** keep max level 10 (cap +50%) if the +30% endgame multiplier feels underwhelming after first players reach it.
 
 ## References
 
