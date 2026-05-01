@@ -3,6 +3,15 @@ use super::super::*;
 use crate::common::services::PointTransactionResponse;
 use crate::common::utils::time::time_ago;
 
+// TODO(character-xp-skills, Task 37): wire `RewardBreakdownChip` here
+// once the upstream Biyard Points API surfaces `money_tree_bonus` and
+// `money_tree_level` per transaction. The chip component is ready —
+// `crate::features::character::components::RewardBreakdownChip` —
+// and the matching CSS is already in `app/ratel/assets/main.css`. To
+// integrate, render the chip inside the outer `div` (below the
+// existing flex row) so it occupies the full width via its
+// `grid-column: 1 / -1` rule from the mockup.
+
 pub fn transaction_item(
     tr: &RewardsPageTranslate,
     transaction: &PointTransactionResponse,
@@ -29,19 +38,19 @@ pub fn transaction_item(
     rsx! {
         div {
             key: "{transaction.created_at}-{idx}",
-            class: "rounded border border-card-border p-5",
-            div { class: "flex items-end justify-between w-full",
+            class: "p-5 rounded border border-card-border",
+            div { class: "flex justify-between items-end w-full",
                 div { class: "flex flex-col gap-0.5",
-                    div { class: "flex items-center gap-2.5",
+                    div { class: "flex gap-2.5 items-center",
                         span { class: "{status_class}", "{status_label}" }
                         div { class: "flex items-center",
-                            div { class: "w-5 h-5 rounded-full bg-primary mr-1" }
-                            span { class: "text-[15px] font-medium text-text-primary",
+                            div { class: "mr-1 w-5 h-5 rounded-full bg-primary" }
+                            span { class: "font-medium text-[15px] text-text-primary",
                                 "{amount_label}"
                             }
                         }
                     }
-                    div { class: "flex items-center gap-1",
+                    div { class: "flex gap-1 items-center",
                         span { class: "text-sm font-semibold text-foreground-muted tracking-[0.5px]",
                             "{tr.from}"
                         }

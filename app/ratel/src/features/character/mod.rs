@@ -1,3 +1,4 @@
+pub mod components;
 pub mod controllers;
 pub mod dto;
 pub mod hooks;
@@ -7,6 +8,7 @@ pub mod pages;
 pub mod services;
 pub mod types;
 
+pub use components::*;
 pub use controllers::*;
 pub use dto::*;
 pub use leveling::*;
