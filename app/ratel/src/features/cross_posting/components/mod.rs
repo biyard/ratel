@@ -1,18 +1,15 @@
-// Cross-posting UI components.
+// Cross-posting reusable UI components — embedded inside other pages.
 //
-// PR E1 (1A) — Settings → Connections page + Bluesky connect modal.
-// PR E2 (1A) — Compose-time right-rail sidebar.
-// PR E3 (1A) — Post-detail author syndication panel.
+// PR E2 (1A) — Compose-time right-rail sidebar (`post_edit`).
+// PR E3 (1A) — Post-detail author syndication panel (`post_detail`).
+// PR E1 (1A) — Bluesky connect modal (used by both ConnectionsPage and
+//              OnboardingPage views).
 //
-// To be added in subsequent PRs:
-//   - onboarding_interstitial/ Single-screen post-signup (1D)
-//   - threads_no_ig_modal/     (1C)
-//   - public_backlink_view/    Public landing page (1D polish)
+// Page-level routed components live under `features::cross_posting::views`
+// (per `feature-module-structure.md` "Page-level views → views/<page>/").
 
 pub mod bluesky_connect_modal;
 pub mod compose_sidebar;
-pub mod connections_page;
-pub mod onboarding_page;
 pub mod syndication_panel;
 
 // Explicit re-exports — glob would clash on internal helpers like
@@ -21,6 +18,4 @@ pub mod syndication_panel;
 // `<Name>Props` types alongside even private fns).
 pub use bluesky_connect_modal::BlueskyConnectModal;
 pub use compose_sidebar::CrossPostSidebar;
-pub use connections_page::ConnectionsPage;
-pub use onboarding_page::OnboardingPage;
 pub use syndication_panel::SyndicationPanel;

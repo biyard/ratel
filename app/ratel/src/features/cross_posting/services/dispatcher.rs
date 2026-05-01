@@ -615,8 +615,8 @@ async fn notify_failure(
 
     let payload = InboxPayload::CrossPostingFailed {
         post_id,
-        platform: job.platform.to_string(),
-        error_category: error_category_str(category).to_string(),
+        platform: job.platform,
+        error_category: category,
         error_message,
         cta_url,
     };

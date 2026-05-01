@@ -178,17 +178,7 @@ pub async fn handle_stream_record(
                     tracing::error!(error = %e, "stream: AnalyzeDiscussionInProgress failed");
                 }
             } else if sk.starts_with("SYNDICATION_JOB#") {
-                // Cross-posting Stage 2: dispatch newly-enqueued jobs.
-                // Mirrors the CDK CrossPostingStage2Pipe filter
-                // (state=pending) so local-dev behaviour matches Lambda.
-                if get_string_field(image, "state").as_deref() == Some("pending") {
-                    let job = deserialize(image)?;
-                    if let Err(e) =
-                        crate::features::cross_posting::services::dispatcher::handle_syndication_job_ready(job).await
-                    {
-                        tracing::error!(error = %e, "stream: SyndicationJobReady (INSERT) failed");
-                    }
-                }
+                try_dispatch_pending_syndication_job(image, "INSERT").await?;
             }
         }
         "MODIFY" => {
@@ -263,17 +253,7 @@ pub async fn handle_stream_record(
                     }
                 }
             } else if sk.starts_with("SYNDICATION_JOB#") {
-                // Cross-posting Stage 2: re-dispatch on retry sweeper /
-                // user-initiated retry that flips state back to pending.
-                // Same filter as the INSERT branch above.
-                if get_string_field(image, "state").as_deref() == Some("pending") {
-                    let job = deserialize(image)?;
-                    if let Err(e) =
-                        crate::features::cross_posting::services::dispatcher::handle_syndication_job_ready(job).await
-                    {
-                        tracing::error!(error = %e, "stream: SyndicationJobReady (MODIFY) failed");
-                    }
-                }
+                try_dispatch_pending_syndication_job(image, "MODIFY").await?;
             } else if sk == "SPACE_COMMON" {
                 // PopularSpaceUpdate
                 let space = deserialize(image)?;
@@ -332,6 +312,37 @@ pub async fn handle_stream_record(
 
 /// Mirror an INSERT/MODIFY of any essence-indexable entity into the user's
 /// Essence list. Each branch deserializes the image into the matching
+/// Dispatch a `SyndicationJob` row when its current `state` is `"pending"`.
+/// Mirrors the CDK `CrossPostingStage2Pipe` filter (see
+/// `cdk/lib/dynamo-stream-event.ts`) so local-dev behaviour matches Lambda;
+/// both INSERT (Stage 1 factory enqueue) and MODIFY (user-initiated retry
+/// flipping state back to pending) flow through this single entry point.
+#[cfg(feature = "server")]
+async fn try_dispatch_pending_syndication_job(
+    image: &std::collections::HashMap<String, serde_dynamo::AttributeValue>,
+    event_label: &'static str,
+) -> crate::common::Result<()> {
+    use crate::common::Error;
+    use crate::common::utils::InfraError;
+
+    let state = image.get("state").and_then(|v| match v {
+        serde_dynamo::AttributeValue::S(s) => Some(s.as_str()),
+        _ => None,
+    });
+    if state != Some("pending") {
+        return Ok(());
+    }
+    let job: crate::features::cross_posting::models::SyndicationJob =
+        serde_dynamo::from_item(image.clone()).map_err(|e| {
+            tracing::error!("stream deserialize: {e}");
+            Error::from(InfraError::StreamDeserializeFailed)
+        })?;
+    if let Err(e) = crate::features::cross_posting::services::dispatcher::handle_syndication_job_ready(job).await {
+        tracing::error!(error = %e, "stream: SyndicationJobReady ({event_label}) failed");
+    }
+    Ok(())
+}
+
 /// model and delegates to the shared `essence::services` indexer (the same
 /// helper the migrate endpoint uses), so behaviour stays identical between
 /// stream-driven indexing and explicit backfills.

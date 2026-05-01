@@ -1,4 +1,6 @@
 use crate::common::*;
+use crate::features::cross_posting::models::ErrorCategory;
+use crate::features::cross_posting::types::SocialPlatform;
 use crate::features::spaces::pages::actions::types::SpaceActionType;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -160,8 +162,8 @@ pub enum InboxPayload {
     /// Connections for `auth_expired` (the user must reconnect first).
     CrossPostingFailed {
         post_id: String,
-        platform: String,
-        error_category: String,
+        platform: SocialPlatform,
+        error_category: ErrorCategory,
         error_message: Option<String>,
         cta_url: String,
     },
