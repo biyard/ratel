@@ -18,6 +18,8 @@ pub mod rag;
 
 pub mod activity;
 
+pub mod character;
+
 pub mod did;
 pub mod essence;
 pub mod me;

@@ -322,6 +322,10 @@ pub enum Error {
 
     #[error("{0}")]
     #[translate(from)]
+    Character(#[from] crate::features::character::types::CharacterError),
+
+    #[error("{0}")]
+    #[translate(from)]
     Notifications(#[from] crate::features::notifications::types::NotificationsError),
 
     #[error("{0}")]
