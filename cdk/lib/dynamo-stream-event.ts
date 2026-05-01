@@ -1657,5 +1657,58 @@ export class DynamoStreamEventStack extends Stack {
       },
       targets: [new eventsTargets.LambdaFunction(analyzeLambdaFunction)],
     });
+
+    // ── Pipe: SpaceScore Insert/Modify → CharacterXpDelta ───────────
+    // Fires when a SpaceScore row is created or updated (e.g. Money
+    // Tree wraps, action-completion scoring). The Lambda applies the
+    // resulting XP delta to the user's CharacterProfile and emits any
+    // level-up side effects. INSERT + MODIFY both flow through the
+    // same handler — the Rust-side dispatch in
+    // `EventBridgeEnvelope::proc` reads the new image either way.
+    new pipes.CfnPipe(this, "SpaceScorePipe", {
+      name: `ratel-${stage}-space-score-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT", "MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SPACE_SCORE#" }] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "CharacterXpDelta",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route CharacterXpDelta events to app-shell Lambda ─────
+    new events.Rule(this, "CharacterXpDeltaRule", {
+      eventBus,
+      description:
+        "Route space score insert/update events to app-shell for character XP delta application",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["CharacterXpDelta"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
   }
 }
