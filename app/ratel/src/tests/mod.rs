@@ -1,6 +1,7 @@
 pub mod macros;
 pub mod setup;
 
+mod cross_posting_tests;
 mod discussion_tests;
 mod home_tests;
 mod inbox_helper_tests;

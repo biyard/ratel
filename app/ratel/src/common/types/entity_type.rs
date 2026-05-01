@@ -253,6 +253,14 @@ pub enum EntityType {
     SubTeamFormField(String),             // SUB_TEAM_FORM_FIELD#{field_id}
     SubTeamApplication(String),           // SUB_TEAM_APPLICATION#{application_id}
     SubTeamAnnouncement(String),          // SUB_TEAM_ANNOUNCEMENT#{announcement_id}
+
+    // Cross-posting feature (Phase 1: Bluesky / LinkedIn / Threads). All entities
+    // share an existing Partition variant (User or Feed) — no new Partition.
+    SocialConnection(String),       // pk=User(user_id), inner=platform.to_string()
+    SyndicationDirective,           // pk=Feed(post_id), singleton per published post
+    SyndicationJob(String),         // pk=Feed(post_id), inner=platform.to_string()
+    EngagementSnapshot(String),     // pk=Feed(post_id), inner=platform.to_string()
+    UserOnboardingFlags,            // pk=User(user_id), singleton per user
 }
 
 impl TryInto<Partition> for EntityType {

@@ -73,6 +73,13 @@ services:
       QDRANT_URL: http://qdrant:6333
       QDRANT_API_KEY: ${QDRANT_API_KEY:-}
 
+      # Cross-posting credential encryption (envvar AEAD; KMS migration tracked
+      # in docs/superpowers/specs/2026-04-28-cross-posting-design.md). Local
+      # dev defaults to a fixed all-zero key for reproducibility — DO NOT use
+      # in any deployed environment.
+      CROSS_POSTING_DATA_KEY: ${CROSS_POSTING_DATA_KEY:-v1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA}
+      CROSS_POSTING_DATA_KEY_PREVIOUS: ${CROSS_POSTING_DATA_KEY_PREVIOUS:-}
+
     volumes:
       - cargo-target:/app-target
       - node_modules:/app/node_modules

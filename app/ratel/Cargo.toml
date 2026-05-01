@@ -72,6 +72,7 @@ reqwest = { workspace = true, optional = true }
 async-trait = { workspace = true }
 sha3 = { version = "0.10.8", optional = true }
 sha2 = { version = "0.10", optional = true }
+aes-gcm = { version = "0.10", optional = true }
 hex = { version = "0.4.3", optional = true }
 k256 = { version = "0.13", features = ["ecdsa"], optional = true }
 hmac = { version = "0.12.1", optional = true }
@@ -153,6 +154,7 @@ server = [
   "schemars",
   "serde_dynamo",
   "sha2",
+  "aes-gcm",
   "attr-voting",
   "sha3",
   "ssi",

@@ -108,3 +108,67 @@
     init();
   }).observe(document.body, { childList: true, subtree: true });
 })();
+
+// AC-18 — referral banner for signed-out viewers landing from a syndicated
+// copy. Reads `?utm_source=` and `document.referrer` to pick a tier:
+//   tier-1: utm_source matches a known platform (bluesky / linkedin / threads)
+//   tier-2: referrer host matches a known platform domain
+//   tier-3: any other referrer (generic "from somewhere" copy)
+// No referrer + no utm_source → bar stays hidden.
+//
+// The bar is rendered only when the viewer is signed-out (Dioxus controls
+// the `[data-show="true"]` toggle via session check). This script only
+// owns the platform classification.
+(function () {
+  function classify() {
+    try {
+      var qs = new URLSearchParams(window.location.search);
+      var utm = (qs.get("utm_source") || "").toLowerCase();
+      var known = { bluesky: 1, linkedin: 1, threads: 1 };
+      if (known[utm]) return { tier: 1, platform: utm };
+
+      var ref = document.referrer || "";
+      if (ref) {
+        var host = "";
+        try {
+          host = new URL(ref).host.toLowerCase();
+        } catch (_) {}
+        if (host.indexOf("bsky.app") !== -1 || host.indexOf("bsky.social") !== -1)
+          return { tier: 2, platform: "bluesky" };
+        if (host.indexOf("linkedin.com") !== -1) return { tier: 2, platform: "linkedin" };
+        if (host.indexOf("threads.net") !== -1 || host.indexOf("threads.com") !== -1)
+          return { tier: 2, platform: "threads" };
+        return { tier: 3, platform: "" };
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function paint() {
+    var bar = document.querySelector(".pd-refer-bar");
+    if (!bar || bar.dataset.painted) return;
+    bar.dataset.painted = "true";
+    var c = classify();
+    if (!c) {
+      bar.setAttribute("data-show", "false");
+      return;
+    }
+    bar.setAttribute("data-show", "true");
+    bar.setAttribute("data-tier", String(c.tier));
+    if (c.platform) bar.setAttribute("data-platform", c.platform);
+
+    var closeBtn = bar.querySelector(".pd-refer-bar__close");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", function () {
+        bar.setAttribute("data-show", "false");
+      });
+    }
+  }
+
+  paint();
+  new MutationObserver(function () {
+    paint();
+  }).observe(document.body, { childList: true, subtree: true });
+})();

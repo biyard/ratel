@@ -79,6 +79,18 @@ pub enum DetailType {
     /// CharacterXp. Idempotent under stream replay (a re-delivered MODIFY
     /// with the same total_score produces zero delta).
     CharacterXpDelta,
+    /// Fires on Post MODIFY when status transitions Draft → Published with
+    /// visibility=Public. Drives Stage 1 of the cross-posting pipeline:
+    /// reads the PostSyndicationDirective sidecar and bakes one
+    /// SyndicationJob row per (enabled_platforms ∩ connected) platform.
+    PostPublishedForSyndication,
+    /// Fires on SyndicationJob INSERT or MODIFY whose `NewImage.state ==
+    /// "pending"`. Drives Stage 2 (the dispatcher): acquires an
+    /// idempotency lock, reconciles a stolen lock if needed, re-checks
+    /// post visibility, then calls the platform adapter. Failures notify
+    /// the author and surface a manual Retry CTA — there is no automatic
+    /// retry sweeper.
+    SyndicationJobReady,
     #[serde(other)]
     Unknown,
 }
@@ -364,6 +376,16 @@ impl EventBridgeEnvelope {
                 let cfg = crate::common::CommonConfig::default();
                 let cli = cfg.dynamodb();
                 crate::features::character::services::apply_character_xp_delta(cli, score).await
+            }
+            DetailType::PostPublishedForSyndication => {
+                let post: crate::features::posts::models::Post =
+                    DetailType::parse_detail(&self.detail)?;
+                crate::features::cross_posting::services::factory::handle_post_published_for_syndication(post).await
+            }
+            DetailType::SyndicationJobReady => {
+                let job: crate::features::cross_posting::models::SyndicationJob =
+                    DetailType::parse_detail(&self.detail)?;
+                crate::features::cross_posting::services::dispatcher::handle_syndication_job_ready(job).await
             }
             DetailType::Unknown => {
                 tracing::warn!(

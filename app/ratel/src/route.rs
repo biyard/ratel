@@ -89,6 +89,8 @@ use crate::features::social::pages::team_membership::Home as TeamMemberships;
 use crate::features::social::pages::user_draft::Home as UserDrafts;
 use crate::features::social::pages::user_membership::Home as UserMemberships;
 use crate::features::social::pages::user_reward::Home as UserRewards;
+use crate::features::cross_posting::views::ConnectionsPage as UserSettingsConnectionsPage;
+use crate::features::cross_posting::views::OnboardingPage as OnboardingConnectionsPage;
 use crate::features::social::pages::user_setting::Home as UserSettingPage;
 use crate::features::social::user_views::Home as UserHomeRoot;
 
@@ -113,6 +115,9 @@ pub enum Route {
 
         #[route("/essence")]
         EssenceSourcesPage {},
+
+        #[route("/onboarding/connections")]
+        OnboardingConnectionsPage {},
 
         #[nest("/posts")]
             #[route("/")]
@@ -144,6 +149,8 @@ pub enum Route {
             UserRewards { username: String },
             #[route("/settings")]
             UserSettingPage { username: String },
+            #[route("/settings/connections")]
+            UserSettingsConnectionsPage { username: String },
             #[route("/drafts")]
             UserDrafts { username: String },
             #[layout(SocialLayout)]

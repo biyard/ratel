@@ -172,6 +172,13 @@ jobs:
           ICP_IDENTITY_PEM: ${{ secrets.DEV_ICP_IDENTITY_PEM }}
           VOTER_TAG_SECRET: ${{ secrets.VOTER_TAG_SECRET }}
           ATTR_VOTING_AUTHORITY_JSON: ${{ secrets.ATTR_VOTING_AUTHORITY_JSON }}
+
+          # Cross-posting credential AEAD key (envvar form: "v<int>:<base64-no-pad 32 bytes>").
+          # Backup of the value is held in 1Password (admin-only vault) — losing
+          # this secret without the backup makes every stored connection
+          # unrecoverable. PREVIOUS is set only during a key rotation transition.
+          CROSS_POSTING_DATA_KEY: ${{ secrets.PROD_CROSS_POSTING_DATA_KEY }}
+          CROSS_POSTING_DATA_KEY_PREVIOUS: ${{ secrets.PROD_CROSS_POSTING_DATA_KEY_PREVIOUS }}
         run: |
           rm -rf target/dx
 
