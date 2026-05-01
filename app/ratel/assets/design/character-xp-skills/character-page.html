@@ -43,23 +43,38 @@
       z-index:-1
     }
 
-    /* ── Top bar ─────────────────────────────────────────── */
-    .arena-topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;flex-shrink:0;border-bottom:1px solid var(--border-subtle)}
-    .arena-topbar__brand{display:flex;align-items:center;gap:12px;font-family:var(--font-display);font-weight:700;font-size:14px;letter-spacing:0.08em;text-transform:uppercase}
-    .arena-topbar__brand::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--accent-gold);box-shadow:0 0 12px var(--accent-gold)}
+    /* ── ArenaTopbar (shared with Home Arena) ────────────── */
+    /* Same DOM/class names as home-arena.html so the Dioxus side can reuse
+       a single ArenaTopbar layout component across views. The Character
+       hud-btn carries aria-current="page" / data-active="true" so the
+       shared button styling can highlight the current section. */
+    .arena-topbar{position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:20px 28px;flex-shrink:0}
+    .arena-topbar__brand{display:flex;align-items:center;gap:14px}
+    .arena-topbar__logo{width:40px;height:40px;border-radius:10px;object-fit:cover;border:1px solid rgba(252,179,0,0.15);box-shadow:0 2px 12px rgba(0,0,0,0.3)}
+    .arena-topbar__title{font-family:var(--font-display);font-weight:800;font-size:18px;letter-spacing:0.10em;text-transform:uppercase;background:linear-gradient(135deg,var(--accent-gold),#ffd24a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .arena-topbar__status{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;background:rgba(110,237,216,0.08);border:1px solid rgba(110,237,216,0.15);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent-teal);margin-left:12px}
+    .arena-topbar__status::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal)}
+    .arena-topbar__actions{display:flex;gap:10px}
+    .hud-btn{position:relative;width:42px;height:42px;border-radius:11px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0}
+    .hud-btn:hover{background:var(--bg-glass-hover);border-color:rgba(252,179,0,0.25);transform:translateY(-1px)}
+    .hud-btn svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+    .hud-btn:hover svg{color:var(--accent-gold)}
+    .hud-btn--primary{background:linear-gradient(135deg,rgba(252,179,0,0.18),rgba(252,179,0,0.06));border-color:rgba(252,179,0,0.3)}
+    .hud-btn--primary svg{color:var(--accent-gold)}
+    /* Active section indicator — applied to the hud-btn whose route matches
+       the current page. aria-current="page" is the source of truth. */
+    .hud-btn[aria-current="page"]{background:rgba(252,179,0,0.10);border-color:rgba(252,179,0,0.45);box-shadow:0 0 18px rgba(252,179,0,0.18)}
+    .hud-btn[aria-current="page"] svg{color:var(--accent-gold)}
+    .hud-btn[aria-current="page"]::after{content:'';position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);width:24px;height:2px;border-radius:2px;background:var(--accent-gold);box-shadow:0 0 8px rgba(252,179,0,0.6)}
+    .hud-btn__label{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);white-space:nowrap;opacity:0;transition:opacity 0.2s ease;pointer-events:none}
+    .hud-btn:hover .hud-btn__label{opacity:1}
+    .hud-btn[aria-current="page"] .hud-btn__label{opacity:1;color:var(--accent-gold)}
 
     /* State switcher (mockup-only — does not ship) */
-    .state-switcher{display:flex;gap:6px;padding:4px;background:var(--bg-glass);border:1px solid var(--border-subtle);border-radius:10px}
+    .state-switcher{position:fixed;top:18px;right:24px;display:flex;gap:6px;padding:4px;background:var(--bg-glass);border:1px solid var(--border-subtle);border-radius:10px;z-index:50;backdrop-filter:blur(16px)}
     .state-switcher__btn{padding:6px 12px;border-radius:7px;background:transparent;border:none;color:var(--text-muted);font-family:var(--font-body);font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;transition:all 0.18s ease}
     .state-switcher__btn:hover{color:var(--text-primary)}
     .state-switcher__btn.active{background:rgba(252,179,0,0.12);color:var(--accent-gold)}
-
-    /* ── Profile tabs ────────────────────────────────────── */
-    .profile-tabs{display:flex;gap:4px;padding:0 28px;border-bottom:1px solid var(--border-subtle);background:rgba(0,0,0,0.2)}
-    .profile-tab{padding:14px 20px;background:transparent;border:none;color:var(--text-muted);font-family:var(--font-body);font-size:13px;font-weight:600;letter-spacing:0.04em;cursor:pointer;position:relative;transition:color 0.18s ease}
-    .profile-tab:hover{color:var(--text-primary)}
-    .profile-tab[aria-selected="true"]{color:var(--accent-gold)}
-    .profile-tab[aria-selected="true"]::after{content:'';position:absolute;left:14px;right:14px;bottom:-1px;height:2px;background:var(--accent-gold);box-shadow:0 0 12px rgba(252,179,0,0.4)}
 
     /* ── Layout ──────────────────────────────────────────── */
     .character-page{max-width:1100px;margin:0 auto;padding:32px 28px 80px;width:100%}
@@ -327,9 +342,15 @@
       .character-hero__level{justify-self:start}
       .character-hero__sp{align-self:flex-start;align-items:flex-start;width:100%}
       .skill-grid{grid-template-columns:1fr;gap:14px}
-      .arena-topbar{padding:14px 18px;flex-wrap:wrap;gap:8px}
-      .profile-tabs{padding:0 12px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
-      .profile-tab{flex-shrink:0;padding:12px 14px;font-size:12px}
+      .arena-topbar{padding:14px 16px;flex-wrap:wrap;gap:10px}
+      .arena-topbar__brand{gap:10px}
+      .arena-topbar__logo{width:32px;height:32px}
+      .arena-topbar__title{font-size:14px;letter-spacing:0.08em}
+      .arena-topbar__status{margin-left:6px;padding:2px 8px;font-size:9px}
+      .arena-topbar__actions{gap:8px;width:100%;justify-content:space-between;order:2;overflow-x:auto;-webkit-overflow-scrolling:touch}
+      .hud-btn{width:46px;height:46px;flex:1;max-width:64px;flex-shrink:0}
+      .hud-btn__label{display:none}
+      .state-switcher{position:static;margin:8px 16px}
       .skill-card__footer{flex-direction:column;align-items:stretch;gap:10px}
       .skill-card__level-meta{flex-direction:row;align-items:baseline;gap:8px}
       .skill-card__levelup,.skill-card__maxed,.skill-card__locked-cta{justify-content:center}
@@ -339,26 +360,54 @@
 <body>
   <div class="character-arena">
 
-    <!-- Top bar (mockup-only state switcher) -->
+    <!-- ArenaTopbar — same layout as Home Arena. Character hud-btn carries
+         aria-current="page" / data-testid="home-btn-character" so the shared
+         component highlights the active section. The mockup-only
+         state-switcher (top-right) is rendered as a fixed overlay so it
+         doesn't pollute the production layout. -->
     <div class="arena-topbar">
-      <div class="arena-topbar__brand">RATEL · CHARACTER</div>
-      <div class="state-switcher" role="tablist" aria-label="Mockup state">
-        <button class="state-switcher__btn active" data-state="new">New</button>
-        <button class="state-switcher__btn" data-state="early">Early (L11)</button>
-        <button class="state-switcher__btn" data-state="mid">Mid (L24)</button>
-        <button class="state-switcher__btn" data-state="late">Late (L38)</button>
-        <button class="state-switcher__btn" data-state="endgame">Endgame (L46)</button>
+      <div class="arena-topbar__brand">
+        <img class="arena-topbar__logo" src="https://metadata.ratel.foundation/logos/logo-symbol.png" alt="Ratel logo" />
+        <span class="arena-topbar__title">Ratel</span>
+        <span class="arena-topbar__status">Live</span>
+      </div>
+      <div class="arena-topbar__actions">
+        <button class="hud-btn hud-btn--primary" aria-label="Create post" data-testid="home-btn-create">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span class="hud-btn__label">Create</span>
+        </button>
+        <button class="hud-btn" aria-label="Drafts" data-testid="home-btn-drafts">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+          <span class="hud-btn__label">Drafts</span>
+        </button>
+        <button class="hud-btn" aria-label="Rewards" data-testid="home-btn-rewards">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+          <span class="hud-btn__label">Rewards</span>
+        </button>
+        <button class="hud-btn" aria-label="Credentials" data-testid="home-btn-credentials">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+          <span class="hud-btn__label">Credentials</span>
+        </button>
+        <!-- Active section -->
+        <button class="hud-btn" aria-label="Character" aria-current="page" data-testid="home-btn-character">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+          <span class="hud-btn__label">Character</span>
+        </button>
+        <button class="hud-btn" aria-label="Settings" data-testid="home-btn-settings">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span class="hud-btn__label">Settings</span>
+        </button>
       </div>
     </div>
 
-    <!-- Profile tabs -->
-    <nav class="profile-tabs" aria-label="Profile sections">
-      <button class="profile-tab" type="button">Posts</button>
-      <button class="profile-tab" type="button">Spaces</button>
-      <button class="profile-tab" type="button">Rewards</button>
-      <button class="profile-tab" type="button" aria-selected="true">Character</button>
-      <button class="profile-tab" type="button">About</button>
-    </nav>
+    <!-- Mockup-only state switcher (overlay; not part of the production page) -->
+    <div class="state-switcher" role="tablist" aria-label="Mockup state">
+      <button class="state-switcher__btn active" data-state="new">New</button>
+      <button class="state-switcher__btn" data-state="early">Early (L11)</button>
+      <button class="state-switcher__btn" data-state="mid">Mid (L24)</button>
+      <button class="state-switcher__btn" data-state="late">Late (L38)</button>
+      <button class="state-switcher__btn" data-state="endgame">Endgame (L46)</button>
+    </div>
 
     <main class="character-page" id="character-page">
 
