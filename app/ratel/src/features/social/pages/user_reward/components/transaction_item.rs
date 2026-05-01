@@ -2,15 +2,18 @@ use super::super::views::{format_points, RewardsPageTranslate};
 use super::super::*;
 use crate::common::services::PointTransactionResponse;
 use crate::common::utils::time::time_ago;
+use crate::features::character::components::RewardBreakdownChip;
 
-// TODO(character-xp-skills, Task 37): wire `RewardBreakdownChip` here
-// once the upstream Biyard Points API surfaces `money_tree_bonus` and
-// `money_tree_level` per transaction. The chip component is ready —
-// `crate::features::character::components::RewardBreakdownChip` —
-// and the matching CSS is already in `app/ratel/assets/main.css`. To
-// integrate, render the chip inside the outer `div` (below the
-// existing flex row) so it occupies the full width via its
-// `grid-column: 1 / -1` rule from the mockup.
+// Money Tree bonus surfacing (Task 37, Path A — heuristic): the
+// upstream Biyard Points API is external and does not surface
+// `money_tree_bonus` / `money_tree_level` per transaction. The Ratel
+// list-transactions handler enriches each award row with the user's
+// *current* MoneyTree level and a reconstructed bonus computed from
+// `amount` and `multiplier_permille(level)`. This is exact when the
+// user's MoneyTree level hasn't changed since the award, slightly
+// over-estimated otherwise. `RewardBreakdownChip` renders nothing
+// when level/bonus are zero/None, so non-award rows and level-0 users
+// see no visual change.
 
 pub fn transaction_item(
     tr: &RewardsPageTranslate,
@@ -34,6 +37,9 @@ pub fn transaction_item(
     } else {
         "text-[15px] font-medium text-red-500"
     };
+
+    let mt_level = transaction.money_tree_level.unwrap_or(0);
+    let mt_bonus = transaction.money_tree_bonus.unwrap_or(0);
 
     rsx! {
         div {
@@ -63,6 +69,11 @@ pub fn transaction_item(
                 span { class: "text-sm font-medium text-foreground-muted tracking-[0.5px]",
                     "{time_ago_label}"
                 }
+            }
+            RewardBreakdownChip {
+                level: mt_level,
+                bonus: mt_bonus,
+                total_amount: transaction.amount,
             }
         }
     }
