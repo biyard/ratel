@@ -3,7 +3,7 @@ use crate::features::character::leveling;
 use crate::features::character::models::CharacterXp;
 use crate::features::character::types::SkillId;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct CharacterResponse {
     pub total_xp: i64,
@@ -20,7 +20,7 @@ pub struct CharacterResponse {
     pub skills: Vec<CharacterSkillResponse>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct CharacterSkillResponse {
     pub skill_id: SkillId,
@@ -35,7 +35,7 @@ pub struct CharacterSkillResponse {
     pub is_released: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct PublicCharacterResponse {
     /// Only level is exposed publicly (per spec Q5).

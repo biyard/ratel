@@ -3,10 +3,11 @@ use serde::{Deserialize, Serialize};
 /// Stable string-keyed skill identifier. The serialization (`snake_case`) is
 /// what gets stored in `EntityType::CharacterSkill(...)`, sent over the wire,
 /// and used as the path parameter on `/api/me/skills/:skill_id/level-up`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Hash, Default)]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub enum SkillId {
+    #[default]
     MoneyTree,
     Ranker,
     /// v2 — declared so the data model can store them, but the level-up
