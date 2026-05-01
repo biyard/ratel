@@ -8,7 +8,7 @@ use super::comments::PostCommentsPanel;
 use super::i18n::*;
 
 #[component]
-pub fn PostDetail(post_id: FeedPartition) -> Element {
+pub fn PostDetail(post_id: ReadSignal<FeedPartition>) -> Element {
     let tr: PostDetailSyndicatedTranslate = use_translate();
     let nav = use_navigator();
 
@@ -16,7 +16,7 @@ pub fn PostDetail(post_id: FeedPartition) -> Element {
     // hook itself is argument-free (per rule 2) and reads the id back out
     // via `use_context`. This keeps the controller's public shape free
     // of route-derived parameters.
-    use_context_provider(|| post_id.clone());
+    use_context_provider(|| post_id());
 
     let UsePostDetail {
         detail,
@@ -88,11 +88,8 @@ pub fn PostDetail(post_id: FeedPartition) -> Element {
     let seo_description = strip_html_excerpt(&post_html, 200);
 
     let edit_nav = nav;
-    let p_for_edit = post_id.clone();
     let go_edit = move |_| {
-        edit_nav.push(Route::PostEdit {
-            post_id: p_for_edit.clone(),
-        });
+        edit_nav.push(Route::PostEdit { post_id: post_id() });
     };
     let go_back = move |_| {
         nav.go_back();
@@ -277,7 +274,10 @@ pub fn PostDetail(post_id: FeedPartition) -> Element {
                     div { class: "post-hero__meta",
                         span { class: "post-hero__avatar",
                             if !author_avatar.is_empty() {
-                                img { src: "{author_avatar}", alt: "" }
+                                img {
+                                    src: "{author_avatar}",
+                                    alt: "{author_name}",
+                                }
                             } else {
                                 "{author_initial}"
                             }
@@ -285,7 +285,7 @@ pub fn PostDetail(post_id: FeedPartition) -> Element {
                         div { class: "post-hero__author",
                             span { class: "post-hero__author-name", "{author_name}" }
                             span { class: "post-hero__author-time",
-                                "{format_published(created_at, read_minutes)}"
+                                "{format_published(&tr, created_at, read_minutes)}"
                             }
                         }
                     }
@@ -294,10 +294,18 @@ pub fn PostDetail(post_id: FeedPartition) -> Element {
 
                     if !post_image.is_empty() {
                         figure { class: "post-hero__image",
-                            img { src: "{post_image}", alt: "" }
+                            img { src: "{post_image}", alt: "{post_title}" }
                         }
                     }
 
+                    // SAFETY: `post_html` is server-sanitized in
+                    // `update_post_handler` before persistence (Tiptap
+                    // editor output → server-side allowlist filter), so the
+                    // bytes reaching the browser have been stripped of
+                    // executable HTML / JS. The `dangerous_inner_html`
+                    // escape hatch is the only way to render the rich
+                    // formatting; do NOT bypass the server filter or feed
+                    // raw user input here.
                     div {
                         class: "post-hero__body",
                         dangerous_inner_html: "{post_html}",
@@ -337,7 +345,7 @@ pub fn PostDetail(post_id: FeedPartition) -> Element {
                 }
 
                 if is_author {
-                    SyndicationPanel { post_id: post_id.clone() }
+                    SyndicationPanel { post_id: post_id() }
                 }
 
                 // AC-17 — backlink-landing sidebar (anonymous viewers).
@@ -363,7 +371,10 @@ pub fn PostDetail(post_id: FeedPartition) -> Element {
                             div { class: "pd-house-card__hero",
                                 span { class: "pd-house-card__hero-avatar",
                                     if !author_avatar.is_empty() {
-                                        img { src: "{author_avatar}", alt: "" }
+                                        img {
+                                            src: "{author_avatar}",
+                                            alt: "{author_name}",
+                                        }
                                     } else {
                                         "{author_initial}"
                                     }
@@ -472,24 +483,32 @@ pub fn PostDetail(post_id: FeedPartition) -> Element {
 /// Render "Published {N} hours ago · {M} min read" from a unix-ms timestamp.
 /// Degrades gracefully when `created_at` is 0 (fresh draft) by showing the
 /// read estimate only.
-fn format_published(created_at_ms: i64, read_minutes: u32) -> String {
+fn format_published(
+    tr: &PostDetailSyndicatedTranslate,
+    created_at_ms: i64,
+    read_minutes: u32,
+) -> String {
     let now_ms = chrono::Utc::now().timestamp_millis();
     let delta_sec = (now_ms - created_at_ms).max(0) / 1000;
     let when = if created_at_ms <= 0 {
         String::new()
     } else if delta_sec < 60 {
-        "Published just now".to_string()
+        tr.published_just_now.to_string()
     } else if delta_sec < 60 * 60 {
-        format!("Published {}m ago", delta_sec / 60)
+        tr.published_minutes_ago
+            .replace("{n}", &(delta_sec / 60).to_string())
     } else if delta_sec < 24 * 60 * 60 {
-        format!("Published {}h ago", delta_sec / 3_600)
+        tr.published_hours_ago
+            .replace("{n}", &(delta_sec / 3_600).to_string())
     } else {
-        format!("Published {}d ago", delta_sec / 86_400)
+        tr.published_days_ago
+            .replace("{n}", &(delta_sec / 86_400).to_string())
     };
+    let read = tr.min_read.replace("{n}", &read_minutes.to_string());
     if when.is_empty() {
-        format!("{read_minutes} min read")
+        read
     } else {
-        format!("{when} · {read_minutes} min read")
+        format!("{when} · {read}")
     }
 }
 

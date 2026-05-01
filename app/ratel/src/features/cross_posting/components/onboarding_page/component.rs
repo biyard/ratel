@@ -67,7 +67,7 @@ pub fn OnboardingPage() -> Element {
     };
 
     rsx! {
-        SeoMeta { title: "Connect your networks · Ratel" }
+        SeoMeta { title: "{t.seo_title}" }
 
         BlueskyConnectModal {
             open: modal_open,
@@ -152,7 +152,7 @@ pub fn OnboardingPage() -> Element {
                                     if let Some(c) = bsky.as_ref() {
                                         if c.status == ConnectionStatus::Connected {
                                             strong { "@{c.external_handle}" }
-                                            " — AT Protocol · 300 chars"
+                                            "{t.bluesky_meta_connected_suffix}"
                                         } else {
                                             "{t.bluesky_meta_default}"
                                         }
@@ -173,7 +173,7 @@ pub fn OnboardingPage() -> Element {
                                             "stroke-linejoin": "round",
                                             polyline { "points": "20 6 9 17 4 12" }
                                         }
-                                        "Connected"
+                                        "{t.status_connected}"
                                     }
                                 } else {
                                     button {
@@ -190,7 +190,7 @@ pub fn OnboardingPage() -> Element {
                                             polyline { "points": "5 12 19 12" }
                                             polyline { "points": "12 5 19 12 12 19" }
                                         }
-                                        "Connect"
+                                        "{t.btn_connect}"
                                     }
                                 }
                             }

@@ -35253,6 +35253,7 @@ body.comments-panel-resizing {
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+.crosspost-head__title-icon { color: var(--accent-teal); }
 .crosspost-head__sub {
   font-size: 12.5px;
   color: var(--text-muted);

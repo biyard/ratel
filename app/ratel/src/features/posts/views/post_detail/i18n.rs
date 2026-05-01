@@ -70,6 +70,13 @@ translate! {
     subscribe_cta_primary: { en: "Create free account", ko: "무료 계정 만들기" },
     subscribe_cta_secondary: { en: "I have an account", ko: "이미 계정이 있어요" },
 
+    // format_published — `{n}` is replaced at call site.
+    published_just_now: { en: "Published just now", ko: "방금 발행됨" },
+    published_minutes_ago: { en: "Published {n}m ago", ko: "{n}분 전 발행" },
+    published_hours_ago: { en: "Published {n}h ago", ko: "{n}시간 전 발행" },
+    published_days_ago: { en: "Published {n}d ago", ko: "{n}일 전 발행" },
+    min_read: { en: "{n} min read", ko: "{n}분 읽기" },
+
     // Sidebar — Essence House card.
     house_card_eyebrow: { en: "Essence House", ko: "에센스 하우스" },
     house_card_hero_title_suffix: { en: "'s House", ko: "님의 하우스" },

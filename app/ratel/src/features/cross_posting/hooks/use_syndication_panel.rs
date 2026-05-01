@@ -35,7 +35,7 @@ pub struct UseSyndicationPanel {
     /// Stored as a Signal so the controller stays `Copy` and `retry`
     /// can read the current id without taking ownership of the original
     /// `FeedPartition` prop.
-    post_id: Signal<String>,
+    post_id: Signal<FeedPartition>,
 }
 
 impl UseSyndicationPanel {
@@ -44,7 +44,7 @@ impl UseSyndicationPanel {
     /// successful retry flips the row to `Pending` and back to `Published`
     /// without any further client coordination.
     pub async fn retry(&mut self, platform: SocialPlatform) -> crate::common::Result<()> {
-        retry_job_handler(FeedPartition((self.post_id)()), platform).await?;
+        retry_job_handler((self.post_id)(), platform).await?;
         self.panel.restart();
         Ok(())
     }
@@ -54,8 +54,10 @@ impl UseSyndicationPanel {
 pub fn use_syndication_panel(
     post_id: FeedPartition,
 ) -> std::result::Result<UseSyndicationPanel, RenderError> {
-    let post_id_str = post_id.0.clone();
-    let post_id_signal = use_signal(move || post_id_str.clone());
+    let post_id_signal = use_signal({
+        let post_id = post_id.clone();
+        move || post_id.clone()
+    });
 
     let panel = use_loader(move || {
         let post_id = post_id.clone();

@@ -1043,17 +1043,16 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
 
 #[component]
 fn DiscardDraftConfirm(on_cancel: EventHandler<()>) -> Element {
+    let tr: PostEditTranslate = use_translate();
     rsx! {
-        div { class: "flex flex-col gap-4 p-6 rounded-xl min-w-[320px] bg-card-bg",
-            h3 { class: "text-base font-semibold text-text-primary", "Discard this draft?" }
-            p { class: "text-sm text-foreground-muted",
-                "Discarding will permanently remove the current draft. This action cannot be undone."
-            }
-            div { class: "flex gap-2 justify-end",
-                button {
-                    class: "py-2 px-4 text-sm rounded-md border border-border text-text-primary",
+        Card { class: "gap-4 p-6 min-w-[320px]",
+            h3 { class: "text-base font-semibold text-text-primary", "{tr.discard_confirm_title}" }
+            p { class: "text-sm text-foreground-muted", "{tr.discard_confirm_body}" }
+            Row { main_axis_align: MainAxisAlign::End, class: "gap-2",
+                Button {
+                    style: ButtonStyle::Outline,
                     onclick: move |_| on_cancel.call(()),
-                    "Cancel"
+                    "{tr.cancel}"
                 }
             }
         }
