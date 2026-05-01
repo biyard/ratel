@@ -1,1 +1,2 @@
-// Frontend hooks populated by Task 34 (UseCharacter).
+mod use_character;
+pub use use_character::*;
