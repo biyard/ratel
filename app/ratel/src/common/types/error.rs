@@ -332,6 +332,10 @@ pub enum Error {
     #[translate(from)]
     SubTeam(#[from] crate::features::sub_team::types::SubTeamError),
 
+    #[error("{0}")]
+    #[translate(from)]
+    CrossPosting(#[from] crate::features::cross_posting::types::CrossPostingError),
+
     // Unit variants for common errors
     #[error("Internal error")]
     #[translate(
