@@ -1,1 +1,2 @@
-// DTOs populated by Task 17.
+mod character_response;
+pub use character_response::*;
