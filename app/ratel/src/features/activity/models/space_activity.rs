@@ -26,7 +26,8 @@ pub struct SpaceActivity {
 
 #[cfg(feature = "server")]
 impl SpaceActivity {
-    pub fn new(
+    pub async fn new(
+        cli: &aws_sdk_dynamodb::Client,
         space_id: SpacePartition,
         author: AuthorPartition,
         action_id: String,
@@ -38,6 +39,7 @@ impl SpaceActivity {
         user_avatar: String,
     ) -> Self {
         Self::new_with_dedup(
+            cli,
             space_id,
             author,
             action_id.clone(),
@@ -49,9 +51,11 @@ impl SpaceActivity {
             user_avatar,
             action_id,
         )
+        .await
     }
 
-    pub fn new_with_dedup(
+    pub async fn new_with_dedup(
+        cli: &aws_sdk_dynamodb::Client,
         space_id: SpacePartition,
         author: AuthorPartition,
         action_id: String,
@@ -65,8 +69,30 @@ impl SpaceActivity {
     ) -> Self {
         let now = crate::common::utils::time::get_now_timestamp_millis();
         let space_pk: Partition = space_id.clone().into();
-        let total_score = base_score + additional_score;
         let sk = EntityType::SpaceActivity(format!("{}#{}", dedup_key, now));
+
+        // Apply the user's Ranker skill multiplier to `additional_score` only;
+        // `base_score` is always unboosted. If the skill row read fails for any
+        // reason, fall back to permille=1000 (no boost) — never fail the insert.
+        let mult_permille = {
+            use crate::features::character::leveling::multiplier_permille;
+            use crate::features::character::models::CharacterSkill;
+            use crate::features::character::types::SkillId;
+            let user_pk: Partition = match author.clone() {
+                AuthorPartition::User(id) => Partition::User(id),
+                AuthorPartition::Team(id) => Partition::Team(id),
+                AuthorPartition::Unknown => Partition::None,
+            };
+            CharacterSkill::level_or_zero(cli, &user_pk, SkillId::Ranker)
+                .await
+                .map(multiplier_permille)
+                .unwrap_or(1000)
+        };
+        let boosted_additional = crate::features::character::leveling::apply_permille(
+            additional_score,
+            mult_permille,
+        );
+        let total_score = base_score + boosted_additional;
 
         Self {
             pk: CompositePartition(space_id, author.clone()),
@@ -80,7 +106,7 @@ impl SpaceActivity {
             action_type,
             data,
             base_score,
-            additional_score,
+            additional_score: boosted_additional,
             total_score,
         }
     }
