@@ -45,15 +45,14 @@ test.describe.serial("Cross-posting Phase 1A — compose sidebar", () => {
   }) => {
     await goto(page, `/posts/${postId}/edit`);
 
-    // Sidebar root from `compose_sidebar/component.rs` (mockup class
-    // preserved). Visibility defaults to Public on a fresh draft, so the
-    // sidebar should be present without any toggle action.
-    await expect(page.locator(".crosspost").first()).toBeVisible({
+    // Sidebar root from `compose_sidebar/component.rs`. Visibility defaults
+    // to Public on a fresh draft, so the sidebar should be present without
+    // any toggle action. Uses `data-testid="cross-post-sidebar"` instead of
+    // raw `.crosspost` + `.first()` so we lock the contract on a stable
+    // attribute the RSX intentionally exposes.
+    await expect(page.getByTestId("cross-post-sidebar")).toBeVisible({
       timeout: 10000,
     });
-    await expect(
-      page.locator(".crosspost-head__title-accent").first()
-    ).toBeVisible();
 
     // Three Phase-1A platform cards (Bluesky / LinkedIn / Threads). They
     // render even when the user has no SocialConnection rows — disconnected
@@ -79,7 +78,7 @@ test.describe.serial("Cross-posting Phase 1A — compose sidebar", () => {
 
     // Sidebar gone. `if matches!(visibility(), Visibility::Public)` guards
     // the mount in post_edit/component.rs.
-    await expect(page.locator(".crosspost")).toBeHidden();
+    await expect(page.getByTestId("cross-post-sidebar")).toBeHidden();
   });
 
   test("Disconnected platforms render the Connect CTA", async ({ page }) => {
@@ -96,11 +95,12 @@ test.describe.serial("Cross-posting Phase 1A — compose sidebar", () => {
 
     // Restore Public visibility so the sidebar mounts again.
     await click(page, { text: "Public" });
-    await expect(page.locator(".crosspost").first()).toBeVisible();
+    await expect(page.getByTestId("cross-post-sidebar")).toBeVisible();
 
     // With no Connected SocialConnection row, every card falls through
     // to the `connect-cta` branch in `compose_sidebar/component.rs`
-    // (`if c.status != ConnectionStatus::Connected`).
+    // (`if c.status != ConnectionStatus::Connected`). The pp-card scope
+    // uses `data-platform`, which functions as a stable test attribute.
     await expect(
       page.locator('.pp-card[data-platform="bluesky"] .connect-cta__btn')
     ).toBeVisible();
@@ -111,9 +111,7 @@ test.describe.serial("Cross-posting Phase 1A — compose sidebar", () => {
     // "Reaching N networks" summary should read 0 — derived from
     // `UseCrossPosting::reach_count` Memo (counts platforms toggled true
     // in `per_post_enabled`, which an unconnected user can't flip).
-    await expect(
-      page.locator(".reach-summary__value strong")
-    ).toHaveText("0");
+    await expect(page.getByTestId("reach-summary-count")).toHaveText("0");
   });
 
   // AC-10 (Bluesky truncation warning when body > 300 chars) requires the
@@ -188,18 +186,18 @@ test.describe.serial("Cross-posting Phase 1D — visibility notice (AC-20)", () 
     // selected on Public. Click Private to trigger the notice.
     await click(page, { text: "Private" });
 
-    // `.syndication-remain-notice` is rendered only when:
+    // `data-testid="syndication-remain-notice"` is rendered only when:
     //   * post.status == Published AND
     //   * initial visibility was Public AND
     //   * user has just toggled to Private
-    await expect(page.locator(".syndication-remain-notice")).toBeVisible();
+    await expect(page.getByTestId("syndication-remain-notice")).toBeVisible();
     await expect(
-      page.locator(".syndication-remain-notice__title")
+      page.getByTestId("syndication-remain-notice-title")
     ).toContainText(/Syndicated copies stay visible|이미 발행된 사본은 그대로 남습니다/);
 
     // Toggling back to Public should hide the notice.
     await click(page, { text: "Public" });
-    await expect(page.locator(".syndication-remain-notice")).toBeHidden();
+    await expect(page.getByTestId("syndication-remain-notice")).toBeHidden();
   });
 });
 

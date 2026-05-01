@@ -840,7 +840,10 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                             div {
                                 class: "syndication-remain-notice",
                                 role: "note",
-                                div { class: "syndication-remain-notice__title",
+                                "data-testid": "syndication-remain-notice",
+                                div {
+                                    class: "syndication-remain-notice__title",
+                                    "data-testid": "syndication-remain-notice-title",
                                     "{tr.visibility_syndicated_remain_title}"
                                 }
                                 div { class: "syndication-remain-notice__body",

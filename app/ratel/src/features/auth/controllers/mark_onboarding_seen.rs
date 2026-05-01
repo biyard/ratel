@@ -16,8 +16,10 @@ pub async fn mark_onboarding_seen_handler() -> Result<User> {
         .execute(cli)
         .await?;
 
+    // The updater above succeeded against `user.pk`, so the row must exist;
+    // a `None` re-read here is a should-never-happen DB inconsistency.
     let updated = User::get(cli, user.pk.clone(), Some(EntityType::User))
         .await?
-        .ok_or(Error::NotFound("User not found".into()))?;
+        .ok_or(Error::Internal)?;
     Ok(updated)
 }

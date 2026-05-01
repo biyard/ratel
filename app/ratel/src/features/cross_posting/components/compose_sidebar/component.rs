@@ -56,7 +56,7 @@ pub fn CrossPostSidebar(
         // not to nest `<aside>` for non-tangential content. Mockup class
         // names (`crosspost`, `crosspost-head`, `pp-card`, …) are preserved.
         // CSS lives globally in `app/ratel/assets/main.css` (FOUC convention).
-        div { class: "crosspost",
+        div { class: "crosspost", "data-testid": "cross-post-sidebar",
             div { class: "crosspost-head",
                 span { class: "crosspost-head__eyebrow", "{t.eyebrow}" }
                 h2 { class: "crosspost-head__title",
@@ -96,7 +96,7 @@ pub fn CrossPostSidebar(
                 div { class: "reach-summary__left",
                     span { class: "reach-summary__label", "{t.reaching}" }
                     span { class: "reach-summary__value",
-                        strong { "{reach_count()}" }
+                        strong { "data-testid": "reach-summary-count", "{reach_count()}" }
                         " {t.networks_suffix}"
                     }
                 }

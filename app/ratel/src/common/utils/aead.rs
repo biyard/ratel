@@ -30,6 +30,28 @@
 //! Cargo automatically rebuilds when the value changes. AWS Lambda
 //! runtime does not need a separate env var configured on the function.
 //!
+//! ## Threat model (Phase 1)
+//!
+//! Compile-time embedding means the AES-256 master key lives inside the
+//! shipped Lambda artifact. Anyone with read access to the deployment
+//! bundle (S3 deploy bucket, ECR image, CI artifact, Lambda
+//! `GetFunction` IAM permission) can extract it with `strings` + base64
+//! decode and unseal every `SocialConnection.credential_ciphertext` row
+//! in the table.
+//!
+//! Acceptable for Phase 1 because:
+//! - Deploy artifact + ECR image access is gated to the same IAM
+//!   principals that already have `dynamodb:Query` on the main table —
+//!   the row-level ciphertext is no easier to extract than the key.
+//! - The credentials sealed here (Bluesky app passwords, LinkedIn /
+//!   Threads OAuth tokens) are platform-revocable; rotation cost is
+//!   bounded.
+//! - Roadmap commits to KMS migration before broad production rollout
+//!   (FR-1 #6); see the design doc's "Credential encryption" section.
+//!
+//! **Do NOT** ship to a deployment topology where the artifact is
+//! reachable by principals without DB access until KMS migration lands.
+//!
 //! ## API layers
 //!
 //! - **Low-level**: [`seal_with_key`] / [`open_with_keys`] take explicit
