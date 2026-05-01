@@ -1,34 +1,38 @@
 use crate::common::*;
+use crate::features::auth::hooks::use_user_context;
 use crate::features::cross_posting::hooks::{UseSyndicationPanel, use_syndication_panel};
 use crate::features::cross_posting::i18n::SyndicationPanelTranslate;
-use crate::features::cross_posting::models::JobState;
+use crate::features::cross_posting::models::{ConnectionStatus, JobState};
 use crate::features::cross_posting::types::{SocialPlatform, SyndicationJobView};
 
 /// Author-only post-detail panel.
 ///
-/// Mounts under the post body on the post-detail route. The hook's loader
-/// returns `None` for non-authors (server enforces via session check), so
-/// this component renders a blank fragment in that case — the parent
-/// `post_detail` should still author-gate the mount for efficiency.
+/// Always mounts the full platform matrix (Bluesky / LinkedIn / Threads)
+/// when the parent post is Public, so the author sees a coherent view
+/// straight after publish — no waiting for the async Stage 1 factory to
+/// insert SyndicationJob rows. Each card renders one of four states:
 ///
-/// Status pills, engagement counts, and the Retry CTA all key off the
-/// `SyndicationJobView::state` enum (Pending / Published / Failed / Skipped).
-/// Retry is allowed only on Failed; the back-end re-validates this.
+///   - `Bluesky connected + job exists` — full status card (Pending /
+///     Published / Failed / Skipped) with Retry / View action.
+///   - `Bluesky connected + no job yet` — "Awaiting dispatch" placeholder.
+///     The header refresh button re-fetches when the row arrives.
+///   - `Bluesky not connected` — Connect CTA → Settings → Connections.
+///   - `LinkedIn / Threads` — static "Coming soon" until 1B / 1C ship.
 #[component]
 pub fn SyndicationPanel(post_id: FeedPartition) -> Element {
     let mut sp = use_syndication_panel(post_id)?;
-    let UseSyndicationPanel { panel, .. } = sp;
+    let UseSyndicationPanel {
+        panel, connections, ..
+    } = sp;
     let t: SyndicationPanelTranslate = use_translate();
     let mut toast = use_toast();
+    let user_ctx = use_user_context();
 
     let Some(data) = panel() else {
         return rsx! {};
     };
-
     let jobs = data.jobs;
-    if jobs.is_empty() {
-        return rsx! {};
-    }
+    let conn_list = connections();
 
     let total = jobs.len();
     let total_published = jobs
@@ -37,7 +41,6 @@ pub fn SyndicationPanel(post_id: FeedPartition) -> Element {
         .count();
     let total_failed = jobs.iter().filter(|j| j.state == JobState::Failed).count();
 
-    // Engagement totals (only Published jobs carry counts).
     let total_likes: i32 = jobs
         .iter()
         .filter_map(|j| j.engagement.as_ref().map(|e| e.likes))
@@ -51,15 +54,49 @@ pub fn SyndicationPanel(post_id: FeedPartition) -> Element {
         .filter_map(|j| j.engagement.as_ref().map(|e| e.reposts))
         .sum();
 
+    let bsky_job = jobs
+        .iter()
+        .find(|j| j.platform == SocialPlatform::Bluesky)
+        .cloned();
+    let bsky_connected = conn_list.iter().any(|c| {
+        c.platform == SocialPlatform::Bluesky && c.status == ConnectionStatus::Connected
+    });
+
+    let username = user_ctx
+        .read()
+        .user
+        .as_ref()
+        .map(|u| u.username.clone())
+        .unwrap_or_default();
+
     rsx! {
         section { class: "syn",
             div { class: "syn-head",
                 span { class: "syn-head__title", "{t.title}" }
-                span { class: "syn-head__summary",
-                    strong { "{total_published} of {total}" }
-                    " {t.summary_succeeded}"
-                    if total_failed > 0 {
-                        " · {total_failed} {t.summary_failed_suffix}"
+                if total > 0 {
+                    span { class: "syn-head__summary",
+                        strong { "{total_published} of {total}" }
+                        " {t.summary_succeeded}"
+                        if total_failed > 0 {
+                            " · {total_failed} {t.summary_failed_suffix}"
+                        }
+                    }
+                }
+                button {
+                    class: "syn-head__refresh",
+                    "aria-label": "{t.btn_refresh_aria}",
+                    "data-testid": "syn-refresh",
+                    onclick: move |_| sp.refresh(),
+                    svg {
+                        "viewBox": "0 0 24 24",
+                        "fill": "none",
+                        "stroke": "currentColor",
+                        "stroke-width": "2",
+                        "stroke-linecap": "round",
+                        "stroke-linejoin": "round",
+                        polyline { "points": "23 4 23 10 17 10" }
+                        polyline { "points": "1 20 1 14 7 14" }
+                        path { "d": "M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" }
                     }
                 }
             }
@@ -82,15 +119,130 @@ pub fn SyndicationPanel(post_id: FeedPartition) -> Element {
             }
 
             div { class: "syn-list",
-                for job in jobs {
+                // Bluesky — three sub-states based on (connected, job).
+                if let Some(job) = bsky_job {
                     SyndicationCard {
-                        key: "{job.platform}",
-                        job: job.clone(),
+                        job,
                         on_retry: move |p: SocialPlatform| async move {
                             if let Err(e) = sp.retry(p).await {
                                 toast.error(e);
                             }
                         },
+                    }
+                } else if bsky_connected {
+                    AwaitingDispatchCard { platform: SocialPlatform::Bluesky }
+                } else {
+                    NotConnectedCard {
+                        platform: SocialPlatform::Bluesky,
+                        username: username.clone(),
+                    }
+                }
+                ComingSoonCard {
+                    platform: SocialPlatform::LinkedIn,
+                    hint: t.panel_linkedin_coming_soon_hint,
+                }
+                ComingSoonCard {
+                    platform: SocialPlatform::Threads,
+                    hint: t.panel_threads_coming_soon_hint,
+                }
+            }
+        }
+    }
+}
+
+/// Connected-but-no-job-yet card. Stage 1 factory enqueues
+/// SyndicationJob rows asynchronously after publish (~1-3s); this card
+/// fills the gap so the panel never renders empty after a Public publish.
+#[component]
+fn AwaitingDispatchCard(platform: SocialPlatform) -> Element {
+    let t: SyndicationPanelTranslate = use_translate();
+    let logo_class = match platform {
+        SocialPlatform::Bluesky => "syn-logo syn-logo--bsky",
+        SocialPlatform::LinkedIn => "syn-logo syn-logo--linkedin",
+        SocialPlatform::Threads => "syn-logo syn-logo--threads",
+    };
+    rsx! {
+        article { class: "syn-card", "data-status": "awaiting",
+            div { class: "syn-card__body",
+                span { class: "{logo_class}",
+                    PlatformLogo { platform }
+                }
+                div { class: "syn-card__main",
+                    div { class: "syn-card__name-row",
+                        span { class: "syn-card__name", "{platform.display_name()}" }
+                        span { class: "status-pill status-pill--pending", "{t.awaiting_dispatch}" }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Bluesky-not-connected card. Surfaces a Connect CTA pointing at
+/// Settings → Connections so the author can hook up the platform without
+/// leaving post-detail context.
+#[component]
+fn NotConnectedCard(platform: SocialPlatform, username: String) -> Element {
+    let t: SyndicationPanelTranslate = use_translate();
+    let logo_class = match platform {
+        SocialPlatform::Bluesky => "syn-logo syn-logo--bsky",
+        SocialPlatform::LinkedIn => "syn-logo syn-logo--linkedin",
+        SocialPlatform::Threads => "syn-logo syn-logo--threads",
+    };
+    rsx! {
+        article { class: "syn-card", "data-status": "not-connected",
+            div { class: "syn-card__body",
+                span { class: "{logo_class}",
+                    PlatformLogo { platform }
+                }
+                div { class: "syn-card__main",
+                    div { class: "syn-card__name-row",
+                        span { class: "syn-card__name", "{platform.display_name()}" }
+                        span { class: "status-pill status-pill--off", "{t.not_connected}" }
+                    }
+                }
+                div { class: "syn-card__actions",
+                    Link {
+                        to: crate::Route::UserSettingsConnectionsPage {
+                            username: username.clone(),
+                        },
+                        class: "mini-btn mini-btn--connect",
+                        "data-testid": "syn-connect-bluesky",
+                        "{t.btn_connect_bluesky}"
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Static placeholder for platforms not yet implemented (LinkedIn 1B,
+/// Threads 1C). Mirrors the compose-sidebar's "Coming soon" affordance
+/// so the matrix stays consistent across the two surfaces.
+#[component]
+fn ComingSoonCard(platform: SocialPlatform, hint: &'static str) -> Element {
+    let t: SyndicationPanelTranslate = use_translate();
+    let logo_class = match platform {
+        SocialPlatform::Bluesky => "syn-logo syn-logo--bsky",
+        SocialPlatform::LinkedIn => "syn-logo syn-logo--linkedin",
+        SocialPlatform::Threads => "syn-logo syn-logo--threads",
+    };
+    rsx! {
+        article {
+            class: "syn-card",
+            "data-status": "coming-soon",
+            "data-soon": "true",
+            div { class: "syn-card__body",
+                span { class: "{logo_class}",
+                    PlatformLogo { platform }
+                }
+                div { class: "syn-card__main",
+                    div { class: "syn-card__name-row",
+                        span { class: "syn-card__name", "{platform.display_name()}" }
+                        span { class: "status-pill status-pill--soon", "{t.panel_coming_soon}" }
+                    }
+                    div { class: "syn-card__sub",
+                        span { class: "syn-card__sub-item", "{hint}" }
                     }
                 }
             }
