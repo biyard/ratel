@@ -341,6 +341,15 @@ test.describe
       await click(page, { text: "Finished Sign-up" });
       await waitPopup(page, { visible: false });
 
+      // FR-2 #8 — fresh signups land on /onboarding/connections
+      // (cross-posting post-signup interstitial). Skip it so the test
+      // can return to the space-driven flow and find btn-participate.
+      await expect(page).toHaveURL(/\/onboarding\/connections/, {
+        timeout: 10000,
+      });
+      await click(page, { testId: "onboarding-skip" });
+      await goto(page, spaceUrl);
+
       await page.getByTestId("btn-verify").click({ force: true });
       await page.waitForLoadState();
 
