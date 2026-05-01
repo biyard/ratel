@@ -52,7 +52,7 @@ Numbered, testable. Each SHALL be verifiable by an automated test or a documente
 1. The system SHALL maintain a per-user **Character XP** counter that is the **sum of `SpaceScore.total_score` across every space the user has ever participated in**.
 2. When a `SpaceScore` row is created or updated for a user (currently driven by the DynamoDB Stream → `aggregate_score` pipeline), the system SHALL increment the same user's Character XP by the **delta** (`new_total_score − old_total_score`), never by the absolute value.
 3. The Character XP increment SHALL run inside the same stream-handler dispatch as `aggregate_score`, so a user's per-space rank and account-level progression update on the same event.
-4. The system SHALL derive **Character Level** from Character XP via a fixed quadratic curve: `xp_required(L→L+1) = round(C · L²)` where `C = 600`. Levels start at 1. The cubic curve from earlier drafts grew so steep that even L50 was multi-decade for a typical participant; quadratic with `C = 600` calibrates against the observed 10-day window (avg participant ≈ 360k SpaceXP, top ≈ 650k) so that an avg participant reaches L10 in ~5 days, L30 in ~5 months, and the max-one-skill milestone of L45 in ~17 months. (Tunable single constant; see §"Open questions".)
+4. The system SHALL derive **Character Level** from Character XP via a fixed quadratic curve: `xp_required(L→L+1) = round(C · L²)` where `C = 220`. Levels start at 1. The constant `C = 220` is calibrated against the observed 10-day window (avg participant ≈ 360k SpaceXP/10d ≈ 36k/day, top ≈ 65k/day) and the PO target that **one skill must be maxable within 6 months for an avg participant**. Under this curve an avg participant reaches L10 in ~2.4 days, L30 in ~1.7 months, and the max-one-skill milestone of L45 in **~180 days (6 months)**. A top participant reaches L45 in ~99 days (~3.3 months). (Tunable single constant; see §"Open questions".)
 5. The system SHALL grant **Skill Points** on each level-up. Total skill points granted at level `L` SHALL be `L` (1 SP per level, including the first). With this rate, a user can buy a single L1 skill at character level 5, two L1 skills at level 10, and reaches the endgame of one fully maxed skill at level 45 (cost 45 SP under the new max-skill-level cap). (Note: this is the *granting* curve. The *spending* curve is separate — see §"Skill points: spending". See also Q7.)
 6. Character XP and the derived Level / Skill Point totals SHALL be **idempotent** on stream replay: re-processing the same `SpaceScore` MODIFY event SHALL NOT double-count XP. (Implementation: store last-seen `total_score` per (user, space) and compute delta from stored value.)
 
@@ -70,6 +70,19 @@ Numbered, testable. Each SHALL be verifiable by an automated test or a documente
 13. The multiplier SHALL be visible to the user in the reward claim breakdown ("base 10,000 + 25% Money Tree = 12,500").
 14. The multiplier SHALL NOT apply to the **creator's owner-bonus** payout. Money Tree affects only the participant's primary payout.
 
+**Per-level benefit table** (with all timing under the C = 220 quadratic curve):
+
+| Skill Level | Multiplier (RatelPoint) | SP cost (this lv) | SP total | Char level needed | Avg time | Top time |
+|---|---|---|---|---|---|---|
+| L1 | +5%  | 5  | 5  | L5  | ~5 h     | ~3 h     |
+| L2 | +10% | 6  | 11 | L11 | ~2.4 d   | ~1.3 d   |
+| L3 | +15% | 7  | 18 | L18 | ~11 d    | ~6 d     |
+| L4 | +20% | 8  | 26 | L26 | ~34 d    | ~19 d    |
+| L5 | +25% | 9  | 35 | L35 | ~84 d (~2.8 mo) | ~46 d (~1.5 mo) |
+| **L6** | **+30%** | **10** | **45** | **L45** | **~180 d (6 mo)** | **~99 d (~3.3 mo)** |
+
+Worked example: a participant at Money Tree L4 claiming a `space_reward.point × credits = 10,000` payout receives `10,000 × 1.20 = 12,000` RatelPoint; the breakdown UI shows `base 10,000 + 20% Money Tree = 12,000`.
+
 ### Skill: Ranker (XP earning multiplier)
 
 15. The system SHALL apply a **Ranker multiplier** to the `total_score` of every new `SpaceActivity` row the user records.
@@ -77,6 +90,19 @@ Numbered, testable. Each SHALL be verifiable by an automated test or a documente
 17. The multiplier SHALL apply to the activity's `additional_score` portion only, leaving `base_score` unchanged so that *which actions are valuable* remains a creator-side decision and Ranker only changes *how much* a participant earns from the same action set.
    *(Recommended — see §Q1 below.)*
 18. Ranker SHALL NOT apply retroactively to existing `SpaceScore.total_score` values.
+
+**Per-level benefit table** (timing identical to Money Tree — same SP costs, same char-level prerequisites):
+
+| Skill Level | Multiplier (additional_score) | SP cost (this lv) | SP total | Char level needed | Avg time | Top time |
+|---|---|---|---|---|---|---|
+| L1 | +5%  | 5  | 5  | L5  | ~5 h     | ~3 h     |
+| L2 | +10% | 6  | 11 | L11 | ~2.4 d   | ~1.3 d   |
+| L3 | +15% | 7  | 18 | L18 | ~11 d    | ~6 d     |
+| L4 | +20% | 8  | 26 | L26 | ~34 d    | ~19 d    |
+| L5 | +25% | 9  | 35 | L35 | ~84 d (~2.8 mo) | ~46 d (~1.5 mo) |
+| **L6** | **+30%** | **10** | **45** | **L45** | **~180 d (6 mo)** | **~99 d (~3.3 mo)** |
+
+Worked example: an action with `base_score = 100` and `additional_score = 50` recorded by a participant at Ranker L4 yields `total_score = 100 + 50 × 1.20 = 160`. That `total_score` flows into both `SpaceScore.total_score` (per-space ranking) and Character XP delta (account-level progression), so Ranker compounds: more SpaceXP per action → faster character leveling → more SP for the next skill investment.
 
 ### Backfill
 
@@ -119,10 +145,39 @@ Numbered, testable. Each SHALL be verifiable by an automated test or a documente
 
 ## Skills v2 (deferred — not in MVP scope)
 
-Documented here so the data model accommodates them without rework.
+Documented here so the data model accommodates them without rework. Both v2 skills follow the same SP-cost curve and max level (6) as MVP skills.
 
-- **Influencer (creator-side, owned spaces).** Per skill level, lower the `MIN_PARTICIPANTS_FOR_HOT` threshold for spaces *owned by this user* (currently `10`, see `app/ratel/src/features/spaces/space_common/services/space_fanout.rs:42`) by 1 per level, floored at 5. Effect: easier for a high-Influencer user's spaces to surface in the Hot tab.
-- **Sweeper / 싹쓸이 (creator-side, owned spaces).** Per skill level, increase the **owner bonus** that the space creator receives whenever a participant claims a reward in their space, by `5% × skill_level` on top of the existing 10% owner bonus. Effect: a maxed Sweeper takes 60% of every participant payout instead of 10%. (Cap and exact curve to be confirmed; see Open Question 6.)
+### Influencer (creator-side, owned spaces)
+
+Per skill level, lower the `MIN_PARTICIPANTS_FOR_HOT` threshold for spaces *owned by this user* (currently `10`, see `app/ratel/src/features/spaces/space_common/services/space_fanout.rs:42`). Lower threshold = easier for the user's spaces to surface in the Hot tab.
+
+| Skill Level | MIN_PARTICIPANTS_FOR_HOT (own spaces) | SP cost | SP total | Char level needed |
+|---|---|---|---|---|
+| L0 (default) | 10 | — | — | — |
+| L1 | 9  | 5  | 5  | L5 |
+| L2 | 8  | 6  | 11 | L11 |
+| L3 | 7  | 7  | 18 | L18 |
+| L4 | 6  | 8  | 26 | L26 |
+| L5 | 5  | 9  | 35 | L35 |
+| L6 | 4  | 10 | 45 | L45 |
+
+Floor of 4 means a maxed Influencer can launch a space and surface in Hot with only 4 participants, vs. the global 10. Spaces owned by a non-Influencer continue to use the global threshold.
+
+### Sweeper / 싹쓸이 (creator-side, owned spaces)
+
+Per skill level, increase the **owner bonus** that the space creator receives whenever a participant claims a reward in their space, by `5% × skill_level` on top of the existing 10% owner bonus.
+
+| Skill Level | Owner-bonus rate (per participant claim in own space) | SP cost | SP total | Char level needed |
+|---|---|---|---|---|
+| L0 (default) | 10%      | — | — | — |
+| L1 | 15% | 5  | 5  | L5 |
+| L2 | 20% | 6  | 11 | L11 |
+| L3 | 25% | 7  | 18 | L18 |
+| L4 | 30% | 8  | 26 | L26 |
+| L5 | 35% | 9  | 35 | L35 |
+| L6 | 40% | 10 | 45 | L45 |
+
+Worked example: a maxed Sweeper hosts a space; a participant claims a 10,000-point reward; the participant receives 10,000 (or boosted by their own Money Tree), and the creator receives an extra 4,000 owner bonus instead of the default 1,000.
 
 The data model below stores skills as a generic `(skill_id, level)` map, so adding Influencer/Sweeper later is purely additive.
 
@@ -151,7 +206,7 @@ These are the items we want PO sign-off on before Stage 2 design starts. Each li
    - **PO override would be:** hidden from public view (only on `/me/character`).
 
 6. **(Q6) Sweeper cap.**
-   - **Recommended: cap owner-bonus at 60% total (10% base + 5% per level × 10 levels = +50%, total 60%).** Beyond that the participant payout starts to feel hollowed out.
+   - **Recommended: cap owner-bonus at 40% total (10% base + 5% per level × 6 levels = +30%, total 40%).** Updated from earlier 60% target after the max-skill-level was reduced from 10 to 6 to hit the 6-month one-skill-max goal.
    - This is v2 territory — answer is not blocking MVP, but please confirm direction.
 
 7. **(Q7) SP grant rate per character level.**
@@ -165,12 +220,12 @@ These are the items we want PO sign-off on before Stage 2 design starts. Each li
    - **PO override would be:** larger grant if telemetry shows the early game feels too gated.
 
 8. **(Q8) XP curve steepness and shape.**
-   - **Decided: quadratic `C · L²` with `C = 600`.** PO directive — original cubic `C · L³` made even L50 a multi-decade goal for an avg participant. Quadratic flattens the late-game tail enough that one-skill-max (L45) is a year-and-a-half goal for an avg participant and ~9 months for a top participant. See worked-numbers table in §"Leveling math" of the design doc.
-   - **PO override would be:** raise to `C = 900` (slower) or drop to `C = 400` (faster) after first-week telemetry. The shape (quadratic) is the bigger lever; the multiplier `C` is fine-tuning.
+   - **Decided: quadratic `C · L²` with `C = 220`.** PO directive — one skill must be maxable in **≤ 6 months for an avg participant**. With max-skill at L45 (Q9) and avg activity ≈ 36k XP/day, the calibration is `cumulative_xp(45) ≈ 36k × 180 → C ≈ 220`. Earlier draft used `C = 600`, which put L45 at ~17 months. See worked-numbers table in §"Leveling math" of the design doc.
+   - **PO override would be:** raise to `C = 300` (max-skill in ~8 months) or drop to `C = 150` (max-skill in ~4 months) after first-week telemetry.
 
 9. **(Q9) Max skill level.**
-   - **Decided: 6 (down from 10).** PO directive — paired with the L50-target endgame. Triangular cost (5+n) for n=0..5 gives total 45 SP to max one skill. Multiplier cap stays at +5%/lv → +30% at level 6.
-   - **PO override would be:** keep max level 10 (cap +50%) if the +30% endgame multiplier feels underwhelming after first players reach it.
+   - **Decided: 6 (down from 10).** PO directive — paired with the 6-month one-skill-max target. Triangular cost (5+n) for n=0..5 gives total 45 SP to max one skill. Multiplier cap stays at +5%/lv → +30% at level 6.
+   - **PO override would be:** keep max level 10 (cap +50%) if the +30% endgame multiplier feels underwhelming after first players reach it. Note: raising max level requires re-tuning `C` to keep the 6-month one-skill-max goal.
 
 ## References
 

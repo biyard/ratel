@@ -147,7 +147,7 @@ Character XP / Skills are always read by `(user_pk, *)` — pure pk-prefix looku
 ## 4. Leveling math
 
 ```
-xp_required(L→L+1)     = round(C · L²)               where C = 600
+xp_required(L→L+1)     = round(C · L²)               where C = 220
 total_xp_at_level(L)   = C · (L−1) · L · (2L−1) / 6  (closed form)
 sp_granted_at_level(L) = L                           (1 SP per level)
 
@@ -156,32 +156,35 @@ total_to_max(skill)    = sum of skill_cost(0..5)     = 5+6+7+8+9+10 = 45
 max_skill_level        = 6                           (cap multiplier +30% at L6)
 ```
 
-The shape is **quadratic** (was cubic in earlier drafts). The cubic was so steep that even L50 was decades for the avg participant; quadratic flattens the late-game tail. `C = 600` is calibrated against the observed 10-day activity window (avg participant ≈ 360k SpaceXP, top participants ≈ 650k). See Q7/Q8/Q9 in the roadmap spec.
+The shape is **quadratic** (was cubic in earlier drafts). `C = 220` is calibrated to hit the PO target *"one skill maxable in 6 months for an avg participant"*: with max-skill at L45 and avg activity ≈ 36k XP/day, `cumulative_xp(45) ≈ 36k × 180 → C ≈ 220`. See Q8/Q9 in the roadmap spec.
 
-**Worked numbers** (`C = 600`, quadratic curve, SP = `L`, avg ≈ 36k XP/day, top ≈ 65k XP/day):
+**Worked numbers** (`C = 220`, quadratic curve, SP = `L`, avg ≈ 36k XP/day, top ≈ 65k XP/day):
 
 | Char Level | Cumulative XP | Time (avg / top) | Total SP | Affordable skill build |
 |---|---|---|---|---|
-| L1  | 0           | day 0           | 1   | — (need 5 SP for first skill) |
-| L5  | 18,000      | <1 day / <1 day | 5   | one skill at L1 (5 SP) |
-| L10 | 171,000     | ~5 d / ~3 d     | 10  | both skills at L1 (10 SP) |
-| L16 | 754,800     | ~3 w / ~12 d    | 16  | MoneyTree L2 + Ranker L1 (5+6+5 = 16 SP) |
-| L20 | 1,482,000   | ~6 w / ~3 w     | 20  | both skills at L2 (5+6+5+6 = 22 SP — needs L22) |
-| L22 | 1,981,200   | ~7.5 w / ~4 w   | 22  | both skills at L2 (22 SP) |
-| L30 | 5,133,000   | ~5 mo / ~2.5 mo | 30  | one skill at L4 (5+6+7+8 = 26 SP), 4 SP spare |
-| L36 | 9,234,000   | ~8.5 mo / ~5 mo | 36  | both skills at L3 (5+6+7+5+6+7 = 36 SP) ✓ |
-| L45 | 18,216,000  | ~17 mo / ~9 mo  | 45  | **one skill maxed at L6 (45 SP)** ← MVP endgame |
-| L50 | 24,255,000  | ~22 mo / ~12 mo | 50  | one maxed + the other at L1 (45+5 = 50 SP) |
-| L75 | 82,769,250  | ~6.3 yr / ~3.5 yr | 75 | one maxed + other at L4 (45+26 = 71 SP), 4 spare |
-| L90 | 143,040,750 | ~11 yr / ~6 yr  | 90  | **both skills maxed (45+45 = 90 SP)** ← true endgame |
+| L1  | 0          | day 0              | 1   | — (need 5 SP for first skill) |
+| L5  | 6,600      | ~4 h / ~2 h        | 5   | one skill at L1 (5 SP) |
+| L10 | 62,700     | ~1.7 d / ~1 d      | 10  | both skills at L1 (10 SP) |
+| L11 | 84,700     | ~2.4 d / ~1.3 d    | 11  | one skill at L2 (5+6 = 11 SP) |
+| L16 | 272,800    | ~7.6 d / ~4.2 d    | 16  | MoneyTree L2 + Ranker L1 (5+6+5 = 16 SP) |
+| L18 | 392,700    | ~11 d / ~6 d       | 18  | one skill at L3 (5+6+7 = 18 SP) |
+| L22 | 728,420    | ~20 d / ~11 d      | 22  | both skills at L2 (22 SP) |
+| L26 | 1,215,500  | ~34 d / ~19 d      | 26  | one skill at L4 (26 SP) |
+| L30 | 1,882,100  | ~52 d (~1.7 mo) / ~29 d | 30 | both at L3 + spare (36 SP needed — close, hits at L36) |
+| L35 | 3,010,700  | ~84 d (~2.8 mo) / ~46 d | 35 | one skill at L5 (35 SP) |
+| L36 | 3,280,200  | ~91 d (~3 mo) / ~50 d   | 36 | both skills at L3 (36 SP) ✓ |
+| **L45** | **6,461,400** | **~180 d (6 mo) / ~99 d (~3.3 mo)** | **45** | **one skill maxed at L6 (45 SP)** ← MVP endgame |
+| L50 | 8,893,500  | ~247 d (~8 mo) / ~137 d | 50  | one maxed + the other at L1 (45+5 = 50 SP) |
+| L75 | 30,321,500 | ~2.3 yr / ~1.3 yr      | 75  | one maxed + other at L4 (45+26 = 71 SP), 4 spare |
+| **L90** | **52,572,300** | **~4 yr / ~2.2 yr**   | **90** | **both skills maxed (45+45 = 90 SP)** ← true endgame |
 
-Reading the table: a typical user gets the first skill in under a day, both skills at L1 inside a week, both at L2 in ~2 months, max one skill in ~17 months. A top participant moves through these milestones at roughly 55% of the avg-participant time.
+Reading the table: an avg participant gets their first skill at L1 in ~4 hours, both skills at L1 by day 2, both at L2 in ~3 weeks, both at L3 in ~3 months, **one skill maxed at L6 in 6 months**. A top participant hits each milestone in roughly 55% of the avg-participant time, so they max one skill in ~3.3 months.
 
 Tuning levers (single constants in `app/ratel/src/features/character/leveling.rs`):
-- `C` (XP curve scale) — dial after first-week telemetry. `C = 400` is a faster early-mid game, `C = 900` is a slower one.
-- Curve **shape** (quadratic vs. cubic) — bigger lever than `C`; switching back to cubic effectively shuts off the late game.
+- `C` (XP curve scale) — dial after first-week telemetry. `C = 150` makes one-skill-max ~4 months for avg; `C = 300` makes it ~8 months.
+- Curve **shape** (quadratic vs. cubic) — bigger lever than `C`; cubic shuts off the late game.
 - SP-per-level (currently `1`) — dial if early gating feels too tight.
-- Per-skill `max_level` (currently `6`) and triangular base (`5`) — `max_level = 10` brings back +50% cap; `max_level = 4` brings cost-to-max down to 26 SP for a much faster endgame.
+- Per-skill `max_level` (currently `6`) and triangular base (`5`) — `max_level = 10` brings cap to +50% and cost-to-max to 95 SP, requiring `C` to drop to ~105 to keep the 6-month goal.
 
 ## 5. Event flow detail
 
@@ -442,7 +445,7 @@ Roughly the order Stage 3 would execute, per `.claude/rules/workflows/develop-a-
 | Q5 | Public level visibility | yes, level only | yes |
 | Q6 | Sweeper cap (v2) | +50% / 60% total | yes (v2) |
 | Q7 | SP grant rate per level | **1 SP/level** (PO directive — long endgame) | yes |
-| Q8 | XP curve shape + `C` | **quadratic, `C = 600`** (PO directive — cubic was multi-decade endgame) | yes |
+| Q8 | XP curve shape + `C` | **quadratic, `C = 220`** (PO directive — one-skill-max in 6 months for avg participant) | yes |
 | Q9 | Max skill level | **6** (cost-to-max = 45 SP, multiplier cap +30%) | yes |
 
 If you override any of these, the spec change is one-line in `roadmap/character-xp-skills.md` and (for Q1, Q2, Q5) one paragraph in this doc.
