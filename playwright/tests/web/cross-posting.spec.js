@@ -125,16 +125,20 @@ test.describe.serial("Cross-posting Phase 1A — compose sidebar", () => {
   test("Already-seen onboarding interstitial bounces to home (AC-4b)", async ({
     page,
   }) => {
-    // The seeded test user (set up in `user.auth.setup.js`) has logged in
-    // before, so by the time this test runs they have already gone
-    // through onboarding (or skipped it) at least once. AC-4b: hitting
-    // `/onboarding/connections` directly must NOT pin them on the page —
-    // the OnboardingPage's `use_effect` reads `User.interstitial_seen` and
-    // navigator.replace's home.
-    //
-    // We check the post-redirect URL rather than asserting on home-page
-    // content because the rest of `Index {}` rendering varies by feature
-    // flags / data; the navigator.replace itself is the contract.
+    // `user.auth.setup.js` only signs the seeded user IN; on a fresh DB
+    // their `User.interstitial_seen` is the default `false`, so the
+    // OnboardingPage's `use_effect` would NOT redirect. Flip the flag via
+    // the same handler the page itself calls on Continue/Skip — this is
+    // the AC-4b fixture (a user who has already dismissed it once).
+    const seen = await page.request.post("/api/auth/onboarding-seen");
+    expect(seen.ok(), `seed onboarding-seen: ${await seen.text()}`).toBeTruthy();
+
+    // Hitting `/onboarding/connections` directly must NOT pin the user on
+    // the page — the OnboardingPage's `use_effect` reads
+    // `User.interstitial_seen` and navigator.replace's home. We check the
+    // post-redirect URL rather than asserting on home-page content because
+    // the rest of `Index {}` rendering varies by feature flags / data; the
+    // navigator.replace itself is the contract.
     await goto(page, "/onboarding/connections");
     await expect(page).toHaveURL(/\/$|\/\?/, { timeout: 10000 });
   });

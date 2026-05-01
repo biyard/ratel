@@ -298,7 +298,7 @@ async fn test_retry_job_other_user_rejected() {
 }
 
 #[tokio::test]
-async fn test_retry_job_pending_state_rejected() {
+async fn test_retry_job_pending_state_allowed() {
     let ctx = TestContext::setup().await;
     let post_id = create_draft_post(&ctx, &ctx.test_user.1).await;
     seed_syndication_job(&ctx, &post_id, SocialPlatform::Bluesky, JobState::Pending).await;
@@ -308,13 +308,11 @@ async fn test_retry_job_pending_state_rejected() {
         path: &format!("/api/cross-posting/posts/{}/jobs/bluesky/retry", post_id),
         headers: ctx.test_user.1.clone(),
     };
-    // Only Failed jobs can be retried; Pending ones are already in flight
-    // (FR-7 #44).
-    assert_ne!(
-        status, 200,
-        "retry on Pending must be rejected: {:?}",
-        body
-    );
+    // Per `retry_job_handler`: only `Published` is blocked. `Pending` rows
+    // (e.g. dispatcher Lambda crashed mid-flight, or EventBridge dropped
+    // the event) MUST allow user-initiated retry so the author isn't
+    // dependent on infra recovery.
+    assert_eq!(status, 200, "retry on Pending must succeed: {:?}", body);
 }
 
 #[tokio::test]
