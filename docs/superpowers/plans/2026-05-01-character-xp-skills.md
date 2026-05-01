@@ -2707,19 +2707,629 @@ Before marking the backend plan complete, verify:
 - [ ] `CharacterSkill::find_by_pk_with_sk_prefix` is exposed by `packages/by-macros`. If not, add it as a small helper that issues `Query` with `KeyConditionExpression = "pk = :pk AND begins_with(sk, :prefix)"`. **Do not** fall back to the per-skill loop pattern — the whole point of `list_for_user` is to keep `/api/me/character` at one Query (vs. four GetItems). `tokio::try_join!` of four GetItems is the *worst* fallback (still 4 reads, just parallelized — same DynamoDB cost, more connection overhead).
 - [ ] `m001` backfill writes use `buffer_unordered(16)` not a sequential loop. Verify by inspecting wall-clock time on a seeded test (10 users × 3 spaces should finish in <1s).
 
-## Frontend follow-up (separate plan)
+## Stage 3 frontend (in this plan — Tasks 32–43)
 
-Once this plan is done, write a follow-up plan covering:
+Stage 2 mockups are committed at `app/ratel/assets/design/character-xp-skills/`:
 
-1. Stage 2 HTML mockup at `app/ratel/assets/design/character-xp-skills/` (per `workflows/ui-design-implementation.md`).
-2. Stage 3 RSX conversion (per `workflows/html-to-dioxus.md`):
-   - `UseCharacter` controller hook (`features/character/hooks/use_character.rs`) with `Loader<CharacterResponse>` + `level_up: Action<(SkillId,), CharacterResponse>`.
-   - `CharacterPage` component, `SkillTree`, `SkillCard`.
-   - Reward-breakdown chip in `features/social/pages/user_reward/views/` showing Money Tree bonus.
-   - Profile tab insertion (next to Posts / Spaces / Rewards).
-   - i18n EN+KO.
-3. Playwright e2e at `playwright/tests/web/character-progression.spec.js`:
-   - User votes in poll → `/me/character` shows non-zero XP.
-   - User spends 5 SP on Money Tree → next claim shows boosted amount.
+- `character-page.html` — `/me/character` page (uses the same ArenaTopbar as Home Arena; Character hud-btn carries `aria-current="page"`).
+- `reward-breakdown.html` — Money Tree bonus surfaced in user_reward views (3 variants; we ship Variant A "inline breakdown row").
+- `public-profile-badge.html` — visitor view (Variant A "header chip" + Variant B "inline mini badge"; we ship the large header chip on profile pages).
 
-The frontend plan references the API surface frozen by this plan. Don't re-derive it; cite §6 of the design doc.
+Class names + element IDs from the mockups are the **contract** — they stay identical through RSX conversion.
+
+**Entry point.** Per PO directive: the Character page is reached from the Home Arena (`/`) topbar, by clicking a new "Character" hud-btn (Lucide `award` icon). The Character page itself reuses the same ArenaTopbar layout — there are NO Posts/Spaces/Rewards tabs above the page content; the hud-btn for Character carries `aria-current="page"` to indicate the active section.
+
+---
+
+## Task 32: Extract `ArenaTopbar` shared layout component
+
+The current Home Arena topbar lives inline in `app/ratel/src/views/index/component.rs:207-376`. It needs to be extracted into a reusable component so the Character page can render the same bar with the Character hud-btn marked active.
+
+**Files:**
+- Create: `app/ratel/src/components/arena_topbar/mod.rs`
+- Create: `app/ratel/src/components/arena_topbar/component.rs`
+- Modify: `app/ratel/src/views/index/component.rs` — replace inline markup with `<ArenaTopbar active={None} />`
+- Modify: `app/ratel/src/components/mod.rs` — `pub mod arena_topbar; pub use arena_topbar::*;`
+
+> Note: the existing `app/ratel/src/features/social/pages/team_arena/topbar/` `ArenaTopbar` is a different component (team-arena-specific). We're extracting the **Home/Character** topbar; do not collide. Place this one under `crate::components::arena_topbar` (root-level, like `notification_bell`).
+
+- [ ] **Step 1: Create `mod.rs`**
+
+```rust
+mod component;
+pub use component::*;
+```
+
+- [ ] **Step 2: Define active-section enum**
+
+In `component.rs`:
+
+```rust
+use crate::common::*;
+use crate::route::Route;
+use dioxus::prelude::*;
+
+/// Which top-level section is currently active. Drives `aria-current="page"`
+/// on the matching hud-btn.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ArenaTopbarSection {
+    Home,
+    Character,
+    // Drafts / Rewards / Credentials / MyAi / Essence / Settings can be
+    // added later as those pages adopt this layout.
+}
+```
+
+- [ ] **Step 3: Move the topbar markup verbatim** from `views/index/component.rs:207-376` into the new component, parameterised by `active: Option<ArenaTopbarSection>`. Each hud-btn gets `aria_current: matches_active(active, Section::Foo).then_some("page")`.
+
+For brevity here, the new component re-uses every existing hud-btn (Create, Drafts, Rewards, Credentials, MyAi, Essence, Teams, Settings, Notifications) and adds the **Character** hud-btn between Credentials and MyAi:
+
+```rust
+button {
+    class: "hud-btn",
+    aria_label: "{t.character}",
+    aria_current: (active == Some(ArenaTopbarSection::Character)).then_some("page"),
+    "data-testid": "home-btn-character",
+    onclick: move |_| nav.push(Route::CharacterPage {}),
+    svg {
+        fill: "none", stroke: "currentColor",
+        stroke_linecap: "round", stroke_linejoin: "round",
+        stroke_width: "1.6", view_box: "0 0 24 24",
+        xmlns: "http://www.w3.org/2000/svg",
+        circle { cx: "12", cy: "8", r: "6" }
+        path { d: "M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" }
+    }
+    span { class: "hud-btn__label", "{t.character}" }
+}
+```
+
+The component owns its own translations (i18n.rs) for the labels — including the new `character` key — and accepts `#[props] active: Option<ArenaTopbarSection>` plus the click-handler dependencies (popup for login modal, nav for routes, signals for popovers like `notifications_open`/`teams_open`). All of those are read from contexts inside the component, not threaded as props, so the call site stays clean.
+
+- [ ] **Step 4: Replace the inline markup in `views/index/component.rs:207-376`** with `ArenaTopbar { active: None }`. The existing `t` translations file shrinks accordingly (the labels now live in `arena_topbar/i18n.rs`).
+
+- [ ] **Step 5: Verify build**
+
+```bash
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' dx check --features web
+```
+
+- [ ] **Step 6: Visual smoke**
+
+```bash
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev dx serve --port 8000 --web
+```
+
+Open `/`. Topbar must be visually identical to before (no regression). Hover the new Character hud-btn — label "Character" appears.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add app/ratel/src/components/arena_topbar/ app/ratel/src/views/index/component.rs app/ratel/src/components/mod.rs
+git commit -m "refactor(home): extract ArenaTopbar; add Character hud-btn"
+```
+
+---
+
+## Task 33: Append Character page CSS to `main.css`
+
+Per `conventions/styling.md`, all component CSS lives in `app/ratel/assets/main.css`. Copy the styles from `app/ratel/assets/design/character-xp-skills/character-page.html` (everything inside `<style>...</style>` *except* the topbar/hud-btn rules — those already exist for Home Arena and we don't redefine them) into a new section in `main.css`.
+
+**Files:**
+- Modify: `app/ratel/assets/main.css` — append section.
+
+- [ ] **Step 1: Append section marker + styles**
+
+Append to `app/ratel/assets/main.css`:
+
+```css
+/* === src/features/character/pages/character_page === */
+
+.hud-btn[aria-current="page"]{background:rgba(252,179,0,0.10);border-color:rgba(252,179,0,0.45);box-shadow:0 0 18px rgba(252,179,0,0.18)}
+.hud-btn[aria-current="page"] svg{color:var(--accent-gold)}
+.hud-btn[aria-current="page"]::after{content:'';position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);width:24px;height:2px;border-radius:2px;background:var(--accent-gold);box-shadow:0 0 8px rgba(252,179,0,0.6)}
+.hud-btn[aria-current="page"] .hud-btn__label{opacity:1;color:var(--accent-gold)}
+
+/* (paste the rest of the rules from character-page.html — .character-arena,
+   .character-page, .character-hero{,*}, .skill-grid, .skill-card{,*},
+   .levelup-toast{,*}, .section-header{,*}, and the @media (max-width: 720px)
+   block. Use the exact selectors from the mockup; do not rename.) */
+```
+
+- [ ] **Step 2: Build check**
+
+```bash
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' dx check --features web
+```
+
+CSS-only changes don't affect the type checker; this just confirms no build regression.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add app/ratel/assets/main.css
+git commit -m "style(character): append character-page CSS to main.css"
+```
+
+---
+
+## Task 34: Build `UseCharacter` controller hook
+
+**Files:**
+- Create: `app/ratel/src/features/character/hooks/mod.rs`
+- Create: `app/ratel/src/features/character/hooks/use_character.rs`
+- Modify: `app/ratel/src/features/character/mod.rs` — add `pub mod hooks;`
+
+- [ ] **Step 1: hooks/mod.rs**
+
+```rust
+mod use_character;
+pub use use_character::*;
+```
+
+- [ ] **Step 2: Write the hook** (`async fn` method shape per `conventions/hooks-and-actions.md` — components await `ctx.level_up(id).await` and decide UX; we also expose `level_up_action` as a `use_action` so the button can disable on `.pending()`):
+
+```rust
+use crate::common::*;
+use crate::features::character::controllers::{
+    get_character_handler, level_up_handler,
+};
+use crate::features::character::dto::CharacterResponse;
+use crate::features::character::types::SkillId;
+use dioxus::prelude::*;
+
+#[derive(Clone, Copy, DioxusController)]
+pub struct UseCharacter {
+    pub character: Loader<CharacterResponse>,
+    /// `Action<(SkillId,), ()>` — UI binds to `.pending()` to disable the
+    /// Level Up button mid-spend; success/failure UX (toast) is owned by
+    /// the component via `await ctx.level_up(id)`.
+    pub level_up_action: Action<(SkillId,), ()>,
+}
+
+impl UseCharacter {
+    pub async fn level_up(&mut self, skill_id: SkillId) -> Result<()> {
+        let _ = level_up_handler(skill_id.as_str().to_string()).await?;
+        self.character.refresh();
+        Ok(())
+    }
+}
+
+#[track_caller]
+pub fn use_character() -> UseCharacter {
+    use_context::<UseCharacter>()
+}
+
+pub fn use_character_provider() -> std::result::Result<UseCharacter, RenderError> {
+    if let Some(ctx) = try_use_context::<UseCharacter>() {
+        return Ok(ctx);
+    }
+
+    let character = use_loader(|| async move { get_character_handler().await })?;
+
+    let mut character_loader = character;
+    let level_up_action = use_action(move |id: SkillId| async move {
+        let _ = level_up_handler(id.as_str().to_string()).await?;
+        character_loader.refresh();
+        Ok::<(), crate::common::Error>(())
+    });
+
+    Ok(use_context_provider(UseCharacter { character, level_up_action }))
+}
+```
+
+- [ ] **Step 3: Build check**
+
+```bash
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' dx check --features web
+```
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add app/ratel/src/features/character/hooks/ app/ratel/src/features/character/mod.rs
+git commit -m "feat(character): UseCharacter controller hook (Loader + level_up Action)"
+```
+
+---
+
+## Task 35: Build `CharacterPage` component (RSX conversion)
+
+**Files:**
+- Create: `app/ratel/src/features/character/pages/character_page/mod.rs`
+- Create: `app/ratel/src/features/character/pages/character_page/component.rs`
+- Create: `app/ratel/src/features/character/pages/character_page/i18n.rs`
+- Modify: `app/ratel/src/features/character/mod.rs` — add `pub mod pages;`
+- Create: `app/ratel/src/features/character/pages/mod.rs`
+
+- [ ] **Step 1: pages scaffolding**
+
+```rust
+// pages/mod.rs
+mod character_page;
+pub use character_page::*;
+```
+
+```rust
+// pages/character_page/mod.rs
+mod component;
+mod i18n;
+pub use component::*;
+pub use i18n::*;
+```
+
+- [ ] **Step 2: i18n.rs**
+
+```rust
+use dioxus_translate::translate;
+
+translate! {
+    CharacterPageTranslate;
+
+    page_title:        { en: "Character", ko: "캐릭터" },
+    skill_tree_title:  { en: "Skill Tree", ko: "스킬 트리" },
+    skill_tree_hint:   { en: "+5% per level · Max +50% at L10", ko: "레벨당 +5% · L10에서 최대 +50%" },
+    level_label:       { en: "Level", ko: "레벨" },
+    xp_title:          { en: "Character XP", ko: "캐릭터 XP" },
+    xp_to_next:        { en: "{remaining} XP to Level {next_level}", ko: "다음 레벨까지 {remaining} XP" },
+    xp_total_earned:   { en: "Total XP earned: {total}", ko: "누적 XP: {total}" },
+    sp_label:          { en: "Skill Points", ko: "스킬 포인트" },
+    sp_hint_ready:     { en: "{n} points ready to spend", ko: "사용 가능한 포인트 {n}개" },
+    sp_hint_empty:     { en: "Earn XP to grant more", ko: "XP를 획득하여 추가 포인트를 받으세요" },
+    money_tree_name:   { en: "Money Tree", ko: "머니트리" },
+    money_tree_sub:    { en: "RatelPoint earning boost", ko: "RatelPoint 추가 보상" },
+    money_tree_desc:   { en: "Boosts every RatelPoint payout you receive from any space's reward, applied multiplicatively before the amount is credited to your balance.", ko: "스페이스에서 받는 모든 RatelPoint 보상에 곱셈으로 적용되어 잔액에 반영되기 전에 추가 지급됩니다." },
+    ranker_name:       { en: "Ranker", ko: "랭커" },
+    ranker_sub:        { en: "SpaceXP & Character XP boost", ko: "스페이스XP와 캐릭터XP 추가 보상" },
+    ranker_desc:       { en: "Boosts the bonus portion of every SpaceActivity you record. Compounds: more XP per action → faster character leveling → more SP for future skills.", ko: "기록되는 SpaceActivity의 추가 점수 부분에 적용됩니다. 행동당 XP가 늘어 → 레벨업이 빨라지고 → 더 많은 SP를 얻습니다." },
+    influencer_name:   { en: "Influencer", ko: "인플루언서" },
+    influencer_sub:    { en: "Lower Hot threshold for your spaces", ko: "내 스페이스의 Hot 진입 기준 완화" },
+    influencer_desc:   { en: "Lowers the participants-required-for-Hot threshold for spaces you own — at L6 your space surfaces with just 4 participants instead of the global 10.", ko: "내가 만든 스페이스의 Hot 진입 기준을 낮춥니다. L6에서 기본 10명 대신 4명만 있어도 Hot에 노출됩니다." },
+    sweeper_name:      { en: "Sweeper", ko: "싹쓸이" },
+    sweeper_sub:       { en: "Higher owner bonus on your spaces", ko: "내 스페이스의 오너 보너스 증가" },
+    sweeper_desc:      { en: "When a participant claims a reward in a space you own, the owner-bonus you receive goes up by +5% per level. At L6 you take 40% of every payout instead of the default 10%.", ko: "내 스페이스에서 참여자가 보상을 받을 때마다 오너 보너스가 레벨당 +5% 증가합니다. L6에서는 기본 10% 대신 40%를 받습니다." },
+
+    levelup_label:     { en: "Level Up", ko: "레벨 업" },
+    maxed_label:       { en: "Maxed", ko: "만렙" },
+    locked_label:      { en: "Locked", ko: "잠김" },
+    coming_soon:       { en: "v2 · Coming soon", ko: "v2 · 출시 예정" },
+    next_boost:        { en: "Next: +{pct}% boost", ko: "다음: +{pct}% 부스트" },
+    not_released:      { en: "Not yet released", ko: "출시 예정" },
+    levelup_toast_title: { en: "{skill} leveled up", ko: "{skill} 레벨업" },
+    levelup_toast_sub:   { en: "Now +{pct}% on every {target}", ko: "이제 모든 {target}에 +{pct}%" },
+}
+```
+
+- [ ] **Step 3: Convert `character-page.html` body → RSX**
+
+Run `dx translate -f app/ratel/assets/design/character-xp-skills/character-page.html` to seed `component.rs`. Then post-process:
+
+1. Drop the `<style>` import (CSS is in `main.css`).
+2. Replace the inline mockup ArenaTopbar with `crate::components::ArenaTopbar { active: ArenaTopbarSection::Character }`.
+3. Drop the mockup-only `.state-switcher` (production page does not have it).
+4. Drop the demo `<script>` body — wire RSX directly to `UseCharacter`.
+5. Replace static numbers with values from `use_character()?.character.read()`.
+6. Replace static text with `translate!` references via `CharacterPageTranslate`.
+7. Wire each Level Up `button` to `ctx.level_up_action.call(skill_id)` with `disabled: ctx.level_up_action.pending() || unspent_sp < cost`.
+
+Final structure (excerpt):
+
+```rust
+use crate::common::*;
+use crate::components::{ArenaTopbar, ArenaTopbarSection};
+use crate::features::character::dto::{CharacterResponse, CharacterSkillResponse};
+use crate::features::character::hooks::{use_character_provider, UseCharacter};
+use crate::features::character::pages::character_page::CharacterPageTranslate;
+use crate::features::character::types::SkillId;
+use dioxus::prelude::*;
+
+#[component]
+pub fn CharacterPage() -> Element {
+    let ctx = use_character_provider()?;
+    let tr = CharacterPageTranslate::new(use_locale());
+    let resource = ctx.character;
+    let response = resource()?;
+
+    rsx! {
+        SeoMeta { title: "{tr.page_title}" }
+
+        div { class: "character-arena",
+            ArenaTopbar { active: ArenaTopbarSection::Character }
+
+            main { class: "character-page", id: "character-page",
+                CharacterHero { response: response.clone(), tr: tr.clone() }
+                section_header_row { tr: tr.clone() }
+
+                div { class: "skill-grid",
+                    for s in response.skills.iter() {
+                        SkillCard {
+                            response: s.clone(),
+                            unspent_sp: response.unspent_sp,
+                            on_levelup: move |id| {
+                                let mut ctx = ctx;
+                                spawn(async move { let _ = ctx.level_up(id).await; });
+                            },
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+> Component decomposition: `CharacterHero` (XP bar + level + SP pill) and `SkillCard` (one skill card) are extracted under `pages/character_page/character_hero/` and `pages/character_page/skill_card/` per `conventions/feature-module-structure.md`'s "Extract a sub-component when a section is self-contained and > ~50 lines of RSX" rule.
+
+- [ ] **Step 4: Build check**
+
+```bash
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' dx check --features web
+```
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add app/ratel/src/features/character/pages/
+git commit -m "feat(character): CharacterPage + CharacterHero + SkillCard RSX conversion"
+```
+
+---
+
+## Task 36: Add `Route::CharacterPage` route
+
+**Files:**
+- Modify: `app/ratel/src/route.rs` — add the route variant.
+- Modify: `app/ratel/src/features/character/route.rs` — drop placeholder, re-export.
+
+- [ ] **Step 1: Add route variant**
+
+In `app/ratel/src/route.rs`, add:
+
+```rust
+#[layout(RootLayout)]
+    // ... existing routes ...
+    #[route("/me/character")]
+    CharacterPage {},
+```
+
+> Public-profile route variant `/users/:username/character` is mounted by Task 38 once the public chip exists.
+
+- [ ] **Step 2: Build + visual smoke**
+
+```bash
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' dx check --features web
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev dx serve --port 8000 --web
+```
+
+Open `/`. Click the new Character hud-btn → navigates to `/me/character`. The page shows the hero with default values (since the user has no XP yet); the Character hud-btn is highlighted with the gold underline.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add app/ratel/src/route.rs app/ratel/src/features/character/route.rs
+git commit -m "feat(character): mount /me/character route"
+```
+
+---
+
+## Task 37: Add Money Tree breakdown chip in `user_reward` views (Variant A)
+
+Per `app/ratel/assets/design/character-xp-skills/reward-breakdown.html` Variant A: an inline breakdown row appears under each reward transaction whenever the user's Money Tree level > 0 *and* the row's `bonus > 0`.
+
+**Files:**
+- Modify: `app/ratel/src/features/social/pages/user_reward/views/mod.rs` — add `RewardBreakdownChip` next to each reward transaction row.
+- Modify: `app/ratel/src/features/social/pages/user_reward/dto/...` — surface `money_tree_bonus: i64` and `money_tree_level: i32` from the existing `UserRewardHistory` row (these come from the `metadata` field that Task 23 populates).
+- Modify: `app/ratel/assets/main.css` — append the breakdown row styles from `reward-breakdown.html`.
+
+- [ ] **Step 1: DTO**
+
+Add to `RewardTransactionResponse` (or whatever the existing list-row DTO is named):
+
+```rust
+pub money_tree_bonus: i64,    // amount in RatelPoint added by Money Tree (0 if no skill)
+pub money_tree_level: i32,    // 0..10
+```
+
+The server fn populates these from `UserRewardHistory.metadata` — Task 23 already records both `money_tree_bonus` and the multiplier per claim.
+
+- [ ] **Step 2: RSX chip**
+
+Inside the existing reward-row component, append (preserving the exact class names from the mockup):
+
+```rust
+if response.money_tree_level > 0 && response.money_tree_bonus > 0 {
+    div { class: "reward-tx__breakdown", role: "note", "aria-label": "Reward breakdown",
+        span { class: "breakdown__base",
+            "Base "
+            em { "{format_with_commas(response.amount - response.money_tree_bonus, None)}" }
+        }
+        span { class: "breakdown__plus", "+" }
+        span {
+            class: "mt-chip",
+            title: "Money Tree skill at level {response.money_tree_level}",
+            // award icon — same SVG as character-page.html
+            svg { /* ... */ }
+            "Money Tree L{response.money_tree_level} +{response.money_tree_level * 5}%"
+        }
+        span { class: "breakdown__equals", "= " }
+        span { class: "breakdown__total", "{format_with_commas(response.amount, None)}" }
+    }
+}
+```
+
+- [ ] **Step 3: Append breakdown CSS** to `main.css` under `/* === src/features/social/pages/user_reward/views (money-tree breakdown) === */`. Copy `.reward-tx__breakdown`, `.breakdown__base`, `.breakdown__plus`, `.mt-chip`, `.breakdown__equals`, `.breakdown__total` from the mockup verbatim.
+
+- [ ] **Step 4: Build + visual smoke**
+
+```bash
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' dx check --features web
+```
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add app/ratel/src/features/social/pages/user_reward/ app/ratel/assets/main.css
+git commit -m "feat(character): Money Tree breakdown chip in user_reward views"
+```
+
+---
+
+## Task 38: Public profile level chip (visitor view)
+
+Per `public-profile-badge.html` Variant A: a "Level 32" chip on the right side of the profile header.
+
+**Files:**
+- Create: `app/ratel/src/features/character/components/level_chip/mod.rs`
+- Create: `app/ratel/src/features/character/components/level_chip/component.rs`
+- Modify: the existing public-profile header component (find via `grep -rn "profile-header\|profile_header" app/ratel/src --include="*.rs"`) — render `<LevelChip username={...} />`.
+- Modify: `app/ratel/assets/main.css` — append `.character-level-chip{,*}` and `.level-badge-mini{,*}` styles from the mockup.
+
+- [ ] **Step 1: Component**
+
+```rust
+#[component]
+pub fn LevelChip(username: ReadSignal<String>) -> Element {
+    let resource = use_loader(move || async move {
+        crate::features::character::controllers::get_public_character_handler(username()).await
+    })?;
+
+    let public = resource()?;
+    let level = public.level;
+    let tr = LevelChipTranslate::new(use_locale());
+
+    rsx! {
+        span {
+            class: "character-level-chip",
+            "data-level": "{level}",
+            title: "{tr.tooltip}",
+            span { class: "character-level-chip__label", "{tr.level_label}" }
+            span { class: "character-level-chip__num", "{level}" }
+            span { class: "character-level-chip__sub",
+                if level <= 1 { "{tr.just_joined}" } else { "{tr.ratel_character}" }
+            }
+        }
+    }
+}
+```
+
+- [ ] **Step 2: Add `Route::PublicCharacterPage`** for the dedicated `/users/:username/character` URL (referenced from `get_public_character_handler` in Task 20). For now this can route to a thin wrapper that just renders `LevelChip` with no breakdown — or we punt this view to a future iteration if profile-page integration is enough.
+
+- [ ] **Step 3: Append CSS**
+
+Append `.character-level-chip{,*}` and `.level-badge-mini{,*}` from `public-profile-badge.html` to `main.css`.
+
+- [ ] **Step 4: Build + commit**
+
+```bash
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' dx check --features web
+git add app/ratel/src/features/character/components/level_chip/ app/ratel/assets/main.css <profile-header-file>
+git commit -m "feat(character): public profile level chip"
+```
+
+---
+
+## Task 39: Lint + format frontend changes
+
+- [ ] For each `.rs` file modified in Tasks 32–38: `rustywind --custom-regex 'class: "(.*)"' --write <file>` then `dx fmt -f <file>`.
+
+- [ ] Build:
+
+```bash
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' dx check --features web
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev RUSTFLAGS='-D warnings' cargo check --features web
+```
+
+- [ ] Commit:
+
+```bash
+git add app/ratel/
+git commit -m "style: rustywind + dx fmt on character feature frontend"
+```
+
+---
+
+## Task 40: Playwright e2e — character progression
+
+**Files:**
+- Create: `playwright/tests/web/character-progression.spec.js`
+
+- [ ] **Step 1: Write the scenario** (per `conventions/playwright-tests.md`, prefer extending existing scenarios — but this is a wholly new flow, so a new spec file is justified):
+
+```js
+import { test, expect } from "@playwright/test";
+import { click, goto } from "../utils";
+
+test.describe.serial("Character progression", () => {
+  test("brand-new user lands at Level 1 with 5 SP", async ({ page }) => {
+    await goto(page, "/");
+    await click(page, { testId: "home-btn-character" });
+    await page.waitForURL(/\/me\/character/, { waitUntil: "load" });
+    await expect(page.getByTestId("hero-level")).toHaveText("1");
+    await expect(page.getByTestId("hero-sp-value")).toHaveText("5");
+  });
+
+  test("buying Money Tree L1 disables button when SP runs out", async ({ page }) => {
+    await goto(page, "/me/character");
+    await click(page, { testId: "skill-levelup-money_tree" });
+    // After spending 5 SP, the next-level cost (9) > unspent (0)
+    await expect(page.getByTestId("skill-levelup-money_tree")).toBeDisabled();
+  });
+
+  test("voting in a poll grants XP visible on /me/character", async ({ page }) => {
+    // Drive an XP-earning action via an existing space-flow utility if available;
+    // otherwise call the test API endpoint that seeds a SpaceActivity. This test
+    // is the integration boundary between backend XP propagation and frontend
+    // display — the backend tests in features::character::tests already cover
+    // the propagation itself.
+    // ... seed activity ...
+    await goto(page, "/me/character");
+    const xp = await page.getByTestId("hero-xp-total").innerText();
+    expect(parseInt(xp.replace(/,/g, ""), 10)).toBeGreaterThan(0);
+  });
+});
+```
+
+> The `data-testid` values referenced (`home-btn-character`, `skill-levelup-money_tree`, `hero-level`, `hero-sp-value`, `hero-xp-total`) are added in Tasks 32, 35, and the mockup template — keep them in sync.
+
+- [ ] **Step 2: Add `data-testid` attributes** in `CharacterHero` and `SkillCard` components for the elements the test queries (some are already in the mockup; mirror them in RSX).
+
+- [ ] **Step 3: Run the spec**
+
+```bash
+cd playwright && npx playwright test tests/web/character-progression.spec.js --headed
+```
+
+All three tests must pass.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add playwright/tests/web/character-progression.spec.js
+git commit -m "test(character): Playwright e2e — landing, level-up, XP propagation"
+```
+
+---
+
+## Task 41: Update spec acceptance checklist (frontend criteria)
+
+- [ ] In `roadmap/character-xp-skills.md`, flip these from `- [ ]` to `- [x]`:
+  - `/me/character` page shows total XP, level, XP to next level, and unspent SP, all updating live as new activities post.
+  - A user with no past activity who is brand new sees Level 1 and 0 unspent SP after the level-up bookkeeping (i.e., they get their level-1 SP grant on first appearance).
+  - A user can see their Character Level on another user's public profile.
+
+- [ ] Commit:
+
+```bash
+git add roadmap/character-xp-skills.md
+git commit -m "docs(roadmap): mark frontend acceptance criteria as shipped"
+```
+
+---
+
+## Self-review additions (Stage 3 frontend)
+
+- [ ] `app/ratel/src/components/arena_topbar/` is the only place the home/character topbar markup lives. The previous inline copy at `views/index/component.rs:207-376` has been replaced with `<ArenaTopbar />`.
+- [ ] No `document::Stylesheet { href: asset!("./style.css") }` was introduced anywhere; all character/CSS is in `app/ratel/assets/main.css` under named section markers.
+- [ ] Class names from the mockup (`.character-hero__level`, `.skill-card__pip`, `.character-level-chip`, `.mt-chip`, etc.) are preserved verbatim in RSX.
+- [ ] Money Tree breakdown chip renders only when both `money_tree_level > 0` AND `money_tree_bonus > 0` — never on a flat row.
+- [ ] Profile tabs are NOT present on `/me/character`; the ArenaTopbar is the only nav.
+- [ ] Character hud-btn carries `aria-current="page"` only on `/me/character`; on Home it's just a normal hud-btn.
