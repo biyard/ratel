@@ -64,18 +64,28 @@ pub async fn apply_character_xp_delta(
         return Ok(());
     }
 
-    // Read current CharacterXp, default to a fresh row.
+    // Read current CharacterXp; if absent we INSERT a fresh row, otherwise we
+    // UPDATE only the changed fields. `update_item` does not back-fill the
+    // required `created_at` column, so the loaded-vs-fresh distinction matters
+    // for the very first delta on a brand-new user.
     let (xp_pk, xp_sk) = CharacterXp::user_keys(&user_pk);
-    let xp = CharacterXp::get(cli, &xp_pk, Some(&xp_sk)).await?;
-    let xp = xp.unwrap_or_else(|| CharacterXp::new(user_pk.clone()));
+    let loaded = CharacterXp::get(cli, &xp_pk, Some(&xp_sk)).await?;
 
-    let new_total_xp = xp.total_xp + delta;
+    let prev_level = loaded.as_ref().map(|x| x.level).unwrap_or(1);
+    let prev_total_sp_granted = loaded
+        .as_ref()
+        .map(|x| x.total_sp_granted)
+        .unwrap_or_else(|| leveling::total_sp_granted(1));
+    let prev_total_xp = loaded.as_ref().map(|x| x.total_xp).unwrap_or(0);
+
+    let new_total_xp = prev_total_xp + delta;
     let new_level = leveling::level_from_xp(new_total_xp);
     let new_sp_granted = leveling::total_sp_granted(new_level);
     let now = crate::common::utils::time::get_now_timestamp_millis();
 
-    if xp.total_xp == 0 && xp.created_at == 0 {
-        // First-ever XP for this user; insert the row.
+    if loaded.is_none() {
+        // First-ever XP for this user; insert the full row so DynamoDB has
+        // every required attribute (created_at, level, etc.).
         let mut fresh = CharacterXp::new(user_pk.clone());
         fresh.total_xp = new_total_xp;
         fresh.level = new_level;
@@ -96,12 +106,12 @@ pub async fn apply_character_xp_delta(
     let new_src = CharacterXpSource::new(user_pk.clone(), space_pk_str, new_total);
     new_src.create(cli).await?;
 
-    if new_level != xp.level {
+    if new_level != prev_level {
         tracing::info!(
             user_pk = %user_pk,
-            old_level = xp.level,
+            old_level = prev_level,
             new_level,
-            new_sp = new_sp_granted - xp.total_sp_granted,
+            new_sp = new_sp_granted - prev_total_sp_granted,
             "character level up"
         );
     }

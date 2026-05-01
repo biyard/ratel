@@ -533,6 +533,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::SpaceFollow(e) => e.status_code(),
             Error::SpaceApp(e) => e.status_code(),
             Error::SpaceReport(e) => e.status_code(),
+            Error::Character(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -648,6 +649,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::SpaceFollow(e) => e.status_code(),
             Error::SpaceApp(e) => e.status_code(),
             Error::SpaceReport(e) => e.status_code(),
+            Error::Character(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
