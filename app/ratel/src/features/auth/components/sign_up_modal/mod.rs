@@ -412,6 +412,12 @@ pub fn SignupModal(
                                             handler.call(());
                                         }
                                         popup.close();
+                                        // FR-2 #8 — fresh signup lands on the
+                                        // cross-posting onboarding interstitial.
+                                        // AC-4b: shown once; subsequent logins
+                                        // skip it via `User.interstitial_seen`.
+                                        navigator
+                                            .replace(crate::Route::OnboardingConnectionsPage {});
                                     }
                                     Err(Error::UsernameAlreadyExists) => {
                                         username_warning.set(tr.username_already_exists.to_string());
@@ -463,6 +469,9 @@ pub fn SignupModal(
                                         handler.call(());
                                     }
                                     popup.close();
+                                    navigator
+                                        .replace(crate::Route::OnboardingConnectionsPage {
+                                        });
                                 }
                                 Err(Error::UsernameAlreadyExists) => {
                                     username_warning.set(tr.username_already_exists.to_string());

@@ -182,6 +182,10 @@ impl RatelMcpServer {
             publish: req.publish,
             visibility,
             categories: req.categories,
+            // MCP-driven publish does not invoke cross-posting in Phase 1;
+            // syndication is opt-in via the human compose UI only.
+            enabled_platforms: None,
+            platform_overrides: None,
         };
         update_post_handler_mcp_impl(self.mcp_secret.clone(), req.post_id, update_req)
             .await

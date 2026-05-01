@@ -51,6 +51,14 @@ pub struct User {
     pub password: Option<String>,
 
     pub points: i64,
+
+    /// Cross-posting onboarding (FR-2 #13). `false` for fresh signups; flipped
+    /// to `true` once the user clicks Continue / Skip on the post-signup
+    /// "Connect your networks" interstitial, or completes any connection on
+    /// it. Existing rows without this attribute deserialize as `false` (one
+    /// extra interstitial impression after the field rolls out — acceptable).
+    #[serde(default)]
+    pub interstitial_seen: bool,
 }
 
 impl User {

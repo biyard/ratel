@@ -114,6 +114,13 @@ async function signUpFromSpace(browser, spaceUrl) {
   await click(page, { text: "Finished Sign-up" });
   await waitPopup(page, { visible: false });
 
+  // FR-2 #8 — fresh signups land on /onboarding/connections (cross-posting
+  // post-signup interstitial). Skip it so the test can return to the
+  // space-driven flow and find btn-participate on ArenaViewer.
+  await expect(page).toHaveURL(/\/onboarding\/connections/, { timeout: 10000 });
+  await click(page, { testId: "onboarding-skip" });
+  await goto(page, spaceUrl);
+
   return { context, page, displayName };
 }
 

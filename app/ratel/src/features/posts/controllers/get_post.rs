@@ -16,7 +16,12 @@ pub async fn get_post_handler(post_id: FeedPartition) -> Result<PostDetailRespon
     let user: Option<crate::features::auth::User> = user.into();
     tracing::debug!("Get post for post_pk: {}", post_pk);
 
-    let post_metadata = PostMetadata::query(cli, &post_pk).await?;
+    // Restrict the query to sk prefix `POST` so cross-posting sidecars
+    // (`SYNDICATION_DIRECTIVE`, `SYNDICATION_JOB#…`, `ENGAGEMENT_SNAPSHOT#…`)
+    // colocated under the same pk don't get fetched and fail
+    // `PostMetadata` (untagged enum of Post/PostComment/PostArtwork/PostRepost)
+    // deserialization. All four variants' sk starts with `POST`.
+    let post_metadata = PostMetadata::query_begins_with_sk(cli, &post_pk, "POST").await?;
     let mut comment_keys = vec![];
     let mut post = None;
     let mut post_comments = Vec::<PostComment>::new();
