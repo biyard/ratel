@@ -35599,6 +35599,25 @@ body.comments-panel-resizing {
   letter-spacing: 0.10em; text-transform: uppercase;
   color: var(--text-dim);
 }
+/* Manual refresh — sits at the right edge of the header. Pull SyndicationJob
+   rows that arrived after mount (publish → factory enqueue is async). */
+.syn-head__refresh {
+  margin-left: auto;
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-dim);
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0;
+  transition: all 0.2s;
+}
+.syn-head__refresh:hover {
+  border-color: rgba(252, 179, 0, 0.22);
+  color: var(--accent-gold);
+}
+.syn-head__refresh svg { width: 13px; height: 13px; }
 .syn-head__summary strong {
   color: var(--accent-teal);
   font-weight: 700;
@@ -35795,6 +35814,16 @@ body.comments-panel-resizing {
   color: var(--accent-gold);
 }
 .mini-btn svg { width: 10px; height: 10px; }
+.mini-btn--connect {
+  background: rgba(10, 133, 255, 0.08);
+  border-color: rgba(10, 133, 255, 0.22);
+  color: var(--bsky);
+}
+.mini-btn--connect:hover {
+  background: rgba(10, 133, 255, 0.14);
+  border-color: rgba(10, 133, 255, 0.32);
+  color: var(--bsky);
+}
 .mini-btn--retry {
   background: rgba(239, 68, 68, 0.06);
   border-color: rgba(239, 68, 68, 0.20);

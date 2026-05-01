@@ -80,6 +80,18 @@ pub fn PostDetail(post_id: ReadSignal<FeedPartition>) -> Element {
         .map(|p| !current_username.is_empty() && p.author_username == current_username)
         .unwrap_or(false);
 
+    // Syndication panel mount gate: author + Public visibility. Private /
+    // TeamOnly posts never fan out, so the panel would be a dead surface.
+    let is_public = post
+        .as_ref()
+        .map(|p| {
+            matches!(
+                p.visibility,
+                Some(crate::features::posts::types::Visibility::Public)
+            )
+        })
+        .unwrap_or(false);
+
     // AC-17/18 — signed-out viewers see the backlink-landing chrome
     // (referral bar + brand bar + subscribe CTA). Authenticated users see
     // the regular post-detail topbar.
@@ -344,7 +356,7 @@ pub fn PostDetail(post_id: ReadSignal<FeedPartition>) -> Element {
                     }
                 }
 
-                if is_author {
+                if is_author && is_public {
                     SyndicationPanel { post_id: post_id() }
                 }
 

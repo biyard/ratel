@@ -149,6 +149,23 @@ translate! {
     engage_likes: { en: "likes", ko: "좋아요" },
     engage_comments: { en: "comments", ko: "댓글" },
     engage_reposts: { en: "reposts", ko: "재게시" },
+
+    // Always-show panel additions: each platform card renders even when no
+    // job exists yet so the author sees a coherent matrix instead of a
+    // mounted/hidden race.
+    btn_refresh_aria: { en: "Refresh", ko: "새로고침" },
+    awaiting_dispatch: { en: "Awaiting dispatch", ko: "발송 대기" },
+    not_connected: { en: "Not connected", ko: "연결 안 됨" },
+    btn_connect_bluesky: { en: "Connect Bluesky", ko: "Bluesky 연결하기" },
+    panel_coming_soon: { en: "Coming soon", ko: "곧 출시" },
+    panel_linkedin_coming_soon_hint: {
+        en: "LinkedIn cross-posting arrives in Phase 1B.",
+        ko: "LinkedIn 크로스포스팅은 Phase 1B 에서 활성화됩니다.",
+    },
+    panel_threads_coming_soon_hint: {
+        en: "Threads cross-posting arrives in Phase 1C.",
+        ko: "Threads 크로스포스팅은 Phase 1C 에서 활성화됩니다.",
+    },
 }
 
 translate! {
