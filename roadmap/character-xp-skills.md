@@ -128,17 +128,17 @@ Worked example: an action with `base_score = 100` and `additional_score = 50` re
 
 ## Acceptance criteria
 
-- [ ] Earning XP in a space (e.g., voting in a poll) increases `CharacterXp.total_xp` by the same delta as `SpaceScore.total_score`.
-- [ ] Stream replay of the same `SpaceScore` MODIFY event does not double-count Character XP.
-- [ ] Crossing a level threshold grants the correct number of new skill points (`5 · L` total at level L, i.e., +5 SP per level).
-- [ ] Spending 5 SP on Money Tree raises it to level 1; the next claim breakdown shows the 5% bonus and `User.points` is credited the boosted amount.
-- [ ] Spending 5 SP on Ranker raises it to level 1; the next `SpaceActivity` recorded has its `additional_score` boosted by 5% before aggregation.
-- [ ] Attempting to advance a skill above level 10 is rejected.
-- [ ] Skill cost ramps `5, 9, 13, 17, 21, 25, 29, 33, 37, 41` with cumulative `5, 14, 27, 44, 65, 90, 119, 152, 189, 230` — verified by direct unit test.
-- [ ] Attempting to spend more SP than the user has is rejected.
-- [ ] The backfill produces the same `CharacterXp.total_xp` whether run once or three times.
-- [ ] Starting the server without `MIGRATE=true` does NOT run the backfill, even if `LastBackfillVersion.version` is less than the latest migration's required version.
-- [ ] Starting the server with `MIGRATE=true` after the backfill has already run (i.e., `LastBackfillVersion.version >= 1`) is a no-op — the backfill is not re-executed.
+- [x] Earning XP in a space (e.g., voting in a poll) increases `CharacterXp.total_xp` by the same delta as `SpaceScore.total_score`.
+- [x] Stream replay of the same `SpaceScore` MODIFY event does not double-count Character XP.
+- [x] Crossing a level threshold grants the correct number of new skill points (`5 · L` total at level L, i.e., +5 SP per level).
+- [x] Spending 5 SP on Money Tree raises it to level 1; the next claim breakdown shows the 5% bonus and `User.points` is credited the boosted amount.
+- [x] Spending 5 SP on Ranker raises it to level 1; the next `SpaceActivity` recorded has its `additional_score` boosted by 5% before aggregation.
+- [x] Attempting to advance a skill above level 10 is rejected.
+- [x] Skill cost ramps `5, 9, 13, 17, 21, 25, 29, 33, 37, 41` with cumulative `5, 14, 27, 44, 65, 90, 119, 152, 189, 230` — verified by direct unit test.
+- [x] Attempting to spend more SP than the user has is rejected.
+- [x] The backfill produces the same `CharacterXp.total_xp` whether run once or three times.
+- [x] Starting the server without `MIGRATE=true` does NOT run the backfill, even if `LastBackfillVersion.version` is less than the latest migration's required version.
+- [x] Starting the server with `MIGRATE=true` after the backfill has already run (i.e., `LastBackfillVersion.version >= 1`) is a no-op — the backfill is not re-executed.
 - [ ] The `/me/character` page shows total XP, level, XP to next level, and unspent SP, all updating live as new activities post.
 - [ ] A user with no past activity who is brand new sees Level 1 and 0 unspent SP after the level-up bookkeeping (i.e., they get their level-1 SP grant on first appearance).
 - [ ] A user can see their Character Level on another user's public profile (assuming Open Question 5 resolves "yes").
