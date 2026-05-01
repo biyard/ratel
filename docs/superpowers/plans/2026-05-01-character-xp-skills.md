@@ -11,6 +11,8 @@
 
 **Tech Stack:** Rust 2024, Dioxus 0.7 fullstack, DynamoDB single-table via `DynamoEntity` macro, Axum 0.8.1 with `#[get]`/`#[post]` route macros, `tower-sessions`, `serde_dynamo`. Tests via `TestContext` + `test_get!`/`test_post!` macros (see `app/ratel/src/tests/`).
 
+**Test layout — feature-local.** Per PO directive (review on plan line ~1780), all tests for this feature live under `app/ratel/src/features/character/tests/{file}.rs` rather than the cross-feature `app/ratel/src/tests/`. The tests are declared via `#[cfg(test)] mod tests;` in `features/character/mod.rs` and split by topic (`leveling_tests`, `character_xp_tests`, `skill_tests`, `migration_tests`) with shared fixtures in `helpers.rs`. This keeps the feature self-contained — moving / deleting / renaming the feature touches only one directory.
+
 **Out of scope for this plan** (separate follow-up plan):
 - Stage 2 HTML mockups in `app/ratel/assets/design/character-xp-skills/`
 - Stage 3 frontend RSX (`UseCharacter` hook, `CharacterPage`, `SkillTree`/`SkillCard` components, reward-breakdown chip in `user_reward` views)
@@ -74,8 +76,13 @@ app/ratel/src/features/character/
     ├── error.rs
     └── skill_id.rs
 
-app/ratel/src/tests/character_tests.rs
-app/ratel/src/tests/character_migration_tests.rs
+app/ratel/src/features/character/tests/
+├── mod.rs
+├── helpers.rs               # shared TestContext re-exports + fixtures (e.g. make_score)
+├── leveling_tests.rs        # unit tests for leveling.rs constants/helpers
+├── character_xp_tests.rs    # apply_character_xp_delta + handlers
+├── skill_tests.rs           # level_up handler + Money Tree + Ranker effects
+└── migration_tests.rs       # LastBackfillVersion + m001 backfill + MIGRATE gate
 ```
 
 **Modified files:**
@@ -91,7 +98,6 @@ app/ratel/src/features/spaces/space_common/models/space_reward.rs   # Money Tree
 app/ratel/src/features/activity/models/space_activity.rs            # Ranker wrap in new_with_dedup()
 app/ratel/src/features/mod.rs (or app/ratel/src/lib.rs)             # pub mod character
 app/ratel/src/route.rs                                              # mount character routes
-app/ratel/src/tests/mod.rs                                          # mod character_tests; mod character_migration_tests;
 ```
 
 ---
@@ -287,28 +293,105 @@ git commit -m "feat(by-macros): expose condition_expression on DynamoEntity upda
 
 ---
 
-## Task 4: Test `LastBackfillVersion` CRUD + conditional update
+## Task 4: Scaffold feature-local `tests/` + cover `LastBackfillVersion`
 
 **Files:**
-- Create: `app/ratel/src/tests/character_migration_tests.rs`
-- Modify: `app/ratel/src/tests/mod.rs`
+- Create: `app/ratel/src/features/character/tests/mod.rs`
+- Create: `app/ratel/src/features/character/tests/helpers.rs`
+- Create: `app/ratel/src/features/character/tests/migration_tests.rs`
 
-- [ ] **Step 1: Wire test module**
+> The feature module's `mod.rs` (created in Task 7) declares `#[cfg(test)] mod tests;`. This task creates the test sub-tree.
 
-Append to `app/ratel/src/tests/mod.rs`:
+- [ ] **Step 1: Create `tests/mod.rs`**
+
+Write `app/ratel/src/features/character/tests/mod.rs`:
 
 ```rust
-mod character_migration_tests;
+//! Feature-local tests. Declared from `features/character/mod.rs` under
+//! `#[cfg(test)] mod tests;` so they compile only for `cargo test`.
+//!
+//! Layout:
+//! - `helpers`           shared fixtures: TestContext, make_score, award_xp, run_with_env
+//! - `leveling_tests`    pure-Rust unit tests for `leveling.rs`
+//! - `character_xp_tests` apply_character_xp_delta + GET handlers
+//! - `skill_tests`       level_up handler + Money Tree + Ranker effects
+//! - `migration_tests`   LastBackfillVersion conditional advance + m001 + MIGRATE gate
+
+mod helpers;
+mod leveling_tests;
+mod character_xp_tests;
+mod skill_tests;
+mod migration_tests;
 ```
 
-- [ ] **Step 2: Write tests for the entity**
+- [ ] **Step 2: Create shared `helpers.rs`**
 
-Write `app/ratel/src/tests/character_migration_tests.rs`:
+Write `app/ratel/src/features/character/tests/helpers.rs`:
 
 ```rust
-use super::*;
+//! Shared fixtures for the character feature's tests.
+//!
+//! `TestContext` re-uses the project-wide setup at `crate::tests::TestContext`
+//! (it spins up a fresh DynamoDB Local namespace and a router). The helpers
+//! below add character-feature-specific factories on top.
+
+pub use crate::tests::TestContext;
+pub use crate::common::types::*;
+use crate::features::activity::models::SpaceScore;
+
+/// Build a SpaceScore row for `(user, space)` with `total_score = total`.
+/// Matches the per-space score the existing aggregation pipeline produces.
+pub fn make_score(user_pk: &Partition, space_id: &str, total: i64) -> SpaceScore {
+    let space_part = SpacePartition(space_id.to_string());
+    let author = AuthorPartition(match user_pk {
+        Partition::User(s) => s.clone(),
+        _ => panic!("user pk only"),
+    });
+    let mut s = SpaceScore::new(space_part, author, "u".into(), "".into());
+    s.total_score = total;
+    s
+}
+
+/// Pump enough XP into the user's CharacterXp via the production code path
+/// (not direct entity manipulation) so tests exercise `apply_character_xp_delta`.
+pub async fn award_xp(ctx: &TestContext, user_pk: &Partition, total: i64) {
+    crate::features::character::services::apply_character_xp_delta(
+        ctx.ddb,
+        make_score(user_pk, "s", total),
+    )
+    .await
+    .unwrap();
+}
+
+/// Run a future with an env var temporarily set, then restore the prior value.
+/// Used by migration tests that toggle `MIGRATE`. Tests using this MUST run
+/// serialized — the project's test runner already serializes by default with
+/// `--test-threads=1` for integration tests; if running in parallel, gate
+/// with a `static MUTEX: Mutex<()> = Mutex::const_new(());`.
+pub async fn run_with_env<F, Fut, T>(key: &str, val: &str, f: F) -> T
+where
+    F: FnOnce() -> Fut,
+    Fut: std::future::Future<Output = T>,
+{
+    let prev = std::env::var(key).ok();
+    std::env::set_var(key, val);
+    let r = f().await;
+    if let Some(p) = prev {
+        std::env::set_var(key, p);
+    } else {
+        std::env::remove_var(key);
+    }
+    r
+}
+```
+
+- [ ] **Step 3: Create `migration_tests.rs`**
+
+Write `app/ratel/src/features/character/tests/migration_tests.rs`:
+
+```rust
+use super::helpers::*;
 use crate::common::models::migration::LastBackfillVersion;
-use crate::common::types::*;
 
 #[tokio::test]
 async fn test_last_backfill_version_default_unset() {
@@ -347,7 +430,6 @@ async fn test_advance_to_with_correct_expected_succeeds() {
 async fn test_advance_to_with_wrong_expected_fails() {
     let ctx = TestContext::setup().await;
     LastBackfillVersion::advance_to(ctx.ddb, 0, 1).await.unwrap();
-    // Now stored version is 1; advancing with expected=0 must fail.
     let res = LastBackfillVersion::advance_to(ctx.ddb, 0, 2).await;
     assert!(res.is_err(), "advancing with stale expected should be rejected");
     let (pk, sk) = LastBackfillVersion::singleton_keys();
@@ -359,16 +441,21 @@ async fn test_advance_to_with_wrong_expected_fails() {
 }
 ```
 
-- [ ] **Step 3: Run tests**
+- [ ] **Step 4: Create empty placeholder files** for the other test modules so `tests/mod.rs` compiles. Touch (zero-byte content fine):
+  - `leveling_tests.rs` — populated in Task 8
+  - `character_xp_tests.rs` — populated in Task 14
+  - `skill_tests.rs` — populated in Task 22
 
-Run: `cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- character_migration_tests`
+- [ ] **Step 5: Run the four LBV tests**
+
+Run: `cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- features::character::tests::migration_tests`
 Expected: 4 passed.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add app/ratel/src/tests/character_migration_tests.rs app/ratel/src/tests/mod.rs
-git commit -m "test(migrations): cover LastBackfillVersion conditional advance"
+git add app/ratel/src/features/character/tests/
+git commit -m "test(character): scaffold feature-local tests + LastBackfillVersion coverage"
 ```
 
 ---
@@ -537,6 +624,11 @@ pub use types::*;
 pub use dto::*;
 
 use crate::common::*;
+
+// Feature-local tests (per the test-layout note in the plan header).
+// Compiled only for `cargo test`; never shipped to prod binaries.
+#[cfg(test)]
+mod tests;
 ```
 
 - [ ] **Step 2: Register in features**
@@ -642,97 +734,96 @@ git commit -m "feat(character): leveling math module (constants + helpers)"
 ## Task 8: Test `leveling.rs`
 
 **Files:**
-- Modify: `app/ratel/src/features/character/leveling.rs` — append `#[cfg(test)] mod tests`.
+- Modify: `app/ratel/src/features/character/tests/leveling_tests.rs`
 
-- [ ] **Step 1: Append tests block**
+> Per the feature-local test convention, leveling unit tests live in the feature's `tests/` tree, not as an inline `#[cfg(test)] mod tests` block. They're plain Rust tests (no DynamoDB) but kept alongside the integration tests so the whole feature's coverage lives in one directory.
 
-Append to the bottom of `leveling.rs`:
+- [ ] **Step 1: Replace placeholder with tests**
+
+Write `app/ratel/src/features/character/tests/leveling_tests.rs`:
 
 ```rust
-#[cfg(test)]
-mod tests {
-    use super::*;
+use crate::features::character::leveling::*;
 
-    #[test]
-    fn cumulative_xp_known_values() {
-        assert_eq!(cumulative_xp_at_level(1), 0);
-        // L2: 220 · 1·2·3 / 6 = 220
-        assert_eq!(cumulative_xp_at_level(2), 220);
-        // L5: 220 · 4·5·9 / 6 = 6_600
-        assert_eq!(cumulative_xp_at_level(5), 6_600);
-        // L10: 220 · 9·10·19 / 6 = 62_700
-        assert_eq!(cumulative_xp_at_level(10), 62_700);
-        // L46: 220 · 45·46·91 / 6 = 6_906_900
-        assert_eq!(cumulative_xp_at_level(46), 6_906_900);
-    }
+#[test]
+fn cumulative_xp_known_values() {
+    assert_eq!(cumulative_xp_at_level(1), 0);
+    // L2: 220 · 1·2·3 / 6 = 220
+    assert_eq!(cumulative_xp_at_level(2), 220);
+    // L5: 220 · 4·5·9 / 6 = 6_600
+    assert_eq!(cumulative_xp_at_level(5), 6_600);
+    // L10: 220 · 9·10·19 / 6 = 62_700
+    assert_eq!(cumulative_xp_at_level(10), 62_700);
+    // L46: 220 · 45·46·91 / 6 = 6_906_900
+    assert_eq!(cumulative_xp_at_level(46), 6_906_900);
+}
 
-    #[test]
-    fn level_from_xp_boundaries() {
-        assert_eq!(level_from_xp(0), 1);
-        assert_eq!(level_from_xp(219), 1);
-        assert_eq!(level_from_xp(220), 2);
-        assert_eq!(level_from_xp(6_599), 4);
-        assert_eq!(level_from_xp(6_600), 5);
-        assert_eq!(level_from_xp(6_906_900), 46);
-    }
+#[test]
+fn level_from_xp_boundaries() {
+    assert_eq!(level_from_xp(0), 1);
+    assert_eq!(level_from_xp(219), 1);
+    assert_eq!(level_from_xp(220), 2);
+    assert_eq!(level_from_xp(6_599), 4);
+    assert_eq!(level_from_xp(6_600), 5);
+    assert_eq!(level_from_xp(6_906_900), 46);
+}
 
-    #[test]
-    fn sp_granted_linear() {
-        assert_eq!(total_sp_granted(1), 5);
-        assert_eq!(total_sp_granted(10), 50);
-        assert_eq!(total_sp_granted(46), 230);
-    }
+#[test]
+fn sp_granted_linear() {
+    assert_eq!(total_sp_granted(1), 5);
+    assert_eq!(total_sp_granted(10), 50);
+    assert_eq!(total_sp_granted(46), 230);
+}
 
-    #[test]
-    fn skill_cost_curve() {
-        assert_eq!(skill_cost_next(0), Some(5));
-        assert_eq!(skill_cost_next(1), Some(9));
-        assert_eq!(skill_cost_next(2), Some(13));
-        assert_eq!(skill_cost_next(3), Some(17));
-        assert_eq!(skill_cost_next(4), Some(21));
-        assert_eq!(skill_cost_next(5), Some(25));
-        assert_eq!(skill_cost_next(6), Some(29));
-        assert_eq!(skill_cost_next(7), Some(33));
-        assert_eq!(skill_cost_next(8), Some(37));
-        assert_eq!(skill_cost_next(9), Some(41));
-        assert_eq!(skill_cost_next(10), None);
+#[test]
+fn skill_cost_curve() {
+    assert_eq!(skill_cost_next(0), Some(5));
+    assert_eq!(skill_cost_next(1), Some(9));
+    assert_eq!(skill_cost_next(2), Some(13));
+    assert_eq!(skill_cost_next(3), Some(17));
+    assert_eq!(skill_cost_next(4), Some(21));
+    assert_eq!(skill_cost_next(5), Some(25));
+    assert_eq!(skill_cost_next(6), Some(29));
+    assert_eq!(skill_cost_next(7), Some(33));
+    assert_eq!(skill_cost_next(8), Some(37));
+    assert_eq!(skill_cost_next(9), Some(41));
+    assert_eq!(skill_cost_next(10), None);
 
-        // Total cost to max: 5+9+13+17+21+25+29+33+37+41 = 230
-        let total: i32 = (0..MAX_SKILL_LEVEL).map(|n| skill_cost_next(n).unwrap()).sum();
-        assert_eq!(total, 230);
-    }
+    // Total cost to max: 5+9+13+17+21+25+29+33+37+41 = 230
+    let total: i32 = (0..MAX_SKILL_LEVEL).map(|n| skill_cost_next(n).unwrap()).sum();
+    assert_eq!(total, 230);
+}
 
-    #[test]
-    fn multiplier_curve() {
-        assert_eq!(multiplier_permille(0), 1000);
-        assert_eq!(multiplier_permille(1), 1050);
-        assert_eq!(multiplier_permille(5), 1250);
-        assert_eq!(multiplier_permille(10), 1500); // +50% at max = 1.5×
-    }
+#[test]
+fn multiplier_curve() {
+    assert_eq!(multiplier_permille(0), 1000);
+    assert_eq!(multiplier_permille(1), 1050);
+    assert_eq!(multiplier_permille(5), 1250);
+    assert_eq!(multiplier_permille(10), 1500); // +50% at max = 1.5×
+}
 
-    #[test]
-    fn apply_permille_rounding() {
-        // 10_000 × 1.20 = 12_000
-        assert_eq!(apply_permille(10_000, 1200), 12_000);
-        // 10_000 × 1.05 = 10_500
-        assert_eq!(apply_permille(10_000, 1050), 10_500);
-        // 7 × 1.05 = 7.35 → rounds to 7
-        assert_eq!(apply_permille(7, 1050), 7);
-        // 9 × 1.05 = 9.45 → rounds to 9
-        assert_eq!(apply_permille(9, 1050), 9);
-    }
+#[test]
+fn apply_permille_rounding() {
+    // 10_000 × 1.20 = 12_000
+    assert_eq!(apply_permille(10_000, 1200), 12_000);
+    // 10_000 × 1.05 = 10_500
+    assert_eq!(apply_permille(10_000, 1050), 10_500);
+    // 7 × 1.05 = 7.35 → rounds to 7
+    assert_eq!(apply_permille(7, 1050), 7);
+    // 9 × 1.05 = 9.45 → rounds to 9
+    assert_eq!(apply_permille(9, 1050), 9);
 }
 ```
 
 - [ ] **Step 2: Run tests**
 
-Run: `cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev cargo test --features server -- leveling::tests`
+Run: `cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-dev cargo test --features server -- features::character::tests::leveling_tests`
 Expected: all passed.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add app/ratel/src/features/character/leveling.rs
+git add app/ratel/src/features/character/tests/leveling_tests.rs
 git commit -m "test(character): leveling math unit tests (curve + costs + multiplier)"
 ```
 
@@ -1244,36 +1335,16 @@ git commit -m "feat(character): apply_character_xp_delta service (idempotent)"
 ## Task 14: Test `apply_character_xp_delta`
 
 **Files:**
-- Create: `app/ratel/src/tests/character_tests.rs`
-- Modify: `app/ratel/src/tests/mod.rs`
+- Modify: `app/ratel/src/features/character/tests/character_xp_tests.rs`
 
-- [ ] **Step 1: Wire test module**
+- [ ] **Step 1: Replace placeholder with tests**
 
-Append to `app/ratel/src/tests/mod.rs`:
-
-```rust
-mod character_tests;
-```
-
-- [ ] **Step 2: Write tests**
+Write `app/ratel/src/features/character/tests/character_xp_tests.rs`:
 
 ```rust
-use super::*;
-use crate::common::types::*;
-use crate::features::activity::models::SpaceScore;
+use super::helpers::*;
 use crate::features::character::models::{CharacterXp, CharacterXpSource};
 use crate::features::character::services::apply_character_xp_delta;
-
-fn make_score(user_pk: &Partition, space_id: &str, total: i64) -> SpaceScore {
-    let space_part = SpacePartition(space_id.to_string());
-    let author = AuthorPartition(match user_pk {
-        Partition::User(s) => s.clone(),
-        _ => panic!("user pk only"),
-    });
-    let mut s = SpaceScore::new(space_part, author, "u".into(), "".into());
-    s.total_score = total;
-    s
-}
 
 #[tokio::test]
 async fn test_apply_xp_first_score_inserts_xp_row() {
@@ -1362,15 +1433,15 @@ async fn test_apply_xp_per_space_independent() {
 }
 ```
 
-- [ ] **Step 3: Run tests**
+- [ ] **Step 2: Run tests**
 
-Run: `cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- character_tests::test_apply_xp`
+Run: `cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- features::character::tests::character_xp_tests::test_apply_xp`
 Expected: 6 passed.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add app/ratel/src/tests/character_tests.rs app/ratel/src/tests/mod.rs
+git add app/ratel/src/features/character/tests/character_xp_tests.rs
 git commit -m "test(character): apply_character_xp_delta — insert/replay/delta/negative/levelup/multi-space"
 ```
 
@@ -1676,9 +1747,9 @@ git commit -m "feat(character): GET /api/me/character handler"
 ## Task 19: Test `get_character_handler`
 
 **Files:**
-- Modify: `app/ratel/src/tests/character_tests.rs`
+- Modify: `app/ratel/src/features/character/tests/character_xp_tests.rs`
 
-- [ ] **Step 1: Append tests**
+- [ ] **Step 1: Append tests** (top of file already has `use super::helpers::*;`)
 
 ```rust
 #[tokio::test]
@@ -1732,8 +1803,8 @@ async fn test_get_character_after_xp_delta() {
 - [ ] **Step 2: Run + commit**
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- character_tests::test_get_character
-git add app/ratel/src/tests/character_tests.rs
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- features::character::tests::character_xp_tests::test_get_character
+git add app/ratel/src/features/character/tests/character_xp_tests.rs
 git commit -m "test(character): get_character handler — unauth/default/post-XP"
 ```
 
@@ -1777,7 +1848,7 @@ pub async fn get_public_character_handler(username: String) -> Result<PublicChar
 
 - [ ] **Step 2: Build + tests**
 
-Append to `character_tests.rs`:
+Append to `app/ratel/src/features/character/tests/character_xp_tests.rs`:
 
 ```rust
 #[tokio::test]
@@ -1809,12 +1880,12 @@ async fn test_get_public_character_unknown_user_404() {
 }
 ```
 
-Run: `cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- character_tests::test_get_public_character`
+Run: `cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- features::character::tests::character_xp_tests::test_get_public_character`
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add app/ratel/src/features/character/controllers/get_public_character.rs app/ratel/src/tests/character_tests.rs
+git add app/ratel/src/features/character/controllers/get_public_character.rs app/ratel/src/features/character/tests/character_xp_tests.rs
 git commit -m "feat(character): GET /api/users/:username/character (public, level-only)"
 ```
 
@@ -1930,17 +2001,14 @@ git commit -m "feat(character): POST /api/me/skills/:skill_id/level-up handler"
 ## Task 22: Test `level_up_handler`
 
 **Files:**
-- Modify: `app/ratel/src/tests/character_tests.rs`
+- Modify: `app/ratel/src/features/character/tests/skill_tests.rs`
 
-- [ ] **Step 1: Append tests**
+- [ ] **Step 1: Replace placeholder with tests** (`award_xp` lives in `helpers.rs`, no need to redefine):
+
+Write `app/ratel/src/features/character/tests/skill_tests.rs`:
 
 ```rust
-async fn award_xp(ctx: &TestContext, user_pk: &Partition, total: i64) {
-    crate::features::character::services::apply_character_xp_delta(
-        ctx.ddb,
-        make_score(user_pk, "s", total),
-    ).await.unwrap();
-}
+use super::helpers::*;
 
 #[tokio::test]
 async fn test_level_up_money_tree_l1_success() {
@@ -2042,8 +2110,8 @@ async fn test_level_up_unauthenticated_rejected() {
 - [ ] **Step 2: Run + commit**
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- character_tests::test_level_up
-git add app/ratel/src/tests/character_tests.rs
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- features::character::tests::skill_tests::test_level_up
+git add app/ratel/src/features/character/tests/skill_tests.rs
 git commit -m "test(character): level_up — success/insufficient/unknown/v2/max/unauth"
 ```
 
@@ -2119,7 +2187,7 @@ git commit -m "feat(character): Money Tree boosts participant payout in SpaceRew
 ## Task 24: Test Money Tree end-to-end
 
 **Files:**
-- Modify: `app/ratel/src/tests/character_tests.rs`
+- Modify: `app/ratel/src/features/character/tests/skill_tests.rs`
 
 - [ ] **Step 1: Append test**
 
@@ -2166,8 +2234,8 @@ async fn test_money_tree_boosts_user_reward_amount() {
 - [ ] **Step 2: Run + commit**
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- character_tests::test_money_tree_boosts
-git add app/ratel/src/tests/character_tests.rs
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- features::character::tests::skill_tests::test_money_tree_boosts
+git add app/ratel/src/features/character/tests/skill_tests.rs
 git commit -m "test(character): Money Tree L1 boosts UserReward by 5%"
 ```
 
@@ -2256,7 +2324,7 @@ git commit -m "feat(character): Ranker boosts SpaceActivity.additional_score at 
 ## Task 26: Test Ranker end-to-end
 
 **Files:**
-- Modify: `app/ratel/src/tests/character_tests.rs`
+- Modify: `app/ratel/src/features/character/tests/skill_tests.rs`
 
 - [ ] **Step 1: Append test**
 
@@ -2307,8 +2375,8 @@ async fn test_ranker_boosts_additional_score() {
 - [ ] **Step 2: Run + commit**
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- character_tests::test_ranker_boosts
-git add app/ratel/src/tests/character_tests.rs
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- features::character::tests::skill_tests::test_ranker_boosts
+git add app/ratel/src/features/character/tests/skill_tests.rs
 git commit -m "test(character): Ranker L1 boosts additional_score by 5%"
 ```
 
@@ -2454,24 +2522,11 @@ git commit -m "feat(migrations): m001 — backfill CharacterXp from SpaceScore"
 ## Task 28: Test migration framework end-to-end
 
 **Files:**
-- Modify: `app/ratel/src/tests/character_migration_tests.rs`
+- Modify: `app/ratel/src/features/character/tests/migration_tests.rs`
 
-- [ ] **Step 1: Append tests**
+- [ ] **Step 1: Append tests** (`run_with_env` already lives in `helpers.rs`)
 
 ```rust
-async fn run_with_env<F, Fut, T>(key: &str, val: &str, f: F) -> T
-where
-    F: FnOnce() -> Fut,
-    Fut: std::future::Future<Output = T>,
-{
-    // Tests must serialize this — use a global mutex if running in parallel.
-    let prev = std::env::var(key).ok();
-    std::env::set_var(key, val);
-    let r = f().await;
-    if let Some(p) = prev { std::env::set_var(key, p) } else { std::env::remove_var(key) }
-    r
-}
-
 #[tokio::test]
 async fn test_run_migrations_skips_when_migrate_unset() {
     let ctx = TestContext::setup().await;
@@ -2488,7 +2543,6 @@ async fn test_run_migrations_runs_m001() {
     let ctx = TestContext::setup().await;
     // Seed a SpaceScore so the backfill has work to do.
     use crate::features::activity::models::SpaceScore;
-    use crate::common::types::*;
     let user_pk = ctx.test_user.0.pk.clone();
     let space_part = SpacePartition("seed".into());
     let author = AuthorPartition(match &user_pk { Partition::User(s)=>s.clone(), _=>unreachable!() });
@@ -2531,8 +2585,8 @@ async fn test_run_migrations_idempotent_at_version() {
 - [ ] **Step 2: Run + commit**
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- character_migration_tests
-git add app/ratel/src/tests/character_migration_tests.rs
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- features::character::tests::migration_tests
+git add app/ratel/src/features/character/tests/migration_tests.rs
 git commit -m "test(migrations): MIGRATE gate + m001 + idempotent re-run"
 ```
 
@@ -2596,7 +2650,7 @@ All three must pass with zero warnings.
 - [ ] **Step 4: Run full test suite**
 
 ```bash
-cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- character
+cd app/ratel && DYNAMO_TABLE_PREFIX=ratel-local cargo test --features "full,bypass" -- features::character::tests
 ```
 
 - [ ] **Step 5: Commit**
@@ -2644,7 +2698,8 @@ Before marking the backend plan complete, verify:
 - [ ] All 31 tasks committed (`git log --oneline origin/dev..HEAD` shows 31+ commits).
 - [ ] `cargo check --features server` passes with `-D warnings`.
 - [ ] `dx check --features web` passes with `-D warnings`.
-- [ ] All `character_tests` and `character_migration_tests` pass under `--features "full,bypass"`.
+- [ ] All test files under `app/ratel/src/features/character/tests/` pass under `--features "full,bypass"` via `cargo test -- features::character::tests`.
+- [ ] No test code from this feature lives outside `features/character/tests/` (the project-wide `app/ratel/src/tests/<feature>_tests.rs` convention is intentionally NOT followed for this feature; see plan header note).
 - [ ] No `TODO`, `FIXME`, or `unimplemented!()` left in `features/character/` or `common/migrations/`.
 - [ ] Owner-bonus payout in `SpaceReward::award` is **not** boosted by Money Tree (Task 23 gotcha).
 - [ ] `Ranker` multiplier is applied to `additional_score` only, not `base_score` (Task 25).
