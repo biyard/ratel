@@ -144,6 +144,24 @@ translate! {
         en: "Private",
         ko: "비공개",
     },
+    visibility_syndicated_remain_title: {
+        en: "Syndicated copies stay visible",
+        ko: "이미 발행된 사본은 그대로 남습니다",
+    },
+    visibility_syndicated_remain_body: {
+        en: "Switching to Private hides this post on Ratel, but copies already cross-posted to external networks remain visible. Delete them on each platform if you need them removed.",
+        ko: "비공개로 전환하면 Ratel에서는 글이 숨겨지지만, 외부 네트워크에 이미 발행된 크로스포스트 사본은 그대로 표시됩니다. 필요하다면 각 플랫폼에서 직접 삭제해주세요.",
+    },
+
+    discard_confirm_title: {
+        en: "Discard this draft?",
+        ko: "초안을 폐기할까요?",
+    },
+    discard_confirm_body: {
+        en: "Discarding will permanently remove the current draft. This action cannot be undone.",
+        ko: "초안을 폐기하면 현재 작성 중인 내용이 영구 삭제됩니다. 되돌릴 수 없습니다.",
+    },
+    cancel: { en: "Cancel", ko: "취소" },
 
     discard_draft: {
         en: "Discard Draft",

@@ -387,6 +387,7 @@ dependencies = [
 name = "app-shell"
 version = "0.1.0"
 dependencies = [
+ "aes-gcm",
  "aide",
  "async-trait",
  "attr-voting",

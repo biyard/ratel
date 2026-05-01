@@ -1,4 +1,5 @@
 use crate::common::*;
+use crate::features::cross_posting::models::ErrorCategory;
 use crate::features::notifications::i18n::NotificationsTranslate;
 use dioxus_translate::Language;
 
@@ -144,6 +145,25 @@ impl InboxPayload {
                 String::new(),
                 None,
             ),
+            InboxPayload::CrossPostingFailed {
+                platform,
+                error_category,
+                ..
+            } => {
+                let platform_display = platform.display_name();
+                let title = tr
+                    .xpost_failed_title
+                    .replace("{platform}", platform_display);
+                let body_template = match error_category {
+                    ErrorCategory::NetworkError => tr.xpost_failed_network,
+                    ErrorCategory::RateLimited => tr.xpost_failed_rate_limit,
+                    ErrorCategory::AuthExpired => tr.xpost_failed_auth_expired,
+                    ErrorCategory::ContentRejected => tr.xpost_failed_content_rejected,
+                    ErrorCategory::Unknown => tr.xpost_failed_unknown,
+                };
+                let body = body_template.replace("{platform}", platform_display);
+                (title, body, None)
+            }
         }
     }
 }

@@ -6,6 +6,7 @@ This is the product index. Each checkbox maps to **exactly one spec file** in `r
 
 - [ ] [Sub-team governance (Dept ↔ Club)](roadmap/sub-team.md)
 - [ ] [Meet action (video meetings as space action)](roadmap/meet-action.md)
+- [ ] [Cross-posting (Bluesky / LinkedIn / Threads)](roadmap/cross-posting.md)
 
 ## Planned
 

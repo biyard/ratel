@@ -7,6 +7,8 @@ pub mod storage;
 pub mod time;
 
 #[cfg(feature = "server")]
+pub mod aead;
+#[cfg(feature = "server")]
 pub mod aws;
 #[cfg(feature = "server")]
 pub mod inbox;

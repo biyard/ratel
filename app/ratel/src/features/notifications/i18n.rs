@@ -57,4 +57,28 @@ translate! {
         en: "{parent} was deleted — your team is no longer a sub-team",
         ko: "{parent}팀이 삭제되어 더 이상 하위팀이 아닙니다",
     },
+    xpost_failed_title: {
+        en: "Cross-posting to {platform} failed",
+        ko: "{platform} 크로스포스팅에 실패했습니다",
+    },
+    xpost_failed_network: {
+        en: "Temporary network error. Tap to retry from the post.",
+        ko: "일시적인 네트워크 오류입니다. 게시글에서 재시도해주세요.",
+    },
+    xpost_failed_rate_limit: {
+        en: "{platform} rate limit reached. Tap to retry from the post in a moment.",
+        ko: "{platform} 요청 한도에 도달했습니다. 잠시 후 게시글에서 재시도해주세요.",
+    },
+    xpost_failed_auth_expired: {
+        en: "Your {platform} connection expired. Reconnect in Settings → Connections.",
+        ko: "{platform} 연결이 만료되었습니다. 설정 → Connections에서 다시 연결해주세요.",
+    },
+    xpost_failed_content_rejected: {
+        en: "{platform} rejected the content. Edit the post and try again.",
+        ko: "{platform}에서 콘텐츠를 거부했습니다. 게시글을 수정 후 다시 시도해주세요.",
+    },
+    xpost_failed_unknown: {
+        en: "Cross-posting failed unexpectedly. Tap to retry from the post.",
+        ko: "예상치 못한 오류로 크로스포스팅에 실패했습니다. 게시글에서 재시도해주세요.",
+    },
 }
