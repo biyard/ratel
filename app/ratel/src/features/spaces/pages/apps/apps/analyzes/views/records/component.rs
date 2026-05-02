@@ -33,8 +33,6 @@ pub fn SpaceAnalyzeRecordsPage(
         .and_then(|idx| filters.get(idx as usize).map(|f| f.source));
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
-
         div { class: "analyze-arena analyze-arena--records",
             div { class: "arena",
                 // ── Topbar ───────────────────────────────────
@@ -159,7 +157,6 @@ pub fn RecordsTable(source: AnalyzeFilterSource, rows: Vec<AnalyzeRecordRow>) ->
 
     let src = source.as_str();
     rsx! {
-        document::Stylesheet { href: asset!("./table.css") }
         div { class: "records-table-wrap", "data-source": "{src}",
             div { class: "records-table-header",
                 table { class: "records-table",

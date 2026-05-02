@@ -60,7 +60,6 @@ pub fn SpaceAnalyzeReportPage(
     let report_name = report.name.clone();
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
         document::Script { defer: true, src: asset!("./script.js") }
 
         div { class: "analyze-arena analyze-arena--detail",
