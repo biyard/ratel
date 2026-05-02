@@ -37098,3 +37098,22 @@ body.comments-panel-resizing {
   .pd-subscribe-cta { padding: 22px 18px; }
   .pd-subscribe-cta__title { font-size: 18px; }
 }
+
+/* === mobile scroll escape for full-viewport arena wrappers === */
+/* Desktop pattern: `body { overflow: hidden }` + each arena owns its own
+   scroll container at 100dvh. On mobile, body itself becomes scrollable
+   (tailwind.css `max-tablet:overflow-auto`), so a nested 100dvh scroll
+   container creates two competing scroll roots and touch Y-scroll dies.
+   Below releases the lock on tablet+mobile so the document scrolls
+   naturally — matches the existing `.essence-arena` mobile override. */
+@media (max-width: 768px) {
+  .arena,
+  .post-arena,
+  .home-arena,
+  .connections-arena,
+  .onboarding-arena {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+}
