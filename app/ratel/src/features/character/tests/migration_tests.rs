@@ -4,6 +4,7 @@ use crate::common::models::migration::LastBackfillVersion;
 #[tokio::test]
 async fn test_last_backfill_version_default_unset() {
     let ctx = TestContext::setup().await;
+    reset_migration_state(&ctx.ddb).await;
     let (pk, sk) = LastBackfillVersion::singleton_keys();
     let row = LastBackfillVersion::get(&ctx.ddb, &pk, Some(&sk)).await.unwrap();
     assert!(row.is_none(), "no migration row should exist initially");
@@ -12,6 +13,7 @@ async fn test_last_backfill_version_default_unset() {
 #[tokio::test]
 async fn test_advance_to_from_zero_inserts() {
     let ctx = TestContext::setup().await;
+    reset_migration_state(&ctx.ddb).await;
     LastBackfillVersion::advance_to(&ctx.ddb, 0, 1).await.unwrap();
     let (pk, sk) = LastBackfillVersion::singleton_keys();
     let row = LastBackfillVersion::get(&ctx.ddb, &pk, Some(&sk))
@@ -24,6 +26,7 @@ async fn test_advance_to_from_zero_inserts() {
 #[tokio::test]
 async fn test_advance_to_with_correct_expected_succeeds() {
     let ctx = TestContext::setup().await;
+    reset_migration_state(&ctx.ddb).await;
     LastBackfillVersion::advance_to(&ctx.ddb, 0, 1).await.unwrap();
     LastBackfillVersion::advance_to(&ctx.ddb, 1, 2).await.unwrap();
     let (pk, sk) = LastBackfillVersion::singleton_keys();
@@ -37,6 +40,7 @@ async fn test_advance_to_with_correct_expected_succeeds() {
 #[tokio::test]
 async fn test_advance_to_with_wrong_expected_fails() {
     let ctx = TestContext::setup().await;
+    reset_migration_state(&ctx.ddb).await;
     LastBackfillVersion::advance_to(&ctx.ddb, 0, 1).await.unwrap();
     let res = LastBackfillVersion::advance_to(&ctx.ddb, 0, 2).await;
     assert!(res.is_err(), "advancing with stale expected should be rejected");
@@ -51,6 +55,7 @@ async fn test_advance_to_with_wrong_expected_fails() {
 #[tokio::test]
 async fn test_run_migrations_skips_when_migrate_unset() {
     let ctx = TestContext::setup().await;
+    reset_migration_state(&ctx.ddb).await;
     std::env::remove_var("MIGRATE");
     crate::common::migrations::run_migrations(&ctx.ddb).await.unwrap();
 
@@ -62,6 +67,7 @@ async fn test_run_migrations_skips_when_migrate_unset() {
 #[tokio::test]
 async fn test_run_migrations_runs_m001() {
     let ctx = TestContext::setup().await;
+    reset_migration_state(&ctx.ddb).await;
     // Seed a SpaceScore so the backfill has work to do.
     use crate::features::activity::models::SpaceScore;
     use crate::features::activity::types::AuthorPartition;
@@ -100,6 +106,7 @@ async fn test_run_migrations_runs_m001() {
 #[tokio::test]
 async fn test_run_migrations_idempotent_at_version() {
     let ctx = TestContext::setup().await;
+    reset_migration_state(&ctx.ddb).await;
     LastBackfillVersion::advance_to(&ctx.ddb, 0, 1).await.unwrap();
 
     let ddb = ctx.ddb.clone();

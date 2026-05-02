@@ -32,6 +32,19 @@ pub async fn award_xp(ctx: &TestContext, user_pk: &Partition, total: i64) {
     .unwrap();
 }
 
+/// Clear the migration-state singleton so tests start from a clean slate.
+/// `LastBackfillVersion` lives at a single (pk, sk) — `MIGRATION` +
+/// `LAST_BACKFILL_VERSION` — that all migration tests share. Without this
+/// reset the order tests run in matters: e.g. once one test advances the
+/// version to 1, every subsequent test's `advance_to(0, …)` fails the
+/// conditional update with `ConditionalCheckFailedException`.
+pub async fn reset_migration_state(ddb: &aws_sdk_dynamodb::Client) {
+    use crate::common::models::migration::LastBackfillVersion;
+    let (pk, sk) = LastBackfillVersion::singleton_keys();
+    // `delete` returns NotFound for an absent row; we don't care either way.
+    let _ = LastBackfillVersion::delete(ddb, &pk, Some(&sk)).await;
+}
+
 /// Run a future with an env var temporarily set, then restore the prior value.
 /// Used by migration tests that toggle `MIGRATE`. Tests using this MUST run
 /// serialized — when running in parallel, the env-var swap leaks across tests.
