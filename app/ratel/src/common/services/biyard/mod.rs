@@ -81,6 +81,20 @@ pub struct PointTransactionResponse {
     pub target_user_id: Option<String>,
     pub description: Option<String>,
     pub created_at: i64,
+    /// Money Tree skill level used to compute the bonus surfaced on this row.
+    /// Populated server-side by the Ratel handler — the upstream Biyard
+    /// Points API does not surface this. Heuristic: we use the user's
+    /// *current* MoneyTree level. For a row with a real bonus, this lets the
+    /// `RewardBreakdownChip` render. For non-award rows (or zero-level
+    /// users), this is `None` and the chip renders nothing.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub money_tree_level: Option<i32>,
+    /// Money Tree bonus credited on top of the base amount, in points.
+    /// Reconstructed server-side from `amount` and `money_tree_level` —
+    /// `bonus = amount − round(amount · 1000 / multiplier_permille(level))`.
+    /// `None` when the row is not an award or no MoneyTree boost applies.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub money_tree_bonus: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]

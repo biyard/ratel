@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Public profile — Character Level badge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;
+      --bg-glass:rgba(12,12,26,0.65);
+      --border-subtle:rgba(255,255,255,0.06);
+      --text-primary:#f0f0f5;
+      --text-muted:#8888a8;
+      --text-dim:#55556a;
+      --accent-gold:#fcb300;
+      --accent-teal:#6eedd8;
+      --font-display:'Orbitron',sans-serif;
+      --font-body:'Outfit',sans-serif;
+    }
+    html[data-theme="dark"]{ --dark: ; --light: initial; }
+    html[data-theme="light"]{ --dark: initial; --light: ; }
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+
+    .arena{position:relative;min-height:100vh;padding:60px 24px;display:flex;flex-direction:column;align-items:center;gap:48px;isolation:isolate}
+    .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 55% at 50% 10%,rgba(252,179,0,0.05) 0%,transparent 55%);z-index:-1}
+
+    .demo-section{width:100%;max-width:880px;display:flex;flex-direction:column;gap:14px}
+    .demo-section__heading{font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-muted)}
+    .demo-section__heading::before{content:'';display:inline-block;width:6px;height:6px;background:var(--accent-gold);transform:rotate(45deg);margin-right:10px;vertical-align:middle}
+
+    /* ── Profile header (matches existing user profile aesthetic) ── */
+    .profile-header{
+      display:grid;grid-template-columns:auto 1fr auto;gap:24px;align-items:center;
+      padding:28px 32px;
+      background:var(--bg-glass);
+      backdrop-filter:blur(16px);
+      border:1px solid var(--border-subtle);
+      border-radius:18px;
+    }
+    .profile-header__avatar{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,#fcb300 0%,#6eedd8 100%);border:2px solid rgba(255,255,255,0.10)}
+    .profile-header__body{display:flex;flex-direction:column;gap:6px;min-width:0}
+    .profile-header__name{font-family:var(--font-display);font-size:22px;font-weight:700;letter-spacing:0.02em}
+    .profile-header__username{font-size:13px;color:var(--text-muted)}
+    .profile-header__bio{font-size:13px;color:var(--text-muted);margin-top:6px;max-width:48ch;line-height:1.5}
+
+    /* ── Character Level chip — visitor view ─────────── */
+    /* Compact, prominent, but smaller than the owner-only "/me/character"
+       hero badge. Conveys "this account has been here a while" without
+       leaking skill build / SP / XP totals. */
+    .character-level-chip{
+      display:inline-flex;flex-direction:column;align-items:center;gap:4px;
+      padding:14px 22px;
+      border-radius:14px;
+      background:radial-gradient(ellipse 100% 100% at 50% 0%,rgba(252,179,0,0.12) 0%,rgba(252,179,0,0.04) 70%,transparent 100%);
+      border:1px solid rgba(252,179,0,0.25);
+      box-shadow:0 0 24px rgba(252,179,0,0.10),inset 0 0 16px rgba(252,179,0,0.04);
+      cursor:default;
+    }
+    .character-level-chip__label{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.16em;color:var(--accent-gold);text-transform:uppercase;opacity:0.85}
+    .character-level-chip__num{font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--accent-gold);text-shadow:0 0 18px rgba(252,179,0,0.4);line-height:1;font-variant-numeric:tabular-nums}
+    .character-level-chip__sub{font-size:10px;color:var(--text-muted);font-variant-numeric:tabular-nums}
+
+    /* Inline-mini variant — small badge alongside username for tight layouts */
+    .level-badge-mini{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:3px 9px;border-radius:7px;
+      background:rgba(252,179,0,0.10);
+      border:1px solid rgba(252,179,0,0.22);
+      color:var(--accent-gold);
+      font-family:var(--font-display);
+      font-size:11px;font-weight:700;letter-spacing:0.06em;
+      vertical-align:middle;
+    }
+    .level-badge-mini::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--accent-gold);box-shadow:0 0 6px var(--accent-gold)}
+
+    /* Brand-new account fallback (level 1) */
+    .character-level-chip[data-level="1"]{background:rgba(255,255,255,0.025);border-color:var(--border-subtle);box-shadow:none}
+    .character-level-chip[data-level="1"] .character-level-chip__label{color:var(--text-muted)}
+    .character-level-chip[data-level="1"] .character-level-chip__num{color:var(--text-dim);text-shadow:none}
+
+    /* ── Hover card preview (when hovering the mini badge) ─── */
+    .badge-with-hint{position:relative;display:inline-block}
+    .badge-hint{
+      position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(-4px);
+      width:240px;padding:14px 16px;
+      background:rgba(12,12,26,0.96);
+      backdrop-filter:blur(24px);
+      border:1px solid rgba(252,179,0,0.20);
+      border-radius:12px;
+      font-size:12px;color:var(--text-muted);line-height:1.55;
+      opacity:0;pointer-events:none;
+      transition:opacity 0.18s ease,transform 0.18s ease;
+      z-index:5;
+      box-shadow:0 12px 36px rgba(0,0,0,0.5);
+    }
+    .badge-with-hint:hover .badge-hint,.badge-with-hint:focus-within .badge-hint{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+    .badge-hint strong{color:var(--text-primary);font-weight:600}
+  </style>
+</head>
+<body>
+  <div class="arena">
+
+    <!-- ── A: profile-header chip (large, primary placement) ── -->
+    <section class="demo-section">
+      <h3 class="demo-section__heading">Variant A · Profile header chip (large) — visitor view</h3>
+
+      <div class="profile-header">
+        <span class="profile-header__avatar"></span>
+        <div class="profile-header__body">
+          <span class="profile-header__name">Jane Civic</span>
+          <span class="profile-header__username">@jane.civic</span>
+          <p class="profile-header__bio">Working on local DAO governance + civic transparency. Long-time Ratel participant.</p>
+        </div>
+        <span class="character-level-chip" data-level="32" title="Character Level 32 — long-time Ratel participant">
+          <span class="character-level-chip__label">Level</span>
+          <span class="character-level-chip__num">32</span>
+          <span class="character-level-chip__sub">Ratel Character</span>
+        </span>
+      </div>
+
+      <!-- Brand-new account contrast -->
+      <div class="profile-header">
+        <span class="profile-header__avatar" style="background:linear-gradient(135deg,#444 0%,#222 100%)"></span>
+        <div class="profile-header__body">
+          <span class="profile-header__name">New User</span>
+          <span class="profile-header__username">@newcomer</span>
+          <p class="profile-header__bio">Joined a few minutes ago.</p>
+        </div>
+        <span class="character-level-chip" data-level="1">
+          <span class="character-level-chip__label">Level</span>
+          <span class="character-level-chip__num">1</span>
+          <span class="character-level-chip__sub">Just joined</span>
+        </span>
+      </div>
+    </section>
+
+    <!-- ── B: inline mini badge in user name lines ─── -->
+    <section class="demo-section">
+      <h3 class="demo-section__heading">Variant B · Inline mini badge (next to username)</h3>
+
+      <div class="profile-header">
+        <span class="profile-header__avatar" style="background:linear-gradient(135deg,#818cf8 0%,#f472b6 100%)"></span>
+        <div class="profile-header__body">
+          <span class="profile-header__name">
+            Park Min-jun
+            <span class="badge-with-hint" tabindex="0">
+              <span class="level-badge-mini">LV 18</span>
+              <span class="badge-hint" role="tooltip">
+                <strong>Character Level 18</strong> · earned across all space activity. Skill build is private.
+              </span>
+            </span>
+          </span>
+          <span class="profile-header__username">@minjun.p</span>
+          <p class="profile-header__bio">Sub-team contributor. Civic data nerd.</p>
+        </div>
+      </div>
+
+      <p style="font-size:12px;color:var(--text-muted);max-width:60ch">
+        The mini badge fits in places where the large chip doesn't — comment author lines, post headers, follow-list rows. Hover surfaces a one-line explanation; <strong>skill build / XP totals never leak publicly</strong>.
+      </p>
+    </section>
+
+  </div>
+</body>
+</html>

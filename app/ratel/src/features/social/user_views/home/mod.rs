@@ -4,6 +4,7 @@ use team_header::TeamHeader;
 use user_posts_panel::UserPostsPanel;
 
 use crate::common::*;
+use crate::features::character::components::LevelChip;
 use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::posts::*;
 use crate::features::my_follower::controllers::{check_follow_status_handler, follow_user, unfollow_user};
@@ -75,8 +76,13 @@ pub fn Home(username: String) -> Element {
     let follow_target_pk = initial_status.as_ref().ok().map(|s| s.target_pk.clone());
 
 
+    let chip_username = username.clone();
+    let level_chip_slot: Element = rsx! {
+        LevelChip { username: chip_username }
+    };
+
     rsx! {
-        div { class: "flex flex-col w-full gap-6",
+        div { class: "flex flex-col gap-6 w-full",
             TeamHeader {
                 display_name,
                 profile_url,
@@ -87,6 +93,7 @@ pub fn Home(username: String) -> Element {
                 is_following: is_following(),
                 processing: processing(),
                 logged_in,
+                right_slot: level_chip_slot,
                 on_follow: {
                     let pk = follow_target_pk.clone();
                     move |_| {
@@ -122,29 +129,25 @@ pub fn Home(username: String) -> Element {
             }
 
             // View mode toggle + Create button
-            div { class: "flex items-center justify-between w-full",
+            div { class: "flex justify-between items-center w-full",
                 div { class: "flex overflow-hidden rounded-[10px] w-fit",
                     button {
-                        class: "flex items-center justify-center w-[60px] h-[44px] cursor-pointer transition-colors bg-button-muted hover:bg-button-muted-hover aria-selected:bg-button-active",
+                        class: "flex justify-center items-center transition-colors cursor-pointer w-[60px] h-[44px] bg-button-muted aria-selected:bg-button-active hover:bg-button-muted-hover",
                         "aria-selected": view_mode() == HomeViewMode::List,
                         onclick: move |_| view_mode.set(HomeViewMode::List),
-                        icons::alignments::AlignJustify {
-                            class: "w-6 h-6 [&>path]:stroke-icon-primary",
-                        }
+                        icons::alignments::AlignJustify { class: "w-6 h-6 [&>path]:stroke-icon-primary" }
                     }
                     button {
-                        class: "flex items-center justify-center w-[60px] h-[44px] cursor-pointer transition-colors bg-button-muted hover:bg-button-muted-hover aria-selected:bg-button-active",
+                        class: "flex justify-center items-center transition-colors cursor-pointer w-[60px] h-[44px] bg-button-muted aria-selected:bg-button-active hover:bg-button-muted-hover",
                         "aria-selected": view_mode() == HomeViewMode::Card,
                         onclick: move |_| view_mode.set(HomeViewMode::Card),
-                        lucide_dioxus::LayoutGrid {
-                            class: "w-6 h-6 [&>rect]:stroke-icon-primary [&>path]:stroke-icon-primary",
-                        }
+                        lucide_dioxus::LayoutGrid { class: "w-6 h-6 [&>rect]:stroke-icon-primary [&>path]:stroke-icon-primary" }
                     }
                 }
 
                 if is_owner {
                     button {
-                        class: "flex items-center gap-2.5 bg-btn-secondary-bg hover:bg-btn-secondary-hover-bg text-btn-secondary-text px-5 py-3 h-[44px] rounded-full text-sm font-medium transition-colors cursor-pointer",
+                        class: "flex gap-2.5 items-center py-3 px-5 text-sm font-medium rounded-full transition-colors cursor-pointer bg-btn-secondary-bg text-btn-secondary-text h-[44px] hover:bg-btn-secondary-hover-bg",
                         onclick: move |_| {
                             let nav = nav.clone();
                             async move {

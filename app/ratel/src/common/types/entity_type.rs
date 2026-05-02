@@ -43,6 +43,14 @@ pub enum EntityType {
     UserRelationship(String),
     UserRefreshToken(String),
 
+    // Migration framework
+    LastBackfillVersion,
+
+    // Character (account-level progression)
+    CharacterXp,
+    CharacterXpSource(String),    // space_id (unprefixed; SubPartition wraps SpacePartition)
+    CharacterSkill(String),       // skill_id ("money_tree", "ranker", ...)
+
     // Feed entity types
     Post,
     PostAuthor, // from User

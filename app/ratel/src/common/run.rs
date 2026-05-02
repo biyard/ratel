@@ -49,6 +49,27 @@ fn serve(app: fn() -> Element) {
     let cfg = crate::common::CommonConfig::default();
 
     let cli = cfg.dynamodb();
+
+    // Run pending migrations. No-op unless `MIGRATE=true` is set in the env.
+    // Blocks server startup until done; set on exactly one instance per
+    // release. The conditional UpdateItem in `LastBackfillVersion::advance_to`
+    // is the safety net for accidental double-set.
+    if let Ok(handle) = tokio::runtime::Handle::try_current() {
+        if let Err(e) = handle.block_on(crate::common::migrations::run_migrations(cli)) {
+            tracing::error!(error = %e, "migration runner failed; aborting startup");
+            std::process::exit(1);
+        }
+    } else {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("tokio runtime build for migrations");
+        if let Err(e) = rt.block_on(crate::common::migrations::run_migrations(cli)) {
+            tracing::error!(error = %e, "migration runner failed; aborting startup");
+            std::process::exit(1);
+        }
+    }
+
     let session_layer =
         crate::common::middlewares::session_layer::get_session_layer(cli, cfg.env.to_string());
 

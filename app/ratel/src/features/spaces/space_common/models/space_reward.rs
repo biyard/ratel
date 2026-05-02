@@ -212,24 +212,46 @@ impl SpaceReward {
             }
         }
 
-        let amount = space_reward.get_amount();
+        // Apply Money Tree multiplier to the participant payout. Per spec
+        // FR14, this MUST NOT affect the creator owner-bonus (which is
+        // computed separately from the raw amount inside the Biyard service).
+        let raw_amount = space_reward.get_amount();
+        let mt_permille = {
+            use crate::features::character::leveling::multiplier_permille;
+            use crate::features::character::models::CharacterSkill;
+            use crate::features::character::types::SkillId;
+            CharacterSkill::level_or_zero(cli, &target_pk, SkillId::MoneyTree)
+                .await
+                .map(multiplier_permille)
+                .unwrap_or(1000)
+        };
+        let amount = crate::features::character::leveling::apply_permille(raw_amount, mt_permille);
+        if amount > raw_amount {
+            tracing::info!(
+                target_pk = %target_pk,
+                raw_amount,
+                mt_permille,
+                bonus = amount - raw_amount,
+                "money tree bonus applied"
+            );
+        }
 
         let user_reward = if let Some(mut user_reward) = user_reward {
             txs.push(
                 UserReward::updater(&user_reward.pk, &user_reward.sk)
-                    .increase_total_points(space_reward.get_amount())
+                    .increase_total_points(amount)
                     .increase_total_claims(1)
                     .with_updated_at(now)
                     .transact_write_item(),
             );
             user_reward.total_claims += 1;
-            user_reward.total_points += space_reward.get_amount();
+            user_reward.total_points += amount;
             user_reward
         } else {
             let mut user_reward =
                 UserReward::from_reward_key(space_reward.sk.clone(), target_pk.clone())?;
             user_reward.total_claims += 1;
-            user_reward.total_points += space_reward.get_amount();
+            user_reward.total_points += amount;
             txs.push(user_reward.create_transact_write_item());
             user_reward
         };
