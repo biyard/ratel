@@ -121,6 +121,18 @@ pub async fn handle_stream_record(
                         tracing::error!(error = %e, "stream: ActivityScoreAggregate failed");
                     }
                 }
+            } else if sk == "SPACE_SCORE" {
+                // CharacterXpDelta: aggregate the per-space score change into
+                // the user's account-level CharacterXp. Idempotent under
+                // stream replay via the per-(user,space) last_seen marker.
+                let score: crate::features::activity::models::SpaceScore = deserialize(image)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                if let Err(e) =
+                    crate::features::character::services::apply_character_xp_delta(cli, score).await
+                {
+                    tracing::error!(error = %e, "stream: CharacterXpDelta (INSERT) failed");
+                }
             } else if sk.starts_with("SPACE_STATUS_CHANGE_EVENT#") {
                 let event: crate::common::models::space::SpaceStatusChangeEvent =
                     deserialize(image)?;
@@ -251,6 +263,19 @@ pub async fn handle_stream_record(
                             tracing::error!(error = %e, "stream: PostPublishedForSyndication failed");
                         }
                     }
+                }
+            } else if sk == "SPACE_SCORE" {
+                // CharacterXpDelta on score updates — same dispatch as the
+                // INSERT arm. The service computes the delta from the
+                // per-(user,space) last_seen marker, so MODIFY events are
+                // the primary driver after the first activity in a space.
+                let score: crate::features::activity::models::SpaceScore = deserialize(image)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                if let Err(e) =
+                    crate::features::character::services::apply_character_xp_delta(cli, score).await
+                {
+                    tracing::error!(error = %e, "stream: CharacterXpDelta (MODIFY) failed");
                 }
             } else if sk.starts_with("SYNDICATION_JOB#") {
                 try_dispatch_pending_syndication_job(image, "MODIFY").await?;

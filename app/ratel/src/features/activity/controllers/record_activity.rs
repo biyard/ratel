@@ -74,6 +74,7 @@ pub async fn record_activity(
     }
 
     let activity = SpaceActivity::new_with_dedup(
+        cli,
         space_id,
         author,
         action_id.clone(),
@@ -84,7 +85,8 @@ pub async fn record_activity(
         user_name,
         user_avatar,
         dedup.clone(),
-    );
+    )
+    .await;
     activity.create(cli).await?;
     tracing::info!(
         action_id = %action_id,

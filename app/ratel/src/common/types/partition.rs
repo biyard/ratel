@@ -102,6 +102,11 @@ pub enum Partition {
     Timeline(String), // TIMELINE#{user_id}
 
     Category, // CATEGORY - shared pk for all categories
+
+    /// Singleton row keyed for migration framework state.
+    /// Pairs with `EntityType::LastBackfillVersion` to form a single
+    /// (pk, sk) row at `MIGRATION` + `LAST_BACKFILL_VERSION`.
+    Migration,
 }
 
 impl Partition {

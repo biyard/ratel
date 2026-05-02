@@ -74,6 +74,11 @@ pub enum DetailType {
     /// Filter pinned to INSERT keeps Lambda's own update from
     /// re-triggering itself.
     AnalyzeDiscussionInProgress,
+    /// Fires on SPACE_SCORE# INSERT/MODIFY. Applies the delta of
+    /// `SpaceScore.total_score` for the (user, space) into the user's
+    /// CharacterXp. Idempotent under stream replay (a re-delivered MODIFY
+    /// with the same total_score produces zero delta).
+    CharacterXpDelta,
     /// Fires on Post MODIFY when status transitions Draft → Published with
     /// visibility=Public. Drives Stage 1 of the cross-posting pipeline:
     /// reads the PostSyndicationDirective sidecar and bakes one
@@ -364,6 +369,13 @@ impl EventBridgeEnvelope {
                 let cfg = crate::common::CommonConfig::default();
                 let cli = cfg.dynamodb();
                 crate::features::spaces::pages::apps::apps::analyzes::services::discussion_analysis::process_discussion_analysis(cli, &row).await
+            }
+            DetailType::CharacterXpDelta => {
+                let score: crate::features::activity::models::SpaceScore =
+                    DetailType::parse_detail(&self.detail)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                crate::features::character::services::apply_character_xp_delta(cli, score).await
             }
             DetailType::PostPublishedForSyndication => {
                 let post: crate::features::posts::models::Post =
