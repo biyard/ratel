@@ -231,14 +231,6 @@ jobs:
           CROSS_POSTING_DATA_KEY: ${{ secrets.DEV_CROSS_POSTING_DATA_KEY }}
           CROSS_POSTING_DATA_KEY_PREVIOUS: ${{ secrets.DEV_CROSS_POSTING_DATA_KEY_PREVIOUS }}
         run: |
-          # === TEMP DEBUG: cross-posting envvar baking 진단용. 머지 즉시 revert. ===
-          echo "ENV CHECK (length only - values not exposed):"
-          echo "  CROSS_POSTING_DATA_KEY length=${#CROSS_POSTING_DATA_KEY}"
-          echo "  CROSS_POSTING_DATA_KEY_PREVIOUS length=${#CROSS_POSTING_DATA_KEY_PREVIOUS}"
-          echo "  KAIA_FEEPAYER_KEY length=${#KAIA_FEEPAYER_KEY}"
-          echo "  TELEGRAM_TOKEN length=${#TELEGRAM_TOKEN}"
-          # === ====================================================================
-
           rm -rf target/dx
 
           cd app/ratel
