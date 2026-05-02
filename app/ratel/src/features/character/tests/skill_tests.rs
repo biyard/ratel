@@ -113,13 +113,19 @@ async fn test_money_tree_boosts_user_reward_amount() {
         body: {}
     };
 
-    // Fabricate a SpaceReward and call award directly.
+    // Fabricate a SpaceReward and call award directly. Generate
+    // unique space + action ids so this test stays orthogonal to other
+    // tests in the suite that share the table — `create()` uses
+    // `attribute_not_exists`, so a deterministic (pk, sk) collision with
+    // any earlier-run test would fail with `ConditionalCheckFailedException`.
     use crate::features::spaces::space_common::models::space_reward::SpaceReward;
 
-    let space_id = SpacePartition("space-fixture".to_string());
+    let nonce = crate::common::utils::time::get_now_timestamp_millis();
+    let space_id = SpacePartition(format!("space-mt-{nonce}"));
+    let action_id = format!("action-mt-{nonce}");
     let reward = SpaceReward::new(
         space_id.clone(),
-        "action-1".into(),
+        action_id,
         RewardUserBehavior::RespondPoll,
         "test reward".into(),
         1,      // credits

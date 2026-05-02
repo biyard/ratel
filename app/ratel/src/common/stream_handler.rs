@@ -121,7 +121,7 @@ pub async fn handle_stream_record(
                         tracing::error!(error = %e, "stream: ActivityScoreAggregate failed");
                     }
                 }
-            } else if sk.starts_with("SPACE_SCORE#") {
+            } else if sk == "SPACE_SCORE" {
                 // CharacterXpDelta: aggregate the per-space score change into
                 // the user's account-level CharacterXp. Idempotent under
                 // stream replay via the per-(user,space) last_seen marker.
@@ -264,7 +264,7 @@ pub async fn handle_stream_record(
                         }
                     }
                 }
-            } else if sk.starts_with("SPACE_SCORE#") {
+            } else if sk == "SPACE_SCORE" {
                 // CharacterXpDelta on score updates — same dispatch as the
                 // INSERT arm. The service computes the delta from the
                 // per-(user,space) last_seen marker, so MODIFY events are

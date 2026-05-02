@@ -34,11 +34,15 @@ pub async fn run(cli: &aws_sdk_dynamodb::Client) -> crate::common::Result<()> {
             return Err(Error::Internal);
         }
 
+        // SpaceScore is a unit variant of EntityType, so its sk serializes
+        // to the bare string "SPACE_SCORE" — no trailing '#'. Filter with
+        // exact equality instead of `begins_with`, which would miss every
+        // row.
         let mut req = cli
             .scan()
             .table_name(SpaceScore::table_name())
-            .filter_expression("begins_with(sk, :prefix)")
-            .expression_attribute_values(":prefix", AttributeValue::S("SPACE_SCORE#".into()))
+            .filter_expression("sk = :sk")
+            .expression_attribute_values(":sk", AttributeValue::S("SPACE_SCORE".into()))
             .limit(500);
         if let Some(esk) = last_evaluated_key.clone() {
             req = req.set_exclusive_start_key(Some(esk));

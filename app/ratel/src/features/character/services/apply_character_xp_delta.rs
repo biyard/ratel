@@ -60,7 +60,9 @@ pub async fn apply_character_xp_delta(
             "negative SpaceScore delta — last_seen advanced, CharacterXp unchanged"
         );
         let new_src = CharacterXpSource::new(user_pk.clone(), space_pk_str.clone(), new_total);
-        let _ = new_src.create(cli).await;
+        // upsert (PutItem without condition) — we want to overwrite the
+        // last_seen marker every time, even when the row already exists.
+        let _ = new_src.upsert(cli).await;
         return Ok(());
     }
 
@@ -102,9 +104,12 @@ pub async fn apply_character_xp_delta(
             .await?;
     }
 
-    // Record last_seen so future deltas are correct.
+    // Record last_seen so future deltas are correct. The source row may
+    // already exist (when this is the second-or-later score update for the
+    // (user, space) pair), so we use `upsert` (PutItem without condition)
+    // rather than `create` (which uses `attribute_not_exists`).
     let new_src = CharacterXpSource::new(user_pk.clone(), space_pk_str, new_total);
-    new_src.create(cli).await?;
+    new_src.upsert(cli).await?;
 
     if new_level != prev_level {
         tracing::info!(

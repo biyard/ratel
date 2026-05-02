@@ -73,7 +73,10 @@ async fn test_apply_xp_level_up_grants_sp() {
 
     let (pk, sk) = CharacterXp::user_keys(&user_pk);
     let xp = CharacterXp::get(&ctx.ddb, &pk, Some(&sk)).await.unwrap().unwrap();
-    assert!(xp.level >= 12);
+    // With C=220 the cumulative-XP curve puts L11 at 84_700 and L12 at
+    // 111_320; total_xp = 100_000 lands at level 11. Assert ≥ 11 so the
+    // test stays robust against minor curve tweaks above this threshold.
+    assert!(xp.level >= 11);
     assert_eq!(xp.total_sp_granted, 5 * xp.level);
 }
 
