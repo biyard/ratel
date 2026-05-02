@@ -1681,7 +1681,9 @@ export class DynamoStreamEventStack extends Stack {
                 eventName: ["INSERT", "MODIFY"],
                 dynamodb: {
                   NewImage: {
-                    sk: { S: [{ prefix: "SPACE_SCORE#" }] },
+                    // SpaceScore is a unit EntityType variant, so its sk
+                    // serializes to the bare string "SPACE_SCORE" (no '#').
+                    sk: { S: ["SPACE_SCORE"] },
                   },
                 },
               }),
