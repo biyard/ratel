@@ -9,7 +9,6 @@ pub fn AppLayout() -> Element {
     match &user {
         Some(u) if u.user_type == UserType::Admin => {
             rsx! {
-                document::Stylesheet { href: asset!("./views/main/style.css") }
                 section { class: "admin-arena",
                     // Sticky topbar — back button + ARENA-style title.
                     // Required because admin pages otherwise have no
