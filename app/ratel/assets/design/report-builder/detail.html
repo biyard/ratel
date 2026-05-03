@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Report Builder — Detail / Editor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&family=Noto+Serif+KR:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ─────────────────────────────────────────────────────────────
+       Arena chrome (topbar, page background) — mockup-only.
+       The actual editor styles live in the second <style> block,
+       copied verbatim from `app/ratel/src/common/components/editor/style.css`.
+       ───────────────────────────────────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* Theme toggle keys — the project's space-toggle pattern.
+       In `var(--dark, X) var(--light, Y)`, `--dark` being `initial`
+       lets the X fallback through, while `--light` set to a space
+       suppresses the Y. So DARK mode wants `--dark: initial; --light: ;`
+       (X kept, Y empty) and LIGHT mode wants the inverse. */
+    html[data-theme="dark"] {
+      --dark: initial;
+      --light: ;
+    }
+    html[data-theme="light"] {
+      --dark: ;
+      --light: initial;
+    }
+
+    html[data-theme="dark"] {
+      --bg-void: #06060e;
+      --bg-glass: rgba(12, 12, 26, 0.65);
+      --border-subtle: rgba(255, 255, 255, 0.06);
+      --border-strong: rgba(255, 255, 255, 0.12);
+      --text-primary: #f0f0f5;
+      --text-muted: #8888a8;
+      --text-dim: #55556a;
+      --surface-soft: rgba(255, 255, 255, 0.02);
+      --surface-hover: rgba(255, 255, 255, 0.04);
+    }
+    html[data-theme="light"] {
+      --bg-void: #f5f5fb;
+      --bg-glass: rgba(255, 255, 255, 0.85);
+      --border-subtle: rgba(10, 10, 30, 0.08);
+      --border-strong: rgba(10, 10, 30, 0.16);
+      --text-primary: #12121a;
+      --text-muted: #5b5b75;
+      --text-dim: #9898ad;
+      --surface-soft: rgba(10, 10, 30, 0.03);
+      --surface-hover: rgba(10, 10, 30, 0.05);
+    }
+    :root {
+      --accent-gold: #fcb300;
+      --accent-teal: #6eedd8;
+      --accent-red: #ef4444;
+      --report-color: #fcb300;
+      --report-bg: rgba(252, 179, 0, 0.10);
+      --report-border: rgba(252, 179, 0, 0.24);
+      --report-soft: rgba(252, 179, 0, 0.06);
+      --font-display: 'Orbitron', sans-serif;
+      --font-body: 'Outfit', sans-serif;
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg-void);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+    }
+
+    .arena {
+      position: relative;
+      width: 100%; height: 100vh; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+
+    /* ── Topbar ──────────────────────────────────── */
+    .arena-topbar {
+      flex: 0 0 auto;
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 20px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-subtle);
+      z-index: 20;
+    }
+    .back-btn {
+      width: 32px; height: 32px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border-strong); border-radius: 999px;
+      background: transparent; color: var(--text-primary);
+      cursor: pointer; transition: 120ms ease;
+    }
+    .back-btn:hover { border-color: var(--accent-gold); background: var(--surface-hover); }
+    .back-btn svg { width: 16px; height: 16px; stroke-width: 2.4; }
+    .topbar-title-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .topbar-title {
+      font-family: var(--font-display);
+      font-size: 14px; font-weight: 700;
+      letter-spacing: 0.04em;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .topbar-meta {
+      font-size: 11px; color: var(--text-muted);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .topbar-meta svg { width: 11px; height: 11px; }
+
+    .topbar-actions { display: flex; gap: 8px; align-items: center; }
+    .toolbar-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px;
+      border: 1px solid var(--border-strong); border-radius: 999px;
+      background: transparent;
+      color: var(--text-primary);
+      font-family: var(--font-display);
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      cursor: pointer; transition: 120ms ease;
+    }
+    .toolbar-btn:hover { border-color: var(--accent-gold); }
+    .toolbar-btn svg { width: 13px; height: 13px; stroke-width: 2.5; }
+    .toolbar-btn--primary {
+      background: var(--report-color); color: #06060e;
+      border-color: var(--report-color);
+    }
+    .toolbar-btn--primary:hover { filter: brightness(1.05); }
+    .toolbar-btn--ghost { color: var(--text-muted); }
+
+    .mode-switch {
+      display: inline-flex;
+      padding: 3px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+    }
+    .mode-switch__opt {
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-family: var(--font-display);
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text-muted);
+      cursor: pointer; transition: 120ms ease;
+    }
+    .mode-switch__opt[aria-current="true"] {
+      background: var(--report-bg);
+      color: var(--report-color);
+      box-shadow: 0 0 0 1px var(--report-border) inset;
+    }
+
+    /* Save status indicator (sits inside the topbar meta line). */
+    .save-status {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--text-muted);
+      transition: color 200ms ease;
+    }
+    .save-status[data-state="saving"] { color: var(--accent-gold); }
+    .save-status[data-state="saved"] { color: var(--accent-teal); }
+    .save-status[data-state="dirty"] { color: var(--accent-gold); }
+    .save-status svg { width: 12px; height: 12px; }
+    .save-status[data-state="saving"] svg { animation: spin 0.9s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Save button — only visible in edit mode. The mockup uses
+       `body[data-mode="edit"]` (set when the user picks the 편집
+       option in the mode switch) to gate the button so read-mode
+       chrome stays minimal. */
+    .save-btn { display: none; }
+    body[data-mode="edit"] .save-btn { display: inline-flex; }
+    /* In edit mode the 재생성 button is less central — push it to
+       a ghost style so 저장 stays the primary action visually. */
+    body[data-mode="edit"] .toolbar-btn--regen { color: var(--text-muted); }
+
+    /* ── Editor wrapper page (paper container) ──── */
+    .paper-wrap {
+      flex: 1; min-height: 0;
+      overflow-y: auto;
+      padding: 32px 24px 80px;
+      display: flex; justify-content: center;
+    }
+    .paper-wrap .ratel-editor {
+      width: 100%;
+      max-width: 940px;
+    }
+    /* Make the editable surface roomy so it reads as a "report page",
+       not a chat input. The editor's default `min-height: 340px` /
+       `max-height: 75vh` cap is removed here so the document
+       scrolls inside `.paper-wrap` instead of inside `.re-content`. */
+    .paper-wrap .ratel-editor .re-content {
+      min-height: 60vh;
+      max-height: none;
+      padding: 56px 64px;
+      font-family: 'Noto Serif KR', 'Outfit', serif;
+      font-size: 15px;
+      line-height: 1.75;
+    }
+
+    /* ── Report-specific decorations (sit inside .re-content) ─── */
+    .re-content .report-cover {
+      text-align: center;
+      padding-bottom: 28px;
+      margin-bottom: 28px;
+    }
+    .re-content .report-cover__type {
+      font-family: var(--font-display);
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--report-color);
+      margin-bottom: 12px;
+    }
+    .re-content .report-cover h1 {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 28px; font-weight: 700;
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+      margin: 0 0 12px;
+    }
+    .re-content .report-cover__sub {
+      font-size: 14px; color: var(--text-muted);
+      font-family: var(--font-body);
+    }
+    .re-content .report-status-banner {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px;
+      margin-bottom: 28px;
+      border-radius: 12px;
+      background: var(--report-soft);
+      border: 1px solid var(--report-border);
+      font-size: 12px; color: var(--text-muted);
+      font-family: var(--font-body);
+    }
+    .re-content .report-status-banner svg {
+      width: 18px; height: 18px; color: var(--report-color); flex-shrink: 0;
+    }
+    .re-content .report-status-banner b {
+      color: var(--report-color); font-family: var(--font-display); font-weight: 700;
+    }
+    .re-content .report-section {
+      padding: 24px 0;
+    }
+    .re-content .report-section:last-of-type {
+      padding-bottom: 0;
+    }
+    .re-content .report-section__num {
+      font-family: var(--font-display);
+      font-size: 11px; font-weight: 700;
+      color: var(--report-color);
+      letter-spacing: 0.08em;
+      display: block;
+      margin-bottom: 6px;
+    }
+    .re-content .report-section h2 {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 22px; font-weight: 700;
+      margin: 0 0 14px;
+    }
+    .re-content .report-footer-note {
+      text-align: center;
+      padding: 28px 0 0;
+      color: var(--text-dim); font-size: 12px;
+      font-family: var(--font-body);
+    }
+    .re-content .report-footer-note p { margin: 0 0 4px; }
+
+    /* ── Read-mode hides the editor chrome (toolbar + statusbar) ── */
+    .ratel-editor[data-editable="false"] .re-toolbar,
+    .ratel-editor[data-editable="false"] .re-statusbar { display: none; }
+    /* Read-mode keeps the paper feel — no border, but keeps padding
+       so the document stays the same width as in edit mode. */
+    .ratel-editor[data-editable="false"] {
+      background: transparent;
+      border: 1px solid var(--re-border-subtle);
+      border-radius: 14px;
+    }
+    .ratel-editor[data-editable="false"] .re-content {
+      padding: 56px 64px;
+    }
+
+    @media (max-width: 720px) {
+      .paper-wrap .ratel-editor .re-content,
+      .ratel-editor[data-editable="false"] .re-content { padding: 32px 24px; }
+    }
+
+    /* ── Print rules — strip every chrome layer for a clean PDF. ─ */
+    @media print {
+      .arena-topbar { display: none !important; }
+      .ratel-editor .re-toolbar,
+      .ratel-editor .re-statusbar,
+      .ratel-editor .re-modal-mask,
+      .re-content .report-status-banner { display: none !important; }
+      body, html { background: white !important; color: #000 !important; }
+      .arena, .paper-wrap, .ratel-editor, .ratel-editor .re-content {
+        display: block !important; height: auto !important; overflow: visible !important;
+        max-width: none !important; margin: 0 !important;
+        background: white !important; color: #000 !important;
+        border: none !important; box-shadow: none !important;
+      }
+      .ratel-editor .re-content { padding: 24mm 18mm !important; }
+      .re-content .report-section { break-inside: avoid; }
+    }
+  </style>
+
+  <!-- ─── Editor styles (verbatim copy of
+       `app/ratel/src/common/components/editor/style.css`) ─── -->
+  <style>
+    .ratel-editor {
+      --re-glass: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, rgba(255, 255, 255, 0.85));
+      --re-toolbar-bg: var(--dark, rgba(10, 10, 22, 0.95)) var(--light, rgba(255, 255, 255, 0.95));
+      --re-input-bg: var(--dark, rgba(255, 255, 255, 0.025)) var(--light, rgba(0, 0, 0, 0.025));
+      --re-input-bg-focus: var(--dark, rgba(255, 255, 255, 0.04)) var(--light, rgba(0, 0, 0, 0.04));
+      --re-tooltip-bg: var(--dark, #1a1a2c) var(--light, #1a1a2c);
+      --re-border-subtle: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(0, 0, 0, 0.08));
+      --re-border-strong: var(--dark, rgba(255, 255, 255, 0.12)) var(--light, rgba(0, 0, 0, 0.16));
+      --re-border-active: var(--dark, rgba(252, 179, 0, 0.45)) var(--light, rgba(252, 179, 0, 0.55));
+      --re-text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
+      --re-text-muted: var(--dark, #8888a8) var(--light, #5a5a72);
+      --re-text-dim: var(--dark, #55556a) var(--light, #9a9aae);
+      --re-text-link: var(--dark, #6eedd8) var(--light, #0e8c79);
+      --re-accent: var(--dark, #fcb300) var(--light, #cf8a00);
+      --re-code-bg: var(--dark, rgba(255, 255, 255, 0.05)) var(--light, rgba(0, 0, 0, 0.05));
+      --re-quote-border: var(--dark, rgba(252, 179, 0, 0.6)) var(--light, rgba(207, 138, 0, 0.6));
+
+      display: flex; flex-direction: column;
+      background: var(--re-input-bg);
+      border: 1px solid var(--re-border-subtle);
+      border-radius: 14px;
+      overflow: hidden;
+      color: var(--re-text-primary);
+      font-family: 'Outfit', sans-serif;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+    .ratel-editor:focus-within {
+      background: var(--re-input-bg-focus);
+      border-color: var(--dark, rgba(252, 179, 0, 0.18)) var(--light, rgba(252, 179, 0, 0.32));
+    }
+    .ratel-editor .re-toolbar {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+      padding: 10px 12px;
+      background: var(--re-toolbar-bg);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--re-border-subtle);
+    }
+    .ratel-editor .re-toolbar__group { display: inline-flex; align-items: center; gap: 2px; padding: 0 4px; }
+    .ratel-editor .re-toolbar__group + .re-toolbar__group {
+      border-left: 1px solid var(--re-border-subtle);
+      margin-left: 2px; padding-left: 8px;
+    }
+    .ratel-editor .re-tb-btn {
+      position: relative; appearance: none;
+      border: 1px solid transparent; background: transparent;
+      width: 34px; height: 34px; min-width: 34px; min-height: 34px;
+      border-radius: 8px;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: var(--re-text-muted); cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+      font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600; padding: 0;
+    }
+    .ratel-editor .re-tb-btn:hover { background: var(--re-input-bg-focus); color: var(--re-text-primary); }
+    .ratel-editor .re-tb-btn:active { transform: scale(0.96); }
+    .ratel-editor .re-tb-btn[aria-pressed="true"] {
+      background: var(--dark, rgba(252, 179, 0, 0.10)) var(--light, rgba(252, 179, 0, 0.14));
+      color: var(--re-accent);
+      border-color: var(--re-border-active);
+    }
+    .ratel-editor .re-tb-btn svg { width: 16px; height: 16px; }
+    .ratel-editor .re-tb-btn[data-tip]:hover::after {
+      content: attr(data-tip);
+      position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+      background: var(--re-tooltip-bg); color: #fff; font-size: 11px;
+      padding: 4px 8px; border-radius: 6px; white-space: nowrap;
+      pointer-events: none; z-index: 50;
+    }
+    .ratel-editor .re-block { position: relative; }
+    .ratel-editor .re-block__btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      height: 34px; padding: 0 10px;
+      border-radius: 8px; background: transparent;
+      border: 1px solid var(--re-border-subtle);
+      color: var(--re-text-primary);
+      font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer;
+    }
+    .ratel-editor .re-block__btn:hover { border-color: var(--re-border-strong); background: var(--re-input-bg-focus); }
+    .ratel-editor .re-block__btn svg { width: 11px; height: 11px; color: var(--re-text-muted); transition: transform 0.15s ease; }
+    .ratel-editor .re-block[data-open="true"] .re-block__btn { border-color: var(--re-border-active); color: var(--re-accent); }
+    .ratel-editor .re-block[data-open="true"] .re-block__btn svg { transform: rotate(180deg); color: var(--re-accent); }
+    .ratel-editor .re-block__menu {
+      position: absolute; top: calc(100% + 6px); left: 0;
+      min-width: 180px; background: var(--re-toolbar-bg);
+      border: 1px solid var(--re-border-strong); border-radius: 10px;
+      padding: 6px; display: none; flex-direction: column; gap: 2px;
+      z-index: 60; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    }
+    .ratel-editor .re-block[data-open="true"] .re-block__menu { display: flex; }
+    .ratel-editor .re-block__item {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 8px 12px; border-radius: 6px; cursor: pointer;
+      color: var(--re-text-primary); font-size: 14px; font-weight: 500;
+      background: transparent; border: none; text-align: left; font-family: inherit;
+    }
+    .ratel-editor .re-block__item:hover { background: var(--re-input-bg-focus); }
+    .ratel-editor .re-block__item--active {
+      color: var(--re-accent);
+      background: var(--dark, rgba(252, 179, 0, 0.08)) var(--light, rgba(252, 179, 0, 0.10));
+    }
+    .ratel-editor .re-block__item-hint { font-size: 11px; color: var(--re-text-dim); font-family: 'JetBrains Mono', monospace; }
+    .ratel-editor .re-block__item--h1 { font-size: 18px; font-weight: 700; }
+    .ratel-editor .re-block__item--h2 { font-size: 16px; font-weight: 700; }
+    .ratel-editor .re-block__item--h3 { font-size: 14px; font-weight: 600; }
+    .ratel-editor .re-block__item--quote { font-style: italic; color: var(--re-text-muted); }
+    .ratel-editor .re-block__item--code { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--re-text-muted); }
+    .ratel-editor .re-content {
+      min-height: 340px; max-height: 75vh; overflow-y: auto;
+      padding: 22px 24px; background: transparent;
+      color: var(--re-text-primary); font-family: 'Outfit', sans-serif;
+      font-size: 15px; line-height: 1.6; outline: none;
+    }
+    .ratel-editor .re-content[data-empty="true"]:not(:focus)::before {
+      content: attr(data-placeholder); color: var(--re-text-dim);
+      pointer-events: none; display: block;
+    }
+    .ratel-editor .re-content h1 { font-size: 1.7rem; font-weight: 800; margin: 1.5rem 0 1rem; line-height: 1.2; }
+    .ratel-editor .re-content h2 { font-size: 1.35rem; font-weight: 700; margin: 1.25rem 0 0.75rem; line-height: 1.25; }
+    .ratel-editor .re-content h3 { font-size: 1.15rem; font-weight: 600; margin: 1rem 0 0.5rem; }
+    .ratel-editor .re-content p { margin: 0 0 0.75rem; }
+    .ratel-editor .re-content ul, .ratel-editor .re-content ol { padding-left: 1.6rem; margin: 0.5rem 0 1rem; }
+    .ratel-editor .re-content ul { list-style: disc; }
+    .ratel-editor .re-content ol { list-style: decimal; }
+    .ratel-editor .re-content li { margin: 0.25rem 0; }
+    .ratel-editor .re-content blockquote {
+      border-left: 3px solid var(--re-quote-border);
+      padding: 6px 14px; margin: 0.75rem 0;
+      color: var(--re-text-muted); font-style: italic;
+      background: var(--dark, rgba(252, 179, 0, 0.04)) var(--light, rgba(252, 179, 0, 0.06));
+    }
+    .ratel-editor .re-content a { color: var(--re-text-link); text-decoration: underline; text-underline-offset: 3px; }
+    .ratel-editor .re-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 0.75rem 0; }
+    .ratel-editor .re-content pre {
+      background: var(--re-code-bg); border: 1px solid var(--re-border-subtle);
+      border-radius: 10px; padding: 14px 16px; margin: 0.75rem 0;
+      overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+      font-size: 13px; line-height: 1.55;
+    }
+    .ratel-editor .re-content code { font-family: 'JetBrains Mono', monospace; font-size: 0.9em; background: var(--re-code-bg); padding: 1px 5px; border-radius: 4px; }
+    .ratel-editor .re-content pre code { background: transparent; padding: 0; border-radius: 0; }
+    .ratel-editor .re-content table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; }
+    .ratel-editor .re-content table th, .ratel-editor .re-content table td {
+      border: 1px solid var(--re-border-strong); padding: 6px 10px; text-align: left; min-width: 60px;
+    }
+    .ratel-editor .re-content table th { background: var(--re-input-bg-focus); font-weight: 600; }
+    .ratel-editor .re-content .yt-wrap {
+      position: relative; padding-bottom: 56.25%; height: 0;
+      margin: 0.75rem 0; border-radius: 10px; overflow: hidden; background: #000;
+    }
+    .ratel-editor .re-content .yt-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    .ratel-editor .re-statusbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 8px 16px; border-top: 1px solid var(--re-border-subtle);
+      background: var(--re-toolbar-bg); font-size: 11px; color: var(--re-text-muted); font-weight: 500;
+    }
+    .ratel-editor .re-statusbar__chips { display: flex; gap: 8px; align-items: center; }
+    .ratel-editor .re-statusbar__chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 8px; border-radius: 6px; background: var(--re-input-bg);
+    }
+    .ratel-editor .re-statusbar__chip strong { color: var(--re-text-primary); margin-left: 4px; }
+    .ratel-editor .re-ime-state { display: none; }
+    .ratel-editor[data-composing="true"] .re-ime-state { display: inline-flex; }
+    .ratel-editor .re-modal-mask {
+      position: fixed; inset: 0; background: rgba(6, 6, 14, 0.65);
+      backdrop-filter: blur(6px); display: none;
+      align-items: center; justify-content: center; z-index: 200; padding: 20px;
+    }
+    .ratel-editor .re-modal-mask.open { display: flex; }
+    .ratel-editor .re-modal {
+      background: var(--re-toolbar-bg); border: 1px solid var(--re-border-strong);
+      border-radius: 14px; width: 100%; max-width: 420px; padding: 20px;
+      display: flex; flex-direction: column; gap: 14px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+    .ratel-editor .re-modal__title { font-family: 'Orbitron', sans-serif; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--re-text-primary); }
+    .ratel-editor .re-modal__field { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .ratel-editor .re-modal__field label { font-size: 11px; color: var(--re-text-muted); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+    .ratel-editor .re-modal__field input[type="text"], .ratel-editor .re-modal__field input[type="url"], .ratel-editor .re-modal__field input[type="number"] {
+      height: 38px; padding: 0 12px; border-radius: 8px;
+      border: 1px solid var(--re-border-subtle); background: var(--re-input-bg);
+      color: var(--re-text-primary); font-family: inherit; font-size: 14px; outline: none;
+    }
+    .ratel-editor .re-modal__field input:focus { border-color: var(--re-border-active); background: var(--re-input-bg-focus); }
+    .ratel-editor .re-modal__row { display: flex; gap: 10px; }
+    .ratel-editor .re-dropzone {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 8px; padding: 28px 20px;
+      border: 2px dashed var(--re-border-strong); border-radius: 12px;
+      background: var(--re-input-bg); color: var(--re-text-muted); cursor: pointer; text-align: center;
+      transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    }
+    .ratel-editor .re-dropzone:hover { background: var(--re-input-bg-focus); border-color: var(--re-border-active); color: var(--re-text-primary); }
+    .ratel-editor .re-dropzone[data-dragging="true"] {
+      background: var(--dark, rgba(252, 179, 0, 0.06)) var(--light, rgba(252, 179, 0, 0.10));
+      border-color: var(--re-accent); color: var(--re-accent);
+    }
+    .ratel-editor .re-dropzone__icon { width: 36px; height: 36px; opacity: 0.85; }
+    .ratel-editor .re-dropzone__title { font-size: 14px; font-weight: 600; color: var(--re-text-primary); }
+    .ratel-editor .re-dropzone__hint { font-size: 12px; color: var(--re-text-dim); }
+    .ratel-editor .re-camera-btn {
+      display: none; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 16px; border: 1px solid var(--re-border-subtle); border-radius: 10px;
+      background: var(--re-input-bg); color: var(--re-text-primary);
+      font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .ratel-editor .re-camera-btn:hover { background: var(--re-input-bg-focus); border-color: var(--re-border-active); }
+    .ratel-editor .re-camera-btn svg { width: 18px; height: 18px; }
+    @media (hover: none) and (pointer: coarse) { .ratel-editor .re-camera-btn { display: inline-flex; } }
+    .ratel-editor .re-modal__divider {
+      display: flex; align-items: center; gap: 10px; font-size: 10px;
+      font-weight: 700; letter-spacing: 0.18em; color: var(--re-text-dim); margin: 4px 0;
+    }
+    .ratel-editor .re-modal__divider::before, .ratel-editor .re-modal__divider::after {
+      content: ""; flex: 1; height: 1px; background: var(--re-border-subtle);
+    }
+    .ratel-editor .re-modal__checkbox {
+      display: flex; align-items: center; gap: 8px;
+      text-transform: none; letter-spacing: 0;
+      font-size: 13px; color: var(--re-text-primary); font-weight: 500;
+    }
+    .ratel-editor .re-modal__actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+    .ratel-editor .re-btn {
+      padding: 8px 16px; border-radius: 8px;
+      border: 1px solid var(--re-border-subtle); background: var(--re-glass);
+      color: var(--re-text-muted); font-family: inherit; font-size: 12px; font-weight: 600;
+      cursor: pointer; letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .ratel-editor .re-btn:hover { color: var(--re-text-primary); border-color: var(--re-border-strong); }
+    .ratel-editor .re-btn--primary {
+      background: linear-gradient(135deg, var(--re-accent), #e5a200);
+      color: #0a0a0a; border-color: transparent;
+    }
+    .ratel-editor .re-btn--primary:hover { color: #0a0a0a; }
+    @media (max-width: 640px) {
+      .ratel-editor .re-toolbar { padding: 8px; gap: 4px; overflow-x: auto; flex-wrap: nowrap; }
+      .ratel-editor .re-toolbar__group { padding: 0 2px; }
+      .ratel-editor .re-toolbar__group + .re-toolbar__group { padding-left: 6px; margin-left: 0; }
+      .ratel-editor .re-tb-btn { width: 40px; height: 40px; min-width: 40px; min-height: 40px; }
+      .ratel-editor .re-block__btn { height: 40px; font-size: 14px; }
+      .ratel-editor .re-content { padding: 16px 14px; min-height: 280px; font-size: 16px; }
+    }
+    .ratel-editor[data-editable="false"] {
+      background: transparent; border: none; border-radius: 0; overflow: visible;
+    }
+    .ratel-editor[data-editable="false"] .re-content {
+      min-height: 0; max-height: none; overflow: visible; padding: 0;
+    }
+    .ratel-editor .re-content div[data-youtube-video] {
+      position: relative; padding-bottom: 56.25%; height: 0;
+      margin: 0.75rem 0; border-radius: 10px; overflow: hidden; background: #000;
+    }
+    .ratel-editor .re-content div[data-youtube-video] iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  </style>
+</head>
+<body data-mode="read">
+  <div class="arena">
+    <!-- Topbar -->
+    <header class="arena-topbar">
+      <button class="back-btn" type="button" aria-label="Back" onclick="window.location='./list.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <div class="topbar-title-wrap">
+        <span class="topbar-title">2026 개헌 인식 종합 보고서</span>
+        <span class="topbar-meta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>2026.04.29 14:21</span>
+          <span style="color: var(--text-dim);">·</span>
+          <span>최종 조사 · 종합 분석</span>
+          <span style="color: var(--text-dim);">·</span>
+          <span class="save-status" id="save-status" data-state="saved">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <span class="save-status__label">저장됨</span>
+          </span>
+        </span>
+      </div>
+      <div class="topbar-actions">
+        <div class="mode-switch" id="mode-switch">
+          <span class="mode-switch__opt" aria-current="true" data-mode="read">읽기</span>
+          <span class="mode-switch__opt" data-mode="edit">편집</span>
+        </div>
+        <button class="toolbar-btn toolbar-btn--ghost toolbar-btn--regen" type="button" title="다시 생성">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          재생성
+        </button>
+        <button class="toolbar-btn toolbar-btn--primary save-btn" type="button" id="save-btn" title="저장하고 읽기 모드로">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/>
+            <polyline points="7 3 7 8 15 8"/>
+          </svg>
+          저장
+        </button>
+        <button class="toolbar-btn toolbar-btn--primary" type="button" id="pdf-btn" title="PDF로 다운로드">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          PDF 다운로드
+        </button>
+      </div>
+    </header>
+
+    <!-- Paper area = Ratel editor instance -->
+    <main class="paper-wrap">
+      <div class="ratel-editor" data-bound="false" data-editable="false" data-placeholder="보고서 내용을 작성하세요…">
+        <!-- Toolbar (verbatim from page.html) -->
+        <div class="re-toolbar" role="toolbar" aria-label="Editor toolbar">
+          <div class="re-toolbar__group">
+            <button class="re-tb-btn" data-cmd="undo" data-tip="Undo" type="button" aria-label="Undo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6" /><path d="M21 17a9 9 0 0 0-15-6.7L3 13" /></svg>
+            </button>
+            <button class="re-tb-btn" data-cmd="redo" data-tip="Redo" type="button" aria-label="Redo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6" /><path d="M3 17a9 9 0 0 1 15-6.7L21 13" /></svg>
+            </button>
+          </div>
+          <div class="re-toolbar__group">
+            <div class="re-block" data-open="false">
+              <button class="re-block__btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+                <span class="re-block__label">Paragraph</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+              </button>
+              <div class="re-block__menu" role="listbox">
+                <button class="re-block__item" type="button" data-block="P"><span>Paragraph</span><span class="re-block__item-hint">P</span></button>
+                <button class="re-block__item re-block__item--h1" type="button" data-block="H1"><span>Heading 1</span><span class="re-block__item-hint">H1</span></button>
+                <button class="re-block__item re-block__item--h2" type="button" data-block="H2"><span>Heading 2</span><span class="re-block__item-hint">H2</span></button>
+                <button class="re-block__item re-block__item--h3" type="button" data-block="H3"><span>Heading 3</span><span class="re-block__item-hint">H3</span></button>
+                <button class="re-block__item re-block__item--quote" type="button" data-block="BLOCKQUOTE"><span>Quote</span><span class="re-block__item-hint">"</span></button>
+                <button class="re-block__item re-block__item--code" type="button" data-block="PRE"><span>Code block</span><span class="re-block__item-hint">{ }</span></button>
+              </div>
+            </div>
+          </div>
+          <div class="re-toolbar__group">
+            <button class="re-tb-btn" data-cmd="bold" data-tip="Bold" type="button" aria-label="Bold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 0 8H6z"/><path d="M6 12h9a4 4 0 0 1 0 8H6z"/></svg></button>
+            <button class="re-tb-btn" data-cmd="italic" data-tip="Italic" type="button" aria-label="Italic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg></button>
+            <button class="re-tb-btn" data-cmd="underline" data-tip="Underline" type="button" aria-label="Underline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" y1="20" x2="20" y2="20"/></svg></button>
+            <button class="re-tb-btn" data-cmd="strikeThrough" data-tip="Strikethrough" type="button" aria-label="Strikethrough"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><path d="M16 6c-1.5-1.3-3.5-2-6-2-3 0-5 1.5-5 4 0 2 1.5 3 5 4"/><path d="M8 18c1.5 1.3 3.5 2 6 2 3 0 5-1.5 5-4 0-1-.4-1.8-1-2.4"/></svg></button>
+            <button class="re-tb-btn" data-cmd="code-inline" data-tip="Inline code" type="button" aria-label="Inline code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></button>
+          </div>
+          <div class="re-toolbar__group">
+            <button class="re-tb-btn" data-cmd="justifyLeft" data-tip="Align left" type="button" aria-label="Align left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg></button>
+            <button class="re-tb-btn" data-cmd="justifyCenter" data-tip="Align center" type="button" aria-label="Align center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg></button>
+            <button class="re-tb-btn" data-cmd="justifyRight" data-tip="Align right" type="button" aria-label="Align right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg></button>
+            <button class="re-tb-btn" data-cmd="justifyFull" data-tip="Justify" type="button" aria-label="Justify"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg></button>
+          </div>
+          <div class="re-toolbar__group">
+            <button class="re-tb-btn" data-cmd="insertUnorderedList" data-tip="Bullet list" type="button" aria-label="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg></button>
+            <button class="re-tb-btn" data-cmd="insertOrderedList" data-tip="Numbered list" type="button" aria-label="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></button>
+            <button class="re-tb-btn" data-cmd="outdent" data-tip="Outdent" type="button" aria-label="Outdent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="5" x2="3" y2="5"/><line x1="21" y1="19" x2="3" y2="19"/><line x1="21" y1="9" x2="11" y2="9"/><line x1="21" y1="15" x2="11" y2="15"/><polyline points="7 9 3 12 7 15"/></svg></button>
+            <button class="re-tb-btn" data-cmd="indent" data-tip="Indent" type="button" aria-label="Indent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="5" x2="21" y2="5"/><line x1="3" y1="19" x2="21" y2="19"/><line x1="13" y1="9" x2="3" y2="9"/><line x1="13" y1="15" x2="3" y2="15"/><polyline points="17 9 21 12 17 15"/></svg></button>
+          </div>
+          <div class="re-toolbar__group">
+            <button class="re-tb-btn" data-cmd="link" data-tip="Insert link" type="button" aria-label="Insert link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+            <button class="re-tb-btn" data-cmd="unlink" data-tip="Remove link" type="button" aria-label="Remove link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.84 12.25l1.72-1.71a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M5.16 11.75L3.44 13.46a5 5 0 0 0 7.07 7.07l1.71-1.71"/><line x1="2" y1="2" x2="22" y2="22"/></svg></button>
+            <button class="re-tb-btn" data-cmd="image" data-tip="Insert image" type="button" aria-label="Insert image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>
+            <button class="re-tb-btn" data-cmd="youtube" data-tip="Embed YouTube" type="button" aria-label="Embed YouTube"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 8.5a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v7a4 4 0 0 0 4 4h12a4 4 0 0 0 4-4z"/><polygon points="10 8 16 12 10 16 10 8"/></svg></button>
+            <button class="re-tb-btn" data-cmd="table" data-tip="Insert table" type="button" aria-label="Insert table"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></button>
+            <button class="re-tb-btn" data-cmd="hr" data-tip="Horizontal rule" type="button" aria-label="Horizontal rule"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/></svg></button>
+          </div>
+          <div class="re-toolbar__group">
+            <button class="re-tb-btn" data-cmd="removeFormat" data-tip="Clear formatting" type="button" aria-label="Clear formatting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><line x1="5" y1="20" x2="11" y2="20"/><line x1="13" y1="4" x2="8" y2="20"/><line x1="3" y1="3" x2="21" y2="21"/></svg></button>
+          </div>
+        </div>
+
+        <!-- Editable surface — the report itself lives here. -->
+        <div class="re-content" contenteditable="false" data-empty="false" spellcheck="true" autocapitalize="sentences">
+          <header class="report-cover">
+            <div class="report-cover__type">Analysis Report · 2026.04.29</div>
+            <h1>2026 개헌 인식 종합 보고서</h1>
+            <p class="report-cover__sub">— 최종 조사(140명 응답·308건 데이터) 기반 종합 분석</p>
+          </header>
+
+          <div class="report-status-banner" contenteditable="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="m9 12 2 2 4-4"/>
+            </svg>
+            <span><b>AI 작성 완료</b> · 편집 모드로 전환하면 표지부터 본문 끝까지 모든 텍스트를 직접 수정할 수 있어요. PDF로 내보내기 전 한 번 검토를 권장합니다.</span>
+          </div>
+
+          <section class="report-section">
+            <span class="report-section__num">SECTION 01</span>
+            <h2>개요</h2>
+            <p>본 보고서는 「2026 개헌 국민에게 직접 묻다」 스페이스에서 진행된 최종 설문조사 결과를 토대로, 대한민국 헌법 개정 전반에 대한 시민 인식을 종합적으로 분석한 결과물이다. 조사는 블록체인 기반 참여형 여론조사 방식으로 진행되었으며, 총 <strong>140명</strong>이 참여해 <strong>308건</strong>의 응답·코멘트 데이터를 남겼다.</p>
+            <p>설계의 핵심은 단일 응답이 아닌 다중 분석 차원(성별·연령·지역·정책 의제)을 교차하여 살펴보는 것이다. 응답자들은 헌법 개정 필요성, 개헌 방식, 단계적 추진 시기, 정보 투명성 등 4개 핵심 영역에 대한 의견을 제시했다. 본 보고서의 목적은 그 다층적 데이터를 종합하여 <em>현재 시점의 시민 인식 지형</em>을 객관적으로 기술하는 데 있다.</p>
+          </section>
+
+          <section class="report-section">
+            <span class="report-section__num">SECTION 02</span>
+            <h2>조사 설계</h2>
+            <h3>1. 조사 방법</h3>
+            <p>블록체인 기반 참여형 여론조사 플랫폼을 통해 비대면 온라인으로 시행. 응답 데이터는 분산원장에 익명화되어 기록되며, 사후 검증이 가능한 형태로 보존된다.</p>
+            <h3>2. 표본</h3>
+            <table>
+              <tr><th>항목</th><th>내용</th></tr>
+              <tr><td>총 응답자</td><td>140명</td></tr>
+              <tr><td>유효 응답</td><td>140명 (100%)</td></tr>
+              <tr><td>표본 추출 방식</td><td>스페이스 자발적 참여 (자기선택 표본)</td></tr>
+              <tr><td>익명 참여 여부</td><td>활성화 (실명 미수집)</td></tr>
+            </table>
+            <h3>3. 조사 기간</h3>
+            <p>2026년 4월 14일 ~ 4월 28일 (15일간 상시 응답 가능, 24시간 무인 운영)</p>
+            <h3>4. 데이터 한계</h3>
+            <p>자기선택 표본 특성상 일반 인구의 대표성을 갖지는 않으며, 특정 의제에 대한 능동적 관심을 가진 시민층의 의견 분포로 해석해야 한다.</p>
+          </section>
+
+          <section class="report-section">
+            <span class="report-section__num">SECTION 03</span>
+            <h2>분석 결과</h2>
+            <h3>1. 핵심 지표</h3>
+            <ul>
+              <li>헌법 개정의 필요성에 대해 <strong>매우 필요</strong>(50%)와 <strong>불필요</strong>(50%)가 양극화된 응답을 보임. 중간(보통·필요·전혀불필요) 의견은 거의 나타나지 않음.</li>
+              <li>개헌 방식 선호: <strong>핵심 의제부터 단계적 개정</strong>(100%) — 일괄 개정 의견은 0%로 단계적 접근에 대한 합의 수준이 매우 강하게 형성.</li>
+              <li>단계적 개정의 첫 시기로 <strong>2026년 6월 지방선거 동시</strong>(50%)와 <strong>2028년 총선 동시</strong>(50%)가 균등하게 선호.</li>
+            </ul>
+            <h3>2. 인구통계 특성</h3>
+            <p>응답자의 다수가 18~29세 청년층 비중이 높았으며, 거주지는 강원·제주·기타 지역 응답이 두드러짐. 이는 자기선택 표본의 특성으로, 적극적 정치 참여 성향의 청년층 의견이 강하게 반영되었음을 시사한다.</p>
+            <h3>3. 주목할 만한 발견</h3>
+            <blockquote>"이번 참여형 여론조사에 참여하면서, 내 정보가 어떤 방식으로 확인·기록되는지 충분히 이해하기 어렵다고 느꼈다." — 응답자 절반(50%)이 매우 그렇다(5점)로 응답.</blockquote>
+            <p>익명 참여 환경임에도 불구하고 데이터 처리에 대한 투명성 인식이 낮은 점은 향후 시민 참여형 거버넌스 설계의 핵심 개선점으로 도출됐다.</p>
+          </section>
+
+          <section class="report-section">
+            <span class="report-section__num">SECTION 04</span>
+            <h2>결론 및 제언</h2>
+            <p>분석 결과를 종합하면, 청년층 중심의 적극적 참여 응답자는 <strong>핵심 의제부터의 단계적 개헌</strong>에 폭넓은 합의를 보이고 있다. 다만 응답이 양극화 되어 있다는 점은, 단일한 개헌 의제의 즉각적 추진보다는 의제 우선순위 설계와 충분한 공론화 절차의 필요성을 시사한다.</p>
+            <h3>제언</h3>
+            <ol>
+              <li><strong>의제 우선순위 공론화</strong> — 개헌 필요·불필요가 50:50으로 양극화된 만큼, "어떤 의제부터"의 합의가 선행되어야 한다. 시민 참여형 의제 도출 트랙 운영을 권장.</li>
+              <li><strong>시기 분산</strong> — 2026년 6월/2028년 두 선거 시기에 균등 선호가 분포한 점을 활용해, 단일 일괄 국민투표보다 의제별·단계별 분산 추진이 사회적 비용을 줄일 수 있다.</li>
+              <li><strong>참여 데이터 투명성 강화</strong> — 응답자의 절반이 데이터 처리에 대한 인식이 낮다고 답했다. 향후 거버넌스 설계 시 데이터 처리 흐름 시각화·고지를 강화할 것.</li>
+            </ol>
+            <h3>한계</h3>
+            <p>본 분석은 자기선택 표본(140명)에 기반하므로 일반 인구의 대표성을 갖지 않는다. 결과는 능동적 정치 참여 성향의 시민 의견 분포로 해석해야 하며, 정책 결정의 단독 근거로 사용하기보다 보조 자료로 활용함이 적절하다.</p>
+          </section>
+
+          <footer class="report-footer-note">
+            <p>본 보고서는 AI가 분석 결과를 토대로 자동 생성한 초안입니다. PDF로 내보내기 전 검토를 권장합니다.</p>
+            <p>생성: 2026.04.29 14:21 · 출처: 최종 조사 · 종합 분석</p>
+          </footer>
+        </div>
+
+        <!-- Status bar -->
+        <div class="re-statusbar">
+          <div class="re-statusbar__chips">
+            <span class="re-statusbar__chip">Words <strong class="re-word-count">0</strong></span>
+            <span class="re-statusbar__chip">Chars <strong class="re-char-count">0</strong></span>
+          </div>
+          <div class="re-statusbar__chip re-ime-state">composing…</div>
+        </div>
+
+        <!-- Modals (verbatim) -->
+        <div class="re-modal-mask" data-modal="link">
+          <div class="re-modal" role="dialog" aria-label="Insert link">
+            <div class="re-modal__title">Insert link</div>
+            <div class="re-modal__field">
+              <label>URL</label>
+              <input class="re-link-url" type="url" placeholder="https://example.com" autocomplete="off" />
+            </div>
+            <div class="re-modal__actions">
+              <button class="re-btn" data-close-modal type="button">Cancel</button>
+              <button class="re-btn re-btn--primary re-link-confirm" type="button">Insert</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="re-modal-mask" data-modal="image">
+          <div class="re-modal" role="dialog" aria-label="Insert image">
+            <div class="re-modal__title">Insert image</div>
+            <label class="re-dropzone" data-dragging="false">
+              <input class="re-image-file" type="file" accept="image/*" hidden />
+              <svg class="re-dropzone__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+              </svg>
+              <div class="re-dropzone__title">Drag &amp; drop an image</div>
+              <div class="re-dropzone__hint">or tap to browse — PNG, JPG, GIF, WebP</div>
+            </label>
+            <label class="re-camera-btn">
+              <input class="re-image-camera" type="file" accept="image/*" capture="environment" hidden />
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+              <span>Take a photo</span>
+            </label>
+            <div class="re-modal__divider"><span>OR PASTE A URL</span></div>
+            <div class="re-modal__field">
+              <input class="re-image-url" type="url" placeholder="https://example.com/image.png" />
+            </div>
+            <div class="re-modal__actions">
+              <button class="re-btn" data-close-modal type="button">Cancel</button>
+              <button class="re-btn re-btn--primary re-image-confirm" type="button">Insert URL</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="re-modal-mask" data-modal="youtube">
+          <div class="re-modal" role="dialog" aria-label="Embed YouTube">
+            <div class="re-modal__title">Embed YouTube video</div>
+            <div class="re-modal__field">
+              <label>YouTube URL or ID</label>
+              <input class="re-youtube-url" type="text" placeholder="https://youtu.be/dQw4w9WgXcQ" />
+            </div>
+            <div class="re-modal__actions">
+              <button class="re-btn" data-close-modal type="button">Cancel</button>
+              <button class="re-btn re-btn--primary re-youtube-confirm" type="button">Embed</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="re-modal-mask" data-modal="table">
+          <div class="re-modal" role="dialog" aria-label="Insert table">
+            <div class="re-modal__title">Insert table</div>
+            <div class="re-modal__row">
+              <div class="re-modal__field">
+                <label>Rows</label>
+                <input class="re-table-rows" type="number" min="1" max="20" value="3" />
+              </div>
+              <div class="re-modal__field">
+                <label>Columns</label>
+                <input class="re-table-cols" type="number" min="1" max="10" value="3" />
+              </div>
+            </div>
+            <div class="re-modal__field">
+              <label class="re-modal__checkbox">
+                <input class="re-table-header" type="checkbox" checked /> First row is header
+              </label>
+            </div>
+            <div class="re-modal__actions">
+              <button class="re-btn" data-close-modal type="button">Cancel</button>
+              <button class="re-btn re-btn--primary re-table-confirm" type="button">Insert</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ─── Editor JS (verbatim copy of
+       `app/ratel/src/common/components/editor/script.js`) ─── -->
+  <script>
+    (function () {
+      function init(root) {
+        if (!root || root.dataset.bound === "true") return;
+        root.dataset.bound = "true";
+        var editor = root.querySelector(".re-content");
+        if (!editor) return;
+        var wordCountEl = root.querySelector(".re-word-count");
+        var charCountEl = root.querySelector(".re-char-count");
+        var bridge = root.querySelector(".re-bridge");
+        var placeholder = root.dataset.placeholder || "Type here…";
+        editor.setAttribute("data-placeholder", placeholder);
+        var editable = root.dataset.editable !== "false";
+        editor.setAttribute("contenteditable", editable ? "true" : "false");
+        refreshEmptyState();
+        if (!editable) return;
+
+        var composing = false;
+        editor.addEventListener("compositionstart", function () { composing = true; root.setAttribute("data-composing", "true"); });
+        editor.addEventListener("compositionend", function () { composing = false; root.setAttribute("data-composing", "false"); scheduleUpdate(); });
+
+        var updateTimer = null;
+        function scheduleUpdate() { if (composing) return; clearTimeout(updateTimer); updateTimer = setTimeout(emitChange, 120); }
+        function refreshEmptyState() {
+          var empty = editor.textContent.trim().length === 0 && editor.children.length <= 1;
+          editor.dataset.empty = empty ? "true" : "false";
+          return empty;
+        }
+        function emitChange() {
+          var empty = refreshEmptyState();
+          var html = empty ? "" : editor.innerHTML;
+          var text = editor.innerText || "";
+          var words = text.trim() ? text.trim().split(/\s+/).length : 0;
+          if (wordCountEl) wordCountEl.textContent = words;
+          if (charCountEl) charCountEl.textContent = text.length;
+          if (bridge) { bridge.value = html; bridge.dispatchEvent(new Event("input", { bubbles: true })); }
+          syncToolbarState();
+        }
+        editor.addEventListener("input", scheduleUpdate);
+        editor.addEventListener("paste", function () { setTimeout(scheduleUpdate, 0); });
+
+        function applyCmd(cmd, value) { editor.focus(); document.execCommand(cmd, false, value || null); scheduleUpdate(); }
+        root.querySelectorAll(".re-tb-btn").forEach(function (btn) {
+          var cmd = btn.dataset.cmd;
+          btn.addEventListener("click", function (e) { e.preventDefault(); handleCommand(cmd); });
+        });
+        function handleCommand(cmd) {
+          switch (cmd) {
+            case "code-inline": return wrapInlineCode();
+            case "link":        return openModal("link");
+            case "unlink":      return applyCmd("unlink");
+            case "image":       return openModal("image");
+            case "youtube":     return openModal("youtube");
+            case "table":       return openModal("table");
+            case "hr":          return applyCmd("insertHorizontalRule");
+            default:            return applyCmd(cmd);
+          }
+        }
+        function wrapInlineCode() {
+          var sel = window.getSelection();
+          if (!sel || sel.rangeCount === 0) return;
+          var range = sel.getRangeAt(0);
+          if (range.collapsed) return;
+          var code = document.createElement("code");
+          code.appendChild(range.extractContents());
+          range.insertNode(code);
+          sel.removeAllRanges();
+          var after = document.createRange(); after.setStartAfter(code); sel.addRange(after);
+          scheduleUpdate();
+        }
+
+        var blockDropdown = root.querySelector(".re-block");
+        var blockBtn = blockDropdown.querySelector(".re-block__btn");
+        var blockBtnLabel = blockDropdown.querySelector(".re-block__label");
+        var blockLabels = { P: "Paragraph", H1: "Heading 1", H2: "Heading 2", H3: "Heading 3", BLOCKQUOTE: "Quote", PRE: "Code block" };
+        blockBtn.addEventListener("click", function (e) {
+          e.preventDefault(); e.stopPropagation();
+          var open = blockDropdown.dataset.open === "true";
+          blockDropdown.dataset.open = open ? "false" : "true";
+          blockBtn.setAttribute("aria-expanded", open ? "false" : "true");
+        });
+        document.addEventListener("click", function (e) {
+          if (!blockDropdown.contains(e.target)) {
+            blockDropdown.dataset.open = "false";
+            blockBtn.setAttribute("aria-expanded", "false");
+          }
+        });
+        blockDropdown.addEventListener("mousedown", function () { savedRange = saveSelection(); });
+        root.querySelectorAll("[data-block]").forEach(function (item) {
+          item.addEventListener("click", function (e) {
+            e.preventDefault();
+            var tag = item.dataset.block;
+            blockDropdown.dataset.open = "false";
+            blockBtn.setAttribute("aria-expanded", "false");
+            restoreSelection();
+            applyCmd("formatBlock", "<" + tag + ">");
+          });
+        });
+        function syncBlockLabel() {
+          if (document.activeElement !== editor) return;
+          var sel = window.getSelection();
+          if (!sel || sel.rangeCount === 0) return;
+          var node = sel.getRangeAt(0).startContainer;
+          if (node.nodeType === 3) node = node.parentNode;
+          while (node && node !== editor) {
+            var tag = node.nodeName;
+            if (blockLabels[tag]) {
+              blockBtnLabel.textContent = blockLabels[tag];
+              root.querySelectorAll("[data-block]").forEach(function (item) {
+                item.classList.toggle("re-block__item--active", item.dataset.block === tag);
+              });
+              return;
+            }
+            node = node.parentNode;
+          }
+          blockBtnLabel.textContent = "Paragraph";
+        }
+
+        var queryMap = { bold: "bold", italic: "italic", underline: "underline", strikeThrough: "strikeThrough", insertUnorderedList: "insertUnorderedList", insertOrderedList: "insertOrderedList", justifyLeft: "justifyLeft", justifyCenter: "justifyCenter", justifyRight: "justifyRight", justifyFull: "justifyFull" };
+        function syncToolbarState() {
+          root.querySelectorAll(".re-tb-btn").forEach(function (btn) {
+            var name = queryMap[btn.dataset.cmd];
+            if (!name) return;
+            try { btn.setAttribute("aria-pressed", document.queryCommandState(name) ? "true" : "false"); } catch (_e) {}
+          });
+        }
+        document.addEventListener("selectionchange", function () {
+          if (document.activeElement === editor) { syncToolbarState(); syncBlockLabel(); }
+        });
+
+        var savedRange = null;
+        function saveSelection() { var sel = window.getSelection(); if (!sel || sel.rangeCount === 0) return null; return sel.getRangeAt(0).cloneRange(); }
+        function restoreSelection() { if (!savedRange) { editor.focus(); return; } editor.focus(); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(savedRange); }
+        function openModal(name) {
+          savedRange = saveSelection();
+          var mask = root.querySelector("[data-modal='" + name + "']");
+          if (!mask) return;
+          mask.classList.add("open");
+          var firstInput = mask.querySelector("input");
+          if (firstInput) setTimeout(function () { firstInput.focus(); }, 30);
+        }
+        function closeModal(mask) { mask.classList.remove("open"); }
+        root.querySelectorAll("[data-close-modal]").forEach(function (btn) {
+          btn.addEventListener("click", function () { closeModal(btn.closest(".re-modal-mask")); });
+        });
+        root.querySelectorAll(".re-modal-mask").forEach(function (mask) {
+          mask.addEventListener("click", function (e) { if (e.target === mask) closeModal(mask); });
+        });
+
+        var linkMask = root.querySelector("[data-modal='link']");
+        var linkUrl = linkMask.querySelector(".re-link-url");
+        linkMask.querySelector(".re-link-confirm").addEventListener("click", function () {
+          var url = linkUrl.value.trim(); closeModal(linkMask); linkUrl.value = "";
+          if (!url) return; restoreSelection(); applyCmd("createLink", url);
+        });
+
+        var imageMask = root.querySelector("[data-modal='image']");
+        var imageUrl = imageMask.querySelector(".re-image-url");
+        var imageFile = imageMask.querySelector(".re-image-file");
+        var imageCamera = imageMask.querySelector(".re-image-camera");
+        var dropzone = imageMask.querySelector(".re-dropzone");
+        function insertFile(file) {
+          if (!file || !file.type || file.type.indexOf("image/") !== 0) return;
+          var reader = new FileReader();
+          reader.onload = function (ev) {
+            closeModal(imageMask); imageUrl.value = "";
+            if (imageFile) imageFile.value = "";
+            if (imageCamera) imageCamera.value = "";
+            restoreSelection();
+            applyCmd("insertImage", ev.target.result);
+          };
+          reader.readAsDataURL(file);
+        }
+        imageFile.addEventListener("change", function () { if (imageFile.files && imageFile.files[0]) insertFile(imageFile.files[0]); });
+        if (imageCamera) {
+          imageCamera.addEventListener("change", function () { if (imageCamera.files && imageCamera.files[0]) insertFile(imageCamera.files[0]); });
+        }
+        if (dropzone) {
+          ["dragenter", "dragover"].forEach(function (evt) {
+            dropzone.addEventListener(evt, function (e) { e.preventDefault(); e.stopPropagation(); dropzone.dataset.dragging = "true"; });
+          });
+          ["dragleave", "dragend"].forEach(function (evt) {
+            dropzone.addEventListener(evt, function (e) { e.preventDefault(); e.stopPropagation(); dropzone.dataset.dragging = "false"; });
+          });
+          dropzone.addEventListener("drop", function (e) {
+            e.preventDefault(); e.stopPropagation(); dropzone.dataset.dragging = "false";
+            var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+            if (file) insertFile(file);
+          });
+        }
+        imageMask.querySelector(".re-image-confirm").addEventListener("click", function () {
+          var url = imageUrl.value.trim(); closeModal(imageMask); imageUrl.value = "";
+          if (!url) return; restoreSelection(); applyCmd("insertImage", url);
+        });
+
+        var youtubeMask = root.querySelector("[data-modal='youtube']");
+        var youtubeUrl = youtubeMask.querySelector(".re-youtube-url");
+        youtubeMask.querySelector(".re-youtube-confirm").addEventListener("click", function () {
+          var raw = youtubeUrl.value.trim(); closeModal(youtubeMask); youtubeUrl.value = "";
+          if (!raw) return;
+          var id = parseYoutubeId(raw); if (!id) return;
+          var html = '<div class="yt-wrap"><iframe src="https://www.youtube.com/embed/' + id + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><p><br></p>';
+          restoreSelection(); document.execCommand("insertHTML", false, html); scheduleUpdate();
+        });
+        function parseYoutubeId(input) {
+          var m = input.match(/(?:youtu\.be\/|v=|\/embed\/)([\w-]{11})/);
+          if (m) return m[1];
+          if (/^[\w-]{11}$/.test(input)) return input;
+          return null;
+        }
+
+        var tableMask = root.querySelector("[data-modal='table']");
+        var tableRows = tableMask.querySelector(".re-table-rows");
+        var tableCols = tableMask.querySelector(".re-table-cols");
+        var tableHeader = tableMask.querySelector(".re-table-header");
+        tableMask.querySelector(".re-table-confirm").addEventListener("click", function () {
+          var rows = parseInt(tableRows.value, 10) || 1;
+          var cols = parseInt(tableCols.value, 10) || 1;
+          var useHeader = tableHeader.checked;
+          closeModal(tableMask);
+          var html = "<table>";
+          for (var r = 0; r < rows; r++) {
+            html += "<tr>";
+            for (var c = 0; c < cols; c++) {
+              var cell = useHeader && r === 0 ? "th" : "td";
+              html += "<" + cell + ">&nbsp;</" + cell + ">";
+            }
+            html += "</tr>";
+          }
+          html += "</table><p><br></p>";
+          restoreSelection(); document.execCommand("insertHTML", false, html); scheduleUpdate();
+        });
+
+        editor.addEventListener("keydown", function (e) {
+          var meta = e.metaKey || e.ctrlKey; if (!meta) return;
+          var k = e.key.toLowerCase();
+          if (k === "b") { e.preventDefault(); applyCmd("bold"); }
+          else if (k === "i") { e.preventDefault(); applyCmd("italic"); }
+          else if (k === "u") { e.preventDefault(); applyCmd("underline"); }
+          else if (k === "k") { e.preventDefault(); openModal("link"); }
+        });
+
+        emitChange();
+      }
+      function initAll() { document.querySelectorAll(".ratel-editor").forEach(init); }
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initAll);
+      } else {
+        initAll();
+      }
+      new MutationObserver(initAll).observe(document.body, { childList: true, subtree: true });
+    })();
+  </script>
+
+  <!-- Mode switch + Save + PDF wiring (mockup-only) -->
+  <script>
+    (function () {
+      var body = document.body;
+      var editor = document.querySelector('.ratel-editor');
+      var content = editor.querySelector('.re-content');
+      var saveStatus = document.getElementById('save-status');
+      var saveStatusLabel = saveStatus.querySelector('.save-status__label');
+      var saveBtn = document.getElementById('save-btn');
+
+      function setMode(mode) {
+        body.dataset.mode = mode;
+        document.querySelectorAll('.mode-switch__opt').forEach(function (o) {
+          o.setAttribute('aria-current', String(o.dataset.mode === mode));
+        });
+        if (mode === 'edit') {
+          editor.setAttribute('data-editable', 'true');
+          content.setAttribute('contenteditable', 'true');
+          // Re-bind so the toolbar handlers attach (they were skipped
+          // when editable=false at init time). Toggling an attribute
+          // is enough because the editor's MutationObserver re-runs
+          // `init` and the script's `data-bound` flag was stripped
+          // by setting it back to "false".
+          editor.dataset.bound = 'false';
+          editor.setAttribute('data-rebind', String(Date.now()));
+        } else {
+          editor.setAttribute('data-editable', 'false');
+          content.setAttribute('contenteditable', 'false');
+        }
+      }
+
+      document.querySelectorAll('.mode-switch__opt').forEach(function (opt) {
+        opt.addEventListener('click', function () { setMode(opt.dataset.mode); });
+      });
+
+      // ── Save status state machine ─────────────────────────
+      // Auto-save: when the user types we mark "변경됨" then debounce
+      // a "저장 중…" → "저장됨" transition. Save button does the same
+      // immediately + flips back to read mode (mockup behavior; the
+      // real implementation would persist to the server first).
+      var dirtyTimer = null;
+      var saveTimer = null;
+
+      function setSaveState(state, label) {
+        saveStatus.dataset.state = state;
+        if (label) saveStatusLabel.textContent = label;
+        if (state === 'saving') {
+          saveStatus.querySelector('svg').innerHTML =
+            '<path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 4 21 10 15 10"/>';
+        } else {
+          saveStatus.querySelector('svg').innerHTML =
+            '<polyline points="20 6 9 17 4 12"/>';
+        }
+      }
+
+      function scheduleAutoSave() {
+        setSaveState('dirty', '변경됨');
+        clearTimeout(dirtyTimer);
+        dirtyTimer = setTimeout(function () {
+          setSaveState('saving', '저장 중…');
+          clearTimeout(saveTimer);
+          saveTimer = setTimeout(function () {
+            setSaveState('saved', '자동 저장됨');
+          }, 600);
+        }, 1200);
+      }
+
+      content.addEventListener('input', scheduleAutoSave);
+
+      saveBtn.addEventListener('click', function () {
+        clearTimeout(dirtyTimer);
+        clearTimeout(saveTimer);
+        setSaveState('saving', '저장 중…');
+        setTimeout(function () {
+          setSaveState('saved', '저장 완료');
+          // After explicit save, drop back to read mode so the user
+          // can review the rendered output without the toolbar.
+          setMode('read');
+        }, 500);
+      });
+
+      // PDF export — uses the browser print dialog with @media print rules above.
+      document.getElementById('pdf-btn').addEventListener('click', function () { window.print(); });
+    })();
+  </script>
+</body>
+</html>

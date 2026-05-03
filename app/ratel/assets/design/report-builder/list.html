@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Report Builder — List Arena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html[data-theme="dark"] {
+      --bg-void: #06060e;
+      --bg-glass: rgba(12, 12, 26, 0.65);
+      --bg-glass-hover: rgba(20, 20, 40, 0.80);
+      --border-subtle: rgba(255, 255, 255, 0.06);
+      --border-strong: rgba(255, 255, 255, 0.12);
+      --text-primary: #f0f0f5;
+      --text-muted: #8888a8;
+      --text-dim: #55556a;
+      --surface-soft: rgba(255, 255, 255, 0.02);
+      --surface-hover: rgba(255, 255, 255, 0.04);
+      --panel-bg: #0c0c1a;
+      --glow-aura-a: rgba(252, 179, 0, 0.05);
+      --glow-aura-b: rgba(244, 63, 94, 0.04);
+    }
+    html[data-theme="light"] {
+      --bg-void: #f5f5fb;
+      --bg-glass: rgba(255, 255, 255, 0.75);
+      --bg-glass-hover: rgba(255, 255, 255, 0.95);
+      --border-subtle: rgba(10, 10, 30, 0.08);
+      --border-strong: rgba(10, 10, 30, 0.16);
+      --text-primary: #12121a;
+      --text-muted: #5b5b75;
+      --text-dim: #9898ad;
+      --surface-soft: rgba(10, 10, 30, 0.03);
+      --surface-hover: rgba(10, 10, 30, 0.05);
+      --panel-bg: #ffffff;
+      --glow-aura-a: rgba(252, 179, 0, 0.08);
+      --glow-aura-b: rgba(244, 63, 94, 0.06);
+    }
+    :root {
+      --accent-gold: #fcb300;
+      --accent-rose: #f43f5e;
+      --accent-teal: #6eedd8;
+      --report-color: #fcb300;
+      --report-bg: rgba(252, 179, 0, 0.10);
+      --report-border: rgba(252, 179, 0, 0.24);
+      --report-glow: rgba(252, 179, 0, 0.16);
+      --status-draft-color: #8888a8;
+      --status-running-color: #06b6d4;
+      --status-done-color: #22c55e;
+      --status-failed-color: #ef4444;
+      --font-display: 'Orbitron', sans-serif;
+      --font-body: 'Outfit', sans-serif;
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg-void);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      transition: background 0.25s, color 0.25s;
+    }
+
+    .arena {
+      position: relative;
+      min-height: 100vh;
+      width: 100%;
+      overflow: hidden;
+    }
+    .arena::before {
+      content: '';
+      position: fixed;
+      inset: -10%;
+      background:
+        radial-gradient(circle at 18% 20%, var(--glow-aura-a), transparent 45%),
+        radial-gradient(circle at 82% 22%, var(--glow-aura-b), transparent 45%),
+        radial-gradient(circle at 50% 90%, rgba(110, 237, 216, 0.05), transparent 50%);
+      filter: blur(60px);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Topbar ──────────────────────────────────── */
+    .arena-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 24px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      background: transparent;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: 120ms ease;
+    }
+    .back-btn:hover { background: var(--surface-hover); border-color: var(--accent-gold); }
+    .back-btn svg { width: 16px; height: 16px; stroke-width: 2.4; }
+    .arena-topbar__logo {
+      width: 36px; height: 36px; border-radius: 9px; object-fit: cover;
+      border: 1px solid rgba(252, 179, 0, 0.15); flex-shrink: 0;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    }
+    .breadcrumb {
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    }
+    .breadcrumb__item {
+      font-family: var(--font-display);
+      font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .breadcrumb__sep { color: var(--text-dim); font-size: 10px; }
+    .breadcrumb__current { color: var(--text-primary); font-weight: 600; }
+    .type-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 8px;
+      font-family: var(--font-display);
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      background: var(--report-bg); color: var(--report-color);
+      border: 1px solid var(--report-border);
+    }
+    .type-badge svg { width: 13px; height: 13px; }
+    .topbar-title {
+      flex: 1; min-width: 180px;
+      font-family: var(--font-display);
+      font-size: 15px; font-weight: 700; letter-spacing: 0.04em;
+      padding: 6px 10px; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* ── Body ────────────────────────────────────── */
+    .body {
+      position: relative;
+      z-index: 1;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    .heading-row {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+    .heading {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .heading h1 {
+      font-family: var(--font-display);
+      font-size: 26px; font-weight: 800; letter-spacing: 0.02em;
+    }
+    .heading p {
+      color: var(--text-muted); font-size: 13px;
+    }
+    .quota-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 14px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      background: var(--surface-soft);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .quota-pill strong {
+      color: var(--report-color);
+      font-family: var(--font-display);
+      font-weight: 700;
+    }
+    .quota-pill svg {
+      width: 14px; height: 14px;
+      color: var(--report-color);
+    }
+
+    /* ── Carousel ───────────────────────────────── */
+    /* Break out of `.body`'s max-width(1280px) so arrows can sit at
+       the viewport edges. The track keeps its own horizontal padding
+       so cards still align with the body's content column. */
+    .carousel-wrap {
+      position: relative;
+      margin-top: 24px;
+      width: 100vw;
+      margin-left: calc(50% - 50vw);
+      margin-right: calc(50% - 50vw);
+    }
+    .carousel-track {
+      display: flex; gap: 20px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding: 8px max(24px, calc((100vw - 1280px) / 2 + 24px)) 24px;
+      scroll-behavior: smooth;
+    }
+    .carousel-track::-webkit-scrollbar { display: none; }
+
+    .report-card {
+      flex: 0 0 auto;
+      width: 360px;
+      scroll-snap-align: center;
+      padding: 24px;
+      border-radius: 18px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border-subtle);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: transform 220ms ease, border-color 220ms ease, background 220ms ease;
+      cursor: pointer;
+      display: flex; flex-direction: column; gap: 14px;
+      min-height: 340px;
+    }
+    .report-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--report-border);
+      background: var(--surface-hover);
+    }
+    .report-card__head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px;
+    }
+    .status-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 999px;
+      font-family: var(--font-display);
+      font-size: 9px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .status-chip[data-status="draft"] {
+      color: var(--status-draft-color);
+      background: rgba(136, 136, 168, 0.10);
+      border: 1px solid rgba(136, 136, 168, 0.24);
+    }
+    .status-chip[data-status="running"] {
+      color: var(--status-running-color);
+      background: rgba(6, 182, 212, 0.10);
+      border: 1px solid rgba(6, 182, 212, 0.24);
+    }
+    .status-chip[data-status="done"] {
+      color: var(--status-done-color);
+      background: rgba(34, 197, 94, 0.10);
+      border: 1px solid rgba(34, 197, 94, 0.24);
+    }
+    .status-chip[data-status="failed"] {
+      color: var(--status-failed-color);
+      background: rgba(239, 68, 68, 0.10);
+      border: 1px solid rgba(239, 68, 68, 0.24);
+    }
+    .status-chip__pulse {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: currentColor;
+    }
+    .status-chip[data-status="running"] .status-chip__pulse {
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.4); }
+    }
+    .report-card__rank {
+      font-family: var(--font-display);
+      font-size: 11px; font-weight: 700;
+      color: var(--text-dim);
+      letter-spacing: 0.08em;
+    }
+
+    .report-card__title {
+      font-family: var(--font-display);
+      font-size: 18px; font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 0.01em;
+      line-height: 1.3;
+    }
+    .report-card__excerpt {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .report-card__meta {
+      margin-top: auto;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .report-card__meta-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--text-muted);
+    }
+    .report-card__meta-row svg { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.7; }
+    .report-card__meta-row strong {
+      color: var(--text-primary);
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .report-card__sections {
+      display: flex; flex-wrap: wrap; gap: 4px;
+    }
+    .section-tag {
+      padding: 2px 8px; border-radius: 999px;
+      background: var(--report-bg);
+      color: var(--report-color);
+      border: 1px solid var(--report-border);
+      font-size: 10px;
+      font-family: var(--font-display);
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* New card */
+    .report-card--new {
+      border: 1px dashed var(--border-strong);
+      background: transparent;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 10px;
+    }
+    .report-card--new:hover {
+      border-color: var(--report-color);
+      background: var(--report-bg);
+    }
+    .report-card--new__icon {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--report-bg);
+      border: 1px solid var(--report-border);
+      color: var(--report-color);
+    }
+    .report-card--new__icon svg { width: 26px; height: 26px; }
+    .report-card--new__title {
+      font-family: var(--font-display);
+      font-size: 16px; font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 0.04em;
+    }
+    .report-card--new__desc {
+      font-size: 12px; color: var(--text-muted);
+      max-width: 220px; line-height: 1.5;
+    }
+
+    /* Carousel arrows */
+    .carousel-arrow {
+      position: absolute; top: 50%;
+      transform: translateY(-50%);
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-glass);
+      backdrop-filter: blur(10px);
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: 120ms ease;
+      z-index: 5;
+    }
+    .carousel-arrow:hover { border-color: var(--report-color); color: var(--report-color); }
+    .carousel-arrow svg { width: 18px; height: 18px; stroke-width: 2.4; }
+    .carousel-arrow--prev { left: 16px; }
+    .carousel-arrow--next { right: 16px; }
+
+    /* Dots indicator */
+    .carousel-dots {
+      display: flex; justify-content: center; gap: 8px;
+      margin-top: 8px;
+    }
+    .carousel-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border-subtle);
+      transition: 220ms ease;
+    }
+    .carousel-dot.active {
+      width: 28px; border-radius: 999px;
+      background: var(--report-color);
+    }
+
+    /* Empty hint */
+    .empty-hint {
+      margin-top: 16px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 12px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .empty-hint svg { width: 16px; height: 16px; color: var(--report-color); flex-shrink: 0; }
+
+    @media (max-width: 720px) {
+      .heading h1 { font-size: 22px; }
+      .report-card { width: 320px; }
+      .carousel-arrow { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <!-- Topbar -->
+    <header class="arena-topbar" role="banner">
+      <button class="back-btn" type="button" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5"/>
+          <path d="M12 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <img class="arena-topbar__logo" src="https://metadata.ratel.foundation/logos/logo-symbol.png" alt="Space" />
+      <nav class="breadcrumb">
+        <span class="breadcrumb__item">2026 개헌 국민에게 직접 묻다</span>
+        <span class="breadcrumb__sep">›</span>
+        <span class="breadcrumb__item">Apps</span>
+        <span class="breadcrumb__sep">›</span>
+        <span class="breadcrumb__item breadcrumb__current">Report</span>
+      </nav>
+      <span class="type-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 3v4a1 1 0 0 0 1 1h4"/>
+          <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/>
+          <line x1="9" y1="13" x2="15" y2="13"/>
+          <line x1="9" y1="17" x2="13" y2="17"/>
+        </svg>
+        Report
+      </span>
+      <span class="topbar-title">분석 보고서</span>
+    </header>
+
+    <!-- Body -->
+    <main class="body">
+      <div class="heading-row">
+        <div class="heading">
+          <h1>분석 보고서</h1>
+          <p>분석 결과를 토대로 AI가 섹션별 보고서를 생성합니다 · 카드를 눌러 열어보세요</p>
+        </div>
+        <div class="quota-pill" title="비-Enterprise 등급은 스페이스당 2개까지 생성할 수 있어요">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+          <span>한도 <strong>1 / 2</strong> 사용</span>
+        </div>
+      </div>
+
+      <div class="carousel-wrap">
+        <button class="carousel-arrow carousel-arrow--prev" type="button" aria-label="이전">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+
+        <div class="carousel-track" id="carousel">
+          <!-- New card -->
+          <article class="report-card report-card--new" data-action="create">
+            <div class="report-card--new__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </div>
+            <div class="report-card--new__title">새 보고서 만들기</div>
+            <div class="report-card--new__desc">분석 결과 1개를 골라 AI 섹션 보고서를 생성합니다</div>
+          </article>
+
+          <!-- Existing report 1 (done) -->
+          <article class="report-card">
+            <div class="report-card__head">
+              <span class="status-chip" data-status="done">
+                <span class="status-chip__pulse"></span>
+                완료
+              </span>
+              <span class="report-card__rank">#01</span>
+            </div>
+            <div class="report-card__title">2026 개헌 인식 종합 보고서</div>
+            <div class="report-card__excerpt">
+              참여자 140명 응답 데이터를 기반으로 한 개헌 필요성, 우선 의제, 단계적 추진 시기에 대한 종합 분석. 핵심 의제부터 단계적 개정을 선호하는 응답이 다수.
+            </div>
+            <div class="report-card__sections">
+              <span class="section-tag">개요</span>
+              <span class="section-tag">조사설계</span>
+              <span class="section-tag">분석결과</span>
+              <span class="section-tag">결론·제언</span>
+            </div>
+            <div class="report-card__meta">
+              <div class="report-card__meta-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 3v18h18"/>
+                  <path d="M7 14l4-4 4 4 5-5"/>
+                </svg>
+                <span>출처 · <strong>최종 조사</strong></span>
+              </div>
+              <div class="report-card__meta-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span>2026.04.29 14:21</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Running -->
+          <article class="report-card">
+            <div class="report-card__head">
+              <span class="status-chip" data-status="running">
+                <span class="status-chip__pulse"></span>
+                생성 중
+              </span>
+              <span class="report-card__rank">#02</span>
+            </div>
+            <div class="report-card__title">청년층 헌법 인식 보고서</div>
+            <div class="report-card__excerpt">
+              18-29세 응답자 그룹 한정 분석 보고서. AI가 섹션별로 본문을 작성하고 있습니다.
+            </div>
+            <div class="report-card__sections">
+              <span class="section-tag">개요</span>
+              <span class="section-tag">분석결과</span>
+              <span class="section-tag">결론·제언</span>
+            </div>
+            <div class="report-card__meta">
+              <div class="report-card__meta-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 3v18h18"/>
+                  <path d="M7 14l4-4 4 4 5-5"/>
+                </svg>
+                <span>출처 · <strong>청년층 분석</strong></span>
+              </div>
+              <div class="report-card__meta-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span>방금 시작</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Draft -->
+          <article class="report-card">
+            <div class="report-card__head">
+              <span class="status-chip" data-status="draft">
+                <span class="status-chip__pulse"></span>
+                초안
+              </span>
+              <span class="report-card__rank">#03</span>
+            </div>
+            <div class="report-card__title">지역별 응답 비교 분석</div>
+            <div class="report-card__excerpt">
+              섹션 구성을 마쳤지만 아직 분석 결과를 선택하지 않은 초안. 시작하기를 누르면 AI 생성을 시작합니다.
+            </div>
+            <div class="report-card__sections">
+              <span class="section-tag">개요</span>
+              <span class="section-tag">조사설계</span>
+            </div>
+            <div class="report-card__meta">
+              <div class="report-card__meta-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span>2026.04.28 11:05</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <button class="carousel-arrow carousel-arrow--next" type="button" aria-label="다음">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="carousel-dots" id="dots">
+        <span class="carousel-dot active"></span>
+        <span class="carousel-dot"></span>
+        <span class="carousel-dot"></span>
+        <span class="carousel-dot"></span>
+      </div>
+
+      <div class="empty-hint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        분석을 먼저 만들어 두면 보고서 생성 시 자료로 사용할 수 있어요.
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Carousel arrows scroll the track horizontally
+    (function () {
+      const track = document.getElementById('carousel');
+      const prev = document.querySelector('.carousel-arrow--prev');
+      const next = document.querySelector('.carousel-arrow--next');
+      const dots = document.getElementById('dots').children;
+      const cards = track.querySelectorAll('.report-card');
+
+      function scrollByCard(dir) {
+        const card = track.querySelector('.report-card');
+        if (!card) return;
+        const w = card.offsetWidth + 20;
+        track.scrollBy({ left: dir * w, behavior: 'smooth' });
+      }
+      prev.addEventListener('click', () => scrollByCard(-1));
+      next.addEventListener('click', () => scrollByCard(1));
+
+      function updateDots() {
+        const cw = track.clientWidth / 2;
+        const tx = track.scrollLeft + cw;
+        let closest = 0; let bestDist = Infinity;
+        cards.forEach((c, i) => {
+          const cx = c.offsetLeft + c.offsetWidth / 2;
+          const d = Math.abs(cx - tx);
+          if (d < bestDist) { bestDist = d; closest = i; }
+        });
+        Array.from(dots).forEach((d, i) => d.classList.toggle('active', i === closest));
+      }
+      track.addEventListener('scroll', () => requestAnimationFrame(updateDots));
+      updateDots();
+
+      // Click "new" card → demo only
+      track.addEventListener('click', (e) => {
+        const newCard = e.target.closest('[data-action="create"]');
+        if (newCard) {
+          window.location.href = './create.html';
+        }
+        const reportCard = e.target.closest('.report-card:not(.report-card--new)');
+        if (reportCard) {
+          window.location.href = './detail.html';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

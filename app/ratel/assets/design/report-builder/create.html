@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Report Builder — Create Wizard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html[data-theme="dark"] {
+      --bg-void: #06060e;
+      --bg-glass: rgba(12, 12, 26, 0.65);
+      --border-subtle: rgba(255, 255, 255, 0.06);
+      --border-strong: rgba(255, 255, 255, 0.12);
+      --text-primary: #f0f0f5;
+      --text-muted: #8888a8;
+      --text-dim: #55556a;
+      --surface-soft: rgba(255, 255, 255, 0.02);
+      --surface-hover: rgba(255, 255, 255, 0.04);
+      --panel-bg: #0c0c1a;
+      --input-bg: rgba(255, 255, 255, 0.03);
+      --input-border: rgba(255, 255, 255, 0.08);
+      --glow-aura-a: rgba(252, 179, 0, 0.05);
+      --glow-aura-b: rgba(110, 237, 216, 0.04);
+    }
+    html[data-theme="light"] {
+      --bg-void: #f5f5fb;
+      --bg-glass: rgba(255, 255, 255, 0.75);
+      --border-subtle: rgba(10, 10, 30, 0.08);
+      --border-strong: rgba(10, 10, 30, 0.16);
+      --text-primary: #12121a;
+      --text-muted: #5b5b75;
+      --text-dim: #9898ad;
+      --surface-soft: rgba(10, 10, 30, 0.03);
+      --surface-hover: rgba(10, 10, 30, 0.05);
+      --panel-bg: #ffffff;
+      --input-bg: rgba(10, 10, 30, 0.02);
+      --input-border: rgba(10, 10, 30, 0.10);
+      --glow-aura-a: rgba(252, 179, 0, 0.08);
+      --glow-aura-b: rgba(110, 237, 216, 0.07);
+    }
+    :root {
+      --accent-gold: #fcb300;
+      --accent-teal: #6eedd8;
+      --accent-red: #ef4444;
+      --report-color: #fcb300;
+      --report-bg: rgba(252, 179, 0, 0.10);
+      --report-border: rgba(252, 179, 0, 0.24);
+      --report-soft: rgba(252, 179, 0, 0.06);
+      --font-display: 'Orbitron', sans-serif;
+      --font-body: 'Outfit', sans-serif;
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg-void);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+    }
+
+    .arena {
+      position: relative;
+      min-height: 100vh;
+      width: 100%;
+      overflow: hidden;
+    }
+    .arena::before {
+      content: '';
+      position: fixed; inset: -10%;
+      background:
+        radial-gradient(circle at 20% 18%, var(--glow-aura-a), transparent 45%),
+        radial-gradient(circle at 80% 22%, var(--glow-aura-b), transparent 45%);
+      filter: blur(60px); z-index: 0; pointer-events: none;
+    }
+
+    /* ── Topbar ──────────────────────────────────── */
+    .arena-topbar {
+      position: sticky; top: 0; z-index: 30;
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 24px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .back-btn {
+      width: 32px; height: 32px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border-strong); border-radius: 999px;
+      background: transparent; color: var(--text-primary);
+      cursor: pointer; transition: 120ms ease;
+    }
+    .back-btn:hover { border-color: var(--accent-gold); background: var(--surface-hover); }
+    .back-btn svg { width: 16px; height: 16px; stroke-width: 2.4; }
+    .topbar-title {
+      font-family: var(--font-display);
+      font-size: 14px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--text-primary);
+      flex: 1;
+    }
+
+    /* Step indicator */
+    .step-indicator {
+      display: inline-flex; align-items: center;
+      gap: 0;
+      padding: 4px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+    }
+    .step-dot {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-family: var(--font-display);
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text-muted);
+      transition: 120ms ease;
+    }
+    .step-dot[aria-current="true"] {
+      background: var(--report-bg);
+      color: var(--report-color);
+      box-shadow: 0 0 0 1px var(--report-border) inset;
+    }
+    .step-dot[data-completed="true"] {
+      color: var(--text-primary);
+    }
+    .step-dot__num {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 10px;
+      background: var(--surface-hover);
+    }
+    .step-dot[aria-current="true"] .step-dot__num {
+      background: var(--report-color); color: #06060e;
+    }
+    .step-dot[data-completed="true"] .step-dot__num {
+      background: var(--accent-teal); color: #06060e;
+    }
+
+    /* ── Body ────────────────────────────────────── */
+    .body {
+      position: relative; z-index: 1;
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 32px 24px 120px;
+    }
+
+    .step-pane { display: none; }
+    .step-pane.active { display: block; animation: fade 200ms ease; }
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .pane-head {
+      display: flex; flex-direction: column; gap: 6px;
+      margin-bottom: 24px;
+    }
+    .pane-head h1 {
+      font-family: var(--font-display);
+      font-size: 22px; font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+    .pane-head p { color: var(--text-muted); font-size: 13px; line-height: 1.5; }
+
+    /* Section list (Step 1) */
+    .section-list {
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .section-row {
+      display: grid;
+      grid-template-columns: 24px 1fr auto;
+      gap: 12px;
+      padding: 14px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      transition: 120ms ease;
+    }
+    .section-row:hover { border-color: var(--report-border); }
+    .section-row__handle {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px;
+      cursor: grab;
+      color: var(--text-dim);
+    }
+    .section-row__handle:active { cursor: grabbing; }
+    .section-row__handle svg { width: 14px; height: 14px; }
+    .section-row__main { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .section-row__title-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-family: var(--font-display);
+      font-size: 15px; font-weight: 700;
+      letter-spacing: 0.02em;
+      padding: 0;
+    }
+    .section-row__title-input:focus { outline: none; }
+    .section-row__prompt {
+      width: 100%;
+      min-height: 64px;
+      padding: 10px 12px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 10px;
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--text-primary);
+      resize: vertical;
+      line-height: 1.5;
+    }
+    .section-row__prompt:focus {
+      outline: none; border-color: var(--report-color);
+      box-shadow: 0 0 0 3px var(--report-soft);
+    }
+    .section-row__prompt-label {
+      display: flex; align-items: center; justify-content: space-between;
+      font-family: var(--font-display);
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .section-row__actions {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .icon-btn {
+      width: 28px; height: 28px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 8px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      cursor: pointer; transition: 120ms ease;
+    }
+    .icon-btn:hover { background: var(--surface-hover); color: var(--text-primary); }
+    .icon-btn--danger:hover { color: var(--accent-red); border-color: rgba(239, 68, 68, 0.30); }
+    .icon-btn svg { width: 14px; height: 14px; }
+
+    /* Add section */
+    .add-section-btn {
+      width: 100%;
+      padding: 14px;
+      background: transparent;
+      border: 1px dashed var(--border-strong);
+      border-radius: 14px;
+      color: var(--text-muted);
+      font-family: var(--font-display);
+      font-size: 12px; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      cursor: pointer; transition: 120ms ease;
+    }
+    .add-section-btn:hover {
+      border-color: var(--report-color); color: var(--report-color);
+      background: var(--report-soft);
+    }
+    .add-section-btn svg { width: 14px; height: 14px; stroke-width: 2.5; }
+
+    .quota-banner {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px;
+      margin-top: 12px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .quota-banner svg { width: 16px; height: 16px; color: var(--accent-gold); flex-shrink: 0; }
+    .quota-banner strong { color: var(--accent-gold); font-family: var(--font-display); }
+
+    /* Step 2: Pick analyze report */
+    .analyze-list {
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .analyze-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: 120ms ease;
+    }
+    .analyze-item:hover { border-color: var(--report-border); }
+    .analyze-item[aria-checked="true"] {
+      background: var(--report-soft);
+      border-color: var(--report-color);
+    }
+    .analyze-item__radio {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--border-strong);
+      flex-shrink: 0;
+      position: relative;
+    }
+    .analyze-item[aria-checked="true"] .analyze-item__radio {
+      border-color: var(--report-color);
+    }
+    .analyze-item[aria-checked="true"] .analyze-item__radio::after {
+      content: '';
+      position: absolute; inset: 3px;
+      background: var(--report-color);
+      border-radius: 50%;
+    }
+    .analyze-item__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+    .analyze-item__title {
+      font-family: var(--font-display); font-size: 14px; font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .analyze-item__chips {
+      display: flex; flex-wrap: wrap; gap: 4px;
+    }
+    .src-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 999px;
+      font-size: 10px;
+      font-family: var(--font-display); font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .src-chip[data-src="poll"] { color: #06b6d4; background: rgba(6,182,212,0.10); border: 1px solid rgba(6,182,212,0.24); }
+    .src-chip[data-src="quiz"] { color: #a855f7; background: rgba(168,85,247,0.10); border: 1px solid rgba(168,85,247,0.24); }
+    .src-chip[data-src="discussion"] { color: #60a5fa; background: rgba(96,165,250,0.10); border: 1px solid rgba(96,165,250,0.24); }
+    .src-chip[data-src="follow"] { color: #f97316; background: rgba(249,115,22,0.10); border: 1px solid rgba(249,115,22,0.24); }
+    .analyze-item__meta {
+      display: flex; gap: 14px; align-items: center;
+      font-size: 11px; color: var(--text-muted);
+    }
+    .analyze-item__meta b { color: var(--text-primary); font-family: var(--font-display); font-weight: 700; }
+
+    /* Step 3: Review */
+    .summary-card {
+      padding: 24px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      margin-bottom: 16px;
+    }
+    .summary-card__row {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .summary-card__row:last-child { border-bottom: none; }
+    .summary-card__label {
+      font-family: var(--font-display);
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .summary-card__value { color: var(--text-primary); font-size: 13px; line-height: 1.6; }
+    .summary-card__value strong {
+      font-family: var(--font-display);
+      color: var(--report-color);
+    }
+    .summary-sections {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin-top: 4px;
+    }
+    .summary-section-tag {
+      padding: 4px 10px; border-radius: 999px;
+      background: var(--report-bg);
+      color: var(--report-color);
+      border: 1px solid var(--report-border);
+      font-size: 11px; font-family: var(--font-display); font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    /* Generation progress */
+    .gen-progress {
+      padding: 24px; background: var(--panel-bg);
+      border: 1px solid var(--border-subtle); border-radius: 16px;
+      display: none;
+    }
+    .gen-progress.active { display: block; }
+    .gen-progress__head {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 16px;
+    }
+    .gen-progress__spinner {
+      width: 22px; height: 22px;
+      border: 2px solid var(--surface-hover);
+      border-top-color: var(--report-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .gen-progress__title {
+      font-family: var(--font-display);
+      font-size: 14px; font-weight: 700;
+      color: var(--report-color);
+      letter-spacing: 0.04em;
+    }
+    .gen-progress__list {
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .gen-progress__item {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px;
+    }
+    .gen-progress__item-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--surface-hover);
+      flex-shrink: 0;
+    }
+    .gen-progress__item[data-state="done"] .gen-progress__item-dot {
+      background: var(--accent-teal);
+    }
+    .gen-progress__item[data-state="running"] .gen-progress__item-dot {
+      background: var(--report-color);
+      box-shadow: 0 0 0 3px var(--report-bg);
+    }
+    .gen-progress__item-label { flex: 1; color: var(--text-muted); }
+    .gen-progress__item[data-state="done"] .gen-progress__item-label { color: var(--text-primary); }
+    .gen-progress__item-status {
+      font-family: var(--font-display);
+      font-size: 10px;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .gen-progress__item[data-state="running"] .gen-progress__item-status { color: var(--report-color); }
+    .gen-progress__item[data-state="done"] .gen-progress__item-status { color: var(--accent-teal); }
+
+    /* Footer (sticky bottom action) */
+    .wizard-footer {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      z-index: 20;
+      padding: 16px 24px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border-subtle);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+    }
+    .wizard-footer__left {
+      font-size: 12px; color: var(--text-muted);
+    }
+    .wizard-footer__btns {
+      display: flex; gap: 10px;
+    }
+    .btn {
+      padding: 10px 22px;
+      border-radius: 999px;
+      font-family: var(--font-display);
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      cursor: pointer; transition: 120ms ease;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn--ghost {
+      background: transparent;
+      border: 1px solid var(--border-strong);
+      color: var(--text-primary);
+    }
+    .btn--ghost:hover { border-color: var(--accent-gold); }
+    .btn--primary {
+      background: var(--report-color);
+      color: #06060e;
+      border: 1px solid var(--report-color);
+    }
+    .btn--primary:hover { filter: brightness(1.05); }
+    .btn--primary:disabled {
+      background: var(--surface-hover);
+      color: var(--text-dim);
+      border-color: var(--border-strong);
+      cursor: not-allowed;
+    }
+    .btn svg { width: 14px; height: 14px; stroke-width: 2.5; }
+
+    /* Section type chip preview */
+    .section-row__type {
+      flex-shrink: 0;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--report-bg);
+      color: var(--report-color);
+      border: 1px solid var(--report-border);
+      font-family: var(--font-display);
+      font-size: 9px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .section-row__head {
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    /* Title input wrap */
+    .name-input-wrap {
+      margin-bottom: 24px;
+    }
+    .name-input-wrap label {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .name-input {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 15px;
+      font-family: var(--font-body);
+    }
+    .name-input:focus {
+      outline: none; border-color: var(--report-color);
+      box-shadow: 0 0 0 3px var(--report-soft);
+    }
+
+    /* Empty quota lock */
+    .quota-lock-card {
+      padding: 22px;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.24);
+      border-radius: 14px;
+      display: flex; gap: 14px; align-items: start;
+      margin-bottom: 16px;
+    }
+    .quota-lock-card svg { width: 22px; height: 22px; color: var(--accent-red); flex-shrink: 0; }
+    .quota-lock-card__title {
+      font-family: var(--font-display); font-weight: 700;
+      color: var(--accent-red); font-size: 13px;
+      letter-spacing: 0.04em; margin-bottom: 4px;
+    }
+    .quota-lock-card__body { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+    .quota-lock-card__cta {
+      display: inline-flex; align-items: center; gap: 4px;
+      margin-top: 6px;
+      color: var(--accent-gold);
+      font-weight: 600; text-decoration: none;
+    }
+
+    @media (max-width: 720px) {
+      .pane-head h1 { font-size: 18px; }
+      .step-indicator { display: none; }
+      .summary-card__row { grid-template-columns: 100px 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="arena">
+    <!-- Topbar -->
+    <header class="arena-topbar" role="banner">
+      <button class="back-btn" type="button" aria-label="Back" onclick="window.location='./list.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <span class="topbar-title">새 보고서 만들기</span>
+      <nav class="step-indicator" aria-label="Steps">
+        <span class="step-dot" data-completed="false" aria-current="true">
+          <span class="step-dot__num">1</span> 섹션 구성
+        </span>
+        <span class="step-dot">
+          <span class="step-dot__num">2</span> 분석 결과
+        </span>
+        <span class="step-dot">
+          <span class="step-dot__num">3</span> 시작
+        </span>
+      </nav>
+    </header>
+
+    <!-- Body -->
+    <main class="body">
+      <!-- ── Step 1: Sections ────────────── -->
+      <section class="step-pane active" data-step="1">
+        <div class="pane-head">
+          <h1>섹션 구성</h1>
+          <p>AI가 작성할 섹션과 그 섹션의 핵심 질문을 정해주세요. 기본 4개 섹션이 채워져 있고, 자유롭게 추가/삭제/순서 변경할 수 있어요.</p>
+        </div>
+
+        <div class="name-input-wrap">
+          <label for="report-name">보고서 제목</label>
+          <input id="report-name" class="name-input" type="text" placeholder="예: 2026 개헌 인식 종합 보고서" value="2026 개헌 인식 종합 보고서" />
+        </div>
+
+        <div class="section-list" id="sections">
+          <div class="section-row" data-key="overview">
+            <div class="section-row__handle" title="드래그로 순서 변경">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="6" r="1.5" fill="currentColor"/><circle cx="9" cy="12" r="1.5" fill="currentColor"/><circle cx="9" cy="18" r="1.5" fill="currentColor"/><circle cx="15" cy="6" r="1.5" fill="currentColor"/><circle cx="15" cy="12" r="1.5" fill="currentColor"/><circle cx="15" cy="18" r="1.5" fill="currentColor"/></svg>
+            </div>
+            <div class="section-row__main">
+              <div class="section-row__head">
+                <span class="section-row__type">개요</span>
+                <input class="section-row__title-input" value="개요" aria-label="섹션 제목" />
+              </div>
+              <div class="section-row__prompt-label">
+                <span>AI 프롬프트</span>
+                <span style="color: var(--text-dim); text-transform: none; letter-spacing: 0;">한 줄로 핵심을 요약해주세요</span>
+              </div>
+              <textarea class="section-row__prompt" rows="3">선택된 분석 결과의 목적, 조사 배경, 응답자 규모를 2~3문단으로 요약해줘. 기관·연구자 톤으로 사실 위주로 작성하고, 결과나 결론은 다음 섹션에서 다룰 거니 여기서는 미리 단정짓지 말 것.</textarea>
+            </div>
+            <div class="section-row__actions">
+              <button class="icon-btn icon-btn--danger" aria-label="삭제">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="section-row" data-key="design">
+            <div class="section-row__handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="6" r="1.5" fill="currentColor"/><circle cx="9" cy="12" r="1.5" fill="currentColor"/><circle cx="9" cy="18" r="1.5" fill="currentColor"/><circle cx="15" cy="6" r="1.5" fill="currentColor"/><circle cx="15" cy="12" r="1.5" fill="currentColor"/><circle cx="15" cy="18" r="1.5" fill="currentColor"/></svg></div>
+            <div class="section-row__main">
+              <div class="section-row__head">
+                <span class="section-row__type">조사설계</span>
+                <input class="section-row__title-input" value="조사 설계" aria-label="섹션 제목" />
+              </div>
+              <div class="section-row__prompt-label">
+                <span>AI 프롬프트</span>
+              </div>
+              <textarea class="section-row__prompt" rows="3">조사 방법(설문/퀴즈/토론), 표본 추출 방식, 응답 기간, 신뢰 구간 등을 항목별로 정리해줘. 메타데이터는 분석 결과 페이로드에서 가져올 것.</textarea>
+            </div>
+            <div class="section-row__actions">
+              <button class="icon-btn icon-btn--danger" aria-label="삭제"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>
+            </div>
+          </div>
+
+          <div class="section-row" data-key="results">
+            <div class="section-row__handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="6" r="1.5" fill="currentColor"/><circle cx="9" cy="12" r="1.5" fill="currentColor"/><circle cx="9" cy="18" r="1.5" fill="currentColor"/><circle cx="15" cy="6" r="1.5" fill="currentColor"/><circle cx="15" cy="12" r="1.5" fill="currentColor"/><circle cx="15" cy="18" r="1.5" fill="currentColor"/></svg></div>
+            <div class="section-row__main">
+              <div class="section-row__head">
+                <span class="section-row__type">분석결과</span>
+                <input class="section-row__title-input" value="분석 결과" aria-label="섹션 제목" />
+              </div>
+              <div class="section-row__prompt-label">
+                <span>AI 프롬프트</span>
+              </div>
+              <textarea class="section-row__prompt" rows="4">교차 필터 결과를 토대로 응답률이 높은 항목, 인구통계학적 특성, 의외의 패턴을 1) 핵심 지표 (퍼센티지·분포), 2) 인구통계 특성, 3) 주목할 만한 발견 순서로 정리해줘. 표나 항목 글머리 자유롭게 사용 가능.</textarea>
+            </div>
+            <div class="section-row__actions">
+              <button class="icon-btn icon-btn--danger" aria-label="삭제"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>
+            </div>
+          </div>
+
+          <div class="section-row" data-key="conclusion">
+            <div class="section-row__handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="6" r="1.5" fill="currentColor"/><circle cx="9" cy="12" r="1.5" fill="currentColor"/><circle cx="9" cy="18" r="1.5" fill="currentColor"/><circle cx="15" cy="6" r="1.5" fill="currentColor"/><circle cx="15" cy="12" r="1.5" fill="currentColor"/><circle cx="15" cy="18" r="1.5" fill="currentColor"/></svg></div>
+            <div class="section-row__main">
+              <div class="section-row__head">
+                <span class="section-row__type">결론·제언</span>
+                <input class="section-row__title-input" value="결론 및 제언" aria-label="섹션 제목" />
+              </div>
+              <div class="section-row__prompt-label">
+                <span>AI 프롬프트</span>
+              </div>
+              <textarea class="section-row__prompt" rows="4">분석 결과를 종합한 인사이트와 정책·실무 제언을 작성해줘. 반드시 데이터에 근거할 것 — 사견은 배제하고, 데이터가 명확히 가리키는 방향만 제시. 한계점도 한 단락으로 명시.</textarea>
+            </div>
+            <div class="section-row__actions">
+              <button class="icon-btn icon-btn--danger" aria-label="삭제"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>
+            </div>
+          </div>
+        </div>
+
+        <button class="add-section-btn" type="button" id="add-section">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          섹션 추가
+        </button>
+
+        <div class="quota-banner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span>비-Enterprise 등급은 스페이스당 보고서 <strong>2개</strong>까지 생성할 수 있어요. 현재 <strong>1 / 2</strong> 사용.</span>
+        </div>
+      </section>
+
+      <!-- ── Step 2: Pick analyze ────────── -->
+      <section class="step-pane" data-step="2">
+        <div class="pane-head">
+          <h1>분석 결과 선택</h1>
+          <p>이 보고서가 사용할 분석 결과 1개를 골라주세요. 보고서 생성 후에도 다른 분석으로 바꿀 수 있어요.</p>
+        </div>
+
+        <div class="analyze-list">
+          <div class="analyze-item" role="radio" aria-checked="true" data-id="report-01">
+            <div class="analyze-item__radio"></div>
+            <div class="analyze-item__main">
+              <div class="analyze-item__title">최종 조사 · 종합 분석</div>
+              <div class="analyze-item__chips">
+                <span class="src-chip" data-src="poll">POLL · 귀하의 성별은?</span>
+                <span class="src-chip" data-src="poll">POLL · 거주 지역?</span>
+              </div>
+              <div class="analyze-item__meta">
+                <span><b>140</b>명 응답</span>
+                <span>·</span>
+                <span><b>308</b>개 데이터</span>
+                <span>·</span>
+                <span>2026.04.28</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="analyze-item" role="radio" aria-checked="false" data-id="report-02">
+            <div class="analyze-item__radio"></div>
+            <div class="analyze-item__main">
+              <div class="analyze-item__title">청년층 한정 분석</div>
+              <div class="analyze-item__chips">
+                <span class="src-chip" data-src="poll">POLL · 18~29세</span>
+                <span class="src-chip" data-src="quiz">QUIZ · 대통령 4년 중임제</span>
+              </div>
+              <div class="analyze-item__meta">
+                <span><b>62</b>명 응답</span>
+                <span>·</span>
+                <span><b>175</b>개 데이터</span>
+                <span>·</span>
+                <span>2026.04.27</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="analyze-item" role="radio" aria-checked="false" data-id="report-03">
+            <div class="analyze-item__radio"></div>
+            <div class="analyze-item__main">
+              <div class="analyze-item__title">계엄·국회 통제 토론 분석</div>
+              <div class="analyze-item__chips">
+                <span class="src-chip" data-src="discussion">DISCUSSION · 계엄</span>
+                <span class="src-chip" data-src="follow">FOLLOW · 박ㅇㅇ</span>
+              </div>
+              <div class="analyze-item__meta">
+                <span><b>87</b>명 응답</span>
+                <span>·</span>
+                <span><b>241</b>개 데이터</span>
+                <span>·</span>
+                <span>2026.04.25</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Step 3: Review + start ────── -->
+      <section class="step-pane" data-step="3">
+        <div class="pane-head">
+          <h1>준비 완료</h1>
+          <p>아래 구성으로 AI가 섹션별 본문을 생성합니다. 생성된 문서는 다음 화면에서 자유롭게 편집할 수 있어요.</p>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-card__row">
+            <div class="summary-card__label">보고서 제목</div>
+            <div class="summary-card__value">2026 개헌 인식 종합 보고서</div>
+          </div>
+          <div class="summary-card__row">
+            <div class="summary-card__label">출처 분석</div>
+            <div class="summary-card__value">최종 조사 · 종합 분석 <span style="color: var(--text-muted);">(140명 응답 · 308개 데이터)</span></div>
+          </div>
+          <div class="summary-card__row">
+            <div class="summary-card__label">섹션</div>
+            <div class="summary-card__value">
+              <strong>4개</strong> · 다음 순서로 작성됩니다
+              <div class="summary-sections">
+                <span class="summary-section-tag">1. 개요</span>
+                <span class="summary-section-tag">2. 조사 설계</span>
+                <span class="summary-section-tag">3. 분석 결과</span>
+                <span class="summary-section-tag">4. 결론 및 제언</span>
+              </div>
+            </div>
+          </div>
+          <div class="summary-card__row">
+            <div class="summary-card__label">예상 시간</div>
+            <div class="summary-card__value">약 <strong>30~60초</strong> 소요 · 섹션당 평균 10~15초</div>
+          </div>
+        </div>
+
+        <div class="gen-progress" id="gen-progress">
+          <div class="gen-progress__head">
+            <span class="gen-progress__spinner"></span>
+            <span class="gen-progress__title">AI가 섹션을 작성하고 있어요</span>
+          </div>
+          <div class="gen-progress__list">
+            <div class="gen-progress__item" data-state="done">
+              <span class="gen-progress__item-dot"></span>
+              <span class="gen-progress__item-label">개요</span>
+              <span class="gen-progress__item-status">완료</span>
+            </div>
+            <div class="gen-progress__item" data-state="running">
+              <span class="gen-progress__item-dot"></span>
+              <span class="gen-progress__item-label">조사 설계</span>
+              <span class="gen-progress__item-status">작성 중</span>
+            </div>
+            <div class="gen-progress__item" data-state="pending">
+              <span class="gen-progress__item-dot"></span>
+              <span class="gen-progress__item-label">분석 결과</span>
+              <span class="gen-progress__item-status">대기</span>
+            </div>
+            <div class="gen-progress__item" data-state="pending">
+              <span class="gen-progress__item-dot"></span>
+              <span class="gen-progress__item-label">결론 및 제언</span>
+              <span class="gen-progress__item-status">대기</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer actions -->
+    <footer class="wizard-footer">
+      <div class="wizard-footer__left" id="footer-hint">섹션 4개 · AI가 각 섹션에 프롬프트를 적용해 작성합니다</div>
+      <div class="wizard-footer__btns">
+        <button class="btn btn--ghost" id="btn-prev" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          이전
+        </button>
+        <button class="btn btn--primary" id="btn-next" type="button">
+          다음
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      let step = 1;
+      const total = 3;
+      const panes = document.querySelectorAll('.step-pane');
+      const dots = document.querySelectorAll('.step-dot');
+      const btnPrev = document.getElementById('btn-prev');
+      const btnNext = document.getElementById('btn-next');
+      const footerHint = document.getElementById('footer-hint');
+      const genProgress = document.getElementById('gen-progress');
+
+      function render() {
+        panes.forEach((p) => {
+          p.classList.toggle('active', Number(p.dataset.step) === step);
+        });
+        dots.forEach((d, i) => {
+          d.setAttribute('aria-current', String(i + 1 === step));
+          d.dataset.completed = String(i + 1 < step);
+        });
+        btnPrev.style.visibility = step === 1 ? 'hidden' : '';
+        if (step === total) {
+          btnNext.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> 시작하기';
+          footerHint.textContent = '시작하기를 누르면 AI가 섹션별 작성을 시작합니다';
+        } else if (step === 2) {
+          btnNext.innerHTML = '검토 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+          footerHint.textContent = '분석 1개를 선택해주세요';
+        } else {
+          btnNext.innerHTML = '분석 선택 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+          footerHint.textContent = '섹션 4개 · AI가 각 섹션에 프롬프트를 적용해 작성합니다';
+        }
+      }
+      render();
+
+      btnPrev.addEventListener('click', () => { if (step > 1) { step--; render(); } });
+      btnNext.addEventListener('click', () => {
+        if (step < total) { step++; render(); }
+        else {
+          // Demo: simulate generation, then navigate to detail
+          genProgress.classList.add('active');
+          btnNext.disabled = true;
+          btnNext.innerHTML = '<span class="gen-progress__spinner" style="width:14px;height:14px;border-width:2px;"></span> 생성 중…';
+          setTimeout(() => { window.location.href = './detail.html'; }, 2200);
+        }
+      });
+
+      // Step 2 radio behavior
+      document.querySelectorAll('.analyze-item').forEach((el) => {
+        el.addEventListener('click', () => {
+          document.querySelectorAll('.analyze-item').forEach((x) => x.setAttribute('aria-checked', 'false'));
+          el.setAttribute('aria-checked', 'true');
+        });
+      });
+
+      // Step 1 add row
+      document.getElementById('add-section').addEventListener('click', () => {
+        const list = document.getElementById('sections');
+        const div = document.createElement('div');
+        div.className = 'section-row';
+        div.innerHTML = `
+          <div class="section-row__handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="6" r="1.5" fill="currentColor"/><circle cx="9" cy="12" r="1.5" fill="currentColor"/><circle cx="9" cy="18" r="1.5" fill="currentColor"/><circle cx="15" cy="6" r="1.5" fill="currentColor"/><circle cx="15" cy="12" r="1.5" fill="currentColor"/><circle cx="15" cy="18" r="1.5" fill="currentColor"/></svg></div>
+          <div class="section-row__main">
+            <div class="section-row__head"><span class="section-row__type">사용자 정의</span><input class="section-row__title-input" placeholder="섹션 제목" /></div>
+            <div class="section-row__prompt-label"><span>AI 프롬프트</span></div>
+            <textarea class="section-row__prompt" rows="3" placeholder="이 섹션에 대한 핵심 질문을 적어주세요"></textarea>
+          </div>
+          <div class="section-row__actions"><button class="icon-btn icon-btn--danger" aria-label="삭제"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button></div>`;
+        list.appendChild(div);
+        div.querySelector('input').focus();
+      });
+
+      // Delete row
+      document.getElementById('sections').addEventListener('click', (e) => {
+        const del = e.target.closest('.icon-btn--danger');
+        if (del) del.closest('.section-row').remove();
+      });
+    })();
+  </script>
+</body>
+</html>
