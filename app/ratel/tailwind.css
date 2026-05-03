@@ -950,7 +950,7 @@ h3 {
 }
 
 body {
-  @apply overflow-hidden max-tablet:overflow-auto bg-background text-foreground;
+  @apply max-tablet:overflow-auto bg-background text-foreground;
 }
 
 /* Mobile Safari: use dynamic viewport height to account for address bar.
