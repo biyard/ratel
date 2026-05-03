@@ -29,14 +29,21 @@ pub struct AnalyzeDiscussionResponse {
     pub discussion_id: String,
 }
 
+#[mcp_tool(
+    name = "analyze_discussion",
+    description = "Enqueue a fresh discussion text-analysis run (LDA + TF-IDF + text-network) for the matched users on one discussion under a finished analyze report. Requires creator role."
+)]
 #[post(
     "/api/spaces/{space_id}/apps/analyzes/reports/{report_id}/discussions/{discussion_id}/analyze",
     role: SpaceUserRole
 )]
 pub async fn analyze_discussion(
-    space_id: SpacePartition,
-    report_id: SpaceAnalyzeReportEntityType,
-    discussion_id: FeedPartition,
+    #[mcp(description = "Space partition key")] space_id: SpacePartition,
+    #[mcp(description = "Analyze report id")] report_id: SpaceAnalyzeReportEntityType,
+    #[mcp(description = "Discussion (post) partition key")] discussion_id: FeedPartition,
+    #[mcp(
+        description = "Analysis params payload as JSON, e.g. {\"params\": {\"top_k_keywords\": 30, \"num_topics\": 5, ...}}"
+    )]
     req: AnalyzeDiscussionRequest,
 ) -> Result<AnalyzeDiscussionResponse> {
     SpaceApp::can_edit(role)?;

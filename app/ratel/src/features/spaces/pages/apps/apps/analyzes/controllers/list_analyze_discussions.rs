@@ -29,10 +29,14 @@ pub struct AnalyzeDiscussionItem {
     pub matched_participant_count: i64,
 }
 
+#[mcp_tool(
+    name = "list_analyze_discussions",
+    description = "List discussions in a space available as analyze report sources. Cross-filter aware comment counts are 0 here; use get_analyze_report for the populated counts. Requires creator role."
+)]
 #[get("/api/spaces/{space_id}/apps/analyzes/discussions?bookmark", role: SpaceUserRole)]
 pub async fn list_analyze_discussions(
-    space_id: SpacePartition,
-    bookmark: Option<String>,
+    #[mcp(description = "Space partition key")] space_id: SpacePartition,
+    #[mcp(description = "Pagination bookmark. Omit for first page.")] bookmark: Option<String>,
 ) -> Result<ListResponse<AnalyzeDiscussionItem>> {
     SpaceApp::can_edit(role)?;
     let common_config = crate::common::CommonConfig::default();
