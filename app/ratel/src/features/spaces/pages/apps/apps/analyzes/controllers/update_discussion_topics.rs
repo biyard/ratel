@@ -19,15 +19,23 @@ pub struct UpdateDiscussionTopicsRequest {
     pub topics: Vec<TopicRow>,
 }
 
+#[mcp_tool(
+    name = "update_discussion_topics",
+    description = "Rename the LDA topic labels on an existing discussion-analysis row. Submit the full Vec<TopicRow> for the row; only `topic` (label) ends up changed. Requires creator role."
+)]
 #[post(
     "/api/spaces/{space_id}/apps/analyzes/reports/{report_id}/discussions/{discussion_id}/results/{request_id}/topics",
     role: SpaceUserRole
 )]
 pub async fn update_discussion_topics(
-    space_id: SpacePartition,
-    report_id: SpaceAnalyzeReportEntityType,
-    discussion_id: FeedPartition,
+    #[mcp(description = "Space partition key")] space_id: SpacePartition,
+    #[mcp(description = "Analyze report id")] report_id: SpaceAnalyzeReportEntityType,
+    #[mcp(description = "Discussion (post) partition key")] discussion_id: FeedPartition,
+    #[mcp(description = "Discussion analysis request id (UUIDv7) returned by analyze_discussion")]
     request_id: String,
+    #[mcp(
+        description = "Topics payload as JSON, e.g. {\"topics\": [{\"topic\": \"...\", \"keywords\": [...], \"weight\": ...}, ...]}"
+    )]
     req: UpdateDiscussionTopicsRequest,
 ) -> Result<()> {
     SpaceApp::can_edit(role)?;

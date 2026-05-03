@@ -38,13 +38,20 @@ pub struct PreviewAnalyzeReportResponse {
 /// stream-based auto-analysis pipeline reuses the same matching logic
 /// (see `services::intersection`) against the saved filters once the
 /// report is persisted.
+#[mcp_tool(
+    name = "preview_analyze_report",
+    description = "Compute the matching respondent count, data count, and a per-filter sample of records for a tentative filter set. Used by the create wizard before persisting. Empty filters → only respondent count is meaningful. Requires creator role."
+)]
 #[post(
     "/api/spaces/{space_id}/apps/analyzes/reports/preview",
     role: SpaceUserRole,
     space: SpaceCommon
 )]
 pub async fn preview_analyze_report(
-    space_id: SpacePartition,
+    #[mcp(description = "Space partition key")] space_id: SpacePartition,
+    #[mcp(
+        description = "Preview payload as JSON, e.g. {\"filters\": [{\"name\": \"...\", \"items\": [...]}]}"
+    )]
     req: PreviewAnalyzeReportRequest,
 ) -> Result<PreviewAnalyzeReportResponse> {
     SpaceApp::can_edit(role)?;

@@ -32,9 +32,16 @@ pub struct CreateAnalyzeReportResponse {
 /// team's Enterprise space would be wrongly capped, and an Enterprise
 /// user would bypass a non-Enterprise team's quota. Limit is
 /// admin-tunable through `PUT /api/admin/analyze-quota`.
+#[mcp_tool(
+    name = "create_analyze_report",
+    description = "Create a new analyze report on a space. The pipeline computes poll/quiz/follow aggregates asynchronously; the response only returns the new report id. Quota gated for non-Enterprise space owners. Requires creator role."
+)]
 #[post("/api/spaces/{space_id}/apps/analyzes/reports", user: User, role: SpaceUserRole, space: SpaceCommon)]
 pub async fn create_analyze_report(
-    space_id: SpacePartition,
+    #[mcp(description = "Space partition key")] space_id: SpacePartition,
+    #[mcp(
+        description = "Report payload as JSON, e.g. {\"name\": \"My Report\", \"filters\": [{\"name\": \"...\", \"items\": [...]}]}"
+    )]
     req: CreateAnalyzeReportRequest,
 ) -> Result<CreateAnalyzeReportResponse> {
     SpaceApp::can_edit(role)?;

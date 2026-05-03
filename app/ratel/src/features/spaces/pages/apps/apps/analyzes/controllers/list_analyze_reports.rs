@@ -2,10 +2,14 @@ use crate::common::ListResponse;
 use crate::features::spaces::pages::apps::apps::analyzes::*;
 use crate::features::spaces::pages::apps::models::SpaceApp;
 
+#[mcp_tool(
+    name = "list_analyze_reports",
+    description = "List saved analyze reports in a space, newest first. Returns id, name, status, created_at, and filters. Requires creator role."
+)]
 #[get("/api/spaces/{space_id}/apps/analyzes/reports?bookmark", role: SpaceUserRole)]
 pub async fn list_analyze_reports(
-    space_id: SpacePartition,
-    bookmark: Option<String>,
+    #[mcp(description = "Space partition key")] space_id: SpacePartition,
+    #[mcp(description = "Pagination bookmark. Omit for first page.")] bookmark: Option<String>,
 ) -> Result<ListResponse<AnalyzeReport>> {
     SpaceApp::can_edit(role)?;
     let common_config = crate::common::CommonConfig::default();

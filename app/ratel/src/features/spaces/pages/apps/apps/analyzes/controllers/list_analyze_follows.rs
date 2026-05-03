@@ -16,10 +16,14 @@ pub struct AnalyzeFollowItem {
     pub profile_url: String,
 }
 
+#[mcp_tool(
+    name = "list_analyze_follows",
+    description = "List follow targets registered in a space's follow campaign — each target is one filter chip in the analyze cross-filter. Requires creator role."
+)]
 #[get("/api/spaces/{space_id}/apps/analyzes/follows?bookmark", role: SpaceUserRole)]
 pub async fn list_analyze_follows(
-    space_id: SpacePartition,
-    bookmark: Option<String>,
+    #[mcp(description = "Space partition key")] space_id: SpacePartition,
+    #[mcp(description = "Pagination bookmark. Omit for first page.")] bookmark: Option<String>,
 ) -> Result<ListResponse<AnalyzeFollowItem>> {
     SpaceApp::can_edit(role)?;
     let common_config = crate::common::CommonConfig::default();
