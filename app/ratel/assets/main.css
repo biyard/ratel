@@ -37118,7 +37118,7 @@ body.comments-panel-resizing {
   .space-general-arena {
     height: auto;
     min-height: 100dvh;
-    overflow: visible;
+    overflow-x: hidden;
   }
 }
 
