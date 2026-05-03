@@ -12,10 +12,14 @@ pub struct AnalyzePollItem {
     pub default: bool,
 }
 
+#[mcp_tool(
+    name = "list_analyze_polls",
+    description = "List polls in a space available as analyze report sources. Returns id, title, question count, and whether each is the default poll. Requires creator role."
+)]
 #[get("/api/spaces/{space_id}/apps/analyzes/polls?bookmark", role: SpaceUserRole)]
 pub async fn list_analyze_polls(
-    space_id: SpacePartition,
-    bookmark: Option<String>,
+    #[mcp(description = "Space partition key")] space_id: SpacePartition,
+    #[mcp(description = "Pagination bookmark. Omit for first page.")] bookmark: Option<String>,
 ) -> Result<ListResponse<AnalyzePollItem>> {
     SpaceApp::can_edit(role)?;
     let common_config = crate::common::CommonConfig::default();

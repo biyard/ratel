@@ -54,6 +54,9 @@ pub use components::SuspenseBoundary;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 #[cfg(feature = "server")]
+pub mod migrations;
+
+#[cfg(feature = "server")]
 pub mod stream_handler;
 
 #[cfg(all(feature = "server", feature = "local-dev"))]

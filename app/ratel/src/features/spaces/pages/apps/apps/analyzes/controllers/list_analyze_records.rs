@@ -22,15 +22,21 @@ const PAGE_SIZE: usize = 50;
 /// filter chip on a saved report. `filter_idx` is required so the
 /// page can render a tab per chip without paying the hydration cost
 /// for chips the user isn't looking at.
+#[mcp_tool(
+    name = "list_analyze_records",
+    description = "Paginated, hydrated frozen records belonging to ONE filter chip on a saved report. Pass filter_idx to pick the chip; omit it to get an empty list. Bookmark is a decimal offset. Requires viewer role."
+)]
 #[get(
     "/api/spaces/{space_id}/apps/analyzes/reports/{report_id}/records?filter_idx&bookmark",
     role: SpaceUserRole,
     space: SpaceCommon
 )]
 pub async fn list_analyze_records(
-    space_id: SpacePartition,
-    report_id: SpaceAnalyzeReportEntityType,
+    #[mcp(description = "Space partition key")] space_id: SpacePartition,
+    #[mcp(description = "Analyze report id")] report_id: SpaceAnalyzeReportEntityType,
+    #[mcp(description = "Filter chip index (0-based). Omit to receive an empty list.")]
     filter_idx: Option<u32>,
+    #[mcp(description = "Pagination bookmark (decimal offset). Omit for first page.")]
     bookmark: Option<String>,
 ) -> Result<ListResponse<AnalyzeRecordRow>> {
     SpaceApp::can_view(role)?;

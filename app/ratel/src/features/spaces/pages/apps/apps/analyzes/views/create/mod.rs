@@ -52,8 +52,6 @@ pub fn SpaceAnalyzeCreatePage(space_id: ReadSignal<SpacePartition>) -> Element {
     let space_title = space_data.title.clone();
 
     rsx! {
-        document::Stylesheet { href: asset!("./style.css") }
-
         div { class: "analyze-arena analyze-arena--create",
             div { class: "arena",
                 // ── Topbar ───────────────────────────────────

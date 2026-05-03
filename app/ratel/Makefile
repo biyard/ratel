@@ -171,6 +171,8 @@ env.sh:
 	@echo "export HOST_UID='$(HOST_UID)'" >> $@
 	@echo "export HOST_GID='$(HOST_GID)'" >> $@
 	@echo "export BIYARD_API_URL='$(BIYARD_API_URL)'" >> $@
+	@echo "export CROSS_POSTING_DATA_KEY='$(CROSS_POSTING_DATA_KEY)'" >> $@
+	@echo "export CROSS_POSTING_DATA_KEY_PREVIOUS='$(CROSS_POSTING_DATA_KEY_PREVIOUS)'" >> $@
 
 
 test:

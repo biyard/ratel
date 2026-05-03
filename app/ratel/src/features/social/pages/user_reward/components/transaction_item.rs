@@ -2,6 +2,18 @@ use super::super::views::{format_points, RewardsPageTranslate};
 use super::super::*;
 use crate::common::services::PointTransactionResponse;
 use crate::common::utils::time::time_ago;
+use crate::features::character::components::RewardBreakdownChip;
+
+// Money Tree bonus surfacing (Task 37, Path A — heuristic): the
+// upstream Biyard Points API is external and does not surface
+// `money_tree_bonus` / `money_tree_level` per transaction. The Ratel
+// list-transactions handler enriches each award row with the user's
+// *current* MoneyTree level and a reconstructed bonus computed from
+// `amount` and `multiplier_permille(level)`. This is exact when the
+// user's MoneyTree level hasn't changed since the award, slightly
+// over-estimated otherwise. `RewardBreakdownChip` renders nothing
+// when level/bonus are zero/None, so non-award rows and level-0 users
+// see no visual change.
 
 pub fn transaction_item(
     tr: &RewardsPageTranslate,
@@ -26,22 +38,25 @@ pub fn transaction_item(
         "text-[15px] font-medium text-red-500"
     };
 
+    let mt_level = transaction.money_tree_level.unwrap_or(0);
+    let mt_bonus = transaction.money_tree_bonus.unwrap_or(0);
+
     rsx! {
         div {
             key: "{transaction.created_at}-{idx}",
-            class: "rounded border border-card-border p-5",
-            div { class: "flex items-end justify-between w-full",
+            class: "p-5 rounded border border-card-border",
+            div { class: "flex justify-between items-end w-full",
                 div { class: "flex flex-col gap-0.5",
-                    div { class: "flex items-center gap-2.5",
+                    div { class: "flex gap-2.5 items-center",
                         span { class: "{status_class}", "{status_label}" }
                         div { class: "flex items-center",
-                            div { class: "w-5 h-5 rounded-full bg-primary mr-1" }
-                            span { class: "text-[15px] font-medium text-text-primary",
+                            div { class: "mr-1 w-5 h-5 rounded-full bg-primary" }
+                            span { class: "font-medium text-[15px] text-text-primary",
                                 "{amount_label}"
                             }
                         }
                     }
-                    div { class: "flex items-center gap-1",
+                    div { class: "flex gap-1 items-center",
                         span { class: "text-sm font-semibold text-foreground-muted tracking-[0.5px]",
                             "{tr.from}"
                         }
@@ -54,6 +69,11 @@ pub fn transaction_item(
                 span { class: "text-sm font-medium text-foreground-muted tracking-[0.5px]",
                     "{time_ago_label}"
                 }
+            }
+            RewardBreakdownChip {
+                level: mt_level,
+                bonus: mt_bonus,
+                total_amount: transaction.amount,
             }
         }
     }

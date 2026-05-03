@@ -2,6 +2,10 @@ use crate::features::auth::User;
 use crate::features::posts::models::*;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
+use std::collections::HashMap;
+
+use crate::features::cross_posting::models::PostSyndicationDirective;
+use crate::features::cross_posting::types::SocialPlatform;
 
 #[cfg(feature = "server")]
 use crate::features::posts::utils::validator::{validate_content, validate_title};
@@ -17,6 +21,17 @@ pub enum UpdatePostRequest {
         publish: bool,
         visibility: Option<Visibility>,
         categories: Option<Vec<String>>,
+        /// Per-post platform selection (cross-posting). Phase 1: defaults
+        /// to all connected + auto_post_enabled when omitted; an explicit
+        /// empty Vec means "Ratel-only" (FR-4 #27). Stage 1 factory only
+        /// runs when this resolves to non-empty AND visibility = Public.
+        #[serde(default)]
+        enabled_platforms: Option<Vec<SocialPlatform>>,
+        /// Per-platform body overrides (cross-posting v1.5 readiness). Phase
+        /// 1: always empty — UI does not expose. The field is accepted now
+        /// so v1.5 client/server are wire-compatible without a DTO change.
+        #[serde(default)]
+        platform_overrides: Option<HashMap<SocialPlatform, String>>,
     },
     PostType {
         r#type: PostType,
@@ -102,6 +117,8 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
             visibility,
             image_urls,
             categories,
+            enabled_platforms,
+            platform_overrides,
         } => {
             validate_title(&title)?;
             validate_content(&content)?;
@@ -112,6 +129,7 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
                 title
             );
             let visibility = visibility.unwrap_or_default();
+            let is_public_publish = publish && matches!(visibility, Visibility::Public);
 
             post.visibility = Some(visibility.clone());
 
@@ -123,7 +141,6 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
             post.status = status;
             post.title = title.clone();
             post.html_contents = content.clone();
-            post.visibility = Some(visibility.clone());
             if let Some(ref cats) = categories {
                 post.categories = cats.clone();
             }
@@ -135,12 +152,33 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
             if let Some(cats) = categories {
                 updater = updater.with_categories(cats);
             }
-            if let Some(image_urls) = image_urls {
+            let mut transacts = if let Some(image_urls) = image_urls {
                 post.urls = image_urls.clone();
                 vec![updater.with_urls(image_urls).transact_write_item()]
             } else {
                 vec![updater.transact_write_item()]
+            };
+
+            // Cross-posting Stage 1 factory hook (design doc → "Atomic
+            // write — reuse existing infrastructure"). Append a
+            // PostSyndicationDirective to the SAME transact batch so
+            // either both Post + directive land or neither does. Stage 1
+            // Lambda triggers on the Post Draft→Published MODIFY and reads
+            // this directive to bake SyndicationJob rows; absence of the
+            // directive is the kill switch (no syndication).
+            if is_public_publish && enabled_platforms.as_ref().is_some_and(|v| !v.is_empty()) {
+                let directive = PostSyndicationDirective {
+                    pk: post.pk.clone(),
+                    sk: EntityType::SyndicationDirective,
+                    enabled_platforms: enabled_platforms.unwrap_or_default(),
+                    platform_overrides: platform_overrides.unwrap_or_default(),
+                    author_user_id: user.pk.clone(),
+                    created_at: now,
+                };
+                transacts.push(directive.create_transact_write_item());
             }
+
+            transacts
         }
         UpdatePostRequest::PostType { r#type } => {
             post.post_type = r#type.clone();

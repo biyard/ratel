@@ -121,6 +121,18 @@ pub async fn handle_stream_record(
                         tracing::error!(error = %e, "stream: ActivityScoreAggregate failed");
                     }
                 }
+            } else if sk == "SPACE_SCORE" {
+                // CharacterXpDelta: aggregate the per-space score change into
+                // the user's account-level CharacterXp. Idempotent under
+                // stream replay via the per-(user,space) last_seen marker.
+                let score: crate::features::activity::models::SpaceScore = deserialize(image)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                if let Err(e) =
+                    crate::features::character::services::apply_character_xp_delta(cli, score).await
+                {
+                    tracing::error!(error = %e, "stream: CharacterXpDelta (INSERT) failed");
+                }
             } else if sk.starts_with("SPACE_STATUS_CHANGE_EVENT#") {
                 let event: crate::common::models::space::SpaceStatusChangeEvent =
                     deserialize(image)?;
@@ -177,6 +189,8 @@ pub async fn handle_stream_record(
                 {
                     tracing::error!(error = %e, "stream: AnalyzeDiscussionInProgress failed");
                 }
+            } else if sk.starts_with("SYNDICATION_JOB#") {
+                try_dispatch_pending_syndication_job(image, "INSERT").await?;
             }
         }
         "MODIFY" => {
@@ -231,7 +245,40 @@ pub async fn handle_stream_record(
                     {
                         tracing::error!(error = %e, "stream: TimelineUpdate failed");
                     }
+
+                    // Cross-posting Stage 1 factory — only on the
+                    // Draft→Published transition with PUBLIC visibility.
+                    // Mirrors the CDK CrossPostingStage1Pipe filter
+                    // (OldImage.status anything-but PUBLISHED + NewImage
+                    // status=PUBLISHED + visibility=PUBLIC).
+                    let old_status = old_image
+                        .and_then(|i| get_string_field(i, "status"))
+                        .unwrap_or_default();
+                    let visibility = get_string_field(image, "visibility").unwrap_or_default();
+                    if old_status != "PUBLISHED" && visibility == "PUBLIC" {
+                        let post3 = deserialize(image)?;
+                        if let Err(e) =
+                            crate::features::cross_posting::services::factory::handle_post_published_for_syndication(post3).await
+                        {
+                            tracing::error!(error = %e, "stream: PostPublishedForSyndication failed");
+                        }
+                    }
                 }
+            } else if sk == "SPACE_SCORE" {
+                // CharacterXpDelta on score updates — same dispatch as the
+                // INSERT arm. The service computes the delta from the
+                // per-(user,space) last_seen marker, so MODIFY events are
+                // the primary driver after the first activity in a space.
+                let score: crate::features::activity::models::SpaceScore = deserialize(image)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                if let Err(e) =
+                    crate::features::character::services::apply_character_xp_delta(cli, score).await
+                {
+                    tracing::error!(error = %e, "stream: CharacterXpDelta (MODIFY) failed");
+                }
+            } else if sk.starts_with("SYNDICATION_JOB#") {
+                try_dispatch_pending_syndication_job(image, "MODIFY").await?;
             } else if sk == "SPACE_COMMON" {
                 // PopularSpaceUpdate
                 let space = deserialize(image)?;
@@ -290,6 +337,37 @@ pub async fn handle_stream_record(
 
 /// Mirror an INSERT/MODIFY of any essence-indexable entity into the user's
 /// Essence list. Each branch deserializes the image into the matching
+/// Dispatch a `SyndicationJob` row when its current `state` is `"pending"`.
+/// Mirrors the CDK `CrossPostingStage2Pipe` filter (see
+/// `cdk/lib/dynamo-stream-event.ts`) so local-dev behaviour matches Lambda;
+/// both INSERT (Stage 1 factory enqueue) and MODIFY (user-initiated retry
+/// flipping state back to pending) flow through this single entry point.
+#[cfg(feature = "server")]
+async fn try_dispatch_pending_syndication_job(
+    image: &std::collections::HashMap<String, serde_dynamo::AttributeValue>,
+    event_label: &'static str,
+) -> crate::common::Result<()> {
+    use crate::common::Error;
+    use crate::common::utils::InfraError;
+
+    let state = image.get("state").and_then(|v| match v {
+        serde_dynamo::AttributeValue::S(s) => Some(s.as_str()),
+        _ => None,
+    });
+    if state != Some("pending") {
+        return Ok(());
+    }
+    let job: crate::features::cross_posting::models::SyndicationJob =
+        serde_dynamo::from_item(image.clone()).map_err(|e| {
+            tracing::error!("stream deserialize: {e}");
+            Error::from(InfraError::StreamDeserializeFailed)
+        })?;
+    if let Err(e) = crate::features::cross_posting::services::dispatcher::handle_syndication_job_ready(job).await {
+        tracing::error!(error = %e, "stream: SyndicationJobReady ({event_label}) failed");
+    }
+    Ok(())
+}
+
 /// model and delegates to the shared `essence::services` indexer (the same
 /// helper the migrate endpoint uses), so behaviour stays identical between
 /// stream-driven indexing and explicit backfills.

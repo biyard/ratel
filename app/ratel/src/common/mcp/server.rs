@@ -182,6 +182,10 @@ impl RatelMcpServer {
             publish: req.publish,
             visibility,
             categories: req.categories,
+            // MCP-driven publish does not invoke cross-posting in Phase 1;
+            // syndication is opt-in via the human compose UI only.
+            enabled_platforms: None,
+            platform_overrides: None,
         };
         update_post_handler_mcp_impl(self.mcp_secret.clone(), req.post_id, update_req)
             .await
@@ -596,6 +600,151 @@ impl RatelMcpServer {
     )]
     async fn get_unread_count(&self) -> McpResult {
         crate::features::notifications::controllers::get_unread_count::get_unread_count_handler_mcp_handler(&self.mcp_secret).await
+    }
+
+    // ── Analyze app tools ───────────────────────────────────────────
+
+    #[rmcp::tool(
+        name = "list_analyze_reports",
+        description = "List saved analyze reports in a space, newest first. Returns id, name, status, created_at, and filters. Requires creator role."
+    )]
+    async fn list_analyze_reports(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::apps::apps::analyzes::controllers::ListAnalyzeReportsMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::apps::apps::analyzes::controllers::list_analyze_reports_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "get_analyze_report",
+        description = "Fetch one analyze report's metadata, computed poll/quiz/follow aggregates, and the discussion sidebar list with cross-filter aware comment counts. Requires creator role."
+    )]
+    async fn get_analyze_report(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::apps::apps::analyzes::controllers::GetAnalyzeReportMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::apps::apps::analyzes::controllers::get_analyze_report_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "create_analyze_report",
+        description = "Create a new analyze report on a space. Pipeline computes aggregates asynchronously; only the new report id is returned. Quota gated for non-Enterprise space owners. Requires creator role."
+    )]
+    async fn create_analyze_report(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::apps::apps::analyzes::controllers::CreateAnalyzeReportMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::apps::apps::analyzes::controllers::create_analyze_report_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "preview_analyze_report",
+        description = "Compute respondent count, data count, and per-filter sample records for a tentative filter set. Used by the create wizard before persisting. Requires creator role."
+    )]
+    async fn preview_analyze_report(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::apps::apps::analyzes::controllers::PreviewAnalyzeReportMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::apps::apps::analyzes::controllers::preview_analyze_report_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "list_analyze_records",
+        description = "Paginated, hydrated frozen records belonging to ONE filter chip on a saved report. Pass filter_idx to pick the chip. Requires viewer role."
+    )]
+    async fn list_analyze_records(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::apps::apps::analyzes::controllers::ListAnalyzeRecordsMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::apps::apps::analyzes::controllers::list_analyze_records_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "get_matched_users",
+        description = "List user pks ('USER#...') matching a saved report's cross-filter selection. Empty filters → every space participant. Requires viewer role."
+    )]
+    async fn get_matched_users(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::apps::apps::analyzes::controllers::GetMatchedUsersMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::apps::apps::analyzes::controllers::get_matched_users_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "list_analyze_polls",
+        description = "List polls in a space available as analyze report sources. Returns id, title, question count, and whether each is the default poll. Requires creator role."
+    )]
+    async fn list_analyze_polls(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::apps::apps::analyzes::controllers::ListAnalyzePollsMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::apps::apps::analyzes::controllers::list_analyze_polls_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "list_analyze_quizzes",
+        description = "List quizzes in a space available as analyze report sources. Returns id, title (from SpaceAction), and question count. Requires creator role."
+    )]
+    async fn list_analyze_quizzes(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::apps::apps::analyzes::controllers::ListAnalyzeQuizzesMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::apps::apps::analyzes::controllers::list_analyze_quizzes_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "list_analyze_follows",
+        description = "List follow targets registered in a space's follow campaign — each target is one filter chip in the analyze cross-filter. Requires creator role."
+    )]
+    async fn list_analyze_follows(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::apps::apps::analyzes::controllers::ListAnalyzeFollowsMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::apps::apps::analyzes::controllers::list_analyze_follows_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "list_analyze_discussions",
+        description = "List discussions in a space available as analyze report sources. Cross-filter aware comment counts are 0 here; use get_analyze_report for populated counts. Requires creator role."
+    )]
+    async fn list_analyze_discussions(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::apps::apps::analyzes::controllers::ListAnalyzeDiscussionsMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::apps::apps::analyzes::controllers::list_analyze_discussions_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "analyze_discussion",
+        description = "Enqueue a fresh discussion text-analysis run (LDA + TF-IDF + text-network) for the matched users on one discussion under a finished analyze report. Requires creator role."
+    )]
+    async fn analyze_discussion(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::apps::apps::analyzes::controllers::AnalyzeDiscussionMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::apps::apps::analyzes::controllers::analyze_discussion_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "list_analyze_discussion_results",
+        description = "History of discussion analysis results for one (report, discussion). Newest first. Supports bookmark pagination. Requires creator role."
+    )]
+    async fn list_analyze_discussion_results(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::apps::apps::analyzes::controllers::ListAnalyzeDiscussionResultsMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::apps::apps::analyzes::controllers::list_analyze_discussion_results_mcp_handler(&self.mcp_secret, req).await
+    }
+
+    #[rmcp::tool(
+        name = "update_discussion_topics",
+        description = "Rename the LDA topic labels on an existing discussion-analysis row. Submit the full Vec<TopicRow> for the row; only `topic` (label) ends up changed. Requires creator role."
+    )]
+    async fn update_discussion_topics(
+        &self,
+        Parameters(req): Parameters<crate::features::spaces::pages::apps::apps::analyzes::controllers::UpdateDiscussionTopicsMcpRequest>,
+    ) -> McpResult {
+        crate::features::spaces::pages::apps::apps::analyzes::controllers::update_discussion_topics_mcp_handler(&self.mcp_secret, req).await
     }
 }
 

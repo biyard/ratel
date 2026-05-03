@@ -9,13 +9,17 @@
 use crate::features::spaces::pages::apps::apps::analyzes::*;
 use crate::features::spaces::pages::apps::models::SpaceApp;
 
+#[mcp_tool(
+    name = "get_matched_users",
+    description = "List user pks ('USER#...') matching a saved report's cross-filter selection. Empty filters → every space participant. Used by the Excel export. Requires viewer role."
+)]
 #[get(
     "/api/spaces/{space_id}/apps/analyzes/reports/{report_id}/matched_users",
     role: SpaceUserRole
 )]
 pub async fn get_matched_users(
-    space_id: SpacePartition,
-    report_id: SpaceAnalyzeReportEntityType,
+    #[mcp(description = "Space partition key")] space_id: SpacePartition,
+    #[mcp(description = "Analyze report id")] report_id: SpaceAnalyzeReportEntityType,
 ) -> Result<Vec<String>> {
     SpaceApp::can_view(role)?;
 

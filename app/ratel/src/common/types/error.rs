@@ -322,11 +322,19 @@ pub enum Error {
 
     #[error("{0}")]
     #[translate(from)]
+    Character(#[from] crate::features::character::types::CharacterError),
+
+    #[error("{0}")]
+    #[translate(from)]
     Notifications(#[from] crate::features::notifications::types::NotificationsError),
 
     #[error("{0}")]
     #[translate(from)]
     SubTeam(#[from] crate::features::sub_team::types::SubTeamError),
+
+    #[error("{0}")]
+    #[translate(from)]
+    CrossPosting(#[from] crate::features::cross_posting::types::CrossPostingError),
 
     // Unit variants for common errors
     #[error("Internal error")]
@@ -525,6 +533,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::SpaceFollow(e) => e.status_code(),
             Error::SpaceApp(e) => e.status_code(),
             Error::SpaceReport(e) => e.status_code(),
+            Error::Character(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -640,6 +649,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::SpaceFollow(e) => e.status_code(),
             Error::SpaceApp(e) => e.status_code(),
             Error::SpaceReport(e) => e.status_code(),
+            Error::Character(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

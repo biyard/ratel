@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Character — XP & Skill Tree</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;
+      --bg-glass:rgba(12,12,26,0.65);
+      --bg-glass-solid:rgba(12,12,26,0.92);
+      --bg-glass-hover:rgba(20,20,40,0.80);
+      --bg-input:rgba(255,255,255,0.025);
+      --border-subtle:rgba(255,255,255,0.06);
+      --border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;
+      --text-muted:#8888a8;
+      --text-dim:#55556a;
+      --accent-gold:#fcb300;
+      --accent-teal:#6eedd8;
+      --accent-coral:#ef4444;
+      --accent-green:#22c55e;
+      --accent-violet:#818cf8;
+      --font-display:'Orbitron',sans-serif;
+      --font-body:'Outfit',sans-serif;
+    }
+    html[data-theme="dark"]{ --dark: ; --light: initial; }
+    html[data-theme="light"]{ --dark: initial; --light: ; }
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+
+    /* ── Arena shell ──────────────────────────────────────── */
+    .character-arena{position:relative;min-height:100vh;display:flex;flex-direction:column;isolation:isolate}
+    .character-arena::before{
+      content:'';position:fixed;inset:0;
+      background:
+        radial-gradient(ellipse 70% 55% at 20% 10%,rgba(252,179,0,0.06) 0%,transparent 55%),
+        radial-gradient(ellipse 60% 60% at 85% 90%,rgba(110,237,216,0.05) 0%,transparent 55%),
+        radial-gradient(circle at 50% 50%,var(--bg-void) 0%,var(--bg-void) 100%);
+      z-index:-1
+    }
+
+    /* ── ArenaTopbar (shared with Home Arena) ────────────── */
+    /* Same DOM/class names as home-arena.html so the Dioxus side can reuse
+       a single ArenaTopbar layout component across views. The Character
+       hud-btn carries aria-current="page" / data-active="true" so the
+       shared button styling can highlight the current section. */
+    .arena-topbar{position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:20px 28px;flex-shrink:0}
+    .arena-topbar__brand{display:flex;align-items:center;gap:14px}
+    .arena-topbar__logo{width:40px;height:40px;border-radius:10px;object-fit:cover;border:1px solid rgba(252,179,0,0.15);box-shadow:0 2px 12px rgba(0,0,0,0.3)}
+    .arena-topbar__title{font-family:var(--font-display);font-weight:800;font-size:18px;letter-spacing:0.10em;text-transform:uppercase;background:linear-gradient(135deg,var(--accent-gold),#ffd24a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .arena-topbar__status{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;background:rgba(110,237,216,0.08);border:1px solid rgba(110,237,216,0.15);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent-teal);margin-left:12px}
+    .arena-topbar__status::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent-teal);box-shadow:0 0 6px var(--accent-teal)}
+    .arena-topbar__actions{display:flex;gap:10px}
+    .hud-btn{position:relative;width:42px;height:42px;border-radius:11px;background:var(--bg-glass);backdrop-filter:blur(16px);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s ease;padding:0}
+    .hud-btn:hover{background:var(--bg-glass-hover);border-color:rgba(252,179,0,0.25);transform:translateY(-1px)}
+    .hud-btn svg{width:18px;height:18px;color:var(--text-muted);transition:color 0.2s}
+    .hud-btn:hover svg{color:var(--accent-gold)}
+    .hud-btn--primary{background:linear-gradient(135deg,rgba(252,179,0,0.18),rgba(252,179,0,0.06));border-color:rgba(252,179,0,0.3)}
+    .hud-btn--primary svg{color:var(--accent-gold)}
+    /* Active section indicator — applied to the hud-btn whose route matches
+       the current page. aria-current="page" is the source of truth. */
+    .hud-btn[aria-current="page"]{background:rgba(252,179,0,0.10);border-color:rgba(252,179,0,0.45);box-shadow:0 0 18px rgba(252,179,0,0.18)}
+    .hud-btn[aria-current="page"] svg{color:var(--accent-gold)}
+    .hud-btn[aria-current="page"]::after{content:'';position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);width:24px;height:2px;border-radius:2px;background:var(--accent-gold);box-shadow:0 0 8px rgba(252,179,0,0.6)}
+    .hud-btn__label{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);white-space:nowrap;opacity:0;transition:opacity 0.2s ease;pointer-events:none}
+    .hud-btn:hover .hud-btn__label{opacity:1}
+    .hud-btn[aria-current="page"] .hud-btn__label{opacity:1;color:var(--accent-gold)}
+
+    /* State switcher (mockup-only — does not ship) */
+    .state-switcher{position:fixed;top:18px;right:24px;display:flex;gap:6px;padding:4px;background:var(--bg-glass);border:1px solid var(--border-subtle);border-radius:10px;z-index:50;backdrop-filter:blur(16px)}
+    .state-switcher__btn{padding:6px 12px;border-radius:7px;background:transparent;border:none;color:var(--text-muted);font-family:var(--font-body);font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;transition:all 0.18s ease}
+    .state-switcher__btn:hover{color:var(--text-primary)}
+    .state-switcher__btn.active{background:rgba(252,179,0,0.12);color:var(--accent-gold)}
+
+    /* ── Layout ──────────────────────────────────────────── */
+    .character-page{max-width:1100px;margin:0 auto;padding:32px 28px 80px;width:100%}
+
+    /* ── Hero (XP / Level / SP) ──────────────────────────── */
+    .character-hero{
+      position:relative;
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      align-items:center;
+      gap:32px;
+      padding:28px 32px;
+      background:linear-gradient(135deg,rgba(252,179,0,0.04) 0%,rgba(110,237,216,0.03) 60%,transparent 100%),var(--bg-glass);
+      backdrop-filter:blur(20px);
+      border:1px solid var(--border-subtle);
+      border-radius:18px;
+      overflow:hidden;
+    }
+    .character-hero::after{
+      content:'';position:absolute;inset:0;
+      background:radial-gradient(ellipse 60% 100% at 100% 0%,rgba(252,179,0,0.08) 0%,transparent 60%);
+      pointer-events:none;
+    }
+
+    /* Level badge — the prestige number */
+    .character-hero__level{
+      position:relative;z-index:1;
+      width:128px;height:128px;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      border-radius:50%;
+      background:radial-gradient(circle at 50% 30%,rgba(252,179,0,0.18) 0%,rgba(252,179,0,0.04) 60%,transparent 100%);
+      border:2px solid rgba(252,179,0,0.35);
+      box-shadow:0 0 32px rgba(252,179,0,0.15),inset 0 0 32px rgba(252,179,0,0.08);
+    }
+    .character-hero__level-label{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.16em;color:var(--accent-gold);text-transform:uppercase;opacity:0.7}
+    .character-hero__level-num{font-family:var(--font-display);font-size:48px;font-weight:800;line-height:1;color:var(--accent-gold);text-shadow:0 0 24px rgba(252,179,0,0.4);margin-top:2px}
+
+    /* XP bar block */
+    .character-hero__xp{position:relative;z-index:1;display:flex;flex-direction:column;gap:10px;min-width:0}
+    .character-hero__xp-meta{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+    .character-hero__xp-title{font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted)}
+    .character-hero__xp-numbers{font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--text-primary);font-variant-numeric:tabular-nums}
+    .character-hero__xp-numbers em{font-style:normal;color:var(--accent-teal);font-weight:700}
+    .character-hero__xp-bar{height:14px;border-radius:7px;background:var(--bg-input);border:1px solid var(--border-subtle);overflow:hidden;position:relative}
+    .character-hero__xp-fill{
+      height:100%;
+      background:linear-gradient(90deg,rgba(252,179,0,0.85) 0%,rgba(110,237,216,0.85) 100%);
+      border-radius:6px;
+      box-shadow:0 0 16px rgba(252,179,0,0.4);
+      transition:width 0.6s cubic-bezier(0.16,1,0.3,1);
+      position:relative;
+    }
+    .character-hero__xp-fill::after{
+      content:'';position:absolute;inset:0;
+      background:linear-gradient(180deg,rgba(255,255,255,0.18) 0%,transparent 50%);
+      border-radius:6px;
+    }
+    .character-hero__xp-hint{font-size:11px;color:var(--text-dim);font-variant-numeric:tabular-nums}
+
+    /* SP pill */
+    .character-hero__sp{
+      position:relative;z-index:1;
+      display:flex;flex-direction:column;align-items:flex-end;gap:6px;
+      padding:14px 20px;
+      background:rgba(110,237,216,0.06);
+      border:1px solid rgba(110,237,216,0.18);
+      border-radius:14px;
+      min-width:140px;
+      box-shadow:0 0 24px rgba(110,237,216,0.05);
+    }
+    .character-hero__sp-label{font-family:var(--font-display);font-size:9px;font-weight:600;letter-spacing:0.16em;color:var(--accent-teal);text-transform:uppercase;opacity:0.85}
+    .character-hero__sp-value{font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--accent-teal);text-shadow:0 0 18px rgba(110,237,216,0.4);line-height:1;font-variant-numeric:tabular-nums}
+    .character-hero__sp-hint{font-size:10px;color:var(--text-muted)}
+
+    /* No-SP variant (flat) */
+    .character-hero__sp[data-empty="true"]{background:rgba(255,255,255,0.025);border-color:var(--border-subtle);box-shadow:none}
+    .character-hero__sp[data-empty="true"] .character-hero__sp-label{color:var(--text-muted)}
+    .character-hero__sp[data-empty="true"] .character-hero__sp-value{color:var(--text-dim);text-shadow:none}
+
+    /* ── Section header ─────────────────────────────────── */
+    .section-header{display:flex;align-items:baseline;justify-content:space-between;margin:48px 0 20px}
+    .section-header__title{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-primary)}
+    .section-header__title::before{content:'';display:inline-block;width:8px;height:8px;background:var(--accent-gold);transform:rotate(45deg);margin-right:12px;vertical-align:middle;box-shadow:0 0 8px rgba(252,179,0,0.6)}
+    .section-header__hint{font-size:12px;color:var(--text-muted)}
+
+    /* ── Skill grid ──────────────────────────────────────── */
+    .skill-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+
+    /* ── Skill card ──────────────────────────────────────── */
+    .skill-card{
+      --card-glow:rgba(252,179,0,0.15);
+      position:relative;
+      display:flex;flex-direction:column;
+      padding:24px 24px 22px;
+      background:var(--bg-glass);
+      backdrop-filter:blur(16px);
+      border:1px solid var(--border-subtle);
+      border-radius:14px;
+      transition:border-color 0.25s ease,box-shadow 0.25s ease,transform 0.25s ease;
+      overflow:hidden;
+      isolation:isolate;
+    }
+    .skill-card::before{
+      content:'';position:absolute;inset:0;
+      background:radial-gradient(ellipse 80% 60% at 0% 0%,var(--card-glow) 0%,transparent 70%);
+      opacity:0.6;pointer-events:none;z-index:-1;
+    }
+    .skill-card:hover{border-color:rgba(252,179,0,0.25);box-shadow:0 0 24px rgba(252,179,0,0.06);transform:translateY(-1px)}
+
+    /* Skill identity */
+    .skill-card__head{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px}
+    .skill-card__icon{
+      width:48px;height:48px;border-radius:12px;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(252,179,0,0.08);
+      border:1px solid rgba(252,179,0,0.18);
+      flex-shrink:0;
+    }
+    .skill-card__icon svg{width:24px;height:24px;color:var(--accent-gold)}
+    .skill-card[data-skill="ranker"] .skill-card__icon{background:rgba(110,237,216,0.08);border-color:rgba(110,237,216,0.18)}
+    .skill-card[data-skill="ranker"] .skill-card__icon svg{color:var(--accent-teal)}
+    .skill-card[data-skill="ranker"]{--card-glow:rgba(110,237,216,0.12)}
+    .skill-card[data-skill="influencer"] .skill-card__icon{background:rgba(129,140,248,0.08);border-color:rgba(129,140,248,0.18)}
+    .skill-card[data-skill="influencer"] .skill-card__icon svg{color:var(--accent-violet)}
+    .skill-card[data-skill="influencer"]{--card-glow:rgba(129,140,248,0.10)}
+    .skill-card[data-skill="sweeper"] .skill-card__icon{background:rgba(244,114,182,0.08);border-color:rgba(244,114,182,0.18)}
+    .skill-card[data-skill="sweeper"] .skill-card__icon svg{color:#f472b6}
+    .skill-card[data-skill="sweeper"]{--card-glow:rgba(244,114,182,0.10)}
+
+    .skill-card__title-block{flex:1;min-width:0}
+    .skill-card__name{font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:0.04em;color:var(--text-primary);margin-bottom:2px}
+    .skill-card__name-ko{font-family:var(--font-body);font-size:11px;font-weight:500;color:var(--text-muted);letter-spacing:0.02em}
+    .skill-card__multiplier{
+      align-self:flex-start;
+      padding:4px 10px;
+      background:rgba(252,179,0,0.10);
+      border:1px solid rgba(252,179,0,0.22);
+      border-radius:8px;
+      font-family:var(--font-display);
+      font-size:13px;font-weight:700;
+      color:var(--accent-gold);
+      font-variant-numeric:tabular-nums;
+    }
+    .skill-card[data-skill="ranker"] .skill-card__multiplier{background:rgba(110,237,216,0.10);border-color:rgba(110,237,216,0.22);color:var(--accent-teal)}
+    .skill-card[data-skill="influencer"] .skill-card__multiplier{background:rgba(129,140,248,0.10);border-color:rgba(129,140,248,0.22);color:var(--accent-violet)}
+    .skill-card[data-skill="sweeper"] .skill-card__multiplier{background:rgba(244,114,182,0.10);border-color:rgba(244,114,182,0.22);color:#f472b6}
+
+    /* Description */
+    .skill-card__desc{font-size:13px;line-height:1.55;color:var(--text-muted);margin-bottom:16px}
+
+    /* Level pips */
+    .skill-card__pips{display:flex;gap:6px;margin-bottom:18px}
+    .skill-card__pip{
+      flex:1;height:8px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid var(--border-subtle);
+      border-radius:3px;
+      transition:all 0.25s ease;
+    }
+    .skill-card__pip[data-filled="true"]{background:var(--accent-gold);border-color:var(--accent-gold);box-shadow:0 0 8px rgba(252,179,0,0.5)}
+    .skill-card[data-skill="ranker"] .skill-card__pip[data-filled="true"]{background:var(--accent-teal);border-color:var(--accent-teal);box-shadow:0 0 8px rgba(110,237,216,0.5)}
+    .skill-card[data-skill="influencer"] .skill-card__pip[data-filled="true"]{background:var(--accent-violet);border-color:var(--accent-violet);box-shadow:0 0 8px rgba(129,140,248,0.5)}
+    .skill-card[data-skill="sweeper"] .skill-card__pip[data-filled="true"]{background:#f472b6;border-color:#f472b6;box-shadow:0 0 8px rgba(244,114,182,0.5)}
+
+    /* Footer (Level meta + button) */
+    .skill-card__footer{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:auto;padding-top:14px;border-top:1px dashed var(--border-subtle)}
+    .skill-card__level-meta{display:flex;flex-direction:column;gap:2px}
+    .skill-card__level-meta-label{font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim)}
+    .skill-card__level-meta-value{font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums}
+    .skill-card__level-meta-next{font-size:11px;color:var(--text-muted);font-variant-numeric:tabular-nums}
+
+    /* Level-up button — primary action */
+    .skill-card__levelup{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 18px;border-radius:10px;
+      background:linear-gradient(135deg,rgba(252,179,0,0.95) 0%,rgba(252,179,0,0.7) 100%);
+      color:#1a1a0a;
+      border:1px solid rgba(252,179,0,0.6);
+      font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;
+      cursor:pointer;
+      transition:all 0.2s ease;
+      box-shadow:0 4px 16px rgba(252,179,0,0.25);
+    }
+    .skill-card__levelup:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(252,179,0,0.35)}
+    .skill-card__levelup svg{width:14px;height:14px}
+    .skill-card__levelup-cost{padding:1px 7px;border-radius:5px;background:rgba(0,0,0,0.18);font-family:var(--font-display);font-size:11px;font-weight:700}
+
+    /* Disabled (insufficient SP) */
+    .skill-card__levelup[disabled]{
+      background:rgba(255,255,255,0.04);
+      color:var(--text-dim);
+      border-color:var(--border-subtle);
+      box-shadow:none;
+      cursor:not-allowed;
+    }
+    .skill-card__levelup[disabled]:hover{transform:none;box-shadow:none}
+    .skill-card__levelup[disabled] .skill-card__levelup-cost{background:rgba(255,255,255,0.04);color:var(--text-dim)}
+
+    /* Maxed badge */
+    .skill-card__maxed{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 18px;border-radius:10px;
+      background:rgba(110,237,216,0.10);
+      border:1px solid rgba(110,237,216,0.30);
+      color:var(--accent-teal);
+      font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+    }
+    .skill-card__maxed svg{width:14px;height:14px}
+
+    /* v2 locked overlay */
+    .skill-card[data-locked="true"]{opacity:0.55}
+    .skill-card[data-locked="true"]::after{
+      content:'';position:absolute;inset:0;
+      background:repeating-linear-gradient(45deg,transparent 0,transparent 10px,rgba(255,255,255,0.015) 10px,rgba(255,255,255,0.015) 20px);
+      pointer-events:none;border-radius:14px;
+    }
+    .skill-card__lock-tag{
+      align-self:flex-start;
+      padding:4px 10px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid var(--border-subtle);
+      border-radius:8px;
+      font-family:var(--font-display);
+      font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+      color:var(--text-muted);
+    }
+    .skill-card__locked-cta{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 18px;border-radius:10px;
+      background:rgba(255,255,255,0.03);
+      border:1px dashed var(--border-subtle);
+      color:var(--text-muted);
+      font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;
+    }
+    .skill-card__locked-cta svg{width:14px;height:14px}
+
+    /* ── Levelup confirmation toast ──────────────────────── */
+    .levelup-toast{
+      position:fixed;left:50%;bottom:32px;transform:translateX(-50%) translateY(120%);
+      display:flex;align-items:center;gap:14px;
+      padding:14px 22px;
+      background:var(--bg-glass-solid);
+      backdrop-filter:blur(20px);
+      border:1px solid rgba(252,179,0,0.4);
+      border-radius:14px;
+      box-shadow:0 12px 48px rgba(0,0,0,0.5),0 0 32px rgba(252,179,0,0.15);
+      transition:transform 0.45s cubic-bezier(0.16,1,0.3,1);
+      z-index:50;
+    }
+    .levelup-toast[data-open="true"]{transform:translateX(-50%) translateY(0)}
+    .levelup-toast__icon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:rgba(252,179,0,0.18);color:var(--accent-gold)}
+    .levelup-toast__icon svg{width:20px;height:20px}
+    .levelup-toast__text{display:flex;flex-direction:column;gap:2px}
+    .levelup-toast__title{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:0.06em;color:var(--text-primary)}
+    .levelup-toast__sub{font-size:12px;color:var(--text-muted)}
+
+    /* ── Mobile / small screens ──────────────────────────── */
+    @media (max-width: 720px){
+      .character-page{padding:24px 18px 64px}
+      .character-hero{
+        grid-template-columns:1fr;
+        gap:20px;
+        padding:24px;
+      }
+      .character-hero__level{justify-self:start}
+      .character-hero__sp{align-self:flex-start;align-items:flex-start;width:100%}
+      .skill-grid{grid-template-columns:1fr;gap:14px}
+      .arena-topbar{padding:14px 16px;flex-wrap:wrap;gap:10px}
+      .arena-topbar__brand{gap:10px}
+      .arena-topbar__logo{width:32px;height:32px}
+      .arena-topbar__title{font-size:14px;letter-spacing:0.08em}
+      .arena-topbar__status{margin-left:6px;padding:2px 8px;font-size:9px}
+      .arena-topbar__actions{gap:8px;width:100%;justify-content:space-between;order:2;overflow-x:auto;-webkit-overflow-scrolling:touch}
+      .hud-btn{width:46px;height:46px;flex:1;max-width:64px;flex-shrink:0}
+      .hud-btn__label{display:none}
+      .state-switcher{position:static;margin:8px 16px}
+      .skill-card__footer{flex-direction:column;align-items:stretch;gap:10px}
+      .skill-card__level-meta{flex-direction:row;align-items:baseline;gap:8px}
+      .skill-card__levelup,.skill-card__maxed,.skill-card__locked-cta{justify-content:center}
+    }
+  </style>
+</head>
+<body>
+  <div class="character-arena">
+
+    <!-- ArenaTopbar — same layout as Home Arena. Character hud-btn carries
+         aria-current="page" / data-testid="home-btn-character" so the shared
+         component highlights the active section. The mockup-only
+         state-switcher (top-right) is rendered as a fixed overlay so it
+         doesn't pollute the production layout. -->
+    <div class="arena-topbar">
+      <div class="arena-topbar__brand">
+        <img class="arena-topbar__logo" src="https://metadata.ratel.foundation/logos/logo-symbol.png" alt="Ratel logo" />
+        <span class="arena-topbar__title">Ratel</span>
+        <span class="arena-topbar__status">Live</span>
+      </div>
+      <div class="arena-topbar__actions">
+        <button class="hud-btn hud-btn--primary" aria-label="Create post" data-testid="home-btn-create">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span class="hud-btn__label">Create</span>
+        </button>
+        <button class="hud-btn" aria-label="Drafts" data-testid="home-btn-drafts">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+          <span class="hud-btn__label">Drafts</span>
+        </button>
+        <button class="hud-btn" aria-label="Rewards" data-testid="home-btn-rewards">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+          <span class="hud-btn__label">Rewards</span>
+        </button>
+        <button class="hud-btn" aria-label="Credentials" data-testid="home-btn-credentials">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+          <span class="hud-btn__label">Credentials</span>
+        </button>
+        <!-- Active section -->
+        <button class="hud-btn" aria-label="Character" aria-current="page" data-testid="home-btn-character">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+          <span class="hud-btn__label">Character</span>
+        </button>
+        <button class="hud-btn" aria-label="Settings" data-testid="home-btn-settings">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span class="hud-btn__label">Settings</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mockup-only state switcher (overlay; not part of the production page) -->
+    <div class="state-switcher" role="tablist" aria-label="Mockup state">
+      <button class="state-switcher__btn active" data-state="new">New</button>
+      <button class="state-switcher__btn" data-state="early">Early (L11)</button>
+      <button class="state-switcher__btn" data-state="mid">Mid (L24)</button>
+      <button class="state-switcher__btn" data-state="late">Late (L38)</button>
+      <button class="state-switcher__btn" data-state="endgame">Endgame (L46)</button>
+    </div>
+
+    <main class="character-page" id="character-page">
+
+      <!-- ── Hero: Level + XP + SP ──────────────────────── -->
+      <section class="character-hero" aria-label="Character summary">
+        <div class="character-hero__level">
+          <span class="character-hero__level-label">Level</span>
+          <span class="character-hero__level-num" id="hero-level">1</span>
+        </div>
+
+        <div class="character-hero__xp">
+          <div class="character-hero__xp-meta">
+            <span class="character-hero__xp-title">Character XP</span>
+            <span class="character-hero__xp-numbers">
+              <em id="hero-xp-current">0</em> / <span id="hero-xp-needed">220</span>
+            </span>
+          </div>
+          <div class="character-hero__xp-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="character-hero__xp-fill" id="hero-xp-fill" style="width:0%"></div>
+          </div>
+          <div class="character-hero__xp-hint">
+            <span id="hero-xp-to-next">220 XP to Level 2</span> · Total XP earned: <span id="hero-xp-total">0</span>
+          </div>
+        </div>
+
+        <div class="character-hero__sp" id="hero-sp">
+          <span class="character-hero__sp-label">Skill Points</span>
+          <span class="character-hero__sp-value" id="hero-sp-value">5</span>
+          <span class="character-hero__sp-hint" id="hero-sp-hint">Spend on the tree below</span>
+        </div>
+      </section>
+
+      <!-- ── Skill tree ─────────────────────────────────── -->
+      <header class="section-header">
+        <h2 class="section-header__title">Skill Tree</h2>
+        <span class="section-header__hint">+5% per level · Max +50% at L10</span>
+      </header>
+
+      <div class="skill-grid">
+
+        <!-- Money Tree -->
+        <article class="skill-card" data-skill="money_tree">
+          <div class="skill-card__head">
+            <span class="skill-card__icon" aria-hidden="true">
+              <!-- coin/tree -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M12 13v8"/><path d="M9 18h6"/><path d="M9 8h6"/></svg>
+            </span>
+            <div class="skill-card__title-block">
+              <div class="skill-card__name">Money Tree</div>
+              <div class="skill-card__name-ko">머니트리 · RatelPoint earning boost</div>
+            </div>
+            <span class="skill-card__multiplier" id="mt-mult">+0%</span>
+          </div>
+          <p class="skill-card__desc">Boosts every RatelPoint payout you receive from any space's reward, applied multiplicatively before the amount is credited to your balance.</p>
+          <div class="skill-card__pips" id="mt-pips" aria-label="Skill level pips" role="meter" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+          </div>
+          <footer class="skill-card__footer">
+            <div class="skill-card__level-meta">
+              <span class="skill-card__level-meta-label">Level</span>
+              <span class="skill-card__level-meta-value" id="mt-level">0 / 10</span>
+              <span class="skill-card__level-meta-next" id="mt-next">Next: +5% boost</span>
+            </div>
+            <button class="skill-card__levelup" id="mt-button" type="button" data-testid="skill-levelup-money_tree">
+              <span>Level Up</span>
+              <span class="skill-card__levelup-cost" id="mt-cost">5 SP</span>
+            </button>
+          </footer>
+        </article>
+
+        <!-- Ranker -->
+        <article class="skill-card" data-skill="ranker">
+          <div class="skill-card__head">
+            <span class="skill-card__icon" aria-hidden="true">
+              <!-- chevrons-up -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg>
+            </span>
+            <div class="skill-card__title-block">
+              <div class="skill-card__name">Ranker</div>
+              <div class="skill-card__name-ko">랭커 · SpaceXP & Character XP boost</div>
+            </div>
+            <span class="skill-card__multiplier" id="rk-mult">+0%</span>
+          </div>
+          <p class="skill-card__desc">Boosts the bonus portion of every SpaceActivity you record. Compounds: more XP per action → faster character leveling → more SP for future skills.</p>
+          <div class="skill-card__pips" id="rk-pips" aria-label="Skill level pips" role="meter" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+          </div>
+          <footer class="skill-card__footer">
+            <div class="skill-card__level-meta">
+              <span class="skill-card__level-meta-label">Level</span>
+              <span class="skill-card__level-meta-value" id="rk-level">0 / 10</span>
+              <span class="skill-card__level-meta-next" id="rk-next">Next: +5% boost</span>
+            </div>
+            <button class="skill-card__levelup" id="rk-button" type="button" data-testid="skill-levelup-ranker">
+              <span>Level Up</span>
+              <span class="skill-card__levelup-cost" id="rk-cost">5 SP</span>
+            </button>
+          </footer>
+        </article>
+
+        <!-- Influencer (v2 locked) -->
+        <article class="skill-card" data-skill="influencer" data-locked="true">
+          <div class="skill-card__head">
+            <span class="skill-card__icon" aria-hidden="true">
+              <!-- megaphone -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a4 4 0 0 0 4 4h1l5 4V5L8 9H7a4 4 0 0 0-4 2Z"/><path d="M16 8a5 5 0 0 1 0 8"/></svg>
+            </span>
+            <div class="skill-card__title-block">
+              <div class="skill-card__name">Influencer</div>
+              <div class="skill-card__name-ko">인플루언서 · Lower Hot threshold for your spaces</div>
+            </div>
+            <span class="skill-card__lock-tag">v2 · Coming soon</span>
+          </div>
+          <p class="skill-card__desc">Lowers the participants-required-for-Hot threshold for spaces you own — at L6 your space surfaces with just 4 participants instead of the global 10.</p>
+          <div class="skill-card__pips" aria-hidden="true">
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+          </div>
+          <footer class="skill-card__footer">
+            <div class="skill-card__level-meta">
+              <span class="skill-card__level-meta-label">Status</span>
+              <span class="skill-card__level-meta-value">Not yet released</span>
+            </div>
+            <span class="skill-card__locked-cta">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span>Locked</span>
+            </span>
+          </footer>
+        </article>
+
+        <!-- Sweeper (v2 locked) -->
+        <article class="skill-card" data-skill="sweeper" data-locked="true">
+          <div class="skill-card__head">
+            <span class="skill-card__icon" aria-hidden="true">
+              <!-- broom-ish: arrow down to base -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 11 6 19"/><path d="m21 4-7 7"/><path d="M3 21h18"/><path d="M5 16h6"/></svg>
+            </span>
+            <div class="skill-card__title-block">
+              <div class="skill-card__name">Sweeper</div>
+              <div class="skill-card__name-ko">싹쓸이 · Higher owner bonus on your spaces</div>
+            </div>
+            <span class="skill-card__lock-tag">v2 · Coming soon</span>
+          </div>
+          <p class="skill-card__desc">When a participant claims a reward in a space you own, the owner-bonus you receive goes up by +5% per level. At L6 you take 40% of every payout instead of the default 10%.</p>
+          <div class="skill-card__pips" aria-hidden="true">
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+            <span class="skill-card__pip"></span>
+          </div>
+          <footer class="skill-card__footer">
+            <div class="skill-card__level-meta">
+              <span class="skill-card__level-meta-label">Status</span>
+              <span class="skill-card__level-meta-value">Not yet released</span>
+            </div>
+            <span class="skill-card__locked-cta">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span>Locked</span>
+            </span>
+          </footer>
+        </article>
+
+      </div>
+    </main>
+
+    <!-- Level-up confirmation toast -->
+    <div class="levelup-toast" id="levelup-toast" role="status" aria-live="polite">
+      <span class="levelup-toast__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </span>
+      <div class="levelup-toast__text">
+        <span class="levelup-toast__title" id="toast-title">Money Tree leveled up</span>
+        <span class="levelup-toast__sub" id="toast-sub">Now +10% on every RatelPoint claim</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ── Mockup state machine ──
+    // Each state mirrors a worked-numbers row from the spec.
+    // `ranker` and `money_tree` levels chosen to show variety; in production the
+    // hook just reads CharacterResponse.skills[i].level off the API.
+    const STATES = {
+      new:     { level: 1,  totalXp: 0,         spGranted: 5,   spSpent: 0,   mt: 0, rk: 0 },
+      early:   { level: 11, totalXp: 84_700,    spGranted: 55,  spSpent: 14,  mt: 2, rk: 0 },
+      mid:     { level: 24, totalXp: 475_640,   spGranted: 120, spSpent: 119, mt: 7, rk: 0 },
+      late:    { level: 38, totalXp: 1_933_250, spGranted: 190, spSpent: 189, mt: 9, rk: 0 },
+      endgame: { level: 46, totalXp: 6_906_900, spGranted: 230, spSpent: 230, mt: 10, rk: 0 },
+    };
+
+    // xp_required(L→L+1) = 220 · L²; cumulative_xp_at_level(L) = 220 · (L−1)·L·(2L−1) / 6
+    const C = 220;
+    const cumXpAt = L => Math.round(C * (L - 1) * L * (2 * L - 1) / 6);
+    // skill cost = 5 + 4n, max level 10
+    const skillCost = n => (n >= 10 ? null : 5 + 4 * n);
+
+    function applyState(s) {
+      const st = STATES[s];
+      const unspent = st.spGranted - st.spSpent;
+
+      // Hero
+      document.getElementById('hero-level').textContent = st.level;
+      const curThr = cumXpAt(st.level);
+      const nextThr = cumXpAt(st.level + 1);
+      const within = st.totalXp - curThr;
+      const span   = nextThr - curThr;
+      document.getElementById('hero-xp-current').textContent = within.toLocaleString();
+      document.getElementById('hero-xp-needed').textContent  = span.toLocaleString();
+      document.getElementById('hero-xp-total').textContent   = st.totalXp.toLocaleString();
+      document.getElementById('hero-xp-to-next').textContent = `${(span - within).toLocaleString()} XP to Level ${st.level + 1}`;
+      document.getElementById('hero-xp-fill').style.width    = Math.min(100, Math.round(within / span * 100)) + '%';
+
+      // SP pill
+      const spEl = document.getElementById('hero-sp');
+      const spVal = document.getElementById('hero-sp-value');
+      const spHint = document.getElementById('hero-sp-hint');
+      spVal.textContent = unspent;
+      if (unspent === 0) {
+        spEl.setAttribute('data-empty', 'true');
+        spHint.textContent = 'Earn XP to grant more';
+      } else {
+        spEl.removeAttribute('data-empty');
+        spHint.textContent = unspent === 1 ? '1 point ready to spend' : `${unspent} points ready to spend`;
+      }
+
+      paintSkill('mt', st.mt, unspent);
+      paintSkill('rk', st.rk, unspent);
+    }
+
+    function paintSkill(prefix, lv, unspent) {
+      const pips  = document.getElementById(prefix + '-pips');
+      const mult  = document.getElementById(prefix + '-mult');
+      const lvl   = document.getElementById(prefix + '-level');
+      const next  = document.getElementById(prefix + '-next');
+      const cost  = document.getElementById(prefix + '-cost');
+      const btn   = document.getElementById(prefix + '-button');
+
+      [...pips.children].forEach((p, i) => p.setAttribute('data-filled', i < lv ? 'true' : 'false'));
+      pips.setAttribute('aria-valuenow', lv);
+
+      mult.textContent = `+${lv * 5}%`;
+      lvl.textContent  = `${lv} / 10`;
+
+      const c = skillCost(lv);
+      if (c === null) {
+        // Maxed
+        cost.textContent = '';
+        const footer = btn.parentElement;
+        btn.outerHTML = '<span class="skill-card__maxed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Maxed</span>';
+        next.textContent = 'Maximum boost reached';
+      } else {
+        cost.textContent = c + ' SP';
+        next.textContent = `Next: +${(lv + 1) * 5}% (was +${lv * 5}%)`;
+        btn.toggleAttribute('disabled', unspent < c);
+      }
+    }
+
+    // Wire state switcher
+    document.querySelectorAll('.state-switcher__btn').forEach(b => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.state-switcher__btn').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        applyState(b.dataset.state);
+      });
+    });
+
+    // Levelup toast demo
+    function showToast(title, sub) {
+      const t = document.getElementById('levelup-toast');
+      document.getElementById('toast-title').textContent = title;
+      document.getElementById('toast-sub').textContent   = sub;
+      t.setAttribute('data-open', 'true');
+      clearTimeout(window.__toastT);
+      window.__toastT = setTimeout(() => t.removeAttribute('data-open'), 2400);
+    }
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.skill-card__levelup');
+      if (!btn || btn.disabled) return;
+      const card = btn.closest('.skill-card');
+      const skill = card?.dataset.skill;
+      const name = card?.querySelector('.skill-card__name')?.textContent ?? '';
+      // In prod the API returns the new state; here we only show the toast.
+      const lvNow = parseInt(card.querySelector('[id$="-level"]')?.textContent || '0', 10);
+      showToast(`${name} leveled up`, `Now +${(lvNow + 1) * 5}% on every ${skill === 'ranker' ? 'SpaceActivity' : 'RatelPoint claim'}`);
+    });
+
+    // Boot
+    applyState('new');
+  </script>
+</body>
+</html>

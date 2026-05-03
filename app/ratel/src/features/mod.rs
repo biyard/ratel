@@ -18,6 +18,8 @@ pub mod rag;
 
 pub mod activity;
 
+pub mod character;
+
 pub mod did;
 pub mod essence;
 pub mod me;
@@ -25,3 +27,5 @@ pub mod me;
 pub mod notifications;
 
 pub mod sub_team;
+
+pub mod cross_posting;

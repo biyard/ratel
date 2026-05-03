@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reward Breakdown — with Money Tree boost</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;
+      --bg-glass:rgba(12,12,26,0.65);
+      --bg-input:rgba(255,255,255,0.025);
+      --border-subtle:rgba(255,255,255,0.06);
+      --text-primary:#f0f0f5;
+      --text-muted:#8888a8;
+      --text-dim:#55556a;
+      --accent-gold:#fcb300;
+      --accent-teal:#6eedd8;
+      --font-display:'Orbitron',sans-serif;
+      --font-body:'Outfit',sans-serif;
+    }
+    html[data-theme="dark"]{ --dark: ; --light: initial; }
+    html[data-theme="light"]{ --dark: initial; --light: ; }
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+
+    .arena{position:relative;min-height:100vh;padding:60px 24px;display:flex;flex-direction:column;align-items:center;gap:48px;isolation:isolate}
+    .arena::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 55% at 50% 10%,rgba(252,179,0,0.05) 0%,transparent 55%),radial-gradient(ellipse 60% 60% at 50% 90%,rgba(110,237,216,0.04) 0%,transparent 55%);z-index:-1}
+
+    .demo-section{width:100%;max-width:880px;display:flex;flex-direction:column;gap:14px}
+    .demo-section__heading{font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-muted)}
+    .demo-section__heading::before{content:'';display:inline-block;width:6px;height:6px;background:var(--accent-gold);transform:rotate(45deg);margin-right:10px;vertical-align:middle}
+
+    /* ── Reward row (matches existing user_reward views) ─── */
+    .reward-tx{
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      align-items:center;
+      gap:18px;
+      padding:18px 22px;
+      background:var(--bg-glass);
+      backdrop-filter:blur(16px);
+      border:1px solid var(--border-subtle);
+      border-radius:14px;
+    }
+    .reward-tx__icon{
+      width:44px;height:44px;border-radius:12px;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(252,179,0,0.10);
+      border:1px solid rgba(252,179,0,0.22);
+      color:var(--accent-gold);
+    }
+    .reward-tx__icon svg{width:22px;height:22px}
+    .reward-tx__body{min-width:0;display:flex;flex-direction:column;gap:6px}
+    .reward-tx__title{font-size:14px;font-weight:600;color:var(--text-primary);letter-spacing:0.01em}
+    .reward-tx__meta{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-muted)}
+    .reward-tx__meta-dot{width:3px;height:3px;background:var(--text-dim);border-radius:50%}
+
+    .reward-tx__amount{
+      display:flex;flex-direction:column;align-items:flex-end;gap:4px;
+      font-family:var(--font-display);
+      font-variant-numeric:tabular-nums;
+    }
+    .reward-tx__amount-value{font-size:18px;font-weight:700;color:var(--accent-gold);letter-spacing:0.02em}
+    .reward-tx__amount-unit{font-size:10px;font-weight:600;letter-spacing:0.14em;color:var(--text-dim);text-transform:uppercase}
+
+    /* ── Money Tree breakdown chip ──────────────────────── */
+    /* Two presentations: an inline split-row breakdown and a hover popover.
+       The Dioxus implementation can pick either; both share the .mt-chip class. */
+
+    .reward-tx__breakdown{
+      grid-column:1 / -1;
+      display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+      padding:10px 14px;margin-top:6px;
+      background:rgba(252,179,0,0.04);
+      border:1px dashed rgba(252,179,0,0.20);
+      border-radius:10px;
+      font-size:12px;
+    }
+    .breakdown__base{color:var(--text-muted);font-variant-numeric:tabular-nums}
+    .breakdown__base em{font-style:normal;color:var(--text-primary);font-weight:600}
+    .breakdown__plus{color:var(--text-dim)}
+    .mt-chip{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:3px 9px;border-radius:7px;
+      background:rgba(252,179,0,0.12);
+      border:1px solid rgba(252,179,0,0.30);
+      color:var(--accent-gold);
+      font-family:var(--font-display);
+      font-size:11px;font-weight:700;letter-spacing:0.06em;
+      cursor:default;
+    }
+    .mt-chip svg{width:12px;height:12px}
+    .breakdown__equals{color:var(--text-dim)}
+    .breakdown__total{color:var(--accent-gold);font-weight:700;font-variant-numeric:tabular-nums;font-family:var(--font-display)}
+
+    /* Hover popover variant — shown on the amount itself */
+    .amount-with-popover{position:relative;cursor:default}
+    .amount-popover{
+      position:absolute;top:calc(100% + 8px);right:0;
+      width:260px;
+      padding:14px 16px;
+      background:rgba(12,12,26,0.96);
+      backdrop-filter:blur(24px);
+      border:1px solid rgba(252,179,0,0.25);
+      border-radius:12px;
+      box-shadow:0 12px 36px rgba(0,0,0,0.5),0 0 24px rgba(252,179,0,0.10);
+      opacity:0;pointer-events:none;
+      transform:translateY(-4px);
+      transition:opacity 0.18s ease,transform 0.18s ease;
+      z-index:5;
+    }
+    .amount-with-popover:hover .amount-popover,
+    .amount-with-popover:focus-within .amount-popover{opacity:1;transform:translateY(0);pointer-events:auto}
+    .amount-popover__title{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+    .amount-popover__row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:13px;font-variant-numeric:tabular-nums}
+    .amount-popover__row + .amount-popover__row{border-top:1px dashed var(--border-subtle)}
+    .amount-popover__row--total{font-weight:700;color:var(--accent-gold);font-family:var(--font-display)}
+    .amount-popover__row-label{color:var(--text-muted);display:flex;align-items:center;gap:6px}
+    .amount-popover__row-value{color:var(--text-primary)}
+    .amount-popover__row--bonus .amount-popover__row-value{color:var(--accent-gold)}
+
+    /* No-skill fallback (zero Money Tree) — shown for contrast */
+    .reward-tx[data-mt="0"] .reward-tx__breakdown,
+    .reward-tx[data-mt="0"] .amount-popover{display:none}
+
+    /* ── Compact list (claim history) row ───────────────── */
+    .history-row{
+      display:grid;grid-template-columns:1fr auto;align-items:center;gap:14px;
+      padding:14px 18px;
+      background:rgba(255,255,255,0.02);
+      border:1px solid var(--border-subtle);
+      border-radius:10px;
+    }
+    .history-row__main{display:flex;flex-direction:column;gap:3px}
+    .history-row__title{font-size:13px;color:var(--text-primary)}
+    .history-row__date{font-size:11px;color:var(--text-muted);font-variant-numeric:tabular-nums}
+    .history-row__amount{font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--accent-gold);font-variant-numeric:tabular-nums}
+    .history-row__amount-bonus{font-size:10px;color:var(--accent-teal);font-weight:600;margin-left:6px}
+
+  </style>
+</head>
+<body>
+  <div class="arena">
+
+    <!-- ── A: detailed reward row with inline breakdown ── -->
+    <section class="demo-section">
+      <h3 class="demo-section__heading">Variant A · Inline breakdown row (recommended)</h3>
+
+      <article class="reward-tx" data-mt="4">
+        <span class="reward-tx__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M5 9l7-7 7 7"/></svg>
+        </span>
+        <div class="reward-tx__body">
+          <span class="reward-tx__title">Voted in poll · "Should we extend Q3 deadline?"</span>
+          <div class="reward-tx__meta">
+            <span>Local DAO Governance</span>
+            <span class="reward-tx__meta-dot"></span>
+            <span>2 minutes ago</span>
+          </div>
+        </div>
+        <div class="reward-tx__amount">
+          <span class="reward-tx__amount-value">+12,000</span>
+          <span class="reward-tx__amount-unit">RatelPoint</span>
+        </div>
+
+        <div class="reward-tx__breakdown" role="note" aria-label="Reward breakdown">
+          <span class="breakdown__base">Base <em>10,000</em></span>
+          <span class="breakdown__plus">+</span>
+          <span class="mt-chip" title="Money Tree skill at level 4">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M12 13v8"/><path d="M9 18h6"/></svg>
+            Money Tree L4 +20%
+          </span>
+          <span class="breakdown__equals">= </span>
+          <span class="breakdown__total">12,000</span>
+        </div>
+      </article>
+
+      <!-- L0 contrast: same row without Money Tree, no chip rendered -->
+      <article class="reward-tx" data-mt="0">
+        <span class="reward-tx__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M5 9l7-7 7 7"/></svg>
+        </span>
+        <div class="reward-tx__body">
+          <span class="reward-tx__title">Answered quiz · "City budget transparency"</span>
+          <div class="reward-tx__meta">
+            <span>Civic Lab</span>
+            <span class="reward-tx__meta-dot"></span>
+            <span>Yesterday</span>
+          </div>
+        </div>
+        <div class="reward-tx__amount">
+          <span class="reward-tx__amount-value">+10,000</span>
+          <span class="reward-tx__amount-unit">RatelPoint</span>
+        </div>
+      </article>
+    </section>
+
+    <!-- ── B: amount with hover popover ───────────────── -->
+    <section class="demo-section">
+      <h3 class="demo-section__heading">Variant B · Hover popover on amount</h3>
+
+      <article class="reward-tx" data-mt="10">
+        <span class="reward-tx__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M5 9l7-7 7 7"/></svg>
+        </span>
+        <div class="reward-tx__body">
+          <span class="reward-tx__title">Posted topic comment · "Treasury reform"</span>
+          <div class="reward-tx__meta">
+            <span>Treasury DAO</span>
+            <span class="reward-tx__meta-dot"></span>
+            <span>3 hours ago</span>
+          </div>
+        </div>
+        <div class="reward-tx__amount amount-with-popover" tabindex="0" aria-describedby="popover-1">
+          <span class="reward-tx__amount-value">+15,000</span>
+          <span class="reward-tx__amount-unit">RatelPoint</span>
+
+          <div class="amount-popover" id="popover-1" role="tooltip">
+            <div class="amount-popover__title">
+              <span>Breakdown</span>
+              <span class="mt-chip" title="Money Tree skill at level 10 (max)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M12 13v8"/><path d="M9 18h6"/></svg>
+                MAX
+              </span>
+            </div>
+            <div class="amount-popover__row">
+              <span class="amount-popover__row-label">Base reward</span>
+              <span class="amount-popover__row-value">10,000</span>
+            </div>
+            <div class="amount-popover__row amount-popover__row--bonus">
+              <span class="amount-popover__row-label">+ Money Tree L10 (+50%)</span>
+              <span class="amount-popover__row-value">+5,000</span>
+            </div>
+            <div class="amount-popover__row amount-popover__row--total">
+              <span class="amount-popover__row-label">Total credited</span>
+              <span class="amount-popover__row-value">15,000</span>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- ── C: compact history list (small badge only) ─── -->
+    <section class="demo-section">
+      <h3 class="demo-section__heading">Variant C · Compact history (small badge)</h3>
+
+      <div class="history-row">
+        <div class="history-row__main">
+          <span class="history-row__title">Discussion reply · "Quarterly transparency report"</span>
+          <span class="history-row__date">2026-04-30 · 14:22</span>
+        </div>
+        <div class="history-row__amount">
+          +10,500
+          <span class="history-row__amount-bonus">+5% MT</span>
+        </div>
+      </div>
+
+      <div class="history-row">
+        <div class="history-row__main">
+          <span class="history-row__title">Followed Civic Lab</span>
+          <span class="history-row__date">2026-04-29 · 09:15</span>
+        </div>
+        <div class="history-row__amount">+5,000</div>
+      </div>
+
+      <div class="history-row">
+        <div class="history-row__main">
+          <span class="history-row__title">Quiz pass · "Local DAO 101"</span>
+          <span class="history-row__date">2026-04-28 · 21:03</span>
+        </div>
+        <div class="history-row__amount">
+          +13,500
+          <span class="history-row__amount-bonus">+15% MT</span>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>

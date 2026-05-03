@@ -1657,5 +1657,169 @@ export class DynamoStreamEventStack extends Stack {
       },
       targets: [new eventsTargets.LambdaFunction(analyzeLambdaFunction)],
     });
+
+    // ── Pipe: SpaceScore Insert/Modify → CharacterXpDelta ───────────
+    // Fires when a SpaceScore row is created or updated (e.g. Money
+    // Tree wraps, action-completion scoring). The Lambda applies the
+    // resulting XP delta to the user's CharacterProfile and emits any
+    // level-up side effects. INSERT + MODIFY both flow through the
+    // same handler — the Rust-side dispatch in
+    // `EventBridgeEnvelope::proc` reads the new image either way.
+    new pipes.CfnPipe(this, "SpaceScorePipe", {
+      name: `ratel-${stage}-space-score-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT", "MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    // SpaceScore is a unit EntityType variant, so its sk
+                    // serializes to the bare string "SPACE_SCORE" (no '#').
+                    sk: { S: ["SPACE_SCORE"] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "CharacterXpDelta",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route CharacterXpDelta events to app-shell Lambda ─────
+    new events.Rule(this, "CharacterXpDeltaRule", {
+      eventBus,
+      description:
+        "Route space score insert/update events to app-shell for character XP delta application",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["CharacterXpDelta"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe: Cross-posting Stage 1 — Post Draft→Published transition ──
+    // Fires on Post MODIFY only when status transitions to PUBLISHED (the
+    // OldImage anything-but guard prevents re-firing on title/body edits
+    // while still Published) AND visibility is PUBLIC. Drives the Stage 1
+    // factory: read PostSyndicationDirective sidecar and bake one
+    // SyndicationJob row per (enabled_platforms ∩ connected) platform.
+    new pipes.CfnPipe(this, "CrossPostingStage1Pipe", {
+      name: `ratel-${stage}-cross-posting-stage1-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["MODIFY"],
+                dynamodb: {
+                  OldImage: {
+                    status: { S: [{ "anything-but": ["PUBLISHED"] }] },
+                  },
+                  NewImage: {
+                    sk: { S: [{ prefix: "POST" }] },
+                    status: { S: ["PUBLISHED"] },
+                    visibility: { S: ["PUBLIC"] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "PostPublishedForSyndication",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route PostPublishedForSyndication to app-shell Lambda ──
+    new events.Rule(this, "CrossPostingStage1Rule", {
+      eventBus,
+      description:
+        "Route post Draft→Published transitions to app-shell for cross-posting Stage 1 factory",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["PostPublishedForSyndication"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
+    // ── Pipe: Cross-posting Stage 2 — SyndicationJob ready for dispatch ──
+    // Fires on SyndicationJob INSERT (initial enqueue from Stage 1 factory)
+    // OR MODIFY (retry sweeper / user-initiated retry flipping state back
+    // to "pending"). The dispatcher acquires a lock, reconciles a stolen
+    // lock if needed, then calls the platform adapter.
+    new pipes.CfnPipe(this, "CrossPostingStage2Pipe", {
+      name: `ratel-${stage}-cross-posting-stage2-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["INSERT", "MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: [{ prefix: "SYNDICATION_JOB#" }] },
+                    state: { S: ["pending"] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "SyndicationJobReady",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route SyndicationJobReady to app-shell Lambda ──
+    new events.Rule(this, "CrossPostingStage2Rule", {
+      eventBus,
+      description:
+        "Route SyndicationJob pending events to app-shell for cross-posting Stage 2 dispatcher",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["SyndicationJobReady"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
   }
 }

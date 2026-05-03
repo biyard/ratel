@@ -25,5 +25,8 @@ pub async fn list_team_point_transactions_handler(
         .list_user_transactions(team_pk.clone(), month, bookmark, Some(10))
         .await?;
 
+    // Money Tree bonuses are awarded to individual users, not teams, so
+    // there is no team-level enrichment to do here. The Option fields on
+    // PointTransactionResponse default to None and the chip hides itself.
     Ok(res)
 }

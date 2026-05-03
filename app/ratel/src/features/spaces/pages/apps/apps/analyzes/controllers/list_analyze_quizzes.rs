@@ -12,10 +12,14 @@ pub struct AnalyzeQuizItem {
     pub questions_count: usize,
 }
 
+#[mcp_tool(
+    name = "list_analyze_quizzes",
+    description = "List quizzes in a space available as analyze report sources. Returns id, title (from SpaceAction), and question count. Requires creator role."
+)]
 #[get("/api/spaces/{space_id}/apps/analyzes/quizzes?bookmark", role: SpaceUserRole)]
 pub async fn list_analyze_quizzes(
-    space_id: SpacePartition,
-    bookmark: Option<String>,
+    #[mcp(description = "Space partition key")] space_id: SpacePartition,
+    #[mcp(description = "Pagination bookmark. Omit for first page.")] bookmark: Option<String>,
 ) -> Result<ListResponse<AnalyzeQuizItem>> {
     SpaceApp::can_edit(role)?;
     let common_config = crate::common::CommonConfig::default();

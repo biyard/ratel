@@ -45,13 +45,17 @@ pub struct AnalyzeReportResultPayload {
     pub follow_aggregates: Vec<FollowTargetAggregate>,
 }
 
+#[mcp_tool(
+    name = "get_analyze_report",
+    description = "Fetch a single analyze report's metadata, computed poll/quiz/follow aggregates, and the discussion sidebar list (with cross-filter aware comment counts). Requires creator role."
+)]
 #[get(
     "/api/spaces/{space_id}/apps/analyzes/reports/{report_id}",
     role: SpaceUserRole
 )]
 pub async fn get_analyze_report(
-    space_id: SpacePartition,
-    report_id: SpaceAnalyzeReportEntityType,
+    #[mcp(description = "Space partition key")] space_id: SpacePartition,
+    #[mcp(description = "Analyze report id")] report_id: SpaceAnalyzeReportEntityType,
 ) -> Result<GetAnalyzeReportResponse> {
     SpaceApp::can_edit(role)?;
     let common_config = crate::common::CommonConfig::default();
@@ -189,15 +193,19 @@ async fn fetch_discussion_candidates(
 /// detail page shows the latest result (head of this list) and
 /// optionally exposes the rest behind a "이전 분석" affordance. Most
 /// recent first thanks to UUIDv7's lexicographic sort.
+#[mcp_tool(
+    name = "list_analyze_discussion_results",
+    description = "History of discussion analysis results for one (report, discussion). Newest first. Supports bookmark pagination. Requires creator role."
+)]
 #[get(
     "/api/spaces/{space_id}/apps/analyzes/reports/{report_id}/discussions/{discussion_id}/results?bookmark",
     role: SpaceUserRole
 )]
 pub async fn list_analyze_discussion_results(
-    space_id: SpacePartition,
-    report_id: SpaceAnalyzeReportEntityType,
-    discussion_id: FeedPartition,
-    bookmark: Option<String>,
+    #[mcp(description = "Space partition key")] space_id: SpacePartition,
+    #[mcp(description = "Analyze report id")] report_id: SpaceAnalyzeReportEntityType,
+    #[mcp(description = "Discussion (post) partition key")] discussion_id: FeedPartition,
+    #[mcp(description = "Pagination bookmark. Omit for first page.")] bookmark: Option<String>,
 ) -> Result<ListResponse<SpaceAnalyzeDiscussionResult>> {
     SpaceApp::can_edit(role)?;
     let common_config = crate::common::CommonConfig::default();
