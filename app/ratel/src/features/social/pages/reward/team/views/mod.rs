@@ -7,7 +7,7 @@ use super::controllers::{
 use super::dto::TeamRewardsResponse;
 use super::*;
 use crate::common::services::PointTransactionResponse;
-use crate::features::social::pages::team_arena::{TeamArenaTab, use_team_arena};
+use crate::features::social::pages::team_arena::{use_team_arena, TeamArenaTab};
 use dioxus::prelude::*;
 
 pub use i18n::TeamRewardsTranslate;
@@ -112,20 +112,14 @@ pub fn Home(username: ReadSignal<String>) -> Element {
     // context which carries the real team_pk, then use it for every other
     // loader.
     let perm_resource = use_loader(move || async move {
-        Ok::<_, crate::common::Error>(
-            get_team_reward_permission_handler(username()).await.ok(),
-        )
+        Ok::<_, crate::common::Error>(get_team_reward_permission_handler(username()).await.ok())
     })?;
     let Some(perm) = perm_resource() else {
         return rsx! {
             div { class: "rewards-arena",
                 div { class: "page",
                     div { class: "empty",
-                        div { class: "",
-                            {tr.activity_empty}
-                            empty__desc {}
-                            ","
-                        }
+                        div { class: "empty-desc", "{tr.activity_empty}" }
                     }
                 }
             }
@@ -135,9 +129,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
     let team_pk_signal: Signal<TeamPartition> = use_signal(|| team_pk.clone());
 
     let rewards_resource = use_loader(move || async move {
-        Ok::<_, crate::common::Error>(
-            get_team_rewards_handler(team_pk_signal(), None).await.ok(),
-        )
+        Ok::<_, crate::common::Error>(get_team_rewards_handler(team_pk_signal(), None).await.ok())
     })?;
     let transactions_resource = use_loader(move || async move {
         Ok::<_, crate::common::Error>(
@@ -211,8 +203,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
             let pk = team_pk_signal();
             is_fetching_next.set(true);
             if let Ok(data) =
-                list_team_point_transactions_handler(pk, Some(month_for_load), Some(bookmark))
-                    .await
+                list_team_point_transactions_handler(pk, Some(month_for_load), Some(bookmark)).await
             {
                 let mut updated = transactions.read().clone();
                 updated.extend(data.items);
@@ -311,11 +302,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                             div { dangerous_inner_html: donut_svg }
                             div { class: "donut-legend",
                                 if donut_items.is_empty() {
-                                    div { class: "",
-                                        {tr.activity_empty}
-                                        empty-desc {}
-                                        ","
-                                    }
+                                    div { class: "empty-desc", "{tr.activity_empty}" }
                                 } else {
                                     for (name, value, color) in donut_items.iter() {
                                         div {
@@ -360,11 +347,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                                         path { d: "M16 10H8" }
                                     }
                                 }
-                                div { class: "",
-                                    {tr.activity_empty}
-                                    empty__desc {}
-                                    ","
-                                }
+                                div { class: "empty__desc", "{tr.activity_empty}" }
                             }
                         } else {
                             for tx in tx_list.iter() {
@@ -502,8 +485,16 @@ fn HeroCard(
 
 #[component]
 fn ActivityRow(tx: PointTransactionResponse, pts_unit: String) -> Element {
-    let amount_class = if tx.amount >= 0 { "activity__amount--in" } else { "activity__amount--out" };
-    let icon_class = if tx.amount >= 0 { "activity__icon--in" } else { "activity__icon--out" };
+    let amount_class = if tx.amount >= 0 {
+        "activity__amount--in"
+    } else {
+        "activity__amount--out"
+    };
+    let icon_class = if tx.amount >= 0 {
+        "activity__icon--in"
+    } else {
+        "activity__icon--out"
+    };
     let sign = if tx.amount >= 0 { "+" } else { "" };
     let title = tx
         .description
@@ -620,7 +611,11 @@ fn render_donut(items: &[(String, i64, &str)], total: i64) -> String {
         let start = offset;
         let end = offset + frac * std::f64::consts::TAU;
         offset = end;
-        let large = if (end - start) > std::f64::consts::PI { 1 } else { 0 };
+        let large = if (end - start) > std::f64::consts::PI {
+            1
+        } else {
+            0
+        };
         let x0 = cx + r_outer * start.cos();
         let y0 = cy + r_outer * start.sin();
         let x1 = cx + r_outer * end.cos();
@@ -640,4 +635,3 @@ fn render_donut(items: &[(String, i64, &str)], total: i64) -> String {
         total_fmt = format_points(total)
     )
 }
-

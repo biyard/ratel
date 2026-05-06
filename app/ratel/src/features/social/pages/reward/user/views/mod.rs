@@ -387,11 +387,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                             div { dangerous_inner_html: donut_svg }
                             div { class: "donut-legend",
                                 if donut_items.is_empty() {
-                                    div { class: "",
-                                        {tr.activity_empty}
-                                        empty-desc {}
-                                        ","
-                                    }
+                                    div { class: "empty-desc", "{tr.activity_empty}" }
                                 } else {
                                     for (name, value, color) in donut_items.iter() {
                                         div {
@@ -436,11 +432,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                                         path { d: "M16 10H8" }
                                     }
                                 }
-                                div { class: "",
-                                    {tr.activity_empty}
-                                    empty__desc {}
-                                    ","
-                                }
+                                div { class: "empty__desc", "{tr.activity_empty}" }
                             }
                         } else {
                             for tx in tx_list.iter() {
@@ -500,16 +492,8 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                                         path { d: "M16 10H8" }
                                     }
                                 }
-                                div { class: "",
-                                    {tr.past_empty_title}
-                                    empty__title {}
-                                    ","
-                                }
-                                div { class: "",
-                                    {tr.past_empty_desc}
-                                    empty__desc {}
-                                    ","
-                                }
+                                div { class: "empty__title", "{tr.past_empty_title}" }
+                                div { class: "empty__desc", "{tr.past_empty_desc}" }
                             }
                         } else {
                             for item in past_months.iter() {
