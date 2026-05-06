@@ -205,12 +205,12 @@ pub fn ArenaTopbar(
                             id: "arena-teams-dd-list",
                             onscroll: move |_| {
                                 let js = r#"
-                                                                                                                                    const el = document.getElementById('arena-teams-dd-list');
-                                                                                                                                    if (!el) { dioxus.send(false); return; }
-                                                                                                                                    const nearBottom =
-                                                                                                                                        el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
-                                                                                                                                    dioxus.send(nearBottom);
-                                                                                                                                "#;
+                                                                                                                                                            const el = document.getElementById('arena-teams-dd-list');
+                                                                                                                                                            if (!el) { dioxus.send(false); return; }
+                                                                                                                                                            const nearBottom =
+                                                                                                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+                                                                                                                                                            dioxus.send(nearBottom);
+                                                                                                                                                        "#;
                                 let mut ctrl = teams_query;
                                 spawn(async move {
                                     let mut eval = document::eval(js);
@@ -287,7 +287,7 @@ pub fn ArenaTopbar(
                     HudButton {
                         label: tr.drafts.to_string(),
                         active: active == TeamArenaTab::Drafts,
-                        to: Route::TeamDraft {
+                        to: Route::SocialDraft {
                             username: username.clone(),
                         },
                         icon: rsx! {

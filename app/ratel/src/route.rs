@@ -71,9 +71,9 @@ fn CredentialsHome() -> Element {
 
 // Team pages
 use crate::features::social::layout::SocialLayout;
+use crate::features::social::pages::SocialDraft;
 use crate::features::social::pages::SocialIndex;
 use crate::features::social::pages::dao::Home as TeamDao;
-use crate::features::social::pages::draft::Home as TeamDraft;
 use crate::features::social::pages::member::Home as TeamMember;
 use crate::features::social::pages::reward::Home as TeamReward;
 use crate::features::social::pages::setting::Home as TeamSetting;
@@ -88,7 +88,6 @@ use crate::features::social::pages::credentials::Home as CredentialPage;
 use crate::features::social::pages::post::Home as UserPosts;
 use crate::features::social::pages::space::Home as UserSpaces;
 use crate::features::social::pages::team_membership::Home as TeamMemberships;
-use crate::features::social::pages::user_draft::Home as UserDrafts;
 use crate::features::social::pages::user_membership::Home as UserMemberships;
 use crate::features::social::pages::user_reward::Home as UserRewards;
 use crate::features::social::pages::user_setting::Home as UserSettingPage;
@@ -150,11 +149,11 @@ pub enum Route {
             UserSettingPage { username: String },
             #[route("/settings/connections")]
             UserSettingsConnectionsPage { username: String },
-            #[route("/drafts")]
-            UserDrafts { username: String },
             #[layout(SocialLayout)]
                 #[route("/")]
                 SocialIndex { username: String },
+                #[route("/drafts")]
+                SocialDraft { username: String },
                 #[route("/posts")]
                 UserPosts { username: String },
                 #[route("/memberships")]
@@ -163,8 +162,6 @@ pub enum Route {
                 CredentialPage { username: String },
                 #[route("/spaces")]
                 UserSpaces { username: String },
-                #[route("/team-drafts")]
-                TeamDraft { username: String },
                 #[route("/dao")]
                 TeamDao { username: String },
                 #[route("/members")]

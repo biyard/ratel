@@ -138,7 +138,7 @@ pub fn Index() -> Element {
                 .with_title("Start building your Essence");
             return;
         }
-        nav.push(Route::UserDrafts {
+        nav.push(Route::SocialDraft {
             username: drafts_username.clone(),
         });
     };
