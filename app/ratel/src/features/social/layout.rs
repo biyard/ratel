@@ -219,7 +219,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                 if can_team_edit {
                     div { class: "flex flex-col px-3 pb-4 shrink-0",
                         {
-                            let is_draft_active = matches!(current_route, Route::TeamDraft { .. });
+                            let is_draft_active = matches!(current_route, Route::SocialDraft { .. });
                             let draft_class = if is_draft_active {
                                 "bg-hover text-text-primary"
                             } else {
@@ -227,7 +227,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                             };
                             rsx! {
                                 Link {
-                                    to: Route::TeamDraft {
+                                    to: Route::SocialDraft {
                                         username: username.clone(),
                                     },
                                     class: "flex gap-2.5 items-center py-2 px-2 w-full text-sm font-medium text-left rounded-lg transition-colors {draft_class}",

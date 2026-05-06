@@ -9,7 +9,7 @@ use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::posts::controllers::delete_post::delete_post_handler;
 use crate::features::posts::controllers::dto::*;
 use crate::features::posts::controllers::list_user_drafts::list_user_drafts_handler;
-use crate::features::social::pages::user_draft::*;
+use crate::features::social::pages::draft::user::*;
 use crate::route::Route;
 
 use i18n::UserDraftsTranslate;
