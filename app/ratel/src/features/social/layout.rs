@@ -91,7 +91,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
             username: username.clone(),
         }
         .to_string();
-        let is_reward_page = matches!(current_route, Route::TeamReward { .. });
+        let is_reward_page = matches!(current_route, Route::SocialReward { .. });
         let mut mask = 0i64;
         for value in &permissions_vec {
             mask |= 1i64 << (*value as i32);
@@ -281,7 +281,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                         onclick: move |e| e.stop_propagation(),
                                         if can_team_edit {
                                             Link {
-                                                to: Route::TeamReward {
+                                                to: Route::SocialReward {
                                                     username: username.clone(),
                                                 },
                                                 class: "flex gap-2 items-center py-2 px-3 w-full text-sm text-left transition-colors text-text-primary hover:bg-hover",
@@ -293,7 +293,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                         }
                                         if is_team_member {
                                             Link {
-                                                to: if can_team_edit { Route::TeamSetting {
+                                                to: if can_team_edit { Route::SocialSetting {
                                                     username: username.clone(),
                                                 } } else { Route::TeamSettingMember {
                                                     username: username.clone(),

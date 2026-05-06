@@ -176,7 +176,7 @@ pub fn ArenaSettingsPanel(
                 div { class: "ta-settings-footer",
                     if can_edit {
                         Link {
-                            to: Route::TeamSetting {
+                            to: Route::SocialSetting {
                                 username: username.clone(),
                             },
                             class: "ta-settings-action",
