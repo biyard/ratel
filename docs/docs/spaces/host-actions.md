@@ -24,7 +24,7 @@ The modal asks one question first: **what kind of Action?** You pick from four t
 
 Pick a tile, see a live **Preview** of the empty card on the right, then click **Create**. Ratel takes you straight to the new Action's editor URL where you fill in the rest.
 
-> **About Meets.** The fifth Action type — **Meet** (a scheduled event with RSVP) — exists in the platform and has its own viewer at `/spaces/:space_id/actions/meets/:meet_id`, but a host editor entry point is *(Coming soon)*. Today Meets are typically created via the [MCP API](../ai-connect#actions-inside-a-space) (`create_meet` tool) and then surface in the participant carousel like any other Action.
+> **About Meets.** The fifth Action type — **Meet** (a scheduled event with RSVP) — exists in the platform and has its own viewer at `/spaces/:space_id/actions/meets/:meet_id`, but a host editor entry point is *(Coming soon)*. Today Meets are typically created via the [MCP API](../essence/my-essence#-my-ai--my-ai) (`create_meet` tool) and then surface in the participant carousel like any other Action.
 
 ## How an editor URL works
 
@@ -166,7 +166,7 @@ The Configuration card has the common sections only — Schedule, Participation 
 
 URL: `/spaces/:space_id/actions/meets/:meet_id` (admin view)
 
-A scheduled event — livestream, video call, workshop, in-person gathering. The participant view at this URL is live, but a host editor entry point in the create-modal is *(Coming soon)*. Today, hosts who need a Meet can create one via the MCP API (`create_meet` tool — see [Connect AI](../ai-connect#actions-inside-a-space)).
+A scheduled event — livestream, video call, workshop, in-person gathering. The participant view at this URL is live, but a host editor entry point in the create-modal is *(Coming soon)*. Today, hosts who need a Meet can create one via the MCP API (`create_meet` tool — see [Connect via MCP](../essence/my-essence#-my-ai--my-ai)).
 
 ## Tips
 
