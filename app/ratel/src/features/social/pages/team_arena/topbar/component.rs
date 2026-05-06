@@ -85,7 +85,7 @@ pub fn ArenaTopbar(
     let go_team_home = {
         let username = username.clone();
         move |_| {
-            nav.push(Route::TeamHome {
+            nav.push(Route::SocialIndex {
                 username: username.clone(),
             });
         }
@@ -205,12 +205,12 @@ pub fn ArenaTopbar(
                             id: "arena-teams-dd-list",
                             onscroll: move |_| {
                                 let js = r#"
-                                                                                                            const el = document.getElementById('arena-teams-dd-list');
-                                                                                                            if (!el) { dioxus.send(false); return; }
-                                                                                                            const nearBottom =
-                                                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
-                                                                                                            dioxus.send(nearBottom);
-                                                                                                        "#;
+                                                                                                                                    const el = document.getElementById('arena-teams-dd-list');
+                                                                                                                                    if (!el) { dioxus.send(false); return; }
+                                                                                                                                    const nearBottom =
+                                                                                                                                        el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+                                                                                                                                    dioxus.send(nearBottom);
+                                                                                                                                "#;
                                 let mut ctrl = teams_query;
                                 spawn(async move {
                                     let mut eval = document::eval(js);
@@ -221,7 +221,7 @@ pub fn ArenaTopbar(
                                     }
                                 });
                             },
-                            for (idx , entry) in dd_entries.iter().cloned().enumerate() {
+                            for (idx, entry) in dd_entries.iter().cloned().enumerate() {
                                 TeamDdItem {
                                     key: "{entry.username}",
                                     username: entry.username.clone(),
@@ -466,7 +466,7 @@ fn TeamDdItem(
             onclick: move |_| {
                 on_pick.call(());
                 if !is_current {
-                    nav.push(Route::TeamHome {
+                    nav.push(Route::SocialIndex {
                         username: username.clone(),
                     });
                 }

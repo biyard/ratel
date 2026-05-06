@@ -22,7 +22,9 @@ pub fn use_wall_context() -> UseWallContext {
 }
 
 #[track_caller]
-pub fn provide_wall_context(username: ReadSignal<String>) -> Result<UseWallContext, Loading> {
+pub fn use_wall_context_provider(
+    username: ReadSignal<String>,
+) -> Result<UseWallContext, Loading> {
     let data = use_loader(move || async move { get_wall_by_username(username()).await })?;
 
     let ctx = use_context_provider(move || UseWallContext { data });

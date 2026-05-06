@@ -80,7 +80,7 @@ pub fn ArenaTeamCreationPopup() -> Element {
                                 }
                                 team_ctx.select_team(&response.team_pk);
                                 popup.close();
-                                nav.push(Route::TeamHome {
+                                nav.push(Route::SocialIndex {
                                     username: username.clone(),
                                 });
                             }
