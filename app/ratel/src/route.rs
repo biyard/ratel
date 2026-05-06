@@ -25,7 +25,6 @@ use crate::features::spaces::pages::apps::apps::general::SpaceGeneralAppPage;
 use crate::features::spaces::pages::apps::apps::incentive_pool::SpaceIncentivePoolAppPage;
 use crate::features::spaces::pages::apps::apps::panels::SpacePanelsAppPage;
 use crate::features::spaces::pages::apps::Layout as SpaceAppsLayout;
-use crate::features::spaces::pages::apps::SpaceAppsPage;
 use crate::features::spaces::pages::index::action_pages::{
     SpaceDiscussionCommentPage, SpaceDiscussionPage,
 };
@@ -71,16 +70,16 @@ fn CredentialsHome() -> Element {
 
 // Team pages
 use crate::features::social::layout::SocialLayout;
-use crate::features::social::pages::SocialDraft;
-use crate::features::social::pages::SocialIndex;
-use crate::features::social::pages::SocialMembership;
-use crate::features::social::pages::SocialReward;
-use crate::features::social::pages::SocialSetting;
 use crate::features::social::pages::dao::Home as TeamDao;
 use crate::features::social::pages::member::Home as TeamMember;
 use crate::features::social::pages::setting::ManagementPage as TeamSettingMember;
 use crate::features::social::pages::setting::SubscriptionPage as TeamSettingSubscription;
 use crate::features::social::pages::team_arena::TeamArenaLayout;
+use crate::features::social::pages::SocialDraft;
+use crate::features::social::pages::SocialIndex;
+use crate::features::social::pages::SocialMembership;
+use crate::features::social::pages::SocialReward;
+use crate::features::social::pages::SocialSetting;
 
 // User pages
 use crate::features::cross_posting::views::ConnectionsPage as UserSettingsConnectionsPage;
@@ -203,8 +202,6 @@ pub enum Route {
             #[layout(SpaceLayout)]
                 #[route("/")]
                 SpaceIndexPage { space_id: SpacePartition },
-                #[route("/dashboard")]
-                SpaceDashboardPage { space_id: SpacePartition },
                 #[route("/overview")]
                 SpaceOverviewPage { space_id: SpacePartition },
                 #[route("/report")]
@@ -243,9 +240,6 @@ pub enum Route {
                 // Space Apps
                 #[nest("/apps")]
                     #[layout(SpaceAppsLayout)]
-                        #[route("/")]
-                        SpaceAppsPage { space_id: SpacePartition },
-
                         #[route("/general")]
                         SpaceGeneralAppPage { space_id: SpacePartition },
 
