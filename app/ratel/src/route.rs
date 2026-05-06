@@ -53,7 +53,6 @@ use crate::features::sub_team::pages::{
 use crate::features::posts::{Index as PostIndex, PostDetail, PostEdit};
 
 use crate::views::{Index, PrivacyPolicyPage, TermsOfServicePage};
-use layout::AppLayout;
 use membership::Home as MembershipHome;
 use root_layout::RootLayout;
 
