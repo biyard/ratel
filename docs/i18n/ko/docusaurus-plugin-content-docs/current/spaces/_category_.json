@@ -1,0 +1,8 @@
+{
+  "label": "스페이스",
+  "position": 6,
+  "link": {
+    "type": "doc",
+    "id": "spaces/index"
+  }
+}

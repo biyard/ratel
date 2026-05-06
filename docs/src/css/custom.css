@@ -1,0 +1,464 @@
+/**
+ * Ratel theme for Docusaurus.
+ * Overrides Infima (Docusaurus' default CSS framework) so the docs site
+ * matches the Ratel app — dark base, gold primary, Raleway/Inter fonts.
+ */
+
+/* === Brand palette (mirrors app/ratel/assets/tailwind-colors.css) ======== */
+:root {
+  --ratel-gold: #fcb300;
+  --ratel-gold-soft: rgba(252, 179, 0, 0.08);
+  --ratel-gold-line: rgba(252, 179, 0, 0.35);
+
+  --ratel-bg: #1d1d1d;
+  --ratel-bg-elev: #1a1a1a;
+  --ratel-card: #35343f;
+  --ratel-card-2: #262626;
+  --ratel-line: #262626;
+  --ratel-line-soft: rgba(255, 255, 255, 0.06);
+
+  --ratel-fg: #ffffff;
+  --ratel-fg-body: #d4d4d4;
+  --ratel-fg-muted: #8c8c8c;
+  --ratel-fg-dim: #a1a1a1;
+
+  --ratel-error: #f87171;
+
+  --ratel-font-display: "Raleway", system-ui, sans-serif;
+  --ratel-font-body: "Inter", system-ui, sans-serif;
+}
+
+/* === Infima global overrides ============================================ */
+:root {
+  /* Primary = Ratel gold */
+  --ifm-color-primary: var(--ratel-gold);
+  --ifm-color-primary-dark: #e3a100;
+  --ifm-color-primary-darker: #d69800;
+  --ifm-color-primary-darkest: #b07d00;
+  --ifm-color-primary-light: #ffc01a;
+  --ifm-color-primary-lighter: #ffc52b;
+  --ifm-color-primary-lightest: #ffd05c;
+
+  /* Typography */
+  --ifm-font-family-base: var(--ratel-font-body);
+  --ifm-heading-font-family: var(--ratel-font-display);
+  --ifm-heading-font-weight: 700;
+  --ifm-font-weight-bold: 700;
+  --ifm-line-height-base: 1.65;
+  --ifm-code-font-size: 92%;
+
+  /* Light mode (kept readable but de-emphasized — Ratel is dark-first) */
+  --ifm-background-color: #fafaf7;
+  --ifm-background-surface-color: #ffffff;
+  --ifm-color-content: #191919;
+  --ifm-color-content-secondary: #4a4a4a;
+
+  --docusaurus-highlighted-code-line-bg: rgba(252, 179, 0, 0.12);
+  --ifm-container-width-xl: 100%;
+  --ifm-spacing-horizontal: 0px;
+}
+
+/* === Dark mode (the canonical Ratel look) =============================== */
+[data-theme="dark"] {
+  --ifm-color-primary: var(--ratel-gold);
+  --ifm-color-primary-dark: #e3a100;
+  --ifm-color-primary-darker: #d69800;
+  --ifm-color-primary-darkest: #b07d00;
+  --ifm-color-primary-light: #ffc01a;
+  --ifm-color-primary-lighter: #ffc52b;
+  --ifm-color-primary-lightest: #ffd05c;
+
+  --ifm-background-color: var(--ratel-bg);
+  --ifm-background-surface-color: var(--ratel-bg-elev);
+  --ifm-color-content: var(--ratel-fg);
+  --ifm-color-content-secondary: var(--ratel-fg-body);
+
+  --ifm-color-emphasis-0: var(--ratel-bg);
+  --ifm-color-emphasis-100: #232323;
+  --ifm-color-emphasis-200: #2a2a2a;
+  --ifm-color-emphasis-300: var(--ratel-line);
+  --ifm-color-emphasis-400: #404040;
+  --ifm-color-emphasis-500: #525252;
+  --ifm-color-emphasis-600: #737373;
+  --ifm-color-emphasis-700: var(--ratel-fg-muted);
+  --ifm-color-emphasis-800: var(--ratel-fg-dim);
+  --ifm-color-emphasis-900: #e5e5e5;
+  --ifm-color-emphasis-1000: var(--ratel-fg);
+
+  /* Navbar/footer share the body surface — no boundary, no chrome */
+  --ifm-navbar-background-color: transparent;
+  --ifm-navbar-link-color: var(--ratel-fg-body);
+  --ifm-navbar-link-hover-color: var(--ratel-gold);
+  --ifm-navbar-shadow: none;
+
+  --ifm-footer-background-color: transparent;
+  --ifm-footer-color: var(--ratel-fg-muted);
+  --ifm-footer-link-color: var(--ratel-fg-body);
+  --ifm-footer-link-hover-color: var(--ratel-gold);
+  --ifm-footer-title-color: var(--ratel-fg);
+
+  --ifm-menu-color: var(--ratel-fg-body);
+  --ifm-menu-color-active: var(--ratel-gold);
+  --ifm-menu-color-background-active: var(--ratel-gold-soft);
+  --ifm-menu-color-background-hover: rgba(255, 255, 255, 0.04);
+
+  --ifm-toc-border-color: var(--ratel-line);
+  --ifm-hr-border-color: var(--ratel-line);
+
+  --ifm-code-background: #101010;
+  --ifm-pre-background: #101010;
+  --ifm-card-background-color: var(--ratel-card-2);
+
+  --ifm-link-color: var(--ratel-gold);
+  --ifm-link-hover-color: #ffd05c;
+
+  --docusaurus-highlighted-code-line-bg: rgba(252, 179, 0, 0.18);
+}
+
+/* === Body chrome ======================================================== */
+html,
+body {
+  font-family: var(--ratel-font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+[data-theme="dark"] body {
+  /* Subtle gold glow + grid feel inspired by Ratel's arena aesthetic */
+  background:
+    radial-gradient(
+      circle at 18% -10%,
+      rgba(252, 179, 0, 0.07) 0%,
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at 95% 8%,
+      rgba(252, 179, 0, 0.04) 0%,
+      transparent 45%
+    ),
+    var(--ratel-bg);
+}
+
+/* === Sidebar-as-chrome layout =========================================== */
+/* Owned by the swizzled `DocRoot/Layout/Sidebar` React component at
+   `docs/src/theme/DocRoot/Layout/Sidebar/index.tsx`. The component renders
+   `<aside class="ratel-sidebar">` containing header (logo + locale),
+   scrollable menu, and footer (theme toggle + github icon). All layout
+   here targets those `.ratel-sidebar*` classes — no more fighting with
+   the original navbar. */
+
+/* --- Mobile (<996px): keep the default Docusaurus navbar so users can
+   open the mobile doc-nav drawer. The swizzled <aside class="ratel-sidebar">
+   is hidden until desktop. */
+.ratel-sidebar {
+  display: none;
+}
+
+/* --- Desktop layout ---------------------------------------------------- */
+@media (min-width: 996px) {
+  :root {
+    --ratel-sidebar-width: var(--doc-sidebar-width, 300px);
+    --ratel-sidebar-pad-x: 16px;
+  }
+
+  /* The swizzled Navbar/Layout adds `.ratel-navbar-mobile-only` so we can
+     hide the entire navbar on desktop without breaking the mobile drawer. */
+  .ratel-navbar-mobile-only {
+    display: none !important;
+  }
+
+  /* --- Sidebar shell -------------------------------------------------- */
+  .ratel-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--ratel-sidebar-width);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--ratel-line-soft);
+    background: transparent;
+    z-index: 100;
+    box-sizing: border-box;
+
+
+    --ifm-navbar-height: 0.5rem;
+  }
+
+  /* --- Header: logo + locale dropdown on one row --------------------- */
+  .ratel-sidebar__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px var(--ratel-sidebar-pad-x);
+    flex-shrink: 0;
+  }
+  .ratel-sidebar__logo-link {
+    display: inline-flex;
+    align-items: center;
+    line-height: 0;
+  }
+  .ratel-sidebar__logo {
+    height: 32px;
+    width: auto;
+    display: block;
+  }
+  /* Style the locale dropdown link to match the muted body color */
+  .ratel-sidebar__locale .navbar__link {
+    color: var(--ratel-fg-body);
+    font-size: 0.85rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  .ratel-sidebar__locale .navbar__link:hover {
+    color: var(--ratel-gold);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  /* --- Menu: takes remaining vertical space, scrolls independently --- */
+  .ratel-sidebar__menu {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    /* The wrapped DocSidebar uses theme-classic's own sticky/height rules.
+       Strip those so it can size to our flex parent. */
+  }
+  /* Neutralize theme-classic's sticky/height defaults inside our flex parent */
+  .ratel-sidebar__menu > .theme-doc-sidebar-container,
+  .ratel-sidebar__menu [class*="docSidebarContainer"] {
+    position: static !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    border-right: none !important;
+    background: transparent !important;
+  }
+  .ratel-sidebar__menu .menu__list {
+    overflow-x: hidden;
+  }
+  .ratel-sidebar__menu .menu__link {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .ratel-sidebar__menu--hidden {
+    /* Mirror theme-classic's hidden-sidebar visual */
+    opacity: 0.6;
+  }
+
+  /* --- Footer: theme toggle + github icon ---------------------------- */
+  .ratel-sidebar__footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px var(--ratel-sidebar-pad-x);
+    flex-shrink: 0;
+    border-top: 1px solid var(--ratel-line-soft);
+  }
+  .ratel-sidebar__theme-toggle,
+  .ratel-sidebar__github {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    color: var(--ratel-fg-body);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    text-decoration: none;
+  }
+  .ratel-sidebar__theme-toggle:hover,
+  .ratel-sidebar__github:hover {
+    background: rgba(252, 179, 0, 0.1);
+    color: var(--ratel-gold);
+  }
+  .ratel-sidebar__theme-toggle {
+    font-size: 18px;
+    line-height: 1;
+  }
+  .ratel-sidebar__github img {
+    width: 22px;
+    height: 22px;
+    display: block;
+    /* SVG fill is `currentColor` → renders black via <img>; filter inverts
+       to a light grey in dark mode for visibility against the dark bg. */
+    filter: brightness(0) invert(0.83);
+    transition: filter 0.15s ease;
+  }
+  .ratel-sidebar__github:hover img {
+    /* Approximated #fcb300 via filter chain */
+    filter: brightness(0) saturate(100%) invert(72%) sepia(67%) saturate(2854%)
+      hue-rotate(2deg) brightness(101%) contrast(103%);
+  }
+  [data-theme="light"] .ratel-sidebar__github img {
+    /* Light mode: tint icon dark for contrast against #fafaf7 */
+    filter: brightness(0);
+  }
+  [data-theme="light"] .ratel-sidebar__github:hover img {
+    filter: brightness(0) saturate(100%) invert(72%) sepia(67%) saturate(2854%)
+      hue-rotate(2deg) brightness(101%) contrast(103%);
+  }
+
+  /* --- Push doc content right of the sidebar -------------------------- */
+  .main-wrapper {
+    margin-top: 0;
+    margin-left: var(--ratel-sidebar-width);
+  }
+  [class*="docMainContainer"] {
+    margin-left: 0;
+  }
+  [class*="docPage"] {
+    padding-top: 0;
+  }
+
+  /* --- Active sidebar item: subtle gold accent ----------------------- */
+  [data-theme="dark"] .menu__link--active {
+    color: var(--ratel-gold);
+  }
+
+  /* --- Breadcrumbs: sticky to the top of the content area ------------- */
+  /* Verified ancestors (.main-wrapper, [class*="docPage"],
+     [class*="docMainContainer"], <article>) do NOT set overflow in either
+     theme-classic or our custom CSS, so position:sticky engages naturally. */
+  .theme-doc-breadcrumbs {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    margin-top: 0 !important;
+    margin-bottom: 1rem;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    /* Glassy backdrop blur — comment out if it conflicts with content */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}
+
+/* --- Footer: removed sitewide ---------------------------------------- */
+.footer,
+footer.footer {
+  display: none !important;
+}
+
+/* === Headings =========================================================== */
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+  font-family: var(--ratel-font-display);
+  letter-spacing: -0.01em;
+}
+
+.markdown h1 {
+  font-size: 2.4rem;
+  font-weight: 800;
+}
+
+[data-theme="dark"] .markdown h2 {
+  border-bottom: 1px solid var(--ratel-line);
+  padding-bottom: 0.35em;
+}
+
+/* === Sidebar / TOC ====================================================== */
+.menu__link {
+  border-radius: 6px;
+  font-size: 0.92rem;
+}
+
+.menu__link--active:not(.menu__link--sublist) {
+  font-weight: 600;
+}
+
+[data-theme="dark"] .table-of-contents__link:hover,
+[data-theme="dark"] .table-of-contents__link--active {
+  color: var(--ratel-gold);
+}
+
+/* === Buttons ============================================================ */
+.button--primary {
+  font-family: var(--ratel-font-display);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #1d1d1d;
+  background: var(--ratel-gold);
+  border-color: var(--ratel-gold);
+}
+
+.button--primary:hover {
+  background: #ffc01a;
+  border-color: #ffc01a;
+  color: #1d1d1d;
+}
+
+.button--secondary {
+  background: transparent;
+  border-color: var(--ratel-gold-line);
+  color: var(--ratel-gold);
+}
+
+[data-theme="dark"] .button--secondary:hover {
+  background: var(--ratel-gold-soft);
+  color: var(--ratel-gold);
+  border-color: var(--ratel-gold);
+}
+
+/* === Code blocks ======================================================== */
+[data-theme="dark"] .prism-code {
+  border: 1px solid var(--ratel-line);
+}
+
+code {
+  border-radius: 4px;
+}
+
+[data-theme="dark"] :not(pre) > code {
+  background: rgba(252, 179, 0, 0.1);
+  color: #ffd05c;
+  border: 1px solid rgba(252, 179, 0, 0.18);
+}
+
+/* === Blockquotes / admonitions ========================================== */
+[data-theme="dark"] blockquote {
+  border-left-color: var(--ratel-gold);
+  background: var(--ratel-gold-soft);
+  color: var(--ratel-fg-body);
+}
+
+/* === Hero/intro card spacing on docs landing ============================ */
+.markdown > p:first-of-type {
+  font-size: 1.05rem;
+  color: var(--ifm-color-content-secondary);
+}
+
+/* === Pagination cards =================================================== */
+[data-theme="dark"] .pagination-nav__link {
+  background: var(--ratel-card-2);
+  border: 1px solid var(--ratel-line);
+}
+
+[data-theme="dark"] .pagination-nav__link:hover {
+  border-color: var(--ratel-gold);
+}
+
+[data-theme="dark"] .pagination-nav__sublabel {
+  color: var(--ratel-fg-muted);
+}
+
+/* === Locale dropdown / theme toggle ===================================== */
+.dropdown__menu {
+  border: 1px solid var(--ratel-line);
+}
+
+[data-theme="dark"] .dropdown__menu {
+  background: var(--ratel-card-2);
+}
+
+
+.theme-doc-markdown {
+  padding: 0 1rem;
+}
