@@ -108,7 +108,7 @@ pub fn AppMenu() -> Element {
                         }
 
                         NavMenuItem {
-                            href: Route::UserRewards {
+                            href: Route::SocialReward {
                                 username: user.username.clone(),
                             },
                             label: tr.rewards,
@@ -130,7 +130,7 @@ pub fn AppMenu() -> Element {
                             }
                         }
                         NavMenuItem {
-                            href: Route::UserSettingPage {
+                            href: Route::SocialSetting {
                                 username: user.username.clone(),
                             },
                             label: tr.settings,

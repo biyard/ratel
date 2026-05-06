@@ -252,7 +252,7 @@ pub enum Error {
     #[error("{0}")]
     #[translate(from)]
     ExchangePoints(
-        #[from] crate::features::social::pages::user_reward::controllers::ExchangePointsError,
+        #[from] crate::features::social::pages::reward::user::controllers::ExchangePointsError,
     ),
 
     #[error("{0}")]
