@@ -1,0 +1,8 @@
+{
+  "label": "팀",
+  "position": 4,
+  "link": {
+    "type": "doc",
+    "id": "teams/index"
+  }
+}
