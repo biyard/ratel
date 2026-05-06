@@ -19,7 +19,6 @@ const config: Config = {
   projectName: "ratel",
 
   onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "warn",
 
   i18n: {
     defaultLocale: "en",
