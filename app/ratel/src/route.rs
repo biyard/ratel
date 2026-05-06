@@ -202,8 +202,6 @@ pub enum Route {
             #[layout(SpaceLayout)]
                 #[route("/")]
                 SpaceIndexPage { space_id: SpacePartition },
-                #[route("/overview")]
-                SpaceOverviewPage { space_id: SpacePartition },
                 #[route("/report")]
                 SpaceReportPage { space_id: SpacePartition },
 
