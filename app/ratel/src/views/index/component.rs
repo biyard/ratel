@@ -870,7 +870,7 @@ fn HomeTeamDdItem(
             "data-testid": "home-team-dd-item-{username}",
             onclick: move |_| {
                 on_pick.call(());
-                nav.push(Route::TeamHome {
+                nav.push(Route::SocialIndex {
                     username: username.clone(),
                 });
             },

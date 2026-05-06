@@ -113,7 +113,7 @@ fn SettingsSidemenu(username: String) -> Element {
 
     let user_display = user.display_name.clone();
     let user_profile = user.profile_url.clone();
-    let team_home_route = Route::TeamHome {
+    let team_home_route = Route::SocialIndex {
         username: username.clone(),
     }
     .to_string();

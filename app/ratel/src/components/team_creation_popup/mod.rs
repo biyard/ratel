@@ -26,7 +26,7 @@ pub fn TeamCreationPopup() -> Element {
                     Ok(response) => {
                         team_ctx.select_team(&response.pk);
                         popup.close();
-                        nav.push(Route::TeamHome {
+                        nav.push(Route::SocialIndex {
                             username: response.username,
                         });
                     }

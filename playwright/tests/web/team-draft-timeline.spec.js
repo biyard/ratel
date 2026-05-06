@@ -48,7 +48,7 @@ test.describe.serial("Team draft timeline on team home page", () => {
       nickname: teamNickname,
       description: "E2E test team for draft timeline",
     });
-    await expect(page).toHaveURL(new RegExp(`/${teamUsername}/home`));
+    await expect(page).toHaveURL(new RegExp(`/${teamUsername}/?$`));
   });
 
   // --- 2. Create a draft post from the team home page ---
