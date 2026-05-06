@@ -23,7 +23,7 @@ Actions 페이지는 퀘스트 카드의 **카루셀** 입니다. 카드 한 장
 
 - 액션 **타입** (poll, discussion, quiz, follow, meet)
 - 무엇을 묻는지 짧게 요약한 헤드라인
-- 액션에 걸린 보상 (스페이스에 [Incentive Pool](/spaces/apps#incentive-pool) 이 설정돼 있다면)
+- 액션에 걸린 보상 (스페이스에 [Incentive Pool](./apps#-incentive-pool-베타) 이 설정돼 있다면)
 - 이미 참여했는지, 했다면 무엇을 했는지
 
 카드를 탭하면 그 액션의 전체 페이지가 열립니다. 완료 후 카루셀로 돌아오면 다음 카드가 순서대로 보입니다.
