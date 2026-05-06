@@ -73,10 +73,11 @@ fn CredentialsHome() -> Element {
 use crate::features::social::layout::SocialLayout;
 use crate::features::social::pages::SocialDraft;
 use crate::features::social::pages::SocialIndex;
+use crate::features::social::pages::SocialMembership;
+use crate::features::social::pages::SocialReward;
+use crate::features::social::pages::SocialSetting;
 use crate::features::social::pages::dao::Home as TeamDao;
 use crate::features::social::pages::member::Home as TeamMember;
-use crate::features::social::pages::reward::Home as TeamReward;
-use crate::features::social::pages::setting::Home as TeamSetting;
 use crate::features::social::pages::setting::ManagementPage as TeamSettingMember;
 use crate::features::social::pages::setting::SubscriptionPage as TeamSettingSubscription;
 use crate::features::social::pages::team_arena::TeamArenaLayout;
@@ -87,10 +88,6 @@ use crate::features::cross_posting::views::OnboardingPage as OnboardingConnectio
 use crate::features::social::pages::credentials::Home as CredentialPage;
 use crate::features::social::pages::post::Home as UserPosts;
 use crate::features::social::pages::space::Home as UserSpaces;
-use crate::features::social::pages::team_membership::Home as TeamMemberships;
-use crate::features::social::pages::user_membership::Home as UserMemberships;
-use crate::features::social::pages::user_reward::Home as UserRewards;
-use crate::features::social::pages::user_setting::Home as UserSettingPage;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
@@ -143,10 +140,6 @@ pub enum Route {
         #[end_nest]
 
         #[nest("/:username")]
-            #[route("/rewards")]
-            UserRewards { username: String },
-            #[route("/settings")]
-            UserSettingPage { username: String },
             #[route("/settings/connections")]
             UserSettingsConnectionsPage { username: String },
             #[layout(SocialLayout)]
@@ -154,10 +147,12 @@ pub enum Route {
                 SocialIndex { username: String },
                 #[route("/drafts")]
                 SocialDraft { username: String },
+                #[route("/rewards")]
+                SocialReward { username: String },
                 #[route("/posts")]
                 UserPosts { username: String },
                 #[route("/memberships")]
-                UserMemberships { username: String },
+                SocialMembership { username: String },
                 #[route("/credentials")]
                 CredentialPage { username: String },
                 #[route("/spaces")]
@@ -166,15 +161,11 @@ pub enum Route {
                 TeamDao { username: String },
                 #[route("/members")]
                 TeamMember { username: String },
-                #[route("/team-rewards")]
-                TeamReward { username: String },
-                #[route("/team-memberships")]
-                TeamMemberships { username: String },
-                #[route("/team-settings")]
-                TeamSetting { username: String },
-                #[route("/team-settings/members")]
+                #[route("/settings")]
+                SocialSetting { username: String },
+                #[route("/settings/members")]
                 TeamSettingMember { username: String },
-                #[route("/team-settings/subscription")]
+                #[route("/settings/subscription")]
                 TeamSettingSubscription { username: String },
 
                 // Sub-team governance — path param inherited from the
