@@ -2,6 +2,7 @@ pub mod credentials;
 pub mod dao;
 pub mod draft;
 pub mod home;
+mod index;
 pub mod member;
 pub mod post;
 pub mod reward;
@@ -13,3 +14,5 @@ pub mod user_draft;
 pub mod user_membership;
 pub mod user_reward;
 pub mod user_setting;
+
+pub use index::*;
