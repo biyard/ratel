@@ -23,6 +23,7 @@ pub use features::*;
 use dioxus::fullstack::{Loader, Loading};
 use dioxus_primitives::dioxus_attributes::attributes;
 use dioxus_primitives::merge_attributes;
+use features::auth::{OptionalUser, User};
 
 #[cfg(test)]
 pub mod tests;

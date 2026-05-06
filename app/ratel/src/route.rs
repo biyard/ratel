@@ -45,10 +45,10 @@ use crate::features::admin::{AdminLayout, AdminMainPage};
 // under `features::sub_team::pages::*` and will be fleshed out by the
 // UI-implementation dispatches.
 use crate::features::sub_team::pages::{
-    TeamBylawsPage, TeamLeaveParentPage, TeamSubTeamApplicationStatusPage,
-    TeamSubTeamApplyPage, TeamSubTeamBroadcastComposePage, TeamSubTeamBroadcastEditPage,
-    TeamSubTeamDeregisterPage, TeamSubTeamDetailPage, TeamSubTeamDocComposePage,
-    TeamSubTeamDocEditPage, TeamSubTeamManagementPage,
+    TeamBylawsPage, TeamLeaveParentPage, TeamSubTeamApplicationStatusPage, TeamSubTeamApplyPage,
+    TeamSubTeamBroadcastComposePage, TeamSubTeamBroadcastEditPage, TeamSubTeamDeregisterPage,
+    TeamSubTeamDetailPage, TeamSubTeamDocComposePage, TeamSubTeamDocEditPage,
+    TeamSubTeamManagementPage,
 };
 
 use crate::features::posts::{Index as PostIndex, PostDetail, PostEdit};
@@ -82,6 +82,8 @@ use crate::features::social::pages::setting::SubscriptionPage as TeamSettingSubs
 use crate::features::social::pages::team_arena::TeamArenaLayout;
 
 // User pages
+use crate::features::cross_posting::views::ConnectionsPage as UserSettingsConnectionsPage;
+use crate::features::cross_posting::views::OnboardingPage as OnboardingConnectionsPage;
 use crate::features::social::pages::credentials::Home as CredentialPage;
 use crate::features::social::pages::post::Home as UserPosts;
 use crate::features::social::pages::space::Home as UserSpaces;
@@ -89,8 +91,6 @@ use crate::features::social::pages::team_membership::Home as TeamMemberships;
 use crate::features::social::pages::user_draft::Home as UserDrafts;
 use crate::features::social::pages::user_membership::Home as UserMemberships;
 use crate::features::social::pages::user_reward::Home as UserRewards;
-use crate::features::cross_posting::views::ConnectionsPage as UserSettingsConnectionsPage;
-use crate::features::cross_posting::views::OnboardingPage as OnboardingConnectionsPage;
 use crate::features::social::pages::user_setting::Home as UserSettingPage;
 use crate::features::social::user_views::Home as UserHomeRoot;
 
@@ -164,8 +164,6 @@ pub enum Route {
                 CredentialPage { username: String },
                 #[route("/spaces")]
                 UserSpaces { username: String },
-            #[end_layout]
-            #[layout(TeamArenaLayout)]
                 #[route("/home")]
                 TeamHome { username: String },
                 #[route("/team-drafts")]
