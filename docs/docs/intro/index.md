@@ -27,7 +27,7 @@ This guide walks you through the platform from your first sign-in to running you
 
 | Chapter | What's inside |
 |---|---|
-| [1-1 Glossary](./glossary) | Quick reference for every term used in these docs — Essence, Space, MCP, Reward, House, and more. |
+| [1-1 Glossary](./glossary.md) | Quick reference for every term used in these docs — Essence, Space, MCP, Reward, House, and more. |
 | 2. Getting Started | Sign up, set up your profile, link your DID, and write your first Post. |
 | 3. Connect AI | Plug your Essence into ChatGPT, Claude Desktop, or any MCP-compatible client, and choose which sources feed it. |
 | 4. Create a Team | Spin up a Team or Sub-team, invite members, and share posting rights and Spaces. |
