@@ -5,11 +5,25 @@ use crate::features::posts::controllers::list_categories::list_categories_handle
 use crate::features::social::controllers::dto::TeamResponse;
 use crate::features::social::controllers::find_team::find_team_handler;
 use crate::features::social::*;
+use crate::social::pages::team_arena::TeamArenaLayout;
 
 /// Team layout — used exclusively for team routes (home, drafts, groups, dao, members, rewards).
 /// Always renders TeamSidemenu with categories sidebar.
 #[component]
-pub fn SocialLayout(username: String) -> Element {
+pub fn SocialLayout(username: ReadSignal<String>) -> Element {
+    let ctx = provide_wall_context(username)?;
+
+    rsx! {
+        if ctx.is_user() {
+            UserLayout { username }
+        } else if ctx.is_team() {
+            TeamArenaLayout { username }
+        }
+    }
+}
+
+#[component]
+pub fn UserLayout(username: ReadSignal<String>) -> Element {
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let logged_in = user_ctx().user.is_some();
 
@@ -21,11 +35,7 @@ pub fn SocialLayout(username: String) -> Element {
             class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-team-bg text-text-primary",
             "data-testid": "social-layout",
             div { class: "hidden overflow-hidden h-screen tablet:flex",
-                TeamSidemenu {
-                    key: "{username}",
-                    username: username.clone(),
-                    logged_in,
-                }
+                TeamSidemenu { key: "{username}", username: username(), logged_in }
             }
             div { class: "flex overflow-hidden flex-col min-w-0 min-h-0",
                 div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px] max-tablet:p-3 max-mobile:p-2",
@@ -34,26 +44,6 @@ pub fn SocialLayout(username: String) -> Element {
             }
         }
 
-    }
-}
-
-/// User layout — used for user profile routes (posts, rewards, settings, etc.).
-/// Includes AppMenu header and UserSidemenu.
-#[component]
-pub fn UserLayout(username: String) -> Element {
-    let user_ctx = crate::features::auth::hooks::use_user_context();
-    let logged_in = user_ctx().user.is_some();
-
-    rsx! {
-        div { class: "antialiased bg-bg",
-            crate::AppMenu {}
-            div { class: "flex overflow-x-hidden gap-5 justify-between py-3 mx-auto min-h-screen text-white bg-bg max-w-desktop max-tablet:px-2.5 max-mobile:px-0 max-mobile:py-0 max-mobile:gap-0",
-                if logged_in {
-                    UserSidemenu { username: username.clone() }
-                }
-                div { class: "flex flex-col px-5 grow max-mobile:px-0", Outlet::<Route> {} }
-            }
-        }
     }
 }
 
