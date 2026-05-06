@@ -1,4 +1,3 @@
-pub mod components;
 pub mod controllers;
 pub mod layout;
 pub mod models;
@@ -9,7 +8,6 @@ pub mod pages;
 pub mod user_views;
 mod views;
 
-pub use components::*;
 use controllers::*;
 use hooks::*;
 pub use types::*;
