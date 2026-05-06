@@ -64,11 +64,11 @@ test.describe.serial("Team draft timeline on team home page", () => {
   });
 
   // --- 3. Verify the team drafts page lists the draft ---
-  // The arena redesign moved drafts off the team home onto the dedicated
-  // `/team-drafts` page, so navigate there instead of the home URL.
+  // The team and user draft pages were unified into a single `/drafts` route
+  // that branches on wall context, so navigate there instead of the home URL.
 
   test("Team drafts page shows the draft for creators", async ({ page }) => {
-    await goto(page, `/${teamUsername}/team-drafts`);
+    await goto(page, `/${teamUsername}/drafts`);
 
     // The drafts page renders the team-arena layout plus the drafts grid.
     await expect(
@@ -79,7 +79,7 @@ test.describe.serial("Team draft timeline on team home page", () => {
   // --- 4. Verify draft card content ---
 
   test("Draft card displays title and Draft badge", async ({ page }) => {
-    await goto(page, `/${teamUsername}/team-drafts`);
+    await goto(page, `/${teamUsername}/drafts`);
 
     // The draft card should display the post title.
     await expect(page.getByText(postTitle)).toBeVisible({ timeout: 15000 });
@@ -93,7 +93,7 @@ test.describe.serial("Team draft timeline on team home page", () => {
   test("Clicking a draft card navigates to the post edit page", async ({
     page,
   }) => {
-    await goto(page, `/${teamUsername}/team-drafts`);
+    await goto(page, `/${teamUsername}/drafts`);
 
     // Wait for the draft list to render.
     await expect(page.getByText(postTitle)).toBeVisible({ timeout: 15000 });

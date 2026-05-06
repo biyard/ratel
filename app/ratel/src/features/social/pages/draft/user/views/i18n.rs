@@ -1,4 +1,4 @@
-use crate::features::social::pages::user_draft::*;
+use crate::features::social::pages::draft::user::*;
 
 translate! {
     UserDraftsTranslate;
