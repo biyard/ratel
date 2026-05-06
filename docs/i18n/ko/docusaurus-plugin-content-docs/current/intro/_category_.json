@@ -1,0 +1,8 @@
+{
+  "label": "Ratel 소개",
+  "position": 1,
+  "link": {
+    "type": "doc",
+    "id": "intro/index"
+  }
+}

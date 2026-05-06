@@ -92,6 +92,28 @@ export default defineConfig({
         storageState: "user.json",
       },
     },
+
+    // Docs — recordings used as visual aids in the docs site.
+    // Specs under tests/docs/ produce .webm videos consumed by
+    // tests/docs/make-media.sh and embedded into docs/static/media/.
+    // No auth-setup dependency: signup recordings run with a fresh
+    // context (storageState cleared inside the spec); future authed
+    // recordings will perform inline login or grow their own dependency.
+    // video/screenshot/trace settings are inherited from the top-level
+    // `use` block (all three set to "on") so every test produces
+    // capturable artifacts automatically.
+    {
+      name: "Docs",
+      testMatch: ["tests/docs/**/*.spec.js"],
+      outputDir: "test-results/docs/",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: {
+          width: 1440,
+          height: 950,
+        },
+      },
+    },
   ],
 
   /* Run your local dev server before starting the tests */

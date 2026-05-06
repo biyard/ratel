@@ -1,0 +1,75 @@
+name: Docs (Docusaurus → GitHub Pages)
+
+# Deploys docs/ to the gh-pages branch with branch-based baseUrl:
+#   main → /          (https://docs.ratel.foundation/)
+#   dev  → /dev/      (https://docs.ratel.foundation/dev/)
+#
+# Both branches publish to the SAME gh-pages branch but to different
+# destination_dir paths, with keep_files: true so they don't overwrite
+# each other.
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "docs/**"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: docs-gh-pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (main -> /)
+        if: github.ref == 'refs/heads/main'
+        env:
+          ENV: prod
+        run: npm run build
+
+      - name: Build (dev -> /dev/)
+        if: github.ref == 'refs/heads/dev'
+        env:
+          ENV: dev
+        run: npm run build
+
+      - name: Deploy main to gh-pages root
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/build
+          publish_branch: gh-pages
+          keep_files: true
+          exclude_assets: "dev/**"
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com
+          commit_message: "docs: deploy main"
+
+      - name: Deploy dev to gh-pages /dev
+        if: github.ref == 'refs/heads/dev'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/build
+          publish_branch: gh-pages
+          destination_dir: dev
+          keep_files: true
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com
+          commit_message: "docs: deploy dev"
