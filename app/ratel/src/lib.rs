@@ -6,7 +6,6 @@ pub mod config;
 mod constants;
 pub mod contexts;
 pub mod interop;
-pub mod layout;
 pub mod root_layout;
 mod route;
 pub mod views;
