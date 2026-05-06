@@ -11,7 +11,7 @@ use crate::social::pages::team_arena::TeamArenaLayout;
 /// Always renders TeamSidemenu with categories sidebar.
 #[component]
 pub fn SocialLayout(username: ReadSignal<String>) -> Element {
-    let ctx = provide_wall_context(username)?;
+    let ctx = use_wall_context_provider(username)?;
 
     rsx! {
         if ctx.is_user() {
@@ -87,7 +87,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                        display_name: String,
                        permissions_vec: Vec<u8>,
                        _teams: Vec<crate::common::contexts::TeamItem>| {
-        let team_home_route = Route::TeamHome {
+        let team_home_route = Route::SocialIndex {
             username: username.clone(),
         }
         .to_string();

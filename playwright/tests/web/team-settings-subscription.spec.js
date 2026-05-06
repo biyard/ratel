@@ -40,8 +40,8 @@ test.describe.serial(
       });
       expect(res.ok(), `create team: ${await res.text()}`).toBeTruthy();
 
-      await goto(page, `/${teamUsername}/home`);
-      await expect(page).toHaveURL(new RegExp(`/${teamUsername}/home`));
+      await goto(page, `/${teamUsername}`);
+      await expect(page).toHaveURL(new RegExp(`/${teamUsername}/?$`));
     });
 
     test("should navigate to team settings page", async ({ page }) => {
