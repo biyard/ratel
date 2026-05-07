@@ -24,18 +24,10 @@ pub fn SocialLayout(username: ReadSignal<String>) -> Element {
     let tr: SocialTranslate = use_translate();
 
     rsx! {
-        WrappedPage {
-            redirection: RedirectTo {
-                target: Route::SocialIndex {
-                    username: username(),
-                },
-                label: tr.redirect_label.to_string(),
-            },
-            if ctx.is_user() {
-                UserLayout { username }
-            } else if ctx.is_team() {
-                TeamArenaLayout { username }
-            }
+        if ctx.is_user() {
+            UserLayout { username }
+        } else if ctx.is_team() {
+            TeamArenaLayout { username }
         }
     }
 }
