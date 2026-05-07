@@ -21,7 +21,7 @@ translate! {
 #[component]
 pub fn SocialLayout(username: ReadSignal<String>) -> Element {
     let ctx = use_wall_context_provider(username)?;
-    let tr: SocialTranslate = use_translate();
+    // let tr: SocialTranslate = use_translate();
 
     rsx! {
         if ctx.is_user() {
