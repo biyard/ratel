@@ -15,36 +15,22 @@ pub fn Home(username: ReadSignal<String>) -> Element {
 
     // Highlight the "Home" tab in the arena topbar.
     let mut arena = use_team_arena();
-    use_effect(move || arena.active_tab.set(TeamArenaTab::Home));
 
-    // Fetch team profile (for description, created_at, team pk).
-    let team = use_loader(move || async move {
-        Result::<_, Error>::Ok(find_team_handler(username()).await.ok())
-    })?;
-
-    let description_html = team
-        .as_ref()
-        .map(|t| t.html_contents.clone())
-        .unwrap_or_default();
-    let created_at = team.as_ref().map(|t| t.created_at).unwrap_or(0);
-    let team_pk_str = team.as_ref().map(|t| t.pk.clone());
-    let can_edit = arena.can_edit.read().clone();
+    let description_html = arena.description();
+    let created_at = arena.created_at();
+    let can_edit = arena.can_edit();
 
     // Posts feed with category filter + infinite pagination.
     let mut selected_category: Signal<Option<String>> = use_signal(|| None);
 
-    let mut feed = use_infinite_query(move |bookmark| {
-        let username = username();
-        let category = selected_category();
-        async move { list_team_posts_handler(username, category, bookmark).await }
+    let mut feed = use_infinite_query(move |bookmark| async move {
+        list_team_posts_handler(username(), selected_category(), bookmark).await
     })?;
-
-    use_effect(move || {
-        let _ = username();
-        let _ = selected_category();
-
-        feed.restart();
-    });
+    debug!(
+        "Home feed: items = {:?} has_more = {}",
+        feed.items().len(),
+        feed.has_more()
+    );
 
     let items = feed.items();
 
@@ -53,10 +39,13 @@ pub fn Home(username: ReadSignal<String>) -> Element {
     let total_posts = items.len();
     let total_likes: i64 = items.iter().map(|p| p.likes).sum();
     let total_comments: i64 = items.iter().map(|p| p.comments).sum();
+    debug!(
+        "Home feed: category_summary = {:?} total_posts = {} total_likes = {} total_comments = {}",
+        category_summary, total_posts, total_likes, total_comments
+    );
 
     rsx! {
-        document::Script { defer: true, src: asset!("./script.js") }
-
+        // document::Script { defer: true, src: asset!("./script.js") }
         div { class: "home-arena", "data-testid": "team-home-arena",
 
             // ── Team intro strip ─────────────────────────
@@ -225,20 +214,16 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                             class: "home-browse-btn",
                             r#type: "button",
                             "data-testid": "team-home-create-post",
-                            onclick: move |_| {
-                                let team_pk = team_pk_str.clone();
-                                let nav = nav;
-                                async move {
-                                    let team_id = team_pk.and_then(|pk| pk.parse().ok());
-                                    match create_post_handler(team_id).await {
-                                        Ok(resp) => {
-                                            let post_pk: FeedPartition = resp.post_pk.into();
-                                            nav.push(Route::PostEdit {
-                                                post_id: post_pk,
-                                            });
-                                        }
-                                        Err(e) => debug!("Failed to create post: {:?}", e),
+                            onclick: move |_| async move {
+                                let team_id = arena.team_id();
+                                match create_post_handler(team_id.into()).await {
+                                    Ok(resp) => {
+                                        let post_pk: FeedPartition = resp.post_pk.into();
+                                        nav.push(Route::PostEdit {
+                                            post_id: post_pk,
+                                        });
                                     }
+                                    Err(e) => debug!("Failed to create post: {:?}", e),
                                 }
                             },
                             svg {
@@ -295,6 +280,10 @@ pub fn Home(username: ReadSignal<String>) -> Element {
 
 #[component]
 fn PostCard(index: usize, post: PostResponse) -> Element {
+    debug!(
+        "Rendering PostCard: index = {} post_pk = {}",
+        index, post.pk
+    );
     let nav = use_navigator();
     let route = post.url();
     let thumbnail = post.urls.first().cloned();

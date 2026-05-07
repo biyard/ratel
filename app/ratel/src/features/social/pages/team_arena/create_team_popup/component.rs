@@ -1,6 +1,11 @@
-use crate::common::{use_popup, use_team_context, TeamCreationForm, TeamCreationPayload};
-use crate::features::social::controllers::{create_team_handler, get_user_teams_handler, CreateTeamRequest};
+use crate::auth::UserType;
+use crate::common::{use_popup, use_team_context, TeamCreationForm, TeamCreationPayload, TeamItem};
+use crate::features::social::controllers::{
+    create_team_handler, get_user_teams_handler, CreateTeamRequest,
+};
+use crate::posts::types::TeamGroupPermissions;
 use crate::route::Route;
+use crate::social::pages::member::dto::TeamRole;
 use dioxus::prelude::*;
 
 /// Arena-styled wrapper around the existing `TeamCreationForm`.
@@ -8,7 +13,8 @@ use dioxus::prelude::*;
 /// matches the team arena aesthetic (dark glass, gold accents, Orbitron).
 #[component]
 pub fn ArenaTeamCreationPopup() -> Element {
-    let mut popup = use_popup();
+    let use_popup = use_popup();
+    let mut popup = use_popup;
     let mut team_ctx = use_team_context();
     let nav = use_navigator();
     let mut error_msg = use_signal(|| Option::<String>::None);
@@ -75,9 +81,16 @@ pub fn ArenaTeamCreationPopup() -> Element {
                         };
                         match create_team_handler(req).await {
                             Ok(response) => {
-                                if let Ok(resp) = get_user_teams_handler(None).await {
-                                    team_ctx.set_teams(resp.items);
-                                }
+                                team_ctx
+                                    .add_team(TeamItem {
+                                        pk: response.team_pk.clone(),
+                                        nickname: nickname.clone(),
+                                        username: username.clone(),
+                                        profile_url: profile_url.clone(),
+                                        user_type: UserType::Team,
+                                        permissions: TeamRole::Admin.into(),
+                                        description: description.clone(),
+                                    });
                                 team_ctx.select_team(&response.team_pk);
                                 popup.close();
                                 nav.push(Route::SocialIndex {
