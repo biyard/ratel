@@ -27,6 +27,8 @@ pub struct TeamArenaContext {
     pub role: Signal<Option<crate::social::pages::member::dto::TeamRole>>,
     pub following: Signal<bool>,
     pub team_id: Signal<TeamPartition>,
+    pub description: Signal<String>,
+    pub created_at: Signal<i64>,
 }
 
 impl From<UseWallContext> for TeamArenaContext {
@@ -39,6 +41,8 @@ impl From<UseWallContext> for TeamArenaContext {
                 profile_url,
                 role,
                 following,
+                description,
+                created_at,
                 ..
             } => {
                 let (can_edit, is_admin, is_member) = if let Some(role) = role {
@@ -59,6 +63,8 @@ impl From<UseWallContext> for TeamArenaContext {
                     role: Signal::new(role),
                     following: Signal::new(following),
                     team_id: Signal::new(id),
+                    description: Signal::new(description),
+                    created_at: Signal::new(created_at),
                 }
             }
             _ => panic!("Wall context is not a team"),
@@ -145,7 +151,6 @@ pub fn TeamArenaLayout(username: ReadSignal<String>) -> Element {
                 on_follow: on_follow_click,
                 on_open_settings: move |_| settings_open.set(true),
             }
-
             div { class: "team-arena__content",
                 SuspenseBoundary { Outlet::<Route> {} }
             }

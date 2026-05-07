@@ -82,6 +82,7 @@ pub enum Wall {
         description: String,
         can_edit: bool,
         following: bool,
+        created_at: i64,
     },
     Team {
         id: TeamPartition,
@@ -91,6 +92,7 @@ pub enum Wall {
         description: String,
         role: Option<TeamRole>,
         following: bool,
+        created_at: i64,
     },
 }
 
@@ -113,6 +115,7 @@ impl Into<Wall> for WallUser {
                 description: u.description,
                 can_edit: false,
                 following: false,
+                created_at: u.created_at,
             },
             WallUser::Team(t) => Wall::Team {
                 id: t.pk.into(),
@@ -122,6 +125,7 @@ impl Into<Wall> for WallUser {
                 description: t.description,
                 role: None,
                 following: false,
+                created_at: t.created_at,
             },
         }
     }
