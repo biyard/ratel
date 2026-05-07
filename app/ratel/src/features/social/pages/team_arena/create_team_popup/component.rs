@@ -13,8 +13,7 @@ use dioxus::prelude::*;
 /// matches the team arena aesthetic (dark glass, gold accents, Orbitron).
 #[component]
 pub fn ArenaTeamCreationPopup() -> Element {
-    let use_popup = use_popup();
-    let mut popup = use_popup;
+    let mut popup = use_popup();
     let mut team_ctx = use_team_context();
     let nav = use_navigator();
     let mut error_msg = use_signal(|| Option::<String>::None);
