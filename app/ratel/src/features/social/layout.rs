@@ -1,4 +1,3 @@
-use crate::common::*;
 use crate::features::auth::{LoginModal, SignupModal};
 use crate::features::posts::controllers::dto::CategoryResponse;
 use crate::features::posts::controllers::list_categories::list_categories_handler;
@@ -6,18 +5,37 @@ use crate::features::social::controllers::dto::TeamResponse;
 use crate::features::social::controllers::find_team::find_team_handler;
 use crate::features::social::*;
 use crate::social::pages::team_arena::TeamArenaLayout;
+use crate::*;
+
+translate! {
+    SocialTranslate;
+
+    redirect_label: {
+        en: "Go to User's Wall",
+        ko: "사용자 페이지로 이동",
+    },
+}
 
 /// Team layout — used exclusively for team routes (home, drafts, groups, dao, members, rewards).
 /// Always renders TeamSidemenu with categories sidebar.
 #[component]
 pub fn SocialLayout(username: ReadSignal<String>) -> Element {
     let ctx = use_wall_context_provider(username)?;
+    let tr: SocialTranslate = use_translate();
 
     rsx! {
-        if ctx.is_user() {
-            UserLayout { username }
-        } else if ctx.is_team() {
-            TeamArenaLayout { username }
+        WrappedPage {
+            redirection: RedirectTo {
+                target: Route::SocialIndex {
+                    username: username(),
+                },
+                label: tr.redirect_label.to_string(),
+            },
+            if ctx.is_user() {
+                UserLayout { username }
+            } else if ctx.is_team() {
+                TeamArenaLayout { username }
+            }
         }
     }
 }
