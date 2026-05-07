@@ -1,5 +1,7 @@
 [application]
+name = "Ratel"
 tailwind_input = "tailwind.css"
+android_manifest = "android/AndroidManifest.xml"
 
 [web.app]
 
@@ -18,7 +20,7 @@ script = []
 [bundle]
 identifier = "co.biyard.ratel"
 publisher = "Biyard Corp."
-icon = ["assets/icons/icon.icns","assets/favicon.ico"]
+icon = ["assets/favicon.ico"]
 copyright = "Copyright 2023 Biyard Corp."
 category = "Lifestyle"
 short_description = ""

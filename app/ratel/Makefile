@@ -98,7 +98,7 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					BUCKET_NAME=$(BUCKET_NAME) \
 					SLACK_HOOK=$(SLACK_HOOK) \
 
-.PHONY: env.sh
+.PHONY: env.sh test run android android-emulator ios build build-testing build-arm build-lambda docker
 env.sh:
 	@echo "export AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID)" > $@
 	@echo "export AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY)" >> $@
@@ -222,7 +222,24 @@ $(ANDROID_HOME)/system-images/android-34/google_apis/$(ARCH):
 android-emulator: $(HOME)/.android/debug.keystore $(HOME)/.android/avd/$(AVD_NAME).avd $(ANDROID_HOME)/emulator/emulator
 	$(ANDROID_HOME)/emulator/emulator -avd $(AVD_NAME) -netdelay none -netspeed full &
 
-android: $(HOME)/.android/debug.keystore
+# dx-cli 0.7.6 does not auto-copy [bundle].resources / [android].resources into
+# its output res/ tree, so we mirror our mipmap PNGs (Ratel app icon) into the
+# dx-managed res/ directory ourselves before launching dx serve. dx only writes
+# its own files (ic_launcher.webp etc.) and never deletes the directory, so any
+# extra files we drop in here are preserved across incremental builds.
+ANDROID_DX_RES_DIR = target/dx/app-shell/debug/android/app/src/main/res
+ANDROID_MIPMAP_DENSITIES = mdpi hdpi xhdpi xxhdpi xxxhdpi
+
+.PHONY: sync-android-icons
+sync-android-icons:
+	@for d in $(ANDROID_MIPMAP_DENSITIES); do \
+		mkdir -p $(ANDROID_DX_RES_DIR)/mipmap-$$d; \
+		if [ -f android/res/mipmap-$$d/ratel_icon.png ]; then \
+			cp -f android/res/mipmap-$$d/ratel_icon.png $(ANDROID_DX_RES_DIR)/mipmap-$$d/; \
+		fi; \
+	done
+
+android: $(HOME)/.android/debug.keystore sync-android-icons
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --android --target $(ANDROID_TARGET) --features $(RUN_FEATURES) $(DEVICE_FLAG)
 
 ios:
