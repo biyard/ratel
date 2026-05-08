@@ -24708,9 +24708,12 @@ html[data-theme="light"] .sga-modal__confirm-danger,
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  background: var(--panel-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  /* Use `--surface` (fully opaque #ffffff in light, #0c0c1a in dark)
+     instead of `--panel-bg` whose light value is rgba(...,0.9) — at 0.9
+     alpha + the blur filter the panel reads as a translucent grey on a
+     light page. Dropping the blur filter together so the bg stays a
+     clean solid colour. */
+  background: var(--surface);
   border-left: 1px solid var(--border);
   overflow: hidden;
 }
