@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.1">
 <title data-rh="true">리포트 (호스트) | Ratel</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://docs.ratel.foundation/dev/ko/img/social-card.png"><meta data-rh="true" name="twitter:image" content="https://docs.ratel.foundation/dev/ko/img/social-card.png"><meta data-rh="true" property="og:url" content="https://docs.ratel.foundation/dev/ko/spaces/reports"><meta data-rh="true" property="og:locale" content="ko_KR"><meta data-rh="true" property="og:locale:alternate" content="en_US"><meta data-rh="true" name="docusaurus_locale" content="ko"><meta data-rh="true" name="docsearch:language" content="ko"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="리포트 (호스트) | Ratel"><meta data-rh="true" name="description" content="리포트(Report) 는 호스트가 자신의 스페이스에서 일어난 일을 종합해 발행하는 결과물입니다 — 참여자들이 어떻게 생각했고, 어디서 합의했고, 어디서 갈렸고, 무엇이 두드러졌는지를 정리한 문서예요. Ratel 에는 함께 동작하는 두 개의 리포트 화면이 있습니다."><meta data-rh="true" property="og:description" content="리포트(Report) 는 호스트가 자신의 스페이스에서 일어난 일을 종합해 발행하는 결과물입니다 — 참여자들이 어떻게 생각했고, 어디서 합의했고, 어디서 갈렸고, 무엇이 두드러졌는지를 정리한 문서예요. Ratel 에는 함께 동작하는 두 개의 리포트 화면이 있습니다."><link data-rh="true" rel="icon" href="/dev/ko/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://docs.ratel.foundation/dev/ko/spaces/reports"><link data-rh="true" rel="alternate" href="https://docs.ratel.foundation/dev/spaces/reports" hreflang="en-US"><link data-rh="true" rel="alternate" href="https://docs.ratel.foundation/dev/ko/spaces/reports" hreflang="ko-KR"><link data-rh="true" rel="alternate" href="https://docs.ratel.foundation/dev/spaces/reports" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Spaces","item":"https://docs.ratel.foundation/dev/ko/spaces"},{"@type":"ListItem","position":2,"name":"리포트 (호스트)","item":"https://docs.ratel.foundation/dev/ko/spaces/reports"}]}</script><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;family=Raleway:wght@400;500;600;700;800&amp;display=swap"><link rel="stylesheet" href="/dev/ko/assets/css/styles.c8474df6.css">
-<script src="/dev/ko/assets/js/runtime~main.39ba58d1.js" defer="defer"></script>
+<script src="/dev/ko/assets/js/runtime~main.cdc7d3de.js" defer="defer"></script>
 <script src="/dev/ko/assets/js/main.c71f47de.js" defer="defer"></script>
 </head>
 <body>
@@ -30,11 +30,6 @@
 <p>결과 페이지는 선택된 필터를 칩으로 상단에 표시한 뒤, 그 교차 필터 범위 안의 데이터 — 폴 응답의 분포 차트, 퀴즈의 점수 요약, 팔로우 카운트, 토론 댓글 빈도 — 를 렌더링합니다. 칩은 보고서 저장 시점에 <em>frozen</em> 되므로, 한 달 뒤에 다시 열어도 같은 슬라이스를 그대로 볼 수 있어요.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="4-단계--원본-데이터-드릴다운">4 단계 — 원본 데이터 드릴다운<a href="#4-단계--원본-데이터-드릴다운" class="hash-link" aria-label="4 단계 — 원본 데이터 드릴다운에 대한 직접 링크" title="4 단계 — 원본 데이터 드릴다운에 대한 직접 링크" translate="no">​</a></h3>
 <p><strong>원본 데이터 보기 (View raw data)</strong> 를 누르면 <code>/spaces/:space_id/apps/analyzes/report/:report_id/records</code> 가 열립니다 — 필터에 매칭된 모든 개별 레코드 (사용자 · 문항 · 응답 · 글 · 코멘트 · 팔로우 대상) 의 페이지네이션 표예요.  칩 헤더의 칩을 누르면 추가로 좁힐 수 있습니다.</p>
-<p>특정 액션 단위에서 시작하고 싶다면 다음 두 딥링크가 유용합니다.</p>
-<ul>
-<li class=""><code>/spaces/:space_id/apps/analyzes/poll/:poll_id</code> — 폴 단위 분석 뷰.</li>
-<li class=""><code>/spaces/:space_id/apps/analyzes/discussion/:discussion_id</code> — 토론 단위 분석 뷰.</li>
-</ul>
 <p>각 분석에는 매칭된 레코드를 스프레드시트로 내보내는 <strong>엑셀 다운로드(Download Excel)</strong> 버튼이 있습니다.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="-스페이스-리포트-작성"><img src="/dev/ko/img/icons/file-text.svg" width="22" height="22" alt="리포트" style="vertical-align:middle"> 스페이스 리포트 작성<a href="#-스페이스-리포트-작성" class="hash-link" aria-label="-스페이스-리포트-작성에 대한 직접 링크" title="-스페이스-리포트-작성에 대한 직접 링크" translate="no">​</a></h2>
 <p>모든 스페이스에는 다음 위치에 단 하나의 정식 리포트가 있습니다.</p>
@@ -42,7 +37,7 @@
 <p>이 화면이 Phase 4 에서 구독자에게 판매될 공개 내러티브입니다. 페이지는 세 가지 모드를 갖습니다.</p>
 <ul>
 <li class=""><strong>Read-only (읽기 전용)</strong> — 방문자가 보는 모드. Phase 4 에서 구독자가 보게 될 모드.</li>
-<li class=""><strong>Editable (편집)</strong> — 호스  트가 <em>Toggle Edit</em> 을 눌렀을 때 보이는 모드. 같은 페이지가 리치 텍스트 에디터로 전환됩니다.</li>
+<li class=""><strong>Editable (편집)</strong> — 호스트가 <em>Toggle Edit</em> 을 눌렀을 때 보이는 모드. 같은 페이지가 리치 텍스트 에디터로 전환됩니다.</li>
 <li class=""><strong>Generating… (생성 중)</strong> — <strong>Generate AI Report</strong> 를 누른 직후 보이는 상태. Ratel 이 누적된 활동에서 초안을 종합하여 에디터에 넣어 주면, 호스트는 이를 다듬습니다.</li>
 </ul>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="작성-흐름">작성 흐름<a href="#작성-흐름" class="hash-link" aria-label="작성 흐름에 대한 직접 링크" title="작성 흐름에 대한 직접 링크" translate="no">​</a></h3>

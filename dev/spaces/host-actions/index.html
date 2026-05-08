@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.1">
 <title data-rh="true">Host Actions (Editors) | Ratel</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://docs.ratel.foundation/dev/img/social-card.png"><meta data-rh="true" name="twitter:image" content="https://docs.ratel.foundation/dev/img/social-card.png"><meta data-rh="true" property="og:url" content="https://docs.ratel.foundation/dev/spaces/host-actions"><meta data-rh="true" property="og:locale" content="en_US"><meta data-rh="true" property="og:locale:alternate" content="ko_KR"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Host Actions (Editors) | Ratel"><meta data-rh="true" name="description" content="This chapter is the host-side companion to Space Actions. The participant chapter explains what an Action looks like to someone who shows up to engage; this one walks you, the host, through creating and editing each Action type."><meta data-rh="true" property="og:description" content="This chapter is the host-side companion to Space Actions. The participant chapter explains what an Action looks like to someone who shows up to engage; this one walks you, the host, through creating and editing each Action type."><link data-rh="true" rel="icon" href="/dev/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://docs.ratel.foundation/dev/spaces/host-actions"><link data-rh="true" rel="alternate" href="https://docs.ratel.foundation/dev/spaces/host-actions" hreflang="en-US"><link data-rh="true" rel="alternate" href="https://docs.ratel.foundation/dev/ko/spaces/host-actions" hreflang="ko-KR"><link data-rh="true" rel="alternate" href="https://docs.ratel.foundation/dev/spaces/host-actions" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Spaces","item":"https://docs.ratel.foundation/dev/spaces"},{"@type":"ListItem","position":2,"name":"Host Actions (Editors)","item":"https://docs.ratel.foundation/dev/spaces/host-actions"}]}</script><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;family=Raleway:wght@400;500;600;700;800&amp;display=swap"><link rel="stylesheet" href="/dev/assets/css/styles.c8474df6.css">
-<script src="/dev/assets/js/runtime~main.df9b4374.js" defer="defer"></script>
+<script src="/dev/assets/js/runtime~main.aa0baffa.js" defer="defer"></script>
 <script src="/dev/assets/js/main.a75e15c6.js" defer="defer"></script>
 </head>
 <body>
@@ -57,29 +57,31 @@
 <ul>
 <li class=""><strong>Title</strong> — what people see at the top of the discussion card.</li>
 <li class=""><strong>Description / body</strong> — Markdown-supported rich text. This is the prompt participants reply to.</li>
-<li class=""><strong>Attachments</strong> — drag-and-drop PDF / PNG / JPG up to 25 MB each.</li>
+<li class=""><strong>Attachments</strong> — drag-and-drop dropzone. Accepted extensions: <code>.pdf</code>, <code>.docx</code>, <code>.pptx</code>, <code>.xlsx</code>, <code>.png</code>, <code>.jpg</code>, <code>.jpeg</code>, <code>.mp4</code>, <code>.mov</code>. Each upload becomes a row under the editor (icon · name · size · remove button) and is auto-linked to the Files app&#x27;s <strong>Boards</strong> tab so participants can find it from the file library too.</li>
 </ul>
 <p>The Configuration card adds <strong>Moderation</strong> alongside the common sections. Use Moderation to set who can hide off-topic replies once the discussion is live.</p>
+<video controls="" preload="metadata" width="100%" src="/dev/media/discussion_editor.mov" style="border-radius:8px;border:1px solid var(--ratel-line-soft);max-width:720px;display:block;margin:1rem 0"><p>Your browser doesn&#x27;t support embedded video. <a href="/dev/media/discussion_editor.mov">Download the walkthrough</a>.</p></video>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="-poll-editor"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><polyline points="20 6 9 17 4 12"></polyline></svg> Poll editor<a href="#-poll-editor" class="hash-link" aria-label="Direct link to -poll-editor" title="Direct link to -poll-editor" translate="no">​</a></h2>
 <p>URL: <code>/spaces/:space_id/actions/polls/:poll_id</code></p>
 <p>The Content card holds:</p>
 <ul>
 <li class=""><strong>Title</strong> — the headline of the poll.</li>
-<li class=""><strong>Questions</strong> — between <strong>1 and 20 questions</strong>. Each question chooses one of four types:<!-- -->
+<li class=""><strong>Questions</strong> — add as many as you want. Each card carries its own title + optional description, and one of four types picked from the <strong>+ Add question</strong> menu:<!-- -->
 <ul>
-<li class=""><strong>Single</strong> — one option per question (radio).</li>
-<li class=""><strong>Multi</strong> — multiple options selectable (checkbox).</li>
-<li class=""><strong>Subjective</strong> — free-text response with an optional inline hint shown above the input.</li>
-<li class=""><strong>Linear</strong> — a numeric scale with min / max bounds (1–5, 0–10, etc.).</li>
+<li class=""><strong>Single</strong> — radio list, one option per response.</li>
+<li class=""><strong>Multi</strong> — same option list as Single, but multiple options can be selected.</li>
+<li class=""><strong>Subjective</strong> — long-form free-text response. The question&#x27;s description acts as a placeholder hint.</li>
+<li class=""><strong>Linear</strong> — numeric scale with <code>min_value</code> / <code>max_value</code> bounds and optional anchor labels (<code>min_label</code>, <code>max_label</code>) shown at each end of the scale.</li>
 </ul>
 </li>
-<li class=""><strong>Allow &quot;Other&quot; option</strong> per question — adds a free-text &quot;Other&quot; choice next to the fixed options.</li>
+<li class=""><strong>Allow &quot;Other&quot; option</strong> <em>(Single / Multi only)</em> — adds a free-text &quot;Other&quot; choice that participants can type into; responses without <code>Other</code> text are rejected when the toggle is off.</li>
 </ul>
 <p>The Configuration card adds <strong>Voting rules</strong> alongside the common sections:</p>
 <ul>
-<li class=""><strong>Allow response editing</strong> — when on, participants can update their answers while the poll is open. Off makes responses final on submit.</li>
-<li class=""><strong>Encrypted upload</strong> — when on, vote results are encrypted and stored on-chain; responses cannot be edited after submission. Use this for high-stakes votes where auditability matters.</li>
+<li class=""><strong>Allow response editing</strong> — when on, participants can update their answers while the poll is open. Off makes responses final on submit. Auto-disabled when Encrypted upload is enabled.</li>
+<li class=""><strong>Encrypted upload</strong> — when on, vote results are encrypted and stored on-chain (canister upload); responses cannot be edited after submission. Use this for high-stakes votes where auditability matters.</li>
 </ul>
+<video controls="" preload="metadata" width="100%" src="/dev/media/poll_editor.mov" style="border-radius:8px;border:1px solid var(--ratel-line-soft);max-width:720px;display:block;margin:1rem 0"><p>Your browser doesn&#x27;t support embedded video. <a href="/dev/media/poll_editor.mov">Download the walkthrough</a>.</p></video>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="-quiz-editor"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Quiz editor<a href="#-quiz-editor" class="hash-link" aria-label="Direct link to -quiz-editor" title="Direct link to -quiz-editor" translate="no">​</a></h2>
 <p>URL: <code>/spaces/:space_id/actions/quizzes/:quiz_id</code></p>
 <p>The Content card holds:</p>
@@ -88,10 +90,10 @@
 <li class=""><strong>Questions</strong> — between <strong>3 and 20 questions</strong>, each Single or Multi choice with a marked correct answer.</li>
 <li class=""><strong>Pass Score</strong> — minimum score (out of total questions) to clear the quiz.</li>
 <li class=""><strong>Retry Count</strong> — how many attempts each participant gets.</li>
-<li class=""><strong>Survey Time</strong> — total time allowed per attempt.</li>
 <li class=""><strong>Attachments</strong> — reference materials participants can consult: PDF / PNG / JPG up to 25 MB each.</li>
 </ul>
 <p>Pass and the reward unlocks; fail and (if Retry Count allows) the participant can try again.</p>
+<video controls="" preload="metadata" width="100%" src="/dev/media/quiz_editor.mov" style="border-radius:8px;border:1px solid var(--ratel-line-soft);max-width:720px;display:block;margin:1rem 0"><p>Your browser doesn&#x27;t support embedded video. <a href="/dev/media/quiz_editor.mov">Download the walkthrough</a>.</p></video>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="-follow-editor"><img src="/dev/img/icons/users.svg" width="22" height="22" alt="Follow" style="vertical-align:middle"> Follow editor<a href="#-follow-editor" class="hash-link" aria-label="Direct link to -follow-editor" title="Direct link to -follow-editor" translate="no">​</a></h2>
 <p>URL: <code>/spaces/:space_id/actions/follows/:follow_id</code></p>
 <p>The Targets card holds:</p>
@@ -100,6 +102,7 @@
 <li class=""><strong>Targets</strong> — between <strong>1 and 20 user accounts</strong> the participant should follow. Each target is rendered as an inline row in the participant view with a <em>Follow</em> button right there.</li>
 </ul>
 <p>The Configuration card has the common sections only — Schedule, Participation &amp; Rewards, Dependencies, Status, Danger zone.</p>
+<video controls="" preload="metadata" width="100%" src="/dev/media/follow_editor.mov" style="border-radius:8px;border:1px solid var(--ratel-line-soft);max-width:720px;display:block;margin:1rem 0"><p>Your browser doesn&#x27;t support embedded video. <a href="/dev/media/follow_editor.mov">Download the walkthrough</a>.</p></video>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="-meet-editor-coming-soon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Meet editor <em>(Coming soon)</em><a href="#-meet-editor-coming-soon" class="hash-link" aria-label="Direct link to -meet-editor-coming-soon" title="Direct link to -meet-editor-coming-soon" translate="no">​</a></h2>
 <p>URL: <code>/spaces/:space_id/actions/meets/:meet_id</code> (admin view)</p>
 <p>A scheduled event — livestream, video call, workshop, in-person gathering. The participant view at this URL is live, but a host editor entry point in the create-modal is <em>(Coming soon)</em>. Today, hosts who need a Meet can create one via the MCP API (<code>create_meet</code> tool — see <a class="" href="/dev/essence/my-essence#-my-ai--my-ai">Connect via MCP</a>).</p>

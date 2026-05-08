@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.1">
 <title data-rh="true">호스트 액션 (편집기) | Ratel</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://docs.ratel.foundation/dev/ko/img/social-card.png"><meta data-rh="true" name="twitter:image" content="https://docs.ratel.foundation/dev/ko/img/social-card.png"><meta data-rh="true" property="og:url" content="https://docs.ratel.foundation/dev/ko/spaces/host-actions"><meta data-rh="true" property="og:locale" content="ko_KR"><meta data-rh="true" property="og:locale:alternate" content="en_US"><meta data-rh="true" name="docusaurus_locale" content="ko"><meta data-rh="true" name="docsearch:language" content="ko"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="호스트 액션 (편집기) | Ratel"><meta data-rh="true" name="description" content="이 챕터는 스페이스 액션 의 호스트 측 짝입니다. 참여자 챕터가 액션이 참여자에게 어떻게 보이는지 를 다뤘다면, 이 챕터는 호스트인 당신이 각 액션 유형을 어떻게 만들고 편집 하는지를 안내합니다."><meta data-rh="true" property="og:description" content="이 챕터는 스페이스 액션 의 호스트 측 짝입니다. 참여자 챕터가 액션이 참여자에게 어떻게 보이는지 를 다뤘다면, 이 챕터는 호스트인 당신이 각 액션 유형을 어떻게 만들고 편집 하는지를 안내합니다."><link data-rh="true" rel="icon" href="/dev/ko/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://docs.ratel.foundation/dev/ko/spaces/host-actions"><link data-rh="true" rel="alternate" href="https://docs.ratel.foundation/dev/spaces/host-actions" hreflang="en-US"><link data-rh="true" rel="alternate" href="https://docs.ratel.foundation/dev/ko/spaces/host-actions" hreflang="ko-KR"><link data-rh="true" rel="alternate" href="https://docs.ratel.foundation/dev/spaces/host-actions" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Spaces","item":"https://docs.ratel.foundation/dev/ko/spaces"},{"@type":"ListItem","position":2,"name":"호스트 액션 (편집기)","item":"https://docs.ratel.foundation/dev/ko/spaces/host-actions"}]}</script><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;family=Raleway:wght@400;500;600;700;800&amp;display=swap"><link rel="stylesheet" href="/dev/ko/assets/css/styles.c8474df6.css">
-<script src="/dev/ko/assets/js/runtime~main.39ba58d1.js" defer="defer"></script>
+<script src="/dev/ko/assets/js/runtime~main.cdc7d3de.js" defer="defer"></script>
 <script src="/dev/ko/assets/js/main.c71f47de.js" defer="defer"></script>
 </head>
 <body>
@@ -57,29 +57,31 @@
 <ul>
 <li class=""><strong>제목 (Title)</strong> — 토론 카드 상단에 노출되는 헤드라인.</li>
 <li class=""><strong>설명 / 본문 (Description / body)</strong> — 마크다운 지원 리치 텍스트. 이것이 참여자가 답할 <em>프롬프트</em> 입니다.</li>
-<li class=""><strong>첨부 (Attachments)</strong> — PDF / PNG / JPG 를 드래그앤드롭, 각 25MB 까지.</li>
+<li class=""><strong>첨부 (Attachments)</strong> — 드래그앤드롭 드롭존. 허용 확장자: <code>.pdf</code>, <code>.docx</code>, <code>.pptx</code>, <code>.xlsx</code>, <code>.png</code>, <code>.jpg</code>, <code>.jpeg</code>, <code>.mp4</code>, <code>.mov</code>. 업로드된 파일은 편집기 아래에 행으로 (아이콘 · 이름 · 크기 · 제거 버튼) 노출되며, Files 앱의 <strong>Boards</strong> 탭에 자동 링크되어 참여자도   파일 라이브러리에서 찾을 수 있습니다.</li>
 </ul>
 <p>Configuration 카드는 공통 섹션에 더해 <strong>조정 (Moderation)</strong> 섹션을 가집니다. 토론이 활성화된 후 오프토픽 답변을 가릴 수 있는 권한을 여기서 지정합니다.</p>
+<video controls="" preload="metadata" width="100%" src="/dev/ko/media/discussion_editor.mov" style="border-radius:8px;border:1px solid var(--ratel-line-soft);max-width:720px;display:block;margin:1rem 0"><p>브라우저가 비디오 임베드를 지원하지 않습니다. <a href="/dev/ko/media/discussion_editor.mov">워크스루 다운로드</a>.</p></video>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="-poll-편집기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><polyline points="20 6 9 17 4 12"></polyline></svg> Poll 편집기<a href="#-poll-편집기" class="hash-link" aria-label="-poll-편집기에 대한 직접 링크" title="-poll-편집기에 대한 직접 링크" translate="no">​</a></h2>
 <p>URL: <code>/spaces/:space_id/actions/polls/:poll_id</code></p>
 <p>Content 카드는 다음을 담습니다.</p>
 <ul>
 <li class=""><strong>제목 (Title)</strong> — 폴의 헤드라인.</li>
-<li class=""><strong>질문 (Questions)</strong> — <strong>1 ~ 20 개</strong>. 각 질문은 네 가지 유형 중 하나로 동작합니다.<!-- -->
+<li class=""><strong>질문 (Questions)</strong> — 원하는 만큼 추가할 수 있습니다. 각 카드는 자체 제목 + 선택적 설명을 가지며, <strong>+ 질문 추가</strong> 메뉴에서 네 가지 유형 중 하나를 고릅니다.<!-- -->
 <ul>
-<li class=""><strong>Single (단일)</strong> — 질문당 한 옵션 (라디오).</li>
-<li class=""><strong>Multi (다중)</strong> — 여러 옵션 선택 (체크박스).</li>
-<li class=""><strong>Subjective (주관식)</strong> — 자유 텍스트 응답, 선택적으로 입력창 위에 힌트 표시.</li>
-<li class=""><strong>Linear (선형)</strong> — 최소 / 최대를 가진 숫자 스케일 (1–5, 0–10 등).</li>
+<li class=""><strong>Single (단일)</strong> — 라디오 리스트, 응답당 한 옵션.</li>
+<li class=""><strong>Multi (다중)</strong> — Single 과 동일한 옵션 리스트지만 여러 옵션을 동시에 선택 가능.</li>
+<li class=""><strong>Subjective (주관식)</strong> — 장문 자유 텍스트 응답. 질문의 description 이 입력창 placeholder 힌트로 동작합니다.</li>
+<li class=""><strong>Linear (선형)</strong> — <code>min_value</code> / <code>max_value</code> 경계와 양 끝의 선택적 anchor 라벨 (<code>min_label</code>, <code>max_label</code>) 을 가진 숫자 스케일.</li>
 </ul>
 </li>
-<li class=""><strong>&quot;Other&quot; 옵션 허용</strong> (질문별) — 고정된 선지 옆에 자유 텍스트 &quot;Other&quot; 선택지를 추가합니다.</li>
+<li class=""><strong>&quot;Other&quot; 옵션 허용</strong> <em>(Single / Multi 한정)</em> — 참여자가 직접 입력할 수 있는 자유 텍스트 &quot;Other&quot; 선택지를 추가합니다. 토글을 끄면 <code>Other</code> 텍스트가 포함된 응답이 거부됩니다.</li>
 </ul>
 <p>Configuration 카드는 공통 섹션에 더해 <strong>투표 규칙 (Voting rules)</strong> 섹션을 가집니다.</p>
 <ul>
-<li class=""><strong>응답 수정 허용 (Allow response editing)</strong> — 켜면 폴 진행 중에 참여자가 응답을 수정할 수 있습니다. 끄면 제출 즉시 응답이 확정됩니다.</li>
-<li class=""><strong>암호화 업로드 (Encrypted upload)</strong> — 켜면 투표 결과가 암호화되어 온체인에 저장되며, 제출 후 응답 수정이 불가능합니다. 감사 가능성이 중요한 고비중 투표에 사용하세요.</li>
+<li class=""><strong>응답 수정 허용 (Allow response editing)</strong> — 켜면 폴 진행 중에 참여자가 응답을 수정할 수 있습니다. 끄면 제출 즉시 응답이 확정됩니다. 암호화 업로드가 켜져 있으면 자동으로 비활성화됩니다.</li>
+<li class=""><strong>암호화 업로드 (Encrypted upload)</strong> — 켜면 투표 결과가 암호화되어 온체인 (canister) 에 업로드되며, 제출 후 응답 수정이 불가능합니다. 감사 가능성이 중요한 고비중 투표에 사용하세요.</li>
 </ul>
+<video controls="" preload="metadata" width="100%" src="/dev/ko/media/poll_editor.mov" style="border-radius:8px;border:1px solid var(--ratel-line-soft);max-width:720px;display:block;margin:1rem 0"><p>브라우저가 비디오 임베드를 지원하지 않습니다. <a href="/dev/ko/media/poll_editor.mov">워크스루 다운로드</a>.</p></video>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="-quiz-편집기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Quiz 편집기<a href="#-quiz-편집기" class="hash-link" aria-label="-quiz-편집기에 대한 직접 링크" title="-quiz-편집기에 대한 직접 링크" translate="no">​</a></h2>
 <p>URL: <code>/spaces/:space_id/actions/quizzes/:quiz_id</code></p>
 <p>Content 카드는 다음을 담습니다.</p>
@@ -88,24 +90,25 @@
 <li class=""><strong>질문 (Questions)</strong> — <strong>3 ~ 20 개</strong>, 각각 Single 또는 Multi 선택. 정답을 표시합니다.</li>
 <li class=""><strong>합격 점수 (Pass Score)</strong> — 통과에 필요한 최소 점수 (전체 문항 대비).</li>
 <li class=""><strong>재시도 횟수 (Retry Count)</strong> — 참여자별 재응시 가능 횟수.</li>
-<li class=""><strong>응시 시간 (Survey Time)</strong> — 한 번의 응시에 허용되는 총 시간.</li>
 <li class=""><strong>첨부 (Attachments)</strong> — 참여자가 참고할 자료: PDF / PNG / JPG, 각 25MB 까지.</li>
 </ul>
 <p>합격하면 보상이 잠금 해제되고, 불합격하면 (Retry Count 가 허용하는 한) 다시 응시할 수 있습니다.</p>
+<video controls="" preload="metadata" width="100%" src="/dev/ko/media/quiz_editor.mov" style="border-radius:8px;border:1px solid var(--ratel-line-soft);max-width:720px;display:block;margin:1rem 0"><p>브라우저가 비디오 임베드를 지원하지 않습니다. <a href="/dev/ko/media/quiz_editor.mov">워크스루 다운로드</a>.</p></video>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="-follow-편집기"><img src="/dev/ko/img/icons/users.svg" width="22" height="22" alt="팔로우" style="vertical-align:middle"> Follow 편집기<a href="#-follow-편집기" class="hash-link" aria-label="-follow-편집기에 대한 직접 링크" title="-follow-편집기에 대한 직접 링크" translate="no">​</a></h2>
 <p>URL: <code>/spaces/:space_id/actions/follows/:follow_id</code></p>
 <p>Targets 카드는 다음을 담습니다.</p>
 <ul>
-<li class=""><strong>제목 (Title)</strong> — 캠페인 의 이름.</li>
+<li class=""><strong>제목 (Title)</strong> — 캠페인의 이름.</li>
 <li class=""><strong>타겟 (Targets)</strong> — 참여자가 팔로우해야 할 <strong>1 ~ 20 명</strong> 의 사용자 계정. 각 타겟은 참여자 뷰에서 인라인 행으로 렌더링되고, 그 자리에 <em>팔로우</em> 버튼이 함께 보입니다.</li>
 </ul>
 <p>Configuration 카드는 공통 섹션 — 일정, 참여 및 보상, 선행 액션, 상태, 위험 영역 — 만 갖습니다.</p>
+<video controls="" preload="metadata" width="100%" src="/dev/ko/media/follow_editor.mov" style="border-radius:8px;border:1px solid var(--ratel-line-soft);max-width:720px;display:block;margin:1rem 0"><p>브라우저가 비디오 임베드를 지원하지 않습니다. <a href="/dev/ko/media/follow_editor.mov">워크스루 다운로드</a>.</p></video>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="-meet-편집기-예정"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Meet 편집기 <em>(예정)</em><a href="#-meet-편집기-예정" class="hash-link" aria-label="-meet-편집기-예정에 대한 직접 링크" title="-meet-편집기-예정에 대한 직접 링크" translate="no">​</a></h2>
 <p>URL: <code>/spaces/:space_id/actions/meets/:meet_id</code> (관리자 뷰)</p>
 <p>라이브스트림 · 화상 통화 · 워크숍 · 오프라인 모임 같은 일정 이벤트입니다. 이 URL 의 참여자 뷰는 라이브이지만, 만들기 모달의 호스트 편집기 진입점은 <em>(예정)</em> 입니다. 오늘 시점에 Meet 가 필요한 호스트는 MCP API 의 <code>create_meet</code> 도구를 사용하세요 (<a class="" href="/dev/ko/essence/my-essence#-my-ai--my-ai">MCP 연결</a> 참고).</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="팁">팁<a href="#팁" class="hash-link" aria-label="팁에 대한 직접 링크" title="팁에 대한 직접 링크" translate="no">​</a></h2>
 <ul>
-<li class=""><strong>보상 예산은 적절한 액션에 배정하세요.</strong> Credit 은 스페이스의 인센티브 풀에서 빠집니다. 온보딩용 퀴즈는 무보상으로 두고, 최종 리포트 의 핵심이 되는 토론에 Credit 을 집중하는 식으로요.</li>
+<li class=""><strong>보상 예산은 적절한 액션에 배정하세요.</strong> Credit 은 스페이스의 인센티브 풀에서 빠집니다. 온보딩용 퀴즈는 무보상으로 두고, 최종 리포트의 핵심이 되는 토론에 Credit 을 집중하는 식으로요.</li>
 <li class=""><strong>Dependencies 로 시퀀스를 짜세요.</strong> 흔한 패턴: 빠른 <em>사전(Sample)</em> 폴 → 깊은 <em>최종(Final)</em> 폴. 최종 폴이 사전 폴에 의존하도록 설정하면 참여자가 워밍업을 마치고 본 질문에 답하게 됩니다.</li>
 <li class=""><strong>참여자 뷰로 테스트하세요.</strong> 같은 URL 을 시크릿 창이나 다른 세션에서 열어보세요 — 참여자가 보는 화면이 그대로 드러납니다. 관리자 / 참여자 전환은 자동입니다.</li>
 </ul>
