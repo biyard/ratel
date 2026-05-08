@@ -175,10 +175,15 @@ env.sh:
 	@echo "export CROSS_POSTING_DATA_KEY_PREVIOUS='$(CROSS_POSTING_DATA_KEY_PREVIOUS)'" >> $@
 
 
+# Run integration tests. Pass TEST=<name> to run only matching tests:
+#   make test                                  # all tests
+#   make test TEST=pending_reward_retry        # only matching tests
+TEST ?=
+
 test:
 	mkdir -p ./test-build-target/debug/deps/public
 	npx @tailwindcss/cli -i tailwind.css -o ./assets/tailwind.css
-	$(BUILD_ENV) CARGO_TARGET_DIR=./test-build-target cargo test --features server,bypass --tests -- --test-threads=1
+	$(BUILD_ENV) CARGO_TARGET_DIR=./test-build-target cargo test --features server,bypass --tests $(TEST) -- --test-threads=1 --nocapture
 
 run:
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES)

@@ -10,18 +10,14 @@ use crate::common::*;
 pub enum PendingRewardStatus {
     #[default]
     Pending,
-    InProgress,
     Completed,
-    Failed,
 }
 
 impl Display for PendingRewardStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = match self {
             Self::Pending => "PENDING",
-            Self::InProgress => "IN_PROGRESS",
             Self::Completed => "COMPLETED",
-            Self::Failed => "FAILED",
         };
         f.write_str(s)
     }
@@ -34,9 +30,7 @@ impl FromStr for PendingRewardStatus {
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         match s.to_ascii_uppercase().as_str() {
             "PENDING" => Ok(Self::Pending),
-            "IN_PROGRESS" => Ok(Self::InProgress),
             "COMPLETED" => Ok(Self::Completed),
-            "FAILED" => Ok(Self::Failed),
             _ => Err(Error::InvalidFormat),
         }
     }
@@ -49,17 +43,13 @@ mod tests {
     #[test]
     fn display_uses_screaming_snake() {
         assert_eq!(PendingRewardStatus::Pending.to_string(), "PENDING");
-        assert_eq!(PendingRewardStatus::InProgress.to_string(), "IN_PROGRESS");
+        assert_eq!(PendingRewardStatus::Completed.to_string(), "COMPLETED");
     }
 
     #[test]
     fn from_str_is_case_insensitive() {
         assert_eq!(
             "pending".parse::<PendingRewardStatus>().unwrap(),
-            PendingRewardStatus::Pending
-        );
-        assert_eq!(
-            "PENDING".parse::<PendingRewardStatus>().unwrap(),
             PendingRewardStatus::Pending
         );
     }
