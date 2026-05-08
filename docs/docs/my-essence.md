@@ -50,7 +50,7 @@ The **Setup guide** below the capabilities has a tabbed walkthrough — one tab 
 - **Cursor** — `Settings → Cursor Settings → MCP → Add new server (HTTP / Streamable)`.
 - **Generic JSON** — A `curl` smoke-test plus the JSON-RPC 2.0 / SSE shape for any MCP SDK (Python, TypeScript, Rust).
 
-Each tab walks you through three numbered steps, with copy-ready commands and JSON snippets. If you've already read the [AI Connect chapter](./ai-connect), this is the same surface — `/my-ai` is the in-app destination for it.
+Each tab walks you through three numbered steps, with copy-ready commands and JSON snippets. If you've already read the [AI Connect chapter](./ai-connect.md), this is the same surface — `/my-ai` is the in-app destination for it.
 
 ## <img src={useBaseUrl('/img/icons/award.svg')} width="20" height="20" alt="Character" style={{verticalAlign: 'middle'}} /> Character — `/me/character`
 

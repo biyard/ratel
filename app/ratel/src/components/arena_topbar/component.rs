@@ -74,7 +74,7 @@ pub fn RatelArenaTopbar(active: Option<RatelArenaTopbarSection>) -> Element {
                 .with_title("Start building your Essence");
             return;
         }
-        nav.push(Route::UserDrafts {
+        nav.push(Route::SocialDraft {
             username: drafts_username.clone(),
         });
     };
@@ -89,7 +89,7 @@ pub fn RatelArenaTopbar(active: Option<RatelArenaTopbarSection>) -> Element {
                 .with_title("Start building your Essence");
             return;
         }
-        nav.push(Route::UserRewards {
+        nav.push(Route::SocialReward {
             username: rewards_username.clone(),
         });
     };

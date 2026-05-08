@@ -1,23 +1,18 @@
-#![allow(unused)]
-pub mod config;
-pub mod controllers;
-pub mod dto;
-pub mod hooks;
-pub mod layout;
-#[cfg(not(feature = "server"))]
-pub mod interop;
-#[cfg(not(feature = "server"))]
-pub mod web;
+pub mod team;
+pub mod user;
 
-#[cfg(feature = "server")]
-pub mod server;
-mod views;
-pub use views::*;
+use crate::features::social::*;
+use crate::*;
 
-use crate::common::*;
-use dioxus::prelude::*;
+#[component]
+pub fn SocialReward(username: ReadSignal<String>) -> Element {
+    let ctx = use_wall_context();
 
-type Result<T> = crate::common::Result<T>;
-type DioxusResult<T> = dioxus::prelude::Result<T>;
-
-use serde::{Deserialize, Serialize};
+    rsx! {
+        if ctx.is_user() {
+            user::Home { username: username() }
+        } else if ctx.is_team() {
+            team::Home { username }
+        }
+    }
+}

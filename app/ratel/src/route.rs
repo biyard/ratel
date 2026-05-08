@@ -25,7 +25,6 @@ use crate::features::spaces::pages::apps::apps::general::SpaceGeneralAppPage;
 use crate::features::spaces::pages::apps::apps::incentive_pool::SpaceIncentivePoolAppPage;
 use crate::features::spaces::pages::apps::apps::panels::SpacePanelsAppPage;
 use crate::features::spaces::pages::apps::Layout as SpaceAppsLayout;
-use crate::features::spaces::pages::apps::SpaceAppsPage;
 use crate::features::spaces::pages::index::action_pages::{
     SpaceDiscussionCommentPage, SpaceDiscussionPage,
 };
@@ -45,16 +44,15 @@ use crate::features::admin::{AdminLayout, AdminMainPage};
 // under `features::sub_team::pages::*` and will be fleshed out by the
 // UI-implementation dispatches.
 use crate::features::sub_team::pages::{
-    TeamBylawsPage, TeamLeaveParentPage, TeamSubTeamApplicationStatusPage,
-    TeamSubTeamApplyPage, TeamSubTeamBroadcastComposePage, TeamSubTeamBroadcastEditPage,
-    TeamSubTeamDeregisterPage, TeamSubTeamDetailPage, TeamSubTeamDocComposePage,
-    TeamSubTeamDocEditPage, TeamSubTeamManagementPage,
+    TeamBylawsPage, TeamLeaveParentPage, TeamSubTeamApplicationStatusPage, TeamSubTeamApplyPage,
+    TeamSubTeamBroadcastComposePage, TeamSubTeamBroadcastEditPage, TeamSubTeamDeregisterPage,
+    TeamSubTeamDetailPage, TeamSubTeamDocComposePage, TeamSubTeamDocEditPage,
+    TeamSubTeamManagementPage,
 };
 
 use crate::features::posts::{Index as PostIndex, PostDetail, PostEdit};
 
 use crate::views::{Index, PrivacyPolicyPage, TermsOfServicePage};
-use layout::AppLayout;
 use membership::Home as MembershipHome;
 use root_layout::RootLayout;
 
@@ -72,27 +70,22 @@ fn CredentialsHome() -> Element {
 // Team pages
 use crate::features::social::layout::SocialLayout;
 use crate::features::social::pages::dao::Home as TeamDao;
-use crate::features::social::pages::draft::Home as TeamDraft;
-use crate::features::social::pages::home::Home as TeamHome;
 use crate::features::social::pages::member::Home as TeamMember;
-use crate::features::social::pages::reward::Home as TeamReward;
-use crate::features::social::pages::setting::Home as TeamSetting;
 use crate::features::social::pages::setting::ManagementPage as TeamSettingMember;
 use crate::features::social::pages::setting::SubscriptionPage as TeamSettingSubscription;
 use crate::features::social::pages::team_arena::TeamArenaLayout;
+use crate::features::social::pages::SocialDraft;
+use crate::features::social::pages::SocialIndex;
+use crate::features::social::pages::SocialMembership;
+use crate::features::social::pages::SocialReward;
+use crate::features::social::pages::SocialSetting;
 
 // User pages
+use crate::features::cross_posting::views::ConnectionsPage as UserSettingsConnectionsPage;
+use crate::features::cross_posting::views::OnboardingPage as OnboardingConnectionsPage;
 use crate::features::social::pages::credentials::Home as CredentialPage;
 use crate::features::social::pages::post::Home as UserPosts;
 use crate::features::social::pages::space::Home as UserSpaces;
-use crate::features::social::pages::team_membership::Home as TeamMemberships;
-use crate::features::social::pages::user_draft::Home as UserDrafts;
-use crate::features::social::pages::user_membership::Home as UserMemberships;
-use crate::features::social::pages::user_reward::Home as UserRewards;
-use crate::features::cross_posting::views::ConnectionsPage as UserSettingsConnectionsPage;
-use crate::features::cross_posting::views::OnboardingPage as OnboardingConnectionsPage;
-use crate::features::social::pages::user_setting::Home as UserSettingPage;
-use crate::features::social::user_views::Home as UserHomeRoot;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
@@ -145,44 +138,32 @@ pub enum Route {
         #[end_nest]
 
         #[nest("/:username")]
-            #[route("/rewards")]
-            UserRewards { username: String },
-            #[route("/settings")]
-            UserSettingPage { username: String },
             #[route("/settings/connections")]
             UserSettingsConnectionsPage { username: String },
-            #[route("/drafts")]
-            UserDrafts { username: String },
             #[layout(SocialLayout)]
                 #[route("/")]
-                UserHomeRoot { username: String },
+                SocialIndex { username: String },
+                #[route("/drafts")]
+                SocialDraft { username: String },
+                #[route("/rewards")]
+                SocialReward { username: String },
                 #[route("/posts")]
                 UserPosts { username: String },
                 #[route("/memberships")]
-                UserMemberships { username: String },
+                SocialMembership { username: String },
                 #[route("/credentials")]
                 CredentialPage { username: String },
                 #[route("/spaces")]
                 UserSpaces { username: String },
-            #[end_layout]
-            #[layout(TeamArenaLayout)]
-                #[route("/home")]
-                TeamHome { username: String },
-                #[route("/team-drafts")]
-                TeamDraft { username: String },
                 #[route("/dao")]
                 TeamDao { username: String },
                 #[route("/members")]
                 TeamMember { username: String },
-                #[route("/team-rewards")]
-                TeamReward { username: String },
-                #[route("/team-memberships")]
-                TeamMemberships { username: String },
-                #[route("/team-settings")]
-                TeamSetting { username: String },
-                #[route("/team-settings/members")]
+                #[route("/settings")]
+                SocialSetting { username: String },
+                #[route("/settings/members")]
                 TeamSettingMember { username: String },
-                #[route("/team-settings/subscription")]
+                #[route("/settings/subscription")]
                 TeamSettingSubscription { username: String },
 
                 // Sub-team governance — path param inherited from the
@@ -220,10 +201,6 @@ pub enum Route {
             #[layout(SpaceLayout)]
                 #[route("/")]
                 SpaceIndexPage { space_id: SpacePartition },
-                #[route("/dashboard")]
-                SpaceDashboardPage { space_id: SpacePartition },
-                #[route("/overview")]
-                SpaceOverviewPage { space_id: SpacePartition },
                 #[route("/report")]
                 SpaceReportPage { space_id: SpacePartition },
 
@@ -260,9 +237,6 @@ pub enum Route {
                 // Space Apps
                 #[nest("/apps")]
                     #[layout(SpaceAppsLayout)]
-                        #[route("/")]
-                        SpaceAppsPage { space_id: SpacePartition },
-
                         #[route("/general")]
                         SpaceGeneralAppPage { space_id: SpacePartition },
 

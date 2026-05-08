@@ -117,6 +117,10 @@ impl TeamContext {
         self.teams.set(teams);
     }
 
+    pub fn add_team(&mut self, team: TeamItem) {
+        self.teams.push(team);
+    }
+
     pub fn selected_team(&self) -> Option<TeamItem> {
         let teams = self.teams.read();
         let idx = *self.selected_index.read();

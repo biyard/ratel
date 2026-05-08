@@ -78,8 +78,8 @@ The flow is **selective disclosure** by design: a verifier asks *"is this person
 
 Today, credentials are most useful in two places:
 
-- **Space gating** — A host can require a verified attribute (e.g. *age ≥ 19*, *member of `@university.alpha`*) before letting a participant join their Space or claim a reward. The host configures this from the Space's [Panels app](./spaces/apps#-panels) or from individual Action settings.
-- **On-chain operations** — Your DID is what the [reward claim flow](./rewards#on-chain-settlement) signs against. The cryptographic identity is what links the off-platform-chain Points ledger to the on-chain claim transaction.
+- **Space gating** — A host can require a verified attribute (e.g. *age ≥ 19*, *member of `@university.alpha`*) before letting a participant join their Space or claim a reward. The host configures this from the Space's [Panels app](./spaces/apps.md#-panels) or from individual Action settings.
+- **On-chain operations** — Your DID is what the [reward claim flow](./rewards.md#on-chain-settlement) signs against. The cryptographic identity is what links the off-platform-chain Points ledger to the on-chain claim transaction.
 
 As the platform grows, expect more places — DAO voting, cross-Team federation, external partner attestations — to plug into the same DID. Adding credentials now makes those future surfaces work for you on day one.
 
@@ -88,7 +88,7 @@ As the platform grows, expect more places — DAO voting, cross-Team federation,
 Your data, your disclosure. A few principles the page enforces:
 
 - **Selective disclosure** — A verifier sees only the attribute they asked for (e.g. *"age ≥ 19"*), not the data behind it (your actual birthdate). KYC providers see your raw ID; Ratel does not.
-- **No wallet required** — The DID is bound to your Ratel account. You don't need a blockchain wallet to *have* a DID; you only need one to *claim on-chain rewards* tied to it (see [Rewards](./rewards)).
+- **No wallet required** — The DID is bound to your Ratel account. You don't need a blockchain wallet to *have* a DID; you only need one to *claim on-chain rewards* tied to it (see [Rewards](./rewards.md)).
 - **KMS-encrypted at rest** — Cryptographic material (the issuer's signing key, your bound DID, the W3C VC document) is KMS-encrypted on Ratel's side. Verifiable signatures travel; secrets don't.
 - **Revocable** — *Not revoked* today, but the model includes revocation. If a credential needs to be invalidated (a code is leaked, an institution requests it), Ratel can mark it revoked and verifiers checking the proof get *Revoked* in their answer.
 
@@ -101,6 +101,6 @@ Your data, your disclosure. A few principles the page enforces:
 
 ## What's next
 
-- [Settings](./settings) — manage the underlying account the DID is bound to.
-- [Rewards](./rewards) — see where your DID is used to sign on-chain claim transactions.
-- [Spaces → Apps → Panels](./spaces/apps#-panels) — the host-side surface where credentials gate Space access.
+- [Settings](./settings.md) — manage the underlying account the DID is bound to.
+- [Rewards](./rewards.md) — see where your DID is used to sign on-chain claim transactions.
+- [Spaces → Apps → Panels](./spaces/apps.md#-panels) — the host-side surface where credentials gate Space access.
