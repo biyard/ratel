@@ -9,15 +9,15 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 A **Report** is the host's published synthesis of what happened in their Space — what participants thought, where they agreed, where they didn't, what stood out. Ratel ships two report surfaces that work together:
 
-| Surface | URL | What it is |
-|---|---|---|
-| **Space Report** (longform) | `/spaces/:space_id/report` | One per Space. The host's narrative document, with an *AI-generate-then-edit* workflow. This is what subscribers will eventually pay for in Phase 4. |
+| Surface                     | URL                                   | What it is                                                                                                                                                               |
+| --------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Space Report** (longform) | `/spaces/:space_id/report`            | One per Space. The host's narrative document, with an _AI-generate-then-edit_ workflow. This is what subscribers will eventually pay for in Phase 4.                     |
 | **Analyzes** (cross-filter) | `/spaces/:space_id/apps/analyzes/...` | Many per Space. Saved cross-filter analyses over polls, quizzes, follows, and discussions, with raw-records drilldown. The data you cite from the longform Space Report. |
 
 This chapter walks through both, in the order a host typically uses them: build a few Analyzes to see what's there, then write the Space Report on top.
 
 :::note Production availability
-The Analyzes app is hidden in production while it goes through validation — it's available on dev / staging today. The longform Space Report at `/spaces/:space_id/report` is available everywhere. **On production today, the recommended *Analyze-first* workflow below isn't available** — you can still write the longform Report from scratch using your own observations and link to the Space's individual polls or discussions for evidence.
+The Analyzes app is hidden in production while it goes through validation — it's available on dev / staging today. The longform Space Report at `/spaces/:space_id/report` is available everywhere. **On production today, the recommended _Analyze-first_ workflow below isn't available** — you can still write the longform Report from scratch using your own observations and link to the Space's individual polls or discussions for evidence.
 :::
 
 ## <img src={useBaseUrl('/img/icons/grid.svg')} width="22" height="22" alt="Analyzes" style={{verticalAlign: 'middle'}} /> Building an Analyze
@@ -48,11 +48,6 @@ The result page shows the analysis's selected filters as chips at the top, then 
 
 Click **View raw data** to open `/spaces/:space_id/apps/analyzes/report/:report_id/records` — a paginated table of every individual record (User · Question · Answer · Post · Comment · Followed) that matched your filters. Click any chip in the chip header to filter the records further.
 
-Two more deep links are useful when you want to drill from a specific Action rather than the whole analysis:
-
-- `/spaces/:space_id/apps/analyzes/poll/:poll_id` — Per-poll analyze view.
-- `/spaces/:space_id/apps/analyzes/discussion/:discussion_id` — Per-discussion analyze view.
-
 A **Download Excel** button on each analysis exports the matching records as a spreadsheet.
 
 ## <img src={useBaseUrl('/img/icons/file-text.svg')} width="22" height="22" alt="Report" style={{verticalAlign: 'middle'}} /> Writing the Space Report
@@ -66,7 +61,7 @@ Every Space has one canonical Report at:
 It's the public-facing narrative subscribers will eventually pay for. The page has three modes:
 
 - **Read-only** — what visitors see (and what subscribers will see in Phase 4).
-- **Editable** — what you, as host, see when you click *Toggle Edit*. The same page becomes a rich-text editor.
+- **Editable** — what you, as host, see when you click _Toggle Edit_. The same page becomes a rich-text editor.
 - **Generating…** — what you see after clicking **Generate AI Report**. Ratel synthesizes a draft from the Space's accumulated activity and drops it into the editor for you to refine.
 
 ### Authoring flow
@@ -74,11 +69,11 @@ It's the public-facing narrative subscribers will eventually pay for. The page h
 A typical host loop:
 
 1. **Open the page** — `/spaces/:space_id/report`. The first time, it's empty.
-2. **Click *Generate AI Report*** — Ratel reads the Space's activity (polls, discussions, quizzes, follows) and produces a draft narrative. You'll see a *Generating…* placeholder while it works.
-3. **Click *Toggle Edit*** — switch into Editable mode. Refine the AI draft in the rich-text editor: add framing, cite specific Analyzes you built earlier, drop in conclusions the AI couldn't reach on its own.
-4. **Click *Save*** — the page flips back to Read-only and is now what visitors see.
+2. **Click _Generate AI Report_** — Ratel reads the Space's activity (polls, discussions, quizzes, follows) and produces a draft narrative. You'll see a _Generating…_ placeholder while it works.
+3. **Click _Toggle Edit_** — switch into Editable mode. Refine the AI draft in the rich-text editor: add framing, cite specific Analyzes you built earlier, drop in conclusions the AI couldn't reach on its own.
+4. **Click _Save_** — the page flips back to Read-only and is now what visitors see.
 
-Re-run *Generate AI Report* any time activity in the Space picks up — Ratel produces a fresh draft from the current data, and you decide which parts to merge.
+Re-run _Generate AI Report_ any time activity in the Space picks up — Ratel produces a fresh draft from the current data, and you decide which parts to merge.
 
 ### What goes into a Report
 
@@ -91,7 +86,7 @@ Reports are most useful when they cite the data behind their claims. The natural
 
 Subscribers reading the Read-only Report can click those links and verify the claim against the raw records.
 
-## Phase 4 — Revenue split *(Coming soon)*
+## Phase 4 — Revenue split _(Coming soon)_
 
 When Reports become a paid product in Phase 4, every sale is split:
 
@@ -99,7 +94,7 @@ When Reports become a paid product in Phase 4, every sale is split:
 
 The contributor share is **weighted by relevance to the final Report** — participants whose poll responses, comments, follow choices, and quiz answers shaped the published narrative receive proportionally more. The contribution-record drilldown at `/spaces/:space_id/apps/analyzes/report/:report_id/records` is the data layer that drives that split.
 
-The split engine and the buy-flow itself are *(Coming soon)* — Reports are publishable today, but they aren't priced or sold today. When the engine ships, your existing Reports become eligible without any extra work on your part.
+The split engine and the buy-flow itself are _(Coming soon)_ — Reports are publishable today, but they aren't priced or sold today. When the engine ships, your existing Reports become eligible without any extra work on your part.
 
 ## Tips
 

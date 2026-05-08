@@ -44,7 +44,56 @@
 
   window.ratel.teamArena.initStars = initStars;
 
+  // ── Post-card carousel: toggle .active on the centred card so its
+  // CSS rule lifts opacity/blur back to readable. Without this the
+  // default `.team-arena .post-card` state (opacity 0.30 + blur 5px)
+  // makes every card a ghost. Mirrors the action-dashboard carousel.
+  function initPostCarousel() {
+    var tracks = document.querySelectorAll('.team-arena .carousel-track');
+    tracks.forEach(function (track) {
+      if (track.dataset.postCarouselBound) return;
+      track.dataset.postCarouselBound = 'true';
+
+      function updateActive() {
+        var cards = Array.from(track.querySelectorAll('.post-card'));
+        if (cards.length === 0) return;
+        var trackRect = track.getBoundingClientRect();
+        var center = trackRect.left + trackRect.width / 2;
+        var closest = 0;
+        var closestDist = Infinity;
+        cards.forEach(function (card, i) {
+          var rect = card.getBoundingClientRect();
+          var dist = Math.abs(center - (rect.left + rect.width / 2));
+          if (dist < closestDist) {
+            closestDist = dist;
+            closest = i;
+          }
+        });
+        cards.forEach(function (c, i) {
+          c.classList.toggle('active', i === closest);
+        });
+      }
+
+      track.addEventListener('scroll', updateActive, { passive: true });
+      // Initial pass + small retries — Dioxus may insert post-cards after
+      // this script runs (CSR / hydration window), so a single pass on
+      // bind would leave every card ghosted until the user touches the
+      // scroll. The retries keep the active class in sync once cards
+      // arrive.
+      setTimeout(updateActive, 50);
+      setTimeout(updateActive, 200);
+      setTimeout(updateActive, 600);
+      new MutationObserver(updateActive)
+        .observe(track, { childList: true });
+    });
+  }
+
+  window.ratel.teamArena.initPostCarousel = initPostCarousel;
+
   initStars();
-  new MutationObserver(function () { initStars(); })
-    .observe(document.body, { childList: true, subtree: true });
+  initPostCarousel();
+  new MutationObserver(function () {
+    initStars();
+    initPostCarousel();
+  }).observe(document.body, { childList: true, subtree: true });
 })();

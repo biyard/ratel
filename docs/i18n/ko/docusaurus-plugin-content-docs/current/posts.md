@@ -11,37 +11,52 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 게시글은 당신의 Essence 에 가장 직접적으로 기여하는 통로입니다. 작성한 글, 남긴 댓글, 누른 반응 하나하나가 모두 **EssenceSource** — 당신의 House 가 학습하는 원료가 됩니다. Ratel 에 글을 많이 쓸수록 Essence 는 풍성해지고, 당신을 구독한 사람들에게 House 는 더 유용해집니다.
 
-## 피드 둘러보기
+## 게시글이 노출되는 위치
 
-피드는 `/` (홈) 와 `/posts` 에서 만날 수 있습니다. 다른 사람들이 무슨 생각을 하고 있는지 발견하고, 흥미로운 대화에 끼어들 수 있는 가장 중심이 되는 공간입니다.
+홈 페이지 (`/`) 는 **Spaces 아레나** 입니다 — Hot Spaces / My Spaces 카루셀이 정면에 나오고, 그 시점에 가장 활발한 스페이스로 곧장 진입할 수 있습니다. 게시글 자체는 다음 전용 화면들에서 만납니다.
 
-- <img src={useBaseUrl('/img/icons/users.svg')} width="18" height="18" alt="Users" style={{verticalAlign: 'middle'}} /> **팔로잉(Following)** — 팔로우 중인 사람·팀·House 의 게시글
-- <img src={useBaseUrl('/img/icons/compass.svg')} width="18" height="18" alt="Compass" style={{verticalAlign: 'middle'}} /> **발견(Discover)** — 네트워크 전체에서 폭넓게 추천되는 게시글. 새로운 것을 찾을 때 유용합니다
-- **무한 스크롤** — 스크롤만 내리면 다음 게시글이 자동으로 로드됩니다. "다음 페이지" 버튼을 누를 필요가 없습니다
-- **정렬 · 필터** — 피드 상단에서 최신순 / 인기순을 바꾸거나 주제별로 좁힐 수 있습니다
+- **본인 게시글 목록** — `/<your-handle>/posts`. 본인이 발행한 모든 게시글을 최신순으로 보여주는 무한 스크롤 리스트입니다. 각 행은 클릭으로 진입 가능한 피드 카드 형태입니다.
+- **다른 사용자의 게시글** — `/<their-handle>/posts`. 같은 레이아웃, 다른 계정.
+- **단일 게시글** — `/posts/:post_id`. 공유·딥링크용 게시글 전용 페이지 (아래 [게시글 상세 페이지](#게시글-상세-페이지) 참고).
 
-:::tip
-피드가 너무 조용하다면 발견(Discover) 탭에서 몇 명을 더 팔로우해 보세요. 팔로우한 계정의 글이 가장 우선적으로 노출됩니다.
-:::
+새 게시글을 만나는 경로는 링크 중심입니다 — 직접 공유받은 링크, Bluesky / Threads / LinkedIn 으로의 [크로스포스팅](#크로스포스팅-cross-posting), 그리고 Spaces 안에서 참조된 게시글을 따라 들어갑니다.
 
 ## 게시글 작성
 
-앱 어디서든 <img src={useBaseUrl('/img/icons/edit.svg')} width="18" height="18" alt="Edit" style={{verticalAlign: 'middle'}} /> **작성** 버튼을 누르거나 `/posts` 에서 새 글쓰기를 시작하면 에디터가 열립니다. Ratel 의 에디터는 **Tiptap** 기반의 리치 텍스트 에디터입니다. 마크다운 문법을 외울 필요는 없지만, 글을 진지하게 쓰는 데 필요한 기능은 모두 갖춰져 있습니다.
+앱 어디서든 <img src={useBaseUrl('/img/icons/edit.svg')} width="18" height="18" alt="Edit" style={{verticalAlign: 'middle'}} /> **작성** 버튼을 누르면 에디터가 열립니다. 새로 만들어진 임시저장에 대해 `/posts/:post_id/edit` 로 진입하며, contenteditable 기반 리치 텍스트 본문과 우측 크로스포스팅 사이드 패널을 갖춘 화면이 나타납니다.
 
-지원하는 기능:
+### 게시글 유형
 
-- **제목(H1–H3)** — 글의 구조 잡기
-- **굵게**, **기울임**, **취소선**
-- **글머리 기호 · 번호 매기기 목록**
-- **인용 블록** — 다른 사람의 말을 인용할 때
-- **코드 블록** — 문법 강조 포함, 기술적인 내용에 유용합니다
-- **인라인 링크** — 웹 어디든 연결 가능
-- **이미지** — 드래그 앤 드롭 · 클립보드 붙여넣기 · 파일 업로드
-- **임베드** — YouTube 영상, X 게시글 등 지원되는 링크를 붙이면 자동으로 미리보기가 만들어집니다
+상단의 segmented 컨트롤로 게시글 유형을 고를 수 있습니다 — **Article (기사)** 가 기본이며 이 페이지가 다루는 유형입니다. **Repost (재게시)** 와 **Artwork (작품)** 은 함께 보이지만 현재 비활성 상태로 _예정_ 라벨이 붙어 있습니다.
 
-또한 **해시태그**(`#essence`) 로 발견을 돕고, **@멘션** 으로 다른 사용자를 대화에 부를 수 있습니다.
+### 툴바
 
-작성을 마치면 두 가지 선택지가 있습니다 — 나중에 다듬기 위해 **임시 저장(Save as draft)** 하거나, 바로 타임라인과 팔로워 피드에 노출되도록 **게시(Publish)** 합니다.
+본문 에디터의 툴바는 다음 그룹으로 구성됩니다.
+
+- **히스토리** — 실행 취소 (Undo) · 다시 실행 (Redo)
+- **블록 포맷 드롭다운** — Heading 1 · Heading 2 · Heading 3 · 인용 (Quote) · 코드 블록
+- **인라인 마크** — 굵게 (Bold) · 기울임 (Italic) · 밑줄 (Underline) · 취소선 (Strikethrough) · 인라인 코드
+- **정렬** — 왼쪽 · 가운데 · 오른쪽 · 양쪽
+- **목록** — 글머리 기호 · 번호 매기기, 함께 들여쓰기 / 내어쓰기
+- **삽입** — 링크 삽입 (제거 옵션 포함) · 이미지 삽입 (드래그 앤 드롭 dropzone 모달) · YouTube 임베드 (URL 또는 video ID) · 표 삽입 · 가로선
+- **정리** — 서식 지우기
+
+툴바에는 글자 수 카운터가 있습니다 (Article 게시글 본문은 5,000 자 한도).
+
+본문 위 **제목(Title)** 입력란에도 자체 길이 한도가 있고, 제목과 본문 모두 입력 즉시 자동 저장됩니다 — 아래 [임시저장](#임시저장-drafts) 참고.
+
+### 임베드
+
+오늘 기준으로 에디터가 직접 지원하는 임베드는 **YouTube** 한 종류입니다 (임베드 모달에 YouTube URL 또는 video ID 를 붙여 넣으면 인라인으로 렌더링됩니다). X · Threads 등의 외부 링크 임베드는 아직 연결되지 않았습니다.
+
+### 임시저장 vs 발행
+
+상단바의 두 가지 쓰기 액션:
+
+- **Save draft (임시저장)** — 현재 상태를 명시적으로 저장하고 임시저장 목록으로 돌아갑니다. 버튼 옆 자동 저장 인디케이터가 마지막 동기화 시점을 보여줍니다.
+- **Publish (발행)** — 게시글을 본인의 타임라인에 노출시키고, 사이드 패널에서 토글한 크로스포스트 목적지로도 송출합니다.
+
+타이핑할 때마다 자동 저장되므로 Save 버튼은 깔끔하게 자리를 뜨기 위한 수단에 가깝습니다 — 깜빡 잊는다고 글이 사라지지 않습니다.
 
 ## 임시저장 (Drafts)
 
@@ -53,27 +68,25 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ### 통계 헤더와 필터
 
-`/your-handle/drafts` 상단에는 통계 스트립이 있습니다 — **전체 임시저장(Total drafts)**, **작성 단어(Words written)**, **마지막 편집(Last edited)** — *"이번 달에 얼마나 썼지?"* 를 한눈에 보기 좋아요.
+`/your-handle/drafts` 상단에는 통계 스트립이 있습니다 — **전체 임시저장(Total drafts)**, **작성 단어(Words written)**, **마지막 편집(Last edited)** — _"이번 달에 얼마나 썼지?"_ 를 한눈에 보기 좋아요.
 
 아래의 필터 칩으로 목록을 좁힐 수 있습니다.
 
 - **전체(All)** · **오늘(Today)** · **이번 주(This Week)** · **이전(Older)** — 최근성 기준.
 - **스페이스 사용(Space-enabled)** — 스페이스가 첨부된 임시저장 (게시글 발행과 동시에 스페이스를 만드는 임시저장).
 
-**정렬(Sort)** 드롭다운으로 목록을 재배열합니다 — *최근 편집순(Recently edited)* (기본), *오래된 순(Oldest first)*, *제목순(Title A → Z)*, *단어 많은순(Most words)*. 목록은 *오늘 / 이번 주 / 이전* 섹션으로 자동 묶여 시각적으로 훑기 좋습니다.
+**정렬(Sort)** 드롭다운으로 목록을 재배열합니다 — _최근 편집순(Recently edited)_ (기본), _오래된 순(Oldest first)_, _제목순(Title A → Z)_, _단어 많은순(Most words)_. 목록은 _오늘 / 이번 주 / 이전_ 섹션으로 자동 묶여 시각적으로 훑기 좋습니다.
 
 ### 임시저장별 액션
 
-각 임시저장 타일에는 썸네일, 제목 (또는 *Untitled draft*), 발췌, 마지막 편집부터의 경과 시간, 첨부된 이미지가 있다면 이미지 카운트가 표시돼요. 타일의 **`…`** 메뉴에서 다음 작업이 가능합니다.
+각 임시저장 타일에는 썸네일, 제목 (또는 _Untitled draft_), 발췌, 마지막 편집부터의 경과 시간, 첨부된 이미지가 있다면 이미지 카운트가 표시됩니다. 각 타일에는 인라인 **Resume** 버튼과 **`…`** 메뉴가 있고, 메뉴에서 다음 작업이 가능합니다.
 
 - **이어서 편집(Resume editing)** — 임시저장을 게시글 에디터에서 다시 열기.
-- **복제(Duplicate)** — 임시저장을 새 untitled 임시저장으로 복사 (반복 게시 템플릿에 유용).
-- **마크다운 내보내기(Export as Markdown)** — 본문을 `.md` 파일로 다운로드. (본문만 대상 — 이미지 첨부는 Ratel 에 그대로 남습니다.)
-- **임시저장 삭제(Delete draft)** — 영구 삭제, 되돌릴 수 없음. (휴지통 복구는 *(예정)* 입니다.)
+- **임시저장 삭제(Delete draft)** — 영구 삭제, 되돌릴 수 없음. (휴지통 복구는 _(예정)_ 입니다.)
 
 ### 팀 임시저장
 
-협업 글을 위한 별도 **팀 임시저장** 도 `/your-handle/team-drafts` 에서 관리할 수 있어요. Team 의 관리자 / 멤버가 Team 핸들로 발행하기 전에 함께 임시저장을 다듬을 수 있습니다. 자동 저장과 임시저장별 액션은 같지만, 작업 공간은 Team 의 관리자급과 공유됩니다.
+협업 글을 위한 별도 **팀 임시저장** 도 `/your-handle/team-drafts` 에서 관리할 수 있어요. Team 의 관리자가 Team 핸들로 발행하기 전에 함께 임시저장을 다듬을 수 있습니다. 자동 저장과 임시저장별 액션은 같지만, 작업 공간은 Team 의 관리자급과 공유됩니다.
 
 ## 게시글 상세 페이지
 
@@ -105,18 +118,18 @@ Ratel 의 대표 기능 중 하나입니다. 한 번 쓴 글을 중요한 모든
 각 플랫폼은 고유한 콘텐츠 규칙이 있고, Ratel 이 자동으로 맞춰 줍니다.
 
 - <img src={useBaseUrl('/img/icons/bluesky.svg')} width="16" alt="Bluesky" style={{verticalAlign: 'middle'}} /> **Bluesky** — 300자 제한이라 긴 글은 자연스럽게 잘라내고 Ratel 의 원문 링크가 붙습니다
-- <img src={useBaseUrl('/img/icons/linkedin.svg')} width="16" alt="LinkedIn" style={{verticalAlign: 'middle'}} /> **LinkedIn** *(예정)* — 장문에 친화적이라 대부분 원문 그대로 발행됩니다
-- <img src={useBaseUrl('/img/icons/threads.svg')} width="16" alt="Threads" style={{verticalAlign: 'middle'}} /> **Threads** *(예정)* — 500자 제한, Bluesky 와 비슷한 방식으로 처리됩니다
+- <img src={useBaseUrl('/img/icons/linkedin.svg')} width="16" alt="LinkedIn" style={{verticalAlign: 'middle'}} /> **LinkedIn** _(예정)_ — 장문에 친화적이라 대부분 원문 그대로 발행됩니다
+- <img src={useBaseUrl('/img/icons/threads.svg')} width="16" alt="Threads" style={{verticalAlign: 'middle'}} /> **Threads** _(예정)_ — 500자 제한, Bluesky 와 비슷한 방식으로 처리됩니다
 
 ### 발행 시점에 목적지 선택
 
 게시글을 작성할 때 에디터 우측의 **크로스포스트(Cross-post)** 사이드바에 연결된 모든 목적지가 토글이 있는 행으로 표시됩니다. 기본값은 목적지별 **자동 게시(Auto-post)** 설정 (`/your-handle/settings/connections` 에서 관리) 을 따르지만, 게시글마다 토글을 바꿀 수 있어요 — Ratel 전용 글이라면 끄고, 일회성 공지라면 켭니다.
 
-행 위쪽에 *N 개 네트워크에 도달(Reaching N networks)* 헤더가 보이고, 어떤 목적지의 글자 수 제한에 글이 잘리는 경우 **Truncated (잘림)** 뱃지가 노출됩니다. 발행 전에 외부에 노출되는 사본이 잘릴지 미리 확인할 수 있어요.
+행 위쪽에 _N 개 네트워크에 도달(Reaching N networks)_ 헤더가 보이고, 어떤 목적지의 글자 수 제한에 글이 잘리는 경우 **Truncated (잘림)** 뱃지가 노출됩니다. 발행 전에 외부에 노출되는 사본이 잘릴지 미리 확인할 수 있어요.
 
 ### 글자 수 제한 처리
 
-각 목적지에는 단단한 상한선이 있어요 — Bluesky 300 자, Threads 500 자 (출시 시), Farcaster 320 자 (출시 시), LinkedIn 3,000 자 (출시 시). Ratel 게시글이 한도를 넘으면:
+각 목적지에는 단단한 상한선이 있습니다 — Bluesky 300 자, Threads 500 자 (출시 시), LinkedIn 3,000 자 (출시 시). Ratel 게시글이 한도를 넘으면:
 
 > 1,500 자짜리 Ratel 게시글은 Bluesky 에서 280 자 발췌 + `… → ratel.foundation/posts/<id>` 형태로 발행됩니다 — 외부 독자는 링크를 눌러 Ratel 의 원문을 읽습니다.
 
@@ -126,8 +139,8 @@ Ratel 의 대표 기능 중 하나입니다. 한 번 쓴 글을 중요한 모든
 
 발행된 게시글의 상세 페이지 (`/posts/:post_id`) 에는 본문 아래에 **확장 게시(Syndication)** 패널이 추가됩니다. 연결된 각 목적지가 다음을 포함한 행으로 렌더링돼요.
 
-- 상태 뱃지 — **Published (게시됨)** 녹색 체크 + 외부 게시글로 가는 *View* 링크, **Pending (대기 중)** (큐 — 발송 대기), **Failed (실패)** 빨간색, **Retry now (재시도)** 버튼 포함, 또는 **Skipped (건너뜀)** 발행 시점에 토글을 껐을 때.
-- 상단의 *N succeeded · N failed* 요약.
+- 상태 뱃지 — **Published (게시됨)** 녹색 체크 + 외부 게시글로 가는 _View_ 링크, **Pending (대기 중)** (큐 — 발송 대기), **Failed (실패)** 빨간색, **Retry now (재시도)** 버튼 포함, 또는 **Skipped (건너뜀)** 발행 시점에 토글을 껐을 때.
+- 상단의 _N succeeded · N failed_ 요약.
 - 시간이 지나며 들어오는 목적지의 인게이지먼트 — 좋아요, 댓글, 재게시.
 - Failed 행의 **Attempt** 카운터로 재시도가 이미 한 번 일어났는지 확인 가능.
 
@@ -138,7 +151,7 @@ Ratel 의 대표 기능 중 하나입니다. 한 번 쓴 글을 중요한 모든
 크로스포스트 실패의 대부분은 두 가지로 나뉩니다.
 
 - **토큰 만료** — 외부 플랫폼이 Ratel 의 접근 권한을 회수한 경우. `/<your-handle>/settings/connections` 에서 재연결하면 행의 **Retry now** 버튼이 다시 동작합니다.
-- **목적지 플랫폼 장애** — 패널이 *Failed* 와 시도 카운터를 표시합니다. 플랫폼이 복구되면 **Retry now** 를 누르세요. Ratel 은 무한정 자동 재시도하지 않습니다 — 통제권은 본인에게 있어요.
+- **목적지 플랫폼 장애** — 패널이 _Failed_ 와 시도 카운터를 표시합니다. 플랫폼이 복구되면 **Retry now** 를 누르세요. Ratel 은 무한정 자동 재시도하지 않습니다 — 통제권은 본인에게 있어요.
 
 :::tip
 크로스포스트가 실패했다면 (플랫폼 장애, 토큰 만료 등) `/your-handle/settings/connections` 에서 재연결한 뒤, 실패한 행의 **Retry now** 를 눌러 다시 발송하세요. 연결이 복구된 시점부터 새 게시물은 정상 동기화됩니다.
@@ -151,3 +164,11 @@ Ratel 의 대표 기능 중 하나입니다. 한 번 쓴 글을 중요한 모든
 :::note
 Essence 파이프라인의 전체 기능 (임베딩 · 검색 · House Q&A) 은 단계별로 출시될 예정입니다 (예정). 오늘 발행하는 게시글은 이미 EssenceSource 로 수집되어 후속 단계에 활용됩니다.
 :::
+
+## 워크스루 (Walkthrough)
+
+> 🎬 **워크스루:** 게시글을 처음부터 끝까지 작성하고 발행하는 흐름.
+
+<video controls preload="metadata" width="100%" src={useBaseUrl('/media/post.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+  브라우저가 비디오 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/post.mov')}>워크스루 다운로드</a>.
+</video>
