@@ -60,8 +60,15 @@ test.describe.serial("Space admin arena", () => {
     spaceUrl = `/spaces/${spaceId}`;
 
     // Sanity-check the creator dashboard is reachable before proceeding.
-    await goto(page, `${spaceUrl}/dashboard`);
-    await getLocator(page, { text: "Dashboard" });
+    // Trailing slash required for `/dashboard/:..rest` catch-all (without it
+    // the empty rest doesn't match and the page falls through to PageNotFound).
+    // Also assert via URL match instead of text — the dashboard heading is
+    // localized so a literal "Dashboard" lookup is brittle.
+    await goto(page, `${spaceUrl}/dashboard/`);
+    await page.waitForURL(/\/spaces\/[a-z0-9-]+\/dashboard\/?$/, {
+      waitUntil: "load",
+      timeout: 10000,
+    });
   });
 
   test("Setup: create poll action", async ({ page }) => {
