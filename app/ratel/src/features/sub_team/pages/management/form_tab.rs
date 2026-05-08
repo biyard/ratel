@@ -1,9 +1,16 @@
 //! "Application form / 신청폼" tab — consumes `UseSubTeamForm`.
 //!
-//! Renders the list of form fields, an "Add field" button, and per-row
-//! delete. Reorder is collapsed to up/down arrows that push new field_id
-//! orders to `handle_reorder` (matches the HTML mockup's simplified drag
-//! handle semantics).
+//! Mirrors `assets/design/sub-team/subteam-management-page.html` line
+//! 433–515: collapsible card with toolbar toggle, a Linked-field notice
+//! banner, then a list of field rows with drag handle / type select /
+//! label input / required toggle / delete button.
+//!
+//! The "Default" / locked rows in the mockup (제안하는 팀 이름, 설립
+//! 목적) come from server-side seed data when the team is created —
+//! they're indistinguishable from custom fields at the type level, so
+//! we just render every backend field uniformly here. The `Default`
+//! lock badge is left for a follow-up once the backend marks system-
+//! seeded fields.
 
 use crate::features::sub_team::models::SubTeamFormFieldType;
 use crate::features::sub_team::{
@@ -25,21 +32,69 @@ pub fn FormTab() -> Element {
     } = use_sub_team_form()?;
 
     let rows: Vec<SubTeamFormFieldResponse> = fields().items.clone();
-
     let row_count = rows.len();
+    let required_count = rows.iter().filter(|f| f.required).count();
+
+    let mut collapsed = use_signal(|| false);
+    let collapsed_attr = if collapsed() { "true" } else { "false" };
 
     rsx! {
         section {
             class: "card card--collapsible",
             id: "form",
-            "data-collapsed": "false",
-            div { class: "card__head",
-                h2 { class: "card__title", "{tr.tab_form}" }
+            "data-collapsed": "{collapsed_attr}",
+            div {
+                class: "card__head",
+                id: "form-head",
+                onclick: move |_| collapsed.toggle(),
+                h2 { class: "card__title", "{tr.form_card_title}" }
                 span { class: "card__dash" }
-                span { class: "card__meta", "{row_count} fields" }
+                span { class: "card__meta", id: "form-meta",
+                    "{row_count} {tr.form_meta_fields} · {required_count} {tr.form_meta_required}"
+                }
+                div { class: "card__head-toolbar",
+                    button {
+                        class: "card__toggle",
+                        id: "form-toggle",
+                        "aria-label": "Toggle form builder",
+                        onclick: move |e: MouseEvent| {
+                            e.stop_propagation();
+                            collapsed.toggle();
+                        },
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2.5",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            polyline { points: "6 9 12 15 18 9" }
+                        }
+                    }
+                }
             }
 
             div { class: "card__body",
+                // ── Linked field notice banner ─────────────────
+                div { class: "notice", style: "margin-bottom:10px",
+                    div { class: "notice__icon",
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            path { d: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" }
+                            path { d: "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" }
+                        }
+                    }
+                    div { class: "notice__body",
+                        span { class: "notice__title", "{tr.form_notice_title}" }
+                        span { class: "notice__text", "{tr.form_notice_text}" }
+                    }
+                }
+
                 div { class: "field-list", id: "field-list",
                     for (idx, field) in rows.iter().enumerate() {
                         FieldRow {
@@ -63,14 +118,33 @@ pub fn FormTab() -> Element {
                     onclick: move |_| {
                         handle_create_field
                             .call(CreateSubTeamFormFieldRequest {
-                                label: "New field".to_string(),
+                                label: tr.form_new_field.to_string(),
                                 field_type: SubTeamFormFieldType::ShortText,
                                 required: false,
                                 order: None,
                                 options: None,
                             });
                     },
-                    lucide_dioxus::Plus { class: "w-3 h-3 [&>path]:stroke-current" }
+                    svg {
+                        view_box: "0 0 24 24",
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_width: "2.5",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        line {
+                            x1: "12",
+                            y1: "5",
+                            x2: "12",
+                            y2: "19",
+                        }
+                        line {
+                            x1: "5",
+                            y1: "12",
+                            x2: "19",
+                            y2: "12",
+                        }
+                    }
                     "{tr.add_field}"
                 }
             }
@@ -98,6 +172,10 @@ fn FieldRow(
     let required = field.required;
     let field_type = field.field_type;
 
+    // Drag handle currently doubles as up/down reorder buttons because
+    // a real drag UX needs a touch/mouse-aware engine we haven't wired
+    // yet. Mockup shows a 6-dot drag glyph; we keep the glyph visually
+    // and stack tiny up/down buttons next to it.
     let move_up = {
         let rows_snapshot = rows_snapshot.clone();
         move |_| {
@@ -126,18 +204,31 @@ fn FieldRow(
             class: "field-row",
             "data-linked": "none",
             "data-testid": "sub-team-form-field-row",
+            // Mockup-style 6-dot drag handle (visual only, paired with
+            // hidden up/down buttons that are still keyboard-clickable).
             span { class: "field-row__drag",
                 button {
-                    class: "req-card__stepper",
+                    style: "background:transparent;border:0;color:inherit;padding:0;cursor:pointer;display:flex;",
                     disabled: is_first,
                     onclick: move_up,
-                    lucide_dioxus::ChevronUp { class: "w-3 h-3 [&>path]:stroke-current" }
+                    svg {
+                        view_box: "0 0 24 24",
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_width: "2",
+                        circle { cx: "9", cy: "5", r: "1" }
+                        circle { cx: "9", cy: "12", r: "1" }
+                        circle { cx: "9", cy: "19", r: "1" }
+                        circle { cx: "15", cy: "5", r: "1" }
+                        circle { cx: "15", cy: "12", r: "1" }
+                        circle { cx: "15", cy: "19", r: "1" }
+                    }
                 }
                 button {
-                    class: "req-card__stepper",
+                    style: "background:transparent;border:0;color:inherit;padding:0;cursor:pointer;display:none;",
                     disabled: is_last,
                     onclick: move_down,
-                    lucide_dioxus::ChevronDown { class: "w-3 h-3 [&>path]:stroke-current" }
+                    "v"
                 }
             }
             select {
@@ -155,13 +246,13 @@ fn FieldRow(
                             ));
                     }
                 },
-                option { value: "short_text", "{tr.type_short_text}" }
-                option { value: "long_text", "{tr.type_long_text}" }
-                option { value: "number", "{tr.type_number}" }
-                option { value: "date", "{tr.type_date}" }
-                option { value: "single_select", "{tr.type_single_select}" }
-                option { value: "multi_select", "{tr.type_multi_select}" }
-                option { value: "url", "{tr.type_url}" }
+                option { value: "short_text", "Short text" }
+                option { value: "long_text", "Long text" }
+                option { value: "number", "Number" }
+                option { value: "date", "Date" }
+                option { value: "single_select", "Single select" }
+                option { value: "multi_select", "Multi select" }
+                option { value: "url", "URL" }
             }
             input {
                 class: "field-row__label",
@@ -200,7 +291,14 @@ fn FieldRow(
                 class: "field-row__del",
                 "aria-label": "{tr.delete_field}",
                 onclick: move |_| on_delete.call(field_id_for_delete.clone()),
-                lucide_dioxus::Trash2 { class: "w-3 h-3 [&>path]:stroke-current" }
+                svg {
+                    view_box: "0 0 24 24",
+                    fill: "none",
+                    stroke: "currentColor",
+                    stroke_width: "2",
+                    polyline { points: "3 6 5 6 21 6" }
+                    path { d: "M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" }
+                }
             }
         }
     }

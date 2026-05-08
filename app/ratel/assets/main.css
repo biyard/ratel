@@ -31486,6 +31486,17 @@ body.comments-panel-resizing {
   gap: 16px;
   min-width: 0;
 }
+.sub-team-doc-compose .composer__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sub-team-dim);
+}
+.sub-team-doc-compose .composer__eyebrow-sep { opacity: 0.5; }
 .sub-team-doc-compose .title-input {
   width: 100%;
   padding: 12px 0;
@@ -32040,41 +32051,10 @@ body.comments-panel-resizing {
   color: var(--sub-team-text);
 }
 
-.sub-team-management .switch {
-  position: relative;
-  display: inline-block;
-  width: 46px;
-  height: 26px;
-}
-.sub-team-management .switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-.sub-team-management .switch__track {
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 100px;
-  transition: all 0.2s;
-}
-.sub-team-management .switch__track::before {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #fff;
-  transition: all 0.2s;
-}
-.sub-team-management .switch input:checked + .switch__track {
-  background: var(--sub-team-gold);
-}
-.sub-team-management .switch input:checked + .switch__track::before {
-  transform: translateX(20px);
-}
+/* (Switch CSS lives in a single block at the end of this management
+ * section, mirroring the mockup's `:checked ~ .switch__track::after`
+ * pattern. The earlier `::before`-based version was a duplicate that
+ * rendered a second thumb on top of the mockup one — removed.) */
 
 .sub-team-management .tabs-nav {
   position: sticky;
@@ -32300,6 +32280,14 @@ body.comments-panel-resizing {
   text-transform: uppercase;
   cursor: pointer;
 }
+.sub-team-management .add-field-btn svg,
+.sub-team-management .add-doc-btn svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+.sub-team-management .req-card__icon svg { width: 16px; height: 16px; flex-shrink: 0; }
+.sub-team-management .field-row__del svg { width: 12px; height: 12px; flex-shrink: 0; }
 
 .sub-team-management .doc-list {
   display: flex;
@@ -32724,6 +32712,374 @@ body.comments-panel-resizing {
   color: var(--sub-team-coral);
 }
 .sub-team-management .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ── KPI row (above tabs, always visible) ─────────────────── */
+.sub-team-management .kpi-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+@media (max-width: 720px) {
+  .sub-team-management .kpi-row { grid-template-columns: 1fr; }
+}
+.sub-team-management .kpi {
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: var(--sub-team-glass);
+  border: 1px solid var(--sub-team-border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.sub-team-management .kpi__label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sub-team-dim);
+}
+.sub-team-management .kpi__value {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--sub-team-text);
+}
+.sub-team-management .kpi__value--gold {
+  background: linear-gradient(135deg, var(--sub-team-gold), #ffd24a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.sub-team-management .kpi__value--amber { color: var(--sub-team-amber); }
+.sub-team-management .kpi__value--teal  { color: var(--sub-team-teal); }
+.sub-team-management .kpi__value--purple { color: var(--sub-team-purple); }
+.sub-team-management .kpi__delta {
+  font-size: 10px;
+  color: var(--sub-team-green);
+  letter-spacing: 0.08em;
+}
+.sub-team-management .kpi__delta--amber  { color: var(--sub-team-amber); }
+.sub-team-management .kpi__delta--purple { color: var(--sub-team-purple); }
+
+/* ── Tabs nav: SVG icons + count badges ────────────────────── */
+.sub-team-management .tabs-nav__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.sub-team-management .tabs-nav__btn:hover { color: var(--sub-team-text); }
+.sub-team-management .tabs-nav__btn svg { width: 14px; height: 14px; opacity: 0.7; }
+.sub-team-management .tabs-nav__btn[aria-selected="true"] svg { opacity: 1; }
+.sub-team-management .tabs-nav__btn[aria-selected="true"] {
+  box-shadow: 0 0 14px rgba(252, 179, 0, 0.1);
+}
+.sub-team-management .tabs-nav__badge {
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--sub-team-text);
+}
+.sub-team-management .tabs-nav__btn[aria-selected="true"] .tabs-nav__badge {
+  background: rgba(252, 179, 0, 0.18);
+  color: var(--sub-team-gold);
+}
+.sub-team-management .tabs-nav__badge--amber {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--sub-team-amber);
+}
+
+/* ── Activation hero polish (data-on glow) ─────────────────── */
+.sub-team-management .activation { overflow: hidden; transition: border-color 0.3s; }
+.sub-team-management .activation::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 55% 60% at 15% 15%, var(--act-glow, rgba(255, 255, 255, 0.04)) 0%, transparent 60%);
+  pointer-events: none;
+  transition: all 0.3s;
+}
+.sub-team-management .activation[data-on="true"]::before {
+  --act-glow: rgba(252, 179, 0, 0.12);
+}
+.sub-team-management .activation > * { position: relative; z-index: 1; }
+.sub-team-management .activation__icon { transition: all 0.3s; flex-shrink: 0; }
+.sub-team-management .activation[data-on="true"] .activation__icon {
+  background: rgba(252, 179, 0, 0.1);
+  border-color: rgba(252, 179, 0, 0.28);
+  color: var(--sub-team-gold);
+  box-shadow: 0 0 18px rgba(252, 179, 0, 0.15);
+}
+.sub-team-management .activation__icon { color: var(--sub-team-muted); }
+.sub-team-management .activation__icon svg { width: 24px; height: 24px; }
+.sub-team-management .activation__label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sub-team-dim);
+  margin-bottom: 4px;
+}
+.sub-team-management .activation[data-on="true"] .activation__label { color: var(--sub-team-gold); }
+.sub-team-management .activation__title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--sub-team-text);
+  margin-bottom: 4px;
+}
+.sub-team-management .activation__desc {
+  font-size: 13px;
+  color: var(--sub-team-muted);
+  line-height: 1.55;
+}
+.sub-team-management .activation__switch { transform: scale(1.3); transform-origin: right center; }
+
+/* Activation-gated wrapper — dims configuration blocks when OFF, but
+ * leaves roster/queue/broadcast surfaces fully interactive (mockup
+ * applies `[data-activated="false"] .gated` to requirements only). */
+.sub-team-management [data-activated="false"] .gated {
+  opacity: 0.3;
+  pointer-events: none;
+  filter: saturate(0.4);
+}
+.sub-team-management .gated { transition: all 0.35s; }
+
+/* ── Switch — match mockup's checkbox-input pattern exactly ─── */
+/* Overrides the global `.switch` (which treats the element ITSELF as the
+ * track + uses `.switch::after` as the thumb) with the mockup's
+ * `<label class="switch"><input/><span class="switch__track"/></label>`
+ * + `:checked ~ .switch__track::after` pattern. We explicitly null out
+ * the global rule's `::after`, fixed dimensions, and background so the
+ * label becomes a pure flex container. */
+.sub-team-management .switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  /* override global .switch (line 8431) defaults */
+  width: auto;
+  height: auto;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  transition: none;
+}
+.sub-team-management .switch::after {
+  /* Disable the global label-as-track thumb; the real thumb lives on
+   * `.switch__track::after` in the markup. */
+  content: none;
+  display: none;
+}
+.sub-team-management .switch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.sub-team-management .switch__track {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--sub-team-border);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.sub-team-management .switch__track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--sub-team-dim);
+  transition: all 0.25s;
+}
+.sub-team-management .switch input:checked ~ .switch__track {
+  background: rgba(252, 179, 0, 0.25);
+  border-color: rgba(252, 179, 0, 0.4);
+}
+.sub-team-management .switch input:checked ~ .switch__track::after {
+  left: 20px;
+  background: var(--sub-team-gold);
+  box-shadow: 0 0 8px rgba(252, 179, 0, 0.5);
+}
+
+/* ── Inline info note (used in Requirements + others) ─────── */
+/* Note: a base `.sub-team-management .inline-note` exists earlier; this
+ * adds the icon + nested rules so the note can render with an ⓘ icon
+ * inline with the descriptive copy, matching mockup exactly. */
+.sub-team-management .inline-note svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--sub-team-muted);
+}
+
+/* ── Collapsible card (used by FormTab) ───────────────────── */
+.sub-team-management .card--collapsible .card__head {
+  cursor: pointer;
+  user-select: none;
+}
+.sub-team-management .card__head-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+}
+.sub-team-management .card__toggle {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  padding: 0;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--sub-team-border);
+  color: var(--sub-team-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.25s, color 0.2s, border-color 0.2s;
+}
+.sub-team-management .card__toggle svg { width: 14px; height: 14px; }
+.sub-team-management .card--collapsible[data-collapsed="true"] .card__toggle {
+  transform: rotate(-90deg);
+}
+.sub-team-management .card--collapsible[data-collapsed="false"] .card__toggle:hover {
+  color: var(--sub-team-gold);
+  border-color: rgba(252, 179, 0, 0.25);
+}
+.sub-team-management .card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+.sub-team-management .card--collapsible[data-collapsed="true"] .card__body {
+  max-height: 0;
+  opacity: 0;
+  margin-top: -18px;
+}
+.sub-team-management .card--collapsible[data-collapsed="false"] .card__body {
+  max-height: 4000px;
+  opacity: 1;
+}
+
+/* ── Notice card (Linked-field intro inside Form section) ──── */
+.sub-team-management .notice {
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(110, 237, 216, 0.04);
+  border: 1px solid rgba(110, 237, 216, 0.22);
+  align-items: flex-start;
+}
+.sub-team-management .notice__icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(110, 237, 216, 0.10);
+  border: 1px solid rgba(110, 237, 216, 0.25);
+  color: var(--sub-team-teal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sub-team-management .notice__icon svg { width: 14px; height: 14px; }
+.sub-team-management .notice__body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.sub-team-management .notice__title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--sub-team-teal);
+}
+.sub-team-management .notice__text {
+  font-size: 12px;
+  color: var(--sub-team-muted);
+  line-height: 1.55;
+}
+
+/* ── Form field-row pieces (locked badge, type select) ────── */
+.sub-team-management .field-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(6, 6, 14, 0.5);
+  border: 1px solid var(--sub-team-border);
+}
+.sub-team-management .field-row[data-locked="true"] {
+  border-color: rgba(252, 179, 0, 0.18);
+  background: rgba(252, 179, 0, 0.04);
+}
+.sub-team-management .field-row__drag {
+  color: var(--sub-team-dim);
+  cursor: grab;
+  display: flex;
+  align-items: center;
+}
+.sub-team-management .field-row__drag svg { width: 14px; height: 14px; }
+.sub-team-management .field-row__type {
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(129, 140, 248, 0.08);
+  border: 1px solid rgba(129, 140, 248, 0.22);
+  color: #818cf8;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23818cf8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  padding-right: 22px;
+}
+.sub-team-management .field-row__label {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border-radius: 7px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--sub-team-text);
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  transition: all 0.2s;
+}
+.sub-team-management .field-row__label:hover { border-color: var(--sub-team-border); }
+.sub-team-management .field-row__label:focus {
+  border-color: rgba(252, 179, 0, 0.3);
+  background: rgba(6, 6, 14, 0.6);
+}
+.sub-team-management .field-row__lock-badge {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--sub-team-gold);
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: rgba(252, 179, 0, 0.08);
+  border: 1px solid rgba(252, 179, 0, 0.22);
+  text-transform: uppercase;
+}
 
 
 /* === src/views/index/space_card/style.css === */

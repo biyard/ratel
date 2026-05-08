@@ -12,6 +12,7 @@ pub enum TeamArenaTab {
     Members,
     Rewards,
     Subscription,
+    SubTeams,
     Settings,
 }
 
@@ -205,12 +206,12 @@ pub fn ArenaTopbar(
                             id: "arena-teams-dd-list",
                             onscroll: move |_| {
                                 let js = r#"
-                                                                                                                                                                                    const el = document.getElementById('arena-teams-dd-list');
-                                                                                                                                                                                    if (!el) { dioxus.send(false); return; }
-                                                                                                                                                                                    const nearBottom =
-                                                                                                                                                                                        el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
-                                                                                                                                                                                    dioxus.send(nearBottom);
-                                                                                                                                                                                "#;
+                                                                                                                                                                                                            const el = document.getElementById('arena-teams-dd-list');
+                                                                                                                                                                                                            if (!el) { dioxus.send(false); return; }
+                                                                                                                                                                                                            const nearBottom =
+                                                                                                                                                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+                                                                                                                                                                                                            dioxus.send(nearBottom);
+                                                                                                                                                                                                        "#;
                                 let mut ctrl = teams_query;
                                 spawn(async move {
                                     let mut eval = document::eval(js);
@@ -389,6 +390,30 @@ pub fn ArenaTopbar(
                                     x2: "22",
                                     y2: "10",
                                 }
+                            }
+                        },
+                    }
+                }
+
+                if can_edit {
+                    HudButton {
+                        label: tr.sub_teams.to_string(),
+                        active: active == TeamArenaTab::SubTeams,
+                        to: Route::TeamSubTeamManagementPage {
+                            username: username.clone(),
+                        },
+                        icon: rsx! {
+                            svg {
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_width: "2",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                path { d: "M12 2l2.09 4.23 4.66.68-3.38 3.29.8 4.64L12 12.67l-4.17 2.17.8-4.64L5.25 6.91l4.66-.68L12 2z" }
+                                circle { cx: "6", cy: "19", r: "3" }
+                                circle { cx: "18", cy: "19", r: "3" }
+                                path { d: "M9 19h6" }
                             }
                         },
                     }

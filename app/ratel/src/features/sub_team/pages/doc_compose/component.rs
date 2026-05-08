@@ -126,7 +126,12 @@ fn DocComposeForm(username: String) -> Element {
         .count();
 
     rsx! {
-        div { class: "arena sub-team-doc-compose",
+        // Standalone composer — route lives OUTSIDE TeamArenaLayout
+        // (see route.rs). `.arena` class intentionally omitted: the
+        // global `.arena { height: 100vh; overflow: hidden }` clips
+        // the composer column. The page-scoped style provides
+        // `min-height: 100vh + flex column` instead.
+        div { class: "sub-team-doc-compose",
             div { class: "arena-topbar",
                 div { class: "arena-topbar__left",
                     a {

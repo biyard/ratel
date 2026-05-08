@@ -122,7 +122,12 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
     };
 
     rsx! {
-        div { class: "arena sub-team-broadcast-compose",
+        // Standalone composer (route is OUTSIDE TeamArenaLayout). The
+        // `.arena` wrapper class is intentionally NOT used here — its
+        // global `height: 100vh + overflow: hidden` clipped the
+        // composer column. The page-scoped `.sub-team-broadcast-compose`
+        // already provides `min-height: 100vh + display: flex column`.
+        div { class: "sub-team-broadcast-compose",
             div { class: "arena-topbar",
                 div { class: "arena-topbar__left",
                     a {

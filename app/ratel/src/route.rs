@@ -140,6 +140,18 @@ pub enum Route {
         #[nest("/:username")]
             #[route("/settings/connections")]
             UserSettingsConnectionsPage { username: String },
+            // Sub-team document / broadcast composers — full-screen
+            // focused editors that intentionally do NOT inherit the
+            // TeamArenaLayout (parent topbar, sidemenu) since they
+            // already render their own topbar with Back / Save.
+            #[route("/sub-teams/docs/compose")]
+            TeamSubTeamDocComposePage { username: String },
+            #[route("/sub-teams/docs/:doc_id/edit")]
+            TeamSubTeamDocEditPage { username: String, doc_id: String },
+            #[route("/sub-teams/announcements/compose")]
+            TeamSubTeamBroadcastComposePage { username: String },
+            #[route("/sub-teams/announcements/:announcement_id/edit")]
+            TeamSubTeamBroadcastEditPage { username: String, announcement_id: String },
             #[layout(SocialLayout)]
                 #[route("/")]
                 SocialIndex { username: String },
@@ -178,14 +190,6 @@ pub enum Route {
                 TeamSubTeamApplyPage { username: String },
                 #[route("/sub-teams/application")]
                 TeamSubTeamApplicationStatusPage { username: String },
-                #[route("/sub-teams/docs/compose")]
-                TeamSubTeamDocComposePage { username: String },
-                #[route("/sub-teams/docs/:doc_id/edit")]
-                TeamSubTeamDocEditPage { username: String, doc_id: String },
-                #[route("/sub-teams/announcements/compose")]
-                TeamSubTeamBroadcastComposePage { username: String },
-                #[route("/sub-teams/announcements/:announcement_id/edit")]
-                TeamSubTeamBroadcastEditPage { username: String, announcement_id: String },
                 #[route("/sub-teams/:sub_team_id")]
                 TeamSubTeamDetailPage { username: String, sub_team_id: String },
                 #[route("/sub-teams/:sub_team_id/deregister")]

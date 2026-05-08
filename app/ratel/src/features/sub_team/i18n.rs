@@ -27,6 +27,58 @@ translate! {
     settings_autosaved: { en: "Auto-saved", ko: "자동 저장됨" },
     settings_save: { en: "Save", ko: "저장" },
 
+    // Activation hero (always visible above tabs)
+    activation_label_on: { en: "Parent-eligible · ON", ko: "하위팀 신청 받기 · ON" },
+    activation_label_off: { en: "Parent-eligible · OFF", ko: "하위팀 신청 받기 · OFF" },
+    activation_title_on: {
+        en: "Accepting sub-team applications",
+        ko: "하위팀 가입 신청을 받고 있습니다",
+    },
+    activation_title_off: {
+        en: "Sub-team applications closed",
+        ko: "하위팀 가입 신청을 받지 않습니다",
+    },
+    activation_desc: {
+        en: "While ON, the “Sub-team” icon on this team's home routes visitors to the apply page. Toggling OFF stops new applications but keeps existing relationships, broadcasts, and the dashboard fully operational.",
+        ko: "ON 상태일 때, 이 팀 홈의 \"하위팀\" 아이콘이 방문자를 가입 신청 페이지로 보냅니다. OFF 로 바꿔도 기존 하위팀 관계, 공지, 대시보드는 정상 작동합니다.",
+    },
+
+    // KPI row
+    kpi_recognized: { en: "Recognized sub-teams", ko: "인증 하위팀" },
+    kpi_pending: { en: "Pending applications", ko: "심사 대기" },
+    kpi_last_broadcast: { en: "Last broadcast", ko: "마지막 공지" },
+    kpi_pending_review: { en: "Needs review", ko: "검토 필요" },
+    kpi_no_broadcast: { en: "—", ko: "—" },
+
+    // Requirements card (mockup line 392-431)
+    req_card_title: { en: "Eligibility · Team-level checks", ko: "가입 요건 · TEAM-LEVEL CHECKS" },
+    req_card_meta: { en: "Objective team metrics only", ko: "객관적 팀 지표만" },
+    req_min_members_title: { en: "Minimum members", ko: "최소 멤버 수" },
+    req_min_members_desc: {
+        en: "Team must reach this headcount before submitting",
+        ko: "팀이 이 인원을 달성해야 제출 가능",
+    },
+    req_min_days_title: { en: "Minimum team age", ko: "팀 생성 최소 기간" },
+    req_min_days_desc: {
+        en: "Team must exist for at least this many days before applying",
+        ko: "팀이 만들어진 후 최소 일수 후에 신청 가능",
+    },
+    req_inline_note: {
+        en: "For per-team info like a faculty advisor, mark the field as required in the Application form. Bylaws and similar documents go in the Documents tab — set them as required reading and applicants must read & agree before submitting.",
+        ko: "지도교수·담당자 같은 팀별 정보는 신청폼에서 \"필수\" 체크로 받으세요. 학칙·규정 같은 문서는 문서 탭에서 만들고 \"필독\"으로 지정하면 가입 신청 때 반드시 읽고 동의해야 제출됩니다.",
+    },
+
+    // Form card (mockup line 433-505)
+    form_card_title: { en: "Application form", ko: "신청폼 · APPLICATION FORM" },
+    form_meta_fields: { en: "fields", ko: "필드" },
+    form_meta_required: { en: "required", ko: "필수" },
+    form_notice_title: { en: "Linked field", ko: "LINKED FIELD" },
+    form_notice_text: {
+        en: "Click the 🔗 Link button next to a field to bind its default value to an attribute on the applicant team's profile.",
+        ko: "각 필드 옆의 🔗 Link 버튼을 클릭하면 신청자 팀 프로필의 어떤 속성에서 자동으로 값을 가져올지 지정할 수 있습니다.",
+    },
+    form_new_field: { en: "New field", ko: "새 필드" },
+
     // Form fields UI
     add_field: { en: "Add field", ko: "필드 추가" },
     delete_field: { en: "Delete field", ko: "필드 삭제" },
