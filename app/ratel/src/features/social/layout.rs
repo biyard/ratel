@@ -1,15 +1,39 @@
-use crate::common::*;
 use crate::features::auth::{LoginModal, SignupModal};
 use crate::features::posts::controllers::dto::CategoryResponse;
 use crate::features::posts::controllers::list_categories::list_categories_handler;
 use crate::features::social::controllers::dto::TeamResponse;
 use crate::features::social::controllers::find_team::find_team_handler;
 use crate::features::social::*;
+use crate::social::pages::team_arena::TeamArenaLayout;
+use crate::*;
+
+translate! {
+    SocialTranslate;
+
+    redirect_label: {
+        en: "Go to User's Wall",
+        ko: "사용자 페이지로 이동",
+    },
+}
 
 /// Team layout — used exclusively for team routes (home, drafts, groups, dao, members, rewards).
 /// Always renders TeamSidemenu with categories sidebar.
 #[component]
-pub fn SocialLayout(username: String) -> Element {
+pub fn SocialLayout(username: ReadSignal<String>) -> Element {
+    let ctx = use_wall_context_provider(username)?;
+    // let tr: SocialTranslate = use_translate();
+
+    rsx! {
+        if ctx.is_user() {
+            UserLayout { username }
+        } else if ctx.is_team() {
+            TeamArenaLayout { username }
+        }
+    }
+}
+
+#[component]
+pub fn UserLayout(username: ReadSignal<String>) -> Element {
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let logged_in = user_ctx().user.is_some();
 
@@ -21,11 +45,7 @@ pub fn SocialLayout(username: String) -> Element {
             class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-team-bg text-text-primary",
             "data-testid": "social-layout",
             div { class: "hidden overflow-hidden h-screen tablet:flex",
-                TeamSidemenu {
-                    key: "{username}",
-                    username: username.clone(),
-                    logged_in,
-                }
+                TeamSidemenu { key: "{username}", username: username(), logged_in }
             }
             div { class: "flex overflow-hidden flex-col min-w-0 min-h-0",
                 div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px] max-tablet:p-3 max-mobile:p-2",
@@ -34,26 +54,6 @@ pub fn SocialLayout(username: String) -> Element {
             }
         }
 
-    }
-}
-
-/// User layout — used for user profile routes (posts, rewards, settings, etc.).
-/// Includes AppMenu header and UserSidemenu.
-#[component]
-pub fn UserLayout(username: String) -> Element {
-    let user_ctx = crate::features::auth::hooks::use_user_context();
-    let logged_in = user_ctx().user.is_some();
-
-    rsx! {
-        div { class: "antialiased bg-bg",
-            crate::AppMenu {}
-            div { class: "flex overflow-x-hidden gap-5 justify-between py-3 mx-auto min-h-screen text-white bg-bg max-w-desktop max-tablet:px-2.5 max-mobile:px-0 max-mobile:py-0 max-mobile:gap-0",
-                if logged_in {
-                    UserSidemenu { username: username.clone() }
-                }
-                div { class: "flex flex-col px-5 grow max-mobile:px-0", Outlet::<Route> {} }
-            }
-        }
     }
 }
 
@@ -97,11 +97,11 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                        display_name: String,
                        permissions_vec: Vec<u8>,
                        _teams: Vec<crate::common::contexts::TeamItem>| {
-        let team_home_route = Route::TeamHome {
+        let team_home_route = Route::SocialIndex {
             username: username.clone(),
         }
         .to_string();
-        let is_reward_page = matches!(current_route, Route::TeamReward { .. });
+        let is_reward_page = matches!(current_route, Route::SocialReward { .. });
         let mut mask = 0i64;
         for value in &permissions_vec {
             mask |= 1i64 << (*value as i32);
@@ -229,7 +229,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                 if can_team_edit {
                     div { class: "flex flex-col px-3 pb-4 shrink-0",
                         {
-                            let is_draft_active = matches!(current_route, Route::TeamDraft { .. });
+                            let is_draft_active = matches!(current_route, Route::SocialDraft { .. });
                             let draft_class = if is_draft_active {
                                 "bg-hover text-text-primary"
                             } else {
@@ -237,7 +237,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                             };
                             rsx! {
                                 Link {
-                                    to: Route::TeamDraft {
+                                    to: Route::SocialDraft {
                                         username: username.clone(),
                                     },
                                     class: "flex gap-2.5 items-center py-2 px-2 w-full text-sm font-medium text-left rounded-lg transition-colors {draft_class}",
@@ -291,7 +291,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                         onclick: move |e| e.stop_propagation(),
                                         if can_team_edit {
                                             Link {
-                                                to: Route::TeamReward {
+                                                to: Route::SocialReward {
                                                     username: username.clone(),
                                                 },
                                                 class: "flex gap-2 items-center py-2 px-3 w-full text-sm text-left transition-colors text-text-primary hover:bg-hover",
@@ -303,7 +303,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                                         }
                                         if is_team_member {
                                             Link {
-                                                to: if can_team_edit { Route::TeamSetting {
+                                                to: if can_team_edit { Route::SocialSetting {
                                                     username: username.clone(),
                                                 } } else { Route::TeamSettingMember {
                                                     username: username.clone(),

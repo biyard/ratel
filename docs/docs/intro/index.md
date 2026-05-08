@@ -27,16 +27,14 @@ This guide walks you through the platform from your first sign-in to running you
 
 | Chapter | What's inside |
 |---|---|
-| [1-1 Glossary](./glossary.md) | Quick reference for every term used in these docs — Essence, Space, MCP, Reward, House, and more. |
+| [Glossary](./glossary.md) | Quick reference for every term used in these docs — Essence, Space, MCP, Reward, House, and more. |
 | 2. Getting Started | Sign up, set up your profile, link your DID, and write your first Post. |
-| 3. Connect AI | Plug your Essence into ChatGPT, Claude Desktop, or any MCP-compatible client, and choose which sources feed it. |
-| 4. Create a Team | Spin up a Team or Sub-team, invite members, and share posting rights and Spaces. |
+| 4. Teams | Spin up a Team or Sub-team, invite members, and share posting rights and Spaces. Includes **Sub-teams** (parent / child lifecycle) and **Team Settings** (admin tour of a Team's account). |
 | 5. Posts | Write, comment, vote, and cross-post — and learn how each action shapes your Essence. |
 | 6. Spaces | Host or join Spaces, run Discussions, Polls, Quizzes, and Follow quests, and configure Rewards. |
+| 7. Essence | Inspect what activity has fed your Essence, manage sources, and connect your AI to it via MCP. |
+| 8. Rewards | The five reward primitives — XP, Points, Credits, Tokens, and Incentive Pools — and how they flow. |
 | 9. Credentials | Verify attributes about yourself — KYC + offline codes — and gate Spaces with what you've proven. |
-| 13. Membership | Pick the tier that fits how you host — Free, Pro, Max, VIP, or Enterprise — and what each unlocks. |
-| 14. Sub-teams | Apply, manage, broadcast, and end the parent / child relationship between two Teams. |
-| 15. Team Settings | Admin tour of a Team's account: profile, members & roles, subscription, delete. |
 
 ## A note on what's live today
 

@@ -138,7 +138,7 @@ pub fn Index() -> Element {
                 .with_title("Start building your Essence");
             return;
         }
-        nav.push(Route::UserDrafts {
+        nav.push(Route::SocialDraft {
             username: drafts_username.clone(),
         });
     };
@@ -153,7 +153,7 @@ pub fn Index() -> Element {
                 .with_title("Start building your Essence");
             return;
         }
-        nav.push(Route::UserRewards {
+        nav.push(Route::SocialReward {
             username: rewards_username.clone(),
         });
     };
@@ -870,7 +870,7 @@ fn HomeTeamDdItem(
             "data-testid": "home-team-dd-item-{username}",
             onclick: move |_| {
                 on_pick.call(());
-                nav.push(Route::TeamHome {
+                nav.push(Route::SocialIndex {
                     username: username.clone(),
                 });
             },

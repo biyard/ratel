@@ -1,33 +1,22 @@
-#![allow(unused)]
-pub mod components;
-pub mod config;
-pub mod controllers;
-pub mod hooks;
-#[path = "views/i18n.rs"]
-pub mod i18n;
-pub mod layout;
-pub mod models;
-#[cfg(not(feature = "server"))]
-pub mod interop;
-#[cfg(not(feature = "server"))]
-pub mod web;
+pub mod team;
+pub mod user;
 
-#[cfg(feature = "server")]
-pub mod server;
-mod views;
-pub use views::*;
-pub use i18n::*;
+// Re-export team-only sub-route components so route.rs can import them under a single path.
+pub use team::ManagementPage;
+pub use team::SubscriptionPage;
 
-use crate::common::*;
-use dioxus::prelude::*;
+use crate::features::social::*;
+use crate::*;
 
-type Result<T> = crate::common::Result<T>;
-type DioxusResult<T> = dioxus::prelude::Result<T>;
+#[component]
+pub fn SocialSetting(username: ReadSignal<String>) -> Element {
+    let ctx = use_wall_context();
 
-use serde::{Deserialize, Serialize};
-
-#[derive(Clone, Copy)]
-pub struct SettingsSaveContext {
-    pub save_trigger: Signal<u64>,
-    pub is_saving: Signal<bool>,
+    rsx! {
+        if ctx.is_user() {
+            user::Home { username: username() }
+        } else if ctx.is_team() {
+            team::Home { username }
+        }
+    }
 }

@@ -52,7 +52,7 @@ test.describe.serial("Team post listing (issue-1311)", () => {
     // internal retry loop hit its 15s timeout. This test's goal is to
     // verify the listing content, not the HUD UI, so a direct goto is
     // the appropriate path.
-    await goto(page, `/${teamUsername}/home`);
+    await goto(page, `/${teamUsername}`);
     const postElement = page.getByText(postTitle);
     await expect(postElement).toBeVisible({ timeout: 10000 });
   });

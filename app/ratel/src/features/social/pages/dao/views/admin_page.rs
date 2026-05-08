@@ -4,7 +4,7 @@ use super::super::models::{DaoWalletError, create_dao};
 use super::TeamDaoTranslate;
 use super::super::*;
 use dioxus::prelude::*;
-use crate::features::social::pages::setting::controllers::{UpdateTeamRequest, update_team_handler};
+use crate::features::social::pages::setting::team::controllers::{UpdateTeamRequest, update_team_handler};
 
 #[component]
 pub fn AdminPage(username: String, context: TeamDao) -> Element {
@@ -146,7 +146,7 @@ pub fn AdminPage(username: String, context: TeamDao) -> Element {
     };
 
     rsx! {
-        div { class: "flex flex-col w-full max-w-[1152px] gap-5 p-6",
+        div { class: "flex flex-col gap-5 p-6 w-full max-w-[1152px]",
             div { class: "mb-4",
                 h1 { class: "text-3xl font-bold text-text-primary mb-2", "{tr.dao_title}" }
                 p { class: "text-text-secondary", "{tr.dao_description}" }

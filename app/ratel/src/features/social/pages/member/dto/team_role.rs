@@ -65,6 +65,14 @@ impl TeamRole {
     }
 }
 
+impl Into<Vec<u8>> for TeamRole {
+    fn into(self) -> Vec<u8> {
+        let perms: crate::features::posts::types::TeamGroupPermissions =
+            self.to_legacy_permissions().into();
+        perms.0.into_iter().map(|p| p as u8).collect()
+    }
+}
+
 impl std::fmt::Display for TeamRole {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
