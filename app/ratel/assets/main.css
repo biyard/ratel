@@ -1,6 +1,9 @@
 /* App-wide styling */
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  overflow: hidden;
+  width: 100dvw;
+  height: 100dvh;
 }
 
 /* Membership plan grid (used in embedded membership routes) */

@@ -176,7 +176,7 @@ pub fn ArenaSettingsPanel(
                 div { class: "ta-settings-footer",
                     if can_edit {
                         Link {
-                            to: Route::TeamSetting {
+                            to: Route::SocialSetting {
                                 username: username.clone(),
                             },
                             class: "ta-settings-action",
@@ -207,12 +207,12 @@ pub fn ArenaSettingsPanel(
                                         // Centralized sign-out: flushes server session,
                                         // clears UserContext + cached refresh token,
                                         // reloads on web. Mobile doesn't reload, so we
-                                        // navigate to TeamHome explicitly afterward
+                                        // navigate to SocialIndex explicitly afterward
                                         // — staying on an admin-only sub-page would
                                         // render ViewerPage under the now-logged-out
                                         // state.
                                         crate::features::auth::services::sign_out(user_ctx).await;
-                                        nav.replace(Route::TeamHome { username });
+                                        nav.replace(Route::SocialIndex { username });
                                     }
                                 }
                             },

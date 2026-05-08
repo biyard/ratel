@@ -16,7 +16,10 @@ pub enum SocialError {
     InvalidGender,
 
     #[error("invalid membership tier")]
-    #[translate(en = "Invalid membership tier", ko = "유효하지 않은 멤버십 등급입니다.")]
+    #[translate(
+        en = "Invalid membership tier",
+        ko = "유효하지 않은 멤버십 등급입니다."
+    )]
     InvalidMembershipTier,
 
     #[error("password too short")]
@@ -38,12 +41,22 @@ pub enum SocialError {
     #[translate(en = "Invalid team name", ko = "유효하지 않은 팀 이름입니다.")]
     InvalidTeamName,
 
+    #[error("invalid user name")]
+    #[translate(en = "Invalid user name", ko = "유효하지 않은 사용자 이름입니다.")]
+    InvalidUserName,
+
     #[error("team name taken")]
-    #[translate(en = "Team name is already taken", ko = "이미 사용 중인 팀 이름입니다.")]
+    #[translate(
+        en = "Team name is already taken",
+        ko = "이미 사용 중인 팀 이름입니다."
+    )]
     TeamNameTaken,
 
     #[error("PortOne request failed")]
-    #[translate(en = "Payment service request failed", ko = "결제 서비스 요청에 실패했습니다.")]
+    #[translate(
+        en = "Payment service request failed",
+        ko = "결제 서비스 요청에 실패했습니다."
+    )]
     PortOneRequestFailed,
 
     #[error("PortOne returned bad status")]
