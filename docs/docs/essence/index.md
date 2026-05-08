@@ -24,5 +24,5 @@ A few principles worth knowing up front:
 
 | Page | What it covers |
 |---|---|
-| **[My Essence management](./my-essence)** | The two surfaces where your Essence becomes tangible — **My AI** at `/my-ai` (your MCP endpoint and connected-client setup) and **Character** at `/me/character` (XP, skill points, and skill tree). |
-| **[Essence sources](./sources)** | The `/essence` control panel — every input feeding your Essence, with search, filters by source kind (Posts / Comments / Polls / Quizzes / Notion *(Coming soon)*), per-row Delete, and bulk-remove on the roadmap. |
+| **[My Essence management](./my-essence.md)** | The two surfaces where your Essence becomes tangible — **My AI** at `/my-ai` (your MCP endpoint and connected-client setup) and **Character** at `/me/character` (XP, skill points, and skill tree). |
+| **[Essence sources](./sources.md)** | The `/essence` control panel — every input feeding your Essence, with search, filters by source kind (Posts / Comments / Polls / Quizzes / Notion *(Coming soon)*), per-row Delete, and bulk-remove on the roadmap. |

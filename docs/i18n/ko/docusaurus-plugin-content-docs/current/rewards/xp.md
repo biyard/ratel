@@ -50,5 +50,5 @@ XP 는 `/me/character` 의 **캐릭터(Character)** 화면에 누적됩니다 ([
 
 ## 관련 페이지
 
-- [포인트](./points) — XP 의 스킬 곱셈 부스트가 늘리는 *적립의 단위*.
+- [포인트](./points.md) — XP 의 스킬 곱셈 부스트가 늘리는 *적립의 단위*.
 - [내 Essence → Character](../essence/my-essence#-character--mecharacter) — SP 로 머니 트리를 레벨업하고, 캐릭터가 적립에 어떻게 기여하는지 확인.

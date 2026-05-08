@@ -25,7 +25,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 방문자가 로그인한 상태이고 본인이 아니라면 헤더 옆에 **팔로우 / 팔로잉** 버튼이 보입니다. 누군가를 팔로우하면, 그 사람의 게시글이 팔로워의 피드에서 더 위로 가중치를 받습니다.
 
-이름 오른쪽의 **Level 칩** 은 캐릭터 레벨을 보여줍니다 — Essence 를 채운 활동량에 대한 공개 요약이에요. ([내 Essence → Character](./my-essence#-character-mecharacter) 에서 레벨이 무엇을 의미하고 SP 를 어떻게 쓰는지 자세히 다룹니다.)
+이름 오른쪽의 **Level 칩** 은 캐릭터 레벨을 보여줍니다 — Essence 를 채운 활동량에 대한 공개 요약이에요. ([내 Essence → Character](./my-essence.md#-character-mecharacter) 에서 레벨이 무엇을 의미하고 SP 를 어떻게 쓰는지 자세히 다룹니다.)
 
 ## 팔로잉과 팔로워
 
@@ -72,7 +72,7 @@ Ratel 의 팔로우는 어떤 프로필 헤더에서든 한 번 클릭으로 토
 2. **프로필** 카드의 필드를 수정합니다.
 3. **저장(Save)** 을 클릭. 변경 사항은 즉시 반영됩니다.
 
-**핸들 자체** 는 가입 시 정해지며 이후 변경이 어렵습니다 — 안정적인 이름을 고르세요. 그 외(소개, 아바타, 배너)는 언제든 수정할 수 있습니다. 모든 설정 카드의 전체 투어는 [설정](./settings) 챕터에서 다룹니다.
+**핸들 자체** 는 가입 시 정해지며 이후 변경이 어렵습니다 — 안정적인 이름을 고르세요. 그 외(소개, 아바타, 배너)는 언제든 수정할 수 있습니다. 모든 설정 카드의 전체 투어는 [설정](./settings.md) 챕터에서 다룹니다.
 
 ## 외부에서 프로필로 링크하기
 
@@ -82,7 +82,7 @@ Ratel 의 팔로우는 어떤 프로필 헤더에서든 한 번 클릭으로 토
 https://ratel.foundation/<your-handle>
 ```
 
-Bluesky, X, LinkedIn, Slack, Discord 등에서 URL 정규화를 거쳐도 깨지지 않고 그대로 동작하며, <img src={useBaseUrl('/img/icons/compass.svg')} width="14" height="14" alt="오픈그래프" style={{verticalAlign: 'middle'}} /> 오픈그래프 미리보기에 아바타·디스플레이 네임·소개가 노출됩니다. Ratel 게시글을 Bluesky 로 크로스포스트하면 ([포스트 → 크로스포스팅](./posts#%ED%81%AC%EB%A1%9C%EC%8A%A4%ED%8F%AC%EC%8A%A4%ED%8C%85-cross-posting) 참고), 외부에 게시된 카피에는 내 프로필의 원문 링크가 자동으로 따라 붙습니다.
+Bluesky, X, LinkedIn, Slack, Discord 등에서 URL 정규화를 거쳐도 깨지지 않고 그대로 동작하며, <img src={useBaseUrl('/img/icons/compass.svg')} width="14" height="14" alt="오픈그래프" style={{verticalAlign: 'middle'}} /> 오픈그래프 미리보기에 아바타·디스플레이 네임·소개가 노출됩니다. Ratel 게시글을 Bluesky 로 크로스포스트하면 ([포스트 → 크로스포스팅](./posts.md#%ED%81%AC%EB%A1%9C%EC%8A%A4%ED%8F%AC%EC%8A%A4%ED%8C%85-cross-posting) 참고), 외부에 게시된 카피에는 내 프로필의 원문 링크가 자동으로 따라 붙습니다.
 
 특정 글이나 스페이스에 사람을 보내고 싶을 때는 — *"내 최근 글을 읽어 줘"*, *"이번 주 내가 호스트하는 스페이스에 와"* — 게시글 URL 이나 스페이스 URL 을 직접 보내세요. 프로필 페이지는 *내가 누구인지*, 딥링크는 *내가 만든 무엇인지* 를 알리는 도구입니다.
 
@@ -90,6 +90,6 @@ Bluesky, X, LinkedIn, Slack, Discord 등에서 URL 정규화를 거쳐도 깨지
 
 프로필 세팅이 끝났다면 자연스러운 다음 단계는 다음과 같습니다.
 
-- [설정](./settings) — 비밀번호, 결제, MCP 서버 등 계정 나머지 부분 다듬기.
-- [내 Essence](./my-essence) — 지금까지의 활동이 무엇을 만들었는지 확인.
-- [리워드](./rewards) — 모든 스페이스에서 적립한 보상 추적.
+- [설정](./settings.md) — 비밀번호, 결제, MCP 서버 등 계정 나머지 부분 다듬기.
+- [내 Essence](./my-essence.md) — 지금까지의 활동이 무엇을 만들었는지 확인.
+- [리워드](./rewards.md) — 모든 스페이스에서 적립한 보상 추적.

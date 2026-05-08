@@ -109,6 +109,6 @@ The split engine and the buy-flow itself are *(Coming soon)* — Reports are pub
 
 ## What's next
 
-- [Space Apps → Analyzes](./apps#-analyzes) — the apps-level overview of where Analyzes live.
-- [Host Actions](./host-actions) — the polls, discussions, quizzes, and follows whose results you'll be analyzing.
-- [Space Dashboard](./dashboard) — live stats for the Space whose activity you're synthesizing.
+- [Space Apps → Analyzes](./apps.md#-analyzes) — the apps-level overview of where Analyzes live.
+- [Host Actions](./host-actions.md) — the polls, discussions, quizzes, and follows whose results you'll be analyzing.
+- [Space Dashboard](./dashboard.md) — live stats for the Space whose activity you're synthesizing.

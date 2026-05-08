@@ -18,4 +18,4 @@ You'll reach for credentials whenever proof of *something* about you needs to le
 
 | Page | What it covers |
 |---|---|
-| **[Attribute management](./attributes)** | The hands-on `/credentials` page tour — Personal Identity card, KYC + offline code verification methods, the attribute grid (Age / Gender / University / Employer / Membership), the W3C VC cryptographic proof panel, and the privacy guarantees that hold across all of it. |
+| **[Attribute management](./attributes.md)** | The hands-on `/credentials` page tour — Personal Identity card, KYC + offline code verification methods, the attribute grid (Age / Gender / University / Employer / Membership), the W3C VC cryptographic proof panel, and the privacy guarantees that hold across all of it. |
