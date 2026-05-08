@@ -7,7 +7,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # Host Actions
 
-This chapter is the **host-side** companion to [Space Actions](./actions). The participant chapter explains what an Action looks like to someone who shows up to engage; this one walks you, the host, through creating and editing each Action type.
+This chapter is the **host-side** companion to [Space Actions](./actions.md). The participant chapter explains what an Action looks like to someone who shows up to engage; this one walks you, the host, through creating and editing each Action type.
 
 ## Creating an Action
 
@@ -49,7 +49,7 @@ Every editor is split into a **Content** card on top and a **Configuration** car
 | Section | What you set |
 |---|---|
 | **Schedule** | *Starts at* and *Ends at* date-times. Outside this window the Action isn't active. |
-| **Participation & Rewards** | The reward in **Credits (CR)** drawn from the Space's [Incentive Pool](./apps#-incentive-pool-beta). Credits convert to participant points on completion. |
+| **Participation & Rewards** | The reward in **Credits (CR)** drawn from the Space's [Incentive Pool](./apps.md#-incentive-pool-beta). Credits convert to participant points on completion. |
 | **Dependency Actions** | Other Actions in the Space a participant must complete first to unlock this one. |
 | **Status** | Toggle the Action between draft / live / closed. |
 | **Danger zone** | Delete the Action. Submissions/responses go with it; rewards already paid are not refunded. |
@@ -80,7 +80,7 @@ The Space has a **General → Anonymous participation** toggle (under Settings �
 Turn anonymous participation on for sensitive surveys (workplace satisfaction, health screenings, internal critique) where attribution would chill honest answers. Leave it off for community polls where social signal — *who voted for what* — is part of the value.
 :::
 
-Anonymous mode does **not** turn off the [Panels](./apps#-panels-beta) demographic capture — anonymity is per-submission, but if the host has enabled the Panels app, participants are still asked for their age band, gender, region, etc. so the Creator can run aggregate slicing. Both can coexist because Panel attributes are stored separately from submission identity.
+Anonymous mode does **not** turn off the [Panels](./apps.md#-panels-beta) demographic capture — anonymity is per-submission, but if the host has enabled the Panels app, participants are still asked for their age band, gender, region, etc. so the Creator can run aggregate slicing. Both can coexist because Panel attributes are stored separately from submission identity.
 
 ## Publishing the Space
 
@@ -176,6 +176,6 @@ A scheduled event — livestream, video call, workshop, in-person gathering. The
 
 ## What's next
 
-- [Space Actions](./actions) — participant-side reference for the same five Action types.
-- [Space Apps → Incentive Pool](./apps#-incentive-pool-beta) — fund the Credit pool your Action rewards draw from.
-- [Reports](./reports) — turn the Action results into a published narrative.
+- [Space Actions](./actions.md) — participant-side reference for the same five Action types.
+- [Space Apps → Incentive Pool](./apps.md#-incentive-pool-beta) — fund the Credit pool your Action rewards draw from.
+- [Reports](./reports.md) — turn the Action results into a published narrative.

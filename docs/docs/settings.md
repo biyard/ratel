@@ -47,7 +47,7 @@ Forgot your current password? Use **Forgot password?** on the sign-in screen —
 
 The third card. Read your active membership tier and manage the card on file.
 
-- **Current Plan** — A badge showing your active tier (Free, Pro, Max, Vip, Enterprise) plus a **Change Plan** link that opens [/membership](./membership) where you actually swap tiers.
+- **Current Plan** — A badge showing your active tier (Free, Pro, Max, Vip, Enterprise) plus a **Change Plan** link that opens [/membership](./membership.md) where you actually swap tiers.
 - **Credits** — Remaining and total Credits for the current cycle (e.g. `145 / 190`). On Free this reads `0 / 0`.
 - **Expires** — When the current cycle's allotment expires (Unlimited on Free).
 - **Card on file** — A masked card number plus the cardholder name, with a button beside it: **Add Card** (no card yet), **Change Card** (a card on file already), or **Cancel** while the card form is open. Card processing is handled by **PortOne**, so you can pay with the methods PortOne supports for your region (Visa, Mastercard, AMEX, JCB, plus local options in Korea).
@@ -63,7 +63,7 @@ The fourth card. This is where you mint and rotate the secret token that lets an
 - **Generate Secret** — first time? Click this to mint your token. Ratel constructs a URL of the form `https://ratel.foundation/mcp/<your-token>` and shows it once — copy it on the spot.
 - **Regenerate** — already have a token but want a fresh one? Click *Regenerate*. The new URL appears immediately and the old one stops working. Treat the URL like an API key.
 
-For full setup walkthroughs (Claude Desktop, Claude Code, Cursor, generic JSON), see [Connect AI](./ai-connect). The same controls also exist in a dedicated arena layout at `/my-ai`, described in [My Essence → My AI](./my-essence#-my-ai--my-ai).
+For full setup walkthroughs (Claude Desktop, Claude Code, Cursor, generic JSON), see [Connect AI](./ai-connect.md). The same controls also exist in a dedicated arena layout at `/my-ai`, described in [My Essence → My AI](./my-essence.md#-my-ai--my-ai).
 
 ## <img src={useBaseUrl('/img/icons/bluesky.svg')} width="20" height="20" alt="Connections" style={{verticalAlign: 'middle'}} /> Connections (separate page)
 

@@ -60,6 +60,6 @@ You don't need to think about this normally; it's the platform plumbing that mak
 
 ## Related
 
-- [Reward Points](./points) — the off-chain unit Tokens convert from at cycle lock-in.
+- [Reward Points](./points.md) — the off-chain unit Tokens convert from at cycle lock-in.
 - [Credentials → Attribute management](../credentials/attributes) — your DID is what signs the claim transaction.
 - [Glossary → On-chain settlement](../intro/glossary#on-chain-settlement) — the formal definition of the claim flow.

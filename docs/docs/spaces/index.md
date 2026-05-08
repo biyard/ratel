@@ -78,7 +78,7 @@ When you click **Participate** for the first time, Ratel walks you through three
 Once both gates are cleared, the regular action carousel becomes available and you're a full participant.
 
 :::tip
-Anonymous Spaces (see [Host Actions → Anonymous participation](./host-actions#anonymous-participation)) skip the consent step's identity-binding language but still ask for the data-collection agreement. Your votes are recorded against an anonymous handle in those Spaces.
+Anonymous Spaces (see [Host Actions → Anonymous participation](./host-actions.md#anonymous-participation)) skip the consent step's identity-binding language but still ask for the data-collection agreement. Your votes are recorded against an anonymous handle in those Spaces.
 :::
 
 :::note Coming soon

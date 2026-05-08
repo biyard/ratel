@@ -47,7 +47,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 세 번째 카드. 활성 멤버십 등급을 확인하고 등록된 카드를 관리합니다.
 
-- **현재 플랜(Current Plan)** — 활성 등급 (Free, Pro, Max, Vip, Enterprise) 을 표시하는 뱃지와, 실제 등급 변경이 일어나는 [/membership](./membership) 으로 이동하는 **Change Plan** 링크.
+- **현재 플랜(Current Plan)** — 활성 등급 (Free, Pro, Max, Vip, Enterprise) 을 표시하는 뱃지와, 실제 등급 변경이 일어나는 [/membership](./membership.md) 으로 이동하는 **Change Plan** 링크.
 - **Credits** — 현재 사이클의 잔여 / 전체 Credit (예: `145 / 190`). Free 등급에서는 `0 / 0` 으로 표시됩니다.
 - **만료(Expires)** — 현재 사이클 할당량의 만료일 (Free 에서는 Unlimited).
 - **등록된 카드** — 마스킹된 카드 번호와 카드 소유자 이름, 그리고 옆의 버튼: **Add Card** (등록된 카드 없음), **Change Card** (등록된 카드 있음), 또는 카드 폼이 열려 있을 때는 **Cancel**. 결제는 **PortOne** 이 처리하므로, 거주 지역에서 PortOne 이 지원하는 결제 수단 (Visa, Mastercard, AMEX, JCB, 한국 내 결제수단 등) 을 사용할 수 있습니다.
@@ -63,7 +63,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 - **Generate Secret (생성)** — 처음이라면 클릭해서 토큰을 발급받으세요. Ratel 이 `https://ratel.foundation/mcp/<your-token>` 형태의 URL 을 만들고 *한 번만* 표시합니다 — 그 자리에서 즉시 복사하세요.
 - **Regenerate (재생성)** — 토큰이 이미 있는데 새 URL 이 필요하다면 *Regenerate* 를 클릭. 새 URL 이 즉시 발급되고 기존 URL 은 즉시 동작을 멈춥니다. URL 은 API 키처럼 다루세요.
 
-전체 설정 가이드(Claude Desktop, Claude Code, Cursor, 일반 JSON) 는 [AI 연결](./ai-connect) 챕터를 참고하세요. 같은 컨트롤이 별도의 아레나 레이아웃 `/my-ai` 에도 있고, [내 Essence → My AI](./my-essence#-my-ai--my-ai) 에서 자세히 다룹니다.
+전체 설정 가이드(Claude Desktop, Claude Code, Cursor, 일반 JSON) 는 [AI 연결](./ai-connect.md) 챕터를 참고하세요. 같은 컨트롤이 별도의 아레나 레이아웃 `/my-ai` 에도 있고, [내 Essence → My AI](./my-essence.md#-my-ai--my-ai) 에서 자세히 다룹니다.
 
 ## <img src={useBaseUrl('/img/icons/bluesky.svg')} width="20" height="20" alt="연결" style={{verticalAlign: 'middle'}} /> 연결 (Connections — 별도 페이지)
 
