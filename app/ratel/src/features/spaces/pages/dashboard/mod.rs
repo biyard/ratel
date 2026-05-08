@@ -3,7 +3,6 @@ mod components;
 mod config;
 mod controllers;
 mod i18n;
-mod menu;
 mod types;
 mod views;
 
@@ -14,7 +13,6 @@ use controllers::*;
 use i18n::*;
 use types::*;
 
-pub use menu::get_nav_item;
 pub use views::*;
 
 use components::Pagination;

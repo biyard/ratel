@@ -484,7 +484,7 @@ test.describe.serial("Sub-team governance — AC-1..AC-20", () => {
 
     // AC-11: user2 sees the pinned post. The fan-out stream handler writes
     // a Post into the child team's feed; page poll with a retry loop.
-    await goto(user2Page, `/${childUsername}/home`);
+    await goto(user2Page, `/${childUsername}`);
     await expect(user2Page.getByText("Welcome, clubs")).toBeVisible({
       timeout: 30000,
     });

@@ -1,22 +1,18 @@
-#![allow(unused)]
-pub mod components;
-pub mod config;
-pub mod controllers;
-pub mod hooks;
-#[cfg(not(feature = "server"))]
-pub mod interop;
-pub mod layout;
-pub mod models;
-#[cfg(not(feature = "server"))]
-pub mod web;
+pub mod team;
+pub mod user;
 
-#[cfg(feature = "server")]
-pub mod server;
-mod views;
-pub use views::*;
-
-#[path = "views/i18n.rs"]
-pub mod i18n;
-pub use i18n::*;
-
+use crate::features::social::*;
 use crate::*;
+
+#[component]
+pub fn SocialDraft(username: ReadSignal<String>) -> Element {
+    let ctx = use_wall_context();
+
+    rsx! {
+        if ctx.is_user() {
+            user::Home { username: username() }
+        } else if ctx.is_team() {
+            team::Home { username }
+        }
+    }
+}
