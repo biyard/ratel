@@ -25,7 +25,7 @@ When someone opens `/<your-handle>` they land on your **profile home** with thre
 
 If they're signed in and not you, they'll see a **Follow** / **Following** button on the header. Following someone weights their posts higher in the follower's feed.
 
-A **Level chip** to the right of your name shows your Character level — a public summary of how much activity has fed your Essence. (See [My Essence → Character](./my-essence#-character-mecharacter) for what the level represents and how to spend the SP it earns you.)
+A **Level chip** to the right of your name shows your Character level — a public summary of how much activity has fed your Essence. (See [My Essence → Character](./my-essence.md#-character-mecharacter) for what the level represents and how to spend the SP it earns you.)
 
 ## Following and followers
 
@@ -72,7 +72,7 @@ The profile fields you see on `/<your-handle>` are edited from your settings. To
 2. Update the fields under the **Profile** card.
 3. Click **Save**. Changes are visible immediately.
 
-Your **handle** itself is set when you first sign up and is hard to change later — pick something stable. Everything else (bio, avatar, banner) you can revise any time. See [Settings](./settings) for the full tour of every settings card.
+Your **handle** itself is set when you first sign up and is hard to change later — pick something stable. Everything else (bio, avatar, banner) you can revise any time. See [Settings](./settings.md) for the full tour of every settings card.
 
 ## Linking to your profile from the outside
 
@@ -82,7 +82,7 @@ Your profile URL is canonical and safe to share anywhere:
 https://ratel.foundation/<your-handle>
 ```
 
-It survives URL normalization on Bluesky, X, LinkedIn, Slack, and Discord — the link still resolves cleanly and shows an <img src={useBaseUrl('/img/icons/compass.svg')} width="14" height="14" alt="Open Graph" style={{verticalAlign: 'middle'}} /> Open Graph preview with your avatar, display name, and bio. If you cross-post to Bluesky from a Ratel post (see [Posts → Cross-posting](./posts#cross-posting)), the syndicated copy automatically links back to the original on your profile.
+It survives URL normalization on Bluesky, X, LinkedIn, Slack, and Discord — the link still resolves cleanly and shows an <img src={useBaseUrl('/img/icons/compass.svg')} width="14" height="14" alt="Open Graph" style={{verticalAlign: 'middle'}} /> Open Graph preview with your avatar, display name, and bio. If you cross-post to Bluesky from a Ratel post (see [Posts → Cross-posting](./posts.md#cross-posting)), the syndicated copy automatically links back to the original on your profile.
 
 For specific deep links — *"come read my latest post"*, *"join the Space I'm hosting this week"* — point at the post URL or the Space URL directly. The profile page is for *who you are*; the deep links are for *what you've made*.
 
@@ -90,6 +90,6 @@ For specific deep links — *"come read my latest post"*, *"join the Space I'm h
 
 Once your profile is set up, the natural next steps are:
 
-- [Settings](./settings) — fine-tune the rest of your account (password, billing, MCP server).
-- [My Essence](./my-essence) — see what your activity has built up so far.
-- [Rewards](./rewards) — track what you've earned across every Space.
+- [Settings](./settings.md) — fine-tune the rest of your account (password, billing, MCP server).
+- [My Essence](./my-essence.md) — see what your activity has built up so far.
+- [Rewards](./rewards.md) — track what you've earned across every Space.

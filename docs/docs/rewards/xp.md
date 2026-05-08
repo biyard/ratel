@@ -50,5 +50,5 @@ Two skills are levelable today (Money Tree and Ranker, each capping at L10 with 
 
 ## Related
 
-- [Reward Points](./points) — the *unit of earning* that XP boosts via skill multipliers.
+- [Reward Points](./points.md) — the *unit of earning* that XP boosts via skill multipliers.
 - [My Essence → Character](../essence/my-essence#-character--mecharacter) — spend SP, level up Money Tree, and see what your Character does for your earnings.

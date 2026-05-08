@@ -7,7 +7,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # Host Actions
 
-This chapter is the **host-side** companion to [Space Actions](./actions). The participant chapter explains what an Action looks like to someone who shows up to engage; this one walks you, the host, through creating and editing each Action type.
+This chapter is the **host-side** companion to [Space Actions](./actions.md). The participant chapter explains what an Action looks like to someone who shows up to engage; this one walks you, the host, through creating and editing each Action type.
 
 ## Creating an Action
 
@@ -49,12 +49,61 @@ Every editor is split into a **Content** card on top and a **Configuration** car
 | Section | What you set |
 |---|---|
 | **Schedule** | *Starts at* and *Ends at* date-times. Outside this window the Action isn't active. |
-| **Participation & Rewards** | The reward in **Credits (CR)** drawn from the Space's [Incentive Pool](./apps#-incentive-pool-beta). Credits convert to participant points on completion. |
+| **Participation & Rewards** | The reward in **Credits (CR)** drawn from the Space's [Incentive Pool](./apps.md#-incentive-pool-beta). Credits convert to participant points on completion. |
 | **Dependency Actions** | Other Actions in the Space a participant must complete first to unlock this one. |
 | **Status** | Toggle the Action between draft / live / closed. |
 | **Danger zone** | Delete the Action. Submissions/responses go with it; rewards already paid are not refunded. |
 
 Discussions add a **Moderation** section (assigning who can hide replies); Polls add a **Voting rules** section (see below).
+
+### Who can edit rewards and credits
+
+Configuration is **Creator-only**. The role check happens server-side on every save:
+
+| Role | What they can do |
+|---|---|
+| **Creator** | Full editor access — content, schedule, rewards, dependencies, status, deletion. The Creator is whoever created the Space (the post author who promoted their post into a Space). |
+| **Member** *(team Spaces)* | Can author and edit *their own* Actions inside a team Space, but cannot change reward amounts or pull from the Incentive Pool — those stay locked to the Creator. |
+| **Participant** | Read-only on Action pages. They never see the Configuration card. |
+| **Viewer** | Read-only on the Space splash + Overview. Cannot open Action editors. |
+
+The **Credits (CR)** field is the most common place where this matters: changing reward amounts moves money out of the Space's Incentive Pool, so only the Creator (or an explicitly-elevated team admin) can touch it. If you don't see the Configuration card or the Credits field is greyed out, you're not in a role that can edit rewards.
+
+### Anonymous participation
+
+The Space has a **General → Anonymous participation** toggle (under Settings → Apps → General → Settings) that flips two things at once:
+
+- **Identity binding.** When *off* (default), every vote, comment, and submission is attached to the participant's handle. When *on*, the participant is shown an anonymous handle on the action carousel, and their submissions are recorded against that anonymous identity. The Creator can still see aggregate counts but not individual mappings.
+- **Consent copy.** The ConsentModal that participants see on first join switches to the anonymous variant — it makes clear that responses are not personally attributable, but that aggregate analysis (Panels, Analyzes) is still on.
+
+:::tip When to enable
+Turn anonymous participation on for sensitive surveys (workplace satisfaction, health screenings, internal critique) where attribution would chill honest answers. Leave it off for community polls where social signal — *who voted for what* — is part of the value.
+:::
+
+Anonymous mode does **not** turn off the [Panels](./apps.md#-panels-beta) demographic capture — anonymity is per-submission, but if the host has enabled the Panels app, participants are still asked for their age band, gender, region, etc. so the Creator can run aggregate slicing. Both can coexist because Panel attributes are stored separately from submission identity.
+
+## Publishing the Space
+
+Editing Actions doesn't automatically publish the Space. A draft Space is only visible to its Creator and team admins until it's *published* — at which point the **Index page**, **Overview**, **Dashboard**, and **action carousel** become reachable by participants (and, if set to Public, by anonymous visitors).
+
+### The Publish button
+
+Open the Space's Index page (`/spaces/:space_id/`). The arena topbar surfaces a **Publish** button with the paper-plane icon. Clicking it opens the **Space visibility modal**:
+
+| Option | Who can see the Space |
+|---|---|
+| **Public** *(공개)* | Anyone with the URL — including logged-out visitors. Hot-Spaces ranking, search, and shared links all surface it. Required for Spaces you want listed in the public discovery feeds. |
+| **Private** *(비공개)* | Only invited members and team admins. Visitors without an invitation see a "not found" page; the URL works as an unlisted link only for people you've added through the General app's *Invite Participant* flow. |
+
+Pick a visibility, hit **Publish**, and the modal flips the Space from *Draft* to the corresponding state. The topbar's Publish button is replaced by a **Start** button (which transitions the Space from *Open* → *Ongoing* once you're ready for active participation), and an *In progress* status chip appears next to the title.
+
+### Changing visibility after publish
+
+The visibility flag is editable post-publish — re-open the modal from the topbar's **Settings → Status** entry and pick a different option. Switching from Private → Public retroactively makes the Space discoverable; switching Public → Private hides it from new visitors immediately but doesn't kick out anyone who already joined.
+
+:::warning Publishing is the trigger for invitation emails
+If you've used the General app's *Invite Participant* flow to add emails before publishing, those invitations are dispatched at publish time — not when you add the email. So make sure your Content / Apps / Actions are ready before flipping the switch; published-then-edited Spaces show a stale picture in the invitation emails participants receive.
+:::
 
 ## <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> Discussion editor
 
@@ -127,6 +176,6 @@ A scheduled event — livestream, video call, workshop, in-person gathering. The
 
 ## What's next
 
-- [Space Actions](./actions) — participant-side reference for the same five Action types.
-- [Space Apps → Incentive Pool](./apps#-incentive-pool-beta) — fund the Credit pool your Action rewards draw from.
-- [Reports](./reports) — turn the Action results into a published narrative.
+- [Space Actions](./actions.md) — participant-side reference for the same five Action types.
+- [Space Apps → Incentive Pool](./apps.md#-incentive-pool-beta) — fund the Credit pool your Action rewards draw from.
+- [Reports](./reports.md) — turn the Action results into a published narrative.

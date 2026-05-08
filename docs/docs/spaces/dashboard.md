@@ -31,7 +31,7 @@ Five card variants are rendered in the grid, each with a quick-glance headline n
 | <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> **Total Participants** | participants over time | Tabbed chart of participation trend by Action type |
 | <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> **Total Points Available** | total points pool | Per-action breakdown of points the Space has available to distribute |
 
-If you're the host and your Space has **no Incentive Pool configured yet**, the Pool card shows a violet **Setup Now** button that deep-links you to `/spaces/:space_id/apps/` so you can install the [Incentive Pool app *(Beta)*](./apps#-incentive-pool-beta). Participants viewing the same card don't see the button.
+If you're the host and your Space has **no Incentive Pool configured yet**, the Pool card shows a violet **Setup Now** button that deep-links you to `/spaces/:space_id/apps/` so you can install the [Incentive Pool app *(Beta)*](./apps.md#-incentive-pool-beta). Participants viewing the same card don't see the button.
 
 The grid is opportunistic: the cards shown for a given Space depend on what apps you've installed and what activity has accumulated. A brand-new Space mostly shows zeros; a busy Space mid-cycle fills every card.
 
@@ -47,7 +47,7 @@ A full-width **Ranking** table at the bottom of the page lists every participant
 
 A page-size pager at the bottom flips through additional pages of participants — useful for Spaces where the leaderboard runs deep.
 
-> **Tip.** Hosts use the Ranking table to spot top contributors before they generate a [Report](./reports). Participant scores roll up into the contributor share when the Phase 4 revenue split ships *(Coming soon)*.
+> **Tip.** Hosts use the Ranking table to spot top contributors before they generate a [Report](./reports.md). Participant scores roll up into the contributor share when the Phase 4 revenue split ships *(Coming soon)*.
 
 ## When to use Dashboard vs. Overview vs. Report
 
@@ -57,7 +57,7 @@ The Space has four host-facing tabs. They overlap a little, so here's a quick gu
 |---|---|---|
 | <img src={useBaseUrl('/img/icons/grid.svg')} width="14" alt="Dashboard" style={{verticalAlign: 'middle'}} /> **Dashboard** | `/spaces/:space_id/dashboard` | You want **live numbers** — how many people, how many actions, how the pool is being spent. Refresh a couple of times a day during an active campaign. |
 | <img src={useBaseUrl('/img/icons/file-text.svg')} width="14" alt="Overview" style={{verticalAlign: 'middle'}} /> **Overview** | `/spaces/:space_id/overview` | You want to **edit the narrative** — what the Space is, who it's for, why someone should join. This is the host's pitch, written by you. |
-| <img src={useBaseUrl('/img/icons/file-text.svg')} width="14" alt="Report" style={{verticalAlign: 'middle'}} /> **Report** | `/spaces/:space_id/report` | You want to **publish a longform AI-assisted report** synthesizing the Space's activity. See [Reports](./reports). |
+| <img src={useBaseUrl('/img/icons/file-text.svg')} width="14" alt="Report" style={{verticalAlign: 'middle'}} /> **Report** | `/spaces/:space_id/report` | You want to **publish a longform AI-assisted report** synthesizing the Space's activity. See [Reports](./reports.md). |
 | <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg> **Index** (portal) | `/spaces/:space_id/` | You want to **see the public viewer splash** — the page a first-time visitor lands on. Useful when QA-checking how your Space looks to outsiders. |
 
 Dashboard is the only one of these that updates automatically as activity rolls in; the other three are about what you, as the host, are telling people.
@@ -66,12 +66,12 @@ Dashboard is the only one of these that updates automatically as activity rolls 
 
 A few things the Dashboard *doesn't* show today (each on the roadmap):
 
-- **Per-action drilldown** *(Coming soon)*. The progress bars on the Participation's Action card are read-only summaries — you can't click a bar to drill into "which 12 people responded to this poll". Use the [Analyzes app](./apps#-analyzes) for that.
+- **Per-action drilldown** *(Coming soon)*. The progress bars on the Participation's Action card are read-only summaries — you can't click a bar to drill into "which 12 people responded to this poll". Use the [Analyzes app](./apps.md#-analyzes) for that.
 - **Date range picker** *(Coming soon)*. Today's numbers are cumulative; a "last 7 days" / "this cycle" filter is on the roadmap.
 - **Export** *(Coming soon)*. CSV / PDF export of the dashboard as a snapshot. The Analyzes app does have an Excel export per analysis.
 
 ## What's next
 
-- [Space Apps](./apps) — install the Incentive Pool that drives the dashboard's reward cards.
-- [Host Actions](./host-actions) — create the polls, discussions, quizzes, and follows whose completion fills the progress bars.
-- [Reports](./reports) — turn dashboard activity into a published narrative.
+- [Space Apps](./apps.md) — install the Incentive Pool that drives the dashboard's reward cards.
+- [Host Actions](./host-actions.md) — create the polls, discussions, quizzes, and follows whose completion fills the progress bars.
+- [Reports](./reports.md) — turn dashboard activity into a published narrative.
