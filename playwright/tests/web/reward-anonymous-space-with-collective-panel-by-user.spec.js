@@ -80,8 +80,16 @@ test.describe
 
     spaceUrl = `/spaces/${spaceId}`;
 
-    await goto(page, `${spaceUrl}/dashboard`);
-    await getLocator(page, { text: "Dashboard" });
+    // Route is `/dashboard/:..rest`, so the dx Routable's catch-all needs a
+    // trailing slash to match an empty rest. Without it the path falls through
+    // to PageNotFound. Other specs that go through the UI hit the redirect
+    // path and avoid this; REST-created spaces navigate directly so we must
+    // include the trailing slash explicitly.
+    await goto(page, `${spaceUrl}/dashboard/`);
+    await page.waitForURL(/\/spaces\/[a-z0-9-]+\/dashboard\/?$/, {
+      waitUntil: "load",
+      timeout: 10000,
+    });
   });
 
   test("Create a follow action with 2 credits", async ({ page }) => {
@@ -213,38 +221,40 @@ test.describe
   test("Configure Panel app with Age and Gender attributes", async ({
     page,
   }) => {
-    await goto(page, spaceUrl + "/apps");
+    // Real UI flow:
+    //   open Settings panel from topbar (btn-settings)
+    //   → if Panels not installed: click "+ 설치" (install-app-panels)
+    //   → click "설정" on the now-installed Panels row (settings-app-panels)
+    //   → navigates to /apps/panels
+    // Direct goto to /apps/ no longer works because the apps list is rendered
+    // inside the Settings sliding panel, not on a standalone /apps page.
+    await goto(page, spaceUrl);
+    await hideFab(page);
 
-    // The Panels app card has a "Setting" button with data-testid="configure-app-panels".
-    // But Panels might need to be installed first if not default.
-    // Check if Panels is in "Available Apps" or "Installed Apps".
-    const installButton = page.locator('[data-testid="install-app-panels"]');
-    if ((await installButton.count()) > 0) {
-      // Panels app needs to be installed first
-      await installButton.click();
-      await page.waitForLoadState("load");
-      // Wait for the app to appear in installed section
-      await page.waitForTimeout(1000);
-    }
-
-    // Now click Settings on the Panels app card
-    const settingButton = page.locator('[data-testid="configure-app-panels"]');
-    // There may be multiple "Setting" buttons — the Panels one should be visible
-    // after install. Find the one associated with Panels.
-    // Each AppCard renders the Setting button. We need the Panels one.
-    // The cards show app names. Find "Panels" text and its sibling Setting button.
-    const panelsCard = page.locator("text=Panels").locator("../..");
-    const panelsSettingBtn = panelsCard.locator(
-      '[data-testid="configure-app-panels"]',
+    // Open the Settings panel.
+    await clickNoNav(page, { testId: "btn-settings" });
+    await page.waitForSelector(
+      '[data-testid="settings-panel"][data-open="true"]',
+      { timeout: 10000 },
     );
 
-    if ((await panelsSettingBtn.count()) > 0) {
-      await panelsSettingBtn.click();
-    } else {
-      // Fallback: click any configure-app-panels button
-      await settingButton.first().click();
+    // Install the Panels app if it isn't already.
+    const installPanels = page.locator('[data-testid="install-app-panels"]');
+    if ((await installPanels.count()) > 0) {
+      await installPanels.first().click();
+      // Wait for the install to flip the row into the "Installed apps" section.
+      // The settings button (settings-app-panels) only renders for installed
+      // apps, so its appearance is the install confirmation.
+      await page.waitForSelector('[data-testid="settings-app-panels"]', {
+        timeout: 15000,
+      });
     }
 
+    // Open the Panels settings page.
+    await page
+      .locator('[data-testid="settings-app-panels"]')
+      .first()
+      .click();
     await page.waitForURL(/\/apps\/panels/, { waitUntil: "load" });
 
     // Toggle Age + Gender attribute cards. The panels page was
@@ -263,11 +273,20 @@ test.describe
   });
 
   test("Publish the space as public", async ({ page }) => {
-    await goto(page, spaceUrl + "/dashboard");
+    // Real UI flow:
+    //   /spaces/{id}/ (arena viewer) → topbar publish icon (btn-publish)
+    //   → SpaceVisibilityModal opens → pick "공개/Public" (public-option)
+    //   → click "게시/Publish" (aria-label "Confirm visibility selection")
+    // The previous flow used `{ text: "Publish" }` which doesn't match the
+    // localized topbar copy ("게시" in Korean) and it relied on a now-removed
+    // standalone /dashboard publish button.
+    await goto(page, spaceUrl + "/");
 
-    await click(page, { text: "Publish" });
-    await click(page, { testId: "public-option" });
+    await clickNoNav(page, { testId: "btn-publish" });
+    await waitPopup(page, { visible: true });
+    await clickNoNav(page, { testId: "public-option" });
     await click(page, { label: "Confirm visibility selection" });
+    await waitPopup(page, { visible: false });
   });
 
   test("New user signs up and participates in the space", async ({

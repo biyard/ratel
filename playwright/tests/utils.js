@@ -252,7 +252,7 @@ export async function openHomeTeamsDropdown(page) {
 /**
  * Create a team by driving the home → Teams HUD dropdown → "Create Team"
  * footer → ArenaTeamCreationPopup UI flow. After submit, Dioxus navigates
- * to `/{teamUsername}/home`, which the helper waits for.
+ * to `/{teamUsername}` (the SocialIndex route), which the helper waits for.
  *
  * Requires: logged-in user.
  */
@@ -281,7 +281,7 @@ export async function createTeamFromHome(
   // Submit — the arena popup handler performs the POST, closes the popup,
   // and navigates to the new team's home page.
   await click(page, { testId: "team-create-submit" });
-  await page.waitForURL(new RegExp(`/${username}/home`), {
+  await page.waitForURL(new RegExp(`/${username}/?$`), {
     waitUntil: "load",
   });
   await page.waitForFunction(
@@ -316,7 +316,7 @@ export async function openTeamFromHome(page, teamUsername) {
   await expect(teamItem).toBeVisible({ timeout: 15000 });
   await teamItem.click();
 
-  await page.waitForURL(new RegExp(`/${teamUsername}/home`), {
+  await page.waitForURL(new RegExp(`/${teamUsername}/?$`), {
     waitUntil: "load",
   });
   await page.waitForFunction(
@@ -342,7 +342,7 @@ export async function createTeamPostFromHome(
   postTitle,
   postContents,
 ) {
-  const teamHomeRe = new RegExp(`/${teamUsername}/home$`);
+  const teamHomeRe = new RegExp(`/${teamUsername}/?$`);
   if (!teamHomeRe.test(new URL(page.url()).pathname)) {
     await openTeamFromHome(page, teamUsername);
   }

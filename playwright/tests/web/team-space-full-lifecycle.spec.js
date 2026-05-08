@@ -221,8 +221,12 @@ test.describe.serial("Full space lifecycle with rewards", () => {
 
     spaceUrl = `/spaces/${spaceId}`;
 
-    await goto(page, `${spaceUrl}/dashboard`);
-    await getLocator(page, { text: "Dashboard" });
+    // Trailing slash required for `/dashboard/:..rest` catch-all match.
+    await goto(page, `${spaceUrl}/dashboard/`);
+    await page.waitForURL(/\/spaces\/[a-z0-9-]+\/dashboard\/?$/, {
+      waitUntil: "load",
+      timeout: 10000,
+    });
   });
 
   // ─── 2. Create poll (prerequisite) + reward ──────────────────────────────
@@ -456,9 +460,11 @@ test.describe.serial("Full space lifecycle with rewards", () => {
     // in-place. The legacy /dashboard Publish button no longer drives this.
     await goto(page, spaceUrl);
     await hideFab(page);
-    await click(page, { testId: "btn-publish" });
-    await click(page, { testId: "public-option" });
+    await clickNoNav(page, { testId: "btn-publish" });
+    await waitPopup(page, { visible: true });
+    await clickNoNav(page, { testId: "public-option" });
     await click(page, { label: "Confirm visibility selection" });
+    await waitPopup(page, { visible: false });
   });
 
   // ─── 9. User1: Sign up + prereq BEFORE start ────────────────────────────

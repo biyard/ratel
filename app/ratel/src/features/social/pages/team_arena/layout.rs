@@ -6,10 +6,12 @@ use crate::features::social::controllers::find_team::find_team_handler;
 use crate::features::social::pages::team_arena::settings_panel::ArenaSettingsPanel;
 use crate::features::social::pages::team_arena::topbar::{ArenaTopbar, TeamArenaTab};
 use crate::route::Route;
+use crate::social::controllers::Wall;
+use crate::social::hooks::{use_wall_context, UseWallContext};
 
 /// Context exposed by `TeamArenaLayout` so child pages can highlight the correct
 /// HUD tab and read resolved team data without re-fetching it.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, DioxusController)]
 pub struct TeamArenaContext {
     pub active_tab: Signal<TeamArenaTab>,
     pub username: Signal<String>,
@@ -22,6 +24,52 @@ pub struct TeamArenaContext {
     /// (used by the settings page after Save Changes so the topbar reflects
     /// the new name/logo immediately).
     pub refresh_trigger: Signal<u32>,
+    pub role: Signal<Option<crate::social::pages::member::dto::TeamRole>>,
+    pub following: Signal<bool>,
+    pub team_id: Signal<TeamPartition>,
+    pub description: Signal<String>,
+    pub created_at: Signal<i64>,
+}
+
+impl From<UseWallContext> for TeamArenaContext {
+    fn from(wall_ctx: UseWallContext) -> Self {
+        match wall_ctx.data() {
+            Wall::Team {
+                id,
+                username,
+                display_name,
+                profile_url,
+                role,
+                following,
+                description,
+                created_at,
+                ..
+            } => {
+                let (can_edit, is_admin, is_member) = if let Some(role) = role {
+                    (role.is_admin_or_owner(), role.is_admin_or_owner(), true)
+                } else {
+                    (false, false, false)
+                };
+
+                TeamArenaContext {
+                    active_tab: Signal::new(TeamArenaTab::Home),
+                    username: Signal::new(username),
+                    display_name: Signal::new(display_name),
+                    profile_url: Signal::new(profile_url),
+                    can_edit: Signal::new(can_edit),
+                    is_admin: Signal::new(is_admin),
+                    is_member: Signal::new(is_member),
+                    refresh_trigger: Signal::new(0),
+                    role: Signal::new(role),
+                    following: Signal::new(following),
+                    team_id: Signal::new(id),
+                    description: Signal::new(description),
+                    created_at: Signal::new(created_at),
+                }
+            }
+            _ => panic!("Wall context is not a team"),
+        }
+    }
 }
 
 pub fn use_team_arena() -> TeamArenaContext {
@@ -31,168 +79,49 @@ pub fn use_team_arena() -> TeamArenaContext {
 /// Arena-style layout wrapping every team route. Replaces the old
 /// `SocialLayout` + `TeamSettingLayout` for team-scoped pages.
 #[component]
-pub fn TeamArenaLayout(username: String) -> Element {
+pub fn TeamArenaLayout(username: ReadSignal<String>) -> Element {
     let user_ctx = crate::features::auth::hooks::use_user_context();
+    let wall_ctx = use_wall_context();
 
-    let active_tab = use_signal(|| TeamArenaTab::Home);
     let mut settings_open = use_signal(|| false);
-    let username_signal = use_signal(|| username.clone());
-    let display_signal = use_signal(|| username.clone());
-    let profile_signal = use_signal(String::new);
-    let can_edit_signal = use_signal(|| false);
-    let is_admin_signal = use_signal(|| false);
-    let is_member_signal = use_signal(|| false);
-    let refresh_trigger = use_signal(|| 0u32);
 
-    use_context_provider(|| TeamArenaContext {
-        active_tab,
-        username: username_signal,
-        display_name: display_signal,
-        profile_url: profile_signal,
-        can_edit: can_edit_signal,
-        is_admin: is_admin_signal,
-        is_member: is_member_signal,
-        refresh_trigger,
-    });
+    let team_ctx: TeamArenaContext = wall_ctx.into();
+
+    let mut ctx = use_context_provider(|| team_ctx);
 
     // Category filter signal consumed by TeamHome (carried over from SocialLayout).
     use_context_provider(|| Signal::new(Option::<String>::None));
 
-    // Fetch the team record so we have display name, logo, and permissions.
-    // Re-runs whenever `username` changes, `refresh_trigger` is bumped by a
-    // child page (e.g. settings save handler), OR the logged-in user changes
-    // (login / logout). Without the user-pk dependency the resource would
-    // stay stale after a modal login and the layout would report `can_edit
-    // = false` for an owner who just signed in, surfacing as a bogus
-    // "No permission" error.
-    let user_pk_dep = user_ctx()
-        .user
-        .as_ref()
-        .map(|u| u.pk.to_string())
-        .unwrap_or_default();
-    let team_resource = use_loader(use_reactive(
-        (&username, &refresh_trigger(), &user_pk_dep),
-        |(name, _, _)| async move {
-            Ok::<_, crate::features::social::Error>(
-                find_team_handler(name).await.map_err(|e| e.to_string()),
-            )
-        },
-    ))?;
-
-    // Derive render-time values from the resource directly. The server
-    // returns `Option<TeamRole>` — `Some(role)` means an actual team
-    // membership, `None` means the viewer is not a member (logged out
-    // or just not joined). Everything (can_edit, is_admin, is_member)
-    // flows from this single value; no permissions bitmask on the client.
-    let (display_name, profile_url, role_opt) = {
-        let data = team_resource.read();
-
-        match data.as_ref() {
-            Ok(team) if !team.pk.is_empty() && !team.username.is_empty() => {
-                let nickname = if team.nickname.is_empty() {
-                    team.username.clone()
-                } else {
-                    team.nickname.clone()
-                };
-                (
-                    nickname,
-                    team.profile_url.clone().unwrap_or_default(),
-                    team.role,
-                )
-            }
-            _ => (username.clone(), String::new(), None),
-        }
-    };
-
-    let can_edit = role_opt.map(|r| r.is_admin_or_owner()).unwrap_or(false);
-    let is_member = role_opt.is_some();
+    let profile_url = ctx.profile_url();
+    let display_name = ctx.display_name();
+    let can_edit = ctx.can_edit();
+    let is_member = ctx.is_member();
     let logged_in = user_ctx().user.is_some();
 
-    // Load follow status for non-members (members never see the follow btn).
-    let follow_status = use_server_future({
-        let name = username.clone();
-        move || {
-            let name = name.clone();
-            async move { check_follow_status_handler(name).await.ok() }
-        }
-    })?;
-
-    let (initial_following, follow_target_pk) = {
-        let val = follow_status.read();
-        match val.as_ref().and_then(|o| o.as_ref()) {
-            Some(s) => (s.is_following, Some(s.target_pk.clone())),
-            None => (false, None),
-        }
-    };
-
-    let mut is_following = use_signal(|| initial_following);
     let mut follow_processing = use_signal(|| false);
-    let target_pk_for_follow = follow_target_pk.clone();
 
     let on_follow_click = move |_| {
         if follow_processing() {
             return;
         }
-        let Some(pk) = target_pk_for_follow.clone() else {
-            return;
-        };
         follow_processing.set(true);
         spawn(async move {
-            let currently = is_following();
-            let result = if currently {
+            let pk = ctx.team_id().into();
+
+            let result = if ctx.following() {
                 unfollow_user(pk).await.map(|_| false)
             } else {
                 follow_user(pk).await.map(|_| true)
             };
             match result {
-                Ok(next) => is_following.set(next),
+                Ok(next) => {
+                    ctx.following.set(next);
+                }
                 Err(e) => debug!("follow toggle failed: {:?}", e),
             }
             follow_processing.set(false);
         });
     };
-
-    // Push resolved values into the context so child routes can read them.
-    // Recompute derivatives from `team_resource` INSIDE the effect so the
-    // closure reads that signal — this is what registers the effect's
-    // reactive dependency. Without the signal read the effect only runs
-    // once on mount, which leaves `can_edit` et al. stuck at false even
-    // after a post-login refetch, causing child pages like subscription
-    // to render "No permission" until a full page reload.
-    let mut ctx = use_team_arena();
-    let username_for_ctx = username.clone();
-    use_effect(move || {
-        // Read the signal so this effect re-runs on every team_resource
-        // resolution (login, logout, refresh trigger). Everything derived
-        // from the team flows off the `Option<TeamRole>` returned by the
-        // server — `None` means non-member.
-        let data = team_resource.read();
-
-        let (display_name_v, profile_url_v, role_v) = match data.as_ref() {
-            Ok(team) if !team.pk.is_empty() && !team.username.is_empty() => {
-                let nickname = if team.nickname.is_empty() {
-                    team.username.clone()
-                } else {
-                    team.nickname.clone()
-                };
-                (
-                    nickname,
-                    team.profile_url.clone().unwrap_or_default(),
-                    team.role,
-                )
-            }
-            _ => (username_for_ctx.clone(), String::new(), None),
-        };
-
-        ctx.username.set(username_for_ctx.clone());
-        ctx.display_name.set(display_name_v);
-        ctx.profile_url.set(profile_url_v);
-        ctx.can_edit
-            .set(role_v.map(|r| r.is_admin_or_owner()).unwrap_or(false));
-        ctx.is_admin
-            .set(role_v.map(|r| r.is_owner()).unwrap_or(false));
-        ctx.is_member.set(role_v.is_some());
-    });
 
     rsx! {
         document::Script { defer: true, src: asset!("./script.js") }
@@ -212,23 +141,24 @@ pub fn TeamArenaLayout(username: String) -> Element {
             div { class: "team-arena__bg-scanline" }
 
             ArenaTopbar {
-                username: username.clone(),
+                username: username(),
                 display_name: display_name.clone(),
                 profile_url: profile_url.clone(),
-                active: active_tab(),
+                active: ctx.active_tab(),
                 can_edit,
                 show_follow: logged_in && !is_member,
-                is_following: is_following(),
+                is_following: ctx.following(),
                 on_follow: on_follow_click,
                 on_open_settings: move |_| settings_open.set(true),
             }
-
-            div { class: "team-arena__content", Outlet::<Route> {} }
+            div { class: "team-arena__content",
+                SuspenseBoundary { Outlet::<Route> {} }
+            }
 
             ArenaSettingsPanel {
                 open: settings_open(),
                 on_close: move |_| settings_open.set(false),
-                username: username.clone(),
+                username: username(),
                 can_edit,
             }
         }

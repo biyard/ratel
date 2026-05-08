@@ -180,7 +180,13 @@ test:
 	npx @tailwindcss/cli -i tailwind.css -o ./assets/tailwind.css
 	$(BUILD_ENV) CARGO_TARGET_DIR=./test-build-target cargo test --features server,bypass --tests -- --test-threads=1
 
-run:
+js/node_modules:
+	npm i
+
+../../node_modules:
+	cd ../.. && npm i
+
+run: ../../node_modules js/node_modules
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES)
 
 ANDROID_NDK_HOME ?= /opt/android-ndk

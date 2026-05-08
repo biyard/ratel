@@ -40,17 +40,17 @@ test.describe.serial(
       });
       expect(res.ok(), `create team: ${await res.text()}`).toBeTruthy();
 
-      await goto(page, `/${teamUsername}/home`);
-      await expect(page).toHaveURL(new RegExp(`/${teamUsername}/home`));
+      await goto(page, `/${teamUsername}`);
+      await expect(page).toHaveURL(new RegExp(`/${teamUsername}/?$`));
     });
 
     test("should navigate to team settings page", async ({ page }) => {
       // Navigate directly to the team settings page
-      await goto(page, `/${teamUsername}/team-settings`);
+      await goto(page, `/${teamUsername}/settings`);
 
       // Verify the settings page loaded. The Subscription & Billing card is
       // rendered for admins/owners and contains the Change Plan link.
-      await expect(page).toHaveURL(new RegExp(`/${teamUsername}/team-settings`));
+      await expect(page).toHaveURL(new RegExp(`/${teamUsername}/settings`));
       await expect(
         page.getByText("Subscription & Billing", { exact: true }),
       ).toBeVisible();
@@ -63,7 +63,7 @@ test.describe.serial(
       page,
     }) => {
       // Navigate to team settings first (each test gets a fresh page from storageState)
-      await goto(page, `/${teamUsername}/team-settings`);
+      await goto(page, `/${teamUsername}/settings`);
 
       // Wait for the admin view to render before clicking.
       await expect(
@@ -76,19 +76,19 @@ test.describe.serial(
 
       // Wait for URL to update to the subscription route
       await page.waitForURL(
-        new RegExp(`/${teamUsername}/team-settings/subscription`),
+        new RegExp(`/${teamUsername}/settings/subscription`),
         { waitUntil: "load" },
       );
 
       // Verify we are on the subscription page
       await expect(page).toHaveURL(
-        new RegExp(`/${teamUsername}/team-settings/subscription`),
+        new RegExp(`/${teamUsername}/settings/subscription`),
       );
     });
 
     test("should display the membership plans header", async ({ page }) => {
       // Navigate to the subscription page directly
-      await goto(page, `/${teamUsername}/team-settings/subscription`);
+      await goto(page, `/${teamUsername}/settings/subscription`);
 
       // The MembershipPlanHeader renders "Membership Plans" as the h1 heading
       const heading = page.getByRole("heading", { name: "Membership Plans" });
@@ -96,7 +96,7 @@ test.describe.serial(
     });
 
     test("should display all membership plan cards", async ({ page }) => {
-      await goto(page, `/${teamUsername}/team-settings/subscription`);
+      await goto(page, `/${teamUsername}/settings/subscription`);
 
       // Wait for the membership plans heading to confirm page is loaded
       await expect(
@@ -134,7 +134,7 @@ test.describe.serial(
     test("should display plan features and action buttons", async ({
       page,
     }) => {
-      await goto(page, `/${teamUsername}/team-settings/subscription`);
+      await goto(page, `/${teamUsername}/settings/subscription`);
 
       // Wait for the page to fully render
       await expect(
@@ -177,7 +177,7 @@ test.describe.serial(
     test("should remain on the subscription page after direct navigation", async ({
       page,
     }) => {
-      await goto(page, `/${teamUsername}/team-settings/subscription`);
+      await goto(page, `/${teamUsername}/settings/subscription`);
 
       // Wait for page to load
       await expect(
@@ -186,7 +186,7 @@ test.describe.serial(
 
       // Confirm URL still matches (no redirect for admins/owners).
       await expect(page).toHaveURL(
-        new RegExp(`/${teamUsername}/team-settings/subscription`),
+        new RegExp(`/${teamUsername}/settings/subscription`),
       );
     });
   },

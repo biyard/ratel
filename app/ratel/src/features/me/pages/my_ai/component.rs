@@ -1,7 +1,7 @@
 use super::*;
 use crate::common::hooks::use_origin;
 use crate::common::utils::time::sleep;
-use crate::features::social::pages::user_setting::controllers::{
+use crate::features::social::pages::setting::user::controllers::{
     get_mcp_secret_handler, regenerate_mcp_secret_handler,
 };
 use crate::*;

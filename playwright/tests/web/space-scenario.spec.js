@@ -218,19 +218,29 @@ async function signUpAndParticipate(browser, user, spaceUrl) {
 }
 
 async function openSpaceAppSettings(page, spaceUrl, appType) {
-  await goto(page, spaceUrl + "/apps");
+  // Real UI flow: apps are listed inside the topbar Settings panel rather
+  // than a standalone /apps page. The legacy `configure-app-{type}` testid
+  // was renamed to `settings-app-{type}` (see
+  // `settings_panel/apps_section/component.rs`).
+  await goto(page, spaceUrl);
+
+  await clickNoNav(page, { testId: "btn-settings" });
+  await page.waitForSelector(
+    '[data-testid="settings-panel"][data-open="true"]',
+    { timeout: 10000 },
+  );
 
   const installButton = page.getByTestId(`install-app-${appType}`);
   if (await installButton.isVisible().catch(() => false)) {
     await installButton.click();
     // Install is a server round-trip + context refresh before the card
-    // swaps from install → configure; 5s default is too tight under CI load.
-    await expect(page.getByTestId(`configure-app-${appType}`)).toBeVisible({
+    // swaps from install → settings; 5s default is too tight under CI load.
+    await expect(page.getByTestId(`settings-app-${appType}`)).toBeVisible({
       timeout: 15000,
     });
   }
 
-  await click(page, { testId: `configure-app-${appType}` });
+  await click(page, { testId: `settings-app-${appType}` });
 }
 
 // ─── Test suite ─────────────────────────────────────────────────────────────
@@ -302,8 +312,13 @@ test.describe.serial("Space governance scenario", () => {
 
     spaceUrl = `/spaces/${spaceId}`;
 
-    await goto(page, `${spaceUrl}/dashboard`);
-    await getLocator(page, { text: "Dashboard" });
+    // Trailing slash required for `/dashboard/:..rest` catch-all; assert via
+    // URL match because the dashboard heading is localized.
+    await goto(page, `${spaceUrl}/dashboard/`);
+    await page.waitForURL(/\/spaces\/[a-z0-9-]+\/dashboard\/?$/, {
+      waitUntil: "load",
+      timeout: 10000,
+    });
   });
 
   // TODO: add team member into team
@@ -529,11 +544,14 @@ test.describe.serial("Space governance scenario", () => {
   // ─── 11. Publish space as public ──────────────────────────────────────────
 
   test("Creator1: Publish space as public", async ({ page }) => {
-    await goto(page, spaceUrl + "/dashboard");
-    await click(page, { text: "Publish" });
-    await click(page, { testId: "public-option" });
+    // Real UI flow: arena viewer → topbar publish icon (btn-publish)
+    // → SpaceVisibilityModal → public-option → Confirm.
+    await goto(page, spaceUrl + "/");
+    await clickNoNav(page, { testId: "btn-publish" });
+    await waitPopup(page, { visible: true });
+    await clickNoNav(page, { testId: "public-option" });
     await click(page, { label: "Confirm visibility selection" });
-    await page.waitForLoadState("load");
+    await waitPopup(page, { visible: false });
   });
 
   // ─── 12. Viewer: sign up + Participate (no prereq completion) ────────────
