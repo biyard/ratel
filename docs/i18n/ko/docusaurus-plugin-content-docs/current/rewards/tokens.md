@@ -60,6 +60,6 @@ Ratel 이 사이클에 대한 서명된 청구 페이로드 — *(amount, deadli
 
 ## 관련 페이지
 
-- [포인트](./points) — 사이클 잠금 시점에 토큰이 변환되어 나오는 오프체인 단위.
+- [포인트](./points.md) — 사이클 잠금 시점에 토큰이 변환되어 나오는 오프체인 단위.
 - [자격증명 → 속성 관리](../credentials/attributes) — 본인의 DID 가 청구 트랜잭션을 서명합니다.
 - [용어 정리 → 온체인 정산](../intro/glossary#on-chain-settlement-온체인-정산) — 청구 흐름의 공식 정의.

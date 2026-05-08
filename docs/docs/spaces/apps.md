@@ -51,7 +51,7 @@ URLs:
 - Drill into a single poll's data — `/spaces/:space_id/apps/analyzes/poll/:poll_id`
 - Drill into a single discussion's data — `/spaces/:space_id/apps/analyzes/discussion/:discussion_id`
 
-The Analyzes App is Ratel's **cross-filter analysis engine** — *not* a longform AI narrative generator. (For the longform AI narrative side, see [Reports](./reports), which covers `/spaces/:space_id/report`.) Each analysis you save is a saved **cross-filter** over your Space's polls, quizzes, follows, and discussions, with a drilldown to the per-participant records that match.
+The Analyzes App is Ratel's **cross-filter analysis engine** — *not* a longform AI narrative generator. (For the longform AI narrative side, see [Reports](./reports.md), which covers `/spaces/:space_id/report`.) Each analysis you save is a saved **cross-filter** over your Space's polls, quizzes, follows, and discussions, with a drilldown to the per-participant records that match.
 
 ### How a typical analysis flow runs
 
@@ -63,7 +63,7 @@ The Analyzes App is Ratel's **cross-filter analysis engine** — *not* a longfor
 
 ### Contribution records and the Phase 4 revenue split
 
-The `:report_id/records` page is also the **contribution records** surface: per-participant breakdowns of how each respondent's activity matched the analysis you saved. This is what feeds the Phase 4 revenue split — when you publish a paid Report ([Reports](./reports)), sales are split **10% platform · 60% host · 30% contributors**, with the contributor share weighted by relevance to the final Report.
+The `:report_id/records` page is also the **contribution records** surface: per-participant breakdowns of how each respondent's activity matched the analysis you saved. This is what feeds the Phase 4 revenue split — when you publish a paid Report ([Reports](./reports.md)), sales are split **10% platform · 60% host · 30% contributors**, with the contributor share weighted by relevance to the final Report.
 
 :::note Coming soon
 The full Phase 4 revenue split engine (with on-chain settlement opt-in) is rolling out alongside the broader agent economy. Analyses themselves are usable today on dev / staging; the monetization layer appears in your host dashboard as it ships.

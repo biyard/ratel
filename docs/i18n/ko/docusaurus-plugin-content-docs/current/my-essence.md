@@ -50,7 +50,7 @@ https://ratel.foundation/mcp/<your-token>
 - **Cursor** — `Settings → Cursor Settings → MCP → Add new server (HTTP / Streamable)`.
 - **Generic JSON (일반 JSON)** — `curl` 스모크 테스트 + Python · TypeScript · Rust 등 모든 MCP SDK 가 사용하는 JSON-RPC 2.0 / SSE 형식.
 
-각 탭은 번호가 매겨진 세 단계로 이뤄져 있고, 그대로 복사해 쓸 수 있는 명령어와 JSON 스니펫이 들어 있습니다. [AI 연결 챕터](./ai-connect)를 이미 읽으셨다면 같은 화면입니다 — `/my-ai` 는 그 내용의 인앱 도착지입니다.
+각 탭은 번호가 매겨진 세 단계로 이뤄져 있고, 그대로 복사해 쓸 수 있는 명령어와 JSON 스니펫이 들어 있습니다. [AI 연결 챕터](./ai-connect.md)를 이미 읽으셨다면 같은 화면입니다 — `/my-ai` 는 그 내용의 인앱 도착지입니다.
 
 ## <img src={useBaseUrl('/img/icons/award.svg')} width="20" height="20" alt="Character" style={{verticalAlign: 'middle'}} /> Character — `/me/character`
 

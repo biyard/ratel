@@ -86,7 +86,7 @@ Teams can offer **paid memberships** to supporters at `/your-handle/team-members
 
 Open **Settings → Subscription** at `/your-handle/team-settings/subscription` to manage your team's plan.
 
-The subscription unlocks team-level features (monthly Credits for reward Spaces, the Trusted Creator badge, raw participant data access at higher tiers). Billing is handled off-chain via PortOne, so you can pay with the methods you already use. See [Team Settings → Team subscription](./team-settings#-team-subscription--team-settingssubscription) for the full breakdown.
+The subscription unlocks team-level features (monthly Credits for reward Spaces, the Trusted Creator badge, raw participant data access at higher tiers). Billing is handled off-chain via PortOne, so you can pay with the methods you already use. See [Team Settings → Team subscription](./team-settings.md#-team-subscription--team-settingssubscription) for the full breakdown.
 
 ## DAO — collective governance
 
@@ -111,4 +111,4 @@ Sub-team flows live under your team's arena and cover the full lifecycle:
 - <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c2.39 0 4.68.94 6.36 2.64"/></svg> **Bylaws** — `/your-handle/bylaws`
 - <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> **Leave parent** — `/your-handle/parent/leave`
 
-See [Sub-teams](./sub-teams) for the full flow — apply, manage, docs, announcements, bylaws, deregister, leave parent — covered URL by URL.
+See [Sub-teams](./sub-teams.md) for the full flow — apply, manage, docs, announcements, bylaws, deregister, leave parent — covered URL by URL.

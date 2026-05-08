@@ -78,7 +78,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 두 관문을 모두 통과하면 일반 액션이 열리고 본격 참여자가 됩니다.
 
 :::tip
-익명 스페이스 ([호스트 액션 → 익명 참여](./host-actions#anonymous-participation) 참고)의 경우에도 데이터 수집 동의는 동일하게 묻습니다. 그 스페이스에서는 투표가 익명으로 기록됩니다.
+익명 스페이스 ([호스트 액션 → 익명 참여](./host-actions.md#anonymous-participation) 참고)의 경우에도 데이터 수집 동의는 동일하게 묻습니다. 그 스페이스에서는 투표가 익명으로 기록됩니다.
 :::
 
 :::note 예정
