@@ -13,7 +13,7 @@ Essence 에는 컨트롤 패널이 있습니다 — Essence 에 들어가는 모
 /essence
 ```
 
-[첫날 체크리스트](./getting-started#%EC%B2%AB%EB%82%A0-%EC%B2%B4%ED%81%AC%EB%A6%AC%EC%8A%A4%ED%8A%B8), 인앱 내비게이션, 또는 URL 직접 입력으로 언제든 열 수 있습니다.
+[첫날 체크리스트](./getting-started.md#%EC%B2%AB%EB%82%A0-%EC%B2%B4%ED%81%AC%EB%A6%AC%EC%8A%A4%ED%8A%B8), 인앱 내비게이션, 또는 URL 직접 입력으로 언제든 열 수 있습니다.
 
 ## `/essence` 가 보여주는 것
 

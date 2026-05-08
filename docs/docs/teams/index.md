@@ -15,6 +15,6 @@ This chapter is split into three pages, each tailored to a different audience.
 
 | Page | Who it's for | What it covers |
 |---|---|---|
-| **[Create a Team](./create)** | Hosts setting up a new team | Step-by-step team creation, the arena tabs you'll see, member roles, posts / drafts / rewards / memberships, team subscription, the built-in DAO, and a quick index of sub-team flows. |
-| **[Sub-teams](./sub-teams)** | Hosts running parent / child relationships | The full parent / child Team lifecycle — apply, manage, docs, announcements, bylaws, deregister, leave parent. URL-by-URL deep dive. |
-| **[Team Settings](./team-settings)** | Team admins and owners | Admin-only surfaces — team profile, members & roles, billing dashboard, team subscription, delete team. |
+| **[Create a Team](./create.md)** | Hosts setting up a new team | Step-by-step team creation, the arena tabs you'll see, member roles, posts / drafts / rewards / memberships, team subscription, the built-in DAO, and a quick index of sub-team flows. |
+| **[Sub-teams](./sub-teams.md)** | Hosts running parent / child relationships | The full parent / child Team lifecycle — apply, manage, docs, announcements, bylaws, deregister, leave parent. URL-by-URL deep dive. |
+| **[Team Settings](./team-settings.md)** | Team admins and owners | Admin-only surfaces — team profile, members & roles, billing dashboard, team subscription, delete team. |

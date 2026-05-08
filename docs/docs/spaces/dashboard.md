@@ -69,6 +69,6 @@ A few things the Dashboard _doesn't_ show today (each on the roadmap):
 
 ## What's next
 
-- [Space Apps](./apps) — install the Incentive Pool that drives the dashboard's reward cards.
-- [Host Actions](./host-actions) — create the polls, discussions, quizzes, and follows whose completion fills the progress bars.
-- [Reports](./reports) — turn dashboard activity into a published narrative.
+- [Space Apps](./apps.md) — install the Incentive Pool that drives the dashboard's reward cards.
+- [Host Actions](./host-actions.md) — create the polls, discussions, quizzes, and follows whose completion fills the progress bars.
+- [Reports](./reports.md) — turn dashboard activity into a published narrative.

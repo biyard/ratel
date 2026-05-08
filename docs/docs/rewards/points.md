@@ -11,7 +11,7 @@ title: Reward Points
 
 You don't have to do anything special to earn Points — the platform credits them automatically as soon as a qualifying action completes. The main paths:
 
-- **Hosting a Space Action.** When participants complete a Poll, Discussion, Quiz, or Follow you host, Credits from the Space's [Incentive Pool](./incentives) are converted to Points in your account.
+- **Hosting a Space Action.** When participants complete a Poll, Discussion, Quiz, or Follow you host, Credits from the Space's [Incentive Pool](./incentives.md) are converted to Points in your account.
 - **Completing a participant Action.** When you complete a reward-bearing Action *as a participant*, you receive Points drawn from that Space's Incentive Pool. (See [Space Actions → How action rewards work](../spaces/actions#how-action-rewards-work) for the per-action payout flow.)
 - **Post engagement.** Posts that gather likes, comments, and reshares earn engagement-weighted Points back to the author.
 
@@ -57,7 +57,7 @@ Below the donut sits a 6-cycle monthly chart (Points earned + Tokens received ov
 
 ## Related
 
-- [Tokens](./tokens) — the on-chain payout Points convert into when you claim a past cycle.
-- [Credits](./credits) — the host-funded upstream of Points.
-- [Experience Points (XP)](./xp) — the progression unit; SP from XP buys Money Tree, which multiplies every Point payout.
+- [Tokens](./tokens.md) — the on-chain payout Points convert into when you claim a past cycle.
+- [Credits](./credits.md) — the host-funded upstream of Points.
+- [Experience Points (XP)](./xp.md) — the progression unit; SP from XP buys Money Tree, which multiplies every Point payout.
 - [Glossary → Rewards](../intro/glossary#rewards) — formal definitions of Point, Credit, Token, Cycle, and the on-chain / off-chain split.

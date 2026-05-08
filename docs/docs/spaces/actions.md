@@ -23,7 +23,7 @@ Each card shows:
 
 - The action **type** (poll, discussion, quiz, follow, meet)
 - A short headline summarizing what's being asked
-- The reward attached to the action (if the Space has an [Incentive Pool](./apps#-incentive-pool-beta) configured)
+- The reward attached to the action (if the Space has an [Incentive Pool](./apps.md#-incentive-pool-beta) configured)
 - Whether you've already participated, and if so, what you did
 
 Tap a card to open the action's full page. Once you complete it, you'll come back to the carousel and see the next one in sequence.

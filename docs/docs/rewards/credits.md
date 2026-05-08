@@ -5,7 +5,7 @@ title: Credits
 
 # Credits
 
-**Credits** are the host-funded currency that backs an Action's reward in a Space. They're the upstream of [Reward Points](./points): when a host configures an Action's reward, they allocate Credits from their Incentive Pool — and at payout, each Credit converts into Points for the participant who earned it.
+**Credits** are the host-funded currency that backs an Action's reward in a Space. They're the upstream of [Reward Points](./points.md): when a host configures an Action's reward, they allocate Credits from their Incentive Pool — and at payout, each Credit converts into Points for the participant who earned it.
 
 ## Where Credits come from
 
@@ -24,7 +24,7 @@ These caps are enforced server-side. If a host tries to allocate more Credits to
 When you configure a reward on a Poll, Discussion, Quiz, or Follow, the action settings modal asks for a **Credit allocation**. That allocation:
 
 - Draws from your Team's (or your personal) monthly Credit balance for the current cycle.
-- Defines how much of the Space's [Incentive Pool](./incentives) this specific Action will pay out.
+- Defines how much of the Space's [Incentive Pool](./incentives.md) this specific Action will pay out.
 - Is bounded by your tier's per-Space cap (see above).
 
 The Action's settings page shows the current Credit balance available to spend, the per-Space cap, and (after allocation) what's left in the cycle's Credit budget.
@@ -33,7 +33,7 @@ The Action's settings page shows the current Credit balance available to spend, 
 
 When a participant completes a reward-bearing Action:
 
-1. The platform calculates the participant's share of the Action's Credit allocation, according to the host's distribution rules (flat / weighted by participation depth / staged across phases — see [Incentive Pool](./incentives)).
+1. The platform calculates the participant's share of the Action's Credit allocation, according to the host's distribution rules (flat / weighted by participation depth / staged across phases — see [Incentive Pool](./incentives.md)).
 2. Their share of Credits is converted to **Points** in their account at the platform's current conversion rate (typically 1:1 at MVP, but the platform reserves the right to tune the rate as the economy matures).
 3. The Action's Credit allocation is decremented; the host's Credit balance is decremented for the cycle.
 
@@ -59,6 +59,6 @@ This is intentional: Credits are designed to encourage *active* host engagement 
 
 ## Related
 
-- [Reward Points](./points) — what Credits become for the participant at payout.
-- [Incentive Pool](./incentives) — the Space-level surface where Credits land before they're attached to individual Actions.
+- [Reward Points](./points.md) — what Credits become for the participant at payout.
+- [Incentive Pool](./incentives.md) — the Space-level surface where Credits land before they're attached to individual Actions.
 - [Glossary → Membership Tier](../intro/glossary#membership-tier) — the tier-by-tier Credit allotment table.
