@@ -15,7 +15,7 @@ Membership is Ratel's tier system for hosts and power users. Anyone can sign up 
 
 Open it from the sidebar (the *Membership* link in the left rail) or paste the URL directly. The page shows every tier side-by-side as a card grid — you compare them, click **Get \<Tier\>** on the one you want, and a purchase modal walks you through payment.
 
-A separate **Subscription & Billing** card on your settings page (`/<your-handle>/settings`) is where you manage the tier you've already bought. See [Settings → Subscription & Billing](./settings#-subscription--billing) for that.
+A separate **Subscription & Billing** card on your settings page (`/<your-handle>/settings`) is where you manage the tier you've already bought. See [Settings → Subscription & Billing](./settings.md#-subscription--billing) for that.
 
 ## What Credits are
 
@@ -23,7 +23,7 @@ Before the tiers, the unit they meter:
 
 > **Credits** are monthly points you can use to create or boost reward Spaces.
 
-Every paid tier comes with a monthly Credit allotment that resets each cycle. When you create a reward-bearing Action ([Host Actions](./spaces/host-actions)) or fund a Space's [Incentive Pool](./spaces/apps#-incentive-pool-beta), the cost is paid in Credits. Higher tiers ship with bigger monthly allotments and a higher per-Space cap.
+Every paid tier comes with a monthly Credit allotment that resets each cycle. When you create a reward-bearing Action ([Host Actions](./spaces/host-actions.md)) or fund a Space's [Incentive Pool](./spaces/apps.md#-incentive-pool-beta), the cost is paid in Credits. Higher tiers ship with bigger monthly allotments and a higher per-Space cap.
 
 Credits aren't refundable, can't be transferred, and don't roll over month-to-month — they're the budget you have for one cycle of host work.
 
@@ -108,7 +108,7 @@ After that, your tier shows up in two places:
 
 ### Changing or canceling a tier
 
-Manage subscription changes from the [Settings → Subscription & Billing](./settings#-subscription--billing) card. The settings card is the canonical place for billing operations — see that chapter for the exact controls available today and what's *(Coming soon)*.
+Manage subscription changes from the [Settings → Subscription & Billing](./settings.md#-subscription--billing) card. The settings card is the canonical place for billing operations — see that chapter for the exact controls available today and what's *(Coming soon)*.
 
 ## Tier limits and roadmap
 
@@ -121,6 +121,6 @@ A few things to know:
 
 ## What's next
 
-- [Settings → Subscription & Billing](./settings#-subscription--billing) — manage the tier you just bought.
-- [Host Actions](./spaces/host-actions) — spend Credits on reward Actions in your Spaces.
-- [Space Apps → Incentive Pool](./spaces/apps#-incentive-pool-beta) — fund a Space's pool from your Credit allotment.
+- [Settings → Subscription & Billing](./settings.md#-subscription--billing) — manage the tier you just bought.
+- [Host Actions](./spaces/host-actions.md) — spend Credits on reward Actions in your Spaces.
+- [Space Apps → Incentive Pool](./spaces/apps.md#-incentive-pool-beta) — fund a Space's pool from your Credit allotment.

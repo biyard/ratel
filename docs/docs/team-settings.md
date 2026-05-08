@@ -7,7 +7,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # Team Settings
 
-Team Settings is where a Team's admins manage the Team itself — its public identity, its members and roles, the subscription paying for its monthly Credits, and (if it comes to it) the deletion flow. This is the **administrator's** view of a Team; for the public profile and feed, see the [Create a Team](./teams) chapter.
+Team Settings is where a Team's admins manage the Team itself — its public identity, its members and roles, the subscription paying for its monthly Credits, and (if it comes to it) the deletion flow. This is the **administrator's** view of a Team; for the public profile and feed, see the [Create a Team](./teams.md) chapter.
 
 ## Where Team Settings live
 
@@ -44,7 +44,7 @@ The first card. Everything visible on the Team's public profile is edited here:
 - **Team name (display name)** — what people see in the UI. Up to 30 characters.
 - **Description** — a longer paragraph describing what the Team does. Minimum 10 characters; the platform's content filter rejects test keywords and offensive language.
 - **Username (handle)** — locked. The handle is set when the Team is created and is hard to change later — contact support if it absolutely must move. The field is shown read-only so admins know what URL their Team lives at.
-- **DAO Address** *(when DAO is activated)* — the on-chain treasury / governance address tied to this Team. Read-only here; DAO activation lives in the [Teams → DAO](./teams#dao--collective-governance) flow.
+- **DAO Address** *(when DAO is activated)* — the on-chain treasury / governance address tied to this Team. Read-only here; DAO activation lives in the [Teams → DAO](./teams.md#dao--collective-governance) flow.
 
 Changes to display name, description, logo, and banner are visible everywhere immediately after autosave.
 
@@ -107,7 +107,7 @@ Use the URL `/<team-handle>/team-settings/subscription` when you want to land di
 
 ### Tiers — same five as personal
 
-The Team subscription uses the same five tiers as the user subscription, with the same Credit allotments and per-Space caps. See [Membership](./membership) for the full feature matrix:
+The Team subscription uses the same five tiers as the user subscription, with the same Credit allotments and per-Space caps. See [Membership](./membership.md) for the full feature matrix:
 
 - **Free** — included with every Team.
 - **Pro** — 40 monthly Credits, up to 2 per reward Space, ₩30,000 / month.
@@ -117,7 +117,7 @@ The Team subscription uses the same five tiers as the user subscription, with th
 
 A few Team-specific notes:
 
-- **Credits are billed once and shared.** A Team's monthly Credits are funded by the Team's subscription, not pooled from individual members. Any admin spending Credits on a reward Space (via [Host Actions](./spaces/host-actions)) draws from the Team's allotment.
+- **Credits are billed once and shared.** A Team's monthly Credits are funded by the Team's subscription, not pooled from individual members. Any admin spending Credits on a reward Space (via [Host Actions](./spaces/host-actions.md)) draws from the Team's allotment.
 - **Owner-only purchase.** Only the Team's owner can complete a tier upgrade — the purchase flow draws from the card on file in the owner-gated Billing dashboard.
 - **Off-chain billing only.** Same as personal subscriptions — there's no on-chain settlement for tier billing.
 
@@ -126,7 +126,7 @@ A few Team-specific notes:
 A handful of Team-level controls aren't part of `/team-settings`:
 
 - **DAO activation** — lives on the Team home / DAO flow, not in settings.
-- **Sub-teams** (apply, manage, deregister, leave) — see [Sub-teams](./sub-teams). These are governance flows, not account settings.
+- **Sub-teams** (apply, manage, deregister, leave) — see [Sub-teams](./sub-teams.md). These are governance flows, not account settings.
 - **Drafts, Posts, Spaces, Memberships sold by the Team** — managed from the Team's own arena tabs, not settings.
 - **Team-level notifications preferences** — *(Coming soon)*.
 - **Audit log of admin actions** — *(Coming soon)*.
@@ -141,6 +141,6 @@ A handful of Team-level controls aren't part of `/team-settings`:
 
 ## What's next
 
-- [Create a Team](./teams) — the foundational Team chapter (members, drafts, DAO basics).
-- [Sub-teams](./sub-teams) — the full governance lifecycle for parent / child Team relationships.
-- [Membership](./membership) — pick the tier whose monthly Credits will pay for your Team's reward Spaces.
+- [Create a Team](./teams.md) — the foundational Team chapter (members, drafts, DAO basics).
+- [Sub-teams](./sub-teams.md) — the full governance lifecycle for parent / child Team relationships.
+- [Membership](./membership.md) — pick the tier whose monthly Credits will pay for your Team's reward Spaces.
