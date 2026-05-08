@@ -67,6 +67,20 @@ What "joining" means in practice:
 - If the Space has an **Incentive Pool**, you become eligible to receive a share when actions are completed.
 - You'll receive notifications when the host posts a new action, publishes a report, or replies to a comment you wrote.
 
+### The participation flow
+
+When you click **Participate** for the first time, Ratel walks you through three quick steps before the action carousel opens.
+
+1. **Sign in or sign up.** Logged-out visitors see a **Sign In** card on the splash. New users can sign up directly from the Space — Ratel emails a verification code, you set a password and handle, and you land back on the Space already authenticated.
+2. **Consent modal.** A **ConsentModal** appears the first time you participate. It explains what data the host collects (the actions you complete, your participant role, any panel attributes you opt into) and asks you to tick the agreement checkbox. You can't continue until you check it. This is one-time per Space — re-visiting later skips it.
+3. **Prerequisite checklist.** If the host has marked any Action as a *prerequisite* — typically a short pre-survey poll — a **PrerequisiteCard** shows up next with a checklist. Until you complete every prerequisite, the rest of the action carousel stays hidden. Click a prerequisite item to open it in the full-screen overlay (Poll / Quiz / Discussion), submit, and the card flips green.
+
+Once both gates are cleared, the regular action carousel becomes available and you're a full participant.
+
+:::tip
+Anonymous Spaces (see [Host Actions → Anonymous participation](./host-actions#anonymous-participation)) skip the consent step's identity-binding language but still ask for the data-collection agreement. Your votes are recorded against an anonymous handle in those Spaces.
+:::
+
 :::note Coming soon
 Phase 0's full Essence pipeline — embedding every Space action into your personal knowledge base — is on the way. Until it ships, your activity is recorded and rewarded normally; the embedding layer is added on top later, retroactively.
 :::
