@@ -31,7 +31,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 | <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> **총 참여자** | 시간에 따른 참여자 수 | 액션 유형별 참여 추이를 보여주는 탭형 차트 |
 | <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> **사용 가능 포인트** | 분배 가능한 총 포인트 | 스페이스가 분배에 쓸 수 있는 포인트의 액션별 내역 |
 
-호스트로서 스페이스에 **인센티브 풀이 아직 설정되지 않았다면**, 풀 카드에 보라색 **지금 설정** 버튼이 표시되어 `/spaces/:space_id/apps/` 로 이동하여 [인센티브 풀 앱 *(베타)*](./apps#-incentive-pool-%EB%B2%A0%ED%83%80) 을 설치하도록 안내합니다. 같은 카드를 보는 참여자에게는 이 버튼이 보이지 않아요.
+호스트로서 스페이스에 **인센티브 풀이 아직 설정되지 않았다면**, 풀 카드에 보라색 **지금 설정** 버튼이 표시되어 `/spaces/:space_id/apps/` 로 이동하여 [인센티브 풀 앱 *(베타)*](./apps.md#-incentive-pool-%EB%B2%A0%ED%83%80) 을 설치하도록 안내합니다. 같은 카드를 보는 참여자에게는 이 버튼이 보이지 않아요.
 
 그리드는 상황에 따라 달라집니다 — 어떤 앱을 설치했는지, 얼마나 활동이 쌓였는지에 따라 표시되는 카드가 달라져요. 갓 만든 스페이스는 대부분 0 이고, 사이클 중반의 활성 스페이스는 모든 카드가 채워집니다.
 
@@ -47,7 +47,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 표 하단의 페이지 단위 페이저로 추가 페이지를 넘길 수 있습니다 — 리더보드가 깊은 스페이스에 유용해요.
 
-> **팁.** 호스트는 [리포트](./reports) 를 만들기 전에 랭킹 표로 핵심 기여자를 먼저 파악합니다. 참여자 점수는 Phase 4 매출 분배가 출시되면 *(예정)* 기여자 몫의 가중치로 활용됩니다.
+> **팁.** 호스트는 [리포트](./reports.md) 를 만들기 전에 랭킹 표로 핵심 기여자를 먼저 파악합니다. 참여자 점수는 Phase 4 매출 분배가 출시되면 *(예정)* 기여자 몫의 가중치로 활용됩니다.
 
 ## 대시보드 / 오버뷰 / 리포트, 언제 무엇을?
 
@@ -57,7 +57,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 |---|---|---|
 | <img src={useBaseUrl('/img/icons/grid.svg')} width="14" alt="대시보드" style={{verticalAlign: 'middle'}} /> **대시보드** | `/spaces/:space_id/dashboard` | **라이브 숫자** 가 필요할 때 — 참여자 수, 액션 수, 풀 소진 상황. 활성 캠페인 중에는 하루에 몇 번씩 새로고침하기 좋아요. |
 | <img src={useBaseUrl('/img/icons/file-text.svg')} width="14" alt="오버뷰" style={{verticalAlign: 'middle'}} /> **오버뷰** | `/spaces/:space_id/overview` | **내러티브를 편집** 할 때 — 이 스페이스가 무엇이고, 누구를 위한 곳이고, 왜 참여해야 하는지. 호스트가 직접 쓰는 호스트의 피치예요. |
-| <img src={useBaseUrl('/img/icons/file-text.svg')} width="14" alt="리포트" style={{verticalAlign: 'middle'}} /> **리포트** | `/spaces/:space_id/report` | 활동을 종합한 **장문의 AI 보조 리포트를 발행** 할 때. [리포트](./reports) 챕터 참고. |
+| <img src={useBaseUrl('/img/icons/file-text.svg')} width="14" alt="리포트" style={{verticalAlign: 'middle'}} /> **리포트** | `/spaces/:space_id/report` | 활동을 종합한 **장문의 AI 보조 리포트를 발행** 할 때. [리포트](./reports.md) 챕터 참고. |
 | <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg> **인덱스(포털)** | `/spaces/:space_id/` | 처음 방문하는 사람이 도착하는 **공개 포털 화면을 확인** 할 때. 외부에 어떻게 보이는지 점검할 때 유용해요. |
 
 대시보드는 활동이 들어오면 자동으로 갱신되는 유일한 탭이고, 나머지 셋은 *호스트가 사람들에게 무엇을 말하는가* 와 관련된 탭입니다.
@@ -66,12 +66,12 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 대시보드에 아직 없는 항목들 (각각 로드맵에 있음):
 
-- **액션 단위 드릴다운** *(예정)*. 참여 액션 카드의 진행 바는 읽기 전용 요약입니다 — 바를 눌러 *"이 폴에 응답한 12 명은 누구인가"* 같은 드릴다운은 아직 없어요. 그 용도로는 [Analyzes 앱](./apps#-analyzes) 을 사용하세요.
+- **액션 단위 드릴다운** *(예정)*. 참여 액션 카드의 진행 바는 읽기 전용 요약입니다 — 바를 눌러 *"이 폴에 응답한 12 명은 누구인가"* 같은 드릴다운은 아직 없어요. 그 용도로는 [Analyzes 앱](./apps.md#-analyzes) 을 사용하세요.
 - **기간 선택기** *(예정)*. 현재 숫자는 누적값입니다 — *"최근 7 일"* / *"이번 사이클"* 필터는 로드맵에 있습니다.
 - **익스포트** *(예정)*. 대시보드 스냅샷의 CSV / PDF 익스포트. Analyzes 앱에는 분석별 엑셀 익스포트가 이미 있습니다.
 
 ## 다음 단계
 
-- [스페이스 앱](./apps) — 대시보드의 보상 카드를 채우는 인센티브 풀을 설치하세요.
-- [호스트 액션](./host-actions) — 진행 바를 채우는 폴 · 토론 · 퀴즈 · 팔로우를 만드세요.
-- [리포트](./reports) — 대시보드 활동을 발행 가능한 내러티브로 바꾸세요.
+- [스페이스 앱](./apps.md) — 대시보드의 보상 카드를 채우는 인센티브 풀을 설치하세요.
+- [호스트 액션](./host-actions.md) — 진행 바를 채우는 폴 · 토론 · 퀴즈 · 팔로우를 만드세요.
+- [리포트](./reports.md) — 대시보드 활동을 발행 가능한 내러티브로 바꾸세요.

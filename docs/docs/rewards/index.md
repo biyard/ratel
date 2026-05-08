@@ -21,8 +21,8 @@ Open `/<your-handle>/rewards` to see what you've earned, what's still in motion,
 
 | Page | What it covers |
 |---|---|
-| **[Experience Points (XP)](./xp)** | The activity-driven progression unit. Fixed XP values per action type (Poll, Quiz, Discussion, Follow), how XP rolls up into Character levels, and the dedup rules that prevent double-counting. |
-| **[Reward Points](./points)** | The in-platform reputation unit (`pts`). How Points accrue, how they feed your Direct-Activity Index, and how skill-tree boosts on Character multiply every payout. |
-| **[Credits](./credits)** | The host-funded currency that backs Action rewards. Where Credits come from, how subscription tier caps the Credit allotment, and how Credits convert to Points at payout. |
-| **[Tokens](./tokens)** | The on-chain expression of past-cycle Points. The two-step claim flow (connect wallet → sign and submit), the treasury rate, and the 100% collateralization model. |
-| **[Incentive Pool](./incentives)** | The host-side funding surface — how an Incentive Pool is configured at `/spaces/:space_id/apps/incentive-pool`, how distribution rules work (flat / depth-weighted / staged), and how to keep an audit trail of what's been paid out. |
+| **[Experience Points (XP)](./xp.md)** | The activity-driven progression unit. Fixed XP values per action type (Poll, Quiz, Discussion, Follow), how XP rolls up into Character levels, and the dedup rules that prevent double-counting. |
+| **[Reward Points](./points.md)** | The in-platform reputation unit (`pts`). How Points accrue, how they feed your Direct-Activity Index, and how skill-tree boosts on Character multiply every payout. |
+| **[Credits](./credits.md)** | The host-funded currency that backs Action rewards. Where Credits come from, how subscription tier caps the Credit allotment, and how Credits convert to Points at payout. |
+| **[Tokens](./tokens.md)** | The on-chain expression of past-cycle Points. The two-step claim flow (connect wallet → sign and submit), the treasury rate, and the 100% collateralization model. |
+| **[Incentive Pool](./incentives.md)** | The host-side funding surface — how an Incentive Pool is configured at `/spaces/:space_id/apps/incentive-pool`, how distribution rules work (flat / depth-weighted / staged), and how to keep an audit trail of what's been paid out. |
