@@ -7,7 +7,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # Team Settings
 
-Team Settings is where a Team's admins manage the Team itself — its public identity, its members and roles, the subscription paying for its monthly Credits, and (if it comes to it) the deletion flow. This is the **administrator's** view of a Team; for the public profile and feed, see [Create a Team](./create).
+Team Settings is where a Team's admins manage the Team itself — its public identity, its members and roles, the subscription paying for its monthly Credits, and (if it comes to it) the deletion flow. This is the **administrator's** view of a Team; for the public profile and feed, see [Create a Team](./create.md).
 
 ## Where Team Settings live
 
@@ -44,7 +44,7 @@ The first card. Everything visible on the Team's public profile is edited here:
 - **Team name (display name)** — what people see in the UI. Up to 30 characters.
 - **Description** — a longer paragraph describing what the Team does. Minimum 10 characters; the platform's content filter rejects test keywords and offensive language.
 - **Username (handle)** — locked. The handle is set when the Team is created and is hard to change later — contact support if it absolutely must move. The field is shown read-only so admins know what URL their Team lives at.
-- **DAO Address** *(when DAO is activated)* — the on-chain treasury / governance address tied to this Team. Read-only here; DAO activation lives in the [Create a Team → DAO](./create#dao--collective-governance) flow.
+- **DAO Address** *(when DAO is activated)* — the on-chain treasury / governance address tied to this Team. Read-only here; DAO activation lives in the [Create a Team → DAO](./create.md#dao--collective-governance) flow.
 
 Changes to display name, description, logo, and banner are visible everywhere immediately after autosave.
 
@@ -126,7 +126,7 @@ A few Team-specific notes:
 A handful of Team-level controls aren't part of `/team-settings`:
 
 - **DAO activation** — lives on the Team home / DAO flow, not in settings.
-- **Sub-teams** (apply, manage, deregister, leave) — see [Sub-teams](./sub-teams). These are governance flows, not account settings.
+- **Sub-teams** (apply, manage, deregister, leave) — see [Sub-teams](./sub-teams.md). These are governance flows, not account settings.
 - **Drafts, Posts, Spaces, Memberships sold by the Team** — managed from the Team's own arena tabs, not settings.
 - **Team-level notifications preferences** — *(Coming soon)*.
 - **Audit log of admin actions** — *(Coming soon)*.
@@ -141,6 +141,6 @@ A handful of Team-level controls aren't part of `/team-settings`:
 
 ## What's next
 
-- [Create a Team](./create) — the foundational Team walkthrough (members, drafts, DAO basics).
-- [Sub-teams](./sub-teams) — the full governance lifecycle for parent / child Team relationships.
+- [Create a Team](./create.md) — the foundational Team walkthrough (members, drafts, DAO basics).
+- [Sub-teams](./sub-teams.md) — the full governance lifecycle for parent / child Team relationships.
 - [Glossary → Membership Tier](../intro/glossary#membership-tier) — pick the tier whose monthly Credits will pay for your Team's reward Spaces.

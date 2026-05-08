@@ -9,7 +9,7 @@ Sub-teams are how a parent Team formally recognizes another Team as part of its 
 
 This chapter walks through the full lifecycle for both sides: how a parent Team accepts applicants, how a Team applies and tracks its application, what the recognized relationship looks like day-to-day, and how either side ends it.
 
-The participant-facing summary is in [Create a Team → Sub-teams](./create#sub-teams). This chapter is the deep dive on every URL.
+The participant-facing summary is in [Create a Team → Sub-teams](./create.md#sub-teams). This chapter is the deep dive on every URL.
 
 ## What sub-teams are
 
@@ -193,6 +193,6 @@ The platform's intent is for sub-teams to be the substrate underneath DAO-like f
 
 ## What's next
 
-- [Create a Team](./create) — the foundational Team walkthrough with members, drafts, and DAO basics.
-- [Team Settings](./team-settings) — admin tools for the Team's own settings, including the Subscription card.
+- [Create a Team](./create.md) — the foundational Team walkthrough with members, drafts, and DAO basics.
+- [Team Settings](./team-settings.md) — admin tools for the Team's own settings, including the Subscription card.
 - [Glossary → Membership Tier](../intro/glossary#membership-tier) — pick the tier whose Credits will fund your Team's reward Spaces.

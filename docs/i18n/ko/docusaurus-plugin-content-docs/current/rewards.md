@@ -21,9 +21,9 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 ## 포인트와 토큰 — 기본 단위
 
-리워드 시스템에는 두 단위가 흐르며 역할이 다릅니다. (자세한 정의는 [용어 정리 → 리워드](./intro/glossary#%EB%A6%AC%EC%9B%8C%EB%93%9C-rewards) 참고.)
+리워드 시스템에는 두 단위가 흐르며 역할이 다릅니다. (자세한 정의는 [용어 정리 → 리워드](./intro/glossary.md#%EB%A6%AC%EC%9B%8C%EB%93%9C-rewards) 참고.)
 
-- **포인트(Points / `pts`)** — 액션을 완료하면 적립되는 인플랫폼 평판 단위. 사이클 안에서 누적되며 직접 활동 지표(Direct-Activity Index) 에 반영됩니다. *적립 단위* 이며, [Character](./my-essence#-character-mecharacter) 페이지의 스킬 트리 부스트가 곱셈 가중치를 더합니다.
+- **포인트(Points / `pts`)** — 액션을 완료하면 적립되는 인플랫폼 평판 단위. 사이클 안에서 누적되며 직접 활동 지표(Direct-Activity Index) 에 반영됩니다. *적립 단위* 이며, [Character](./my-essence.md#-character-mecharacter) 페이지의 스킬 트리 부스트가 곱셈 가중치를 더합니다.
 - **토큰(Tokens)** — 사이클이 락인 되면 청구 가능한 온체인 페이아웃. 토큰은 트레저리 준비금으로 1:1 담보되며, 사이클당 환율은 매 블록 갱신됩니다. 리워드 페이지는 현재 사이클의 **예상 토큰** 과, 과거 사이클에서 청구 가능한 *실제* 토큰 양을 함께 보여줍니다.
 
 크레딧(Credit, 스페이스 액션의 보상에 호스트가 펀딩한 단위) 은 이 둘의 상류입니다 — 본인이 완료한 액션이 보상을 지급하면, 그 크레딧이 해당 사이클의 포인트 잔액으로 환산됩니다.
@@ -79,10 +79,10 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 특별히 할 일은 없습니다 — 자격을 갖춘 활동이 끝나는 즉시 플랫폼이 자동으로 포인트를 적립합니다. 주요 경로는 다음과 같아요.
 
-- **스페이스 액션 호스팅** — 내가 호스트한 폴 · 토론 · 퀴즈 · 팔로우를 참여자가 완료하면, 해당 스페이스의 [Incentive Pool *(베타)*](./spaces/apps#-incentive-pool-%EB%B2%A0%ED%83%80) 크레딧이 내 포인트로 환산됩니다.
-- **참여자로서 액션 완료** — 보상이 걸린 액션을 참여자로 완료하면, 그 스페이스의 Incentive Pool 에서 포인트를 분배받습니다. ([스페이스 액션 → 액션 보상 동작](./spaces/actions#%EC%95%A1%EC%85%98-%EB%B3%B4%EC%83%81%EC%9D%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%8F%99%EC%9E%91%ED%95%98%EB%82%98) 참고.)
+- **스페이스 액션 호스팅** — 내가 호스트한 폴 · 토론 · 퀴즈 · 팔로우를 참여자가 완료하면, 해당 스페이스의 [Incentive Pool *(베타)*](./spaces/apps.md#-incentive-pool-%EB%B2%A0%ED%83%80) 크레딧이 내 포인트로 환산됩니다.
+- **참여자로서 액션 완료** — 보상이 걸린 액션을 참여자로 완료하면, 그 스페이스의 Incentive Pool 에서 포인트를 분배받습니다. ([스페이스 액션 → 액션 보상 동작](./spaces/actions.md#%EC%95%A1%EC%85%98-%EB%B3%B4%EC%83%81%EC%9D%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%8F%99%EC%9E%91%ED%95%98%EB%82%98) 참고.)
 - **게시글 인게이지먼트** — 좋아요, 댓글, 리쉐어가 쌓이는 게시글은 인게이지먼트 가중치 포인트가 작성자에게 돌아옵니다.
-- **캐릭터 스킬 곱셈** — [Character](./my-essence#-character-mecharacter) 페이지에서 산 부스트(MVP 기준 머니트리) 가 받는 모든 포인트 지급액에 곱셈 가중치를 더합니다.
+- **캐릭터 스킬 곱셈** — [Character](./my-essence.md#-character-mecharacter) 페이지에서 산 부스트(MVP 기준 머니트리) 가 받는 모든 포인트 지급액에 곱셈 가중치를 더합니다.
 
 **직접 활동 지표(Direct-Activity Index)** 는 참여 이력 (글쓰기·투표·토론은 수동적인 활동보다 더 큰 가중치) 으로부터 산출되며, 플랫폼이 랭킹과 가중치 계산에 쓰는 신호입니다 — 페이지에 별도의 숫자로 노출되지는 않습니다.
 
@@ -105,6 +105,6 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 페이지에 익숙해졌다면, 가장 유용한 다음 단계는 다음과 같습니다.
 
-- [Character](./my-essence#-character-mecharacter) — 적립한 SP 를 사용해 스킬을 올리세요. MVP 의 머니트리는 향후 받는 모든 포인트에 곱셈 부스트를 줍니다.
-- [스페이스 액션 → 액션 보상 동작](./spaces/actions#%EC%95%A1%EC%85%98-%EB%B3%B4%EC%83%81%EC%9D%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%8F%99%EC%9E%91%ED%95%98%EB%82%98) — 액션 단위 보상이 내 계정에 포인트로 들어오기 전 어떤 식으로 흐르는지.
-- [용어 정리 → 리워드](./intro/glossary#%EB%A6%AC%EC%9B%8C%EB%93%9C-rewards) — Point, Credit, Token, Stablecoin, 그리고 오프체인 / 온체인 정산의 공식 정의.
+- [Character](./my-essence.md#-character-mecharacter) — 적립한 SP 를 사용해 스킬을 올리세요. MVP 의 머니트리는 향후 받는 모든 포인트에 곱셈 부스트를 줍니다.
+- [스페이스 액션 → 액션 보상 동작](./spaces/actions.md#%EC%95%A1%EC%85%98-%EB%B3%B4%EC%83%81%EC%9D%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%8F%99%EC%9E%91%ED%95%98%EB%82%98) — 액션 단위 보상이 내 계정에 포인트로 들어오기 전 어떤 식으로 흐르는지.
+- [용어 정리 → 리워드](./intro/glossary.md#%EB%A6%AC%EC%9B%8C%EB%93%9C-rewards) — Point, Credit, Token, Stablecoin, 그리고 오프체인 / 온체인 정산의 공식 정의.
