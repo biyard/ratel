@@ -33,7 +33,7 @@ Right after signup, Ratel offers you a one-step **Connections** onboarding page 
 /onboarding/connections
 ```
 
-The page is the friendly first-run version of [Settings → Connections](./settings#-connections). It explains what cross-posting is — *"Your first post reaches three networks instantly"* — and gives you a card per destination so you can connect once and have every Ratel post fan out to your other social timelines with a backlink.
+The page is the friendly first-run version of [Posts → Cross-posting](./posts#cross-posting). It explains what cross-posting is — *"Your first post reaches three networks instantly"* — and gives you a card per destination so you can connect once and have every Ratel post fan out to your other social timelines with a backlink.
 
 Each card on the onboarding page:
 
@@ -44,7 +44,7 @@ Each card on the onboarding page:
 | <img src={useBaseUrl('/img/icons/threads.svg')} width="16" alt="Threads" style={{verticalAlign: 'middle'}} /> **Threads** *(Coming soon)* | Meta OAuth integration arrives in Phase 1C | Meta · ~275M users · 500 chars. Requires an Instagram Professional account once it ships. |
 | <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><path d="M15 8l-7 7-3-3"/><circle cx="12" cy="12" r="10"/></svg> **Farcaster** *(Coming soon — Phase 2)* | Frames integration + agent posting in Phase 2 | 320 chars · Web3-native. *Notify me* button. |
 
-You can **Skip for now →** at the top of the page and the onboarding closes — Ratel won't nag you about it again. To come back later, open [Settings → Connections](./settings#-connections) at `/<your-handle>/settings/connections` whenever you're ready. Whatever you connect on the onboarding page is already saved when you skip the rest.
+You can **Skip for now →** at the top of the page and the onboarding closes — Ratel won't nag you about it again. To come back later, open [Posts → Cross-posting](./posts#cross-posting) at `/<your-handle>/settings/connections` whenever you're ready. Whatever you connect on the onboarding page is already saved when you skip the rest.
 
 > **Pro tip from the page itself:** *"Creators who connect 2+ networks get 3.4× more subscribers in their first 30 days."*
 

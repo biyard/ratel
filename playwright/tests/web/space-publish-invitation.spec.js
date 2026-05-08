@@ -70,8 +70,14 @@ test.describe.serial("Space publish and invitation (event-driven notification)",
 
     spaceUrl = `/spaces/${spaceId}`;
 
-    await goto(page, `${spaceUrl}/dashboard`);
-    await getLocator(page, { text: "Dashboard" });
+    // Trailing slash required for `/dashboard/:..rest` catch-all (empty rest
+    // doesn't match without it, falls through to PageNotFound). URL-based
+    // assertion replaces the brittle localized "Dashboard" text lookup.
+    await goto(page, `${spaceUrl}/dashboard/`);
+    await page.waitForURL(/\/spaces\/[a-z0-9-]+\/dashboard\/?$/, {
+      waitUntil: "load",
+      timeout: 10000,
+    });
   });
 
   // --- 2. Invite a member via the General app ---
@@ -104,22 +110,27 @@ test.describe.serial("Space publish and invitation (event-driven notification)",
   //     calling SES directly.
 
   test("Creator: Publish space as public", async ({ page }) => {
-    await goto(page, spaceUrl + "/dashboard");
+    // Real UI flow:
+    //   /spaces/{id}/ → topbar publish icon (btn-publish)
+    //   → SpaceVisibilityModal opens → public-option → Confirm
+    // The previous flow used `{ text: "Publish" }` which doesn't match the
+    // localized topbar copy and depended on a now-removed standalone
+    // dashboard publish button.
+    await goto(page, spaceUrl + "/");
 
-    // Click the Publish button
-    await click(page, { text: "Publish" });
-
-    // Select public visibility option
-    await click(page, { testId: "public-option" });
-
-    // Confirm the visibility selection
+    await clickNoNav(page, { testId: "btn-publish" });
+    await waitPopup(page, { visible: true });
+    await clickNoNav(page, { testId: "public-option" });
     await click(page, { label: "Confirm visibility selection" });
-    await page.waitForLoadState("load");
+    await waitPopup(page, { visible: false });
 
     // Verify the space is now published by checking the dashboard is still
-    // accessible and the Publish button has been replaced by status indicators
-    await goto(page, spaceUrl + "/dashboard");
-    await getLocator(page, { text: "Dashboard" });
+    // accessible. Trailing slash needed for catch-all match.
+    await goto(page, spaceUrl + "/dashboard/");
+    await page.waitForURL(/\/spaces\/[a-z0-9-]+\/dashboard\/?$/, {
+      waitUntil: "load",
+      timeout: 10000,
+    });
   });
 
   // --- 4. Verify the published space is accessible without auth ---
@@ -135,10 +146,12 @@ test.describe.serial("Space publish and invitation (event-driven notification)",
     const page = await context.newPage();
 
     try {
-      await goto(page, spaceUrl + "/dashboard");
-
-      // Verify the dashboard page loaded — check for dashboard content
-      await expect(page.getByText("Space Views")).toBeVisible({ timeout: 10000 });
+      // Trailing slash needed for catch-all match.
+      await goto(page, spaceUrl + "/dashboard/");
+      await page.waitForURL(/\/spaces\/[a-z0-9-]+\/dashboard\/?$/, {
+        waitUntil: "load",
+        timeout: 10000,
+      });
     } finally {
       await context.close();
     }
@@ -235,8 +248,9 @@ test.describe.serial("Space publish and invitation (event-driven notification)",
       // Wait for modal to close
       await waitPopup(page, { visible: false });
 
-      // Reload the space page to verify authenticated state
-      await goto(page, spaceUrl + "/dashboard");
+      // Reload the space page to verify authenticated state.
+      // Trailing slash needed for catch-all match.
+      await goto(page, spaceUrl + "/dashboard/");
 
       // Verify the user is now logged in on the space page
       // The space sidebar should show user profile information

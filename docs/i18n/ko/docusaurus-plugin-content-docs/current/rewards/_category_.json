@@ -1,0 +1,8 @@
+{
+  "label": "보상",
+  "position": 8,
+  "link": {
+    "type": "doc",
+    "id": "rewards/index"
+  }
+}
