@@ -31,6 +31,17 @@ pub fn PostDetail(post_id: ReadSignal<FeedPartition>) -> Element {
     let snapshot = detail();
     let post = snapshot.post.clone();
 
+    // Mirrors the Spaces pattern: the server ships the viewer's resolved
+    // role (`viewer_role`) and a direct `is_post_owner` flag. Only the
+    // post's individual author or the team's Owner / Admin can manage.
+    // The previous `!is_signed_out` gate showed Edit to every logged-in
+    // user, including outsiders.
+    let can_edit = snapshot.is_post_owner
+        || snapshot
+            .viewer_role
+            .map(|r| r.is_admin_or_owner())
+            .unwrap_or(false);
+
     let post_title = post
         .as_ref()
         .map(|p| p.title.clone())
@@ -238,18 +249,20 @@ pub fn PostDetail(post_id: ReadSignal<FeedPartition>) -> Element {
                         }
                     }
                     div { class: "arena-topbar__right",
-                        button { class: "topbar-btn", onclick: go_edit,
-                            svg {
-                                view_box: "0 0 24 24",
-                                fill: "none",
-                                stroke: "currentColor",
-                                stroke_width: "2",
-                                stroke_linecap: "round",
-                                stroke_linejoin: "round",
-                                path { d: "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" }
-                                path { d: "M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z" }
+                        if can_edit {
+                            button { class: "topbar-btn", onclick: go_edit,
+                                svg {
+                                    view_box: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_width: "2",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    path { d: "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" }
+                                    path { d: "M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z" }
+                                }
+                                "{tr.btn_edit}"
                             }
-                            "{tr.btn_edit}"
                         }
                         button { class: "topbar-btn", onclick: on_share,
                             svg {

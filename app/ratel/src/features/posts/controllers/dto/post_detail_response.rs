@@ -4,6 +4,7 @@ use super::*;
 use crate::features::posts::models::*;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
+use crate::features::social::pages::member::dto::TeamRole;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
@@ -14,7 +15,20 @@ pub struct PostDetailResponse {
     pub repost: Option<PostRepost>,
     pub is_liked: bool,
     pub is_report: bool,
+    /// Legacy bitmask. Kept for backward compatibility — new client code
+    /// should consume `viewer_role` (Spaces-style direct role check).
     pub permissions: i64,
+    /// Viewer's role with respect to this post's author. `None` when the
+    /// viewer is not the author and not a member of the author's team
+    /// (i.e. an outsider). Mirrors the Spaces pattern of shipping the
+    /// resolved role to the client instead of a permission bitmask.
+    #[serde(default)]
+    pub viewer_role: Option<TeamRole>,
+    /// True when the logged-in viewer is the post's individual author.
+    /// Independent of `viewer_role` (which describes team membership);
+    /// individual posts only ever set this and leave `viewer_role = None`.
+    #[serde(default)]
+    pub is_post_owner: bool,
 }
 
 impl From<Vec<PostMetadata>> for PostDetailResponse {

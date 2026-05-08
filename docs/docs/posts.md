@@ -11,37 +11,52 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 Posts are the highest-signal input to your Essence. Every line you publish, every comment you leave, and every reaction you give becomes an EssenceSource — the raw material your House learns from. The more you write on Ratel, the richer your Essence grows, and the more useful your House becomes to the people who subscribe to it.
 
-## Browse the feed
+## Where posts live
 
-Your feed lives at `/` (home) and `/posts`. It is the main place to discover what other humans on Ratel are thinking about — and to find conversations worth jumping into.
+The home page (`/`) is a **Spaces arena** — a Hot Spaces / My Spaces carousel front-and-center, dropping you straight into whichever Space is most alive in that moment. Posts themselves live at their own dedicated surfaces:
 
-- <img src={useBaseUrl('/img/icons/users.svg')} width="18" height="18" alt="Users" style={{verticalAlign: 'middle'}} /> **Following** — posts from people, teams, and Houses you follow.
-- <img src={useBaseUrl('/img/icons/compass.svg')} width="18" height="18" alt="Compass" style={{verticalAlign: 'middle'}} /> **Discover** — a wider mix surfaced from across the network, useful when you are looking for something new.
-- **Infinite scroll** — keep scrolling and the next batch loads automatically. You never need to click "next page".
-- **Sort and filter** — the top of the feed lets you switch between recency and engagement, and narrow by topic where available.
+- **Your own post list** — `/<your-handle>/posts`. Infinite-scroll list of every post you've published, newest first. Each row renders as a feed card you can click into.
+- **Someone else's posts** — `/<their-handle>/posts`. Same layout; different account.
+- **A single post** — `/posts/:post_id`. The shareable, deep-linkable home of an individual post (covered below in [Post detail page](#post-detail-page)).
 
-:::tip
-If your feed feels too quiet, follow a few more people from the Discover tab. Posts from accounts you follow are weighted highest.
-:::
+Discovery is link-driven: posts reach you through direct shares, [cross-posts](#cross-posting) to Bluesky / Threads / LinkedIn, and references from inside Spaces.
 
 ## Write a post
 
-Click the <img src={useBaseUrl('/img/icons/edit.svg')} width="18" height="18" alt="Edit" style={{verticalAlign: 'middle'}} /> **compose** button anywhere in the app (or open `/posts` and start a new one) to launch the editor. Ratel's editor is built on **Tiptap**, a modern rich-text editor — no Markdown wrangling required, but everything you would expect from a serious writing tool is there.
+Click the <img src={useBaseUrl('/img/icons/edit.svg')} width="18" height="18" alt="Edit" style={{verticalAlign: 'middle'}} /> **compose** button anywhere in the app to launch the editor. The editor opens at `/posts/:post_id/edit` against a freshly created draft, with a contenteditable rich-text body and a configurable side panel for cross-posting.
 
-You can use:
+### Post type
 
-- **Headings** (H1–H3) for structure
-- **Bold**, **italic**, and **strikethrough** for emphasis
-- **Bulleted and numbered lists** for organizing thoughts
-- **Block quotes** for citing other people
-- **Code blocks** with syntax highlighting for technical content
-- **Inline links** to anywhere on the web
-- **Images** — drag and drop, paste from clipboard, or upload from your device
-- **Embeds** — paste a link to a YouTube video, X post, or other supported source and Ratel will turn it into a rich preview
+A segmented control at the top picks the post variant: **Article** (default — the type described in this page), with **Repost** and **Artwork** rendered alongside but currently disabled and labeled *Coming soon*.
 
-Posts also support **hashtags** (`#essence`) for discovery and **@mentions** to pull other Ratel users into the conversation.
+### Toolbar
 
-When you are done, you have two choices: **Save as draft** to keep working on it later, or **Publish** to put it on your timeline and into the feeds of people who follow you.
+The body editor's toolbar is grouped into:
+
+- **History** — Undo · Redo
+- **Block format dropdown** — Heading 1 · Heading 2 · Heading 3 · Quote · Code block
+- **Inline marks** — Bold · Italic · Underline · Strikethrough · Inline code
+- **Alignment** — Left · Center · Right · Justify
+- **Lists** — Bullet list · Numbered list, with Outdent / Indent
+- **Insertions** — Insert link (with a Remove-link companion) · Insert image (modal with a drag-and-drop dropzone) · Embed YouTube (URL or video ID) · Insert table · Horizontal rule
+- **Cleanup** — Clear formatting
+
+A character counter sits in the toolbar (5,000-character body cap on Article posts).
+
+The Title field above the body has its own length cap; both title and body autosave as you type — see [Drafts](#drafts) below.
+
+### Embeds
+
+Today the editor's only first-party embed is **YouTube** (paste a YouTube URL or video ID into the embed modal — Ratel renders it inline). External-link embeds for X, Threads, etc. are not wired yet.
+
+### Save vs Publish
+
+The topbar offers two write actions:
+
+- **Save draft** — explicitly persists the current state and lands you back on the drafts list. The autosave indicator next to the buttons shows the latest sync.
+- **Publish** — pushes the post to your timeline and (if you toggle them on in the side panel) to your connected cross-post destinations.
+
+Drafts are autosaved on every keystroke, so the Save button is mostly a way to step away cleanly — you won't lose work by forgetting it.
 
 ## Drafts
 
@@ -64,11 +79,9 @@ A **Sort** dropdown reorders the list: *Recently edited* (default), *Oldest firs
 
 ### Per-draft actions
 
-Each draft tile shows a thumbnail, title (or *Untitled draft*), an excerpt, the time-ago since last edit, and an image count if you've attached any. The **`…`** menu on each tile exposes:
+Each draft tile shows a thumbnail, title (or *Untitled draft*), an excerpt, the time-ago since last edit, and an image count if you've attached any. Each tile has an inline **Resume** button and a **`…`** menu that exposes:
 
 - **Resume editing** — open the draft back in the post editor.
-- **Duplicate** — copy the draft to a new untitled draft (handy for templating recurring posts).
-- **Export as Markdown** — download a `.md` file of the draft body. (Export targets the body — image attachments stay in Ratel.)
 - **Delete draft** — permanent, no undo. (Restore-from-trash is *(Coming soon)*.)
 
 ### Team drafts
@@ -116,7 +129,7 @@ Above the rows the sidebar shows a *Reaching N networks* header and a **Truncate
 
 ### Length-limit handling
 
-Each destination has a hard ceiling — Bluesky 300 chars, Threads 500 (when shipped), Farcaster 320 (when shipped), LinkedIn 3,000 (when shipped). When your Ratel post exceeds the limit:
+Each destination has a hard ceiling — Bluesky 300 chars, Threads 500 (when shipped), LinkedIn 3,000 (when shipped). When your Ratel post exceeds the limit:
 
 > A 1,500-character Ratel post becomes a Bluesky 280-character excerpt followed by `… → ratel.foundation/posts/<id>` — readers click through to read the full post on Ratel.
 
@@ -151,3 +164,17 @@ Every post you publish, every comment you write, and every reaction you give is 
 :::note
 The full Essence pipeline (embeddings, retrieval, House Q&A) is rolling out in phases. Posts you publish today are already being captured as EssenceSources for when later phases ship.
 :::
+
+## Walkthrough
+
+> 🎬 **Walkthrough:** writing and publishing a post end-to-end.
+
+<video
+  controls
+  preload="metadata"
+  width="100%"
+  src={useBaseUrl('/media/post.mov')}
+  style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}
+>
+  Your browser doesn't support embedded video. <a href={useBaseUrl('/media/post.mov')}>Download the walkthrough</a>.
+</video>
