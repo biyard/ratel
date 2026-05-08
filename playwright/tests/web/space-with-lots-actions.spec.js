@@ -1,11 +1,13 @@
 import { test, expect } from "@playwright/test";
 import {
   click,
+  clickNoNav,
   createAction,
   fill,
   goto,
   getLocator,
   getEditor,
+  waitPopup,
   commitAutosave,
 } from "../utils";
 
@@ -43,8 +45,12 @@ test.describe.serial("Space with lots actions", () => {
 
     spaceUrl = `/spaces/${spaceId}`;
 
-    await goto(page, `${spaceUrl}/dashboard`);
-    await getLocator(page, { text: "Dashboard" });
+    // Trailing slash required for `/dashboard/:..rest` catch-all match.
+    await goto(page, `${spaceUrl}/dashboard/`);
+    await page.waitForURL(/\/spaces\/[a-z0-9-]+\/dashboard\/?$/, {
+      waitUntil: "load",
+      timeout: 10000,
+    });
   }
 
   test.beforeAll(async ({ browser }) => {
@@ -57,8 +63,11 @@ test.describe.serial("Space with lots actions", () => {
   });
 
   test("Create a post", async ({ page }) => {
-    await goto(page, `${spaceUrl}/dashboard`);
-    await getLocator(page, { text: "Dashboard" });
+    await goto(page, `${spaceUrl}/dashboard/`);
+    await page.waitForURL(/\/spaces\/[a-z0-9-]+\/dashboard\/?$/, {
+      waitUntil: "load",
+      timeout: 10000,
+    });
   });
 
   test("Create a discussion in space", async ({ page }) => {
@@ -167,11 +176,14 @@ test.describe.serial("Space with lots actions", () => {
   });
 
   test("Publish space public", async ({ page }) => {
-    await goto(page, spaceUrl + "/dashboard");
-
-    await click(page, { text: "Publish" });
-    await click(page, { testId: "public-option" });
+    // Real UI flow: arena viewer → topbar publish icon (btn-publish)
+    // → SpaceVisibilityModal → public-option → Confirm.
+    await goto(page, spaceUrl + "/");
+    await clickNoNav(page, { testId: "btn-publish" });
+    await waitPopup(page, { visible: true });
+    await clickNoNav(page, { testId: "public-option" });
     await click(page, { label: "Confirm visibility selection" });
+    await waitPopup(page, { visible: false });
   });
 });
 
