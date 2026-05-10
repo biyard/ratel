@@ -24,6 +24,7 @@ enum HomeTab {
 
 #[component]
 pub fn Index() -> Element {
+    debug!("Index page");
     let t: HomeArenaTranslate = use_translate();
     let nav = use_navigator();
     let mut popup = use_popup();
@@ -47,6 +48,7 @@ pub fn Index() -> Element {
     let mut teams_open = use_signal(|| false);
     let mut notifications_open = use_signal(|| false);
 
+    debug!("before team_query");
     // Read user_ctx inside the async so the fetch reflects the current
     // login state at invocation time. Login from the home page triggers
     // `teams_query.restart()` via the LoginModal's `on_success` callback
@@ -61,6 +63,7 @@ pub fn Index() -> Element {
     })?;
     let teams: Vec<TeamItem> = teams_query.items();
     let teams_more = teams_query.more_element();
+    debug!("after team_query");
 
     // Shared restart callback passed into every LoginModal we open from
     // this page — fires right after a successful login so the Teams
@@ -84,8 +87,60 @@ pub fn Index() -> Element {
 
     let brand_logo = "https://metadata.ratel.foundation/logos/logo-symbol.png".to_string();
 
-    let hot_spaces = use_loader(move || async move { list_hot_spaces_handler(None).await })?;
+    debug!("before hot space");
+    let hot_spaces = use_loader(move || async move {
+        debug!("[hot_spaces] closure entered, about to call handler");
+        // On Android, the second sequential server-fn call hangs forever
+        // even with a custom reqwest client. The handler call below never
+        // resolves on Dioxus 0.7's mobile runtime. Hypothesis: dioxus's
+        // task spawner on mobile parks the IO future without ever waking
+        // it. Workaround: hop the call onto a dedicated OS thread with
+        // its own tokio current_thread runtime; communicate the result
+        // back via a oneshot channel.
+        #[cfg(feature = "mobile")]
+        let r = {
+            debug!("[hot_spaces] (mobile) dispatching to dedicated thread");
+            let (tx, rx) = futures::channel::oneshot::channel();
+            std::thread::spawn(move || {
+                let rt = match tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                {
+                    Ok(rt) => rt,
+                    Err(e) => {
+                        let _ = tx.send(Err(crate::common::Error::from(format!(
+                            "tokio rt build err: {e}"
+                        ))));
+                        return;
+                    }
+                };
+                let res = rt.block_on(list_hot_spaces_handler(None));
+                let _ = tx.send(res);
+            });
+            match rx.await {
+                Ok(r) => {
+                    debug!("[hot_spaces] (mobile) dedicated thread returned");
+                    r
+                }
+                Err(e) => {
+                    debug!("[hot_spaces] (mobile) oneshot canceled: {e:?}");
+                    Err(crate::common::Error::from(format!(
+                        "oneshot canceled: {e}"
+                    )))
+                }
+            }
+        };
+        #[cfg(not(feature = "mobile"))]
+        let r = list_hot_spaces_handler(None).await;
+        match &r {
+            Ok(v) => debug!("[hot_spaces] handler OK with {} items", v.items.len()),
+            Err(e) => debug!("[hot_spaces] handler ERR: {e:?}"),
+        }
+        r
+    })?;
+    debug!("after hot space");
     let my_spaces = use_my_spaces()?.my_spaces;
+    debug!("after my space");
 
     let hot_cards = hot_spaces().items;
     let mine_cards = my_spaces().items;
@@ -189,6 +244,8 @@ pub fn Index() -> Element {
     // let go_browse_all = move |_: Event<MouseData>| {
     //     nav.push(Route::PostIndex {});
     // };
+
+    debug!("Rendering Index with {} hot spaces and {} mine spaces", hot_cards.len(), mine_cards.len());
 
     rsx! {
         SeoMeta {

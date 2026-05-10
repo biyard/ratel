@@ -3,6 +3,28 @@ fn main() {
     {
         use app_shell::common::CommonConfig;
 
+        // Override the dioxus-fullstack reqwest client BEFORE any request is
+        // issued. On Android the default client (HTTP/1.1 + keep-alive) stalls
+        // on the second sequential request to the same host: response arrives
+        // at the kernel but never wakes the tokio task. Force HTTP/1.1 only
+        // (no HTTP/2 ALPN), zero idle pool, hard 15s timeout so any hang is
+        // surfaced as an error rather than silent.
+        eprintln!("[ratel-mobile] installing custom reqwest client");
+        let client = dioxus::fullstack::reqwest::Client::builder()
+            .http1_only()
+            .pool_max_idle_per_host(0)
+            .pool_idle_timeout(std::time::Duration::from_millis(1))
+            .tcp_nodelay(true)
+            .connect_timeout(std::time::Duration::from_secs(10))
+            .timeout(std::time::Duration::from_secs(15))
+            .read_timeout(std::time::Duration::from_secs(10))
+            .build()
+            .expect("failed to build mobile reqwest client");
+        match dioxus::fullstack::GLOBAL_REQUEST_CLIENT.set(client) {
+            Ok(()) => eprintln!("[ratel-mobile] custom reqwest client installed"),
+            Err(_) => eprintln!("[ratel-mobile] custom reqwest client install FAILED — already set"),
+        }
+
         let endpoint = CommonConfig::default().env.mobile_endpoint();
         dioxus::fullstack::set_server_url(endpoint);
 

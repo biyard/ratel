@@ -36,12 +36,23 @@ PORT ?= 8080
 RUN_FEATURES ?= local-dev,bypass
 
 # Auto-detect the host's LAN IP so Android devices / emulators on the same
-# network can reach `dx serve` running on this workstation. Tries Linux
-# (`ip route get`) then macOS (`ipconfig getifaddr en0`); falls back to the
-# Android emulator loopback alias `10.0.2.2`, which works for emulators but
-# not physical phones. Override explicitly when needed:
+# network can reach `dx serve` running on this workstation. OS branch is
+# split so each side's failure doesn't silently zero the other (a piped
+# `awk` exits 0 on empty input, which broke the previous `||` chain on
+# macOS). Falls back to the Android emulator loopback alias `10.0.2.2`,
+# which works for emulators but not physical phones. Override explicitly
+# when needed:
 #   MOBILE_API_URL=http://10.20.30.40:8080 make android
-HOST_IP ?= $(shell ip route get 1.1.1.1 2>/dev/null | awk '/src/ {for(i=1;i<=NF;i++) if($$i=="src") {print $$(i+1); exit}}' || ipconfig getifaddr en0 2>/dev/null || echo 10.0.2.2)
+ifeq ($(shell uname -s),Darwin)
+  HOST_IP ?= $(shell iface=$$(route -n get default 2>/dev/null | awk '/interface:/ {print $$2}'); \
+                     [ -n "$$iface" ] && ipconfig getifaddr "$$iface" || echo 10.0.2.2)
+else
+  HOST_IP ?= $(shell ip route get 1.1.1.1 2>/dev/null | awk '/src/ {for(i=1;i<=NF;i++) if($$i=="src") {print $$(i+1); exit}}')
+  ifeq ($(strip $(HOST_IP)),)
+    HOST_IP := 10.0.2.2
+  endif
+endif
+
 MOBILE_API_URL ?= http://$(HOST_IP):$(PORT)
 
 REPOSITORY ?= ratel/app-shell
@@ -59,7 +70,15 @@ HOST_GID ?= $(shell id -g)
 
 
 ifneq ($(ANDROID_EMULATOR_ID),)
+	# Emulator is booted: target it by AVD name.
 	DEVICE_FLAG ?= --device $(AVD_NAME)
+else
+	# No emulator running — fall back to the first attached USB device
+	# from `adb devices` (status == "device"). Resulting flag is empty
+	# if nothing is connected, in which case dx will try to start a
+	# simulator.
+	FIRST_ANDROID_DEVICE := $(shell adb devices | awk 'NR>1 {print $$1; exit}')
+	DEVICE_FLAG ?= --device $(FIRST_ANDROID_DEVICE)
 endif
 
 BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
@@ -189,15 +208,27 @@ js/node_modules:
 run: ../../node_modules js/node_modules
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES)
 
-ANDROID_NDK_HOME ?= /opt/android-ndk
-ANDROID_NDK_TOOLCHAIN ?= $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64
+# Host detection — keeps Makefile portable between Linux and macOS.
+# - Linux:  NDK at /opt/android-ndk, JDK at /usr/lib/jvm/java-17-openjdk
+# - macOS:  NDK at /opt/homebrew/share/android-ndk (Homebrew),
+#           JDK at /Library/Java/JavaVirtualMachines/temurin-17.jdk/...
+HOST_OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
+ifeq ($(HOST_OS),darwin)
+  ANDROID_NDK_HOME ?= /opt/homebrew/share/android-ndk
+  ANDROID_NDK_TOOLCHAIN_HOST ?= darwin-x86_64
+  ANDROID_JAVA_HOME ?= /Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home
+else
+  ANDROID_NDK_HOME ?= /opt/android-ndk
+  ANDROID_NDK_TOOLCHAIN_HOST ?= linux-x86_64
+  # Gradle + Android Gradle Plugin 8.x don't parse class-file major 70
+  # (OpenJDK 26+). Force a JDK that Gradle supports.
+  ANDROID_JAVA_HOME ?= /usr/lib/jvm/java-17-openjdk
+endif
+
+ANDROID_NDK_TOOLCHAIN ?= $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(ANDROID_NDK_TOOLCHAIN_HOST)
 ANDROID_API_LEVEL ?= 24
 ANDROID_TARGET ?= aarch64-linux-android
 ANDROID_CC ?= $(ANDROID_NDK_TOOLCHAIN)/bin/$(ANDROID_TARGET)$(ANDROID_API_LEVEL)-clang
-
-# Gradle + Android Gradle Plugin 8.x don't parse class-file major 70 (OpenJDK 26+).
-# Force a JDK that Gradle supports; override ANDROID_JAVA_HOME if yours lives elsewhere.
-ANDROID_JAVA_HOME ?= /usr/lib/jvm/java-17-openjdk
 
 ANDROID_ENV = \
 	JAVA_HOME=$(ANDROID_JAVA_HOME) \
@@ -233,11 +264,17 @@ android-emulator: $(HOME)/.android/debug.keystore $(HOME)/.android/avd/$(AVD_NAM
 # dx-managed res/ directory ourselves before launching dx serve. dx only writes
 # its own files (ic_launcher.webp etc.) and never deletes the directory, so any
 # extra files we drop in here are preserved across incremental builds.
-ANDROID_DX_RES_DIR = target/dx/app-shell/debug/android/app/src/main/res
-ANDROID_MIPMAP_DENSITIES = mdpi hdpi xhdpi xxhdpi xxxhdpi
+# NOTE: dx 0.7 scaffold nests the actual `:app` Gradle module under
+# `release/android/app/app/...` — the outer `app/` is the Gradle project
+# root (settings.gradle), the inner `app/` is the application module that
+# AAPT processes. Resources MUST live under the inner path or AAPT can't
+# resolve `@mipmap/...` references in the manifest.
+ANDROID_DX_RES_DIR ?= target/dx/app-shell/debug/android/app/app/src/main/res
+ANDROID_MIPMAP_DENSITIES ?= mdpi hdpi xhdpi xxhdpi xxxhdpi
 
 .PHONY: sync-android-icons
 sync-android-icons:
+	@mkdir -p $(ANDROID_DX_RES_DIR)
 	@for d in $(ANDROID_MIPMAP_DENSITIES); do \
 		mkdir -p $(ANDROID_DX_RES_DIR)/mipmap-$$d; \
 		if [ -f android/res/mipmap-$$d/ratel_icon.png ]; then \
@@ -245,8 +282,14 @@ sync-android-icons:
 		fi; \
 	done
 
+# dx serve binds the dev-server / hot-reload websocket to its `--port`.
+# Our axum API server already owns $(PORT) (8080) for the mobile to call,
+# so we hand dx a separate port. Hot-reload over native Android doesn't
+# do much anyway — this is just to avoid the bind collision.
+DX_DEV_PORT ?= 9090
+
 android: $(HOME)/.android/debug.keystore sync-android-icons
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --android --target $(ANDROID_TARGET) --features $(RUN_FEATURES) $(DEVICE_FLAG)
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --addr 0.0.0.0 --port $(DX_DEV_PORT) --features $(RUN_FEATURES) @client --android --target $(ANDROID_TARGET) $(DEVICE_FLAG)
 
 ios:
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --ios --features $(RUN_FEATURES)
