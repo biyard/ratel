@@ -7,9 +7,12 @@
 //! `attribute_not_exists(pk) AND attribute_not_exists(sk)`); a re-run skips
 //! rows already inserted by a previous run or by the retry pipeline.
 //!
-//! Source data: `data/m002_pending_rewards.csv`, generated from the
-//! reconciliation audit (`MISSING_IN_BIYARD` rows only, 4 columns,
-//! PII stripped).
+//! Source data: a 4-column CSV (`user_id, amount, created_at_ms, reward_key`)
+//! generated from the reconciliation audit (`MISSING_IN_BIYARD` rows only,
+//! PII stripped). The path is supplied at runtime via the
+//! `M002_CSV_PATH` env var so the file never enters source control or the
+//! deployed binary; absent the env var, this migration aborts before
+//! advancing the version gate.
 
 use crate::common::models::reward::PendingReward;
 use crate::common::types::{PendingRewardKey, PendingRewardStatus, RewardKey};
@@ -22,14 +25,26 @@ const SPACE_ID: &str = "019d70df-dfc0-7222-be71-e55c2bd8121a";
 const OWNER_TEAM_ID: &str = "840";
 const DESCRIPTION: &str = "outage-backfill";
 
-const BACKFILL_CSV: &str = include_str!("data/m002_pending_rewards.csv");
+const CSV_PATH_ENV: &str = "M002_CSV_PATH";
 const EXPECTED_HEADER: &str = "user_id,amount,created_at_ms,reward_key";
 
 pub async fn run(cli: &aws_sdk_dynamodb::Client) -> crate::common::Result<()> {
     let space_pk = Partition::Space(SPACE_ID.to_string());
     let owner_pk = Partition::Team(OWNER_TEAM_ID.to_string());
 
-    let mut lines = BACKFILL_CSV.lines();
+    let csv_path = std::env::var(CSV_PATH_ENV).map_err(|_| {
+        tracing::error!(
+            env = CSV_PATH_ENV,
+            "m002: env var not set; refusing to advance migration version",
+        );
+        Error::InvalidFormat
+    })?;
+    let csv_data = std::fs::read_to_string(&csv_path).map_err(|e| {
+        tracing::error!(path = %csv_path, error = %e, "m002: failed to read CSV");
+        Error::InvalidFormat
+    })?;
+
+    let mut lines = csv_data.lines();
     let header = lines.next().ok_or(Error::InvalidFormat)?;
     if header.trim() != EXPECTED_HEADER {
         tracing::error!(actual = header, expected = EXPECTED_HEADER, "m002: header mismatch");
