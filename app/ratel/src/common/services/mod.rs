@@ -1,6 +1,7 @@
 pub mod biyard;
 mod error;
 pub mod icp;
+pub mod pending_reward_retry;
 pub mod persistent_state;
 pub use biyard::*;
 pub use error::ServiceError;

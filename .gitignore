@@ -70,3 +70,6 @@ user.json
 /.claude/worktrees/
 google-services.json
 /app/ratel/env.sh
+
+# Migration source data (supplied via env vars at runtime; never committed)
+/app/ratel/src/common/migrations/data/

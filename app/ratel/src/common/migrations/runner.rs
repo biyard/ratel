@@ -29,8 +29,15 @@ pub async fn run_migrations(cli: &aws_sdk_dynamodb::Client) -> crate::common::Re
         tracing::info!("migration 001 complete; version advanced to 1");
     }
 
+    if stored < 2 {
+        tracing::info!("running migration 002: backfill_pending_rewards");
+        super::m002_backfill_pending_rewards::run(cli).await?;
+        LastBackfillVersion::advance_to(cli, 1, 2).await?;
+        tracing::info!("migration 002 complete; version advanced to 2");
+    }
+
     // Future migrations stack additively here:
-    //   if stored < 2 { ... advance_to(cli, 1, 2) ... }
+    //   if stored < 3 { ... advance_to(cli, 2, 3) ... }
 
     tracing::info!("migration runner finished");
     Ok(())
