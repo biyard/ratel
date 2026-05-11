@@ -1,5 +1,6 @@
 mod body;
 mod document;
+mod render;
 #[cfg(test)]
 mod tests;
 

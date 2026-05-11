@@ -63,3 +63,45 @@ fn default_is_empty_html() {
     let body: ContentBody = ContentBody::default();
     assert_eq!(body, ContentBody::HtmlContent(String::new()));
 }
+
+#[test]
+fn html_content_to_plain_text_strips_tags() {
+    let body = ContentBody::html("<p>Hello <b>world</b> <a href='x'>link</a></p>");
+    assert_eq!(body.to_plain_text(), "Hello world link");
+}
+
+#[test]
+fn html_content_to_html_returns_string() {
+    let body = ContentBody::html("<p>raw</p>");
+    assert_eq!(body.to_html(), "<p>raw</p>");
+}
+
+#[test]
+fn structured_content_to_plain_text_walks_blocks() {
+    let doc = ContentDocument {
+        schema_version: 1,
+        blocks: vec![Block {
+            id: "b1".into(),
+            kind: BlockKind::Paragraph(TextBlock {
+                rich_text: RichText(vec![InlineNode::Text(TextRun {
+                    content: "Hello world".into(),
+                    annotations: Annotations::default(),
+                    link: None,
+                })]),
+                color: Color::Default,
+            }),
+            children: vec![],
+            created_at: 0,
+            updated_at: 0,
+        }],
+        meta: serde_json::Map::new(),
+    };
+    let body = ContentBody::structured(doc);
+    assert_eq!(body.to_plain_text(), "Hello world");
+}
+
+#[test]
+fn char_count_counts_unicode_chars() {
+    let body = ContentBody::html("<p>가나다</p>");
+    assert_eq!(body.char_count(), 3);
+}
