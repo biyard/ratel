@@ -24,7 +24,6 @@ enum HomeTab {
 
 #[component]
 pub fn Index() -> Element {
-    debug!("Index page");
     let t: HomeArenaTranslate = use_translate();
     let nav = use_navigator();
     let mut popup = use_popup();
@@ -48,7 +47,14 @@ pub fn Index() -> Element {
     let mut teams_open = use_signal(|| false);
     let mut notifications_open = use_signal(|| false);
 
-    debug!("before team_query");
+    debug!("before hot space");
+    let hot_spaces = use_loader(move || async move {
+        let res = list_hot_spaces_handler().await;
+        debug!("hot spaces response: {:?}", res);
+        res
+    })?;
+    debug!("after hot space");
+
     // Read user_ctx inside the async so the fetch reflects the current
     // login state at invocation time. Login from the home page triggers
     // `teams_query.restart()` via the LoginModal's `on_success` callback
@@ -66,7 +72,6 @@ pub fn Index() -> Element {
     })?;
     let teams: Vec<TeamItem> = teams_query.items();
     let teams_more = teams_query.more_element();
-    debug!("after team_query");
 
     // Shared restart callback passed into every LoginModal we open from
     // this page — fires right after a successful login so the Teams
@@ -90,13 +95,6 @@ pub fn Index() -> Element {
 
     let brand_logo = "https://metadata.ratel.foundation/logos/logo-symbol.png".to_string();
 
-    debug!("before hot space");
-    let hot_spaces = use_loader(move || async move {
-        let res = list_hot_spaces_handler(None).await;
-        debug!("hot spaces response: {:?}", res);
-        res
-    })?;
-    debug!("after hot space");
     let my_spaces = use_my_spaces()?.my_spaces;
     debug!("after my space");
 

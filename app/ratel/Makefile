@@ -72,7 +72,7 @@ HOST_GID ?= $(shell id -g)
 
 
 ifneq ($(ANDROID_EMULATOR_ID),)
-	DEVICE_FLAG ?= --device $(AVD_NAME)
+	DEVICE_FLAG ?= --device $(ANDROID_EMULATOR_ID)
 else
 	FIRST_ANDROID_DEVICE := $(shell adb devices | awk 'NR>1 {print $$1; exit}')
 	ifneq ($(FIRST_ANDROID_DEVICE),)
@@ -80,19 +80,13 @@ else
 	endif
 endif
 
-# Host detection — keeps Makefile portable between Linux and macOS.
-# - Linux:  NDK at /opt/android-ndk, JDK at /usr/lib/jvm/java-17-openjdk
-# - macOS:  NDK at /opt/homebrew/share/android-ndk (Homebrew),
-#           JDK at /Library/Java/JavaVirtualMachines/temurin-17.jdk/...
 HOST_OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ifeq ($(HOST_OS),darwin)
   ANDROID_NDK_HOME ?= /opt/homebrew/share/android-ndk
-  ANDROID_NDK_TOOLCHAIN_HOST ?= darwin-x86_64
-  ANDROID_JAVA_HOME ?= /Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home
+  ANDROID_JAVA_HOME ?= /Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
 	ANDROID_TARGET ?= aarch64-linux-android
 else
   ANDROID_NDK_HOME ?= /opt/android-ndk
-  ANDROID_NDK_TOOLCHAIN_HOST ?= linux-x86_64
   # Gradle + Android Gradle Plugin 8.x don't parse class-file major 70
   # (OpenJDK 26+). Force a JDK that Gradle supports.
   ANDROID_JAVA_HOME ?= /usr/lib/jvm/java-17-openjdk
@@ -103,21 +97,17 @@ ifeq ($(HOST_OS)-$(ANDROID_EMULATOR_ID),linux-)
 	ANDROID_TARGET ?= aarch64-linux-android
 endif
 
-ANDROID_NDK_TOOLCHAIN ?= $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(ANDROID_NDK_TOOLCHAIN_HOST)
-ANDROID_API_LEVEL ?= 24
-ANDROID_CC ?= $(ANDROID_NDK_TOOLCHAIN)/bin/$(ANDROID_TARGET)$(ANDROID_API_LEVEL)-clang
+ifneq ($(CARGO_TARGET_DIR),)
+	ANDROID_DX_RES_DIR ?= $(CARGO_TARGET_DIR)/dx/app-shell/debug/android/app/app/src/main
+else
+	ANDROID_DX_RES_DIR ?= target/dx/app-shell/debug/android/app/app/src/main
+endif
+
+ANDROID_MIPMAP_DENSITIES ?= mdpi hdpi xhdpi xxhdpi xxxhdpi
 
 ANDROID_ENV = \
 	JAVA_HOME=$(ANDROID_JAVA_HOME) \
-	PATH="$(ANDROID_JAVA_HOME)/bin:$(PATH)" \
-	CC_aarch64_linux_android=$(ANDROID_CC) \
-	CXX_aarch64_linux_android=$(ANDROID_CC)++ \
-	AR_aarch64_linux_android=$(ANDROID_NDK_TOOLCHAIN)/bin/llvm-ar \
-	CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$(ANDROID_CC) \
-	CC_armv7_linux_androideabi=$(ANDROID_NDK_TOOLCHAIN)/bin/armv7a-linux-androideabi$(ANDROID_API_LEVEL)-clang \
-	CXX_armv7_linux_androideabi=$(ANDROID_NDK_TOOLCHAIN)/bin/armv7a-linux-androideabi$(ANDROID_API_LEVEL)-clang++ \
-	AR_armv7_linux_androideabi=$(ANDROID_NDK_TOOLCHAIN)/bin/llvm-ar \
-	CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER=$(ANDROID_NDK_TOOLCHAIN)/bin/armv7a-linux-androideabi$(ANDROID_API_LEVEL)-clang
+	ANDROID_NDK_HOME=$(ANDROID_NDK_HOME)
 
 
 BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
@@ -264,31 +254,13 @@ $(ANDROID_HOME)/system-images/android-34/google_apis/$(ARCH):
 android-emulator: $(HOME)/.android/debug.keystore $(HOME)/.android/avd/$(AVD_NAME).avd $(ANDROID_HOME)/emulator/emulator
 	$(ANDROID_HOME)/emulator/emulator -avd $(AVD_NAME) -netdelay none -netspeed full &
 
-# dx-cli 0.7.6 does not auto-copy [bundle].resources / [android].resources into
-# its output res/ tree, so we mirror our mipmap PNGs (Ratel app icon) into the
-# dx-managed res/ directory ourselves before launching dx serve. dx only writes
-# its own files (ic_launcher.webp etc.) and never deletes the directory, so any
-# extra files we drop in here are preserved across incremental builds.
-# NOTE: dx 0.7 scaffold nests the actual `:app` Gradle module under
-# `release/android/app/app/...` — the outer `app/` is the Gradle project
-# root (settings.gradle), the inner `app/` is the application module that
-# AAPT processes. Resources MUST live under the inner path or AAPT can't
-# resolve `@mipmap/...` references in the manifest.
-ANDROID_DX_RES_DIR ?= target/dx/app-shell/debug/android/app/app/src/main/res
-ANDROID_MIPMAP_DENSITIES ?= mdpi hdpi xhdpi xxhdpi xxxhdpi
+.PHONY: $(ANDROID_DX_RES_DIR)
+$(ANDROID_DX_RES_DIR):
+	mkdir -p $(ANDROID_DX_RES_DIR)
+	cp -rf android/res $(ANDROID_DX_RES_DIR)/
 
-.PHONY: sync-android-icons
-sync-android-icons:
-	@mkdir -p $(ANDROID_DX_RES_DIR)
-	@for d in $(ANDROID_MIPMAP_DENSITIES); do \
-		mkdir -p $(ANDROID_DX_RES_DIR)/mipmap-$$d; \
-		if [ -f android/res/mipmap-$$d/ratel_icon.png ]; then \
-			cp -f android/res/mipmap-$$d/ratel_icon.png $(ANDROID_DX_RES_DIR)/mipmap-$$d/; \
-		fi; \
-	done
-
-android: $(HOME)/.android/debug.keystore sync-android-icons
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --features $(RUN_FEATURES) @client --android --target $(ANDROID_TARGET) $(DEVICE_FLAG)
+android: $(HOME)/.android/debug.keystore
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --features $(RUN_FEATURES) @client --android --target $(ANDROID_TARGET) $(DEVICE_FLAG)
 
 ios:
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --ios --features $(RUN_FEATURES)
