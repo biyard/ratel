@@ -383,6 +383,20 @@ pub struct ParentRelationshipResponse {
     pub parent_team_id: Option<String>,
     pub pending_parent_team_id: Option<String>,
     pub latest_application_id: Option<String>,
+    /// Display name of the parent (or pending-parent) team, filled
+    /// server-side via a `Team::get` join so the HUD panel can render
+    /// "서울대학교" instead of a uuid. `None` for `Standalone` or when
+    /// the join failed.
+    #[serde(default)]
+    pub parent_team_display_name: Option<String>,
+    /// `@username` of the parent (or pending-parent) team.
+    #[serde(default)]
+    pub parent_team_username: Option<String>,
+    /// Epoch-ms when this team was recognized as a sub-team
+    /// (SubTeamLink.created_at). `None` unless `status ==
+    /// RecognizedSubTeam`.
+    #[serde(default)]
+    pub recognized_at: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]

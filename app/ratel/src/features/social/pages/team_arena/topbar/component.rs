@@ -407,6 +407,16 @@ pub fn ArenaTopbar(
                     }
                 }
 
+                // Parent HUD — graduation cap icon + dropdown panel
+                // showing the team's parent relationship status
+                // (recognized / pending / standalone) with quick
+                // actions. Admin-only because the underlying
+                // `get_parent_relationship` server function requires
+                // admin/owner role on the team.
+                if can_edit {
+                    crate::features::sub_team::ParentHudPanel {}
+                }
+
                 // Sub-teams icon — three audiences, three destinations.
                 // URL `:username` is the **parent** team in all cases;
                 // the status page resolves the applicant team server-

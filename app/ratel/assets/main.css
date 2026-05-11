@@ -29449,6 +29449,49 @@ body.comments-panel-resizing {
   letter-spacing: 0.04em;
   color: var(--php-text);
 }
+.pp-empty__desc {
+  font-size: 11px;
+  color: var(--php-muted);
+  line-height: 1.55;
+  max-width: 300px;
+}
+
+/* Sub-line in action rows ("View parent team's feed" etc.) */
+.pp-action__sub {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--php-muted);
+  margin-top: 2px;
+}
+
+/* Inline info banner inside parent state blocks. Teal default,
+ * `--amber` variant for the "심사 중" pending block. Backgrounds use
+ * the space toggle so light theme stays readable. */
+.pp-info {
+  font-size: 12px;
+  color: var(--php-text);
+  line-height: 1.6;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--dark, rgba(110, 237, 216, 0.05)) var(--light, rgba(0, 0, 0, 0.025));
+  border: 1px solid var(--dark, rgba(110, 237, 216, 0.18)) var(--light, rgba(0, 0, 0, 0.06));
+}
+.pp-info strong {
+  color: var(--php-gold);
+  font-weight: 700;
+}
+.pp-info--amber {
+  background: var(--dark, rgba(245, 158, 11, 0.06)) var(--light, rgba(245, 158, 11, 0.05));
+  border-color: var(--dark, rgba(245, 158, 11, 0.22)) var(--light, rgba(245, 158, 11, 0.22));
+}
+
+@media (max-width: 500px) {
+  .parent-panel {
+    width: calc(100vw - 24px);
+    right: 12px;
+  }
+}
 
 
 /* === src/features/sub_team/pages/application_status/style.css === */

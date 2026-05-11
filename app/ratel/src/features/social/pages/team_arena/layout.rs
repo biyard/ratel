@@ -108,6 +108,13 @@ pub fn TeamArenaLayout(username: ReadSignal<String>) -> Element {
 
     let mut ctx = use_context_provider(|| team_ctx);
 
+    // Also install the raw `TeamPartition` so sub-team hooks that
+    // expect `use_context::<TeamPartition>()` (parent_relationship,
+    // sub_team_queue, etc.) can run anywhere inside the team arena
+    // without each page re-providing it. ParentHudPanel relies on this.
+    let team_partition = ctx.team_id();
+    use_context_provider(|| team_partition);
+
     // Category filter signal consumed by TeamHome (carried over from SocialLayout).
     use_context_provider(|| Signal::new(Option::<String>::None));
 

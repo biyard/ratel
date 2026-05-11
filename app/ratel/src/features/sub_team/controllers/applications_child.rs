@@ -62,12 +62,70 @@ pub async fn get_parent_relationship_handler(
         }
     };
 
+    // Resolve the parent (or pending-parent) team's display info so
+    // the HUD panel can show the name + handle without a client-side
+    // re-fetch. `recognized_at` is set only when the team is fully
+    // recognized — pulled from the matching SubTeamLink row on the
+    // parent's pk.
+    let parent_uuid_for_join = team
+        .parent_team_id
+        .clone()
+        .or_else(|| team.pending_parent_team_id.clone());
+    let (parent_display_name, parent_username, recognized_at) = match parent_uuid_for_join {
+        Some(uuid) => {
+            let parent_pk = Partition::Team(uuid.clone());
+            let display = Team::get(cli, &parent_pk, Some(EntityType::Team))
+                .await
+                .ok()
+                .flatten();
+            let (name, username) = match display {
+                Some(t) => (Some(t.display_name), Some(t.username)),
+                None => (None, None),
+            };
+            let recognized_at = if matches!(status, ParentRelationshipStatus::RecognizedSubTeam) {
+                find_recognition_timestamp(cli, &parent_pk, &team.pk)
+                    .await
+                    .ok()
+                    .flatten()
+            } else {
+                None
+            };
+            (name, username, recognized_at)
+        }
+        None => (None, None, None),
+    };
+
     Ok(ParentRelationshipResponse {
         status,
         parent_team_id: team.parent_team_id,
         pending_parent_team_id: team.pending_parent_team_id,
         latest_application_id,
+        parent_team_display_name: parent_display_name,
+        parent_team_username: parent_username,
+        recognized_at,
     })
+}
+
+// Walks SubTeamLink rows under `parent_pk` and returns the
+// `created_at` of the link whose child team matches `child_pk`. Used by
+// the HUD panel to show "인증 YYYY-MM-DD ~" for recognized sub-teams.
+#[cfg(feature = "server")]
+async fn find_recognition_timestamp(
+    cli: &aws_sdk_dynamodb::Client,
+    parent_pk: &Partition,
+    child_pk: &Partition,
+) -> Result<Option<i64>> {
+    let prefix = format!("{LINK_SK_PREFIX}#");
+    let opts = SubTeamLink::opt().sk(prefix).limit(PAGE_LIMIT);
+    let (links, _) = SubTeamLink::query(cli, parent_pk.clone(), opts).await?;
+    let child_uuid = match child_pk {
+        Partition::Team(id) => id.clone(),
+        _ => return Ok(None),
+    };
+    Ok(links
+        .into_iter()
+        .find(|l| l.child_team_id == child_uuid)
+        .map(|l| l.approved_at))
 }
 
 // ── GET /api/teams/:team_pk/parent/applications ────────────────────

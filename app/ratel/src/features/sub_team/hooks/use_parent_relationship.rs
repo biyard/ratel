@@ -4,7 +4,7 @@
 //! summary without the full application history.
 
 use crate::features::sub_team::controllers::{
-    get_parent_relationship_handler, leave_parent_handler,
+    cancel_child_application_handler, get_parent_relationship_handler, leave_parent_handler,
 };
 use crate::features::sub_team::types::{LeaveParentRequest, ParentRelationshipResponse};
 use crate::*;
@@ -14,6 +14,10 @@ pub struct UseParentRelationship {
     pub team_id: ReadSignal<TeamPartition>,
     pub relationship: Loader<ParentRelationshipResponse>,
     pub handle_leave_parent: Action<(LeaveParentRequest,), ()>,
+    /// Cancels the in-flight (Pending) application targeting the
+    /// current parent. No-op when there's no application id on the
+    /// response (e.g. Standalone / Recognized states).
+    pub handle_cancel_application: Action<(), ()>,
 }
 
 #[track_caller]
@@ -37,9 +41,21 @@ pub fn use_parent_relationship() -> std::result::Result<UseParentRelationship, R
         Ok::<(), crate::common::Error>(())
     });
 
+    let team_id_for_cancel = team_id_signal;
+    let handle_cancel_application = use_action(move || async move {
+        let app_id = match relationship.read().latest_application_id.clone() {
+            Some(id) if !id.is_empty() => id,
+            _ => return Ok::<(), crate::common::Error>(()),
+        };
+        cancel_child_application_handler(team_id_for_cancel(), app_id).await?;
+        relationship.restart();
+        Ok::<(), crate::common::Error>(())
+    });
+
     Ok(use_context_provider(|| UseParentRelationship {
         team_id: team_id_signal,
         relationship,
         handle_leave_parent,
+        handle_cancel_application,
     }))
 }

@@ -164,8 +164,90 @@ translate! {
 
     // Parent HUD
     parent_icon: { en: "Parent team", ko: "상위팀 아이콘" },
+    parent_panel_title: { en: "Parent · PARENT", ko: "상위팀 · PARENT" },
     application_status: { en: "Application status", ko: "신청 상태" },
     leave_parent: { en: "Leave", ko: "이탈" },
+
+    // Parent HUD panel — per-status copy mirroring
+    // `parent-home-with-button.html` (인증됨 / 심사 중 / 독립 팀).
+    parent_card_status_active: { en: "Active", ko: "Active" },
+    parent_card_status_pending: { en: "Pending", ko: "Pending" },
+    parent_card_meta_recognized_since: {
+        en: "Recognized since",
+        ko: "인증",
+    },
+    parent_card_meta_pending: {
+        en: "Submitted",
+        ko: "제출",
+    },
+    parent_recognized_info_prefix: {
+        en: "This team is a recognized sub-team of ",
+        ko: "이 팀은 ",
+    },
+    parent_recognized_info_suffix: {
+        en: ". You'll receive parent broadcasts and your activity will show on the parent dashboard.",
+        ko: "의 인증 하위팀입니다. 상위팀의 공지를 받고, 상위팀 활동 대시보드에 공개 활동이 집계됩니다.",
+    },
+    parent_pending_info: {
+        en: "The parent admin is reviewing your application. It usually takes 3–5 business days.",
+        ko: "상위팀 담당자가 신청서를 검토 중입니다. 보통 영업일 3–5일 소요됩니다.",
+    },
+    parent_action_open_home_title: {
+        en: "Open parent team home",
+        ko: "상위팀 홈으로 이동",
+    },
+    parent_action_open_home_sub: {
+        en: "View parent team's feed",
+        ko: "상위팀 팀 피드 열기",
+    },
+    parent_action_view_bylaws_title: {
+        en: "View parent bylaws",
+        ko: "상위팀 학칙 보기",
+    },
+    parent_action_view_bylaws_sub: {
+        en: "Read the regulations and documents",
+        ko: "규정 및 문서 확인",
+    },
+    parent_action_leave_title: {
+        en: "Leave parent team",
+        ko: "상위팀에서 이탈",
+    },
+    parent_action_leave_sub: {
+        en: "Become a standalone team — your content is kept",
+        ko: "독립 팀으로 전환 · 콘텐츠는 유지",
+    },
+    parent_action_view_application_title: {
+        en: "Check application status",
+        ko: "신청 상태 확인",
+    },
+    parent_action_view_application_sub: {
+        en: "Open timeline · feedback from the parent",
+        ko: "타임라인 · 상위팀 피드백 열기",
+    },
+    parent_action_edit_application_title: {
+        en: "Edit application",
+        ko: "신청서 수정",
+    },
+    parent_action_edit_application_sub: {
+        en: "Still under review · update the content",
+        ko: "아직 심사 대기 중 · 내용 업데이트",
+    },
+    parent_action_cancel_application_title: {
+        en: "Cancel application",
+        ko: "신청 취소",
+    },
+    parent_action_cancel_application_sub: {
+        en: "Withdraw the application currently under review",
+        ko: "현재 심사 중인 신청을 철회",
+    },
+    parent_standalone_title: {
+        en: "Standalone team",
+        ko: "독립 팀입니다",
+    },
+    parent_standalone_desc: {
+        en: "This team isn't part of any parent team yet.",
+        ko: "아직 어떤 상위팀에도 속해있지 않습니다.",
+    },
 
     // Bylaws
     bylaws_title: { en: "Bylaws", ko: "학칙" },
