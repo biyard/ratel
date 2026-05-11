@@ -37,6 +37,13 @@ pub async fn update_sub_team_settings_handler(
         changed = true;
     }
 
+    if let Some(min_days) = body.min_sub_team_age_days {
+        let clamped = min_days.max(0);
+        updater = updater.with_min_sub_team_age_days(clamped);
+        team.min_sub_team_age_days = clamped;
+        changed = true;
+    }
+
     if changed {
         updater.execute(cli).await.map_err(|e| {
             crate::error!("update_sub_team_settings execute failed: {e}");
@@ -47,5 +54,6 @@ pub async fn update_sub_team_settings_handler(
     Ok(SubTeamSettingsResponse {
         is_parent_eligible: team.is_parent_eligible,
         min_sub_team_members: team.min_sub_team_members,
+        min_sub_team_age_days: team.min_sub_team_age_days,
     })
 }

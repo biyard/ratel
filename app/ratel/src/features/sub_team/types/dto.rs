@@ -11,6 +11,8 @@ use crate::features::sub_team::models::{
 pub struct SubTeamSettingsResponse {
     pub is_parent_eligible: bool,
     pub min_sub_team_members: i32,
+    #[serde(default)]
+    pub min_sub_team_age_days: i32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -20,9 +22,28 @@ pub struct UpdateSubTeamSettingsRequest {
     pub is_parent_eligible: Option<bool>,
     #[serde(default)]
     pub min_sub_team_members: Option<i32>,
+    #[serde(default)]
+    pub min_sub_team_age_days: Option<i32>,
 }
 
 // ── Form fields ──────────────────────────────────────────────────
+
+/// Attributes on the applicant team's profile that a form field can
+/// auto-pull its value from. When a field has `linked_to: Some(_)`,
+/// the apply page prefills it with the applicant team's matching
+/// attribute and renders the field read-only.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+pub enum TeamProfileLink {
+    /// `Team.display_name`
+    TeamName,
+    /// `Team.username`
+    TeamUsername,
+    /// `Team.description`
+    TeamBio,
+    /// `Team.profile_url`
+    TeamProfileUrl,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -33,6 +54,14 @@ pub struct SubTeamFormFieldResponse {
     pub required: bool,
     pub order: i32,
     pub options: Vec<String>,
+    #[serde(default)]
+    pub linked_to: Option<TeamProfileLink>,
+    /// `true` for system-seeded default fields (e.g. "팀 이름",
+    /// "설립 목적"). The form builder hides edit/delete controls for
+    /// these rows; the public apply page treats them like normal
+    /// linked fields.
+    #[serde(default)]
+    pub locked: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -46,6 +75,8 @@ pub struct CreateSubTeamFormFieldRequest {
     pub order: Option<i32>,
     #[serde(default)]
     pub options: Option<Vec<String>>,
+    #[serde(default)]
+    pub linked_to: Option<TeamProfileLink>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -61,6 +92,14 @@ pub struct UpdateSubTeamFormFieldRequest {
     pub order: Option<i32>,
     #[serde(default)]
     pub options: Option<Vec<String>>,
+    /// `Some(link)` sets a link; `None` leaves the field unchanged.
+    /// Clearing an existing link via the patch endpoint isn't
+    /// supported today — admins delete and recreate the field
+    /// instead. (`DynamoEntity` setters for `Option<T>` fields take
+    /// the inner `T` and wrap, so the schema doesn't have a clear-
+    /// variant either.)
+    #[serde(default)]
+    pub linked_to: Option<TeamProfileLink>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -160,6 +199,8 @@ pub struct ApplyContextDocument {
 pub struct ApplyContextResponse {
     pub is_parent_eligible: bool,
     pub min_sub_team_members: i32,
+    #[serde(default)]
+    pub min_sub_team_age_days: i32,
     pub recognized_count: i64,
     pub pending_count: i64,
     pub form_fields: Vec<SubTeamFormFieldResponse>,
@@ -182,6 +223,8 @@ impl From<crate::features::sub_team::models::SubTeamFormField> for SubTeamFormFi
             required: f.required,
             order: f.order,
             options: f.options,
+            linked_to: f.linked_to,
+            locked: f.locked,
         }
     }
 }

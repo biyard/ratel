@@ -79,6 +79,18 @@ translate! {
     },
     form_new_field: { en: "New field", ko: "새 필드" },
 
+    // Linked-field selector options (per field row)
+    form_link_none: { en: "Link", ko: "Link" },
+    form_link_team_name: { en: "Team name", ko: "팀 이름" },
+    form_link_team_username: { en: "Username", ko: "Username" },
+    form_link_team_bio: { en: "Bio / about", ko: "팀 소개 / BIO" },
+    form_link_team_profile_url: { en: "Profile image", ko: "프로필 이미지" },
+
+    // Single/multi select options panel
+    form_options_title: { en: "Options", ko: "선택지" },
+    form_options_placeholder: { en: "Option label…", ko: "선택지 라벨…" },
+    form_options_add: { en: "Add option", ko: "선택지 추가" },
+
     // Form fields UI
     add_field: { en: "Add field", ko: "필드 추가" },
     delete_field: { en: "Delete field", ko: "필드 삭제" },

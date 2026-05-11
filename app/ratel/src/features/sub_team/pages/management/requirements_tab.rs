@@ -6,11 +6,10 @@
 //! pointing the host at the form/documents tabs for non-objective
 //! requirements.
 //!
-//! Backend support today:
-//!   - `min_sub_team_members` → wired to `UseSubTeamSettings`
-//!   - `min_days` → not yet in backend; rendered as visual placeholder
-//!     so the layout matches the mockup. Until the field ships server-
-//!     side the stepper is read-only / disabled.
+//! Backend support today: both `min_sub_team_members` and
+//! `min_sub_team_age_days` are wired through `UseSubTeamSettings` →
+//! `update_sub_team_settings_handler` and persisted on the parent
+//! `Team` row.
 
 use crate::features::sub_team::{
     use_sub_team_settings, SubTeamTranslate, UpdateSubTeamSettingsRequest, UseSubTeamSettings,
@@ -27,6 +26,7 @@ pub fn RequirementsTab() -> Element {
     } = use_sub_team_settings()?;
 
     let min_members = settings().min_sub_team_members;
+    let min_age_days = settings().min_sub_team_age_days;
 
     rsx! {
         section { class: "card", id: "requirements",
@@ -66,6 +66,7 @@ pub fn RequirementsTab() -> Element {
                                     .call(UpdateSubTeamSettingsRequest {
                                         is_parent_eligible: None,
                                         min_sub_team_members: Some(next),
+                                        min_sub_team_age_days: None,
                                     });
                             },
                             "−"
@@ -84,6 +85,7 @@ pub fn RequirementsTab() -> Element {
                                         .call(UpdateSubTeamSettingsRequest {
                                             is_parent_eligible: None,
                                             min_sub_team_members: Some(n.max(0)),
+                                            min_sub_team_age_days: None,
                                         });
                                 }
                             },
@@ -95,6 +97,7 @@ pub fn RequirementsTab() -> Element {
                                     .call(UpdateSubTeamSettingsRequest {
                                         is_parent_eligible: None,
                                         min_sub_team_members: Some(min_members + 1),
+                                        min_sub_team_age_days: None,
                                     });
                             },
                             "+"
@@ -102,7 +105,7 @@ pub fn RequirementsTab() -> Element {
                     }
                 }
 
-                // ── Card 2: 팀 생성 최소 기간 (teal) — visual only today
+                // ── Card 2: 팀 생성 최소 기간 (teal) — wired to backend
                 div { class: "req-card",
                     div {
                         class: "req-card__icon",
@@ -127,17 +130,50 @@ pub fn RequirementsTab() -> Element {
                         div { class: "req-card__desc", "{tr.req_min_days_desc}" }
                     }
                     div { class: "req-card__input-wrap",
-                        button { class: "req-card__stepper", disabled: true, "−" }
+                        button {
+                            class: "req-card__stepper",
+                            onclick: move |_| {
+                                let next = (min_age_days - 1).max(0);
+                                handle_update
+                                    .call(UpdateSubTeamSettingsRequest {
+                                        is_parent_eligible: None,
+                                        min_sub_team_members: None,
+                                        min_sub_team_age_days: Some(next),
+                                    });
+                            },
+                            "−"
+                        }
                         input {
                             class: "req-card__value",
                             r#type: "number",
                             id: "min-days",
-                            value: "0",
+                            "data-testid": "sub-team-settings-min-days-input",
+                            value: "{min_age_days}",
                             min: "0",
                             max: "365",
-                            disabled: true,
+                            onchange: move |e| {
+                                if let Ok(n) = e.value().parse::<i32>() {
+                                    handle_update
+                                        .call(UpdateSubTeamSettingsRequest {
+                                            is_parent_eligible: None,
+                                            min_sub_team_members: None,
+                                            min_sub_team_age_days: Some(n.clamp(0, 365)),
+                                        });
+                                }
+                            },
                         }
-                        button { class: "req-card__stepper", disabled: true, "+" }
+                        button {
+                            class: "req-card__stepper",
+                            onclick: move |_| {
+                                handle_update
+                                    .call(UpdateSubTeamSettingsRequest {
+                                        is_parent_eligible: None,
+                                        min_sub_team_members: None,
+                                        min_sub_team_age_days: Some((min_age_days + 1).min(365)),
+                                    });
+                            },
+                            "+"
+                        }
                     }
                 }
             }

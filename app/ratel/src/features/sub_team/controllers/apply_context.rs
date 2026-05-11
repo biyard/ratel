@@ -83,6 +83,7 @@ pub async fn get_sub_team_apply_context_handler(
     Ok(ApplyContextResponse {
         is_parent_eligible: team.is_parent_eligible,
         min_sub_team_members: team.min_sub_team_members,
+        min_sub_team_age_days: team.min_sub_team_age_days,
         recognized_count,
         pending_count,
         form_fields,

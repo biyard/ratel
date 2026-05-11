@@ -32604,7 +32604,8 @@ body.comments-panel-resizing {
 .sub-team-management .req-card {
   padding: 14px 16px;
   border-radius: 12px;
-  background: var(--sub-team-input-bg);
+  /* Theme-aware: dark navy on dark, off-white on light. */
+  background: var(--dark, rgba(6, 6, 14, 0.5)) var(--light, rgba(0, 0, 0, 0.04));
   border: 1px solid var(--sub-team-border);
   display: flex;
   align-items: center;
@@ -32622,7 +32623,7 @@ body.comments-panel-resizing {
   justify-content: center;
   flex-shrink: 0;
 }
-.sub-team-management .req-card__body { flex: 1; }
+.sub-team-management .req-card__body { flex: 1; min-width: 0; }
 .sub-team-management .req-card__title {
   font-size: 10px;
   font-weight: 700;
@@ -32630,34 +32631,62 @@ body.comments-panel-resizing {
   text-transform: uppercase;
   color: var(--sub-team-gold);
 }
+.sub-team-management .req-card__desc {
+  font-size: 12px;
+  color: var(--sub-team-muted);
+  margin-top: 2px;
+}
 .sub-team-management .req-card__input-wrap {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 .sub-team-management .req-card__stepper {
+  /* `display: flex; align-items: center; justify-content: center; padding: 0`
+   * is what was missing — without it the `-` / `+` characters render
+   * with default <button> baseline alignment and slip off-center. */
   width: 28px;
   height: 28px;
+  padding: 0;
   border-radius: 7px;
   background: transparent;
   border: 1px solid var(--sub-team-border);
   color: var(--sub-team-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   font-size: 14px;
   font-weight: 800;
+  line-height: 1;
+  transition: all 0.2s;
+}
+.sub-team-management .req-card__stepper:hover:not(:disabled) {
+  color: var(--sub-team-gold);
+  border-color: rgba(252, 179, 0, 0.3);
 }
 .sub-team-management .req-card__stepper:disabled { opacity: 0.3; cursor: not-allowed; }
 .sub-team-management .req-card__value {
-  width: 64px;
+  width: 48px;
   text-align: center;
   padding: 6px;
   border-radius: 7px;
-  background: var(--sub-team-input-bg);
+  background: var(--dark, rgba(0, 0, 0, 0.3)) var(--light, rgba(0, 0, 0, 0.03));
   border: 1px solid var(--sub-team-border);
   color: var(--sub-team-text);
   font-size: 14px;
   font-weight: 700;
   outline: none;
+  /* Custom +/- stepper buttons live next to this input, so the
+   * native browser spinners are redundant and visually noisy. */
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.sub-team-management .req-card__value::-webkit-inner-spin-button,
+.sub-team-management .req-card__value::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .sub-team-management .field-list {
@@ -32671,7 +32700,11 @@ body.comments-panel-resizing {
   gap: 10px;
   padding: 10px 14px;
   border-radius: 10px;
-  background: var(--sub-team-input-bg);
+  /* Theme-aware: dark navy on dark, soft off-white on light.
+   * Avoids the grey-on-grey collision when the page is in light
+   * mode and the unscoped `--sub-team-input-bg` resolved to
+   * something that read too dark against the card surface. */
+  background: var(--dark, rgba(6, 6, 14, 0.5)) var(--light, rgba(0, 0, 0, 0.03));
   border: 1px solid var(--sub-team-border);
 }
 .sub-team-management .field-row__drag {
@@ -32725,6 +32758,183 @@ body.comments-panel-resizing {
   border-color: rgba(239, 68, 68, 0.3);
   color: var(--sub-team-coral);
 }
+
+/* ── 🔗 Link button + popover menu ───────────────────────────
+ * Mirrors mockup `subteam-management-page.html` §122-136 exactly:
+ * teal-tinted pill in "set" state, transparent + dim in "none"
+ * state. Popover menu drops below the button with each option
+ * showing label + dotted key hint + check icon. */
+.sub-team-management .field-row__link-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.sub-team-management .field-row__link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(110, 237, 216, 0.06);
+  border: 1px solid rgba(110, 237, 216, 0.22);
+  color: var(--sub-team-teal);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.sub-team-management .field-row__link-btn:hover {
+  background: rgba(110, 237, 216, 0.14);
+}
+.sub-team-management .field-row__link-btn[data-linked="none"] {
+  background: transparent;
+  border-color: var(--sub-team-border);
+  color: var(--sub-team-dim);
+}
+.sub-team-management .field-row__link-btn[data-linked="none"]:hover {
+  color: var(--sub-team-muted);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+.sub-team-management .field-row__link-btn svg { width: 10px; height: 10px; }
+
+.sub-team-management .field-row__link-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 25;
+  min-width: 220px;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--dark, rgba(12, 12, 26, 0.98)) var(--light, rgba(255, 255, 255, 0.98));
+  backdrop-filter: blur(22px);
+  border: 1px solid var(--sub-team-border);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sub-team-management .field-row__link-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: transparent;
+  border: none;
+  color: var(--sub-team-text);
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+.sub-team-management .field-row__link-option:hover {
+  background: var(--dark, rgba(255, 255, 255, 0.04)) var(--light, rgba(0, 0, 0, 0.04));
+}
+.sub-team-management .field-row__link-option[aria-selected="true"] {
+  background: rgba(110, 237, 216, 0.08);
+  color: var(--sub-team-teal);
+}
+.sub-team-management .field-row__link-option-key {
+  font-size: 9px;
+  color: var(--sub-team-dim);
+  letter-spacing: 0.06em;
+}
+.sub-team-management .field-row__link-option[aria-selected="true"] .field-row__link-option-key {
+  color: var(--sub-team-teal);
+  opacity: 0.8;
+}
+.sub-team-management .field-row__link-option svg {
+  width: 12px;
+  height: 12px;
+  color: var(--sub-team-teal);
+  opacity: 0;
+  flex-shrink: 0;
+}
+.sub-team-management .field-row__link-option[aria-selected="true"] svg { opacity: 1; }
+
+/* ── Options sub-panel under SingleSelect/MultiSelect rows ──── *
+ * Renders below the main row inside a `.field-row-wrap` so the
+ * row + options stay aligned as a single visual unit. */
+.sub-team-management .field-row-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sub-team-management .field-options {
+  /* Same horizontal extent as the field-row above. */
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--dark, rgba(6, 6, 14, 0.5)) var(--light, rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--sub-team-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sub-team-management .field-options__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sub-team-management .field-options__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sub-team-management .field-options__input {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 7px;
+  background: var(--dark, rgba(0, 0, 0, 0.3)) var(--light, rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--sub-team-border);
+  color: var(--sub-team-text);
+  font-size: 12px;
+  outline: none;
+  transition: all 0.2s;
+}
+.sub-team-management .field-options__input:focus {
+  border-color: rgba(252, 179, 0, 0.3);
+}
+.sub-team-management .field-options__del {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--sub-team-dim, #6b6b80);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+.sub-team-management .field-options__del:hover {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--sub-team-coral);
+}
+.sub-team-management .field-options__del svg { width: 12px; height: 12px; }
+.sub-team-management .field-options__add {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 7px;
+  background: transparent;
+  border: 1px dashed rgba(252, 179, 0, 0.30);
+  color: var(--sub-team-gold);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.sub-team-management .field-options__add:hover {
+  background: rgba(252, 179, 0, 0.06);
+  border-color: rgba(252, 179, 0, 0.5);
+}
+
 .sub-team-management .add-field-btn {
   display: flex;
   align-items: center;
@@ -33200,11 +33410,15 @@ body.comments-panel-resizing {
 }
 
 .sub-team-management .inline-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   font-size: 11px;
+  line-height: 1.55;
   color: var(--sub-team-dim);
-  padding: 8px 12px;
+  padding: 10px 12px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--dark, rgba(255, 255, 255, 0.02)) var(--light, rgba(0, 0, 0, 0.025));
   border: 1px solid var(--sub-team-border);
 }
 
@@ -33516,6 +33730,10 @@ body.comments-panel-resizing {
   flex-direction: column;
   gap: 10px;
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  /* `hidden` is only required while collapsed so the max-height
+   * transition clips the body cleanly. When expanded we switch to
+   * `visible` so absolute-positioned children like the link-menu
+   * popover can escape the card bounds without being clipped. */
   overflow: hidden;
 }
 .sub-team-management .card--collapsible[data-collapsed="true"] .card__body {
@@ -33526,6 +33744,7 @@ body.comments-panel-resizing {
 .sub-team-management .card--collapsible[data-collapsed="false"] .card__body {
   max-height: 4000px;
   opacity: 1;
+  overflow: visible;
 }
 
 /* ── Notice card (Linked-field intro inside Form section) ──── */
@@ -33565,16 +33784,12 @@ body.comments-panel-resizing {
   line-height: 1.55;
 }
 
-/* ── Form field-row pieces (locked badge, type select) ────── */
-.sub-team-management .field-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: rgba(6, 6, 14, 0.5);
-  border: 1px solid var(--sub-team-border);
-}
+/* ── Locked field-row tint (gold-edged) ───────────────────────
+ * Earlier in this file the primary `.sub-team-management
+ * .field-row` rule sets a theme-aware bg via space toggle —
+ * a duplicate hardcoded `rgba(6, 6, 14, 0.5)` override that
+ * used to live here was breaking light mode and has been
+ * removed. This block keeps only the locked-state tint. */
 .sub-team-management .field-row[data-locked="true"] {
   border-color: rgba(252, 179, 0, 0.18);
   background: rgba(252, 179, 0, 0.04);
@@ -33603,34 +33818,79 @@ body.comments-panel-resizing {
   background-position: right 6px center;
   padding-right: 22px;
 }
-.sub-team-management .field-row__label {
-  flex: 1;
-  min-width: 0;
-  padding: 6px 10px;
-  border-radius: 7px;
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--sub-team-text);
-  font-size: 13px;
-  font-weight: 600;
-  outline: none;
-  transition: all 0.2s;
-}
+/* Duplicate `.sub-team-management .field-row__label` block — the
+ * base rule lives earlier in this file with `background: transparent`.
+ * Below adds hover + focus accents; the focus background uses the
+ * same theme-toggle pattern so light mode no longer renders a dark
+ * navy block on the active input. */
 .sub-team-management .field-row__label:hover { border-color: var(--sub-team-border); }
 .sub-team-management .field-row__label:focus {
   border-color: rgba(252, 179, 0, 0.3);
-  background: rgba(6, 6, 14, 0.6);
+  background: var(--dark, rgba(6, 6, 14, 0.6)) var(--light, rgba(0, 0, 0, 0.04));
 }
 .sub-team-management .field-row__lock-badge {
   font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.12em;
   color: var(--sub-team-gold);
-  padding: 2px 6px;
+  padding: 3px 8px;
   border-radius: 5px;
   background: rgba(252, 179, 0, 0.08);
   border: 1px solid rgba(252, 179, 0, 0.22);
   text-transform: uppercase;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* ── Locked field-row visual cues ─────────────────────────────
+ * Disabled selects/inputs/buttons already get a `disabled` attr
+ * from RSX; below dims them slightly so the row reads as
+ * non-interactive without losing legibility. */
+.sub-team-management .field-row[data-locked="true"] .field-row__type,
+.sub-team-management .field-row[data-locked="true"] .field-row__label {
+  opacity: 0.85;
+  cursor: not-allowed;
+}
+.sub-team-management .field-row[data-locked="true"] .field-row__link-btn,
+.sub-team-management .field-row[data-locked="true"] .field-row__del {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* ── Mobile / small-viewport layout ───────────────────────── *
+ * Stack field-row pieces (type, label, link, required, del)
+ * into a flex-wrap grid so each row stays inside the viewport
+ * on phones. Without this the right-side controls overflow
+ * the card width and the row visually breaks. */
+@media (max-width: 720px) {
+  .sub-team-management .page,
+  .sub-team-management .page--wide { padding: 12px; }
+  .sub-team-management .card { padding: 14px; }
+  .sub-team-management .field-row {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .sub-team-management .field-row__label {
+    order: 5;
+    width: 100%;
+    flex-basis: 100%;
+  }
+  .sub-team-management .field-row__type { flex-shrink: 0; }
+  .sub-team-management .field-row__link-wrap { margin-left: auto; }
+  .sub-team-management .field-row__link-menu {
+    right: auto;
+    left: 0;
+    min-width: 200px;
+  }
+  .sub-team-management .req-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 500px) {
+  .sub-team-management .card__head { flex-wrap: wrap; }
+  .sub-team-management .card__dash { display: none; }
+  .sub-team-management .req-card { flex-wrap: wrap; row-gap: 10px; }
+  .sub-team-management .req-card__body { flex-basis: calc(100% - 56px); }
+  .sub-team-management .req-card__input-wrap { margin-left: 56px; }
+  .sub-team-management .field-row__lock-badge { margin-left: 0; }
 }
 
 

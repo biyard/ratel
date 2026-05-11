@@ -64,6 +64,11 @@ pub struct Team {
     #[serde(default)]
     pub min_sub_team_members: i32,
 
+    // Minimum age (in days, since `created_at`) an applicant team must
+    // be before its Submit button is enabled. `0` means no minimum.
+    #[serde(default)]
+    pub min_sub_team_age_days: i32,
+
     // Parent-child scalars. Invariants:
     //   recognized sub-team ⇔ parent_team_id.is_some()
     //   pending sub-team    ⇔ pending_parent_team_id.is_some() && parent_team_id.is_none()
@@ -105,6 +110,7 @@ impl Team {
             allow_create_space: false,
             is_parent_eligible: false,
             min_sub_team_members: 0,
+            min_sub_team_age_days: 0,
             parent_team_id: None,
             pending_parent_team_id: None,
         }

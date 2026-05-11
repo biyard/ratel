@@ -168,9 +168,7 @@ fn ApplyForm(username: String, team_display: String, team_handle: String) -> Ele
                 }
 
                 if !is_parent_eligible && !parent_team_id().is_empty() {
-                    div { class: "notice notice--warn",
-                        "{tr.apply_parent_eligible_off}"
-                    }
+                    div { class: "notice notice--warn", "{tr.apply_parent_eligible_off}" }
                 }
 
                 div { class: "apply-grid",
@@ -354,11 +352,34 @@ fn FieldRow(
     value: serde_json::Value,
     on_change: EventHandler<(String, serde_json::Value)>,
 ) -> Element {
+    let tr: SubTeamTranslate = use_translate();
     let id = field.id.clone();
     let label = field.label.clone();
     let required = field.required;
     let field_type = field.field_type;
     let options = field.options.clone();
+    // When `linked_to` is set the value will be populated server-side
+    // at submit time from the applicant team's profile, so the input
+    // is rendered read-only with a 🔗 hint. The actual prefill on the
+    // client (echoing the value back into the field for visual feedback)
+    // requires loading the applicant team profile here — deferred.
+    let linked_to = field.linked_to;
+    let is_linked = linked_to.is_some();
+    let linked_hint: Option<&'static str> = match linked_to {
+        Some(crate::features::sub_team::types::TeamProfileLink::TeamName) => {
+            Some(tr.form_link_team_name)
+        }
+        Some(crate::features::sub_team::types::TeamProfileLink::TeamUsername) => {
+            Some(tr.form_link_team_username)
+        }
+        Some(crate::features::sub_team::types::TeamProfileLink::TeamBio) => {
+            Some(tr.form_link_team_bio)
+        }
+        Some(crate::features::sub_team::types::TeamProfileLink::TeamProfileUrl) => {
+            Some(tr.form_link_team_profile_url)
+        }
+        None => None,
+    };
 
     let text_value = match &value {
         serde_json::Value::String(s) => s.clone(),
@@ -384,10 +405,14 @@ fn FieldRow(
         div {
             class: "field",
             "data-testid": "sub-team-apply-field",
+            "data-linked": "{is_linked}",
             label { class: "field__label",
                 "{label}"
                 if required {
                     span { class: "req", " *" }
+                }
+                if let Some(hint) = linked_hint {
+                    span { class: "field__linked-hint", " · 🔗 {hint}" }
                 }
             }
             match field_type {

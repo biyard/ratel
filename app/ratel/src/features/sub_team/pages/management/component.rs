@@ -135,6 +135,7 @@ pub fn TeamSubTeamManagementPage(username: String) -> Element {
                                     .call(UpdateSubTeamSettingsRequest {
                                         is_parent_eligible: Some(e.checked()),
                                         min_sub_team_members: None,
+                                        min_sub_team_age_days: None,
                                     });
                             },
                         }
@@ -316,14 +317,16 @@ pub fn TeamSubTeamManagementPage(username: String) -> Element {
                 }
 
                 // 5. Tab panels — only active tab mounts its tab body.
+                // Requirements + Form are always interactive regardless of
+                // the activation switch — the switch only controls whether
+                // the public apply page is reachable, not whether the admin
+                // can configure rules. (`.gated` wrapper removed.)
                 div {
                     class: "tab-panel",
                     "data-tab": "requirements",
                     "data-active": "{active_tab() == ManagementTab::Requirements}",
                     if active_tab() == ManagementTab::Requirements {
-                        div {
-                            class: "gated",
-                            style: "display:flex;flex-direction:column;gap:16px;",
+                        div { style: "display:flex;flex-direction:column;gap:16px;",
                             RequirementsTab {}
                             FormTab {}
                         }
