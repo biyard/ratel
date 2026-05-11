@@ -1,6 +1,6 @@
 mod toast_tools;
 
-use dioxus::prelude::*;
+use crate::common::*;
 
 #[component]
 pub fn DevTools() -> Element {

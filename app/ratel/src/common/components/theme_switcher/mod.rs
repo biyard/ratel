@@ -15,7 +15,6 @@ pub use theme::*;
 pub use theme_service::*;
 
 use crate::common::*;
-use dioxus::prelude::*;
 
 #[component]
 pub fn ThemeSwitcher() -> Element {

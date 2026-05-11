@@ -1,7 +1,7 @@
 use crate::common::components::{Button, ButtonStyle};
 use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::posts::*;
-use dioxus::prelude::*;
+use crate::common::*;
 
 translate! {
     CreatePostButtonTranslate;

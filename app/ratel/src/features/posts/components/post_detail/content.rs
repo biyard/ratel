@@ -3,7 +3,7 @@ use crate::features::posts::models::PostArtworkMetadata;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
 use crate::common::components::editor::Editor as RichEditor;
-use dioxus::prelude::*;
+use crate::common::*;
 
 #[component]
 pub fn PostContent(

@@ -12,7 +12,6 @@ mod views;
 pub use views::*;
 
 use crate::common::*;
-use dioxus::prelude::*;
 
 type Result<T> = crate::common::Result<T>;
 type DioxusResult<T> = dioxus::prelude::Result<T>;

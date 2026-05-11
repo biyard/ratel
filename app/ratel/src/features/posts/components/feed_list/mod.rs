@@ -3,7 +3,7 @@ use crate::features::posts::controllers::dto::*;
 use crate::features::posts::controllers::list_posts::list_posts_handler;
 use crate::features::posts::*;
 use crate::common::hooks::use_infinite_query;
-use dioxus::prelude::*;
+use crate::common::*;
 
 #[component]
 pub fn FeedList() -> Element {

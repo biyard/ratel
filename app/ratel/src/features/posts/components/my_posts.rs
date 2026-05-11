@@ -3,7 +3,7 @@ use crate::features::posts::controllers::dto::*;
 use crate::features::posts::controllers::list_user_posts::{list_team_posts_handler, list_user_posts_handler};
 use crate::features::posts::*;
 use crate::common::hooks::use_infinite_query;
-use dioxus::prelude::*;
+use crate::common::*;
 
 #[component]
 pub fn MyPosts(username: String) -> Element {

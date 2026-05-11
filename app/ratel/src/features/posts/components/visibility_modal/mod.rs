@@ -1,7 +1,7 @@
 use crate::features::posts::types::Visibility;
 use crate::features::posts::*;
 use crate::common::components::Button;
-use dioxus::prelude::*;
+use crate::common::*;
 
 translate! {
     VisibilityModalTranslate;

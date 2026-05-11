@@ -76,7 +76,7 @@ pub async fn load_session_vote_secret() -> Option<String> {
 
     #[cfg(not(feature = "server"))]
     {
-        use dioxus::prelude::*;
+        use crate::common::*;
 
         let script = format!(
             r#"try {{
@@ -100,7 +100,7 @@ pub fn save_session_vote_secret(user_secret: &str) {
 
     #[cfg(not(feature = "server"))]
     {
-        use dioxus::prelude::*;
+        use crate::common::*;
 
         let script = format!(
             r#"try {{ window.sessionStorage.setItem({k}, {v}); }} catch (_e) {{}}"#,

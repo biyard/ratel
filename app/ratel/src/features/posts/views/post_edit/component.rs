@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use crate::common::*;
 use std::collections::HashMap;
 
 use super::i18n::PostEditTranslate;

@@ -1,5 +1,5 @@
 use crate::common::components::image_upload_preview::PendingImage;
-use dioxus::prelude::*;
+use crate::common::*;
 
 pub const MAX_COMMENT_IMAGES: usize = 4;
 pub const MAX_IMAGE_SIZE_BYTES: f64 = 10.0 * 1024.0 * 1024.0; // 10MB

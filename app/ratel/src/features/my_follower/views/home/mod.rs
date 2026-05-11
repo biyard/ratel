@@ -9,7 +9,7 @@ use crate::features::my_follower::controllers::{
     follow_user, list_followers, list_followings, unfollow_user,
 };
 use crate::features::my_follower::*;
-use dioxus::prelude::*;
+use crate::common::*;
 use i18n::MyFollowerTranslate;
 
 #[component]

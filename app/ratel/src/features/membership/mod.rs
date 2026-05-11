@@ -19,7 +19,6 @@ pub use crate::common::types::*;
 pub use crate::common::{DeserializeFromStr, DynamoEnum, EnumProp, SerializeDisplay};
 
 use crate::common::*;
-use dioxus::prelude::*;
 
 use serde::{Deserialize, Serialize};
 

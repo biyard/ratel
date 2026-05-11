@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use crate::common::*;
 use icons::time::Clock;
 
 #[component]

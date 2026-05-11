@@ -1,5 +1,5 @@
 use crate::common::SpacePartition;
-use dioxus::prelude::*;
+use crate::common::*;
 
 #[get("/api/spaces/:space_id/incentive/ranking?bookmark", _space: crate::common::models::space::SpaceCommon)]
 pub async fn list_ranking_handler(

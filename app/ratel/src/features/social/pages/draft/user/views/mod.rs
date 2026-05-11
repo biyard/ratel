@@ -1,6 +1,6 @@
 mod i18n;
 
-use dioxus::prelude::*;
+use crate::common::*;
 
 use crate::common::hooks::use_infinite_query;
 use crate::common::utils::time::{now, time_ago};

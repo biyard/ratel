@@ -27,11 +27,13 @@ pub fn Index() -> Element {
     let nav = use_navigator();
     let mut popup = use_popup();
     let user_ctx = crate::features::auth::hooks::use_user_context();
-    let username = user_ctx()
-        .user
-        .as_ref()
-        .map(|u| u.username.clone())
-        .unwrap_or_default();
+    let username = use_memo(move || {
+        user_ctx()
+            .user
+            .as_ref()
+            .map(|u| u.username.clone())
+            .unwrap_or_default()
+    });
     let has_user = user_ctx().user.is_some();
     // Admin users get a shield button next to Settings in the topbar
     // HUD that jumps straight to `/admin/`. Non-admins see nothing —
@@ -111,7 +113,7 @@ pub fn Index() -> Element {
 
     let active_spaces = hot_cards.len() as i64;
 
-    let go_create_post = move |_: Event<MouseData>| {
+    let go_create_post = move |_: Event<MouseData>| async move {
         if !has_user {
             popup
                 .open(rsx! {
@@ -120,21 +122,18 @@ pub fn Index() -> Element {
                 .with_title("Start building your Essence");
             return;
         }
-        spawn(async move {
-            match create_post_handler(None).await {
-                Ok(resp) => {
-                    nav.push(Route::PostEdit {
-                        post_id: resp.post_pk.into(),
-                    });
-                }
-                Err(e) => {
-                    dioxus::logger::tracing::error!("Failed to create post: {:?}", e);
-                }
+        match create_post_handler(None).await {
+            Ok(resp) => {
+                nav.push(Route::PostEdit {
+                    post_id: resp.post_pk.into(),
+                });
             }
-        });
+            Err(e) => {
+                dioxus::logger::tracing::error!("Failed to create post: {:?}", e);
+            }
+        }
     };
 
-    let drafts_username = username.clone();
     let go_drafts = move |_: Event<MouseData>| {
         if !has_user {
             popup
@@ -145,11 +144,10 @@ pub fn Index() -> Element {
             return;
         }
         nav.push(Route::SocialDraft {
-            username: drafts_username.clone(),
+            username: username(),
         });
     };
 
-    let rewards_username = username.clone();
     let go_rewards = move |_: Event<MouseData>| {
         if !has_user {
             popup
@@ -160,7 +158,7 @@ pub fn Index() -> Element {
             return;
         }
         nav.push(Route::SocialReward {
-            username: rewards_username.clone(),
+            username: username(),
         });
     };
 

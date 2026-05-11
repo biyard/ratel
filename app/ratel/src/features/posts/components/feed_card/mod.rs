@@ -2,7 +2,7 @@ use super::*;
 use crate::features::posts::controllers::dto::*;
 use crate::features::posts::controllers::like_post::like_post_handler;
 use crate::features::posts::types::*;
-use dioxus::prelude::*;
+use crate::common::*;
 
 fn convert_number_to_string(n: i64) -> String {
     let suffixes = ["K", "M", "B"];

@@ -1,5 +1,5 @@
 mod toast_card;
-use dioxus::prelude::*;
+use crate::common::*;
 use dioxus_translate::{Language, Translate, use_language};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
