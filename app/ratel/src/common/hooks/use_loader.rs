@@ -69,26 +69,34 @@ where
     dioxus::prelude::use_loader(move || {
         let f = future_fn.clone();
         async move {
-            let (tx, rx) = tokio::sync::oneshot::channel();
+            use std::sync::mpsc;
+
+            let (tx, rx) = mpsc::channel::<std::result::Result<T, E>>();
+
             std::thread::spawn(move || {
-                let rt = match tokio::runtime::Builder::new_current_thread()
-                    .enable_all()
-                    .build()
-                {
-                    Ok(rt) => rt,
-                    Err(_) => {
-                        // Drop tx without sending; caller's rx.await will
-                        // return Err and we map that to a panic so the
-                        // loader surfaces a clear failure rather than
-                        // hanging.
-                        return;
-                    }
-                };
-                let res = rt.block_on(async move { f().await });
-                let _ = tx.send(res);
+                let result = (move || -> std::result::Result<T, E> {
+                    let rt = match tokio::runtime::Builder::new_current_thread()
+                        .enable_all()
+                        .build()
+                    {
+                        Ok(rt) => rt,
+                        Err(e) => {
+                            unimplemented!(
+                                "Failed to build Tokio runtime in use_loader bridge thread: {e:?}"
+                            )
+                        }
+                    };
+                    rt.block_on(async move { f().await })
+                })();
+                let _ = tx.send(result);
             });
-            rx.await
-                .expect("use_loader: dedicated bridge thread aborted before sending result")
+
+            match rx.recv() {
+                Ok(v) => v,
+                Err(e) => {
+                    unimplemented!("Failed to receive result from use_loader bridge thread: {e:?}")
+                }
+            }
         }
     })
 }

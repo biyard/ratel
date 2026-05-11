@@ -49,6 +49,8 @@ pub use providers::*;
 pub use run::*;
 
 pub use dioxus::prelude::*;
+pub use hooks::use_loader;
+
 // NOTE: it replaces dioxus::prelude::* and should be used after it.
 pub use components::SuspenseBoundary;
 use serde_repr::{Deserialize_repr, Serialize_repr};

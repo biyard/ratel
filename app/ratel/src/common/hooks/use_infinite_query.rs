@@ -192,7 +192,7 @@ where
 /// }
 /// ```
 pub fn use_infinite_query<Bookmark, I, T, F>(
-    mut future: impl FnMut(Option<Bookmark>) -> F + 'static + Clone + Copy,
+    mut future: impl FnMut(Option<Bookmark>) -> F + 'static + Clone + Copy + Send,
 ) -> dioxus::prelude::Result<InfiniteQuery<Bookmark, I, T>, RenderError>
 where
     Bookmark: 'static + Clone + PartialEq + std::fmt::Debug,
