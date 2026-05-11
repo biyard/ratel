@@ -19,7 +19,7 @@ use crate::features::sub_team::types::{
 
 async fn create_parent_team(ctx: &TestContext) -> Partition {
     let owner = &ctx.test_user.0;
-    Team::create_new_team(
+    let (pk, _) = Team::create_new_team(
         owner,
         &ctx.ddb,
         format!("parent{}", uuid::Uuid::new_v4().simple()),
@@ -28,7 +28,8 @@ async fn create_parent_team(ctx: &TestContext) -> Partition {
         "parent desc".to_string(),
     )
     .await
-    .unwrap()
+    .unwrap();
+    pk
 }
 
 fn team_id_from(pk: &Partition) -> String {
@@ -740,7 +741,7 @@ async fn create_team_for(
     headers: &axum::http::HeaderMap,
 ) -> (Partition, String) {
     let _ = headers;
-    let pk = Team::create_new_team(
+    let (pk, _) = Team::create_new_team(
         user,
         &ctx.ddb,
         format!("child{}", uuid::Uuid::new_v4().simple()),

@@ -82,6 +82,12 @@ pub struct SubTeamFormFieldSnapshot {
     pub required: bool,
     pub order: i32,
     pub options: Vec<String>,
+    /// Locked default field (`제안하는 팀 이름`, `설립 목적`) — kept so
+    /// the applicant-facing status snapshot can sort default fields to
+    /// the top, mirroring the apply page's ordering. `#[serde(default)]`
+    /// keeps existing rows deserializable.
+    #[serde(default)]
+    pub locked: bool,
 }
 
 #[cfg(feature = "server")]

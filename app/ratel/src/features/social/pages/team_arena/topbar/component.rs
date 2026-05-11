@@ -31,6 +31,18 @@ pub fn ArenaTopbar(
     /// Whether the viewer can access admin-only tabs (Drafts, Settings).
     #[props(default = false)]
     can_edit: bool,
+    /// Whether the parent team has flipped the sub-team activation
+    /// switch ON. Non-members only see the sub-team HUD icon when
+    /// this is true (otherwise the team isn't accepting apps yet).
+    #[props(default = false)]
+    is_parent_eligible: bool,
+    /// `Some(applicant_username)` if the viewer is admin/owner of a
+    /// team that has already submitted an in-flight (Pending /
+    /// Returned) application to this team. When set, the sub-team
+    /// HUD icon routes to the applicant's status page instead of the
+    /// apply page so they can resume tracking.
+    #[props(default = None)]
+    pending_applicant_username: Option<String>,
     /// Whether the Follow action should show "Unfollow" instead.
     #[props(default = false)]
     is_following: bool,
@@ -206,12 +218,12 @@ pub fn ArenaTopbar(
                             id: "arena-teams-dd-list",
                             onscroll: move |_| {
                                 let js = r#"
-                                                                                                                                                                                                            const el = document.getElementById('arena-teams-dd-list');
-                                                                                                                                                                                                            if (!el) { dioxus.send(false); return; }
-                                                                                                                                                                                                            const nearBottom =
-                                                                                                                                                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
-                                                                                                                                                                                                            dioxus.send(nearBottom);
-                                                                                                                                                                                                        "#;
+                                                                                                                                                                                                                                    const el = document.getElementById('arena-teams-dd-list');
+                                                                                                                                                                                                                                    if (!el) { dioxus.send(false); return; }
+                                                                                                                                                                                                                                    const nearBottom =
+                                                                                                                                                                                                                                        el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+                                                                                                                                                                                                                                    dioxus.send(nearBottom);
+                                                                                                                                                                                                                                "#;
                                 let mut ctrl = teams_query;
                                 spawn(async move {
                                     let mut eval = document::eval(js);
@@ -395,13 +407,25 @@ pub fn ArenaTopbar(
                     }
                 }
 
-                if can_edit {
+                // Sub-teams icon — three audiences, three destinations:
+                //   • Member admin → management page.
+                //   • Non-member with an in-flight application from one
+                //     of their admin teams → that applicant's status page.
+                //   • Non-member with no pending app, on a parent-eligible
+                //     team → apply page.
+                // Hidden entirely when none of those apply (visitor on a
+                // team that isn't accepting apps and they haven't applied).
+                if can_edit || pending_applicant_username.is_some() || is_parent_eligible {
                     HudButton {
                         label: tr.sub_teams.to_string(),
                         active: active == TeamArenaTab::SubTeams,
-                        to: Route::TeamSubTeamManagementPage {
+                        to: if can_edit { Route::TeamSubTeamManagementPage {
                             username: username.clone(),
-                        },
+                        } } else if let Some(applicant_username) = pending_applicant_username.clone() { Route::TeamSubTeamApplicationStatusPage {
+                            username: applicant_username,
+                        } } else { Route::TeamSubTeamApplyPage {
+                            username: username.clone(),
+                        } },
                         icon: rsx! {
                             svg {
                                 view_box: "0 0 24 24",

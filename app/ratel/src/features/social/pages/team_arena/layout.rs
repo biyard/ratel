@@ -29,6 +29,15 @@ pub struct TeamArenaContext {
     pub team_id: Signal<TeamPartition>,
     pub description: Signal<String>,
     pub created_at: Signal<i64>,
+    /// Whether the team has flipped its sub-team activation switch ON.
+    pub is_parent_eligible: Signal<bool>,
+    pub min_sub_team_members: Signal<i32>,
+    pub min_sub_team_age_days: Signal<i32>,
+    /// `Some(applicant_username)` if the viewer is admin/owner of some
+    /// team that has an in-flight application to this wall team —
+    /// used by the topbar to route the sub-team HUD icon to the
+    /// status page instead of the apply page.
+    pub viewer_pending_applicant_username: Signal<Option<String>>,
 }
 
 impl From<UseWallContext> for TeamArenaContext {
@@ -43,6 +52,10 @@ impl From<UseWallContext> for TeamArenaContext {
                 following,
                 description,
                 created_at,
+                is_parent_eligible,
+                min_sub_team_members,
+                min_sub_team_age_days,
+                viewer_pending_applicant_username,
                 ..
             } => {
                 let (can_edit, is_admin, is_member) = if let Some(role) = role {
@@ -65,6 +78,12 @@ impl From<UseWallContext> for TeamArenaContext {
                     team_id: Signal::new(id),
                     description: Signal::new(description),
                     created_at: Signal::new(created_at),
+                    is_parent_eligible: Signal::new(is_parent_eligible),
+                    min_sub_team_members: Signal::new(min_sub_team_members),
+                    min_sub_team_age_days: Signal::new(min_sub_team_age_days),
+                    viewer_pending_applicant_username: Signal::new(
+                        viewer_pending_applicant_username,
+                    ),
                 }
             }
             _ => panic!("Wall context is not a team"),
@@ -97,6 +116,10 @@ pub fn TeamArenaLayout(username: ReadSignal<String>) -> Element {
     let can_edit = ctx.can_edit();
     let is_member = ctx.is_member();
     let logged_in = user_ctx().user.is_some();
+
+    // Sub-team activation comes from the wall context's turn-key team
+    // payload — no extra per-page fetch needed.
+    let is_parent_eligible = ctx.is_parent_eligible();
 
     let mut follow_processing = use_signal(|| false);
 
@@ -146,6 +169,8 @@ pub fn TeamArenaLayout(username: ReadSignal<String>) -> Element {
                 profile_url: profile_url.clone(),
                 active: ctx.active_tab(),
                 can_edit,
+                is_parent_eligible,
+                pending_applicant_username: (ctx.viewer_pending_applicant_username)(),
                 show_follow: logged_in && !is_member,
                 is_following: ctx.following(),
                 on_follow: on_follow_click,

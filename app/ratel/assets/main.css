@@ -29472,7 +29472,14 @@ body.comments-panel-resizing {
 
   background: var(--sub-team-bg);
   color: var(--sub-team-text);
-  min-height: 100vh;
+  /* `body` is `overflow: hidden; height: 100dvh` globally — every page
+   * needs its own scroll container or content past the viewport is
+   * clipped. Memory rule `feedback_arena_page_scroll.md`. */
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .sub-team-application-status .arena-topbar {
@@ -29529,45 +29536,6 @@ body.comments-panel-resizing {
   gap: 18px;
 }
 
-.sub-team-application-status .status-hero {
-  padding: 22px 26px;
-  border-radius: 18px;
-  background: var(--sub-team-glass);
-  border: 1px solid var(--sub-team-border);
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-.sub-team-application-status .status-hero__icon {
-  width: 58px;
-  height: 58px;
-  border-radius: 14px;
-  background: rgba(252, 179, 0, 0.10);
-  border: 1px solid rgba(252, 179, 0, 0.30);
-  color: var(--sub-team-gold);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.sub-team-application-status .status-hero__body {
-  flex: 1;
-  min-width: 0;
-}
-.sub-team-application-status .status-hero__eyebrow {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--sub-team-dim);
-}
-.sub-team-application-status .status-hero__title {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--sub-team-text);
-  margin-top: 4px;
-}
-
 .sub-team-application-status .card {
   padding: 20px 22px;
   border-radius: 16px;
@@ -29583,10 +29551,29 @@ body.comments-panel-resizing {
   gap: 10px;
 }
 .sub-team-application-status .card__title {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
   font-size: 14px;
   font-weight: 800;
   color: var(--sub-team-text);
   letter-spacing: 0.02em;
+}
+.sub-team-application-status .card__title[data-feedback-variant="returned"] {
+  background: linear-gradient(135deg, #818cf8, #c4b5fd);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.sub-team-application-status .card__title[data-feedback-variant="approved"] {
+  background: linear-gradient(135deg, #22c55e, #86efac);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.sub-team-application-status .card__title[data-feedback-variant="rejected"] {
+  background: linear-gradient(135deg, #ef4444, #fca5a5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 .sub-team-application-status .card__dash {
   flex: 1;
@@ -29594,6 +29581,7 @@ body.comments-panel-resizing {
   background: linear-gradient(90deg, var(--sub-team-border), transparent);
 }
 .sub-team-application-status .card__meta {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
   font-size: 10px;
   color: var(--sub-team-dim);
   letter-spacing: 0.1em;
@@ -29603,88 +29591,45 @@ body.comments-panel-resizing {
 .sub-team-application-status .pill {
   padding: 3px 10px;
   border-radius: 100px;
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
 }
-.sub-team-application-status .pill--Pending {
+.sub-team-application-status .pill::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+  animation: sub-team-status-pulse 1.6s ease-in-out infinite;
+}
+.sub-team-application-status .pill--pending {
   background: rgba(245, 158, 11, 0.10);
   color: var(--sub-team-amber);
   border: 1px solid rgba(245, 158, 11, 0.30);
 }
-.sub-team-application-status .pill--Approved {
+.sub-team-application-status .pill--approved {
   background: rgba(34, 197, 94, 0.10);
   color: var(--sub-team-green);
   border: 1px solid rgba(34, 197, 94, 0.30);
 }
-.sub-team-application-status .pill--Rejected {
+.sub-team-application-status .pill--rejected {
   background: rgba(239, 68, 68, 0.10);
   color: var(--sub-team-coral);
   border: 1px solid rgba(239, 68, 68, 0.30);
 }
-.sub-team-application-status .pill--Returned {
+.sub-team-application-status .pill--returned {
   background: rgba(129, 140, 248, 0.10);
   color: var(--sub-team-violet);
   border: 1px solid rgba(129, 140, 248, 0.30);
-}
-.sub-team-application-status .pill--Draft,
-.sub-team-application-status .pill--Cancelled {
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--sub-team-muted);
-  border: 1px solid var(--sub-team-border);
-}
-
-.sub-team-application-status .feedback {
-  padding: 14px 16px;
-  border-radius: 12px;
-  background: rgba(6, 6, 14, 0.45);
-  border: 1px solid var(--sub-team-border);
-  border-left: 3px solid var(--sub-team-violet);
-}
-.sub-team-application-status .feedback__title {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--sub-team-muted);
-  margin-bottom: 6px;
-}
-.sub-team-application-status .feedback__text {
-  font-size: 14px;
-  color: var(--sub-team-text);
-  line-height: 1.7;
-  white-space: pre-wrap;
-}
-
-.sub-team-application-status .action-row {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-.sub-team-application-status .btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  border: 1px solid;
-}
-.sub-team-application-status .btn--primary {
-  background: linear-gradient(135deg, rgba(110, 237, 216, 0.2), rgba(129, 140, 248, 0.08));
-  border-color: rgba(110, 237, 216, 0.3);
-  color: var(--sub-team-teal);
-}
-.sub-team-application-status .btn--ghost {
-  background: transparent;
-  border-color: var(--sub-team-border);
-  color: var(--sub-team-muted);
 }
 
 .sub-team-application-status .history-list {
@@ -29723,6 +29668,532 @@ body.comments-panel-resizing {
   text-align: center;
   color: var(--sub-team-muted);
   font-style: italic;
+}
+
+/* ─── Topbar brand row (back + divider + child logo + title + status pill) ─── */
+.sub-team-application-status .arena-topbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.sub-team-application-status .brand-home {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--sub-team-border);
+  color: var(--sub-team-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.sub-team-application-status .brand-home__divider {
+  width: 1px;
+  height: 22px;
+  background: var(--sub-team-border);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+.sub-team-application-status .arena-topbar__logo--child {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  background: rgba(110, 237, 216, 0.10);
+  border: 1px solid rgba(110, 237, 216, 0.25);
+  color: var(--sub-team-teal);
+  flex-shrink: 0;
+}
+.sub-team-application-status .arena-topbar__title--child {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--sub-team-text);
+}
+.sub-team-application-status .arena-topbar__handle {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sub-team-dim);
+}
+.sub-team-application-status .u-col {
+  display: flex;
+  flex-direction: column;
+}
+.sub-team-application-status .arena-topbar__status {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sub-team-application-status .arena-topbar__status::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+  animation: sub-team-status-pulse 1.6s ease-in-out infinite;
+}
+@keyframes sub-team-status-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.75); }
+}
+.sub-team-application-status .arena-topbar__status--pending {
+  background: rgba(245, 158, 11, 0.10);
+  color: var(--sub-team-amber);
+  border-color: rgba(245, 158, 11, 0.30);
+}
+.sub-team-application-status .arena-topbar__status--returned {
+  background: rgba(129, 140, 248, 0.10);
+  color: var(--sub-team-violet);
+  border-color: rgba(129, 140, 248, 0.30);
+}
+.sub-team-application-status .arena-topbar__status--approved {
+  background: rgba(34, 197, 94, 0.10);
+  color: var(--sub-team-green);
+  border-color: rgba(34, 197, 94, 0.30);
+}
+.sub-team-application-status .arena-topbar__status--rejected {
+  background: rgba(239, 68, 68, 0.10);
+  color: var(--sub-team-coral);
+  border-color: rgba(239, 68, 68, 0.30);
+}
+
+/* ─── Page header ─── */
+.sub-team-application-status .page-header {
+  padding: 4px 2px 0;
+}
+.sub-team-application-status .page-header__main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sub-team-application-status .page-header__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--sub-team-muted);
+}
+.sub-team-application-status .page-header__title {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--sub-team-text);
+  margin: 0;
+}
+.sub-team-application-status .page-header__title--child strong {
+  color: var(--sub-team-teal);
+  font-weight: 800;
+}
+
+/* ─── Status hero (variant-aware) ─── */
+.sub-team-application-status .status-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 26px 30px;
+  border-radius: 18px;
+  background: var(--sub-team-glass);
+  border: 1px solid var(--sub-team-border);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 24px;
+  align-items: center;
+}
+.sub-team-application-status .status-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 55% 60% at 15% 15%,
+    var(--status-accent, rgba(245, 158, 11, 0.12)) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
+}
+.sub-team-application-status .status-hero > * {
+  position: relative;
+  z-index: 1;
+}
+.sub-team-application-status .status-hero[data-v="pending"] {
+  --status-accent: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+.sub-team-application-status .status-hero[data-v="returned"] {
+  --status-accent: rgba(129, 140, 248, 0.15);
+  border-color: rgba(129, 140, 248, 0.25);
+}
+.sub-team-application-status .status-hero[data-v="approved"] {
+  --status-accent: rgba(34, 197, 94, 0.18);
+  border-color: rgba(34, 197, 94, 0.30);
+  box-shadow: 0 0 36px rgba(34, 197, 94, 0.10);
+}
+.sub-team-application-status .status-hero[data-v="rejected"] {
+  --status-accent: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+.sub-team-application-status .status-hero__icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sub-team-application-status .status-hero[data-v="pending"] .status-hero__icon {
+  background: rgba(245, 158, 11, 0.10);
+  border: 1px solid rgba(245, 158, 11, 0.30);
+  color: var(--sub-team-amber);
+}
+.sub-team-application-status .status-hero[data-v="returned"] .status-hero__icon {
+  background: rgba(129, 140, 248, 0.10);
+  border: 1px solid rgba(129, 140, 248, 0.30);
+  color: var(--sub-team-violet);
+}
+.sub-team-application-status .status-hero[data-v="approved"] .status-hero__icon {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  color: var(--sub-team-green);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+}
+.sub-team-application-status .status-hero[data-v="rejected"] .status-hero__icon {
+  background: rgba(239, 68, 68, 0.10);
+  border: 1px solid rgba(239, 68, 68, 0.30);
+  color: var(--sub-team-coral);
+}
+.sub-team-application-status .status-hero__eyebrow {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sub-team-dim);
+}
+.sub-team-application-status .status-hero__title {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  color: var(--sub-team-text);
+  margin: 4px 0 6px;
+}
+.sub-team-application-status .status-hero__sub {
+  font-size: 13px;
+  color: var(--sub-team-muted);
+  line-height: 1.6;
+  max-width: 520px;
+}
+.sub-team-application-status .status-hero__meta {
+  align-items: flex-end;
+  text-align: right;
+  gap: 6px;
+  width: fit-content;
+  justify-self: end;
+}
+.sub-team-application-status .status-hero__meta-foot {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--sub-team-dim);
+}
+
+/* ─── Feedback card (returned / approved / rejected) ─── */
+.sub-team-application-status .feedback {
+  padding: 16px 18px;
+  border-radius: 14px;
+  margin-top: 4px;
+  background: rgba(6, 6, 14, 0.5);
+  border: 1px solid var(--sub-team-border);
+  display: flex;
+  gap: 12px;
+}
+.sub-team-application-status .feedback__avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(110, 237, 216, 0.10);
+  border: 1px solid rgba(110, 237, 216, 0.25);
+  color: var(--sub-team-teal);
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+.sub-team-application-status .feedback__body {
+  flex: 1;
+  min-width: 0;
+}
+.sub-team-application-status .feedback__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.sub-team-application-status .feedback__author {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sub-team-text);
+}
+.sub-team-application-status .feedback__author-meta {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 10px;
+  color: var(--sub-team-dim);
+  letter-spacing: 0.06em;
+}
+.sub-team-application-status .feedback__text {
+  font-size: 14px;
+  color: var(--sub-team-text);
+  line-height: 1.7;
+  background: var(--dark, rgba(12, 12, 26, 0.5)) var(--light, rgba(0, 0, 0, 0.04));
+  padding: 12px 14px;
+  border-radius: 10px;
+  border-left: 3px solid var(--sub-team-violet);
+  white-space: pre-wrap;
+}
+.sub-team-application-status .feedback--rejected .feedback__text {
+  border-left-color: var(--sub-team-coral);
+}
+
+/* ─── Action row buttons ─── */
+.sub-team-application-status .action-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+.sub-team-application-status .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.sub-team-application-status .btn--primary {
+  background: linear-gradient(135deg, rgba(110, 237, 216, 0.2), rgba(129, 140, 248, 0.08));
+  border-color: rgba(110, 237, 216, 0.3);
+  color: var(--sub-team-teal);
+}
+.sub-team-application-status .btn--ghost {
+  background: transparent;
+  border-color: var(--sub-team-border);
+  color: var(--sub-team-muted);
+}
+
+/* ─── Submitted-answers snapshot table ─── */
+.sub-team-application-status .card__title--snapshot {
+  background: linear-gradient(135deg, #6eedd8, #b6f5e6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.sub-team-application-status .snapshot {
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--dark, rgba(6, 6, 14, 0.45)) var(--light, rgba(0, 0, 0, 0.025));
+  border: 1px solid var(--sub-team-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sub-team-application-status .snapshot__row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--sub-team-border);
+  font-size: 12px;
+}
+.sub-team-application-status .snapshot__row:last-child {
+  border-bottom: none;
+}
+.sub-team-application-status .snapshot__key {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sub-team-dim);
+}
+.sub-team-application-status .snapshot__value {
+  color: var(--sub-team-text);
+  line-height: 1.55;
+  word-break: break-word;
+}
+
+/* ─── Form-version pin notice ─── */
+.sub-team-application-status .notice {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(110, 237, 216, 0.05);
+  border: 1px solid rgba(110, 237, 216, 0.20);
+}
+.sub-team-application-status .notice--teal {
+  background: rgba(110, 237, 216, 0.05);
+  border-color: rgba(110, 237, 216, 0.20);
+}
+.sub-team-application-status .notice__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(110, 237, 216, 0.10);
+  color: var(--sub-team-teal);
+  border: 1px solid rgba(110, 237, 216, 0.30);
+}
+.sub-team-application-status .notice__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.sub-team-application-status .notice__title {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sub-team-teal);
+}
+.sub-team-application-status .notice__text {
+  font-size: 12px;
+  color: var(--sub-team-muted);
+  line-height: 1.55;
+}
+
+/* ─── Mobile (≤ 500px) ───────────────────────────────────────────── */
+@media (max-width: 500px) {
+  .sub-team-application-status .arena-topbar {
+    padding: 12px 14px;
+  }
+  .sub-team-application-status .arena-topbar__brand {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .sub-team-application-status .brand-home__divider {
+    display: none;
+  }
+  .sub-team-application-status .arena-topbar__title--child {
+    font-size: 13px;
+  }
+  .sub-team-application-status .arena-topbar__handle {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+  }
+  .sub-team-application-status .arena-topbar__status {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .sub-team-application-status .page {
+    padding: 16px 14px 60px;
+    gap: 14px;
+  }
+  .sub-team-application-status .page-header__title {
+    font-size: 20px;
+    line-height: 1.25;
+  }
+  .sub-team-application-status .status-hero {
+    /* Collapse the 3-column grid (icon · body · meta) into a single
+     * column so the title doesn't wrap into a 1-word-per-line column
+     * on narrow screens. */
+    grid-template-columns: 1fr;
+    padding: 20px 18px;
+    gap: 14px;
+  }
+  .sub-team-application-status .status-hero__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+  }
+  .sub-team-application-status .status-hero__title {
+    font-size: 18px;
+    line-height: 1.3;
+  }
+  .sub-team-application-status .status-hero__sub {
+    font-size: 12px;
+  }
+  .sub-team-application-status .status-hero__meta {
+    flex-direction: row;
+    align-items: center;
+    justify-self: stretch;
+    text-align: left;
+    gap: 8px;
+    width: 100%;
+  }
+  .sub-team-application-status .status-hero__meta-foot {
+    text-align: right;
+    margin-left: auto;
+  }
+  .sub-team-application-status .card {
+    padding: 16px 14px;
+    gap: 12px;
+  }
+  .sub-team-application-status .feedback {
+    flex-direction: column;
+    padding: 14px;
+    gap: 10px;
+  }
+  .sub-team-application-status .feedback__text {
+    font-size: 13px;
+  }
+  .sub-team-application-status .snapshot__row {
+    /* Stack key over value so long Korean labels aren't truncated
+     * by the fixed 160px grid column. */
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: 8px 0;
+  }
+  .sub-team-application-status .action-row {
+    justify-content: stretch;
+  }
+  .sub-team-application-status .action-row .btn {
+    flex: 1;
+    justify-content: center;
+  }
 }
 
 
@@ -29840,7 +30311,10 @@ body.comments-panel-resizing {
 .sub-team-apply-doc-modal .doc-modal__content {
   padding: 20px 22px;
   border-radius: 12px;
-  background: rgba(12, 12, 26, 0.45);
+  /* Theme-aware: dark navy on dark, soft off-white on light.
+   * Hardcoded `rgba(12, 12, 26, 0.45)` was rendering a flat dark
+   * grey block in light mode. */
+  background: var(--dark, rgba(12, 12, 26, 0.45)) var(--light, rgba(0, 0, 0, 0.03));
   border: 1px solid var(--sub-team-border);
   font-size: 13.5px;
   line-height: 1.85;
@@ -29875,7 +30349,7 @@ body.comments-panel-resizing {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  background: rgba(6, 6, 14, 0.40);
+  background: var(--dark, rgba(6, 6, 14, 0.40)) var(--light, rgba(0, 0, 0, 0.025));
 }
 .sub-team-apply-doc-modal .doc-modal__foot-left {
   font-size: 10px;
@@ -29909,7 +30383,9 @@ body.comments-panel-resizing {
   border-radius: 10px;
   background: linear-gradient(135deg, rgba(168, 85, 247, 0.28), rgba(129, 140, 248, 0.18));
   border: 1px solid rgba(168, 85, 247, 0.50);
-  color: #f3e8ff;
+  /* Light lilac in dark mode, deeper violet in light mode so "동의하기"
+   * stays readable against the gradient on a white card. */
+  color: var(--dark, #f3e8ff) var(--light, #5b21b6);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -29925,7 +30401,7 @@ body.comments-panel-resizing {
 .sub-team-apply-doc-modal .doc-modal__agree-btn[data-agreed="true"] {
   background: linear-gradient(135deg, rgba(34, 197, 94, 0.28), rgba(16, 185, 129, 0.18));
   border-color: rgba(34, 197, 94, 0.50);
-  color: #d1fae5;
+  color: var(--dark, #d1fae5) var(--light, #166534);
   cursor: default;
 }
 .sub-team-apply-doc-modal .doc-modal__agree-btn:disabled {
@@ -29956,7 +30432,14 @@ body.comments-panel-resizing {
 
   background: var(--sub-team-bg);
   color: var(--sub-team-text);
-  min-height: 100vh;
+  /* `body` is `overflow: hidden; height: 100dvh` globally — every
+   * page needs its own scroll container or content past the viewport
+   * is clipped. Memory rule `feedback_arena_page_scroll.md`. */
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .sub-team-apply .arena-topbar {
@@ -30165,7 +30648,7 @@ body.comments-panel-resizing {
   width: 100%;
   padding: 12px 14px;
   border-radius: 10px;
-  background: rgba(6, 6, 14, 0.45);
+  background: var(--dark, rgba(6, 6, 14, 0.45)) var(--light, rgba(0, 0, 0, 0.03));
   border: 1px solid var(--sub-team-border);
   color: var(--sub-team-text);
   text-align: left;
@@ -30321,7 +30804,7 @@ body.comments-panel-resizing {
   gap: 10px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: rgba(6, 6, 14, 0.45);
+  background: var(--dark, rgba(6, 6, 14, 0.45)) var(--light, rgba(0, 0, 0, 0.03));
   border: 1px solid var(--sub-team-border);
 }
 .sub-team-apply .elig-item[data-met="true"] {
@@ -30365,7 +30848,7 @@ body.comments-panel-resizing {
   gap: 12px;
   padding: 12px 14px;
   border-radius: 12px;
-  background: rgba(6, 6, 14, 0.45);
+  background: var(--dark, rgba(6, 6, 14, 0.45)) var(--light, rgba(0, 0, 0, 0.03));
   border: 1px solid var(--sub-team-border);
   flex-wrap: wrap;
 }
@@ -30380,8 +30863,149 @@ body.comments-panel-resizing {
   color: var(--sub-team-muted);
   text-transform: uppercase;
 }
+.sub-team-apply .submit-bar__title--ready,
 .sub-team-apply .submit-bar__title[data-ready="true"] {
   color: var(--sub-team-green);
+}
+.sub-team-apply .submit-bar__sub {
+  font-size: 11px;
+  color: var(--sub-team-dim);
+  margin-top: 2px;
+  line-height: 1.5;
+}
+
+/* ── Composer meta — "{applicant} → {parent}" arrow flow ─── */
+.sub-team-apply .composer-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--sub-team-border);
+  flex-wrap: wrap;
+}
+.sub-team-apply .composer-meta__selected {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--sub-team-text);
+}
+.sub-team-apply .composer-meta__arrow {
+  color: var(--sub-team-dim);
+  display: flex;
+  align-items: center;
+}
+.sub-team-apply .composer-meta__arrow svg { width: 14px; height: 14px; }
+.sub-team-apply .composer-meta__target {
+  color: var(--sub-team-gold);
+}
+
+/* ── Applicant team picker (mockup §team-dropdown) ─────────── *
+ * Trigger looks like an input row; popover menu is absolute-
+ * positioned so it floats over the cards below instead of
+ * shoving them down. Theme-aware backgrounds for light mode. */
+.sub-team-apply .team-dropdown {
+  position: relative;
+  width: 100%;
+}
+.sub-team-apply .team-dropdown__trigger {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 11px;
+  background: var(--dark, rgba(6, 6, 14, 0.55)) var(--light, rgba(255, 255, 255, 0.95));
+  border: 1px solid var(--sub-team-border);
+  color: var(--sub-team-text);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+}
+.sub-team-apply .team-dropdown__trigger:hover {
+  border-color: rgba(110, 237, 216, 0.28);
+}
+.sub-team-apply .team-dropdown__trigger[aria-expanded="true"] {
+  border-color: rgba(110, 237, 216, 0.40);
+  box-shadow: 0 0 14px rgba(110, 237, 216, 0.12);
+}
+.sub-team-apply .team-dropdown__chev {
+  width: 18px;
+  height: 18px;
+  color: var(--sub-team-muted);
+  transition: transform 0.25s;
+}
+.sub-team-apply .team-dropdown__trigger[aria-expanded="true"] .team-dropdown__chev {
+  transform: rotate(180deg);
+  color: var(--sub-team-teal);
+}
+.sub-team-apply .team-dropdown__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.sub-team-apply .team-dropdown__name {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--sub-team-text);
+}
+.sub-team-apply .team-dropdown__meta {
+  font-size: 10px;
+  color: var(--sub-team-muted);
+  letter-spacing: 0.04em;
+}
+
+.sub-team-apply .team-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 200;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--dark, rgba(12, 12, 26, 0.98)) var(--light, rgba(255, 255, 255, 0.98));
+  backdrop-filter: blur(22px);
+  border: 1px solid var(--sub-team-border);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sub-team-apply .team-dropdown__item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: transparent;
+  border: none;
+  color: var(--sub-team-text);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+.sub-team-apply .team-dropdown__item:hover {
+  background: var(--dark, rgba(255, 255, 255, 0.04)) var(--light, rgba(0, 0, 0, 0.04));
+}
+.sub-team-apply .team-dropdown__item[aria-selected="true"] {
+  background: rgba(110, 237, 216, 0.08);
+}
+.sub-team-apply .team-dropdown__item[aria-selected="true"] .team-dropdown__name {
+  color: var(--sub-team-teal);
+}
+.sub-team-apply .team-dropdown__check {
+  color: var(--sub-team-teal);
+  display: flex;
+  align-items: center;
 }
 
 .sub-team-apply .btn {
@@ -30395,16 +31019,195 @@ body.comments-panel-resizing {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  border: 1px solid;
+  border: 1px solid transparent;
+  transition: all 0.15s;
 }
 .sub-team-apply .btn--primary {
   background: linear-gradient(135deg, rgba(110, 237, 216, 0.2), rgba(129, 140, 248, 0.08));
   border-color: rgba(110, 237, 216, 0.3);
   color: var(--sub-team-teal);
 }
+/* Ghost cancel — transparent fill in both themes, gentle border so it
+ * sits next to the primary submit without screaming for attention. */
+.sub-team-apply .btn--ghost {
+  background: transparent;
+  border-color: var(--sub-team-border);
+  color: var(--sub-team-muted);
+}
+.sub-team-apply .btn--ghost:hover {
+  border-color: var(--sub-team-border-strong);
+  color: var(--sub-team-text);
+}
 .sub-team-apply .btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+/* ── Topbar brand cluster (mockup §arena-topbar__brand) ────── */
+.sub-team-apply .arena-topbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+.sub-team-apply .brand-home {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--sub-team-border);
+  color: var(--sub-team-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sub-team-apply .brand-home:hover {
+  border-color: var(--sub-team-border-strong);
+  color: var(--sub-team-text);
+}
+.sub-team-apply .brand-home__divider {
+  width: 1px;
+  height: 18px;
+  background: var(--sub-team-border);
+}
+.sub-team-apply .arena-topbar__logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(252, 179, 0, 0.22), rgba(252, 179, 0, 0.10));
+  border: 1px solid rgba(252, 179, 0, 0.35);
+  color: var(--sub-team-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+.sub-team-apply .u-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.sub-team-apply .arena-topbar__title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--sub-team-text);
+  text-transform: uppercase;
+}
+.sub-team-apply .arena-topbar__handle {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--sub-team-muted);
+}
+.sub-team-apply .arena-topbar__status {
+  margin-left: auto;
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: rgba(168, 85, 247, 0.10);
+  border: 1px solid rgba(168, 85, 247, 0.28);
+  color: var(--sub-team-purple);
+  flex-shrink: 0;
+}
+
+/* ── Page header (mockup hero) ─────────────────────────────── */
+.sub-team-apply .page-header {
+  padding: 18px 22px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sub-team-apply .page-header__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sub-team-gold);
+}
+.sub-team-apply .page-header__title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--sub-team-text);
+  margin: 0;
+}
+.sub-team-apply .page-header__title strong {
+  background: linear-gradient(135deg, var(--sub-team-gold), #ffd24a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  margin-right: 4px;
+}
+.sub-team-apply .page-header__sub {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--sub-team-muted);
+  margin: 0;
+  max-width: 720px;
+}
+
+/* ── Eligibility progress bar (mockup §elig-progress) ────── */
+.sub-team-apply .elig-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.sub-team-apply .elig-progress__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--sub-team-muted);
+}
+.sub-team-apply .elig-progress__fraction {
+  color: var(--sub-team-text);
+  font-weight: 800;
+}
+.sub-team-apply .elig-progress__fraction--ready {
+  color: var(--sub-team-green);
+}
+.sub-team-apply .elig-progress__track {
+  height: 8px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+}
+.sub-team-apply .elig-progress__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--sub-team-amber), var(--sub-team-gold));
+  transition: width 0.4s;
+  box-shadow: 0 0 8px rgba(252, 179, 0, 0.25);
+}
+.sub-team-apply .elig-progress__fill[data-ready="true"] {
+  background: linear-gradient(90deg, var(--sub-team-teal), var(--sub-team-green));
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+}
+
+/* ── Eligibility item desc (newly rendered text under title) */
+.sub-team-apply .elig-item__desc {
+  font-size: 11px;
+  color: var(--sub-team-muted);
+  line-height: 1.5;
+  margin-top: 2px;
 }
 
 

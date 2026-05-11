@@ -1,13 +1,13 @@
 //! Controller for the parent-admin sub-team settings tab.
 //!
-//! Hydrates `settings` from `get_sub_team_settings_handler` on mount
-//! so the activation switch + stepper values survive a page refresh.
-//! `handle_update` PATCHes and writes the server's echoed response
-//! back into the signal.
+//! Initial values come turn-key from `TeamArenaContext` — the wall
+//! controller already fetches the parent `Team` row when the page
+//! mounts, so we don't re-fetch via a dedicated GET. `handle_update`
+//! PATCHes and writes the server's echoed response back into the
+//! signal so the UI reflects the saved state without a re-load.
 
-use crate::features::sub_team::controllers::{
-    get_sub_team_settings_handler, update_sub_team_settings_handler,
-};
+use crate::features::social::pages::team_arena::use_team_arena;
+use crate::features::sub_team::controllers::update_sub_team_settings_handler;
 use crate::features::sub_team::types::{SubTeamSettingsResponse, UpdateSubTeamSettingsRequest};
 use crate::*;
 
@@ -27,17 +27,14 @@ pub fn use_sub_team_settings() -> std::result::Result<UseSubTeamSettings, Render
     let team_id: TeamPartition = use_context();
     let team_id_signal: ReadSignal<TeamPartition> = use_signal(|| team_id).into();
 
-    // Server-side hydration — fetches the persisted settings (Team.
-    // is_parent_eligible / min_* fields) on mount and re-uses the
-    // result as the `settings` signal seed.
-    let loader = use_loader(move || {
-        let id = team_id_signal();
-        async move { get_sub_team_settings_handler(id).await }
-    })?;
-    let mut settings = use_signal(SubTeamSettingsResponse::default);
-    let loaded = loader();
-    use_effect(move || {
-        settings.set(loaded.clone());
+    // Seed from `TeamArenaContext` (populated by the wall controller).
+    // The fields live on the parent `Team` row, which the wall already
+    // loaded — saves an extra round trip per page mount.
+    let arena = use_team_arena();
+    let mut settings = use_signal(|| SubTeamSettingsResponse {
+        is_parent_eligible: arena.is_parent_eligible(),
+        min_sub_team_members: arena.min_sub_team_members(),
+        min_sub_team_age_days: arena.min_sub_team_age_days(),
     });
 
     let team_id_for_update = team_id_signal;

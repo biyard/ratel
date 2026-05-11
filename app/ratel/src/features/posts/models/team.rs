@@ -123,13 +123,14 @@ impl Team {
         profile_url: String,
         username: String,
         description: String,
-    ) -> Result<Partition> {
+    ) -> Result<(Partition, i64)> {
         let team = Team::new(display_name, profile_url, username, description);
 
         let team_owner = TeamOwner::new(team.pk.clone(), user.clone());
 
         let user_pk = user.pk.clone();
         let team_pk = team.pk.clone();
+        let created_at = team.created_at;
 
         let user_team = crate::features::auth::UserTeam::new(
             user_pk,
@@ -152,7 +153,7 @@ impl Team {
             .await
             .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
 
-        Ok(team_pk)
+        Ok((team_pk, created_at))
     }
 
     pub async fn get_permitted_team(

@@ -225,6 +225,34 @@ translate! {
         en: "This team is not accepting sub-team applications",
         ko: "이 팀은 현재 하위팀 신청을 받지 않습니다",
     },
+    apply_page_header_sub: {
+        en: "Pick the team you admin and its profile (name / bio / lead) auto-fills the form. You can edit any field inline.",
+        ko: "내가 관리자인 팀을 선택하면 팀 프로필(이름·소개·지도자 등)이 신청폼에 자동 채워집니다. 필요하면 이 자리에서 바로 수정할 수 있어요.",
+    },
+    apply_status_drafting: { en: "Drafting", ko: "초안" },
+    apply_save_draft: { en: "Save draft", ko: "초안 저장" },
+    apply_progress_label: { en: "Requirements met", ko: "요건 충족도" },
+    apply_elig_admin_title: { en: "Team admin permission", ko: "팀의 관리자 권한" },
+    apply_elig_admin_desc: { en: "Must be an admin of the selected team", ko: "선택한 팀의 admin이어야 신청 가능" },
+    apply_elig_min_members_desc: {
+        en: "Team must reach this headcount before submitting",
+        ko: "팀이 이 인원을 달성해야 제출 가능",
+    },
+    apply_elig_min_days_title: { en: "Team age requirement", ko: "팀 생성 최소 기간" },
+    apply_elig_min_days_desc: { en: "Recently-created teams can't apply yet", ko: "최근 만들어진 팀은 신청 불가" },
+    apply_elig_docs_desc: { en: "Read & agree to every required doc", ko: "지정한 필독 문서를 모두 읽고 동의" },
+    apply_elig_form_desc: { en: "Fill every required field", ko: "필수 필드 모두 작성" },
+    apply_pick_your_team: { en: "Pick your team", ko: "내가 관리자인 팀 선택" },
+    apply_picker_placeholder: { en: "Select a team", ko: "팀을 선택하세요" },
+    apply_picker_empty: {
+        en: "You're not an admin of any team yet",
+        ko: "관리자 권한이 있는 팀이 없습니다",
+    },
+    apply_doc_view_open: { en: "Open to read", ko: "열어 보기" },
+    apply_doc_reference_badge: { en: "Reference", ko: "참고" },
+    apply_close: { en: "Close", ko: "닫기" },
+    apply_submit_progress_prefix: { en: "Requirements", ko: "요건" },
+    apply_submit_progress_suffix: { en: "met", ko: "충족" },
 
     // Doc agreement modal
     doc_modal_eyebrow: { en: "Required reading", ko: "필독 문서" },
@@ -251,6 +279,84 @@ translate! {
     },
     status_decision_reason: { en: "Decision reason", ko: "심사 결과 사유" },
     status_latest_application: { en: "Latest application", ko: "최근 신청" },
+
+    // Status hero — per-state eyebrow / title / sub copy. Mirrors the
+    // `heroContent` table in child-application-status.html.
+    status_hero_pending_eyebrow: { en: "Submitted", ko: "제출됨" },
+    status_hero_pending_title: {
+        en: "Under review",
+        ko: "심사 대기 중입니다",
+    },
+    status_hero_pending_sub: {
+        en: "The parent team is reviewing your application. It usually takes 3–5 business days. You'll be notified by Ratel + email.",
+        ko: "학과사무실 담당자가 신청서를 검토하고 있습니다. 보통 영업일 기준 3–5일이 소요됩니다. 결과는 Ratel 알림 + 이메일로 안내됩니다.",
+    },
+    status_hero_returned_eyebrow: { en: "Returned", ko: "수정 반송됨" },
+    status_hero_returned_title: {
+        en: "Revision requested",
+        ko: "수정 요청이 도착했습니다",
+    },
+    status_hero_returned_sub: {
+        en: "The parent team requested edits. Review the comment below, then edit and resubmit. There is no cooldown.",
+        ko: "학과 담당자가 신청서 수정을 요청했습니다. 아래 코멘트를 확인하고 수정 후 재제출해주세요. 쿨다운은 없습니다.",
+    },
+    status_hero_approved_eyebrow: { en: "Approved", ko: "승인됨" },
+    status_hero_approved_title: {
+        en: "🎉 Recognized as an official sub-team",
+        ko: "🎉 정식 하위팀으로 등록되었습니다",
+    },
+    status_hero_approved_sub: {
+        en: "Your team is now a recognized sub-team. You'll receive parent-team announcements and your activity will roll up to the parent dashboard.",
+        ko: "이제 인증된 하위팀이 되었습니다. 상위팀의 공지를 받고, 활동이 상위팀 대시보드에 집계됩니다.",
+    },
+    status_hero_rejected_eyebrow: { en: "Rejected", ko: "거절됨" },
+    status_hero_rejected_title: {
+        en: "Your application was not approved",
+        ko: "안타깝게도 이번 신청은 거절되었습니다",
+    },
+    status_hero_rejected_sub: {
+        en: "Please review the reason below. You can keep operating as a standalone team and reapply to the same or a different parent team without a cooldown.",
+        ko: "아래 사유를 확인해주세요. 독립 팀으로 계속 운영할 수 있고, 쿨다운 없이 같은 또는 다른 상위팀에 재신청할 수 있습니다.",
+    },
+
+    // Status feedback card — per-state heading + author meta.
+    status_feedback_returned_heading: {
+        en: "Revision comment",
+        ko: "수정 요청 코멘트",
+    },
+    status_feedback_approved_heading: {
+        en: "Welcome message",
+        ko: "환영 메시지",
+    },
+    status_feedback_rejected_heading: {
+        en: "Rejection reason",
+        ko: "거절 사유",
+    },
+    status_feedback_author_suffix: {
+        en: "Parent team",
+        ko: "상위팀 담당자",
+    },
+
+    // Submitted-answers snapshot card.
+    status_snapshot_heading: {
+        en: "Submitted answers",
+        ko: "제출 내역",
+    },
+    status_form_version_meta: {
+        en: "Form snapshot",
+        ko: "폼 스냅샷",
+    },
+    status_fields_count_suffix: {
+        en: "fields",
+        ko: "필드",
+    },
+
+    // Footer notice (form-version pinning).
+    status_form_pin_title: { en: "Form version pinned", ko: "폼 버전 고정" },
+    status_form_pin_text: {
+        en: "This application is pinned to the form version at submission time. Future updates to the form do not retroactively apply.",
+        ko: "제출 시점의 폼 버전에 이 신청은 고정되어 있습니다. 상위팀이 폼을 업데이트하더라도 이 신청에는 적용되지 않습니다.",
+    },
 
     // Doc compose
     doc_compose_title_new: { en: "New document", ko: "새 문서" },

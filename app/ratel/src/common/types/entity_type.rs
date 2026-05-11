@@ -256,6 +256,11 @@ pub enum EntityType {
     SubTeamDocAgreement(String, String),  // SUB_TEAM_DOC_AGREEMENT#{app_id}#{doc_id}
     SubTeamFormField(String),             // SUB_TEAM_FORM_FIELD#{field_id}
     SubTeamApplication(String),           // SUB_TEAM_APPLICATION#{application_id}
+    /// In-progress (not yet submitted) sub-team application body —
+    /// stored under the *applicant* team pk and keyed by the parent
+    /// team id so a single applicant can hold one draft per parent
+    /// they're considering.
+    SubTeamApplicationDraft(String),      // SUB_TEAM_APPLICATION_DRAFT#{parent_team_id}
     SubTeamAnnouncement(String),          // SUB_TEAM_ANNOUNCEMENT#{announcement_id}
 
     // Cross-posting feature (Phase 1: Bluesky / LinkedIn / Threads). All entities

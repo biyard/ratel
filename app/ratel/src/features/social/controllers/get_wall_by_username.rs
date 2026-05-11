@@ -1,7 +1,61 @@
 use crate::auth::UserTeam;
 use crate::features::social::*;
+#[cfg(feature = "server")]
+use crate::features::sub_team::models::{SubTeamApplication, SubTeamApplicationStatus};
 use crate::social::pages::member::dto::TeamRole;
 use crate::{auth::User, posts::models::Team, *};
+
+/// Returns the **applicant team's** username if the viewer is admin/owner
+/// of some team that has an in-flight application (Pending / Returned)
+/// targeting `wall_team_id`. Returns `None` otherwise. The lookup walks
+/// the viewer's UserTeam rows (filtered for admin/owner role) and
+/// queries `SubTeamApplication`'s gsi1 (`find_by_applicant`) for each.
+/// In practice the list is short — most users belong to 1–2 teams.
+#[cfg(feature = "server")]
+async fn find_viewer_pending_application_for(
+    cli: &aws_sdk_dynamodb::Client,
+    viewer_pk: &Partition,
+    wall_team_id: &TeamPartition,
+) -> Option<String> {
+    let wall_team_uuid = wall_team_id.0.clone();
+
+    let sk_prefix = EntityType::UserTeam(String::new()).to_string();
+    let opt = UserTeam::opt().sk(sk_prefix).limit(20);
+    let (user_teams, _): (Vec<UserTeam>, _) = UserTeam::query(cli, viewer_pk, opt).await.ok()?;
+
+    for ut in user_teams {
+        if !ut.role.is_admin_or_owner() {
+            continue;
+        }
+        let applicant_team_pk_str = match &ut.sk {
+            EntityType::UserTeam(s) => s.clone(),
+            _ => continue,
+        };
+        let applicant_pk: Partition = match applicant_team_pk_str.parse() {
+            Ok(p) => p,
+            Err(_) => continue,
+        };
+
+        let opt = SubTeamApplication::opt().limit(20).scan_index_forward(false);
+        let Ok((apps, _)) =
+            SubTeamApplication::find_by_applicant(cli, applicant_pk.clone(), opt).await
+        else {
+            continue;
+        };
+
+        let matched = apps.iter().any(|a| {
+            a.parent_team_id == wall_team_uuid
+                && matches!(
+                    a.status,
+                    SubTeamApplicationStatus::Pending | SubTeamApplicationStatus::Returned
+                )
+        });
+        if matched {
+            return Some(ut.username.clone());
+        }
+    }
+    None
+}
 
 #[get("/api/social/:username", user: OptionalUser)]
 pub async fn get_wall_by_username(username: String) -> Result<Wall> {
@@ -50,19 +104,31 @@ pub async fn get_wall_by_username(username: String) -> Result<Wall> {
             id,
             role,
             following,
+            viewer_pending_applicant_username,
             ..
         } => {
             *following = is_following;
             if let Some(u) = user {
-                // Check if the user is a member of the team.
-
                 let team_pk: Partition = id.clone().into();
 
+                // Member check
                 let member =
                     UserTeam::get(cli, &u.pk, Some(EntityType::UserTeam(team_pk.to_string())))
                         .await?;
                 if let Some(m) = member {
                     *role = Some(m.role);
+                }
+
+                // Pending application check — only fill if viewer is
+                // NOT yet a member; otherwise the HUD already routes
+                // to the management page and we can skip the query
+                // cost. Scans the viewer's admin/owner teams and asks
+                // each one's gsi1 (find_by_applicant) for a row whose
+                // parent matches this wall team and whose status is
+                // still in-flight (Pending / Returned).
+                if role.is_none() {
+                    *viewer_pending_applicant_username =
+                        find_viewer_pending_application_for(cli, &u.pk, id).await;
                 }
             }
         }
@@ -93,6 +159,24 @@ pub enum Wall {
         role: Option<TeamRole>,
         following: bool,
         created_at: i64,
+        /// Whether the team has opted into the sub-team program. Drives
+        /// the visibility of the sub-team HUD icon on the team home.
+        #[serde(default)]
+        is_parent_eligible: bool,
+        /// Minimum applicant team headcount (`0` = no constraint).
+        #[serde(default)]
+        min_sub_team_members: i32,
+        /// Minimum applicant team age in days (`0` = no constraint).
+        #[serde(default)]
+        min_sub_team_age_days: i32,
+        /// If the viewer is admin/owner of some team and that team has
+        /// an in-flight (Pending / Returned) application to this wall
+        /// team, this is the applicant team's username. The HUD icon
+        /// uses it to route to the application status page instead of
+        /// the apply page so the applicant can resume from where they
+        /// left off.
+        #[serde(default)]
+        viewer_pending_applicant_username: Option<String>,
     },
 }
 
@@ -126,6 +210,10 @@ impl Into<Wall> for WallUser {
                 role: None,
                 following: false,
                 created_at: t.created_at,
+                is_parent_eligible: t.is_parent_eligible,
+                min_sub_team_members: t.min_sub_team_members,
+                min_sub_team_age_days: t.min_sub_team_age_days,
+                viewer_pending_applicant_username: None,
             },
         }
     }

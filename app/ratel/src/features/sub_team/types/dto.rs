@@ -192,6 +192,11 @@ pub struct ApplyContextDocument {
     pub body: String,
     pub body_hash: String,
     pub order: i32,
+    /// Applicants must Agree to this doc before submitting. `false`
+    /// means the doc is reference-only — shown in the list but no
+    /// agree button rendered and no eligibility gate.
+    #[serde(default)]
+    pub required: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -284,6 +289,7 @@ impl From<crate::features::sub_team::models::SubTeamDocument> for ApplyContextDo
             body: d.body,
             body_hash: d.body_hash,
             order: d.order,
+            required: d.required,
         }
     }
 }
@@ -299,6 +305,10 @@ pub struct SubTeamFormFieldSnapshotDto {
     pub required: bool,
     pub order: i32,
     pub options: Vec<String>,
+    /// Locked default field — sorted to the top in the status page's
+    /// "Submitted answers" view.
+    #[serde(default)]
+    pub locked: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -382,6 +392,25 @@ pub struct UpdateApplicationRequest {
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct ApplicationDecisionReasonRequest {
     pub reason: String,
+}
+
+// ── Application drafts (autosave) ────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct SaveApplicationDraftRequest {
+    pub parent_team_id: String,
+    pub form_values: std::collections::HashMap<String, serde_json::Value>,
+    pub doc_agreements: Vec<DocAgreementInput>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct ApplicationDraftResponse {
+    pub parent_team_id: String,
+    pub form_values: std::collections::HashMap<String, serde_json::Value>,
+    pub doc_agreements: Vec<DocAgreementInput>,
+    pub updated_at: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -474,6 +503,7 @@ impl From<crate::features::sub_team::models::SubTeamFormFieldSnapshot>
             required: s.required,
             order: s.order,
             options: s.options,
+            locked: s.locked,
         }
     }
 }

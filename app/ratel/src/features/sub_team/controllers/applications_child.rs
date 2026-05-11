@@ -209,6 +209,7 @@ pub async fn submit_application_handler(
             required: f.required,
             order: f.order,
             options: f.options.clone(),
+            locked: f.locked,
         })
         .collect();
 

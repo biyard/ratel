@@ -152,6 +152,14 @@ pub enum Route {
             TeamSubTeamBroadcastComposePage { username: String },
             #[route("/sub-teams/announcements/:announcement_id/edit")]
             TeamSubTeamBroadcastEditPage { username: String, announcement_id: String },
+            // Apply / status pages — focused full-screen pages that render
+            // their own back-button + topbar, so they live OUTSIDE the
+            // `SocialLayout → TeamArenaLayout` chain (which would add a
+            // second team-level topbar and clip the form with .arena).
+            #[route("/sub-teams/apply")]
+            TeamSubTeamApplyPage { username: String },
+            #[route("/sub-teams/application")]
+            TeamSubTeamApplicationStatusPage { username: String },
             #[layout(SocialLayout)]
                 #[route("/")]
                 SocialIndex { username: String },
@@ -186,10 +194,6 @@ pub enum Route {
                 // controller hooks.
                 #[route("/sub-teams/manage")]
                 TeamSubTeamManagementPage { username: String },
-                #[route("/sub-teams/apply")]
-                TeamSubTeamApplyPage { username: String },
-                #[route("/sub-teams/application")]
-                TeamSubTeamApplicationStatusPage { username: String },
                 #[route("/sub-teams/:sub_team_id")]
                 TeamSubTeamDetailPage { username: String, sub_team_id: String },
                 #[route("/sub-teams/:sub_team_id/deregister")]
