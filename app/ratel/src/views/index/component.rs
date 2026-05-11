@@ -2,9 +2,8 @@ use super::space_card::*;
 use super::*;
 use crate::common::components::{Robots, SeoMeta};
 use crate::common::contexts::TeamItem;
-use crate::common::hooks::use_infinite_query;
+use crate::common::hooks::{use_infinite_query, use_loader};
 use crate::common::types::ListResponse;
-use crate::common::use_loader;
 use crate::features::auth::LoginModal;
 use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::social::pages::team_arena::ArenaTeamCreationPopup;
@@ -48,42 +47,7 @@ pub fn Index() -> Element {
     let mut notifications_open = use_signal(|| false);
 
     debug!("before hot space");
-    let hot_spaces = use_loader(move || async move {
-        #[cfg(not(feature = "mobile"))]
-        {
-            list_hot_spaces_handler().await
-        }
-
-        #[cfg(feature = "mobile")]
-        {
-            use std::sync::mpsc;
-
-            let (tx, rx) = mpsc::channel::<Result<ListResponse<HotSpaceResponse>>>();
-            std::thread::spawn(move || {
-                let result = (|| -> Result<ListResponse<HotSpaceResponse>> {
-                    let rt = tokio::runtime::Builder::new_current_thread()
-                        .enable_all()
-                        .build()
-                        .map_err(|e| format!("rt build: {e}"))?;
-                    rt.block_on(async move {
-                        let res = list_hot_spaces_handler().await;
-                        debug!("hot spaces response: {:?}", res);
-                        res
-                    })
-                })();
-
-                let _ = tx.send(result);
-            });
-
-            match rx.recv() {
-                Ok(v) => v,
-                Err(e) => {
-                    debug!("hot-spaces: recv err: {e}");
-                    return Err(Error::Internal);
-                }
-            }
-        }
-    })?;
+    let hot_spaces = use_loader(|| async move { list_hot_spaces_handler().await })?;
     debug!("after hot space");
 
     // Read user_ctx inside the async so the fetch reflects the current

@@ -122,7 +122,7 @@ default = []
 bypass = []
 web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2"]
 desktop = ["dioxus/desktop"]
-mobile = ["dioxus/mobile"]
+mobile = ["dioxus/mobile", "tokio"]
 server = [
   "aide",
   "aws-config",

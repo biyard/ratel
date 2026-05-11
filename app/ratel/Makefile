@@ -93,10 +93,12 @@ else
 	ANDROID_TARGET ?= x86_64-linux-android
 endif
 
+MODE ?= debug
+
 ifneq ($(CARGO_TARGET_DIR),)
-	ANDROID_DX_RES_DIR ?= $(CARGO_TARGET_DIR)/dx/app-shell/debug/android/app/app/src/main
+	ANDROID_DX_RES_DIR ?= $(CARGO_TARGET_DIR)/dx/app-shell/$(MODE)/android/app/app/src/main
 else
-	ANDROID_DX_RES_DIR ?= target/dx/app-shell/debug/android/app/app/src/main
+	ANDROID_DX_RES_DIR ?= target/dx/app-shell/$(MODE)/android/app/app/src/main
 endif
 
 ANDROID_MIPMAP_DENSITIES ?= mdpi hdpi xhdpi xxhdpi xxxhdpi

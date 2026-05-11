@@ -3,7 +3,7 @@ use crate::config;
 use crate::features::auth::AuthProvider;
 use crate::*;
 
-use dioxus::prelude::*;
+use crate::*;
 
 pub const MAIN_CSS: Asset = asset!("/assets/main.css");
 pub const MAIN_JS: Asset = asset!("/assets/ratel-app-shell.js");
