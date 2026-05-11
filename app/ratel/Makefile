@@ -75,7 +75,9 @@ ifneq ($(ANDROID_EMULATOR_ID),)
 	DEVICE_FLAG ?= --device $(AVD_NAME)
 else
 	FIRST_ANDROID_DEVICE := $(shell adb devices | awk 'NR>1 {print $$1; exit}')
-	DEVICE_FLAG ?= --device $(FIRST_ANDROID_DEVICE)
+	ifneq ($(FIRST_ANDROID_DEVICE),)
+		DEVICE_FLAG ?= --device $(FIRST_ANDROID_DEVICE)
+	endif
 endif
 
 # Host detection — keeps Makefile portable between Linux and macOS.
