@@ -9,8 +9,10 @@
 
 #[cfg(feature = "server")]
 mod m001_backfill_character_xp;
+// crate-visible so the integration test in `character/tests` can call `run`
+// directly to exercise m002 twice in a row and assert idempotency.
 #[cfg(feature = "server")]
-mod m002_backfill_pending_rewards;
+pub(crate) mod m002_backfill_pending_rewards;
 #[cfg(feature = "server")]
 mod runner;
 

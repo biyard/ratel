@@ -43,7 +43,9 @@ pub async fn retry_pending_rewards(cli: &aws_sdk_dynamodb::Client) -> Result<Ret
 
             // Anchor the Biyard transaction to the original month so a
             // backfilled outage row doesn't get billed against a later month.
-            let month = format_yyyy_mm(item.created_at);
+            // An invalid `created_at` would break this invariant, so we
+            // fail-fast rather than silently fall back to the current month.
+            let month = format_yyyy_mm(item.created_at)?;
             let description = retry_description(&item);
             let target_pk = item.target_pk.clone();
             let owner_pk = item.owner_pk.clone();
@@ -81,12 +83,28 @@ pub async fn retry_pending_rewards(cli: &aws_sdk_dynamodb::Client) -> Result<Ret
                             }
                         }
                     }
-                    let _ = mark_completed(cli, &item).await;
+                    // Mark COMPLETED so the next retry sweep skips this
+                    // row. If this fails after a successful Biyard award,
+                    // a subsequent sweep would re-award (double-pay), so
+                    // surface it loudly for an operator to reconcile.
+                    if let Err(e) = mark_completed(cli, &item).await {
+                        tracing::error!(
+                            sk = %item.sk,
+                            error = %e,
+                            "CRITICAL: biyard award succeeded but mark_completed failed — may double-pay on next retry",
+                        );
+                    }
                     stats.succeeded += 1;
                 }
                 Err(e) => {
                     let last_error = format!("{e}");
-                    let _ = bump_retry(cli, &item, &last_error).await;
+                    if let Err(bump_err) = bump_retry(cli, &item, &last_error).await {
+                        tracing::error!(
+                            sk = %item.sk,
+                            error = %bump_err,
+                            "failed to bump retry counter — counter and last_error may be stale",
+                        );
+                    }
                     let next_retry_count = item.retry_count + 1;
                     stats.still_pending += 1;
                     stats.still_pending_rows.push(PendingFailureSnapshot {
@@ -132,11 +150,13 @@ fn retry_description(item: &PendingReward) -> String {
     }
 }
 
-fn format_yyyy_mm(ts_ms: i64) -> String {
+fn format_yyyy_mm(ts_ms: i64) -> Result<String> {
     let secs = ts_ms / 1000;
-    let dt = chrono::DateTime::<chrono::Utc>::from_timestamp(secs, 0)
-        .unwrap_or_else(chrono::Utc::now);
-    dt.format("%Y-%m").to_string()
+    let dt = chrono::DateTime::<chrono::Utc>::from_timestamp(secs, 0).ok_or_else(|| {
+        crate::error!("invalid created_at_ms: {ts_ms} — cannot derive month");
+        Error::InvalidFormat
+    })?;
+    Ok(dt.format("%Y-%m").to_string())
 }
 
 #[cfg(feature = "server")]
@@ -175,7 +195,13 @@ mod tests {
 
     #[test]
     fn format_yyyy_mm_returns_utc_month() {
-        assert_eq!(format_yyyy_mm(1776817749390), "2026-04");
-        assert_eq!(format_yyyy_mm(1735689600000), "2025-01");
+        assert_eq!(format_yyyy_mm(1776817749390).unwrap(), "2026-04");
+        assert_eq!(format_yyyy_mm(1735689600000).unwrap(), "2025-01");
+    }
+
+    #[test]
+    fn format_yyyy_mm_rejects_out_of_range_timestamp() {
+        // i64::MAX seconds is far past chrono's representable range.
+        assert!(format_yyyy_mm(i64::MAX).is_err());
     }
 }

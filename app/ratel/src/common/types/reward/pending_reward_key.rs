@@ -90,4 +90,31 @@ mod tests {
         let s = "PENDING_REWARD#1234#FEED#abc#REWARD##RESPOND_POLL";
         assert!(s.parse::<PendingRewardKey>().is_err());
     }
+
+    /// DynamoDB sort keys are compared lexicographically, so callers that
+    /// page through `PENDING_REWARD#*` expecting chronological order need
+    /// `created_at` segments to share a width. All production rows use
+    /// 13-digit millisecond timestamps, so the invariant holds — this test
+    /// pins that.
+    #[test]
+    fn lexicographic_order_matches_timestamp_at_fixed_width() {
+        let mut a = sample();
+        a.created_at = 1_000_000_000_000; // 13 digits
+        let mut b = sample();
+        b.created_at = 2_000_000_000_000; // 13 digits
+        assert!(a.to_string() < b.to_string());
+    }
+
+    /// Counter-example: mixing digit counts inverts lexicographic order
+    /// vs numeric order. Kept as a guard rail — if we ever ingest
+    /// non-millisecond timestamps, this test will start failing and force
+    /// us to revisit zero-padding the `created_at` segment.
+    #[test]
+    fn lexicographic_order_breaks_at_different_digit_count() {
+        let mut a = sample();
+        a.created_at = 9_999_999_999; // 10 digits
+        let mut b = sample();
+        b.created_at = 10_000_000_000; // 11 digits, numerically larger
+        assert!(a.to_string() > b.to_string());
+    }
 }
