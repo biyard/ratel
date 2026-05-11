@@ -249,6 +249,10 @@ pub enum EntityType {
     // agreements for many applications).
     SubTeamLink(String),                  // SUB_TEAM_LINK#{child_team_id}
     SubTeamDocument(String),              // SUB_TEAM_DOCUMENT#{doc_id}
+    /// Immutable snapshot of a `SubTeamDocument` at a specific version.
+    /// Second segment is the version **zero-padded to 8 digits** so the
+    /// lexicographic sk order matches numeric order (v1 < v2 < … < v10).
+    SubTeamDocumentVersion(String, String), // SUB_TEAM_DOCUMENT_VERSION#{doc_id}#{version:08}
     SubTeamDocAgreement(String, String),  // SUB_TEAM_DOC_AGREEMENT#{app_id}#{doc_id}
     SubTeamFormField(String),             // SUB_TEAM_FORM_FIELD#{field_id}
     SubTeamApplication(String),           // SUB_TEAM_APPLICATION#{application_id}

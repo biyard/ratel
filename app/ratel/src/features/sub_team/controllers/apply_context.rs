@@ -53,9 +53,10 @@ pub async fn get_sub_team_apply_context_handler(
     fields.sort_by(|a, b| a.order.cmp(&b.order).then(a.created_at.cmp(&b.created_at)));
     let form_fields: Vec<SubTeamFormFieldResponse> = fields.into_iter().map(Into::into).collect();
 
-    // 3. Required docs only.
+    // 3. Required docs only. Trailing `#` keeps `SUB_TEAM_DOCUMENT_VERSION#…`
+    // snapshot rows out of the result set.
     let doc_opts = SubTeamDocument::opt()
-        .sk(DOC_SK_PREFIX.to_string())
+        .sk(format!("{DOC_SK_PREFIX}#"))
         .limit(PAGE_LIMIT);
     let (mut docs, _) = SubTeamDocument::query(cli, parent_pk.clone(), doc_opts)
         .await

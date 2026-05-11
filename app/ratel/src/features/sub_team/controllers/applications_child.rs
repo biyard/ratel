@@ -506,8 +506,10 @@ async fn load_docs(
     cli: &aws_sdk_dynamodb::Client,
     parent_pk: &Partition,
 ) -> Result<Vec<SubTeamDocument>> {
+    // Trailing `#` keeps `SUB_TEAM_DOCUMENT_VERSION#…` snapshot rows
+    // out of the result set.
     let opts = SubTeamDocument::opt()
-        .sk(DOC_SK_PREFIX.to_string())
+        .sk(format!("{DOC_SK_PREFIX}#"))
         .limit(PAGE_LIMIT);
     let (items, _) = SubTeamDocument::query(cli, parent_pk.clone(), opts).await?;
     Ok(items)

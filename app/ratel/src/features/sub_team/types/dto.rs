@@ -81,6 +81,12 @@ pub struct SubTeamDocumentResponse {
     pub order: i32,
     pub body_hash: String,
     pub updated_at: i64,
+    #[serde(default)]
+    pub version: i32,
+    #[serde(default)]
+    pub editor_username: String,
+    #[serde(default)]
+    pub attachments: Vec<File>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -92,6 +98,8 @@ pub struct CreateSubTeamDocumentRequest {
     pub required: bool,
     #[serde(default)]
     pub order: Option<i32>,
+    #[serde(default)]
+    pub attachments: Option<Vec<File>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -105,12 +113,34 @@ pub struct UpdateSubTeamDocumentRequest {
     pub required: Option<bool>,
     #[serde(default)]
     pub order: Option<i32>,
+    /// Replaces the attachment list when present. `None` leaves the
+    /// list unchanged; `Some(vec![])` clears it.
+    #[serde(default)]
+    pub attachments: Option<Vec<File>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct ReorderDocumentsRequest {
     pub doc_ids: Vec<String>,
+}
+
+// ── Document versions (immutable history) ───────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct SubTeamDocumentVersionResponse {
+    /// Parent doc id (same value across every snapshot for one doc).
+    pub doc_id: String,
+    pub version: i32,
+    pub created_at: i64,
+    pub title: String,
+    pub body: String,
+    pub body_hash: String,
+    pub required: bool,
+    pub order: i32,
+    pub editor_username: String,
+    pub attachments: Vec<File>,
 }
 
 // ── Public apply context ────────────────────────────────────────
@@ -171,6 +201,29 @@ impl From<crate::features::sub_team::models::SubTeamDocument> for SubTeamDocumen
             order: d.order,
             body_hash: d.body_hash,
             updated_at: d.updated_at,
+            version: d.version.max(1),
+            editor_username: d.editor_username,
+            attachments: d.attachments,
+        }
+    }
+}
+
+#[cfg(feature = "server")]
+impl From<crate::features::sub_team::models::SubTeamDocumentVersion>
+    for SubTeamDocumentVersionResponse
+{
+    fn from(v: crate::features::sub_team::models::SubTeamDocumentVersion) -> Self {
+        Self {
+            doc_id: v.doc_id,
+            version: v.version,
+            created_at: v.created_at,
+            title: v.title,
+            body: v.body,
+            body_hash: v.body_hash,
+            required: v.required,
+            order: v.order,
+            editor_username: v.editor_username,
+            attachments: v.attachments,
         }
     }
 }

@@ -31638,6 +31638,463 @@ body.comments-panel-resizing {
   cursor: pointer;
 }
 
+/* ── Autosave chip + topbar buttons ───────────────────────── */
+.sub-team-doc-compose .autosave {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 100px;
+  background: rgba(34, 197, 94, 0.06);
+  border: 1px solid rgba(34, 197, 94, 0.22);
+  color: #22c55e;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+.sub-team-doc-compose .topbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px solid var(--sub-team-border);
+  background: var(--sub-team-glass);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--sub-team-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sub-team-doc-compose .topbar-btn:hover {
+  border-color: rgba(168, 85, 247, 0.28);
+  color: var(--sub-team-purple);
+}
+.sub-team-doc-compose .topbar-btn svg { width: 13px; height: 13px; }
+.sub-team-doc-compose .topbar-btn--primary {
+  background: linear-gradient(135deg, var(--sub-team-purple), #7e22ce);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 2px 14px rgba(168, 85, 247, 0.28);
+}
+.sub-team-doc-compose .topbar-btn--primary:hover {
+  background: linear-gradient(135deg, #c084fc, var(--sub-team-purple));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 22px rgba(168, 85, 247, 0.45);
+  transform: translateY(-1px);
+}
+
+/* ── Edit banner (Document editor · Rich text + 첨부) ──────── */
+.sub-team-doc-compose .edit-banner {
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 14px 28px 0;
+}
+.sub-team-doc-compose .edit-banner__inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(168, 85, 247, 0.02));
+  border: 1px solid rgba(168, 85, 247, 0.25);
+}
+.sub-team-doc-compose .edit-banner__icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.28);
+  color: var(--sub-team-purple);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sub-team-doc-compose .edit-banner__icon svg { width: 16px; height: 16px; }
+.sub-team-doc-compose .edit-banner__label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sub-team-purple);
+  margin-bottom: 4px;
+}
+.sub-team-doc-compose .edit-banner__text {
+  font-size: 13px;
+  color: var(--sub-team-muted);
+  line-height: 1.6;
+}
+.sub-team-doc-compose .edit-banner__text strong { color: var(--sub-team-text); }
+
+/* ── Attachments section ──────────────────────────────────── *
+ * `align-items: stretch` and `flex-wrap: nowrap` must be set
+ * explicitly — the unscoped `.attachments` rule earlier in this
+ * file (`align-items: center; flex-wrap: wrap`) leaks otherwise
+ * and the file-row + attachment-list shrink to content width. */
+.sub-team-doc-compose .attachments {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+.sub-team-doc-compose .attachment-list { width: 100%; }
+.sub-team-doc-compose .attachments__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sub-team-muted);
+}
+.sub-team-doc-compose .attachments__title svg { width: 13px; height: 13px; }
+.sub-team-doc-compose .attachments__count {
+  color: var(--sub-team-purple);
+  margin-left: 6px;
+}
+.sub-team-doc-compose .attachment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+/* Bumped to 3-class specificity (`.attachments .file-dropzone`) so we
+ * outrank the *unscoped* `.file-dropzone` rule earlier in this file
+ * that sets `display: none; flex-direction: column`. Without this the
+ * icon stacks above the text and the row collapses width-wise. */
+.sub-team-doc-compose .attachments .file-dropzone {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(168, 85, 247, 0.03);
+  border: 1.5px dashed rgba(168, 85, 247, 0.32);
+  color: var(--sub-team-purple);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sub-team-doc-compose .attachments .file-dropzone:hover:not(:disabled) {
+  background: rgba(168, 85, 247, 0.06);
+  border-color: rgba(168, 85, 247, 0.5);
+}
+.sub-team-doc-compose .attachments .file-dropzone:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.sub-team-doc-compose .attachments .file-dropzone svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.sub-team-doc-compose .attachments .file-dropzone span {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.sub-team-doc-compose .attachments .file-dropzone small {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--sub-team-dim);
+  text-transform: none;
+  font-weight: 500;
+}
+
+/* ── Meta row accent variant ──────────────────────────────── */
+.sub-team-doc-compose .meta-row__v--accent { color: var(--sub-team-purple); font-weight: 700; }
+
+/* ── Bottom bar (word count / chars / saved status) ───────── */
+.sub-team-doc-compose .bottom-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 28px;
+  background: var(--sub-team-glass);
+  border-top: 1px solid var(--sub-team-border);
+  margin-top: auto;
+}
+.sub-team-doc-compose .bottom-bar__left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.sub-team-doc-compose .bottom-bar__stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--sub-team-muted);
+}
+.sub-team-doc-compose .bottom-bar__stat svg { width: 13px; height: 13px; }
+.sub-team-doc-compose .bottom-bar__stat strong { color: var(--sub-team-text); font-weight: 700; }
+
+/* ── Attachment rows in the composer (mockup .file-row grid) ────
+ * Selector includes `.attachment-list` to outrank the *unscoped*
+ * `.file-row` rules earlier in this file (which set `display: flex`
+ * and `margin-bottom: 8px`). Without the extra ancestor the row
+ * collapses to content-width and breaks the four-column grid. */
+.sub-team-doc-compose .attachment-list .file-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 11px;
+  background: rgba(6, 6, 14, 0.55);
+  border: 1px solid var(--sub-team-border);
+  transition: border-color 0.2s;
+}
+.sub-team-doc-compose .attachment-list .file-row:hover {
+  border-color: rgba(168, 85, 247, 0.28);
+}
+.sub-team-doc-compose .attachment-list .file-row__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  flex-shrink: 0;
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.22);
+  color: var(--sub-team-purple);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sub-team-doc-compose .attachment-list .file-row__icon svg {
+  width: 16px;
+  height: 16px;
+}
+.sub-team-doc-compose .attachment-list .file-row__icon--pdf {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #ef4444;
+}
+.sub-team-doc-compose .attachment-list .file-row__icon--img {
+  background: rgba(110, 237, 216, 0.06);
+  border-color: rgba(110, 237, 216, 0.22);
+  color: #6eedd8;
+}
+.sub-team-doc-compose .attachment-list .file-row__body {
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+}
+.sub-team-doc-compose .attachment-list .file-row__name {
+  font-size: 13px;
+  color: var(--sub-team-text);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.02em;
+}
+.sub-team-doc-compose .attachment-list .file-row__meta {
+  font-size: 10px;
+  color: var(--sub-team-dim);
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+  text-transform: uppercase;
+}
+.sub-team-doc-compose .attachment-list .file-row__meta strong {
+  color: var(--sub-team-purple);
+}
+.sub-team-doc-compose .attachment-list .file-row__progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 100px;
+  background: rgba(34, 197, 94, 0.06);
+  border: 1px solid rgba(34, 197, 94, 0.22);
+  color: #22c55e;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+.sub-team-doc-compose .attachment-list .file-row__progress svg {
+  width: 10px;
+  height: 10px;
+}
+.sub-team-doc-compose .attachment-list .file-row__del {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--sub-team-border);
+  color: var(--sub-team-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sub-team-doc-compose .attachment-list .file-row__del:hover {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.06);
+}
+.sub-team-doc-compose .attachment-list .file-row__del svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ── doc-item updated / foot / stats / hint (mockup port) ────── *
+ * Mirrors `assets/design/sub-team/subteam-management-page.html`
+ * §141-179 — scoped under `.sub-team-management` so the unscoped
+ * `.doc-item` rules in the global cascade don't override us.
+ */
+.sub-team-management .doc-item__updated {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--sub-team-dim, #6b6b80);
+  white-space: nowrap;
+}
+.sub-team-management .doc-item__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.sub-team-management .doc-item__stats {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--sub-team-dim, #6b6b80);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.sub-team-management .doc-item__stats > span {
+  display: inline-flex;
+  align-items: center;
+}
+.sub-team-management .doc-item__stats svg {
+  width: 11px;
+  height: 11px;
+  margin-right: 4px;
+  vertical-align: -1px;
+}
+.sub-team-management .doc-item__hint {
+  font-size: 11px;
+  color: var(--sub-team-dim, #6b6b80);
+  letter-spacing: 0.04em;
+}
+.sub-team-management .doc-item[data-required="true"] .doc-item__hint {
+  color: var(--sub-team-purple, #a855f7);
+}
+
+/* ── Required-reading switch (violet pill) ────────────────── */
+.sub-team-doc-compose .switch {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--sub-team-border, rgba(255, 255, 255, 0.06));
+  cursor: pointer;
+  transition: all 0.25s;
+  flex-shrink: 0;
+  display: inline-block;
+}
+.sub-team-doc-compose .switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--sub-team-muted, #8888a8);
+  transition: all 0.25s;
+}
+.sub-team-doc-compose .switch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.sub-team-doc-compose .switch:has(input:checked),
+.sub-team-doc-compose .switch[aria-checked="true"] {
+  background: rgba(168, 85, 247, 0.30);
+  border-color: rgba(168, 85, 247, 0.48);
+}
+.sub-team-doc-compose .switch:has(input:checked)::after,
+.sub-team-doc-compose .switch[aria-checked="true"]::after {
+  transform: translateX(16px);
+  background: var(--sub-team-purple);
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+}
+
+/* ── Mobile layout adjustments (mirrors mockup) ───────────── */
+@media (max-width: 980px) {
+  .sub-team-doc-compose .composer-page {
+    grid-template-columns: 1fr;
+    padding: 20px 16px 110px;
+    gap: 18px;
+  }
+  .sub-team-doc-compose .side-panel { position: static; top: auto; }
+  .sub-team-doc-compose .autosave { display: none; }
+  .sub-team-doc-compose .edit-banner { padding: 12px 16px 0; }
+}
+@media (max-width: 500px) {
+  .sub-team-doc-compose .arena-topbar {
+    padding: 12px 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .sub-team-doc-compose .arena-topbar__left {
+    flex: 1;
+    min-width: 0;
+  }
+  .sub-team-doc-compose .arena-topbar__right { flex-shrink: 0; gap: 6px; }
+  .sub-team-doc-compose .topbar-title__eyebrow { display: none; }
+  .sub-team-doc-compose .topbar-title__main {
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sub-team-doc-compose .topbar-btn {
+    height: 34px;
+    padding: 0 10px;
+    font-size: 9px;
+  }
+  .sub-team-doc-compose .topbar-btn svg { width: 12px; height: 12px; }
+  .sub-team-doc-compose .title-input { font-size: 24px; padding: 10px 0; }
+  .sub-team-doc-compose .composer { gap: 16px; }
+  .sub-team-doc-compose .side-card { padding: 14px; }
+  .sub-team-doc-compose .bottom-bar { padding: 10px 14px; }
+}
+
 
 /* === src/features/sub_team/pages/leave_parent/style.css === */
 /* Leave-parent page. Mirrors
@@ -32114,16 +32571,21 @@ body.comments-panel-resizing {
   flex-wrap: wrap;
 }
 .sub-team-management .card__title {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 800;
-  color: var(--sub-team-text);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
+  /* Gold gradient text — mirrors shared.css `.card__title`. */
+  background: linear-gradient(135deg, var(--sub-team-gold), #ffd24a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
 }
 .sub-team-management .card__dash {
   flex: 1;
   height: 1px;
-  background: var(--sub-team-border);
+  background: linear-gradient(90deg, rgba(252, 179, 0, 0.2), transparent);
 }
 .sub-team-management .card__meta {
   font-size: 11px;
@@ -32263,8 +32725,7 @@ body.comments-panel-resizing {
   border-color: rgba(239, 68, 68, 0.3);
   color: var(--sub-team-coral);
 }
-.sub-team-management .add-field-btn,
-.sub-team-management .add-doc-btn {
+.sub-team-management .add-field-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -32280,12 +32741,36 @@ body.comments-panel-resizing {
   text-transform: uppercase;
   cursor: pointer;
 }
-.sub-team-management .add-field-btn svg,
-.sub-team-management .add-doc-btn svg {
+.sub-team-management .add-field-btn svg {
   width: 13px;
   height: 13px;
   flex-shrink: 0;
 }
+/* Docs add button uses violet (matches `.add-doc-btn` in mockup
+ * `subteam-management-page.html` line 190), distinct from the gold
+ * form-field add-button on the same page. */
+.sub-team-management .add-doc-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(129, 140, 248, 0.03);
+  border: 1px dashed rgba(129, 140, 248, 0.30);
+  color: #818cf8;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sub-team-management .add-doc-btn:hover {
+  background: rgba(129, 140, 248, 0.08);
+  border-color: rgba(129, 140, 248, 0.5);
+}
+.sub-team-management .add-doc-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
 .sub-team-management .req-card__icon svg { width: 16px; height: 16px; flex-shrink: 0; }
 .sub-team-management .field-row__del svg { width: 12px; height: 12px; flex-shrink: 0; }
 
@@ -32325,18 +32810,34 @@ body.comments-panel-resizing {
   justify-content: center;
   flex-shrink: 0;
 }
+.sub-team-management .doc-item__icon svg { width: 14px; height: 14px; }
+.sub-team-management .doc-item[data-required="true"] .doc-item__icon {
+  background: rgba(168, 85, 247, 0.12);
+  border-color: rgba(168, 85, 247, 0.32);
+  color: var(--sub-team-purple);
+}
 .sub-team-management .doc-item__title {
   flex: 1;
   min-width: 200px;
   padding: 8px 12px;
   border-radius: 8px;
-  background: var(--sub-team-input-bg);
+  /* Theme-aware input fill — dark navy on dark, off-white on light.
+   * Direct `var(--dark, A) var(--light, B)` space-toggle so the
+   * value picks up the active `data-theme` automatically. */
+  background: var(--dark, rgba(6, 6, 14, 0.5)) var(--light, rgba(0, 0, 0, 0.04));
   border: 1px solid var(--sub-team-border);
   color: var(--sub-team-text);
   font-size: 14px;
   font-weight: 700;
+  outline: none;
+  transition: all 0.2s;
+}
+.sub-team-management .doc-item__title:focus {
+  border-color: rgba(129, 140, 248, 0.35);
+  box-shadow: 0 0 12px rgba(129, 140, 248, 0.10);
 }
 .sub-team-management .doc-item__req {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -32349,6 +32850,8 @@ body.comments-panel-resizing {
 }
 .sub-team-management .doc-item__req-pill {
   display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 4px 10px;
   border-radius: 100px;
   font-size: 9px;
@@ -32358,11 +32861,27 @@ body.comments-panel-resizing {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--sub-team-border);
   color: var(--sub-team-dim);
+  transition: all 0.2s;
+}
+/* Dot indicator on the left of "필독" — dim when off, glowing
+ * violet when the linked checkbox is checked. */
+.sub-team-management .doc-item__req-pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.5;
 }
 .sub-team-management .doc-item__req input:checked ~ .doc-item__req-pill {
   background: rgba(168, 85, 247, 0.12);
   border-color: rgba(168, 85, 247, 0.40);
   color: var(--sub-team-purple);
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.15);
+}
+.sub-team-management .doc-item__req input:checked ~ .doc-item__req-pill::before {
+  opacity: 1;
+  box-shadow: 0 0 6px var(--sub-team-purple);
 }
 .sub-team-management .doc-item__edit {
   display: inline-flex;
@@ -32370,15 +32889,35 @@ body.comments-panel-resizing {
   gap: 6px;
   padding: 7px 14px;
   border-radius: 9px;
+  /* Background gradient is fine in both themes; the `color` token
+   * is what flips — pale lilac on dark, darker plum on light so
+   * the "편집" text + pencil icon stay readable. */
   background: linear-gradient(135deg, rgba(168, 85, 247, 0.22), rgba(168, 85, 247, 0.10));
   border: 1px solid rgba(168, 85, 247, 0.35);
-  color: #e9d5ff;
+  color: var(--dark, #e9d5ff) var(--light, #6d28d9);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.10em;
   text-transform: uppercase;
   cursor: pointer;
   text-decoration: none;
+  /* `white-space: nowrap` is critical — otherwise "편집" wraps to two
+   * lines when the row gets crowded since the parent .doc-item__head
+   * is `flex-wrap: wrap`. */
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.sub-team-management .doc-item__edit:hover {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.32), rgba(168, 85, 247, 0.16));
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.22);
+  color: var(--dark, #f3e8ff) var(--light, #5b21b6);
+}
+.sub-team-management .doc-item__edit svg {
+  width: 12px;
+  height: 12px;
+  /* SVG uses `stroke: currentColor` so it inherits the theme-aware
+   * color above — no separate space toggle needed here. */
 }
 .sub-team-management .doc-item__actions { display: flex; gap: 4px; }
 .sub-team-management .doc-item__btn {
@@ -32392,20 +32931,33 @@ body.comments-panel-resizing {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: all 0.2s;
+}
+.sub-team-management .doc-item__btn:hover {
+  color: var(--sub-team-text);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 .sub-team-management .doc-item__btn:disabled { opacity: 0.3; cursor: not-allowed; }
+/* `svg` sizing on the action buttons — without this the trash /
+ * chevron svgs render at intrinsic size and overflow the 28x28 box. */
+.sub-team-management .doc-item__btn svg { width: 13px; height: 13px; }
 .sub-team-management .doc-item__btn--danger:hover {
   border-color: rgba(239, 68, 68, 0.3);
   color: var(--sub-team-coral);
+  background: rgba(239, 68, 68, 0.06);
 }
 .sub-team-management .doc-item__preview {
   padding: 10px 14px;
   border-radius: 8px;
-  background: var(--sub-team-input-bg);
+  background: var(--dark, rgba(6, 6, 14, 0.55)) var(--light, rgba(0, 0, 0, 0.03));
   border: 1px solid var(--sub-team-border);
   color: var(--sub-team-muted);
   font-size: 12.5px;
   line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .sub-team-management .roster {
