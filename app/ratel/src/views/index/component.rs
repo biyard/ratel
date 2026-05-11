@@ -49,9 +49,40 @@ pub fn Index() -> Element {
 
     debug!("before hot space");
     let hot_spaces = use_loader(move || async move {
-        let res = list_hot_spaces_handler().await;
-        debug!("hot spaces response: {:?}", res);
-        res
+        #[cfg(not(feature = "mobile"))]
+        {
+            list_hot_spaces_handler().await
+        }
+
+        #[cfg(feature = "mobile")]
+        {
+            use std::sync::mpsc;
+
+            let (tx, rx) = mpsc::channel::<Result<ListResponse<HotSpaceResponse>>>();
+            std::thread::spawn(move || {
+                let result = (|| -> Result<ListResponse<HotSpaceResponse>> {
+                    let rt = tokio::runtime::Builder::new_current_thread()
+                        .enable_all()
+                        .build()
+                        .map_err(|e| format!("rt build: {e}"))?;
+                    rt.block_on(async move {
+                        let res = list_hot_spaces_handler().await;
+                        debug!("hot spaces response: {:?}", res);
+                        res
+                    })
+                })();
+
+                let _ = tx.send(result);
+            });
+
+            match rx.recv() {
+                Ok(v) => v,
+                Err(e) => {
+                    debug!("hot-spaces: recv err: {e}");
+                    return Err(Error::Internal);
+                }
+            }
+        }
     })?;
     debug!("after hot space");
 
