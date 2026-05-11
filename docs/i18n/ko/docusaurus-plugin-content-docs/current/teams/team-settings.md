@@ -107,7 +107,7 @@ Team 구독의 *대시보드* — 현재 상태와 카드 — 는 `/team-setting
 
 ### 등급 — 개인과 동일한 다섯 등급
 
-Team 구독은 사용자 구독과 동일한 다섯 등급을 사용하며, Credit 할당량과 스페이스당 한도도 같습니다. 전체 기능 매트릭스는 [용어 정리 → 멤버십 티어](../intro/glossary#membership-tier-멤버십-티어) 를 참고하세요.
+Team 구독은 사용자 구독과 동일한 다섯 등급을 사용하며, Credit 할당량과 스페이스당 한도도 같습니다.
 
 - **Free** — 모든 Team 기본 포함.
 - **Pro** — 월 40 Credit, 보상 스페이스당 최대 2 Credit, 월 30,000 원.
@@ -143,4 +143,3 @@ Team 단위 컨트롤 중 `/team-settings` 에 속하지 않는 항목들:
 
 - [팀 생성](./create.md) — 멤버, 초안, DAO 기초를 다루는 기본 Team 워크스루.
 - [하위팀](./sub-teams.md) — 상위 / 하위 Team 관계의 전체 거버넌스 라이프사이클.
-- [용어 정리 → 멤버십 티어](../intro/glossary#membership-tier-멤버십-티어) — Team 의 보상 스페이스를 결제할 월간 Credit 등급을 선택하세요.

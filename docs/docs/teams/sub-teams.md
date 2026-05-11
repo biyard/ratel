@@ -195,4 +195,3 @@ The platform's intent is for sub-teams to be the substrate underneath DAO-like f
 
 - [Create a Team](./create.md) — the foundational Team walkthrough with members, drafts, and DAO basics.
 - [Team Settings](./team-settings.md) — admin tools for the Team's own settings, including the Subscription card.
-- [Glossary → Membership Tier](../intro/glossary#membership-tier) — pick the tier whose Credits will fund your Team's reward Spaces.

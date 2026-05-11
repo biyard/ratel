@@ -27,7 +27,6 @@ This guide walks you through the platform from your first sign-in to running you
 
 | Chapter | What's inside |
 |---|---|
-| [Glossary](./glossary.md) | Quick reference for every term used in these docs — Essence, Space, MCP, Reward, House, and more. |
 | 2. Getting Started | Sign up, set up your profile, link your DID, and write your first Post. |
 | 4. Teams | Spin up a Team or Sub-team, invite members, and share posting rights and Spaces. Includes **Sub-teams** (parent / child lifecycle) and **Team Settings** (admin tour of a Team's account). |
 | 5. Posts | Write, comment, vote, and cross-post — and learn how each action shapes your Essence. |
