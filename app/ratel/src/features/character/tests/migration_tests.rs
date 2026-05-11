@@ -78,19 +78,34 @@ async fn test_run_migrations_runs_m001() {
     s.total_score = 5_000;
     s.create(&ctx.ddb).await.unwrap();
 
+    // Exercise the real `run_migrations` entry point so this test actually
+    // covers the runner's "stored < 1 → run m001" branch. m002 runs in the
+    // same pass and demands `M002_CSV_PATH`; feed it a header-only CSV so it
+    // walks zero rows and returns Ok without affecting what we assert here.
+    let csv = unique_csv_path("m001-runs-noop");
+    std::fs::write(&csv, "user_id,amount,created_at_ms,reward_key\n").unwrap();
+    let path = csv.to_string_lossy().to_string();
+
     let ddb = ctx.ddb.clone();
-    run_with_env("MIGRATE", "true", move || async move {
-        crate::common::migrations::run_migrations(&ddb).await.unwrap();
-    })
+    run_with_envs(
+        &[("MIGRATE", "true"), ("M002_CSV_PATH", &path)],
+        move || async move {
+            crate::common::migrations::run_migrations(&ddb).await.unwrap();
+        },
+    )
     .await;
 
-    // Verify version advanced.
+    let _ = std::fs::remove_file(&csv);
+
+    // Verify the runner advanced past m001. m002 ran on a header-only CSV
+    // (no rows) and bumps the version to 2 as well — that's expected, the
+    // signal we care about is "m001 executed", confirmed via CharacterXp below.
     let (pk, sk) = LastBackfillVersion::singleton_keys();
     let row = LastBackfillVersion::get(&ctx.ddb, &pk, Some(&sk))
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(row.version, 1);
+    assert_eq!(row.version, 2);
 
     // Verify CharacterXp seeded.
     use crate::features::character::models::CharacterXp;
@@ -107,7 +122,11 @@ async fn test_run_migrations_runs_m001() {
 async fn test_run_migrations_idempotent_at_version() {
     let ctx = TestContext::setup().await;
     reset_migration_state(&ctx.ddb).await;
+    // Pre-advance to the latest known migration version so `run_migrations`
+    // has nothing to do. Bumping this whenever a new migration lands keeps
+    // the "already at HEAD = no-op" invariant honest.
     LastBackfillVersion::advance_to(&ctx.ddb, 0, 1).await.unwrap();
+    LastBackfillVersion::advance_to(&ctx.ddb, 1, 2).await.unwrap();
 
     let ddb = ctx.ddb.clone();
     run_with_env("MIGRATE", "true", move || async move {
@@ -120,7 +139,7 @@ async fn test_run_migrations_idempotent_at_version() {
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(row.version, 1, "no further migrations to run");
+    assert_eq!(row.version, 2, "no further migrations to run");
 }
 
 // ── m002 (backfill_pending_rewards) ──────────────────────────────
@@ -167,7 +186,10 @@ async fn test_run_migrations_runs_m002() {
         .unwrap();
     assert_eq!(row.version, 2);
 
-    // Both rows landed under the outage-backfill description.
+    // Both rows landed under the outage-backfill description. The shared
+    // PendingReward table can carry rows from sibling tests (e.g. the
+    // idempotency test below), so filter on *this* test's user_ids — not
+    // just `description == "outage-backfill"`.
     use crate::common::models::reward::PendingReward;
     let (items, _) = PendingReward::find_by_status(
         &ctx.ddb,
@@ -176,11 +198,13 @@ async fn test_run_migrations_runs_m002() {
     )
     .await
     .unwrap();
-    let m002_rows: Vec<_> = items
+    let mine: Vec<_> = items
         .iter()
         .filter(|r| r.description == "outage-backfill")
+        .filter(|r| matches!(&r.target_pk,
+            Partition::User(u) if u == "test-m002-runs-a" || u == "test-m002-runs-b"))
         .collect();
-    assert_eq!(m002_rows.len(), 2);
+    assert_eq!(mine.len(), 2);
 
     let _ = std::fs::remove_file(&csv);
 }
