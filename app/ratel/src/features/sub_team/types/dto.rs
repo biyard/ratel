@@ -326,6 +326,27 @@ pub struct SubTeamApplicationResponse {
     pub decided_at: Option<i64>,
     pub form_snapshot: Vec<SubTeamFormFieldSnapshotDto>,
     pub form_values: std::collections::HashMap<String, serde_json::Value>,
+    /// Applicant team's display name. Filled by the listing handler
+    /// via a `Team::get` join so the parent's queue row can show the
+    /// applicant's name + initials avatar without a per-row client fetch.
+    /// Empty when the join couldn't be resolved (handler logs).
+    #[serde(default)]
+    pub applicant_team_display_name: String,
+    /// Applicant team's `@username`. Same join as `display_name`.
+    #[serde(default)]
+    pub applicant_team_username: String,
+    /// Member count (UserTeam rows) of the applicant team at the time
+    /// of listing. `0` when the join failed.
+    #[serde(default)]
+    pub applicant_member_count: i64,
+    /// Parent (target) team display name. Filled by the listing
+    /// handler — the applicant-side status page uses it to render the
+    /// feedback card's author as the parent team, not the applicant.
+    #[serde(default)]
+    pub parent_team_display_name: String,
+    /// Parent team's `@username`.
+    #[serde(default)]
+    pub parent_team_username: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -524,6 +545,15 @@ impl From<crate::features::sub_team::models::SubTeamApplication> for SubTeamAppl
             decided_at: a.decided_at,
             form_snapshot: a.form_snapshot.into_iter().map(Into::into).collect(),
             form_values: a.form_values,
+            // Applicant + parent team joins are filled by the listing
+            // handler; defaults are kept empty/zero so the `From`
+            // conversion stays a pure data shuffle and never touches
+            // DynamoDB.
+            applicant_team_display_name: String::new(),
+            applicant_team_username: String::new(),
+            applicant_member_count: 0,
+            parent_team_display_name: String::new(),
+            parent_team_username: String::new(),
         }
     }
 }

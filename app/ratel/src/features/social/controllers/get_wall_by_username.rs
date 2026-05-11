@@ -43,11 +43,20 @@ async fn find_viewer_pending_application_for(
             continue;
         };
 
+        // Any application that the applicant might still want to
+        // review on the status page — Pending (waiting), Returned
+        // (revise & resubmit), Approved (welcome message + post-decision
+        // info), or Rejected (rejection reason). Only `Draft` (never
+        // submitted) and `Cancelled` are skipped — those have no
+        // meaningful status view.
         let matched = apps.iter().any(|a| {
             a.parent_team_id == wall_team_uuid
                 && matches!(
                     a.status,
-                    SubTeamApplicationStatus::Pending | SubTeamApplicationStatus::Returned
+                    SubTeamApplicationStatus::Pending
+                        | SubTeamApplicationStatus::Returned
+                        | SubTeamApplicationStatus::Approved
+                        | SubTeamApplicationStatus::Rejected
                 )
         });
         if matched {

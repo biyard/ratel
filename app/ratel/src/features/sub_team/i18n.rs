@@ -280,6 +280,32 @@ translate! {
     status_decision_reason: { en: "Decision reason", ko: "심사 결과 사유" },
     status_latest_application: { en: "Latest application", ko: "최근 신청" },
 
+    // Parent queue row — applicant info line + "review" button.
+    queue_row_members_suffix: { en: "members", ko: "명" },
+    queue_row_form_snapshot: { en: "Form snapshot", ko: "폼 스냅샷" },
+    queue_row_review_btn: { en: "Review application", ko: "신청서 확인하기" },
+    queue_row_confirm: { en: "Confirm", ko: "확인" },
+    queue_row_approve_placeholder: {
+        en: "Optional note for the applicant (e.g. welcome message)",
+        ko: "신청자에게 전할 메모 (선택 사항) — 환영 메시지나 안내 사항",
+    },
+    queue_row_return_placeholder: {
+        en: "Please describe what needs to be revised before resubmission",
+        ko: "재제출 전 수정해야 할 내용을 설명해주세요",
+    },
+    queue_row_reject_placeholder: {
+        en: "Please explain why the application was rejected",
+        ko: "거절 사유를 설명해주세요",
+    },
+
+    // Review modal (parent-side, click "Review application")
+    review_modal_eyebrow: { en: "Application review", ko: "신청서 검토" },
+    review_modal_submitted_at: { en: "Submitted", ko: "제출 시각" },
+    review_modal_submitter: { en: "Submitter", ko: "제출자" },
+    review_modal_form_section: { en: "Submitted answers", ko: "제출 내역" },
+    review_modal_fields_suffix: { en: "fields", ko: "필드" },
+    review_modal_close: { en: "Close", ko: "닫기" },
+
     // Status hero — per-state eyebrow / title / sub copy. Mirrors the
     // `heroContent` table in child-application-status.html.
     status_hero_pending_eyebrow: { en: "Submitted", ko: "제출됨" },

@@ -407,22 +407,23 @@ pub fn ArenaTopbar(
                     }
                 }
 
-                // Sub-teams icon — three audiences, three destinations:
+                // Sub-teams icon — three audiences, three destinations.
+                // URL `:username` is the **parent** team in all cases;
+                // the status page resolves the applicant team server-
+                // side from the viewer's admin memberships.
                 //   • Member admin → management page.
-                //   • Non-member with an in-flight application from one
-                //     of their admin teams → that applicant's status page.
-                //   • Non-member with no pending app, on a parent-eligible
-                //     team → apply page.
-                // Hidden entirely when none of those apply (visitor on a
-                // team that isn't accepting apps and they haven't applied).
+                //   • Non-member with in-flight application → status
+                //     page for THIS parent team.
+                //   • Non-member, no pending app, parent-eligible → apply.
+                // Hidden when none of those apply.
                 if can_edit || pending_applicant_username.is_some() || is_parent_eligible {
                     HudButton {
                         label: tr.sub_teams.to_string(),
                         active: active == TeamArenaTab::SubTeams,
                         to: if can_edit { Route::TeamSubTeamManagementPage {
                             username: username.clone(),
-                        } } else if let Some(applicant_username) = pending_applicant_username.clone() { Route::TeamSubTeamApplicationStatusPage {
-                            username: applicant_username,
+                        } } else if pending_applicant_username.is_some() { Route::TeamSubTeamApplicationStatusPage {
+                            username: username.clone(),
                         } } else { Route::TeamSubTeamApplyPage {
                             username: username.clone(),
                         } },

@@ -29928,7 +29928,9 @@ body.comments-panel-resizing {
   padding: 16px 18px;
   border-radius: 14px;
   margin-top: 4px;
-  background: rgba(6, 6, 14, 0.5);
+  /* Light theme uses the same washed surface as the snapshot card
+   * below so both feedback + snapshot read as one section visually. */
+  background: var(--dark, rgba(6, 6, 14, 0.5)) var(--light, rgba(0, 0, 0, 0.025));
   border: 1px solid var(--sub-team-border);
   display: flex;
   gap: 12px;
@@ -34024,6 +34026,18 @@ body.comments-panel-resizing {
   background: linear-gradient(135deg, rgba(110, 237, 216, 0.32), rgba(110, 237, 216, 0.12));
   color: var(--sub-team-teal);
 }
+.sub-team-management .avatar--violet {
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.32), rgba(129, 140, 248, 0.12));
+  color: #818cf8;
+}
+.sub-team-management .avatar--purple {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.32), rgba(168, 85, 247, 0.12));
+  color: #a855f7;
+}
+.sub-team-management .avatar--cyan {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.32), rgba(34, 211, 238, 0.12));
+  color: #22d3ee;
+}
 
 .sub-team-management .queue-row {
   display: grid;
@@ -34071,7 +34085,259 @@ body.comments-panel-resizing {
   border-color: rgba(239, 68, 68, 0.22);
   color: var(--sub-team-coral);
 }
+.sub-team-management .queue-row__action--review {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--sub-team-border);
+  color: var(--sub-team-muted);
+}
+.sub-team-management .queue-row__action--review:hover {
+  background: rgba(110, 237, 216, 0.06);
+  border-color: rgba(110, 237, 216, 0.25);
+  color: var(--sub-team-teal);
+}
 .sub-team-management .queue-row .field { grid-column: 1 / -1; }
+.sub-team-management .queue-row__decision {
+  grid-column: 1 / -1;
+  grid-area: inline;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+.sub-team-management .queue-row__decision .field__textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--dark, rgba(6, 6, 14, 0.55)) var(--light, rgba(255, 255, 255, 0.88));
+  border: 1px solid var(--sub-team-border);
+  color: var(--sub-team-text);
+  font: inherit;
+  resize: vertical;
+}
+.sub-team-management .queue-row__decision .field__textarea::placeholder {
+  color: var(--sub-team-dim);
+}
+.sub-team-management .queue-row__decision .field__textarea:focus {
+  outline: none;
+  border-color: rgba(110, 237, 216, 0.4);
+  background: var(--dark, rgba(6, 6, 14, 0.7)) var(--light, #ffffff);
+}
+
+/* === src/features/sub_team/pages/management/queue_tab — review modal === */
+.sub-team-review-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+}
+.sub-team-review-modal[data-open="true"] {
+  display: flex;
+}
+/* `.team-arena__content` creates a stacking context at z:10 and the
+ * arena topbar sits at z:30 — without this escape, the modal renders
+ * BELOW the topbar's HUD icons even at z:9999 because it's trapped
+ * inside the content's context. Lifting the content above the topbar
+ * while the modal is open keeps the backdrop covering everything. */
+.team-arena__content:has(.sub-team-review-modal[data-open="true"]) {
+  z-index: 10000;
+}
+.sub-team-review-modal .review-modal {
+  --sub-team-glass: var(--dark, rgba(20, 20, 40, 0.92)) var(--light, #ffffff);
+  --sub-team-border: var(--dark, rgba(255, 255, 255, 0.08)) var(--light, rgba(0, 0, 0, 0.08));
+  --sub-team-text: var(--dark, #f0f0f5) var(--light, #12121a);
+  --sub-team-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+  --sub-team-dim: var(--dark, #55556a) var(--light, #9595a8);
+  --sub-team-teal: #6eedd8;
+
+  position: relative;
+  width: min(720px, 100%);
+  max-height: calc(100vh - 56px);
+  display: flex;
+  flex-direction: column;
+  background: var(--sub-team-glass);
+  border: 1px solid var(--sub-team-border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+.sub-team-review-modal .review-modal__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--sub-team-border);
+}
+.sub-team-review-modal .review-modal__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(110, 237, 216, 0.10);
+  border: 1px solid rgba(110, 237, 216, 0.25);
+  color: var(--sub-team-teal);
+  flex-shrink: 0;
+}
+.sub-team-review-modal .review-modal__title-wrap {
+  flex: 1;
+  min-width: 0;
+}
+.sub-team-review-modal .review-modal__kicker {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--sub-team-dim);
+}
+.sub-team-review-modal .review-modal__title {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--sub-team-text);
+  margin-top: 2px;
+}
+.sub-team-review-modal .review-modal__handle {
+  font-size: 11px;
+  color: var(--sub-team-muted);
+  margin-top: 2px;
+}
+.sub-team-review-modal .review-modal__close-x {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--sub-team-border);
+  background: transparent;
+  color: var(--sub-team-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.sub-team-review-modal .review-modal__body {
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+.sub-team-review-modal .review-modal__meta {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--dark, rgba(6, 6, 14, 0.45)) var(--light, rgba(0, 0, 0, 0.025));
+  border: 1px solid var(--sub-team-border);
+}
+.sub-team-review-modal .review-modal__meta-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sub-team-review-modal .review-modal__meta-label {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sub-team-dim);
+}
+.sub-team-review-modal .review-modal__meta-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sub-team-text);
+}
+.sub-team-review-modal .review-modal__section-title {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  background: linear-gradient(135deg, #6eedd8, #b6f5e6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.sub-team-review-modal .review-modal__snapshot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--dark, rgba(6, 6, 14, 0.45)) var(--light, rgba(0, 0, 0, 0.025));
+  border: 1px solid var(--sub-team-border);
+}
+.sub-team-review-modal .review-modal__snapshot-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--sub-team-border);
+  font-size: 12px;
+}
+.sub-team-review-modal .review-modal__snapshot-row:last-child {
+  border-bottom: none;
+}
+.sub-team-review-modal .review-modal__snapshot-key {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sub-team-dim);
+}
+.sub-team-review-modal .review-modal__snapshot-value {
+  color: var(--sub-team-text);
+  line-height: 1.55;
+  word-break: break-word;
+}
+.sub-team-review-modal .review-modal__empty {
+  padding: 24px;
+  text-align: center;
+  font-style: italic;
+  color: var(--sub-team-muted);
+}
+.sub-team-review-modal .review-modal__foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 22px;
+  border-top: 1px solid var(--sub-team-border);
+}
+.sub-team-review-modal .review-modal__close-btn {
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid var(--sub-team-border);
+  color: var(--sub-team-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+@media (max-width: 500px) {
+  .sub-team-review-modal {
+    padding: 12px;
+  }
+  .sub-team-review-modal .review-modal__meta {
+    grid-template-columns: 1fr;
+  }
+  .sub-team-review-modal .review-modal__snapshot-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
 
 .sub-team-management .bc-cta {
   display: flex;

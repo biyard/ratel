@@ -23,9 +23,10 @@ use crate::common::contexts::TeamItem;
 use crate::features::social::controllers::list_admin_teams_handler;
 use crate::features::sub_team::controllers::{
     delete_sub_team_application_draft_handler, get_sub_team_apply_context_handler,
-    get_sub_team_application_draft_handler, save_sub_team_application_draft_handler,
-    submit_application_handler,
+    get_sub_team_application_draft_handler, list_child_applications_handler,
+    save_sub_team_application_draft_handler, submit_application_handler,
 };
+use crate::features::sub_team::models::SubTeamApplicationStatus;
 use crate::features::sub_team::types::{
     ApplyContextResponse, DocAgreementInput, SaveApplicationDraftRequest,
     SubmitApplicationRequest,
@@ -143,18 +144,22 @@ pub fn use_sub_team_apply() -> std::result::Result<UseSubTeamApply, RenderError>
     let form_values: Signal<HashMap<String, serde_json::Value>> = use_signal(HashMap::new);
     let agreed_doc_ids: Signal<HashMap<String, String>> = use_signal(HashMap::new);
 
-    // Hydrate any prior draft for this (applicant, parent) pair.
-    // Wrapped in `use_effect` + a one-shot `draft_loaded` guard so the
-    // GET fires exactly once per (applicant, parent) pair — without
-    // the guard, every `form_values.set(...)` from the spawn (or from
-    // the prefill effect) re-triggered this block via implicit signal
-    // subscriptions and we hammered the endpoint in a loop.
-    let mut draft_loaded: Signal<bool> = use_signal(|| false);
+    // Two-step hydration (each one-shot via its own guard so the
+    // effect can't re-trigger itself through implicit subscriptions):
+    //   1. Existing in-flight application for this (applicant, parent)
+    //      — wins when the applicant is "Edit and resubmit"-ing a
+    //      Returned application or just revisiting a Pending one.
+    //   2. Draft row — used only when no in-flight application exists
+    //      (drafts are deleted on successful submit, so seeing both
+    //      together is rare; if it happens, draft is older noise and
+    //      the application is the source of truth).
+    let mut hydrated: Signal<bool> = use_signal(|| false);
+    let apply_context_for_hydrate = apply_context;
     {
         let mut form_values_w = form_values;
         let mut agreed = agreed_doc_ids;
         use_effect(move || {
-            if draft_loaded() {
+            if hydrated() {
                 return;
             }
             let applicant = applicant_team_id();
@@ -162,9 +167,44 @@ pub fn use_sub_team_apply() -> std::result::Result<UseSubTeamApply, RenderError>
             if applicant.0.is_empty() || parent.is_empty() || applicant.0 == parent {
                 return;
             }
-            draft_loaded.set(true);
+            hydrated.set(true);
             let parent_cloned = parent.clone();
+            // Snapshot the required docs so the hydration spawn can
+            // pre-fill `agreed_doc_ids` from the body hashes the
+            // applicant agreed to at first submission. The user
+            // doesn't need to re-agree on resubmit since the doc
+            // body hasn't changed (server enforces the hash check).
+            let required_docs: Vec<(String, String)> = apply_context_for_hydrate
+                .read()
+                .required_docs
+                .iter()
+                .filter(|d| d.required)
+                .map(|d| (d.id.clone(), d.body_hash.clone()))
+                .collect();
             spawn(async move {
+                // Step 1 — try in-flight application first.
+                let in_flight = list_child_applications_handler(applicant.clone(), None)
+                    .await
+                    .ok()
+                    .and_then(|page| {
+                        page.items.into_iter().find(|a| {
+                            a.parent_team_id == parent_cloned
+                                && matches!(
+                                    a.status,
+                                    SubTeamApplicationStatus::Pending
+                                        | SubTeamApplicationStatus::Returned,
+                                )
+                        })
+                    });
+                if let Some(app) = in_flight {
+                    form_values_w.set(app.form_values);
+                    // Pre-agree all currently-required docs (the user
+                    // already agreed at first submission). Pulled from
+                    // apply_context so we use the latest hashes.
+                    agreed.set(required_docs.into_iter().collect());
+                    return;
+                }
+                // Step 2 — fall back to draft hydration.
                 if let Ok(Some(draft)) =
                     get_sub_team_application_draft_handler(applicant, parent_cloned).await
                 {

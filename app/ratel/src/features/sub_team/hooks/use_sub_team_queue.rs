@@ -5,6 +5,7 @@ use crate::features::sub_team::controllers::{
     approve_application_handler, list_parent_applications_handler, reject_application_handler,
     return_application_handler,
 };
+use crate::features::sub_team::hooks::UseSubTeamList;
 use crate::features::sub_team::models::SubTeamApplicationStatus;
 use crate::features::sub_team::types::{
     ApplicationDecisionReasonRequest, ApplicationReturnCommentRequest, SubTeamApplicationResponse,
@@ -20,7 +21,7 @@ pub struct UseSubTeamQueue {
         SubTeamApplicationResponse,
         ListResponse<SubTeamApplicationResponse>,
     >,
-    pub handle_approve: Action<(String,), ()>,
+    pub handle_approve: Action<(String, String), ()>,
     pub handle_reject: Action<(String, String), ()>,
     pub handle_return: Action<(String, String), ()>,
 }
@@ -42,11 +43,29 @@ pub fn use_sub_team_queue() -> std::result::Result<UseSubTeamQueue, RenderError>
     })?;
 
     let team_id_for_approve = team_id_signal;
-    let handle_approve = use_action(move |application_id: String| async move {
-        approve_application_handler(team_id_for_approve(), application_id).await?;
-        queue.refresh();
-        Ok::<(), crate::common::Error>(())
-    });
+    // Capture the list controller (if installed by the page shell) so
+    // we can `.restart()` it after a successful approve — the approved
+    // application graduates from "pending" → "recognized sub-team", and
+    // both the pending count and the recognized list need to reflect
+    // that without a page reload.
+    let sub_team_list_ctx = try_use_context::<UseSubTeamList>();
+    let handle_approve =
+        use_action(move |application_id: String, welcome_message: String| async move {
+            approve_application_handler(
+                team_id_for_approve(),
+                application_id,
+                ApplicationDecisionReasonRequest {
+                    reason: welcome_message,
+                },
+            )
+            .await?;
+            queue.refresh();
+            if let Some(ctx) = sub_team_list_ctx {
+                let mut teams = ctx.teams;
+                teams.restart();
+            }
+            Ok::<(), crate::common::Error>(())
+        });
 
     let team_id_for_reject = team_id_signal;
     let handle_reject =

@@ -47,13 +47,10 @@ fn StatusBody(username: String, team_display: String) -> Element {
     let nav = use_navigator();
 
     let UseSubTeamApplicationStatus {
-        applications,
-        mut handle_cancel,
-        ..
+        application, ..
     } = use_sub_team_application_status()?;
 
-    let items: Vec<SubTeamApplicationResponse> = applications.items().to_vec();
-    let latest = items.first().cloned();
+    let latest: Option<SubTeamApplicationResponse> = application();
 
     let username_for_edit = username.clone();
     let username_for_back = username.clone();
@@ -121,7 +118,6 @@ fn StatusBody(username: String, team_display: String) -> Element {
                         let hero = hero_copy(app.status, &tr);
                         let when_text = format_relative_when(app.status, &app);
                         let field_count = app.form_snapshot.len();
-                        let app_id = app.id.clone();
                         let username_for_edit_cl = username_for_edit.clone();
                         let decision_reason = app
                             .decision_reason
@@ -138,18 +134,21 @@ fn StatusBody(username: String, team_display: String) -> Element {
                             app.status,
                             SubTeamApplicationStatus::Rejected
                         );
-                        let parent_initials = app
-                            .parent_team_id
-                            .chars()
+                        // Feedback card author = parent team. Falls back
+                        // to the parent uuid prefix only when the join
+                        // server-side hasn't populated `parent_team_display_name`.
+                        let parent_display = if app.parent_team_display_name.is_empty() {
+                            app.parent_team_id.chars().take(8).collect::<String>()
+                        } else {
+                            app.parent_team_display_name.clone()
+                        };
+                        let parent_initials = parent_display
+                            .split_whitespace()
                             .take(2)
+                            .filter_map(|w| w.chars().next())
                             .collect::<String>()
                             .to_uppercase();
                         let show_edit = matches!(app.status, SubTeamApplicationStatus::Returned);
-                        let show_cancel = matches!(
-                            app.status,
-                            SubTeamApplicationStatus::Pending
-                                | SubTeamApplicationStatus::Returned,
-                        );
                         let pill_class = pill_class_for(app.status);
                         let topbar_label = topbar_status_chip(app.status, &tr).1;
                         let snapshot_rows = build_snapshot_rows(&app);
@@ -180,19 +179,14 @@ fn StatusBody(username: String, team_display: String) -> Element {
                             if show_feedback {
                                 section { class: "card",
                                     div { class: "card__head",
-                                        h3 {
-                                            class: "card__title",
-                                            "data-feedback-variant": "{variant}",
-                                            "{feedback_heading}"
-                                        }
+                                        h3 { class: "card__title", "data-feedback-variant": "{variant}", "{feedback_heading}" }
                                         span { class: "card__dash" }
                                     }
                                     div { class: "{feedback_class}",
                                         div { class: "avatar feedback__avatar", "{parent_initials}" }
                                         div { class: "feedback__body",
                                             div { class: "feedback__head",
-                                                span { class: "feedback__author", "{team_display}" }
-                                                span { class: "feedback__author-meta", "· {tr.status_feedback_author_suffix}" }
+                                                span { class: "feedback__author", "{parent_display}" }
                                             }
                                             div { class: "feedback__title", "{feedback_heading}" }
                                             div { class: "feedback__text", "{decision_reason}" }
@@ -212,17 +206,6 @@ fn StatusBody(username: String, team_display: String) -> Element {
                                                 "{tr.status_edit_and_resubmit}"
                                             }
                                         }
-                                        if show_cancel {
-                                            button {
-                                                class: "btn btn--ghost",
-                                                r#type: "button",
-                                                onclick: move |_| {
-                                                    handle_cancel.call(app_id.clone());
-                                                },
-                                                lucide_dioxus::X { class: "w-3 h-3 [&>path]:stroke-current" }
-                                                "{tr.status_cancel_application}"
-                                            }
-                                        }
                                     }
                                 }
                             }
@@ -238,9 +221,13 @@ fn StatusBody(username: String, team_display: String) -> Element {
                                 }
                                 div { class: "snapshot",
                                     if snapshot_rows.is_empty() {
-                                        div { class: "empty-row", "{tr.status_no_applications}" }
+                                        div { class: "",
+                                            {tr.status_no_applications}
+                                            empty-row {}
+                                            ","
+                                        }
                                     }
-                                    for (key, value) in snapshot_rows.iter() {
+                                    for (key , value) in snapshot_rows.iter() {
                                         div { key: "{key}", class: "snapshot__row",
                                             span { class: "snapshot__key", "{key}" }
                                             span { class: "snapshot__value", "{value}" }
@@ -262,7 +249,11 @@ fn StatusBody(username: String, team_display: String) -> Element {
                         }
                     }
                 } else {
-                    div { class: "empty-row", "{tr.status_no_applications}" }
+                    div { class: "",
+                        {tr.status_no_applications}
+                        empty-row {}
+                        ","
+                    }
                 }
             }
         }
