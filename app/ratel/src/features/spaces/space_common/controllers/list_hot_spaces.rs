@@ -12,7 +12,7 @@
 use crate::common::*;
 #[cfg(feature = "server")]
 use crate::features::auth::OptionalUser;
-use crate::features::spaces::space_common::models::{HOT_SPACE_RANK_PK, HotSpace, HotSpaceHeat};
+use crate::features::spaces::space_common::models::{HotSpace, HotSpaceHeat, HOT_SPACE_RANK_PK};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct HotSpaceResponse {

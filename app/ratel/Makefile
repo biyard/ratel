@@ -70,13 +70,13 @@ BUCKET_NAME ?= metadata.ratel.foundation
 HOST_UID ?= $(shell id -u)
 HOST_GID ?= $(shell id -g)
 
-
 ifneq ($(ANDROID_EMULATOR_ID),)
 	DEVICE_FLAG ?= --device $(ANDROID_EMULATOR_ID)
 else
 	FIRST_ANDROID_DEVICE := $(shell adb devices | awk 'NR>1 {print $$1; exit}')
 	ifneq ($(FIRST_ANDROID_DEVICE),)
 		DEVICE_FLAG ?= --device $(FIRST_ANDROID_DEVICE)
+		ANDROID_TARGET ?= aarch64-linux-android
 	endif
 endif
 
@@ -89,12 +89,8 @@ else
   ANDROID_NDK_HOME ?= /opt/android-ndk
   # Gradle + Android Gradle Plugin 8.x don't parse class-file major 70
   # (OpenJDK 26+). Force a JDK that Gradle supports.
-  ANDROID_JAVA_HOME ?= /usr/lib/jvm/java-17-openjdk
+  ANDROID_JAVA_HOME ?= /usr/lib/jvm/java-21-openjdk
 	ANDROID_TARGET ?= x86_64-linux-android
-endif
-
-ifeq ($(HOST_OS)-$(ANDROID_EMULATOR_ID),linux-)
-	ANDROID_TARGET ?= aarch64-linux-android
 endif
 
 ifneq ($(CARGO_TARGET_DIR),)
@@ -259,7 +255,7 @@ $(ANDROID_DX_RES_DIR):
 	mkdir -p $(ANDROID_DX_RES_DIR)
 	cp -rf android/res $(ANDROID_DX_RES_DIR)/
 
-android: $(HOME)/.android/debug.keystore
+android: $(HOME)/.android/debug.keystore $(ANDROID_DX_RES_DIR)
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --features $(RUN_FEATURES) @client --android --target $(ANDROID_TARGET) $(DEVICE_FLAG)
 
 ios:
