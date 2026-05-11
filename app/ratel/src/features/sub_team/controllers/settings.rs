@@ -3,6 +3,25 @@ use crate::features::posts::models::Team;
 use crate::features::social::pages::member::dto::TeamRole;
 use crate::features::sub_team::types::{SubTeamError, SubTeamSettingsResponse, UpdateSubTeamSettingsRequest};
 
+// ── GET — read current sub-team settings ────────────────────────
+//
+// Returns the parent team's sub-team configuration so the
+// management page's activation switch + stepper inputs can hydrate
+// from the persisted values on every mount/refresh. Auth-light: any
+// caller can read public settings; the PATCH below still requires
+// admin/owner.
+#[get("/api/teams/:team_pk/sub-teams/settings", team: Team)]
+pub async fn get_sub_team_settings_handler(
+    team_pk: TeamPartition,
+) -> Result<SubTeamSettingsResponse> {
+    let _ = team_pk;
+    Ok(SubTeamSettingsResponse {
+        is_parent_eligible: team.is_parent_eligible,
+        min_sub_team_members: team.min_sub_team_members,
+        min_sub_team_age_days: team.min_sub_team_age_days,
+    })
+}
+
 #[patch("/api/teams/:team_pk/sub-teams/settings", user: crate::features::auth::User, team: Team, role: TeamRole)]
 pub async fn update_sub_team_settings_handler(
     team_pk: TeamPartition,

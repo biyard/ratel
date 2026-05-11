@@ -1,15 +1,15 @@
 //! Controller for the parent-admin sub-team settings tab.
 //!
-//! The backend exposes no dedicated GET for sub-team settings — the
-//! `SubTeamSettingsResponse` fields live directly on the parent `Team`
-//! record, which is already fetched elsewhere in the management page
-//! (via `Team::get`). The page component seeds `settings` via
-//! `use_context_provider(initial)` before invoking this hook; the
-//! update action replaces that signal with the server's echoed response.
+//! Hydrates `settings` from `get_sub_team_settings_handler` on mount
+//! so the activation switch + stepper values survive a page refresh.
+//! `handle_update` PATCHes and writes the server's echoed response
+//! back into the signal.
 
-use crate::features::sub_team::controllers::update_sub_team_settings_handler;
-use crate::*;
+use crate::features::sub_team::controllers::{
+    get_sub_team_settings_handler, update_sub_team_settings_handler,
+};
 use crate::features::sub_team::types::{SubTeamSettingsResponse, UpdateSubTeamSettingsRequest};
+use crate::*;
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct UseSubTeamSettings {
@@ -27,13 +27,18 @@ pub fn use_sub_team_settings() -> std::result::Result<UseSubTeamSettings, Render
     let team_id: TeamPartition = use_context();
     let team_id_signal: ReadSignal<TeamPartition> = use_signal(|| team_id).into();
 
-    // Initial snapshot — consumed from ancestor context if the page seeded
-    // one, otherwise default (zeros). The caller should always seed; the
-    // default branch exists so the hook never panics when only the team id
-    // has been plumbed through.
-    let seeded: SubTeamSettingsResponse =
-        try_consume_context().unwrap_or_default();
-    let mut settings = use_signal(|| seeded);
+    // Server-side hydration — fetches the persisted settings (Team.
+    // is_parent_eligible / min_* fields) on mount and re-uses the
+    // result as the `settings` signal seed.
+    let loader = use_loader(move || {
+        let id = team_id_signal();
+        async move { get_sub_team_settings_handler(id).await }
+    })?;
+    let mut settings = use_signal(SubTeamSettingsResponse::default);
+    let loaded = loader();
+    use_effect(move || {
+        settings.set(loaded.clone());
+    });
 
     let team_id_for_update = team_id_signal;
     let handle_update =
