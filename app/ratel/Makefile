@@ -46,11 +46,14 @@ RUN_FEATURES ?= local-dev,bypass
 ifeq ($(shell uname -s),Darwin)
   HOST_IP ?= $(shell iface=$$(route -n get default 2>/dev/null | awk '/interface:/ {print $$2}'); \
                      [ -n "$$iface" ] && ipconfig getifaddr "$$iface" || echo 10.0.2.2)
+	ARCH ?= arm64-v8a
 else
   HOST_IP ?= $(shell ip route get 1.1.1.1 2>/dev/null | awk '/src/ {for(i=1;i<=NF;i++) if($$i=="src") {print $$(i+1); exit}}')
   ifeq ($(strip $(HOST_IP)),)
     HOST_IP := 10.0.2.2
   endif
+
+	ARCH ?= $(shell uname -m)
 endif
 
 MOBILE_API_URL ?= http://$(HOST_IP):$(PORT)
@@ -60,8 +63,7 @@ ECR ?= $(shell aws ecr describe-repositories --repository-names $(REPOSITORY)  -
 QDRANT_PREFIX ?= ratel-$(ENV)
 QDRANT_URL ?= http://localhost:6334
 QDRANT_API_KEY ?= ""
-ARCH ?= $(shell uname -m)
-AVD_NAME ?= Pixel_6_API_34
+AVD_NAME ?= Pixel6_$(ARCH)
 ANDROID_EMULATOR_ID ?= $(shell adb devices | grep emulator | cut -f1)
 DISABLE_ANSI ?= false
 BUCKET_NAME ?= metadata.ratel.foundation
@@ -70,16 +72,51 @@ HOST_GID ?= $(shell id -g)
 
 
 ifneq ($(ANDROID_EMULATOR_ID),)
-	# Emulator is booted: target it by AVD name.
 	DEVICE_FLAG ?= --device $(AVD_NAME)
 else
-	# No emulator running — fall back to the first attached USB device
-	# from `adb devices` (status == "device"). Resulting flag is empty
-	# if nothing is connected, in which case dx will try to start a
-	# simulator.
 	FIRST_ANDROID_DEVICE := $(shell adb devices | awk 'NR>1 {print $$1; exit}')
 	DEVICE_FLAG ?= --device $(FIRST_ANDROID_DEVICE)
 endif
+
+# Host detection — keeps Makefile portable between Linux and macOS.
+# - Linux:  NDK at /opt/android-ndk, JDK at /usr/lib/jvm/java-17-openjdk
+# - macOS:  NDK at /opt/homebrew/share/android-ndk (Homebrew),
+#           JDK at /Library/Java/JavaVirtualMachines/temurin-17.jdk/...
+HOST_OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
+ifeq ($(HOST_OS),darwin)
+  ANDROID_NDK_HOME ?= /opt/homebrew/share/android-ndk
+  ANDROID_NDK_TOOLCHAIN_HOST ?= darwin-x86_64
+  ANDROID_JAVA_HOME ?= /Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home
+	ANDROID_TARGET ?= aarch64-linux-android
+else
+  ANDROID_NDK_HOME ?= /opt/android-ndk
+  ANDROID_NDK_TOOLCHAIN_HOST ?= linux-x86_64
+  # Gradle + Android Gradle Plugin 8.x don't parse class-file major 70
+  # (OpenJDK 26+). Force a JDK that Gradle supports.
+  ANDROID_JAVA_HOME ?= /usr/lib/jvm/java-17-openjdk
+	ANDROID_TARGET ?= x86_64-linux-android
+endif
+
+ifeq ($(HOST_OS)-$(ANDROID_EMULATOR_ID),linux-)
+	ANDROID_TARGET ?= aarch64-linux-android
+endif
+
+ANDROID_NDK_TOOLCHAIN ?= $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(ANDROID_NDK_TOOLCHAIN_HOST)
+ANDROID_API_LEVEL ?= 24
+ANDROID_CC ?= $(ANDROID_NDK_TOOLCHAIN)/bin/$(ANDROID_TARGET)$(ANDROID_API_LEVEL)-clang
+
+ANDROID_ENV = \
+	JAVA_HOME=$(ANDROID_JAVA_HOME) \
+	PATH="$(ANDROID_JAVA_HOME)/bin:$(PATH)" \
+	CC_aarch64_linux_android=$(ANDROID_CC) \
+	CXX_aarch64_linux_android=$(ANDROID_CC)++ \
+	AR_aarch64_linux_android=$(ANDROID_NDK_TOOLCHAIN)/bin/llvm-ar \
+	CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$(ANDROID_CC) \
+	CC_armv7_linux_androideabi=$(ANDROID_NDK_TOOLCHAIN)/bin/armv7a-linux-androideabi$(ANDROID_API_LEVEL)-clang \
+	CXX_armv7_linux_androideabi=$(ANDROID_NDK_TOOLCHAIN)/bin/armv7a-linux-androideabi$(ANDROID_API_LEVEL)-clang++ \
+	AR_armv7_linux_androideabi=$(ANDROID_NDK_TOOLCHAIN)/bin/llvm-ar \
+	CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER=$(ANDROID_NDK_TOOLCHAIN)/bin/armv7a-linux-androideabi$(ANDROID_API_LEVEL)-clang
+
 
 BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
@@ -208,40 +245,6 @@ js/node_modules:
 run: ../../node_modules js/node_modules
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES)
 
-# Host detection — keeps Makefile portable between Linux and macOS.
-# - Linux:  NDK at /opt/android-ndk, JDK at /usr/lib/jvm/java-17-openjdk
-# - macOS:  NDK at /opt/homebrew/share/android-ndk (Homebrew),
-#           JDK at /Library/Java/JavaVirtualMachines/temurin-17.jdk/...
-HOST_OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
-ifeq ($(HOST_OS),darwin)
-  ANDROID_NDK_HOME ?= /opt/homebrew/share/android-ndk
-  ANDROID_NDK_TOOLCHAIN_HOST ?= darwin-x86_64
-  ANDROID_JAVA_HOME ?= /Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home
-else
-  ANDROID_NDK_HOME ?= /opt/android-ndk
-  ANDROID_NDK_TOOLCHAIN_HOST ?= linux-x86_64
-  # Gradle + Android Gradle Plugin 8.x don't parse class-file major 70
-  # (OpenJDK 26+). Force a JDK that Gradle supports.
-  ANDROID_JAVA_HOME ?= /usr/lib/jvm/java-17-openjdk
-endif
-
-ANDROID_NDK_TOOLCHAIN ?= $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(ANDROID_NDK_TOOLCHAIN_HOST)
-ANDROID_API_LEVEL ?= 24
-ANDROID_TARGET ?= aarch64-linux-android
-ANDROID_CC ?= $(ANDROID_NDK_TOOLCHAIN)/bin/$(ANDROID_TARGET)$(ANDROID_API_LEVEL)-clang
-
-ANDROID_ENV = \
-	JAVA_HOME=$(ANDROID_JAVA_HOME) \
-	PATH="$(ANDROID_JAVA_HOME)/bin:$(PATH)" \
-	CC_aarch64_linux_android=$(ANDROID_CC) \
-	CXX_aarch64_linux_android=$(ANDROID_CC)++ \
-	AR_aarch64_linux_android=$(ANDROID_NDK_TOOLCHAIN)/bin/llvm-ar \
-	CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$(ANDROID_CC) \
-	CC_armv7_linux_androideabi=$(ANDROID_NDK_TOOLCHAIN)/bin/armv7a-linux-androideabi$(ANDROID_API_LEVEL)-clang \
-	CXX_armv7_linux_androideabi=$(ANDROID_NDK_TOOLCHAIN)/bin/armv7a-linux-androideabi$(ANDROID_API_LEVEL)-clang++ \
-	AR_armv7_linux_androideabi=$(ANDROID_NDK_TOOLCHAIN)/bin/llvm-ar \
-	CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER=$(ANDROID_NDK_TOOLCHAIN)/bin/armv7a-linux-androideabi$(ANDROID_API_LEVEL)-clang
-
 $(HOME)/.android/debug.keystore:
 	keytool -genkey -v -keystore $@ -storepass android -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Korea,O=Biyard,C=KR"
 
@@ -282,14 +285,8 @@ sync-android-icons:
 		fi; \
 	done
 
-# dx serve binds the dev-server / hot-reload websocket to its `--port`.
-# Our axum API server already owns $(PORT) (8080) for the mobile to call,
-# so we hand dx a separate port. Hot-reload over native Android doesn't
-# do much anyway — this is just to avoid the bind collision.
-DX_DEV_PORT ?= 9090
-
 android: $(HOME)/.android/debug.keystore sync-android-icons
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --addr 0.0.0.0 --port $(DX_DEV_PORT) --features $(RUN_FEATURES) @client --android --target $(ANDROID_TARGET) $(DEVICE_FLAG)
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --features $(RUN_FEATURES) @client --android --target $(ANDROID_TARGET) $(DEVICE_FLAG)
 
 ios:
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --ios --features $(RUN_FEATURES)
@@ -322,3 +319,6 @@ docker.rm:
 
 docker.login:
 	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
+
+android.log:
+	adb logcat -s RatelRust
