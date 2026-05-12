@@ -1,16 +1,6 @@
 use crate::*;
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Serialize,
-    Deserialize,
-    strum::Display,
-    strum::EnumString,
-    Default,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, strum::Display, strum::EnumString, Default)]
 pub enum LayoverSize {
     #[default]
     #[strum(serialize = "w-full")]

@@ -1,4 +1,7 @@
 use crate::common::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[cfg(feature = "server")]
 use super::ServiceError;
@@ -123,7 +126,7 @@ struct ClaimSignatureRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct ClaimSignatureResponse {
     pub month_index: String,
     pub amount: String,

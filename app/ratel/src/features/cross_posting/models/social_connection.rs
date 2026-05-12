@@ -1,12 +1,15 @@
 use crate::common::*;
 use crate::features::cross_posting::types::SocialPlatform;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Per-user, per-platform external account credential. KMS-encrypted.
 ///
 /// Design doc: docs/superpowers/specs/2026-04-28-cross-posting-design.md
 /// (`SocialConnection` section). FR-1 #1–#7.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SocialConnection {
     #[dynamo(prefix = "SC", index = "gsi1", name = "find_by_platform", pk)]
     pub pk: Partition, // User(user_id)
@@ -62,8 +65,8 @@ impl SocialConnection {
     }
 }
 
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, strum::Display)]
-#[cfg_attr(feature = "server", derive(JsonSchema))]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 pub enum ConnectionStatus {

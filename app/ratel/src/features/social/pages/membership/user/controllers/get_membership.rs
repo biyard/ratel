@@ -1,10 +1,13 @@
 use super::super::*;
 #[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
+#[cfg(feature = "server")]
 use crate::features::membership::models::ensure_user_membership_monthly_refill;
 use crate::features::membership::models::UserMembership;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct MembershipResponse {
     pub tier: String,
     pub total_credits: i64,

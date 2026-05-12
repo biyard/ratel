@@ -2,7 +2,6 @@ use crate::common::*;
 
 /// Body for `POST /api/cross-posting/connections/bluesky`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(JsonSchema, OperationIo))]
 pub struct ConnectBlueskyRequest {
     /// Bluesky handle, e.g. `user.bsky.social`. May also be the user's DID.
     pub handle: String,
@@ -14,7 +13,6 @@ pub struct ConnectBlueskyRequest {
 
 /// Body for `PATCH /api/cross-posting/connections/{platform}`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(JsonSchema, OperationIo))]
 pub struct ToggleAutoPostRequest {
     pub auto_post_enabled: bool,
 }

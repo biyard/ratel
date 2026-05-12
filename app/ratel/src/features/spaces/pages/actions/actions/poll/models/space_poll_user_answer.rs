@@ -4,9 +4,12 @@ use crate::common::attribute::*;
 use crate::common::utils::time::get_now_timestamp_millis;
 
 use crate::features::spaces::pages::actions::actions::poll::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SpacePollUserAnswer {
     pub pk: Partition, // User Partition
     #[dynamo(prefix = "POLL_PK", index = "gsi1", name = "find_by_space_pk", pk)]

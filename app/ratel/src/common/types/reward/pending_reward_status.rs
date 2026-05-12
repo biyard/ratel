@@ -1,18 +1,7 @@
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
 // Case-insensitive parse keeps legacy rows that wrote "pending" decoding.
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    Eq,
-    PartialEq,
-    Default,
-    SerializeDisplay,
-    DeserializeFromStr,
-    strum::Display,
-    strum::EnumString,
-)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Default, SerializeDisplay, DeserializeFromStr, strum::Display, strum::EnumString)]
 #[strum(serialize_all = "UPPERCASE", ascii_case_insensitive)]
 pub enum PendingRewardStatus {
     #[default]

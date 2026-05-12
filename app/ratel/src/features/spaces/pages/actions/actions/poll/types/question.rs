@@ -1,7 +1,10 @@
 use crate::features::spaces::pages::actions::actions::poll::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(rename_all = "snake_case", tag = "answer_type")]
 pub enum Question {
     SingleChoice(ChoiceQuestion),
@@ -34,7 +37,7 @@ impl Question {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct LinearScaleQuestion {
     pub title: String,
     pub description: Option<String>,
@@ -47,7 +50,7 @@ pub struct LinearScaleQuestion {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct DropdownQuestion {
     pub title: String,
     pub description: Option<String>,
@@ -57,7 +60,7 @@ pub struct DropdownQuestion {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct CheckboxQuestion {
     pub title: String,
     pub description: Option<String>,
@@ -68,7 +71,7 @@ pub struct CheckboxQuestion {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubjectiveQuestion {
     pub title: String,
     pub description: String,
@@ -76,7 +79,7 @@ pub struct SubjectiveQuestion {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct ChoiceQuestion {
     pub title: String,
     pub description: Option<String>,

@@ -1,6 +1,9 @@
 #[cfg(feature = "server")]
 use crate::features::auth::OptionalUser;
 #[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
+#[cfg(feature = "server")]
 use crate::features::auth::UserTeamGroup;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
@@ -9,7 +12,7 @@ use crate::features::posts::*;
 use super::{TeamGroup, TeamOwner};
 
 #[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct Team {
     pub pk: Partition,
     #[dynamo(

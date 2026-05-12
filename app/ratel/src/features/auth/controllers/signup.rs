@@ -1,6 +1,9 @@
 // Migrated from packages/main-api/src/controllers/v3/auth/signup.rs
 use crate::features::auth::models::*;
 #[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
+#[cfg(feature = "server")]
 use crate::features::auth::utils::evm::recover_address;
 #[cfg(feature = "server")]
 use crate::features::auth::utils::{
@@ -15,7 +18,7 @@ use validator::Validate;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(
     feature = "server",
-    derive(aide::OperationIo, schemars::JsonSchema, Validate)
+    derive(rmcp::schemars::JsonSchema, Validate)
 )]
 pub struct SignupRequest {
     #[serde(flatten)]
@@ -34,7 +37,7 @@ pub struct SignupRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(aide::OperationIo, schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum SignupType {
     Email {
@@ -61,7 +64,7 @@ pub enum SignupType {
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SignupResponse {
     #[serde(flatten)]
     pub user: User,

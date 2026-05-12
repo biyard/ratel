@@ -1,4 +1,7 @@
 use crate::common::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Singleton sidecar per user, tracking onboarding interstitials the user
 /// has dismissed. We deliberately keep this **off** the main `User`
@@ -11,7 +14,7 @@ use crate::common::*;
 /// Design doc: docs/superpowers/specs/2026-04-28-cross-posting-design.md
 /// (`UserOnboardingFlags` section). FR-2 #13.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UserOnboardingFlags {
     #[dynamo(prefix = "UOF", pk)]
     pub pk: Partition, // User(user_id)

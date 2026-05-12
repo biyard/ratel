@@ -4,15 +4,18 @@ use crate::features::posts::*;
 use crate::common::models::space::{SpaceCommon, SpaceParticipant};
 use crate::common::types::SpacePartition;
 use crate::features::auth::User;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct CreateSpaceRequest {
     pub post_id: FeedPartition,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct CreateSpaceResponse {
     pub space_id: SpacePartition,
 }

@@ -1,7 +1,10 @@
 use crate::features::spaces::pages::actions::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Default, DynamoEnum, Translate, Serialize, Deserialize, PartialEq, Eq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum SpaceActionStatus {
     #[default]
     #[translate(en = "Designing", ko = "설계중")]

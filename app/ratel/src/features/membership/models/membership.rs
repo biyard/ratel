@@ -1,22 +1,14 @@
 use crate::features::membership::models::Currency;
 use crate::features::membership::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 pub const ENTERPRISE_MONTHLY_REFILL_CREDITS: i64 = 1_000_000;
 pub const ENTERPRISE_MAX_CREDITS_PER_SPACE: i64 = 1_000;
 
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    PartialOrd,
-    Ord,
-    Eq,
-    SerializeDisplay,
-    DeserializeFromStr,
-    Default,
-    DynamoEnum,
-)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Ord, Eq, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum MembershipTier {
     #[default]
     Free,
@@ -26,10 +18,8 @@ pub enum MembershipTier {
     Enterprise(String),
 }
 
-#[derive(
-    Debug, Clone, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum, Eq, PartialEq,
-)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[derive(Debug, Clone, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum, Eq, PartialEq)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum MembershipStatus {
     #[default]
     Active,
@@ -39,7 +29,7 @@ pub enum MembershipStatus {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct Membership {
     pub pk: Partition,
     pub sk: EntityType,
@@ -95,7 +85,7 @@ impl Membership {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UserMembership {
     pub pk: Partition,
 
@@ -232,7 +222,7 @@ pub async fn ensure_user_membership_monthly_refill(
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct MembershipResponse {
     pub id: MembershipPartition,
     pub tier: MembershipTier,
@@ -264,7 +254,7 @@ impl From<Membership> for MembershipResponse {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UserMembershipResponse {
     pub tier: MembershipPartition,
     pub expired_at: i64,
@@ -296,7 +286,7 @@ impl From<UserMembership> for UserMembershipResponse {
 // ── Team Membership ──────────────────────────────────────────────────
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct TeamMembership {
     pub pk: Partition,
 
@@ -430,7 +420,7 @@ pub async fn ensure_team_membership_monthly_refill(
 }
 
 #[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct TeamMembershipResponse {
     pub tier: MembershipPartition,
     pub expired_at: i64,

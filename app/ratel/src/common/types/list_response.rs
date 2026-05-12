@@ -1,9 +1,11 @@
 use crate::common::traits::{Bookmarker, ItemIter};
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Clone, serde::Serialize, serde::Deserialize, Default, PartialEq, Debug)]
-#[cfg_attr(feature = "server", derive(aide::OperationIo, schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(bound(deserialize = "T: serde::de::DeserializeOwned"))]
-#[cfg_attr(feature = "server", schemars(bound = "T: schemars::JsonSchema"))]
 pub struct ListResponse<T>
 where
     T: Clone + serde::Serialize + serde::de::DeserializeOwned,

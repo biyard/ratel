@@ -1,6 +1,9 @@
 use crate::common::models::space::{SpaceCommon, SpaceUser};
 use crate::features::spaces::pages::actions::actions::discussion::*;
 use crate::features::spaces::pages::actions::models::SpaceAction;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]

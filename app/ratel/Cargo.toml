@@ -23,14 +23,12 @@ aws-smithy-types = { version = "1", optional = true }
 aws-sdk-dynamodb = { workspace = true, optional = true }
 aws-sdk-dynamodbstreams = { workspace = true, optional = true }
 qdrant-client = { workspace = true, optional = true }
-schemars = { workspace = true, optional = true }
-aide = { workspace = true, optional = true }
 tracing = { workspace = true }
 gloo-timers = { version = "0.3", features = ["futures"], optional = true }
 serde_dynamo = { workspace = true, optional = true }
 base64 = { workspace = true }
 # `js` feature: source of randomness on `wasm32-unknown-unknown` for `Uuid::now_v7()`.
-uuid = { workspace = true, features = ["js"] }
+uuid = { workspace = true }
 chrono = { workspace = true }
 regex = { version = "1" }
 ethers = { version = "=2.0.14", optional = true }
@@ -119,11 +117,10 @@ rmcp = { version = "0.7.0", git = "https://github.com/modelcontextprotocol/rust-
 [features]
 default = ["web", "server", "mobile"]
 bypass = []
-web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2"]
+web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2", "uuid/js"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile", "tokio"]
 server = [
-  "aide",
   "aws-config",
   "aws-credential-types",
   "aws-sdk-bedrockagentruntime",
@@ -149,7 +146,6 @@ server = [
   "random-string",
   "reqwest",
   "ratel-canister",
-  "schemars",
   "serde_dynamo",
   "sha2",
   "aes-gcm",

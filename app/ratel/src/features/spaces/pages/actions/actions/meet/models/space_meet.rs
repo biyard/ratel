@@ -1,6 +1,9 @@
 use crate::common::macros::DynamoEntity;
 use crate::common::utils::time::get_now_timestamp_millis;
 use crate::features::spaces::pages::actions::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Translate)]
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]

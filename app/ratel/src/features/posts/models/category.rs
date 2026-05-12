@@ -1,8 +1,11 @@
 use crate::types::*;
 use crate::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, DynamoEntity, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct Category {
     pub pk: Partition,
     pub sk: EntityType,

@@ -1,8 +1,11 @@
 use crate::common::models::space::SpaceUser;
 use crate::features::spaces::pages::actions::actions::poll::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct VoteVerificationMaterialResponse {
     pub poll_id: String,
     pub voter_tag: String,

@@ -1,4 +1,7 @@
 use crate::common::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Immutable snapshot of a `SubTeamDocument` at a specific version.
 ///
@@ -12,7 +15,7 @@ use crate::common::*;
 /// Sort key encodes `{doc_id}#{version:08}` so a single Dynamo query
 /// can fetch every snapshot of one document in chronological order.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamDocumentVersion {
     pub pk: Partition,  // Partition::Team(team_id) — same parent team
     pub sk: EntityType, // EntityType::SubTeamDocumentVersion(doc_id, padded_version)

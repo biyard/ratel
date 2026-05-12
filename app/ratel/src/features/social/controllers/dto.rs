@@ -1,7 +1,10 @@
 use crate::features::social::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UserResponse {
     pub pk: String,
     pub username: String,
@@ -24,7 +27,7 @@ impl From<crate::features::auth::User> for UserResponse {
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct TeamResponse {
     pub pk: String,
     pub created_at: i64,

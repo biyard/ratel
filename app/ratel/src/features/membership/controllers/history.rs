@@ -3,9 +3,12 @@ use crate::features::auth::User;
 use crate::features::membership::models::{TransactionType, UserPurchase, TeamPurchase};
 use crate::features::membership::*;
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct PurchaseHistoryItem {
     pub tx_type: TransactionType,
     pub amount: i64,

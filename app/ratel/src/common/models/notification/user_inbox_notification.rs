@@ -1,10 +1,13 @@
 use crate::common::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 pub const INBOX_TTL_DAYS: i64 = 90;
 pub const UNREAD_SENTINEL: &str = "R";
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UserInboxNotification {
     #[dynamo(
         prefix = "UIN",

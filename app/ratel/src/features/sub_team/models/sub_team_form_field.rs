@@ -1,12 +1,15 @@
 use crate::common::*;
 use crate::features::sub_team::types::TeamProfileLink;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// A single field in a parent team's customizable application form. The parent
 /// admin can add/remove fields, reorder them, and change required flags.
 /// Changes are NOT retroactively applied to in-flight applications — each
 /// `SubTeamApplication` stores a `form_snapshot` at submit time.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamFormField {
     pub pk: Partition,  // Partition::Team(parent_team_id)
     pub sk: EntityType, // EntityType::SubTeamFormField(field_id)
@@ -43,7 +46,7 @@ pub struct SubTeamFormField {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum SubTeamFormFieldType {
     #[default]
     ShortText,

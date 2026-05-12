@@ -8,13 +8,16 @@
 use std::fmt;
 
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Lifecycle of a saved analyze report. `InProgress` is the initial state
 /// after submit — DynamoDB stream pipelines (LDA / TF-IDF / poll-quiz
 /// aggregation) flip it to `Finish` once analysis completes, or `Failed`
 /// on irrecoverable error.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(rename_all = "snake_case")]
 pub enum AnalyzeReportStatus {
     #[default]
@@ -42,7 +45,7 @@ impl AnalyzeReportStatus {
 /// for quiz, blue for discussion, orange for follow). The lowercase
 /// string from `Display` is what the CSS selector matches.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(rename_all = "snake_case")]
 pub enum AnalyzeFilterSource {
     #[default]
@@ -77,7 +80,7 @@ impl fmt::Display for AnalyzeFilterSource {
 /// are stored verbatim so the detail page can re-run the same matching
 /// logic against live response data without re-deriving anything.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct AnalyzeReportFilter {
     pub source: AnalyzeFilterSource,
     pub source_label: String,
@@ -93,7 +96,7 @@ pub struct AnalyzeReportFilter {
 /// One saved analysis as displayed in the list carousel and returned by
 /// `GET /api/spaces/{space_id}/apps/analyzes/reports`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct AnalyzeReport {
     pub id: String,
     pub name: String,
@@ -110,7 +113,7 @@ pub struct AnalyzeReport {
 /// enum) so the wire format is one stable JSON shape that the
 /// records page can pass through without per-source decoding.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "server", derive(aide::OperationIo, schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct AnalyzeRecordRow {
     pub source: AnalyzeFilterSource,
     pub filter_idx: u32,
@@ -159,7 +162,7 @@ pub struct AnalyzeRecordRow {
 /// chokes on enum variants with named fields. Unused fields per source
 /// stay empty strings; the consumer dispatches on `source`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct MatchedRecordRef {
     pub source: AnalyzeFilterSource,
     pub filter_idx: u32,

@@ -1,12 +1,15 @@
 use super::source_kind::EssenceSourceKind;
 use crate::*;
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Wire-format row in `GET /api/essences`. All fields the client needs to
 /// render a sources-table entry — no quality score and no in-house toggle,
 /// those columns were dropped from the UI.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct EssenceResponse {
     /// Deterministic id derived from the referenced entity's pk+sk. Stable
     /// across reruns so upsert semantics work without a GSI lookup.
@@ -41,7 +44,7 @@ pub struct EssenceResponse {
 /// paginating through every row, and they back the breakdown card
 /// percentages.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct EssenceStatsResponse {
     pub total_sources: i64,
     pub total_words: i64,

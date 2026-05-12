@@ -1,4 +1,7 @@
 use crate::common::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Maximum stored body length (64 KB) — enforced on create / update. Keeps
 /// the DynamoDB item under the 400 KB per-item ceiling with headroom for the
@@ -14,7 +17,7 @@ pub const SUB_TEAM_DOCUMENT_MAX_BODY_BYTES: usize = 64 * 1024;
 /// update we recompute it, which invalidates any in-flight agreements that
 /// were hashed against the previous version.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamDocument {
     pub pk: Partition,  // Partition::Team(team_id) — same team that owns the doc
     pub sk: EntityType, // EntityType::SubTeamDocument(doc_id)

@@ -1,4 +1,7 @@
 use crate::common::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 use std::str::FromStr;
 
 /// Phase 1 cross-posting target platforms (FR-1 #1).
@@ -6,10 +9,8 @@ use std::str::FromStr;
 /// Display impl produces the lowercase identifier used in URLs / DynamoDB
 /// sort-key inners (e.g. `SocialConnection("bluesky")`); FromStr accepts
 /// the same lowercase form. Use `display_name()` for user-facing strings.
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default, strum::Display,
-)]
-#[cfg_attr(feature = "server", derive(JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default, strum::Display)]
 #[serde(rename_all = "lowercase")]
 #[strum(serialize_all = "lowercase")]
 pub enum SocialPlatform {

@@ -8,17 +8,7 @@ use crate::common::utils::time::get_now_timestamp_millis;
 
 use super::SpaceEmailVerification;
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    serde_repr::Serialize_repr,
-    serde_repr::Deserialize_repr,
-    Default,
-    DynamoEnum,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde_repr::Serialize_repr, serde_repr::Deserialize_repr, Default, DynamoEnum)]
 #[repr(u8)]
 pub enum InvitationStatus {
     #[default]

@@ -1,6 +1,9 @@
 // Migrated from packages/main-api/src/controllers/v3/auth/change_account.rs
 use crate::features::auth::models::*;
 use crate::features::auth::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[cfg(feature = "server")]
 use crate::features::auth::utils::sha256_baseurl::sha256_base64url;
@@ -8,7 +11,7 @@ use crate::features::auth::utils::sha256_baseurl::sha256_base64url;
 use crate::features::auth::utils::uuid::sorted_uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(aide::OperationIo, schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct ChangeAccountRequest {
     pub device_id: String,
     pub user_pk: Partition,
@@ -16,7 +19,7 @@ pub struct ChangeAccountRequest {
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct ChangeAccountResponse {
     #[serde(flatten)]
     pub user: User,

@@ -1,9 +1,12 @@
 use std::{fmt::Display, str::FromStr};
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 use crate::common::*;
 
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, SerializeDisplay, DeserializeFromStr, Default, PartialEq, Eq)]
-#[cfg_attr(feature = "server", derive(JsonSchema, OperationIo))]
 pub struct CompositePartition<T = Partition, S = Partition>(pub T, pub S);
 
 impl CompositePartition {

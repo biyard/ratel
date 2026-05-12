@@ -3,9 +3,12 @@ use crate::features::posts::*;
 use crate::features::auth::User;
 
 use super::{Post, PostCommentLike};
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct PostComment {
     pub pk: Partition,
     #[dynamo(index = "gsi1", sk)]

@@ -1,6 +1,10 @@
 pub mod macros;
 pub mod setup;
 
+// Re-export axum so test files can use `axum::Router`, `axum::http::...`
+// after `use super::*;` without each declaring its own `use crate::axum;`.
+pub use crate::axum;
+
 mod cross_posting_tests;
 mod discussion_tests;
 mod home_tests;

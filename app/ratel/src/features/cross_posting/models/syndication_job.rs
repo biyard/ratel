@@ -1,5 +1,8 @@
 use crate::common::*;
 use crate::features::cross_posting::types::SocialPlatform;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Number of shards used for sweeper-Query parallelism on `dispatch_shard` /
 /// `engagement_shard` GSIs. **Implementation-fixed; do not change without a
@@ -21,7 +24,7 @@ pub const LOCK_TTL_SEC: i64 = 60;
 /// Design doc: docs/superpowers/specs/2026-04-28-cross-posting-design.md
 /// (`SyndicationJob` section). FR-5 #29–#34, FR-6 #39, FR-7 #45.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SyndicationJob {
     #[dynamo(prefix = "SJ", pk)]
     pub pk: Partition, // Feed(post_id)
@@ -100,8 +103,8 @@ pub struct SyndicationJob {
     pub updated_at: i64,
 }
 
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, strum::Display)]
-#[cfg_attr(feature = "server", derive(JsonSchema))]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 pub enum JobState {
@@ -114,8 +117,8 @@ pub enum JobState {
     Skipped,
 }
 
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, strum::Display)]
-#[cfg_attr(feature = "server", derive(JsonSchema))]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 pub enum ErrorCategory {

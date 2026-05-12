@@ -11,17 +11,7 @@ However, after the change, the relationship is now 1:1, so this Enum is not need
 
 If the relationship needs to be changed back to 1:N in the future, please utilize the field below.
  */
-#[derive(
-    Debug,
-    Clone,
-    DynamoEnum,
-    SerializeDisplay,
-    DeserializeFromStr,
-    Eq,
-    PartialEq,
-    Default,
-    Translate,
-)]
+#[derive(Debug, Clone, DynamoEnum, SerializeDisplay, DeserializeFromStr, Eq, PartialEq, Default, Translate)]
 pub enum RewardUserBehavior {
     #[default]
     #[translate(en = "Poll Response", ko = "투표 응답")]

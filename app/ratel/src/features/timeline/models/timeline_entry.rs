@@ -1,8 +1,11 @@
 use crate::features::timeline::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Reason why a post appeared in someone's timeline.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum TimelineReason {
     /// Author posted it and you follow them
     #[default]
@@ -49,7 +52,7 @@ pub const TIMELINE_CATEGORIES: &[TimelineReason] = &[
 ];
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct TimelineEntry {
     pub pk: Partition,  // TIMELINE#{user_id}
     pub sk: EntityType, // TIMELINE_ENTRY#{timestamp}#{post_pk_inner}

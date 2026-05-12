@@ -41,17 +41,7 @@ pub fn Button(
     }
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    DeserializeFromStr,
-    SerializeDisplay,
-    strum::Display,
-    strum::EnumString,
-    Default,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, DeserializeFromStr, SerializeDisplay, strum::Display, strum::EnumString, Default)]
 pub enum ButtonShape {
     #[default]
     #[strum(serialize = "rounded-full")]
@@ -60,17 +50,7 @@ pub enum ButtonShape {
     Square,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    DeserializeFromStr,
-    SerializeDisplay,
-    strum::Display,
-    strum::EnumString,
-    Default,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, DeserializeFromStr, SerializeDisplay, strum::Display, strum::EnumString, Default)]
 pub enum ButtonSize {
     #[default]
     #[strum(serialize = "py-3 px-5 text-[14px]/[16px] font-bold")]
@@ -86,17 +66,7 @@ pub enum ButtonSize {
     Small,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    DeserializeFromStr,
-    SerializeDisplay,
-    strum::Display,
-    strum::EnumString,
-    Default,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, DeserializeFromStr, SerializeDisplay, strum::Display, strum::EnumString, Default)]
 pub enum ButtonStyle {
     #[default]
     #[strum(

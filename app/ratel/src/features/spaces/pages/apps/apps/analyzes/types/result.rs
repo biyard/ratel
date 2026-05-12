@@ -19,13 +19,14 @@
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "server")]
-use schemars::JsonSchema;
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Per-option tally for a poll/quiz question. The order in
 /// `option_labels` is preserved from the underlying question — index
 /// `i` in `count` corresponds to `option_labels[i]`.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(JsonSchema))]
 pub struct OptionTally {
     pub label: String,
     pub count: u32,
@@ -35,8 +36,8 @@ pub struct OptionTally {
 /// answered. `respondent_count` is how many matched users responded to
 /// THIS specific question (not the whole poll), so percentages should
 /// always be computed against this denominator on the client.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(JsonSchema))]
 pub struct PollQuestionAggregate {
     pub poll_id: String,
     pub poll_title: String,
@@ -52,8 +53,8 @@ pub struct PollQuestionAggregate {
 
 /// Same shape as `PollQuestionAggregate` plus the correct option index
 /// set so the panel can paint correct/incorrect bars.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(JsonSchema))]
 pub struct QuizQuestionAggregate {
     pub quiz_id: String,
     pub quiz_title: String,
@@ -74,8 +75,8 @@ pub struct QuizQuestionAggregate {
 /// Top-N follow targets among the report's matched users, ordered by
 /// count descending. `count` is "how many of the matched users follow
 /// this target".
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(JsonSchema))]
 pub struct FollowTargetAggregate {
     pub user_pk: String,
     pub display_name: String,
@@ -88,8 +89,8 @@ pub struct FollowTargetAggregate {
 
 /// One LDA topic row for the result panel. Topic indices are 1-based
 /// in the label (`토픽_1`) for direct rendering parity with the mock.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(JsonSchema))]
 pub struct TopicRow {
     pub topic: String,
     /// Top-N keywords for this topic, joined into a single comma-sep
@@ -101,8 +102,8 @@ pub struct TopicRow {
 /// One TF-IDF row. `score` is the raw TF-IDF weight summed across the
 /// matched-user discussion corpus; `relative` is `score / max_score`
 /// (already normalised) so the bar widths are direct percentages.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(JsonSchema))]
 pub struct TermScore {
     pub term: String,
     pub score: f64,
@@ -110,16 +111,16 @@ pub struct TermScore {
 }
 
 /// Co-occurrence graph node. `weight` is term frequency in the corpus.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(JsonSchema))]
 pub struct NetworkNode {
     pub term: String,
     pub weight: u32,
 }
 
 /// Co-occurrence graph edge between two nodes.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(JsonSchema))]
 pub struct NetworkEdge {
     pub source: String,
     pub target: String,
@@ -128,8 +129,8 @@ pub struct NetworkEdge {
 
 /// User-supplied parameters for the discussion analysis run. Mirrors
 /// the four inputs in the detail page's "분석 설정" form.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(JsonSchema))]
 pub struct DiscussionAnalysisParams {
     /// Number of LDA topics. Bound 1..=20 on the form.
     pub num_topics: usize,

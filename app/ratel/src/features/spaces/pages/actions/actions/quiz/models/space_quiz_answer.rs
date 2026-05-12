@@ -2,9 +2,12 @@ use crate::common::utils::time::get_now_timestamp_millis;
 
 use crate::features::spaces::pages::actions::actions::quiz::*;
 use crate::features::spaces::pages::actions::actions::quiz::macros::DynamoEntity;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SpaceQuizAnswer {
     pub pk: Partition,
     pub sk: EntityType,

@@ -2,17 +2,20 @@
 use crate::features::auth::models::*;
 use crate::features::auth::*;
 #[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
+#[cfg(feature = "server")]
 use std::collections::HashSet;
 
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(aide::OperationIo, schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct ListAccountsQueryParams {
     pub device_id: String,
     pub bookmark: Option<String>,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct AccountItem {
     pub user_pk: Partition,
     pub display_name: String,
@@ -24,7 +27,7 @@ pub struct AccountItem {
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct ListAccountsResponse {
     pub items: Vec<AccountItem>,
     pub bookmark: Option<String>,

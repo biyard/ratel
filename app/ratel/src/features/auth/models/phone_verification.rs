@@ -1,8 +1,11 @@
 // Migrated from packages/main-api/src/models/dynamo_tables/main/phone/phone_verification.rs
 use crate::features::auth::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct PhoneVerification {
     pub pk: Partition,
     pub sk: EntityType,
