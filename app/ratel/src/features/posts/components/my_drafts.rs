@@ -51,7 +51,12 @@ pub fn MyDrafts() -> Element {
                 {
                     let post_pk_for_nav = post.pk.clone();
                     let post_pk_for_delete = post.pk.clone();
-                    let contents_preview: String = post.body.to_plain_text().chars().take(200).collect();
+                    let contents_preview: String = post
+                        .body
+                        .to_plain_text()
+                        .chars()
+                        .take(200)
+                        .collect();
                     rsx! {
                         div {
                             key: "{post.pk}",
@@ -149,7 +154,12 @@ pub fn TeamDrafts(username: String) -> Element {
                 {
                     let post_pk_for_nav = post.pk.clone();
                     let post_pk_for_delete = post.pk.clone();
-                    let contents_preview: String = post.body.to_plain_text().chars().take(200).collect();
+                    let contents_preview: String = post
+                        .body
+                        .to_plain_text()
+                        .chars()
+                        .take(200)
+                        .collect();
                     rsx! {
                         div {
                             key: "{post.pk}",

@@ -144,7 +144,7 @@ pub fn DraftScrollRow(
                                         nav.push(format!("/posts/{post_pk}/edit"));
                                     },
                                     button {
-                                        class: "absolute top-2 right-2 p-1.5 rounded-full transition-opacity cursor-pointer opacity-60 group-hover:opacity-100 z-[10] hover:bg-destructive/10",
+                                        class: "absolute top-2 right-2 p-1.5 rounded-full opacity-60 transition-opacity cursor-pointer group-hover:opacity-100 z-[10] hover:bg-destructive/10",
                                         aria_label: "Delete draft",
                                         onclick: move |e: MouseEvent| {
                                             e.stop_propagation();
@@ -180,7 +180,7 @@ pub fn DraftScrollRow(
                                         icons::edit::Delete2 {
                                             width: "18",
                                             height: "18",
-                                            class: "[&>path]:stroke-icon-primary hover:[&>path]:stroke-destructive [&>path]:fill-transparent",
+                                            class: "[&>path]:stroke-icon-primary [&>path]:fill-transparent hover:[&>path]:stroke-destructive",
                                         }
                                     }
                                     Col { class: "gap-2 px-5 w-full",
@@ -282,7 +282,7 @@ fn DeleteDraftConfirmation(
     let tr: DraftTimelineTranslate = use_translate();
 
     rsx! {
-        div { class: "flex flex-col w-[400px] max-w-full gap-6",
+        div { class: "flex flex-col gap-6 max-w-full w-[400px]",
             div { class: "flex flex-col gap-2",
                 div { class: "text-lg font-bold text-center text-text-primary",
                     "{tr.delete_draft_title}"

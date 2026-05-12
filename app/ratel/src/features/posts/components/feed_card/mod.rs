@@ -114,8 +114,8 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
 
     rsx! {
         div { class: "flex flex-col pt-5 pb-5",
-            div { class: "flex min-h-8 flex-row justify-between px-5",
-                div { class: "flex h-8 flex-row items-center",
+            div { class: "flex flex-row justify-between px-5 min-h-8",
+                div { class: "flex flex-row items-center h-8",
                     if space_pk.is_some() {
                         SpaceTag {}
                     } else {
@@ -132,11 +132,11 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
                     }
                 }
             }
-            h2 { class: "mt-2 px-5 w-full truncate font-bold align-middle text-xl/[25px] tracking-[0.5px] text-text-primary",
+            h2 { class: "px-5 mt-2 w-full font-bold align-middle truncate text-xl/[25px] tracking-[0.5px] text-text-primary",
                 {title}
             }
             FeedContents { contents: preview, urls }
-            div { class: "mt-4 flex flex-row justify-between items-center px-5",
+            div { class: "flex flex-row justify-between items-center px-5 mt-4",
                 UserBadge {
                     profile_url: author_profile_url,
                     name: author_display_name,
@@ -156,7 +156,7 @@ pub fn FeedContents(contents: String, urls: Vec<String>) -> Element {
     rsx! {
         div { class: "px-5 mt-2 break-all text-desc-text",
             div {
-                class: "border-none truncate whitespace-nowrap",
+                class: "whitespace-nowrap border-none truncate",
                 style: "min-height: 22px; max-height: 22px; overflow: hidden;",
                 "{contents}"
             }
