@@ -31836,8 +31836,12 @@ body.comments-panel-resizing {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-width: 760px;
-  flex: 1 1 480px;
+  /* Mockup constrained the copy to ~760px, but the page container is
+   * 1300px wide so we let the header span the full width on desktop.
+   * Narrow viewports still wrap naturally because the flex parent
+   * lays it out as a column on mobile. */
+  flex: 1 1 auto;
+  width: 100%;
 }
 .sub-team-bylaws .page-header__actions {
   display: flex;
@@ -31968,7 +31972,7 @@ body.comments-panel-resizing {
 }
 
 .sub-team-bylaws .page {
-  max-width: 1200px;
+  max-width: 1300px;
   margin: 0 auto;
   padding: 24px 20px 80px;
   display: flex;

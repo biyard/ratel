@@ -41,6 +41,14 @@ pub fn ParentHudPanel() -> Element {
     let rel = relationship();
     let status = rel.status;
 
+    // Hide the parent HUD entirely when this team is standalone — a
+    // 상위팀 doesn't have a parent of its own, so the graduation cap
+    // (which represents the relationship with a parent) has nothing
+    // to show. Recognized / Pending sub-teams keep the icon.
+    if matches!(status, ParentRelationshipStatus::Standalone) {
+        return rsx! {};
+    }
+
     let mut open: Signal<bool> = use_signal(|| false);
 
     let badge_state = match status {
