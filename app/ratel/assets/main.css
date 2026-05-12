@@ -31759,18 +31759,329 @@ body.comments-panel-resizing {
   --sub-team-border: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(0, 0, 0, 0.08));
   --sub-team-text: var(--dark, #f0f0f5) var(--light, #12121a);
   --sub-team-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+  --sub-team-dim: var(--dark, #55556a) var(--light, #9595a8);
+  --sub-team-gold: #fcb300;
+  --sub-team-teal: #6eedd8;
   --sub-team-coral: #ef4444;
+  --sub-team-green: #22c55e;
+  --sub-team-amber: #f59e0b;
+  --sub-team-purple: #a855f7;
   --sub-team-input-bg: var(--dark, rgba(255, 255, 255, 0.025)) var(--light, rgba(0, 0, 0, 0.03));
 
   background: var(--sub-team-bg);
   color: var(--sub-team-text);
-  min-height: 100vh;
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-self: flex-start;
+}
+
+/* ── Topbar (mockup brand row) ───────────────────────────────── */
+.sub-team-deregister .arena-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  padding: 18px 28px;
+  background: var(--sub-team-glass);
+  border-bottom: 1px solid var(--sub-team-border);
+}
+.sub-team-deregister .arena-topbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.sub-team-deregister .brand-home {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--sub-team-border);
+  color: var(--sub-team-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+.sub-team-deregister .brand-home__divider {
+  width: 1px;
+  height: 22px;
+  background: var(--sub-team-border);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+.sub-team-deregister .arena-topbar__logo--parent {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  background: rgba(252, 179, 0, 0.10);
+  border: 1px solid rgba(252, 179, 0, 0.28);
+  color: var(--sub-team-gold);
+  flex-shrink: 0;
+}
+.sub-team-deregister .arena-topbar__title--parent {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--sub-team-text);
+}
+.sub-team-deregister .arena-topbar__handle {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sub-team-dim);
+}
+.sub-team-deregister .u-col {
+  display: flex;
+  flex-direction: column;
+}
+.sub-team-deregister .arena-topbar__status {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid;
+}
+.sub-team-deregister .arena-topbar__status--danger {
+  background: rgba(239, 68, 68, 0.10);
+  color: var(--sub-team-coral);
+  border-color: rgba(239, 68, 68, 0.30);
 }
 
 .sub-team-deregister .page {
-  max-width: 720px;
+  max-width: 760px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 28px 20px 80px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ── Context card (sub-team being deregistered) ──────────────── */
+.sub-team-deregister .context {
+  padding: 18px 22px;
+  border-radius: 16px;
+  background: var(--sub-team-glass);
+  border: 1px solid var(--sub-team-border);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.sub-team-deregister .avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.sub-team-deregister .avatar--lg { width: 56px; height: 56px; font-size: 16px; }
+.sub-team-deregister .avatar--purple {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.32), rgba(168, 85, 247, 0.10));
+  border: 1px solid rgba(168, 85, 247, 0.30);
+  color: var(--sub-team-purple);
+}
+.sub-team-deregister .context__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.sub-team-deregister .context__name {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--sub-team-text);
+}
+.sub-team-deregister .context__handle {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 10px;
+  color: var(--sub-team-muted);
+  letter-spacing: 0.06em;
+}
+.sub-team-deregister .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid;
+}
+.sub-team-deregister .pill--approved {
+  background: rgba(34, 197, 94, 0.10);
+  color: var(--sub-team-green);
+  border-color: rgba(34, 197, 94, 0.28);
+}
+
+/* ── Dereg head sub-paragraph ────────────────────────────────── */
+.sub-team-deregister .dereg__sub {
+  font-size: 13px;
+  color: var(--sub-team-muted);
+  margin-top: 4px;
+  line-height: 1.55;
+}
+.sub-team-deregister .dereg__sub strong {
+  color: var(--sub-team-text);
+  font-weight: 700;
+}
+
+/* ── Consequences list ───────────────────────────────────────── */
+.sub-team-deregister .consequences {
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: var(--dark, rgba(6, 6, 14, 0.45)) var(--light, rgba(0, 0, 0, 0.025));
+  border: 1px solid var(--sub-team-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sub-team-deregister .consequences__title {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sub-team-muted);
+}
+.sub-team-deregister .consequences__item {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--sub-team-text);
+  line-height: 1.55;
+}
+.sub-team-deregister .consequences__item svg {
+  color: var(--sub-team-green);
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.sub-team-deregister .consequences__item strong {
+  color: var(--sub-team-gold);
+  font-weight: 700;
+}
+.sub-team-deregister .consequences__item--warn svg {
+  color: var(--sub-team-amber);
+}
+
+/* ── Notification preview card ───────────────────────────────── */
+.sub-team-deregister .notif-preview {
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: var(--dark, rgba(252, 179, 0, 0.04)) var(--light, rgba(252, 179, 0, 0.04));
+  border: 1px solid rgba(252, 179, 0, 0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sub-team-deregister .notif-preview__label {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sub-team-gold);
+}
+.sub-team-deregister .notif-preview__body {
+  display: flex;
+  gap: 12px;
+}
+.sub-team-deregister .notif-preview__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  background: rgba(252, 179, 0, 0.12);
+  border: 1px solid rgba(252, 179, 0, 0.28);
+  color: var(--sub-team-gold);
+  flex-shrink: 0;
+}
+.sub-team-deregister .notif-preview__content {
+  flex: 1;
+  min-width: 0;
+}
+.sub-team-deregister .notif-preview__title {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sub-team-text);
+  margin-bottom: 4px;
+}
+.sub-team-deregister .notif-preview__title em {
+  color: var(--sub-team-gold);
+  font-style: normal;
+}
+.sub-team-deregister .notif-preview__text {
+  font-size: 12px;
+  color: var(--sub-team-text);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.sub-team-deregister .notif-preview__text--placeholder {
+  color: var(--sub-team-dim);
+  font-style: italic;
+}
+
+/* ── Checkbox label hint ──────────────────────────────────────── */
+.sub-team-deregister .checkbox__hint {
+  display: block;
+  font-size: 11px;
+  color: var(--sub-team-muted);
+  font-weight: 400;
+  margin-top: 4px;
+}
+
+/* ── Actions row ──────────────────────────────────────────────── */
+.sub-team-deregister .dereg__actions {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+@media (max-width: 500px) {
+  .sub-team-deregister .arena-topbar { padding: 12px 14px; }
+  .sub-team-deregister .arena-topbar__brand { gap: 8px; flex-wrap: wrap; }
+  .sub-team-deregister .brand-home__divider { display: none; }
+  .sub-team-deregister .page { padding: 16px 14px 60px; gap: 14px; }
+  .sub-team-deregister .dereg { padding: 20px 16px; }
+  .sub-team-deregister .context { flex-direction: column; align-items: flex-start; }
+  .sub-team-deregister .dereg__actions { flex-direction: column-reverse; align-items: stretch; }
+  .sub-team-deregister .dereg__actions .btn { justify-content: center; }
 }
 
 .sub-team-deregister .dereg {
@@ -31832,16 +32143,57 @@ body.comments-panel-resizing {
 }
 .sub-team-deregister .req { color: var(--sub-team-coral); }
 
+/* The global `.checkbox` primitive (`src/common/components/checkbox/`)
+ * sizes itself to 1rem × 1rem and paints an inset box-shadow + filled
+ * background. When the same class is reused as our custom *label*
+ * wrapper, those rules leak through and squash the entire row to
+ * 16×16, forcing the label text to wrap one word per line. Cancel
+ * every piece of the primitive's box, then lay the label out as a
+ * full-width flex row so the text fills the remaining space. Mirrors
+ * the working fix on `.sub-team-leave-parent .checkbox`. */
 .sub-team-deregister .checkbox {
-  display: inline-flex;
+  position: relative;
+  display: flex;
   align-items: flex-start;
   gap: 10px;
+  width: 100%;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  background-color: transparent;
+  box-shadow: none;
+  border: 0;
+  border-radius: 0;
   cursor: pointer;
 }
-.sub-team-deregister .checkbox input {
+.sub-team-deregister .checkbox[data-state="checked"] {
+  background-color: transparent;
+  box-shadow: none;
+  color: inherit;
+}
+/* Visually hide the native input so the browser's default checkbox
+ * glyph never leaks through — only `.checkbox__box` is visible. */
+.sub-team-deregister .checkbox input[type="checkbox"] {
   position: absolute;
+  inset: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
   opacity: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
   pointer-events: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.sub-team-deregister .checkbox__label {
+  min-width: 0;
+  flex: 1;
 }
 .sub-team-deregister .checkbox__box {
   width: 20px;
@@ -31913,20 +32265,122 @@ body.comments-panel-resizing {
   --sub-team-cyan: #22d3ee;
   --sub-team-violet: #818cf8;
   --sub-team-coral: #ef4444;
+  --sub-team-amber: #f59e0b;
+  --sub-team-purple: #a855f7;
   --sub-team-input-bg: var(--dark, rgba(255, 255, 255, 0.025)) var(--light, rgba(0, 0, 0, 0.03));
 
+  /* Detail page now lives OUTSIDE TeamArenaLayout, so it owns its own
+   * background + scroll container. Per `feedback_arena_page_scroll.md`,
+   * each page-scoped scroll wrapper must set explicit height + overflow
+   * because `body` is `overflow:hidden; height:100dvh` globally. */
   background: var(--sub-team-bg);
   color: var(--sub-team-text);
-  min-height: 100vh;
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-self: flex-start;
+}
+
+/* ── Topbar (mockup `arena-topbar__brand` row) ──────────────────── */
+.sub-team-detail .arena-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  padding: 18px 28px;
+  background: var(--sub-team-glass);
+  border-bottom: 1px solid var(--sub-team-border);
+}
+.sub-team-detail .arena-topbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.sub-team-detail .brand-home {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--sub-team-border);
+  color: var(--sub-team-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.sub-team-detail .brand-home__divider {
+  width: 1px;
+  height: 22px;
+  background: var(--sub-team-border);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+.sub-team-detail .arena-topbar__logo--child {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  background: rgba(110, 237, 216, 0.10);
+  border: 1px solid rgba(110, 237, 216, 0.25);
+  color: var(--sub-team-teal);
+  flex-shrink: 0;
+}
+.sub-team-detail .arena-topbar__title--child {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--sub-team-text);
+}
+.sub-team-detail .arena-topbar__handle {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sub-team-dim);
+}
+.sub-team-detail .u-col {
+  display: flex;
+  flex-direction: column;
+}
+.sub-team-detail .arena-topbar__status {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid;
+}
+.sub-team-detail .arena-topbar__status--active {
+  background: rgba(34, 197, 94, 0.10);
+  color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.30);
 }
 
 .sub-team-detail .page {
-  max-width: 1200px;
+  width: 100%;
+  max-width: 1300px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 24px 28px 80px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-sizing: border-box;
+  align-self: center;
 }
 
 .sub-team-detail .team-hero {
@@ -32023,6 +32477,125 @@ body.comments-panel-resizing {
   font-size: 24px;
   font-weight: 800;
   color: var(--sub-team-text);
+}
+.sub-team-detail .metric__delta {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--sub-team-dim);
+  margin-top: 6px;
+}
+.sub-team-detail .metric--posts .metric__label { color: var(--sub-team-cyan); }
+.sub-team-detail .metric--spaces .metric__label { color: var(--sub-team-violet); }
+.sub-team-detail .metric--members .metric__label { color: var(--sub-team-teal); }
+.sub-team-detail .metric--growth .metric__label { color: var(--sub-team-gold); }
+
+/* ── Trend chart card ──────────────────────────────────────────── */
+.sub-team-detail .trend {
+  padding: 18px 20px 14px;
+  border-radius: 14px;
+  background: var(--sub-team-glass);
+  border: 1px solid var(--sub-team-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sub-team-detail .trend__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sub-team-detail .trend__title {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sub-team-text);
+}
+.sub-team-detail .trend__legend {
+  display: flex;
+  gap: 14px;
+}
+.sub-team-detail .trend__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 10px;
+  color: var(--sub-team-muted);
+  letter-spacing: 0.06em;
+}
+.sub-team-detail .trend__legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.sub-team-detail .trend__legend-dot--posts {
+  background: var(--sub-team-cyan);
+  box-shadow: 0 0 6px var(--sub-team-cyan);
+}
+.sub-team-detail .trend__legend-dot--members {
+  background: var(--sub-team-teal);
+  box-shadow: 0 0 6px var(--sub-team-teal);
+}
+.sub-team-detail .trend__chart {
+  width: 100%;
+  height: 120px;
+}
+.sub-team-detail .trend__svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ── Member search row ─────────────────────────────────────────── */
+.sub-team-detail .member-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.sub-team-detail .member-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 9px;
+  background: var(--sub-team-input-bg);
+  border: 1px solid var(--sub-team-border);
+  flex: 1;
+  min-width: 0;
+}
+.sub-team-detail .member-search__icon {
+  color: var(--sub-team-dim);
+  display: inline-flex;
+  align-items: center;
+}
+.sub-team-detail .member-search__input {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--sub-team-text);
+  font-size: 12px;
+  outline: none;
+}
+.sub-team-detail .member-search__input::placeholder {
+  color: var(--sub-team-dim);
+}
+.sub-team-detail .member-sort {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--sub-team-dim);
+}
+
+/* Danger zone card title gradient → solid coral */
+.sub-team-detail .card__title--danger {
+  color: var(--sub-team-coral);
 }
 
 .sub-team-detail .card {
@@ -32213,6 +32786,108 @@ body.comments-panel-resizing {
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--sub-team-border);
+}
+
+/* Mobile (≤500px): tighten paddings, stack hero, allow table to scroll
+ * horizontally so the four columns don't squash, shrink topbar chrome. */
+@media (max-width: 500px) {
+  .sub-team-detail .arena-topbar {
+    padding: 10px 12px;
+  }
+  .sub-team-detail .arena-topbar__brand {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .sub-team-detail .arena-topbar__logo--child {
+    width: 32px;
+    height: 32px;
+    font-size: 11px;
+  }
+  .sub-team-detail .arena-topbar__title--child {
+    font-size: 13px;
+  }
+  .sub-team-detail .arena-topbar__handle {
+    font-size: 10px;
+  }
+  .sub-team-detail .arena-topbar__status {
+    padding: 3px 8px;
+    font-size: 9px;
+  }
+  .sub-team-detail .page {
+    padding: 14px 12px 60px;
+    gap: 12px;
+  }
+  .sub-team-detail .team-hero {
+    padding: 16px;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+  }
+  .sub-team-detail .team-hero__title {
+    font-size: 18px;
+  }
+  .sub-team-detail .avatar--lg {
+    width: 44px;
+    height: 44px;
+    font-size: 14px;
+  }
+  .sub-team-detail .metric {
+    padding: 12px 14px;
+  }
+  .sub-team-detail .metric__value {
+    font-size: 20px;
+  }
+  .sub-team-detail .notice {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .sub-team-detail .notice__text {
+    font-size: 12px;
+  }
+  .sub-team-detail .card {
+    padding: 14px;
+  }
+  .sub-team-detail .member-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .sub-team-detail .member-search {
+    width: 100%;
+  }
+  .sub-team-detail .member-search__input {
+    width: 100%;
+  }
+  /* Horizontal scroll for the activity table — keep the four-column
+   * layout intact instead of crushing it. */
+  .sub-team-detail .member-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+  .sub-team-detail .member-table thead,
+  .sub-team-detail .member-table tbody,
+  .sub-team-detail .member-table tr {
+    display: table;
+    width: 100%;
+    table-layout: auto;
+  }
+  .sub-team-detail .member-table thead th,
+  .sub-team-detail .member-table tbody td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .sub-team-detail .member-handle {
+    gap: 8px;
+  }
+  .sub-team-detail .danger-zone {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+  .sub-team-detail .danger-zone__icon {
+    width: 36px;
+    height: 36px;
+  }
 }
 
 

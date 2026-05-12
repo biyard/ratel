@@ -163,6 +163,8 @@ pub enum Route {
             TeamSubTeamApplicationStatusPage { username: String },
             #[route("/parent/leave")]
             TeamLeaveParentPage { username: String },
+            #[route("/sub-teams/:sub_team_id/deregister")]
+            TeamSubTeamDeregisterPage { username: String, sub_team_id: String },
             #[layout(SocialLayout)]
                 #[route("/")]
                 SocialIndex { username: String },
@@ -197,13 +199,17 @@ pub enum Route {
                 // controller hooks.
                 #[route("/sub-teams/manage")]
                 TeamSubTeamManagementPage { username: String },
-                #[route("/sub-teams/:sub_team_id")]
-                TeamSubTeamDetailPage { username: String, sub_team_id: String },
-                #[route("/sub-teams/:sub_team_id/deregister")]
-                TeamSubTeamDeregisterPage { username: String, sub_team_id: String },
                 #[route("/bylaws")]
                 TeamBylawsPage { username: String },
             #[end_layout]
+
+            // Sub-team detail — declared AFTER the layout block so the
+            // dioxus router matches the more specific `/sub-teams/manage`
+            // (inside the layout) before falling back to this wildcard.
+            // The page itself lives OUTSIDE SocialLayout so it owns its
+            // own topbar.
+            #[route("/sub-teams/:sub_team_id")]
+            TeamSubTeamDetailPage { username: String, sub_team_id: String },
         #[end_nest]
 
         #[nest("/spaces/:space_id")]

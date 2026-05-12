@@ -57,11 +57,24 @@ pub async fn deregister_sub_team_handler(
     // 2. Transact-write: delete link + clear child parent_team_id.
     detach_sub_team_link(cli, &team.pk, &child_pk, &sub_team_id).await?;
 
-    // 3. Notify former sub-team admins.
+    // 3. Cancel every application the (now former) sub-team submitted to
+    //    this parent. Without this an Approved application row lingers
+    //    on the child's status page and shows "이미 등록되어 있음" even
+    //    though the parent just removed them. Mirrors the same logic in
+    //    `leave_parent_handler`.
     let former_parent_team_id = match &team.pk {
         Partition::Team(id) => id.clone(),
         _ => String::new(),
     };
+    if !former_parent_team_id.is_empty() {
+        if let Err(e) =
+            cancel_applications_for_parent(cli, &child_pk, &former_parent_team_id).await
+        {
+            crate::error!("deregister_sub_team: cancel applications failed: {e:?}");
+        }
+    }
+
+    // 4. Notify former sub-team admins.
     let former_parent_team_name = team.display_name.clone();
     let reason = body.reason.clone();
     let cta_url = build_sub_team_parent_url(&sub_team_id);

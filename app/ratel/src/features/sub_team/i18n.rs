@@ -263,6 +263,30 @@ translate! {
         en: "Private posts not included",
         ko: "Private 미포함 공지",
     },
+    growth_score: { en: "Growth score", ko: "성장 점수" },
+    growth_score_placeholder: { en: "—", ko: "—" },
+    growth_score_meta: { en: "Not available yet", ko: "아직 집계 전" },
+    trend_title_weekly: { en: "Activity trend · Weekly", ko: "활동 추이 · 주간" },
+    trend_title_monthly: { en: "Activity trend · Monthly", ko: "활동 추이 · 월간" },
+    trend_legend_posts: { en: "Posts", ko: "포스트" },
+    trend_legend_members: { en: "Active members", ko: "활성 멤버" },
+    member_search_placeholder: { en: "Search by handle…", ko: "핸들 검색…" },
+    member_sort_active: { en: "Sort: most active", ko: "정렬: 활동 많은 순" },
+    per_member_activity: { en: "Per-member activity", ko: "멤버별 활동" },
+    direct_announce_title: {
+        en: "Direct announcement",
+        ko: "이 하위팀에만 공지",
+    },
+    direct_announce_placeholder: {
+        en: "Write a private announcement for this sub-team only…",
+        ko: "이 하위팀에만 보낼 공지를 작성하세요…",
+    },
+    direct_announce_send: { en: "Send", ko: "발송" },
+    danger_zone: { en: "Danger zone", ko: "위험 영역" },
+    member_handle_header: { en: "Handle", ko: "멤버" },
+    member_posts_header: { en: "Posts", ko: "포스트" },
+    member_spaces_header: { en: "Spaces", ko: "스페이스" },
+    member_last_active_header: { en: "Last active", ko: "최근 활동" },
 
     // Generic actions / states
     save: { en: "Save", ko: "저장" },
@@ -274,7 +298,71 @@ translate! {
     // Deregister / leave prompts
     deregister_title: { en: "Deregister sub-team", ko: "하위팀 등록 해제" },
     deregister_reason: { en: "Reason", ko: "사유" },
-    deregister_confirm: { en: "Deregister", ko: "해제" },
+    deregister_confirm: { en: "Deregister", ko: "해제 확정" },
+    deregister_status_chip: { en: "Danger action", ko: "위험한 조작" },
+    deregister_eyebrow: { en: "Deregister sub-team", ko: "하위팀 등록 해제" },
+    deregister_header_title_prefix: { en: "Deregister ", ko: "" },
+    deregister_header_title_suffix: {
+        en: " from this parent team",
+        ko: "의 등록을 해제합니다",
+    },
+    deregister_header_sub: {
+        en: "This only removes the parent-child link. The team keeps running standalone — the parent cannot edit or delete its content.",
+        ko: "이 동작은 부모-자식 관계만 해제합니다. 동아리 자체는 독립 팀으로 계속 운영됩니다. 학과는 이 동아리의 콘텐츠를 수정하거나 삭제할 수 없습니다.",
+    },
+    deregister_consequences_title: {
+        en: "What happens after deregister?",
+        ko: "해제 후 어떻게 됩니까?",
+    },
+    deregister_consequence_unlink: {
+        en: "The sub-team's parent_team_id is cleared and it becomes a standalone team.",
+        ko: "하위팀의 parent_team_id가 제거되어 독립 팀으로 전환됩니다.",
+    },
+    deregister_consequence_notify: {
+        en: "Sub-team admins receive a deregister notification with the reason you write below.",
+        ko: "하위팀 admin은 해제 알림과 사유를 전달받습니다.",
+    },
+    deregister_consequence_demote: {
+        en: "Past announcements you sent become normal posts and stay in the team's space.",
+        ko: "이전에 발송한 공지들은 일반 게시물로 강등되어 팀 스페이스에 남아 있습니다.",
+    },
+    deregister_consequence_content: {
+        en: "The team's members, posts, and spaces are NOT affected.",
+        ko: "동아리의 멤버, 게시물, 스페이스는 전혀 영향을 받지 않습니다.",
+    },
+    deregister_consequence_reapply: {
+        en: "Re-recognition requires a brand-new application.",
+        ko: "향후 이 동아리가 다시 인증을 받으려면 정식 신청 절차를 거쳐야 합니다.",
+    },
+    deregister_reason_placeholder: {
+        en: "Explain why you're deregistering — this is delivered verbatim to the sub-team admin.",
+        ko: "예: 최근 3개월 간 정기 활동이 확인되지 않았고, 지도교수 변경 사항 공지도 누락되었습니다. 동아리 활성화 후 재신청해주시면 환영합니다.",
+    },
+    deregister_reason_hint: {
+        en: "Sent verbatim to the sub-team admins and permanently logged with the deregister record.",
+        ko: "이 메시지는 동아리 admin에게 그대로 전달되며, 해제 기록에 영구 보관됩니다.",
+    },
+    deregister_notif_preview_label: {
+        en: "Notification preview · what the sub-team admin will receive",
+        ko: "알림 미리보기 · 하위팀 admin이 받을 알림",
+    },
+    deregister_notif_preview_title_prefix: { en: "", ko: "" },
+    deregister_notif_preview_title_suffix: {
+        en: " has deregistered your team",
+        ko: "에서 팀 등록을 해제했습니다",
+    },
+    deregister_notif_preview_empty: {
+        en: "Your reason will appear here as you type.",
+        ko: "해제 사유가 여기에 표시됩니다 — 왼쪽 텍스트 영역에 입력한 내용이 실시간으로 반영됩니다.",
+    },
+    deregister_confirm_check: {
+        en: "I understand the above and confirm deregistering this sub-team.",
+        ko: "위 내용을 이해했고 등록 해제를 확인합니다.",
+    },
+    deregister_confirm_check_hint: {
+        en: "Check this box to enable the \"Deregister\" button.",
+        ko: "체크해야 \"해제 확정\" 버튼이 활성화됩니다.",
+    },
     leave_parent_title: { en: "Leave parent team", ko: "상위팀 이탈" },
     leave_parent_reason: { en: "Reason (optional)", ko: "사유 (선택)" },
     leave_parent_confirm: { en: "Leave", ko: "이탈" },
