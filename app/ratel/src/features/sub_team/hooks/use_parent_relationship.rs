@@ -20,6 +20,17 @@ pub struct UseParentRelationship {
     pub handle_cancel_application: Action<(), ()>,
 }
 
+impl UseParentRelationship {
+    /// Awaitable variant of `handle_leave_parent` — the callsite can
+    /// `await` completion before navigating, so the spawned task isn't
+    /// dropped when the component unmounts on `nav.push`.
+    pub async fn leave(mut self, req: LeaveParentRequest) -> crate::common::Result<()> {
+        leave_parent_handler((self.team_id)(), req).await?;
+        self.relationship.restart();
+        Ok(())
+    }
+}
+
 #[track_caller]
 pub fn use_parent_relationship() -> std::result::Result<UseParentRelationship, RenderError> {
     if let Some(ctx) = try_use_context::<UseParentRelationship>() {

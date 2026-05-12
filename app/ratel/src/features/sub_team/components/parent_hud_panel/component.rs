@@ -13,6 +13,7 @@
 //! Expects the current team's `TeamPartition` to already be provided
 //! in context (the team arena layout installs one).
 
+use crate::features::social::pages::team_arena::use_team_arena;
 use crate::features::sub_team::types::ParentRelationshipStatus;
 use crate::features::sub_team::{use_parent_relationship, SubTeamTranslate, UseParentRelationship};
 use crate::route::Route;
@@ -28,6 +29,14 @@ pub fn ParentHudPanel() -> Element {
         mut handle_cancel_application,
         ..
     } = use_parent_relationship()?;
+
+    // Viewer is browsing their own team's home — the arena context
+    // carries that team's username. Leave-parent navigates to
+    // `/{own_username}/parent/leave` so the role check on the leave
+    // page's `get_parent_relationship_handler` resolves against the
+    // viewer's own admin team, not the parent (which would 401).
+    let arena = use_team_arena();
+    let own_username = (arena.username)();
 
     let rel = relationship();
     let status = rel.status;
@@ -201,11 +210,18 @@ pub fn ParentHudPanel() -> Element {
                                     }
                                     a {
                                         class: "pp-action pp-action--danger",
-                                        onclick: move |_| {
-                                            // `team_id` is in context — leave page picks it up.
-                                            nav.push(Route::TeamLeaveParentPage {
-                                                username: parent_username.clone(),
-                                            });
+                                        onclick: {
+                                            let own_username = own_username.clone();
+                                            move |_| {
+                                                // URL `:username` MUST be the viewer's own
+                                                // team — leave page's role check runs against
+                                                // whatever team the path resolves to. Passing
+                                                // the parent's username 401s because the
+                                                // viewer isn't an admin of the parent.
+                                                nav.push(Route::TeamLeaveParentPage {
+                                                    username: own_username.clone(),
+                                                });
+                                            }
                                         },
                                         span { class: "pp-action__icon",
                                             lucide_dioxus::LogOut { class: "w-3 h-3 [&>path]:stroke-current" }

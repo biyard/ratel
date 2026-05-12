@@ -32956,6 +32956,8 @@ body.comments-panel-resizing {
   --sub-team-text: var(--dark, #f0f0f5) var(--light, #12121a);
   --sub-team-muted: var(--dark, #8888a8) var(--light, #6b6b80);
   --sub-team-dim: var(--dark, #55556a) var(--light, #9595a8);
+  --sub-team-gold: #fcb300;
+  --sub-team-teal: #6eedd8;
   --sub-team-amber: #f59e0b;
   --sub-team-green: #22c55e;
   --sub-team-coral: #ef4444;
@@ -32963,9 +32965,17 @@ body.comments-panel-resizing {
 
   background: var(--sub-team-bg);
   color: var(--sub-team-text);
-  min-height: 100vh;
+  /* Page-scoped scroll container — `body` is `overflow:hidden;
+   * height:100dvh` globally, so each page needs its own.
+   * Memory rule `feedback_arena_page_scroll.md`. */
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
+/* ── Topbar (mockup `arena-topbar__brand` row) ──────────────────── */
 .sub-team-leave-parent .arena-topbar {
   position: sticky;
   top: 0;
@@ -32976,39 +32986,119 @@ body.comments-panel-resizing {
   background: var(--sub-team-glass);
   border-bottom: 1px solid var(--sub-team-border);
 }
-.sub-team-leave-parent .arena-topbar__left {
+.sub-team-leave-parent .arena-topbar__brand {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+  width: 100%;
 }
-.sub-team-leave-parent .back-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: var(--sub-team-glass);
-  border: 1px solid var(--sub-team-border);
-  display: flex;
+.sub-team-leave-parent .brand-home {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--sub-team-border);
   color: var(--sub-team-muted);
+  cursor: pointer;
+  flex-shrink: 0;
 }
-.sub-team-leave-parent .topbar-title {
-  display: flex;
-  flex-direction: column;
+.sub-team-leave-parent .brand-home__divider {
+  width: 1px;
+  height: 22px;
+  background: var(--sub-team-border);
+  margin: 0 4px;
+  flex-shrink: 0;
 }
-.sub-team-leave-parent .topbar-title__eyebrow {
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
+.sub-team-leave-parent .arena-topbar__logo--child {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  background: rgba(110, 237, 216, 0.10);
+  border: 1px solid rgba(110, 237, 216, 0.25);
+  color: var(--sub-team-teal);
+  flex-shrink: 0;
+}
+.sub-team-leave-parent .arena-topbar__title--child {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--sub-team-text);
+}
+.sub-team-leave-parent .arena-topbar__handle {
+  font-size: 10px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--sub-team-dim);
 }
-.sub-team-leave-parent .topbar-title__main {
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+.sub-team-leave-parent .u-col {
+  display: flex;
+  flex-direction: column;
+}
+.sub-team-leave-parent .arena-topbar__status {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+  border: 1px solid;
+}
+.sub-team-leave-parent .arena-topbar__status--caution {
+  background: rgba(245, 158, 11, 0.10);
+  color: var(--sub-team-amber);
+  border-color: rgba(245, 158, 11, 0.30);
+}
+
+/* ── Page header (eyebrow + title + sub) ────────────────────────── */
+.sub-team-leave-parent .page-header {
+  padding: 4px 2px 0;
+}
+.sub-team-leave-parent .page-header__main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sub-team-leave-parent .page-header__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--sub-team-muted);
+}
+.sub-team-leave-parent .page-header__title {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--sub-team-text);
+  line-height: 1.25;
+  margin: 0;
+}
+.sub-team-leave-parent .page-header__title--child strong {
+  color: var(--sub-team-amber);
+  font-weight: 800;
+}
+.sub-team-leave-parent .page-header__sub {
+  font-size: 13px;
+  color: var(--sub-team-muted);
+  line-height: 1.6;
+  max-width: 620px;
 }
 
 .sub-team-leave-parent .page {
@@ -33031,26 +33121,127 @@ body.comments-panel-resizing {
   color: var(--sub-team-amber);
 }
 
+/* ── Current tie (avatar → tie-line → avatar → parent meta → pill) ── */
 .sub-team-leave-parent .current-tie {
-  padding: 18px 22px;
-  border-radius: 14px;
+  padding: 22px 24px;
+  border-radius: 16px;
   background: var(--sub-team-glass);
   border: 1px solid var(--sub-team-border);
+  display: grid;
+  grid-template-columns: auto auto auto 1fr auto;
+  gap: 16px;
+  align-items: center;
+}
+.sub-team-leave-parent .avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  background: linear-gradient(135deg, rgba(252, 179, 0, 0.30), rgba(110, 237, 216, 0.10));
+  border: 1px solid rgba(252, 179, 0, 0.30);
+  color: var(--sub-team-gold);
+  flex-shrink: 0;
 }
-.sub-team-leave-parent .current-tie__label {
-  font-size: 10px;
+.sub-team-leave-parent .avatar--lg {
+  width: 56px;
+  height: 56px;
+  font-size: 16px;
+}
+.sub-team-leave-parent .avatar--teal {
+  background: linear-gradient(135deg, rgba(110, 237, 216, 0.30), rgba(110, 237, 216, 0.08));
+  border-color: rgba(110, 237, 216, 0.30);
+  color: var(--sub-team-teal);
+}
+.sub-team-leave-parent .tie-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--sub-team-gold);
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--sub-team-dim);
 }
-.sub-team-leave-parent .current-tie__value {
-  font-size: 14px;
+.sub-team-leave-parent .tie-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sub-team-gold);
+  box-shadow: 0 0 8px var(--sub-team-gold);
+}
+.sub-team-leave-parent .tie-dot--child {
+  background: var(--sub-team-teal);
+  box-shadow: 0 0 8px var(--sub-team-teal);
+}
+.sub-team-leave-parent .tie-dash {
+  width: 28px;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    var(--sub-team-gold) 0,
+    var(--sub-team-gold) 3px,
+    transparent 3px,
+    transparent 5px,
+    var(--sub-team-gold) 5px,
+    var(--sub-team-gold) 8px,
+    transparent 8px,
+    transparent 10px,
+    var(--sub-team-gold) 10px,
+    var(--sub-team-gold) 13px,
+    transparent 13px,
+    transparent 15px,
+    var(--sub-team-gold) 15px,
+    var(--sub-team-gold) 18px,
+    transparent 18px
+  );
+  opacity: 0.6;
+}
+.sub-team-leave-parent .tie-meta {
+  min-width: 0;
+}
+.sub-team-leave-parent .tie-meta__name {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 13px;
   font-weight: 700;
   color: var(--sub-team-text);
+}
+.sub-team-leave-parent .tie-meta__sub {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 10px;
+  color: var(--sub-team-muted);
+  letter-spacing: 0.06em;
+}
+.sub-team-leave-parent .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid;
+}
+.sub-team-leave-parent .pill--approved {
+  background: rgba(34, 197, 94, 0.10);
+  color: var(--sub-team-green);
+  border-color: rgba(34, 197, 94, 0.28);
+}
+.sub-team-leave-parent .pill--approved::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--sub-team-green);
+  box-shadow: 0 0 6px var(--sub-team-green);
 }
 
 .sub-team-leave-parent .leave {
@@ -33080,10 +33271,95 @@ body.comments-panel-resizing {
   flex-shrink: 0;
 }
 .sub-team-leave-parent .leave__title {
+  font-family: var(--font-display, "Orbitron"), system-ui, sans-serif;
   font-size: 20px;
   font-weight: 800;
   color: var(--sub-team-text);
   line-height: 1.25;
+}
+.sub-team-leave-parent .leave__sub {
+  font-size: 13px;
+  color: var(--sub-team-muted);
+  margin-top: 4px;
+  line-height: 1.55;
+}
+.sub-team-leave-parent .leave__sub strong {
+  color: var(--sub-team-text);
+  font-weight: 700;
+}
+.sub-team-leave-parent .leave__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+.sub-team-leave-parent .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.sub-team-leave-parent .btn--ghost {
+  background: transparent;
+  border-color: var(--sub-team-border);
+  color: var(--sub-team-muted);
+}
+.sub-team-leave-parent .btn--danger {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.06));
+  border-color: rgba(239, 68, 68, 0.40);
+  color: var(--sub-team-coral);
+}
+.sub-team-leave-parent .btn--danger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Mobile breakpoint — collapse 5-col tie grid into stacked rows. */
+@media (max-width: 500px) {
+  .sub-team-leave-parent .arena-topbar {
+    padding: 12px 14px;
+  }
+  .sub-team-leave-parent .arena-topbar__brand {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .sub-team-leave-parent .brand-home__divider {
+    display: none;
+  }
+  .sub-team-leave-parent .page {
+    padding: 16px 14px 60px;
+    gap: 14px;
+  }
+  .sub-team-leave-parent .page-header__title {
+    font-size: 20px;
+  }
+  .sub-team-leave-parent .current-tie {
+    grid-template-columns: 1fr;
+    text-align: center;
+    justify-items: center;
+  }
+  .sub-team-leave-parent .tie-line {
+    flex-direction: row;
+    justify-content: center;
+  }
+  .sub-team-leave-parent .leave {
+    padding: 20px 16px;
+  }
+  .sub-team-leave-parent .leave__actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .sub-team-leave-parent .leave__actions .btn {
+    justify-content: center;
+  }
 }
 
 .sub-team-leave-parent .keep-list {
@@ -33176,27 +33452,78 @@ body.comments-panel-resizing {
 }
 
 .sub-team-leave-parent .checkbox {
-  display: inline-flex;
+  /* `inline-flex` shrunk this row to fit-content, which forced the
+   * label to wrap roughly one word per line. Use full-width `flex`
+   * with `min-width: 0` on the label so the text fills the remaining
+   * row instead. `position: relative` anchors the visually-hidden
+   * native input so it doesn't escape and render a default checkbox
+   * somewhere in the viewport. The reset bits (background, box-shadow,
+   * border-radius, width/height) cancel the global `.checkbox`
+   * primitive rule that targets the common Checkbox component
+   * (`src/common/components/checkbox/style.css`) — without these the
+   * dark inset shadow + 1rem square fixed-size leaks through and
+   * makes the entire row look like a rendered checkbox. */
+  position: relative;
+  display: flex;
   align-items: flex-start;
   gap: 10px;
+  width: 100%;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  background-color: transparent;
+  box-shadow: none;
+  border: 0;
+  border-radius: 0;
   cursor: pointer;
 }
-.sub-team-leave-parent .checkbox input {
+/* Belt-and-suspenders: cancel the checked-state override from the
+ * global primitive rule too (it would otherwise repaint the label
+ * teal once the box flips). */
+.sub-team-leave-parent .checkbox[data-state="checked"] {
+  background-color: transparent;
+  box-shadow: none;
+  color: inherit;
+}
+/* Visually hide the native input completely (clip + zero-size) so
+ * the browser's default checkbox glyph + outline never leaks through
+ * — only our custom `.checkbox__box` is visible. */
+.sub-team-leave-parent .checkbox input[type="checkbox"] {
   position: absolute;
+  inset: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
   opacity: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
   pointer-events: none;
+  appearance: none;
+  -webkit-appearance: none;
 }
 .sub-team-leave-parent .checkbox__box {
   width: 20px;
   height: 20px;
   border-radius: 5px;
   background: var(--sub-team-input-bg);
-  border: 1px solid var(--sub-team-border);
+  /* Explicit light/dark border colors — pre-toggle `--sub-team-border`
+   * was rendering too dark in light theme because Tailwind's element
+   * reset gives the wrapping label an inherited 1px border. Locking
+   * the value at this rule wins specificity. */
+  border: 1px solid
+    var(--dark, rgba(255, 255, 255, 0.10)) var(--light, rgba(0, 0, 0, 0.12));
   display: flex;
   align-items: center;
   justify-content: center;
   color: transparent;
   flex-shrink: 0;
+  margin-top: 1px;
+  box-sizing: border-box;
 }
 .sub-team-leave-parent .checkbox input:checked ~ .checkbox__box {
   background: var(--sub-team-amber);
@@ -33204,6 +33531,8 @@ body.comments-panel-resizing {
   color: #0a0a0a;
 }
 .sub-team-leave-parent .checkbox__label {
+  flex: 1;
+  min-width: 0;
   font-size: 13px;
   color: var(--sub-team-text);
   line-height: 1.5;

@@ -910,20 +910,33 @@ pub async fn find_my_application_for_parent_handler(
             continue;
         };
         for app in apps {
-            if app.parent_team_id == parent_uuid {
-                let candidate_ts = app.submitted_at.unwrap_or(app.created_at);
-                let beat = match &best {
-                    Some(b) => {
-                        let b_ts = b.submitted_at.unwrap_or(b.created_at);
-                        candidate_ts > b_ts
-                    }
-                    None => true,
-                };
-                if beat {
-                    best = Some(app);
-                }
-                break;
+            if app.parent_team_id != parent_uuid {
+                continue;
             }
+            // Skip applications that have no meaningful "status view".
+            // `Draft` was never submitted and `Cancelled` is a closed
+            // record (the team left or withdrew). Leaving them in would
+            // make the applicant's status page keep showing
+            // "Approved · 정식 하위팀으로 등록되었습니다" even after
+            // they left the parent team.
+            if matches!(
+                app.status,
+                SubTeamApplicationStatus::Draft | SubTeamApplicationStatus::Cancelled
+            ) {
+                continue;
+            }
+            let candidate_ts = app.submitted_at.unwrap_or(app.created_at);
+            let beat = match &best {
+                Some(b) => {
+                    let b_ts = b.submitted_at.unwrap_or(b.created_at);
+                    candidate_ts > b_ts
+                }
+                None => true,
+            };
+            if beat {
+                best = Some(app);
+            }
+            break;
         }
     }
 

@@ -572,6 +572,33 @@ translate! {
         en: "This team is not currently a recognized sub-team.",
         ko: "이 팀은 현재 인증된 하위팀이 아닙니다.",
     },
+    leave_parent_status_chip: {
+        en: "Action · Caution",
+        ko: "주의 · 실행 액션",
+    },
+    leave_parent_eyebrow_code: {
+        en: "Leave Parent Team",
+        ko: "상위팀 이탈",
+    },
+    leave_parent_header_title_prefix: {
+        en: "Leave ",
+        ko: "",
+    },
+    leave_parent_header_title_suffix: {
+        en: " and continue standalone",
+        ko: "에서 독립합니다",
+    },
+    leave_parent_header_emphasis: { en: "Leave", ko: "독립" },
+    leave_parent_header_sub: {
+        en: "Drop the sub-team link without the parent's approval. You'll stop receiving parent broadcasts, your activity won't show on the parent dashboard, and the parent is notified.",
+        ko: "부모팀의 승인 없이 sub-team 관계만 해제하고 독립 팀으로 전환합니다. 부모팀의 공지 방송, 활동 집계, 거버넌스에서 벗어납니다. 부모팀은 알림을 받습니다.",
+    },
+    leave_parent_tie_child_of: { en: "Child of", ko: "Child of" },
+    leave_parent_tie_recognized_since: { en: "Recognized since", ko: "인증" },
+    leave_parent_panel_sub: {
+        en: "Only this team can run this action (team admin role required). The parent's approval isn't needed.",
+        ko: "이 동작은 이 팀에서만 실행 가능합니다 (팀 admin 권한 필요). 부모팀의 승인은 필요하지 않습니다.",
+    },
 
     // Bylaws page
     bylaws_page_eyebrow: { en: "Bylaws", ko: "학칙" },
