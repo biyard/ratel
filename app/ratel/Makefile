@@ -263,7 +263,7 @@ android: $(HOME)/.android/debug.keystore $(ANDROID_DX_RES_DIR)
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --features $(RUN_FEATURES) --no-default-features @client --android --target $(ANDROID_TARGET) $(DEVICE_FLAG)
 
 build-android: $(HOME)/.android/debug.keystore $(ANDROID_DX_RES_DIR)
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx build --release --features $(RUN_FEATURES) --no-default-features @client --android --target $(ANDROID_TARGET) $(DEVICE_FLAG)
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx bundle --release --features $(RUN_FEATURES) --no-default-features @client --android --target $(ANDROID_TARGET) $(DEVICE_FLAG)
 
 ios:
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --ios --features $(RUN_FEATURES)
