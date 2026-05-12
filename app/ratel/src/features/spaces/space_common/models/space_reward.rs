@@ -353,7 +353,7 @@ impl SpaceReward {
                 let _ = PendingReward::new(
                     &target_pk,
                     &space_pk,
-                    &space_reward.sk.to_string(),
+                    &space_reward.sk,
                     amount,
                     &space_reward.description,
                     owner_pk.as_ref(),
