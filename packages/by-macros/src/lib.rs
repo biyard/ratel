@@ -7,8 +7,8 @@ mod dynamo_entity;
 mod dynamo_enum;
 mod enum_prop;
 mod mcp_tool;
-mod qdrant_entity;
 pub(crate) mod parse_queryable_fields;
+mod qdrant_entity;
 #[cfg(feature = "server")]
 mod query_builder_functions;
 mod query_display;
@@ -370,6 +370,10 @@ pub fn mcp_tool(attr: TokenStream, item: TokenStream) -> TokenStream {
 }
 
 pub(crate) fn save_file(st_name: &str, output: &str) {
+    if option_env!("WRITE_OUTPUT").is_none() {
+        return;
+    }
+
     let dir_path = match option_env!("API_MODEL_ARTIFACT_DIR") {
         Some(dir) => dir.to_string(),
         None => {
