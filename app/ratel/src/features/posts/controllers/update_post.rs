@@ -16,7 +16,7 @@ use crate::features::posts::utils::validator::{validate_content, validate_title}
 pub enum UpdatePostRequest {
     Publish {
         title: String,
-        content: String,
+        content: ContentBody,
         image_urls: Option<Vec<String>>,
         publish: bool,
         visibility: Option<Visibility>,
@@ -38,7 +38,7 @@ pub enum UpdatePostRequest {
     },
     Writing {
         title: String,
-        content: String,
+        content: ContentBody,
         categories: Option<Vec<String>>,
     },
     Image {
