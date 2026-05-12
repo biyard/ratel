@@ -22,6 +22,16 @@ pub struct TeamItem {
     pub permissions: Vec<u8>,
     #[serde(default)]
     pub description: String,
+    /// Epoch-ms the team was created. `0` for legacy rows. Used by
+    /// the sub-team apply page to live-evaluate the parent's
+    /// `min_sub_team_age_days` requirement against the picked team.
+    #[serde(default)]
+    pub created_at: i64,
+    /// Member count (UserTeam rows). `0` for legacy rows. Used by
+    /// the sub-team apply page to live-evaluate the parent's
+    /// `min_sub_team_members` requirement against the picked team.
+    #[serde(default)]
+    pub member_count: i64,
 }
 
 impl TeamItem {
@@ -87,6 +97,8 @@ impl TeamContext {
             user_type: UserType::Team,
             permissions: permissions.clone(),
             description: description.clone(),
+            created_at: 0,
+            member_count: 1,
         };
         self.teams.push(team_item.clone());
 

@@ -1,9 +1,11 @@
 //! Controller for the sub-team announcement compose page (new + edit).
 //!
-//! Mirrors `use_sub_team_doc_compose` in shape: a loader that returns
-//! `None` for the "new" flow and the existing row for "edit", plus
-//! create/update/publish/delete actions.
+//! Bundles every signal the composer UI needs: title, html_contents,
+//! tags, space toggle + space type, plus the autosave lifecycle status
+//! and the publish/discard actions. Components consume this hook —
+//! they never call the announcement server handlers directly.
 
+use crate::features::posts::types::SpaceType;
 use crate::features::sub_team::controllers::{
     create_announcement_handler, delete_announcement_handler, get_announcement_handler,
     publish_announcement_handler, update_announcement_handler,
@@ -14,15 +16,42 @@ use crate::features::sub_team::types::{
 };
 use crate::*;
 
+/// Lifecycle of the in-progress draft, surfaced to the composer UI so it
+/// can render the "방금 저장됨" / "저장 중…" / "저장 안 됨" indicator.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BroadcastDraftStatus {
+    /// Composer just opened — nothing to save yet.
+    Idle,
+    /// User typed; debounce timer hasn't fired.
+    Dirty,
+    /// Network request in flight.
+    Saving,
+    /// Last request succeeded; signals == last_saved.
+    Saved,
+    /// Last request errored.
+    Error,
+}
+
 #[derive(Clone, Copy, DioxusController)]
 pub struct UseSubTeamBroadcastCompose {
     pub team_id: ReadSignal<TeamPartition>,
-    pub announcement_id: ReadSignal<Option<String>>,
+    pub announcement_id: Signal<Option<String>>,
     pub announcement: Loader<Option<SubTeamAnnouncementResponse>>,
 
+    // Composer signals — bound to inputs.
+    pub title: Signal<String>,
+    pub html_contents: Signal<String>,
+    pub tags: Signal<Vec<String>>,
+    pub space_enabled: Signal<bool>,
+    pub space_type: Signal<Option<SpaceType>>,
+
+    // Draft autosave lifecycle.
+    pub draft_status: Signal<BroadcastDraftStatus>,
+    pub last_saved_at: Signal<Option<i64>>,
+
+    // Mutations.
     pub handle_save_new: Action<(CreateSubTeamAnnouncementRequest,), String>,
-    pub handle_save_existing:
-        Action<(String, UpdateSubTeamAnnouncementRequest), ()>,
+    pub handle_save_existing: Action<(String, UpdateSubTeamAnnouncementRequest), ()>,
     pub handle_publish: Action<(String,), ()>,
     pub handle_delete: Action<(String,), ()>,
 }
@@ -37,21 +66,51 @@ pub fn use_sub_team_broadcast_compose(
     let team_id: TeamPartition = use_context();
     let team_id_signal: ReadSignal<TeamPartition> = use_signal(|| team_id).into();
     let initial_announcement_id: Option<String> = try_consume_context().unwrap_or(None);
-    let announcement_id_signal: ReadSignal<Option<String>> =
-        use_signal(|| initial_announcement_id).into();
+    let announcement_id: Signal<Option<String>> = use_signal(|| initial_announcement_id);
 
-    let announcement = use_loader(move || {
-        let id = team_id_signal();
-        let announcement_id = announcement_id_signal();
+    let announcement_loader = use_loader(move || {
+        let tid = team_id_signal();
+        let aid = announcement_id();
         async move {
-            let Some(announcement_id) = announcement_id else {
+            let Some(aid) = aid else {
                 return Ok::<Option<SubTeamAnnouncementResponse>, crate::common::Error>(None);
             };
-            let row = get_announcement_handler(id, announcement_id).await?;
+            let row = get_announcement_handler(tid, aid).await?;
             Ok(Some(row))
         }
     })?;
 
+    // Seed editor signals from the loaded draft (if any).
+    let loaded = announcement_loader();
+    let initial_title = loaded.as_ref().map(|a| a.title.clone()).unwrap_or_default();
+    let initial_html = loaded
+        .as_ref()
+        .map(|a| {
+            if !a.html_contents.is_empty() {
+                a.html_contents.clone()
+            } else {
+                a.body.clone()
+            }
+        })
+        .unwrap_or_default();
+    let initial_tags = loaded
+        .as_ref()
+        .map(|a| a.tags.clone())
+        .unwrap_or_default();
+    let initial_space_enabled = loaded.as_ref().map(|a| a.space_enabled).unwrap_or(false);
+    let initial_space_type = loaded.as_ref().and_then(|a| a.space_type);
+
+    let title: Signal<String> = use_signal(|| initial_title);
+    let html_contents: Signal<String> = use_signal(|| initial_html);
+    let tags: Signal<Vec<String>> = use_signal(|| initial_tags);
+    let space_enabled: Signal<bool> = use_signal(|| initial_space_enabled);
+    let space_type: Signal<Option<SpaceType>> = use_signal(|| initial_space_type);
+
+    let draft_status: Signal<BroadcastDraftStatus> =
+        use_signal(|| BroadcastDraftStatus::Idle);
+    let last_saved_at: Signal<Option<i64>> = use_signal(|| None);
+
+    // Mutations.
     let team_id_for_new = team_id_signal;
     let handle_save_new =
         use_action(move |req: CreateSubTeamAnnouncementRequest| async move {
@@ -61,29 +120,35 @@ pub fn use_sub_team_broadcast_compose(
 
     let team_id_for_update = team_id_signal;
     let handle_save_existing = use_action(
-        move |announcement_id: String,
-              req: UpdateSubTeamAnnouncementRequest| async move {
-            update_announcement_handler(team_id_for_update(), announcement_id, req).await?;
+        move |aid: String, req: UpdateSubTeamAnnouncementRequest| async move {
+            update_announcement_handler(team_id_for_update(), aid, req).await?;
             Ok::<(), crate::common::Error>(())
         },
     );
 
     let team_id_for_publish = team_id_signal;
-    let handle_publish = use_action(move |announcement_id: String| async move {
-        publish_announcement_handler(team_id_for_publish(), announcement_id).await?;
+    let handle_publish = use_action(move |aid: String| async move {
+        publish_announcement_handler(team_id_for_publish(), aid).await?;
         Ok::<(), crate::common::Error>(())
     });
 
     let team_id_for_delete = team_id_signal;
-    let handle_delete = use_action(move |announcement_id: String| async move {
-        delete_announcement_handler(team_id_for_delete(), announcement_id).await?;
+    let handle_delete = use_action(move |aid: String| async move {
+        delete_announcement_handler(team_id_for_delete(), aid).await?;
         Ok::<(), crate::common::Error>(())
     });
 
     Ok(use_context_provider(|| UseSubTeamBroadcastCompose {
         team_id: team_id_signal,
-        announcement_id: announcement_id_signal,
-        announcement,
+        announcement_id,
+        announcement: announcement_loader,
+        title,
+        html_contents,
+        tags,
+        space_enabled,
+        space_type,
+        draft_status,
+        last_saved_at,
         handle_save_new,
         handle_save_existing,
         handle_publish,

@@ -104,6 +104,7 @@ pub async fn approve_application(
     parent_team: &Team,
     app: SubTeamApplication,
     approver_user_pk: &Partition,
+    welcome_message: String,
 ) -> Result<SubTeamApplication> {
     if !matches!(
         app.status,
@@ -123,9 +124,13 @@ pub async fn approve_application(
     let sub_team_id = app.sub_team_id.clone();
     let sub_team_pk: Partition = Partition::Team(sub_team_id.clone());
 
-    // 1. application update
+    // 1. application update — store the welcome message in
+    //    `decision_reason` so the applicant's status page can surface
+    //    it under the "환영 메시지" feedback card. Empty string is OK
+    //    (admin skipped the optional note).
     let app_update = SubTeamApplication::updater(&parent_team.pk, &app.sk)
         .with_status(SubTeamApplicationStatus::Approved)
+        .with_decision_reason(welcome_message)
         .with_decided_at(now)
         .with_updated_at(now)
         .transact_write_item();

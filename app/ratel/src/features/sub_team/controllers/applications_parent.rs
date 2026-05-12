@@ -49,12 +49,34 @@ pub async fn list_parent_applications_handler(
             SubTeamError::ApplicationNotFound
         })?;
 
-    let items: Vec<SubTeamApplicationResponse> = items
-        .into_iter()
-        .filter(|a| a.status == filter)
-        .map(Into::into)
-        .collect();
-    Ok((items, next).into())
+    // Join each application to its applicant team for display
+    // metadata (name, username, member_count). N joins, but pages are
+    // capped to PAGE_LIMIT and most queues stay small. Failures
+    // (missing team row, transient ddb error) fall back to empty
+    // strings / 0 so the queue still renders.
+    let mut response: Vec<SubTeamApplicationResponse> = Vec::new();
+    for app in items.into_iter().filter(|a| a.status == filter) {
+        let mut dto: SubTeamApplicationResponse = app.clone().into();
+        if let Ok(Some(applicant)) = crate::features::posts::models::Team::get(
+            cli,
+            &app.applicant_team_pk,
+            Some(crate::common::types::EntityType::Team),
+        )
+        .await
+        {
+            dto.applicant_team_display_name = applicant.display_name.clone();
+            dto.applicant_team_username = applicant.username.clone();
+        }
+        dto.applicant_member_count =
+            crate::features::sub_team::services::count_team_members(cli, &app.applicant_team_pk)
+                .await
+                .unwrap_or(0);
+        // Parent is the caller's `team` extractor — no extra ddb read needed.
+        dto.parent_team_display_name = team.display_name.clone();
+        dto.parent_team_username = team.username.clone();
+        response.push(dto);
+    }
+    Ok((response, next).into())
 }
 
 // ── GET /api/teams/:team_pk/sub-teams/applications/:application_id ─
@@ -85,10 +107,16 @@ pub async fn get_parent_application_handler(
 }
 
 // ── POST /.../applications/:application_id/approve ─────────────────
+//
+// Body carries an optional welcome message — empty string is fine
+// when the admin skipped the note. The message is persisted on
+// the application's `decision_reason` so the applicant's status
+// page surfaces it under "환영 메시지".
 #[post("/api/teams/:team_pk/sub-teams/applications/:application_id/approve", user: crate::features::auth::User, team: Team, role: TeamRole)]
 pub async fn approve_application_handler(
     team_pk: TeamPartition,
     application_id: String,
+    body: ApplicationDecisionReasonRequest,
 ) -> Result<SubTeamApplicationResponse> {
     let _ = team_pk;
     let _ = user;
@@ -99,7 +127,7 @@ pub async fn approve_application_handler(
     let cli = cfg.dynamodb();
 
     let app = get_application(cli, &team.pk, &application_id).await?;
-    let updated = approve_application(cli, &team, app, &user.pk).await?;
+    let updated = approve_application(cli, &team, app, &user.pk, body.reason).await?;
     Ok(updated.into())
 }
 

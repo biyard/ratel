@@ -11,6 +11,8 @@ use crate::features::sub_team::models::{
 pub struct SubTeamSettingsResponse {
     pub is_parent_eligible: bool,
     pub min_sub_team_members: i32,
+    #[serde(default)]
+    pub min_sub_team_age_days: i32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -20,9 +22,28 @@ pub struct UpdateSubTeamSettingsRequest {
     pub is_parent_eligible: Option<bool>,
     #[serde(default)]
     pub min_sub_team_members: Option<i32>,
+    #[serde(default)]
+    pub min_sub_team_age_days: Option<i32>,
 }
 
 // ── Form fields ──────────────────────────────────────────────────
+
+/// Attributes on the applicant team's profile that a form field can
+/// auto-pull its value from. When a field has `linked_to: Some(_)`,
+/// the apply page prefills it with the applicant team's matching
+/// attribute and renders the field read-only.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+pub enum TeamProfileLink {
+    /// `Team.display_name`
+    TeamName,
+    /// `Team.username`
+    TeamUsername,
+    /// `Team.description`
+    TeamBio,
+    /// `Team.profile_url`
+    TeamProfileUrl,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
@@ -33,6 +54,14 @@ pub struct SubTeamFormFieldResponse {
     pub required: bool,
     pub order: i32,
     pub options: Vec<String>,
+    #[serde(default)]
+    pub linked_to: Option<TeamProfileLink>,
+    /// `true` for system-seeded default fields (e.g. "팀 이름",
+    /// "설립 목적"). The form builder hides edit/delete controls for
+    /// these rows; the public apply page treats them like normal
+    /// linked fields.
+    #[serde(default)]
+    pub locked: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -46,6 +75,8 @@ pub struct CreateSubTeamFormFieldRequest {
     pub order: Option<i32>,
     #[serde(default)]
     pub options: Option<Vec<String>>,
+    #[serde(default)]
+    pub linked_to: Option<TeamProfileLink>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -61,6 +92,14 @@ pub struct UpdateSubTeamFormFieldRequest {
     pub order: Option<i32>,
     #[serde(default)]
     pub options: Option<Vec<String>>,
+    /// `Some(link)` sets a link; `None` leaves the field unchanged.
+    /// Clearing an existing link via the patch endpoint isn't
+    /// supported today — admins delete and recreate the field
+    /// instead. (`DynamoEntity` setters for `Option<T>` fields take
+    /// the inner `T` and wrap, so the schema doesn't have a clear-
+    /// variant either.)
+    #[serde(default)]
+    pub linked_to: Option<TeamProfileLink>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -81,6 +120,28 @@ pub struct SubTeamDocumentResponse {
     pub order: i32,
     pub body_hash: String,
     pub updated_at: i64,
+    #[serde(default)]
+    pub version: i32,
+    #[serde(default)]
+    pub editor_username: String,
+    #[serde(default)]
+    pub attachments: Vec<File>,
+    /// `"Bylaws"` / `"ClubBylaws"` when this doc was authored via the
+    /// bylaws page. Empty / `None` for regular sub-team docs.
+    #[serde(default)]
+    pub category: Option<String>,
+    /// `Post.pk` of the backing post (carries the same body + category).
+    /// Card click on the bylaws page routes to this post's detail page.
+    #[serde(default)]
+    pub backing_post_id: Option<String>,
+    /// Likes on the backing post — populated server-side by the list /
+    /// get handlers (batch-get from `Post.likes`). 0 when no backing
+    /// post exists (regular sub-team docs).
+    #[serde(default)]
+    pub likes: i64,
+    /// Comments on the backing post.
+    #[serde(default)]
+    pub comments: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -92,6 +153,14 @@ pub struct CreateSubTeamDocumentRequest {
     pub required: bool,
     #[serde(default)]
     pub order: Option<i32>,
+    #[serde(default)]
+    pub attachments: Option<Vec<File>>,
+    /// Optional category — when set to `"Bylaws"` / `"ClubBylaws"`,
+    /// the handler also writes a backing Post with the same body so
+    /// the bylaws page can show likes/comments + deep-link to the
+    /// post detail.
+    #[serde(default)]
+    pub category: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -105,12 +174,34 @@ pub struct UpdateSubTeamDocumentRequest {
     pub required: Option<bool>,
     #[serde(default)]
     pub order: Option<i32>,
+    /// Replaces the attachment list when present. `None` leaves the
+    /// list unchanged; `Some(vec![])` clears it.
+    #[serde(default)]
+    pub attachments: Option<Vec<File>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct ReorderDocumentsRequest {
     pub doc_ids: Vec<String>,
+}
+
+// ── Document versions (immutable history) ───────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct SubTeamDocumentVersionResponse {
+    /// Parent doc id (same value across every snapshot for one doc).
+    pub doc_id: String,
+    pub version: i32,
+    pub created_at: i64,
+    pub title: String,
+    pub body: String,
+    pub body_hash: String,
+    pub required: bool,
+    pub order: i32,
+    pub editor_username: String,
+    pub attachments: Vec<File>,
 }
 
 // ── Public apply context ────────────────────────────────────────
@@ -123,6 +214,11 @@ pub struct ApplyContextDocument {
     pub body: String,
     pub body_hash: String,
     pub order: i32,
+    /// Applicants must Agree to this doc before submitting. `false`
+    /// means the doc is reference-only — shown in the list but no
+    /// agree button rendered and no eligibility gate.
+    #[serde(default)]
+    pub required: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -130,6 +226,8 @@ pub struct ApplyContextDocument {
 pub struct ApplyContextResponse {
     pub is_parent_eligible: bool,
     pub min_sub_team_members: i32,
+    #[serde(default)]
+    pub min_sub_team_age_days: i32,
     pub recognized_count: i64,
     pub pending_count: i64,
     pub form_fields: Vec<SubTeamFormFieldResponse>,
@@ -152,6 +250,8 @@ impl From<crate::features::sub_team::models::SubTeamFormField> for SubTeamFormFi
             required: f.required,
             order: f.order,
             options: f.options,
+            linked_to: f.linked_to,
+            locked: f.locked,
         }
     }
 }
@@ -171,6 +271,35 @@ impl From<crate::features::sub_team::models::SubTeamDocument> for SubTeamDocumen
             order: d.order,
             body_hash: d.body_hash,
             updated_at: d.updated_at,
+            version: d.version.max(1),
+            editor_username: d.editor_username,
+            attachments: d.attachments,
+            category: d.category,
+            backing_post_id: d.backing_post_id,
+            // Engagement counts are populated by the handler after a
+            // batch-get against backing posts. Default to 0 here.
+            likes: 0,
+            comments: 0,
+        }
+    }
+}
+
+#[cfg(feature = "server")]
+impl From<crate::features::sub_team::models::SubTeamDocumentVersion>
+    for SubTeamDocumentVersionResponse
+{
+    fn from(v: crate::features::sub_team::models::SubTeamDocumentVersion) -> Self {
+        Self {
+            doc_id: v.doc_id,
+            version: v.version,
+            created_at: v.created_at,
+            title: v.title,
+            body: v.body,
+            body_hash: v.body_hash,
+            required: v.required,
+            order: v.order,
+            editor_username: v.editor_username,
+            attachments: v.attachments,
         }
     }
 }
@@ -188,6 +317,7 @@ impl From<crate::features::sub_team::models::SubTeamDocument> for ApplyContextDo
             body: d.body,
             body_hash: d.body_hash,
             order: d.order,
+            required: d.required,
         }
     }
 }
@@ -203,6 +333,10 @@ pub struct SubTeamFormFieldSnapshotDto {
     pub required: bool,
     pub order: i32,
     pub options: Vec<String>,
+    /// Locked default field — sorted to the top in the status page's
+    /// "Submitted answers" view.
+    #[serde(default)]
+    pub locked: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -220,6 +354,27 @@ pub struct SubTeamApplicationResponse {
     pub decided_at: Option<i64>,
     pub form_snapshot: Vec<SubTeamFormFieldSnapshotDto>,
     pub form_values: std::collections::HashMap<String, serde_json::Value>,
+    /// Applicant team's display name. Filled by the listing handler
+    /// via a `Team::get` join so the parent's queue row can show the
+    /// applicant's name + initials avatar without a per-row client fetch.
+    /// Empty when the join couldn't be resolved (handler logs).
+    #[serde(default)]
+    pub applicant_team_display_name: String,
+    /// Applicant team's `@username`. Same join as `display_name`.
+    #[serde(default)]
+    pub applicant_team_username: String,
+    /// Member count (UserTeam rows) of the applicant team at the time
+    /// of listing. `0` when the join failed.
+    #[serde(default)]
+    pub applicant_member_count: i64,
+    /// Parent (target) team display name. Filled by the listing
+    /// handler — the applicant-side status page uses it to render the
+    /// feedback card's author as the parent team, not the applicant.
+    #[serde(default)]
+    pub parent_team_display_name: String,
+    /// Parent team's `@username`.
+    #[serde(default)]
+    pub parent_team_username: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -256,6 +411,20 @@ pub struct ParentRelationshipResponse {
     pub parent_team_id: Option<String>,
     pub pending_parent_team_id: Option<String>,
     pub latest_application_id: Option<String>,
+    /// Display name of the parent (or pending-parent) team, filled
+    /// server-side via a `Team::get` join so the HUD panel can render
+    /// "서울대학교" instead of a uuid. `None` for `Standalone` or when
+    /// the join failed.
+    #[serde(default)]
+    pub parent_team_display_name: Option<String>,
+    /// `@username` of the parent (or pending-parent) team.
+    #[serde(default)]
+    pub parent_team_username: Option<String>,
+    /// Epoch-ms when this team was recognized as a sub-team
+    /// (SubTeamLink.created_at). `None` unless `status ==
+    /// RecognizedSubTeam`.
+    #[serde(default)]
+    pub recognized_at: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -286,6 +455,25 @@ pub struct UpdateApplicationRequest {
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct ApplicationDecisionReasonRequest {
     pub reason: String,
+}
+
+// ── Application drafts (autosave) ────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct SaveApplicationDraftRequest {
+    pub parent_team_id: String,
+    pub form_values: std::collections::HashMap<String, serde_json::Value>,
+    pub doc_agreements: Vec<DocAgreementInput>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+pub struct ApplicationDraftResponse {
+    pub parent_team_id: String,
+    pub form_values: std::collections::HashMap<String, serde_json::Value>,
+    pub doc_agreements: Vec<DocAgreementInput>,
+    pub updated_at: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -323,10 +511,29 @@ pub struct SubTeamAnnouncementResponse {
     pub id: String,
     pub title: String,
     pub body: String,
+    #[serde(default)]
+    pub html_contents: String,
+    #[serde(default)]
+    pub tags: Vec<String>,
     pub author_user_id: String,
     pub status: SubTeamAnnouncementStatus,
     pub target_type: BroadcastTarget,
+    #[serde(default)]
+    pub visibility: crate::features::posts::types::Visibility,
+    #[serde(default)]
+    pub space_enabled: bool,
+    #[serde(default)]
+    pub space_type: Option<crate::features::posts::types::SpaceType>,
+    #[serde(default)]
+    pub space_pk: Option<String>,
     pub fan_out_count: i32,
+    /// Comment count surfaced for the management Published list. Phase 1
+    /// always returns 0 (per-post comments are not aggregated up to
+    /// the announcement source-of-truth yet); kept as a field on the
+    /// DTO so the UI doesn't need a follow-up schema change when
+    /// aggregation lands.
+    #[serde(default)]
+    pub comments_count: i32,
     pub created_at: i64,
     pub updated_at: i64,
     pub published_at: Option<i64>,
@@ -336,7 +543,16 @@ pub struct SubTeamAnnouncementResponse {
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct CreateSubTeamAnnouncementRequest {
     pub title: String,
+    #[serde(default)]
     pub body: String,
+    #[serde(default)]
+    pub html_contents: String,
+    #[serde(default)]
+    pub tags: Vec<String>,
+    #[serde(default)]
+    pub space_enabled: bool,
+    #[serde(default)]
+    pub space_type: Option<crate::features::posts::types::SpaceType>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -346,6 +562,14 @@ pub struct UpdateSubTeamAnnouncementRequest {
     pub title: Option<String>,
     #[serde(default)]
     pub body: Option<String>,
+    #[serde(default)]
+    pub html_contents: Option<String>,
+    #[serde(default)]
+    pub tags: Option<Vec<String>>,
+    #[serde(default)]
+    pub space_enabled: Option<bool>,
+    #[serde(default)]
+    pub space_type: Option<crate::features::posts::types::SpaceType>,
 }
 
 #[cfg(feature = "server")]
@@ -355,10 +579,17 @@ impl From<crate::features::sub_team::models::SubTeamAnnouncement> for SubTeamAnn
             id: a.announcement_id,
             title: a.title,
             body: a.body,
+            html_contents: a.html_contents,
+            tags: a.tags,
             author_user_id: a.author_user_id,
             status: a.status,
             target_type: a.target_type,
+            visibility: a.visibility,
+            space_enabled: a.space_enabled,
+            space_type: a.space_type,
+            space_pk: a.space_pk,
             fan_out_count: a.fan_out_count,
+            comments_count: 0,
             created_at: a.created_at,
             updated_at: a.updated_at,
             published_at: a.published_at,
@@ -378,6 +609,7 @@ impl From<crate::features::sub_team::models::SubTeamFormFieldSnapshot>
             required: s.required,
             order: s.order,
             options: s.options,
+            locked: s.locked,
         }
     }
 }
@@ -398,6 +630,15 @@ impl From<crate::features::sub_team::models::SubTeamApplication> for SubTeamAppl
             decided_at: a.decided_at,
             form_snapshot: a.form_snapshot.into_iter().map(Into::into).collect(),
             form_values: a.form_values,
+            // Applicant + parent team joins are filled by the listing
+            // handler; defaults are kept empty/zero so the `From`
+            // conversion stays a pure data shuffle and never touches
+            // DynamoDB.
+            applicant_team_display_name: String::new(),
+            applicant_team_username: String::new(),
+            applicant_member_count: 0,
+            parent_team_display_name: String::new(),
+            parent_team_username: String::new(),
         }
     }
 }
