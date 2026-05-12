@@ -330,6 +330,7 @@ fn DetailView(username: String, sub_team_id: String) -> Element {
                         }
                         a {
                             class: "btn btn--danger",
+                            "data-testid": "sub-team-detail-deregister-btn",
                             onclick: move |_| {
                                 nav.push(Route::TeamSubTeamDeregisterPage {
                                     username: deregister_username.clone(),

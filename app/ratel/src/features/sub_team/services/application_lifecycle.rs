@@ -162,7 +162,7 @@ pub async fn approve_application(
 
     // Notifications to sub-team admins
     let parent_team_name = parent_team.display_name.clone();
-    let cta_url = build_sub_team_apply_status_url(&sub_team_id);
+    let cta_url = build_sub_team_apply_status_url(cli, &sub_team_id).await;
     let admins = resolve_team_admins(cli, &sub_team_pk)
         .await
         .unwrap_or_default();
@@ -232,7 +232,7 @@ pub async fn reject_application(
         })?;
 
     let parent_team_name = parent_team.display_name.clone();
-    let cta_url = build_sub_team_apply_status_url(&sub_team_id);
+    let cta_url = build_sub_team_apply_status_url(cli, &sub_team_id).await;
     let admins = resolve_team_admins(cli, &sub_team_pk)
         .await
         .unwrap_or_default();
@@ -292,7 +292,7 @@ pub async fn return_application(
         })?;
 
     let parent_team_name = parent_team.display_name.clone();
-    let cta_url = build_sub_team_apply_status_url(&sub_team_id);
+    let cta_url = build_sub_team_apply_status_url(cli, &sub_team_id).await;
     let admins = resolve_team_admins(cli, &sub_team_pk)
         .await
         .unwrap_or_default();
@@ -326,7 +326,7 @@ pub async fn notify_parent_of_submission(
     sub_team_id: &str,
     sub_team_name: &str,
 ) {
-    let cta_url = build_sub_team_management_url(parent_team_id);
+    let cta_url = build_sub_team_management_url(cli, parent_team_id).await;
     let admins = resolve_team_admins(cli, parent_pk).await.unwrap_or_default();
     for u in admins {
         let payload = InboxPayload::SubTeamApplicationSubmitted {
@@ -342,10 +342,53 @@ pub async fn notify_parent_of_submission(
     }
 }
 
-fn build_sub_team_apply_status_url(sub_team_id: &str) -> String {
-    format!("/teams/{sub_team_id}/parent")
+/// URL of the sub-team's "Application status" page. The Dioxus route is
+/// `/:username/sub-teams/application`, so we resolve the sub-team's
+/// `username` from its team id before building the link. Fallback is
+/// the team home (`/:username`) when the lookup fails.
+async fn build_sub_team_apply_status_url(
+    cli: &aws_sdk_dynamodb::Client,
+    sub_team_id: &str,
+) -> String {
+    let pk = Partition::Team(sub_team_id.to_string());
+    let username = crate::features::posts::models::Team::get(
+        cli,
+        &pk,
+        Some(EntityType::Team),
+    )
+    .await
+    .ok()
+    .flatten()
+    .map(|t| t.username)
+    .unwrap_or_default();
+    if username.is_empty() {
+        // Better to land on the home route than a 404 with the bare id.
+        format!("/{sub_team_id}")
+    } else {
+        format!("/{username}/sub-teams/application")
+    }
 }
 
-fn build_sub_team_management_url(parent_team_id: &str) -> String {
-    format!("/teams/{parent_team_id}/sub-teams")
+/// URL of the parent's "Sub-team management" page. Route is
+/// `/:username/sub-teams/manage`.
+async fn build_sub_team_management_url(
+    cli: &aws_sdk_dynamodb::Client,
+    parent_team_id: &str,
+) -> String {
+    let pk = Partition::Team(parent_team_id.to_string());
+    let username = crate::features::posts::models::Team::get(
+        cli,
+        &pk,
+        Some(EntityType::Team),
+    )
+    .await
+    .ok()
+    .flatten()
+    .map(|t| t.username)
+    .unwrap_or_default();
+    if username.is_empty() {
+        format!("/{parent_team_id}")
+    } else {
+        format!("/{username}/sub-teams/manage")
+    }
 }

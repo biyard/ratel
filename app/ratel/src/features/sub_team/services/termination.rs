@@ -84,15 +84,54 @@ pub async fn notify_team_admins(
     }
 }
 
-/// URL builder for the child-side "parent relationship" page (sub-team admin
-/// landing point for termination notifications).
-pub fn build_sub_team_parent_url(sub_team_id: &str) -> String {
-    format!("/teams/{sub_team_id}/parent")
+/// Sub-team-side landing for deregister / leave notifications. The
+/// Dioxus route is `/:username/sub-teams/application`, so we resolve
+/// the team's `username` from its id first. Falls back to the team
+/// home `/:username` (or the bare id) when the lookup fails.
+pub async fn build_sub_team_parent_url(
+    cli: &aws_sdk_dynamodb::Client,
+    sub_team_id: &str,
+) -> String {
+    let pk = Partition::Team(sub_team_id.to_string());
+    let username = crate::features::posts::models::Team::get(
+        cli,
+        &pk,
+        Some(EntityType::Team),
+    )
+    .await
+    .ok()
+    .flatten()
+    .map(|t| t.username)
+    .unwrap_or_default();
+    if username.is_empty() {
+        format!("/{sub_team_id}")
+    } else {
+        format!("/{username}/sub-teams/application")
+    }
 }
 
-/// URL builder for the parent-side sub-teams management dashboard.
-pub fn build_parent_sub_teams_url(parent_team_id: &str) -> String {
-    format!("/teams/{parent_team_id}/sub-teams")
+/// Parent-side sub-team management dashboard. Route is
+/// `/:username/sub-teams/manage`.
+pub async fn build_parent_sub_teams_url(
+    cli: &aws_sdk_dynamodb::Client,
+    parent_team_id: &str,
+) -> String {
+    let pk = Partition::Team(parent_team_id.to_string());
+    let username = crate::features::posts::models::Team::get(
+        cli,
+        &pk,
+        Some(EntityType::Team),
+    )
+    .await
+    .ok()
+    .flatten()
+    .map(|t| t.username)
+    .unwrap_or_default();
+    if username.is_empty() {
+        format!("/{parent_team_id}")
+    } else {
+        format!("/{username}/sub-teams/manage")
+    }
 }
 
 /// Parent-delete cascade: enumerate every SubTeamLink under `parent_pk`,
@@ -134,7 +173,7 @@ pub async fn cascade_parent_delete_to_sub_teams(
         // Notify former sub-team admins.
         let fpt_id = former_parent_team_id.clone();
         let fpt_name = former_parent_team_name.clone();
-        let cta_url = build_sub_team_parent_url(&child_id);
+        let cta_url = build_sub_team_parent_url(cli, &child_id).await;
         notify_team_admins(cli, &child_pk, move || {
             InboxPayload::SubTeamParentDeleted {
                 former_parent_team_id: fpt_id.clone(),

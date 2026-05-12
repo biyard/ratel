@@ -77,7 +77,7 @@ pub async fn deregister_sub_team_handler(
     // 4. Notify former sub-team admins.
     let former_parent_team_name = team.display_name.clone();
     let reason = body.reason.clone();
-    let cta_url = build_sub_team_parent_url(&sub_team_id);
+    let cta_url = build_sub_team_parent_url(cli, &sub_team_id).await;
     notify_team_admins(cli, &child_pk, move || {
         InboxPayload::SubTeamDeregistered {
             former_parent_team_id: former_parent_team_id.clone(),
@@ -172,7 +172,7 @@ pub async fn leave_parent_handler(
     let former_sub_team_name = team.display_name.clone();
     let former_parent_team_id = parent_team_id.clone();
     let reason = body.reason.clone();
-    let cta_url = build_parent_sub_teams_url(&parent_team_id);
+    let cta_url = build_parent_sub_teams_url(cli, &parent_team_id).await;
     notify_team_admins(cli, &parent_pk, move || {
         InboxPayload::SubTeamLeftParent {
             former_parent_team_id: former_parent_team_id.clone(),

@@ -88,6 +88,7 @@ pub fn ParentHudPanel() -> Element {
         div { class: "parent-panel-wrap",
             button {
                 class: "hud-btn hud-btn--parent",
+                "data-testid": "sub-team-hud-parent-btn",
                 "data-state": "{badge_state}",
                 "aria-label": "{tr.parent_icon}",
                 "aria-expanded": "{open()}",
