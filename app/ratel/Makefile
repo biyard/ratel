@@ -56,7 +56,7 @@ else
 	ARCH ?= $(shell uname -m)
 endif
 
-MOBILE_API_URL ?= http://$(HOST_IP):$(PORT)
+MOBILE_API_URL ?= https://dev.ratel.foundation
 
 REPOSITORY ?= ratel/app-shell
 ECR ?= $(shell aws ecr describe-repositories --repository-names $(REPOSITORY)  --query "repositories[0].repositoryUri" --output text)
@@ -95,8 +95,7 @@ else
 	ANDROID_TARGET ?= x86_64-linux-android
 endif
 
-MODE ?= debug
-
+MODE ?= release
 
 ifneq ($(CARGO_TARGET_DIR),)
 	ANDROID_DX_RES_BASE_DIR ?= $(CARGO_TARGET_DIR)/dx/app-shell
@@ -262,22 +261,19 @@ $(ANDROID_HOME)/system-images/android-34/google_apis/$(ARCH):
 android-emulator: $(HOME)/.android/debug.keystore $(HOME)/.android/avd/$(AVD_NAME).avd $(ANDROID_HOME)/emulator/emulator
 	$(ANDROID_HOME)/emulator/emulator -avd $(AVD_NAME) -netdelay none -netspeed full &
 
-.PHONY: $(ANDROID_DX_RES_BASE_DIR)/release/android/app/app/src/main $(ANDROID_DX_RES_BASE_DIR)/debug/android/app/app/src/main/res
-$(ANDROID_DX_RES_BASE_DIR)/release/android/app/app/src/main:
+.PHONY: $(ANDROID_DX_RES_DIR)
+$(ANDROID_DX_RES_DIR):
 	rm -rf $@/res
 	mkdir -p $@
 	cp -rf android/res $@/
 
-$(ANDROID_DX_RES_BASE_DIR)/debug/android/app/app/src/main/res:
-	rm -rf $@/res
-	mkdir -p $@
-	cp -rf android/res $@/
+android: $(HOME)/.android/debug.keystore $(ANDROID_DX_RES_DIR)
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx bundle --release --features $(RUN_FEATURES) --no-default-features --android --target $(ANDROID_TARGET) --fullstack false
+	adb $(DEVICE_FLAG) install -r $(ANDROID_DX_RES_BASE_DIR)/$(MODE)/android/app/app/build/outputs/apk/debug/app-debug.apk
+	adb $(DEVICE_FLAG) shell am start -n "co.biyard.ratel/.MainActivity" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER
 
-android: $(HOME)/.android/debug.keystore $(ANDROID_DX_RES_BASE_DIR)/debug/android/app/app/src/main
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --features $(RUN_FEATURES) --no-default-features @client --android --target $(ANDROID_TARGET) $(DEVICE_FLAG)
-
-build-android: $(HOME)/.android/debug.keystore $(ANDROID_DX_RES_BASE_DIR)/release/android/app/app/src/main
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx bundle --release --features $(RUN_FEATURES) --no-default-features @client --android --target $(ANDROID_TARGET) $(DEVICE_FLAG)
+build-android: $(HOME)/.android/debug.keystore $(ANDROID_DX_RES_DIR)
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx bundle --release --features $(RUN_FEATURES) --no-default-features --android --target $(ANDROID_TARGET) --fullstack false
 
 ios:
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --ios --features $(RUN_FEATURES)
