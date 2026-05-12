@@ -67,7 +67,7 @@ fn UserPostCard(post: PostResponse) -> Element {
     let likes = post.likes;
     let comments = post.comments;
     let thumbnail = post.urls.first().cloned();
-    let html_contents = post.html_contents.clone();
+    let html_contents = post.body.to_html();
     let category = post.categories.first().cloned().unwrap_or_default();
 
     rsx! {

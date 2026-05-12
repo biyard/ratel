@@ -195,7 +195,7 @@ pub fn DraftScrollRow(
                                         }
                                     }
                                     FeedContents {
-                                        contents: post.html_contents.chars().take(200).collect::<String>(),
+                                        contents: post.body.to_plain_text().chars().take(200).collect::<String>(),
                                         urls: post.urls.clone(),
                                     }
                                     div { class: "flex flex-row items-center px-5 mt-4",

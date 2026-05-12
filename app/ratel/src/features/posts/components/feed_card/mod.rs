@@ -101,7 +101,7 @@ pub fn FeedCard(
 fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> Element {
     let PostResponse {
         title,
-        html_contents,
+        body,
         author_display_name,
         author_profile_url,
         author_type,
@@ -110,6 +110,7 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
         urls,
         ..
     } = post;
+    let preview = body.to_plain_text();
 
     rsx! {
         div { class: "flex flex-col pt-5 pb-5",
@@ -134,7 +135,7 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
             h2 { class: "mt-2 px-5 w-full truncate font-bold align-middle text-xl/[25px] tracking-[0.5px] text-text-primary",
                 {title}
             }
-            FeedContents { contents: html_contents, urls }
+            FeedContents { contents: preview, urls }
             div { class: "mt-4 flex flex-row justify-between items-center px-5",
                 UserBadge {
                     profile_url: author_profile_url,
@@ -152,48 +153,15 @@ fn FeedBody(post: PostResponse, on_edit: Option<EventHandler<MouseEvent>>) -> El
 #[component]
 pub fn FeedContents(contents: String, urls: Vec<String>) -> Element {
     let _ = urls;
-    let preview = strip_html_tags(&contents);
     rsx! {
         div { class: "px-5 mt-2 break-all text-desc-text",
             div {
                 class: "border-none truncate whitespace-nowrap",
                 style: "min-height: 22px; max-height: 22px; overflow: hidden;",
-                "{preview}"
+                "{contents}"
             }
         }
     }
-}
-
-fn strip_html_tags(input: &str) -> String {
-    let mut out = String::with_capacity(input.len());
-    let mut in_tag = false;
-    let mut last_was_space = false;
-
-    for ch in input.chars() {
-        match ch {
-            '<' => in_tag = true,
-            '>' => {
-                in_tag = false;
-                if !last_was_space && !out.is_empty() {
-                    out.push(' ');
-                    last_was_space = true;
-                }
-            }
-            _ if in_tag => {}
-            c if c.is_whitespace() => {
-                if !last_was_space && !out.is_empty() {
-                    out.push(' ');
-                    last_was_space = true;
-                }
-            }
-            c => {
-                out.push(c);
-                last_was_space = false;
-            }
-        }
-    }
-
-    out.trim().to_string()
 }
 
 #[component]
