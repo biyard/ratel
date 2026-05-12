@@ -177,7 +177,7 @@ impl RatelMcpServer {
             .transpose()?;
         let update_req = UpdatePostRequest::Publish {
             title: req.title,
-            content: req.content,
+            content: ContentBody::html(req.content),
             image_urls: None,
             publish: req.publish,
             visibility,
