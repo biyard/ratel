@@ -254,13 +254,8 @@ impl RichText {
 }
 
 fn strip_html_tags(html: &str) -> String {
-    let re_img = regex::Regex::new(r"<img[^>]*>").unwrap();
-    let no_img = re_img.replace_all(html, "");
-    let re_tags = regex::Regex::new(r"<[^>]+>").unwrap();
-    let no_tags = re_tags.replace_all(&no_img, "");
-    let re_urls = regex::Regex::new(r"https?://[^\s]+").unwrap();
-    let no_urls = re_urls.replace_all(&no_tags, "");
-    normalize_whitespace(&no_urls)
+    let stripped = strip_tags::strip_tags(html);
+    normalize_whitespace(&stripped)
 }
 
 fn normalize_whitespace(s: &str) -> String {

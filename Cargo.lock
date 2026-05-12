@@ -449,6 +449,7 @@ dependencies = [
  "sha2 0.10.9",
  "sha3",
  "ssi",
+ "strip-tags",
  "strum 0.27.2",
  "thiserror 2.0.18",
  "time",
@@ -15412,6 +15413,12 @@ dependencies = [
  "unicode-normalization",
  "unicode-properties",
 ]
+
+[[package]]
+name = "strip-tags"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ecd2b127e68202f5f285a116f616d5d11735cca5e4befaea0347becd445b05b2"
 
 [[package]]
 name = "strsim"
