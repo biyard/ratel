@@ -87,7 +87,7 @@ pub async fn get_space(
         sk: space.sk,
         title: post.title,
         content: if space.content.is_empty() {
-            strip_color_styles(&post.html_contents)
+            strip_color_styles(&post.body.to_html())
         } else {
             space.content
         },

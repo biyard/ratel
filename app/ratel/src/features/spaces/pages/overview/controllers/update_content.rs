@@ -30,7 +30,7 @@ pub async fn update_space_content(
         .with_content(req.content.clone())
         .execute(dynamo);
     let update_post = Post::updater(&post_partition, EntityType::Post)
-        .with_html_contents(req.content)
+        .with_body(ContentBody::html(req.content))
         .execute(dynamo);
 
     tokio::try_join!(update_space, update_post).map_err(|e| {

@@ -161,7 +161,7 @@ pub async fn handle_announcement_published(
             created_at: now,
             updated_at: now,
             title: announcement.title.clone(),
-            html_contents: announcement.body.clone(),
+            body: ContentBody::html(announcement.body.clone()),
             post_type: PostType::Post,
             status: PostStatus::Published,
             visibility: Some(Visibility::Public),
