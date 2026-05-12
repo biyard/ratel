@@ -193,4 +193,3 @@ Team 의 거버넌스를 외부에 공유할 때 학칙 URL 을 사용하세요 
 
 - [팀 생성](./create.md) — 멤버, 초안, DAO 기초를 다루는 기본 Team 워크스루.
 - [팀 설정](./team-settings.md) — 구독 카드를 포함한 Team 자체 설정의 관리자 도구.
-- [용어 정리 → 멤버십 티어](../intro/glossary#membership-tier-멤버십-티어) — Team 의 보상 스페이스를 펀딩할 Credit 등급을 선택하세요.
