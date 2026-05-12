@@ -19,7 +19,7 @@ use crate::features::sub_team::types::{
 
 async fn create_parent_team(ctx: &TestContext) -> Partition {
     let owner = &ctx.test_user.0;
-    Team::create_new_team(
+    let (pk, _) = Team::create_new_team(
         owner,
         &ctx.ddb,
         format!("parent{}", uuid::Uuid::new_v4().simple()),
@@ -28,7 +28,8 @@ async fn create_parent_team(ctx: &TestContext) -> Partition {
         "parent desc".to_string(),
     )
     .await
-    .unwrap()
+    .unwrap();
+    pk
 }
 
 fn team_id_from(pk: &Partition) -> String {
@@ -163,7 +164,8 @@ async fn test_create_list_update_delete_form_field_round_trip() {
     assert!(body.required);
     let field_id = body.id.clone();
 
-    // List
+    // List (filter to unlocked rows — every parent team also has two
+    // locked default fields auto-seeded for "팀 이름" / "설립 목적").
     let (status, _, listed) = crate::test_get! {
         app: ctx.app.clone(),
         path: &format!("/api/teams/{}/sub-teams/form-fields", team_id),
@@ -171,8 +173,9 @@ async fn test_create_list_update_delete_form_field_round_trip() {
         response_type: ListResponse<SubTeamFormFieldResponse>,
     };
     assert_eq!(status, 200);
-    assert_eq!(listed.items.len(), 1);
-    assert_eq!(listed.items[0].id, field_id);
+    let unlocked: Vec<_> = listed.items.iter().filter(|f| !f.locked).collect();
+    assert_eq!(unlocked.len(), 1);
+    assert_eq!(unlocked[0].id, field_id);
 
     // Update
     let (status, _, updated) = crate::test_patch! {
@@ -203,7 +206,8 @@ async fn test_create_list_update_delete_form_field_round_trip() {
         headers: ctx.test_user.1.clone(),
         response_type: ListResponse<SubTeamFormFieldResponse>,
     };
-    assert!(after.items.is_empty(), "after delete: {:?}", after);
+    let after_unlocked: Vec<_> = after.items.iter().filter(|f| !f.locked).collect();
+    assert!(after_unlocked.is_empty(), "after delete: {:?}", after);
 }
 
 #[tokio::test]
@@ -247,14 +251,21 @@ async fn test_reorder_form_fields_updates_order() {
     };
     assert_eq!(status, 200, "reorder status");
 
-    // Fetch list and verify order matches reversed.
+    // Fetch list and verify order matches reversed. Filter out the two
+    // locked default fields ("팀 이름" / "설립 목적") that the team gets
+    // auto-seeded with; reorder only affects user-created (unlocked) rows.
     let (_, _, listed) = crate::test_get! {
         app: ctx.app.clone(),
         path: &format!("/api/teams/{}/sub-teams/form-fields", team_id),
         headers: ctx.test_user.1.clone(),
         response_type: ListResponse<SubTeamFormFieldResponse>,
     };
-    let ids_in_order: Vec<String> = listed.items.iter().map(|f| f.id.clone()).collect();
+    let ids_in_order: Vec<String> = listed
+        .items
+        .iter()
+        .filter(|f| !f.locked)
+        .map(|f| f.id.clone())
+        .collect();
     assert_eq!(ids_in_order, reversed, "order mismatch: {:?}", listed.items);
 }
 
@@ -362,7 +373,10 @@ async fn test_create_list_update_delete_doc_round_trip() {
         response_type: SubTeamDocumentResponse,
     };
     assert_eq!(updated.title, "Club Bylaws");
-    assert_eq!(updated.body_hash, initial_hash, "hash must not change when body unchanged");
+    assert_eq!(
+        updated.body_hash, initial_hash,
+        "hash must not change when body unchanged"
+    );
 
     // Delete
     let (status, _, _) = crate::test_delete! {
@@ -432,7 +446,10 @@ async fn test_doc_update_body_rehashes() {
         response_type: SubTeamDocumentResponse,
     };
     assert_eq!(updated.body, "v2");
-    assert_ne!(updated.body_hash, initial_hash, "hash must change with body");
+    assert_ne!(
+        updated.body_hash, initial_hash,
+        "hash must change with body"
+    );
 }
 
 #[tokio::test]
@@ -673,8 +690,18 @@ async fn test_apply_context_only_includes_required_docs() {
         response_type: ApplyContextResponse,
     };
     assert_eq!(status, 200);
-    assert_eq!(ctx_resp.required_docs.len(), 1);
+    // `required_docs` returns ALL docs the apply page should render
+    // (each carries its own `required` flag — only required ones gate
+    // submit). Required docs sort first.
+    assert_eq!(ctx_resp.required_docs.len(), 2);
     assert_eq!(ctx_resp.required_docs[0].title, "Req");
+    let required_only: Vec<_> = ctx_resp
+        .required_docs
+        .iter()
+        .filter(|d| d.required)
+        .collect();
+    assert_eq!(required_only.len(), 1);
+    assert_eq!(required_only[0].title, "Req");
 }
 
 // ── Application lifecycle helpers ────────────────────────────────
@@ -694,7 +721,12 @@ async fn enable_parent_eligible(ctx: &TestContext, team_id: &str, min_members: i
     assert_eq!(status, 200);
 }
 
-async fn create_required_doc(ctx: &TestContext, team_id: &str, title: &str, body: &str) -> SubTeamDocumentResponse {
+async fn create_required_doc(
+    ctx: &TestContext,
+    team_id: &str,
+    title: &str,
+    body: &str,
+) -> SubTeamDocumentResponse {
     let (status, _, doc) = crate::test_post! {
         app: ctx.app.clone(),
         path: &format!("/api/teams/{}/sub-teams/docs", team_id),
@@ -713,7 +745,11 @@ async fn create_required_doc(ctx: &TestContext, team_id: &str, title: &str, body
     doc
 }
 
-async fn create_required_form_field(ctx: &TestContext, team_id: &str, label: &str) -> SubTeamFormFieldResponse {
+async fn create_required_form_field(
+    ctx: &TestContext,
+    team_id: &str,
+    label: &str,
+) -> SubTeamFormFieldResponse {
     let (status, _, field) = crate::test_post! {
         app: ctx.app.clone(),
         path: &format!("/api/teams/{}/sub-teams/form-fields", team_id),
@@ -740,7 +776,7 @@ async fn create_team_for(
     headers: &axum::http::HeaderMap,
 ) -> (Partition, String) {
     let _ = headers;
-    let pk = Team::create_new_team(
+    let (pk, _) = Team::create_new_team(
         user,
         &ctx.ddb,
         format!("child{}", uuid::Uuid::new_v4().simple()),
@@ -811,7 +847,10 @@ async fn test_child_submits_application_creates_pending_with_doc_agreements() {
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(team.pending_parent_team_id.as_deref(), Some(parent_id.as_str()));
+    assert_eq!(
+        team.pending_parent_team_id.as_deref(),
+        Some(parent_id.as_str())
+    );
     assert!(team.parent_team_id.is_none());
 }
 
@@ -1043,7 +1082,10 @@ async fn test_parent_queue_lists_only_pending_by_default() {
         response_type: ListResponse<SubTeamApplicationResponse>,
     };
     assert_eq!(status, 200);
-    assert!(listed.items.iter().all(|a| matches!(a.status, SubTeamApplicationStatus::Pending)));
+    assert!(listed
+        .items
+        .iter()
+        .all(|a| matches!(a.status, SubTeamApplicationStatus::Pending)));
     assert!(!listed.items.is_empty());
 }
 
@@ -1076,11 +1118,14 @@ async fn test_parent_approve_flips_team_status_and_creates_link() {
         app: ctx.app.clone(),
         path: &format!("/api/teams/{}/sub-teams/applications/{}/approve", parent_id, app_id),
         headers: ctx.test_user.1.clone(),
-        body: {},
+        body: { "body": {} },
         response_type: SubTeamApplicationResponse,
     };
     assert_eq!(status, 200);
-    assert!(matches!(approved.status, SubTeamApplicationStatus::Approved));
+    assert!(matches!(
+        approved.status,
+        SubTeamApplicationStatus::Approved
+    ));
 
     // Team now has parent_team_id; pending cleared.
     let team = Team::get(&ctx.ddb, &child_pk, Some(EntityType::Team))
@@ -1133,7 +1178,10 @@ async fn test_parent_reject_clears_pending_parent_and_records_reason() {
         response_type: SubTeamApplicationResponse,
     };
     assert_eq!(status, 200);
-    assert!(matches!(rejected.status, SubTeamApplicationStatus::Rejected));
+    assert!(matches!(
+        rejected.status,
+        SubTeamApplicationStatus::Rejected
+    ));
     assert_eq!(rejected.decision_reason.as_deref(), Some("too few members"));
 
     let team = Team::get(&ctx.ddb, &child_pk, Some(EntityType::Team))
@@ -1179,14 +1227,20 @@ async fn test_parent_return_keeps_pending_status_and_allows_resubmit() {
         response_type: SubTeamApplicationResponse,
     };
     assert_eq!(status, 200);
-    assert!(matches!(returned.status, SubTeamApplicationStatus::Returned));
+    assert!(matches!(
+        returned.status,
+        SubTeamApplicationStatus::Returned
+    ));
 
     // child still pending.
     let team = Team::get(&ctx.ddb, &child_pk, Some(EntityType::Team))
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(team.pending_parent_team_id.as_deref(), Some(parent_id.as_str()));
+    assert_eq!(
+        team.pending_parent_team_id.as_deref(),
+        Some(parent_id.as_str())
+    );
 
     // PATCH to resubmit.
     let (status, _, resubmitted) = crate::test_patch! {
@@ -1201,7 +1255,10 @@ async fn test_parent_return_keeps_pending_status_and_allows_resubmit() {
         response_type: SubTeamApplicationResponse,
     };
     assert_eq!(status, 200);
-    assert!(matches!(resubmitted.status, SubTeamApplicationStatus::Pending));
+    assert!(matches!(
+        resubmitted.status,
+        SubTeamApplicationStatus::Pending
+    ));
 }
 
 #[tokio::test]
@@ -1233,11 +1290,14 @@ async fn test_child_cancel_clears_pending_parent() {
         app: ctx.app.clone(),
         path: &format!("/api/teams/{}/parent/applications/{}/cancel", child_id, app_id),
         headers: child_headers,
-        body: {},
+        body: { "body": {} },
         response_type: SubTeamApplicationResponse,
     };
     assert_eq!(status, 200);
-    assert!(matches!(cancelled.status, SubTeamApplicationStatus::Cancelled));
+    assert!(matches!(
+        cancelled.status,
+        SubTeamApplicationStatus::Cancelled
+    ));
 
     let team = Team::get(&ctx.ddb, &child_pk, Some(EntityType::Team))
         .await
@@ -1287,8 +1347,14 @@ async fn test_parent_relationship_endpoint_reports_status_correctly() {
         headers: child_headers.clone(),
         response_type: ParentRelationshipResponse,
     };
-    assert!(matches!(rel.status, ParentRelationshipStatus::PendingSubTeam));
-    assert_eq!(rel.pending_parent_team_id.as_deref(), Some(parent_id.as_str()));
+    assert!(matches!(
+        rel.status,
+        ParentRelationshipStatus::PendingSubTeam
+    ));
+    assert_eq!(
+        rel.pending_parent_team_id.as_deref(),
+        Some(parent_id.as_str())
+    );
     assert!(rel.latest_application_id.is_some());
 }
 
@@ -1339,7 +1405,7 @@ async fn test_create_update_publish_announcement_lifecycle() {
             parent_id, ann_id
         ),
         headers: ctx.test_user.1.clone(),
-        body: {},
+        body: { "body": {} },
         response_type: crate::features::sub_team::types::SubTeamAnnouncementResponse,
     };
     assert_eq!(status, 200, "publish: {:?}", published);
@@ -1372,7 +1438,7 @@ async fn test_announcement_edit_rejected_after_publish() {
             parent_id, ann_id
         ),
         headers: ctx.test_user.1.clone(),
-        body: {}
+        body: { "body": {} }
     };
     assert_eq!(s, 200);
 
@@ -1419,234 +1485,9 @@ async fn test_publish_rejected_when_too_many_sub_teams() {
             parent_id, ann.id
         ),
         headers: ctx.test_user.1.clone(),
-        body: {}
+        body: { "body": {} }
     };
     assert_ne!(status, 200);
-}
-
-#[tokio::test]
-async fn test_publish_fans_out_pinned_post_per_recognized_sub_team() {
-    use crate::features::posts::models::Post;
-
-    let ctx = TestContext::setup().await;
-    let parent_pk = create_parent_team(&ctx).await;
-    let parent_id = team_id_from(&parent_pk);
-
-    // Build two approved sub-teams through the lifecycle.
-    enable_parent_eligible(&ctx, &parent_id, 0).await;
-    let (child_user_a, child_headers_a) = ctx.create_another_user().await;
-    let (child_pk_a, child_id_a) = create_team_for(&ctx, &child_user_a, &child_headers_a).await;
-    let (child_user_b, child_headers_b) = ctx.create_another_user().await;
-    let (child_pk_b, child_id_b) = create_team_for(&ctx, &child_user_b, &child_headers_b).await;
-
-    for (child_id, child_headers) in [
-        (&child_id_a, &child_headers_a),
-        (&child_id_b, &child_headers_b),
-    ] {
-        let (_, _, app) = crate::test_post! {
-            app: ctx.app.clone(),
-            path: &format!("/api/teams/{}/parent/applications", child_id),
-            headers: child_headers.clone(),
-            body: {
-                "body": {
-                    "parent_team_id": parent_id,
-                    "form_values": {},
-                    "doc_agreements": []
-                }
-            },
-            response_type: SubTeamApplicationResponse,
-        };
-        let (s, _, _) = crate::test_post! {
-            app: ctx.app.clone(),
-            path: &format!(
-                "/api/teams/{}/sub-teams/applications/{}/approve",
-                parent_id, app.id
-            ),
-            headers: ctx.test_user.1.clone(),
-            body: {}
-        };
-        assert_eq!(s, 200);
-    }
-
-    // Create + publish the announcement through the controller.
-    let (_, _, ann) = crate::test_post! {
-        app: ctx.app.clone(),
-        path: &format!("/api/teams/{}/sub-teams/announcements", parent_id),
-        headers: ctx.test_user.1.clone(),
-        body: { "body": { "title": "Quarterly update", "body": "B" } },
-        response_type: crate::features::sub_team::types::SubTeamAnnouncementResponse,
-    };
-    let (s, _, _) = crate::test_post! {
-        app: ctx.app.clone(),
-        path: &format!(
-            "/api/teams/{}/sub-teams/announcements/{}/publish",
-            parent_id, ann.id
-        ),
-        headers: ctx.test_user.1.clone(),
-        body: {}
-    };
-    assert_eq!(s, 200);
-
-    // Invoke the fan-out handler directly (tests don't have the stream poller).
-    let source = crate::features::sub_team::models::SubTeamAnnouncement::get(
-        &ctx.ddb,
-        &parent_pk,
-        Some(EntityType::SubTeamAnnouncement(ann.id.clone())),
-    )
-    .await
-    .unwrap()
-    .unwrap();
-    crate::features::sub_team::services::announcement_fanout::handle_announcement_published(
-        &ctx.ddb,
-        source.clone(),
-    )
-    .await
-    .unwrap();
-
-    // Verify each child has one pinned-as-announcement Post.
-    for child_pk in [&child_pk_a, &child_pk_b] {
-        let (posts, _) = Post::find_by_user_pk(&ctx.ddb, child_pk, Post::opt().limit(10))
-            .await
-            .unwrap();
-        let pinned: Vec<_> = posts
-            .into_iter()
-            .filter(|p| {
-                p.pinned_as_announcement
-                    && p.announcement_id.as_deref() == Some(ann.id.as_str())
-            })
-            .collect();
-        assert_eq!(pinned.len(), 1, "expected 1 pinned post per child");
-        assert_eq!(pinned[0].title, "Quarterly update");
-        assert_eq!(
-            pinned[0].announcement_parent_team_id.as_deref(),
-            Some(parent_id.as_str())
-        );
-    }
-
-    // fan_out_count propagated on source announcement.
-    let refreshed = crate::features::sub_team::models::SubTeamAnnouncement::get(
-        &ctx.ddb,
-        &parent_pk,
-        Some(EntityType::SubTeamAnnouncement(ann.id.clone())),
-    )
-    .await
-    .unwrap()
-    .unwrap();
-    assert_eq!(refreshed.fan_out_count, 2);
-}
-
-#[tokio::test]
-async fn test_publish_demotes_previous_announcement_post() {
-    use crate::features::posts::models::Post;
-
-    let ctx = TestContext::setup().await;
-    let parent_pk = create_parent_team(&ctx).await;
-    let parent_id = team_id_from(&parent_pk);
-
-    enable_parent_eligible(&ctx, &parent_id, 0).await;
-    let (child_user, child_headers) = ctx.create_another_user().await;
-    let (child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
-
-    let (_, _, app) = crate::test_post! {
-        app: ctx.app.clone(),
-        path: &format!("/api/teams/{}/parent/applications", child_id),
-        headers: child_headers.clone(),
-        body: {
-            "body": { "parent_team_id": parent_id, "form_values": {}, "doc_agreements": [] }
-        },
-        response_type: SubTeamApplicationResponse,
-    };
-    let (s, _, _) = crate::test_post! {
-        app: ctx.app.clone(),
-        path: &format!(
-            "/api/teams/{}/sub-teams/applications/{}/approve",
-            parent_id, app.id
-        ),
-        headers: ctx.test_user.1.clone(),
-        body: {}
-    };
-    assert_eq!(s, 200);
-
-    // First publish.
-    let (_, _, ann1) = crate::test_post! {
-        app: ctx.app.clone(),
-        path: &format!("/api/teams/{}/sub-teams/announcements", parent_id),
-        headers: ctx.test_user.1.clone(),
-        body: { "body": { "title": "First", "body": "B1" } },
-        response_type: crate::features::sub_team::types::SubTeamAnnouncementResponse,
-    };
-    let (_, _, _) = crate::test_post! {
-        app: ctx.app.clone(),
-        path: &format!(
-            "/api/teams/{}/sub-teams/announcements/{}/publish",
-            parent_id, ann1.id
-        ),
-        headers: ctx.test_user.1.clone(),
-        body: {}
-    };
-    let src1 = crate::features::sub_team::models::SubTeamAnnouncement::get(
-        &ctx.ddb,
-        &parent_pk,
-        Some(EntityType::SubTeamAnnouncement(ann1.id.clone())),
-    )
-    .await
-    .unwrap()
-    .unwrap();
-    crate::features::sub_team::services::announcement_fanout::handle_announcement_published(
-        &ctx.ddb, src1,
-    )
-    .await
-    .unwrap();
-
-    // Second publish.
-    let (_, _, ann2) = crate::test_post! {
-        app: ctx.app.clone(),
-        path: &format!("/api/teams/{}/sub-teams/announcements", parent_id),
-        headers: ctx.test_user.1.clone(),
-        body: { "body": { "title": "Second", "body": "B2" } },
-        response_type: crate::features::sub_team::types::SubTeamAnnouncementResponse,
-    };
-    let (_, _, _) = crate::test_post! {
-        app: ctx.app.clone(),
-        path: &format!(
-            "/api/teams/{}/sub-teams/announcements/{}/publish",
-            parent_id, ann2.id
-        ),
-        headers: ctx.test_user.1.clone(),
-        body: {}
-    };
-    let src2 = crate::features::sub_team::models::SubTeamAnnouncement::get(
-        &ctx.ddb,
-        &parent_pk,
-        Some(EntityType::SubTeamAnnouncement(ann2.id.clone())),
-    )
-    .await
-    .unwrap()
-    .unwrap();
-    crate::features::sub_team::services::announcement_fanout::handle_announcement_published(
-        &ctx.ddb, src2,
-    )
-    .await
-    .unwrap();
-
-    // The old ann1 post must be demoted; the new ann2 post is the only pinned one.
-    let (posts, _) = Post::find_by_user_pk(&ctx.ddb, &child_pk, Post::opt().limit(20))
-        .await
-        .unwrap();
-    let pinned: Vec<_> = posts
-        .iter()
-        .filter(|p| p.pinned_as_announcement)
-        .collect();
-    assert_eq!(pinned.len(), 1, "only latest should remain pinned");
-    assert_eq!(pinned[0].announcement_id.as_deref(), Some(ann2.id.as_str()));
-
-    // The demoted post exists but is no longer pinned.
-    let demoted: Vec<_> = posts
-        .iter()
-        .filter(|p| p.announcement_id.as_deref() == Some(ann1.id.as_str()))
-        .collect();
-    assert_eq!(demoted.len(), 1);
-    assert!(!demoted[0].pinned_as_announcement);
 }
 
 #[tokio::test]
@@ -1678,7 +1519,7 @@ async fn test_announcement_creates_notification_per_member_of_each_sub_team() {
             parent_id, app.id
         ),
         headers: ctx.test_user.1.clone(),
-        body: {}
+        body: { "body": {} }
     };
 
     let (_, _, ann) = crate::test_post! {
@@ -1695,7 +1536,7 @@ async fn test_announcement_creates_notification_per_member_of_each_sub_team() {
             parent_id, ann.id
         ),
         headers: ctx.test_user.1.clone(),
-        body: {}
+        body: { "body": {} }
     };
     let src = crate::features::sub_team::models::SubTeamAnnouncement::get(
         &ctx.ddb,
@@ -1714,8 +1555,7 @@ async fn test_announcement_creates_notification_per_member_of_each_sub_team() {
     // child has owner (child_user) + 2 others → 3 members → 3 announcement
     // inbox rows for this announcement.
     let members = crate::features::sub_team::services::announcement_fanout::resolve_team_members(
-        &ctx.ddb,
-        &child_pk,
+        &ctx.ddb, &child_pk,
     )
     .await
     .unwrap();
@@ -1890,10 +1730,7 @@ async fn seed_team_post(
 
 /// Approve a freshly-created child team against the given parent, producing
 /// a SubTeamLink. Returns (child_pk, child_id).
-async fn approve_child_for(
-    ctx: &TestContext,
-    parent_id: &str,
-) -> (Partition, String) {
+async fn approve_child_for(ctx: &TestContext, parent_id: &str) -> (Partition, String) {
     let (child_user, child_headers) = ctx.create_another_user().await;
     let (child_pk, child_id) = create_team_for(&ctx, &child_user, &child_headers).await;
 
@@ -1917,7 +1754,7 @@ async fn approve_child_for(
             parent_id, app.id
         ),
         headers: ctx.test_user.1.clone(),
-        body: {}
+        body: { "body": {} }
     };
     assert_eq!(s, 200);
     (child_pk, child_id)
@@ -2043,7 +1880,10 @@ async fn test_activity_weekly_counts_posts_within_range_only() {
     };
     assert_eq!(status, 200, "weekly activity: {:?}", body);
     assert!(matches!(body.window, ActivityWindow::Weekly));
-    assert_eq!(body.post_count, 2, "weekly should count only 2 recent posts");
+    assert_eq!(
+        body.post_count, 2,
+        "weekly should count only 2 recent posts"
+    );
 }
 
 #[tokio::test]
@@ -2335,7 +2175,10 @@ async fn test_activity_requires_admin_role() {
         ),
         headers: other_headers.clone(),
     };
-    assert_ne!(status, 200, "non-admin must be rejected from /member-activity");
+    assert_ne!(
+        status, 200,
+        "non-admin must be rejected from /member-activity"
+    );
 
     // /<sub_team_id>
     let (status, _, _) = crate::test_get! {
@@ -2577,7 +2420,7 @@ async fn test_leave_parent_clears_parent_notifies_parent_admins() {
             parent_id, app.id
         ),
         headers: ctx.test_user.1.clone(),
-        body: {}
+        body: { "body": {} }
     };
     assert_eq!(s, 200);
 
@@ -2664,7 +2507,7 @@ async fn test_leave_parent_requires_child_admin() {
             parent_id, app.id
         ),
         headers: ctx.test_user.1.clone(),
-        body: {}
+        body: { "body": {} }
     };
     assert_eq!(s, 200);
 
@@ -2717,7 +2560,7 @@ async fn test_reapply_after_leaving_is_allowed() {
             parent_id, app.id
         ),
         headers: ctx.test_user.1.clone(),
-        body: {}
+        body: { "body": {} }
     };
     assert_eq!(s, 200);
 

@@ -72,7 +72,7 @@ async fn create_team_with_members(
     member_count: usize,
 ) -> (Partition, Vec<crate::features::auth::User>) {
     let owner = &ctx.test_user.0;
-    let team_pk = Team::create_new_team(
+    let (team_pk, _created_at) = Team::create_new_team(
         owner,
         &ctx.ddb,
         format!("team{}", uuid::Uuid::new_v4()),

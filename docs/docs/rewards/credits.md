@@ -61,4 +61,3 @@ This is intentional: Credits are designed to encourage *active* host engagement 
 
 - [Reward Points](./points.md) — what Credits become for the participant at payout.
 - [Incentive Pool](./incentives.md) — the Space-level surface where Credits land before they're attached to individual Actions.
-- [Glossary → Membership Tier](../intro/glossary#membership-tier) — the tier-by-tier Credit allotment table.

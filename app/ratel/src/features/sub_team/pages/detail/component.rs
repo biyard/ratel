@@ -2,12 +2,54 @@
 //! `UseSubTeamActivity` which bundles overview/counts/per-member rows.
 
 use crate::features::social::controllers::find_team::find_team_handler;
-use crate::features::sub_team::types::ActivityWindow;
-use crate::features::sub_team::{
-    use_sub_team_activity, SubTeamTranslate, UseSubTeamActivity,
-};
+use crate::features::sub_team::{use_sub_team_activity, SubTeamTranslate, UseSubTeamActivity};
 use crate::route::Route;
 use crate::*;
+
+/// Turns an epoch-ms timestamp into a short Korean-friendly relative
+/// label with a `YYYY-MM-DD` fallback when the gap is older than a
+/// week. Keeps the table compact instead of showing raw 13-digit
+/// timestamps. Locale-aware so the English UI doesn't show Korean
+/// "오늘" / "N일 전".
+fn format_last_active(ts_ms: i64, lang: Language) -> String {
+    if ts_ms <= 0 {
+        return "—".to_string();
+    }
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    let diff_days = ((now - ts_ms) / 86_400_000).max(0);
+    let is_ko = matches!(lang, Language::Ko);
+    match diff_days {
+        0 => {
+            if is_ko {
+                "오늘".to_string()
+            } else {
+                "Today".to_string()
+            }
+        }
+        1 => {
+            if is_ko {
+                "어제".to_string()
+            } else {
+                "Yesterday".to_string()
+            }
+        }
+        2..=6 => {
+            if is_ko {
+                format!("{diff_days}일 전")
+            } else {
+                format!("{diff_days} days ago")
+            }
+        }
+        _ => {
+            use chrono::TimeZone;
+            chrono::Utc
+                .timestamp_millis_opt(ts_ms)
+                .single()
+                .map(|t| t.format("%Y-%m-%d").to_string())
+                .unwrap_or_else(|| "—".to_string())
+        }
+    }
+}
 
 #[component]
 pub fn TeamSubTeamDetailPage(username: String, sub_team_id: String) -> Element {
@@ -38,10 +80,10 @@ pub fn TeamSubTeamDetailPage(username: String, sub_team_id: String) -> Element {
 #[component]
 fn DetailView(username: String, sub_team_id: String) -> Element {
     let tr: SubTeamTranslate = use_translate();
+    let lang_signal = use_language();
     let nav = use_navigator();
 
     let UseSubTeamActivity {
-        mut window,
         detail,
         counts,
         mut members,
@@ -54,7 +96,12 @@ fn DetailView(username: String, sub_team_id: String) -> Element {
 
     let display_name = overview.display_name.clone();
     let handle = overview.username.clone();
-    let privacy_notice_ko = overview.privacy_notice.ko.clone();
+    let current_lang = lang_signal();
+    let privacy_notice_text = if matches!(current_lang, Language::Ko) {
+        overview.privacy_notice.ko.clone()
+    } else {
+        overview.privacy_notice.en.clone()
+    };
 
     let post_count = overview.post_count;
     let space_count = overview.space_count;
@@ -62,40 +109,71 @@ fn DetailView(username: String, sub_team_id: String) -> Element {
 
     let deregister_username = username.clone();
     let deregister_sub_team = sub_team_id.clone();
-    let initials: String = display_name.chars().take(2).collect::<String>().to_uppercase();
+    let initials: String = display_name
+        .chars()
+        .take(2)
+        .collect::<String>()
+        .to_uppercase();
 
     let member_rows = members.items();
 
+    let mut member_search: Signal<String> = use_signal(String::new);
+
+    let username_for_back = username.clone();
     rsx! {
-        div { class: "arena sub-team-detail",
+        // Detail page lives OUTSIDE `SocialLayout → TeamArenaLayout` —
+        // it owns its own back/home topbar so navigating in from the
+        // parent's management list doesn't end up with two stacked
+        // arena topbars (parent's + ours). Page-scoped scroll
+        // container per `feedback_arena_page_scroll.md`.
+        div { class: "sub-team-detail",
+            div { class: "arena-topbar",
+                div { class: "arena-topbar__brand",
+                    // FIXME: anti-pattern — anchor `href` instead of
+                    // `nav.push` because SPA navigation between this
+                    // detail page and `TeamSubTeamManagementPage`
+                    // triggers a dioxus 0.7 reconciler bug. Bouncing
+                    // in/out repeatedly logs hundreds of
+                    // `cannot reclaim ElementId(N)` errors and ends
+                    // with `HierarchyRequestError: replaceWith on
+                    // CharacterData: The new child element contains
+                    // the parent.` A full-page navigation sidesteps
+                    // the whole virtual-dom-reuse codepath. Should be
+                    // switched back to `nav.push(Route::...)` once
+                    // the underlying reconciler / mount-cycle issue
+                    // is rooted out.
+                    a {
+                        class: "brand-home",
+                        "aria-label": "Back",
+                        href: "/{username_for_back}/sub-teams/manage",
+                        lucide_dioxus::ChevronLeft { class: "w-4 h-4 [&>path]:stroke-current" }
+                    }
+                    span { class: "brand-home__divider" }
+                    div { class: "arena-topbar__logo arena-topbar__logo--child", "{initials}" }
+                    div { class: "u-col",
+                        span { class: "arena-topbar__title arena-topbar__title--child",
+                            "{display_name}"
+                        }
+                        span { class: "arena-topbar__handle", "@{handle}" }
+                    }
+                    span { class: "arena-topbar__status arena-topbar__status--active",
+                        "Active"
+                    }
+                }
+            }
+
             div { class: "page page--wide",
 
-                // Team hero
+                // Team hero — avatar + name/handle + window toggle.
                 div { class: "team-hero",
                     div { class: "avatar avatar--lg avatar--teal", "{initials}" }
-                    div {
+                    div { class: "team-hero__main",
                         div { class: "team-hero__title", "{display_name}" }
                         div { class: "team-hero__handle", "@{handle}" }
                     }
-                    div { class: "window-toggle", role: "tablist",
-                        button {
-                            class: "window-toggle__btn",
-                            role: "tab",
-                            "aria-selected": "{window() == ActivityWindow::Weekly}",
-                            onclick: move |_| window.set(ActivityWindow::Weekly),
-                            "{tr.window_weekly}"
-                        }
-                        button {
-                            class: "window-toggle__btn",
-                            role: "tab",
-                            "aria-selected": "{window() == ActivityWindow::Monthly}",
-                            onclick: move |_| window.set(ActivityWindow::Monthly),
-                            "{tr.window_monthly}"
-                        }
-                    }
                 }
 
-                // Metrics
+                // Metrics — Posts / Spaces / Active members.
                 div { class: "metric-grid",
                     div { class: "metric metric--posts",
                         div { class: "metric__label",
@@ -144,16 +222,30 @@ fn DetailView(username: String, sub_team_id: String) -> Element {
                     }
                     div { class: "notice__body",
                         span { class: "notice__title", "{tr.privacy_notice_short}" }
-                        span { class: "notice__text", "{privacy_notice_ko}" }
+                        span { class: "notice__text", "{privacy_notice_text}" }
                     }
                 }
 
-                // Member activity table
+                // Member activity table + search.
                 section { class: "card",
                     div { class: "card__head",
-                        h2 { class: "card__title", "Per-member activity" }
+                        h2 { class: "card__title", "{tr.per_member_activity}" }
                         span { class: "card__dash" }
                         span { class: "card__meta", "{member_rows.len()}" }
+                    }
+                    div { class: "member-head",
+                        div { class: "member-search",
+                            span { class: "member-search__icon",
+                                lucide_dioxus::Search { class: "w-3 h-3 [&>path]:stroke-current" }
+                            }
+                            input {
+                                class: "member-search__input",
+                                placeholder: "{tr.member_search_placeholder}",
+                                value: "{member_search()}",
+                                oninput: move |e| member_search.set(e.value()),
+                            }
+                        }
+                        span { class: "member-sort", "{tr.member_sort_active}" }
                     }
                     if member_rows.is_empty() {
                         div { class: "inline-note", "{tr.empty_list}" }
@@ -161,14 +253,21 @@ fn DetailView(username: String, sub_team_id: String) -> Element {
                         table { class: "member-table",
                             thead {
                                 tr {
-                                    th { "Handle" }
-                                    th { "Posts" }
-                                    th { "Spaces" }
-                                    th { "Last active" }
+                                    th { "{tr.member_handle_header}" }
+                                    th { "{tr.member_posts_header}" }
+                                    th { "{tr.member_spaces_header}" }
+                                    th { "{tr.member_last_active_header}" }
                                 }
                             }
                             tbody { id: "member-rows",
-                                for m in member_rows.iter() {
+                                for m in member_rows
+                                    .iter()
+                                    .filter(|m| {
+                                        let q = member_search();
+                                        q.is_empty() || m.handle.to_lowercase().contains(&q.to_lowercase())
+                                            || m.display_name.to_lowercase().contains(&q.to_lowercase())
+                                    })
+                                {
                                     tr { key: "{m.user_id}",
                                         td {
                                             span { class: "member-handle",
@@ -194,10 +293,18 @@ fn DetailView(username: String, sub_team_id: String) -> Element {
                                             }
                                         }
                                         td {
-                                            if let Some(ts) = m.last_active_at {
-                                                "{ts}"
-                                            } else {
-                                                "—"
+                                            // Plain `String` expression — dioxus turns it into
+                                            // a text node directly. The earlier `{ ... rsx! { ... } }`
+                                            // nesting allocated a fresh element id for the inner
+                                            // `rsx!` on every render, which the reconciler had
+                                            // trouble reclaiming on this page's remount cycles
+                                            // (hundreds of `cannot reclaim ElementId(N)` errors
+                                            // followed by the CharacterData HierarchyRequestError
+                                            // panic).
+                                            {
+                                                m.last_active_at
+                                                    .map(|ts| format_last_active(ts, current_lang))
+                                                    .unwrap_or_else(|| "—".to_string())
                                             }
                                         }
                                     }
@@ -211,11 +318,7 @@ fn DetailView(username: String, sub_team_id: String) -> Element {
                 // Danger zone (deregister)
                 section { class: "card",
                     div { class: "card__head",
-                        h2 {
-                            class: "card__title",
-                            style: "color:var(--sub-team-coral,#ef4444)",
-                            "Danger zone"
-                        }
+                        h2 { class: "card__title card__title--danger", "{tr.danger_zone}" }
                         span { class: "card__dash" }
                     }
                     div { class: "danger-zone",
@@ -227,6 +330,7 @@ fn DetailView(username: String, sub_team_id: String) -> Element {
                         }
                         a {
                             class: "btn btn--danger",
+                            "data-testid": "sub-team-detail-deregister-btn",
                             onclick: move |_| {
                                 nav.push(Route::TeamSubTeamDeregisterPage {
                                     username: deregister_username.clone(),

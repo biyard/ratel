@@ -32,6 +32,31 @@ jobs:
         run: |
           make test
 
+  docs-build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: docs
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Docusaurus site (en + ko)
+        env:
+          ENV: dev
+        run: npm run build
+
   dx-check:
     runs-on: ubuntu-latest
 
