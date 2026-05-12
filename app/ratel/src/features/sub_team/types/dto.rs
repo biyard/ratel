@@ -454,6 +454,9 @@ pub struct UpdateApplicationRequest {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct ApplicationDecisionReasonRequest {
+    /// Optional welcome message for approve / reject / cancel.
+    /// Defaults to empty string when the caller sends `{}`.
+    #[serde(default)]
     pub reason: String,
 }
 

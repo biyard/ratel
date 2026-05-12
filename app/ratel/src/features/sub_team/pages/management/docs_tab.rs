@@ -259,6 +259,7 @@ fn DocItem(
                 }
                 a {
                     class: "doc-item__edit",
+                    "data-testid": "sub-team-doc-edit-btn",
                     onclick: move |_| {
                         nav.push(Route::TeamSubTeamDocEditPage {
                             username: edit_username.clone(),

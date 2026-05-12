@@ -41,6 +41,14 @@ pub fn ParentHudPanel() -> Element {
     let rel = relationship();
     let status = rel.status;
 
+    // Hide the parent HUD entirely when this team is standalone — a
+    // 상위팀 doesn't have a parent of its own, so the graduation cap
+    // (which represents the relationship with a parent) has nothing
+    // to show. Recognized / Pending sub-teams keep the icon.
+    if matches!(status, ParentRelationshipStatus::Standalone) {
+        return rsx! {};
+    }
+
     let mut open: Signal<bool> = use_signal(|| false);
 
     let badge_state = match status {
@@ -80,6 +88,7 @@ pub fn ParentHudPanel() -> Element {
         div { class: "parent-panel-wrap",
             button {
                 class: "hud-btn hud-btn--parent",
+                "data-testid": "sub-team-hud-parent-btn",
                 "data-state": "{badge_state}",
                 "aria-label": "{tr.parent_icon}",
                 "aria-expanded": "{open()}",
@@ -113,12 +122,14 @@ pub fn ParentHudPanel() -> Element {
                 match status {
                     ParentRelationshipStatus::RecognizedSubTeam => {
                         let meta_line = match &recognized_meta {
-                            Some(date) => format!(
-                                "@{} · {} {} ~",
-                                parent_username,
-                                tr.parent_card_meta_recognized_since,
-                                date,
-                            ),
+                            Some(date) => {
+                                format!(
+                                    "@{} · {} {} ~",
+                                    parent_username,
+                                    tr.parent_card_meta_recognized_since,
+                                    date,
+                                )
+                            }
                             None => format!("@{}", parent_username),
                         };
                         let info_prefix = tr.parent_recognized_info_prefix.to_string();
@@ -160,12 +171,14 @@ pub fn ParentHudPanel() -> Element {
                                             if !username_for_home.is_empty() {
                                                 let url = format!("/{}/", username_for_home);
                                                 spawn(async move {
-                                                    let _ = dioxus::document::eval(&format!(
-                                                        "window.location.assign({});",
-                                                        serde_json::to_string(&url)
-                                                            .unwrap_or_else(|_| "\"/\"".to_string()),
-                                                    ))
-                                                    .await;
+                                                    let _ = dioxus::document::eval(
+                                                            &format!(
+                                                                "window.location.assign({});",
+                                                                serde_json::to_string(&url)
+                                                                    .unwrap_or_else(|_| "\"/\"".to_string()),
+                                                            ),
+                                                        )
+                                                        .await;
                                                 });
                                             }
                                         },
@@ -173,12 +186,8 @@ pub fn ParentHudPanel() -> Element {
                                             lucide_dioxus::House { class: "w-3 h-3 [&>path]:stroke-current" }
                                         }
                                         span { class: "pp-action__body",
-                                            span { class: "pp-action__title",
-                                                "{tr.parent_action_open_home_title}"
-                                            }
-                                            span { class: "pp-action__sub",
-                                                "{tr.parent_action_open_home_sub}"
-                                            }
+                                            span { class: "pp-action__title", "{tr.parent_action_open_home_title}" }
+                                            span { class: "pp-action__sub", "{tr.parent_action_open_home_sub}" }
                                         }
                                         span { class: "pp-action__chev",
                                             lucide_dioxus::ChevronRight { class: "w-3 h-3 [&>path]:stroke-current" }
@@ -197,12 +206,8 @@ pub fn ParentHudPanel() -> Element {
                                             lucide_dioxus::FileText { class: "w-3 h-3 [&>path]:stroke-current" }
                                         }
                                         span { class: "pp-action__body",
-                                            span { class: "pp-action__title",
-                                                "{tr.parent_action_view_bylaws_title}"
-                                            }
-                                            span { class: "pp-action__sub",
-                                                "{tr.parent_action_view_bylaws_sub}"
-                                            }
+                                            span { class: "pp-action__title", "{tr.parent_action_view_bylaws_title}" }
+                                            span { class: "pp-action__sub", "{tr.parent_action_view_bylaws_sub}" }
                                         }
                                         span { class: "pp-action__chev",
                                             lucide_dioxus::ChevronRight { class: "w-3 h-3 [&>path]:stroke-current" }
@@ -227,12 +232,8 @@ pub fn ParentHudPanel() -> Element {
                                             lucide_dioxus::LogOut { class: "w-3 h-3 [&>path]:stroke-current" }
                                         }
                                         span { class: "pp-action__body",
-                                            span { class: "pp-action__title",
-                                                "{tr.parent_action_leave_title}"
-                                            }
-                                            span { class: "pp-action__sub",
-                                                "{tr.parent_action_leave_sub}"
-                                            }
+                                            span { class: "pp-action__title", "{tr.parent_action_leave_title}" }
+                                            span { class: "pp-action__sub", "{tr.parent_action_leave_sub}" }
                                         }
                                         span { class: "pp-action__chev",
                                             lucide_dioxus::ChevronRight { class: "w-3 h-3 [&>path]:stroke-current" }
@@ -276,12 +277,8 @@ pub fn ParentHudPanel() -> Element {
                                             lucide_dioxus::Clock { class: "w-3 h-3 [&>path]:stroke-current" }
                                         }
                                         span { class: "pp-action__body",
-                                            span { class: "pp-action__title",
-                                                "{tr.parent_action_view_application_title}"
-                                            }
-                                            span { class: "pp-action__sub",
-                                                "{tr.parent_action_view_application_sub}"
-                                            }
+                                            span { class: "pp-action__title", "{tr.parent_action_view_application_title}" }
+                                            span { class: "pp-action__sub", "{tr.parent_action_view_application_sub}" }
                                         }
                                         span { class: "pp-action__chev",
                                             lucide_dioxus::ChevronRight { class: "w-3 h-3 [&>path]:stroke-current" }
@@ -300,12 +297,8 @@ pub fn ParentHudPanel() -> Element {
                                             lucide_dioxus::Pencil { class: "w-3 h-3 [&>path]:stroke-current" }
                                         }
                                         span { class: "pp-action__body",
-                                            span { class: "pp-action__title",
-                                                "{tr.parent_action_edit_application_title}"
-                                            }
-                                            span { class: "pp-action__sub",
-                                                "{tr.parent_action_edit_application_sub}"
-                                            }
+                                            span { class: "pp-action__title", "{tr.parent_action_edit_application_title}" }
+                                            span { class: "pp-action__sub", "{tr.parent_action_edit_application_sub}" }
                                         }
                                         span { class: "pp-action__chev",
                                             lucide_dioxus::ChevronRight { class: "w-3 h-3 [&>path]:stroke-current" }
@@ -321,12 +314,8 @@ pub fn ParentHudPanel() -> Element {
                                             lucide_dioxus::X { class: "w-3 h-3 [&>path]:stroke-current" }
                                         }
                                         span { class: "pp-action__body",
-                                            span { class: "pp-action__title",
-                                                "{tr.parent_action_cancel_application_title}"
-                                            }
-                                            span { class: "pp-action__sub",
-                                                "{tr.parent_action_cancel_application_sub}"
-                                            }
+                                            span { class: "pp-action__title", "{tr.parent_action_cancel_application_title}" }
+                                            span { class: "pp-action__sub", "{tr.parent_action_cancel_application_sub}" }
                                         }
                                         span { class: "pp-action__chev",
                                             lucide_dioxus::ChevronRight { class: "w-3 h-3 [&>path]:stroke-current" }

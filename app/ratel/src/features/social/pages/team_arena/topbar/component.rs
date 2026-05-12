@@ -417,26 +417,18 @@ pub fn ArenaTopbar(
                     crate::features::sub_team::ParentHudPanel {}
                 }
 
-                // Sub-teams icon — three audiences, three destinations.
-                // URL `:username` is the **parent** team in all cases;
-                // the status page resolves the applicant team server-
-                // side from the viewer's admin memberships.
-                //   • Member admin → management page.
-                //   • Non-member with in-flight application → status
-                //     page for THIS parent team.
-                //   • Non-member, no pending app, parent-eligible → apply.
-                // Hidden when none of those apply.
-                if can_edit || pending_applicant_username.is_some() || is_parent_eligible {
+                // Sub-teams icon — admin-only entry to the management
+                // page. Non-admins (and logged-out viewers) don't see
+                // the icon. Applicant-side flows (status / apply) are
+                // reachable through the team's other surfaces; this
+                // chip is reserved for the team's own admins.
+                if can_edit {
                     HudButton {
                         label: tr.sub_teams.to_string(),
                         active: active == TeamArenaTab::SubTeams,
-                        to: if can_edit { Route::TeamSubTeamManagementPage {
+                        to: Route::TeamSubTeamManagementPage {
                             username: username.clone(),
-                        } } else if pending_applicant_username.is_some() { Route::TeamSubTeamApplicationStatusPage {
-                            username: username.clone(),
-                        } } else { Route::TeamSubTeamApplyPage {
-                            username: username.clone(),
-                        } },
+                        },
                         icon: rsx! {
                             svg {
                                 view_box: "0 0 24 24",

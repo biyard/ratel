@@ -337,6 +337,7 @@ fn ApplyForm(username: String, team_display: String, team_handle: String) -> Ele
                     div { class: "team-dropdown",
                         button {
                             class: "team-dropdown__trigger",
+                            "data-testid": "sub-team-apply-picker-trigger",
                             r#type: "button",
                             "aria-expanded": "{picker_open()}",
                             onclick: move |_| picker_open.toggle(),
@@ -372,6 +373,7 @@ fn ApplyForm(username: String, team_display: String, team_handle: String) -> Ele
                                                 key: "{team.pk}",
                                                 r#type: "button",
                                                 class: "team-dropdown__item",
+                                                "data-testid": "sub-team-apply-picker-item-{team_handle}",
                                                 "aria-selected": "{is_selected}",
                                                 onclick: move |_| {
                                                     if let Ok(pk) = team_pk_str.parse::<TeamPartition>() {
