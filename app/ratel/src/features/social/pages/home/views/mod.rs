@@ -289,7 +289,7 @@ fn PostCard(index: usize, post: PostResponse) -> Element {
     let thumbnail = post.urls.first().cloned();
     let category = post.categories.first().cloned();
     let cat_modifier = category_modifier(category.as_deref());
-    let preview = strip_html(&post.html_contents);
+    let preview = post.body.to_plain_text();
 
     rsx! {
         article {

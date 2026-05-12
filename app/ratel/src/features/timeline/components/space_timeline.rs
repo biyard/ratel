@@ -132,7 +132,7 @@ fn space_to_post(space: MySpaceResponse) -> PostResponse {
         created_at: space.created_at,
         updated_at: space.created_at,
         title: space.title,
-        html_contents: space.description,
+        body: ContentBody::html(space.description),
         shares: 0,
         likes: 0,
         comments: 0,

@@ -1,5 +1,6 @@
 mod auth;
 mod composite_partition;
+mod content;
 mod entity_type;
 mod error;
 mod event_status;
@@ -16,6 +17,7 @@ mod user_or_team;
 
 pub use auth::*;
 pub use composite_partition::*;
+pub use content::*;
 pub use entity_type::*;
 pub use error::*;
 pub use event_status::*;

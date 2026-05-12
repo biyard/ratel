@@ -21,7 +21,8 @@ pub struct Post {
     pub updated_at: i64,
 
     pub title: String,
-    pub html_contents: String,
+    #[serde(alias = "html_contents")]
+    pub body: ContentBody,
     pub post_type: PostType,
 
     #[dynamo(index = "gsi5", order = 1, sk)]
@@ -185,7 +186,7 @@ impl Post {
             updated_at: now,
             post_type,
             title: title.into(),
-            html_contents: html_contents.into(),
+            body: ContentBody::html(html_contents.into()),
             status: PostStatus::Draft,
             visibility: None,
             shares: 0,

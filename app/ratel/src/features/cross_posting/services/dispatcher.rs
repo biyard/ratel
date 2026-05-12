@@ -636,7 +636,7 @@ async fn notify_failure(
 // ─────────────────────────────────────────────────────────────────────────
 
 fn build_link_card(post: &Post, job: &SyndicationJob) -> LinkCard {
-    let stripped = format::strip_html(&post.html_contents);
+    let stripped = post.body.to_plain_text();
     let description: String = stripped.chars().take(200).collect();
     LinkCard {
         backlink_url: job.backlink_url.clone(),

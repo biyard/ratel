@@ -22,7 +22,7 @@ use tokio::sync::RwLock;
 
 use crate::common::config::ServerConfig;
 use crate::common::models::McpClientSecret;
-use crate::common::types::{EntityType, FeedPartition, TeamPartition};
+use crate::common::types::{ContentBody, EntityType, FeedPartition, TeamPartition};
 use crate::features::auth::controllers::get_me_handler_mcp_impl;
 use crate::features::posts::controllers::{
     create_post_handler_mcp_impl, create_space_handler_mcp_impl, delete_post_handler_mcp_impl,
@@ -182,7 +182,7 @@ impl RatelMcpServer {
             .transpose()?;
         let update_req = UpdatePostRequest::Publish {
             title: req.title,
-            content: req.content,
+            content: ContentBody::html(req.content),
             image_urls: None,
             publish: req.publish,
             visibility,

@@ -23,7 +23,7 @@ pub async fn index_post(cli: &aws_sdk_dynamodb::Client, post: &Post) -> Result<(
         post.title.clone()
     };
     let source_path = format!("Ratel post · {}", strip_prefix(&post.pk.to_string()));
-    let word_count = (estimate_word_count(&post.html_contents)
+    let word_count = (estimate_word_count(&post.body.to_html())
         + post.title.split_whitespace().count() as u32) as i64;
 
     Essence::upsert_for_source(
