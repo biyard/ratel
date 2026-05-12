@@ -15,7 +15,8 @@ pub struct PostRepost {
     #[dynamo(prefix = "POST_PK", name = "find_by_post_pk", index = "gsi2", pk)]
     pub post_pk: Partition,
     pub post_title: String,
-    pub post_html_contents: String,
+    #[serde(alias = "post_html_contents")]
+    pub post_body: ContentBody,
 
     #[dynamo(prefix = "USER_PK", name = "find_by_user_pk", index = "gsi1", pk)]
     pub author_pk: Partition,
@@ -30,7 +31,7 @@ impl PostRepost {
         Post {
             pk: post_pk,
             title: post_title,
-            html_contents: post_html_contents,
+            body: post_body,
             ..
         }: Post,
         User {
@@ -46,7 +47,7 @@ impl PostRepost {
 
             post_pk,
             post_title,
-            post_html_contents,
+            post_body,
             author_pk,
             author_display_name,
             author_profile_url,

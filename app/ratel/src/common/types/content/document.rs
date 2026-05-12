@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 pub type BlockId = String;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct ContentDocument {
     pub schema_version: u32,
     pub blocks: Vec<Block>,
@@ -11,6 +12,7 @@ pub struct ContentDocument {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct Block {
     pub id: BlockId,
     #[serde(flatten)]
@@ -22,6 +24,7 @@ pub struct Block {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(tag = "type", content = "data", rename_all = "snake_case")]
 pub enum BlockKind {
     Paragraph(TextBlock),
@@ -46,6 +49,7 @@ pub enum BlockKind {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct TextBlock {
     pub rich_text: RichText,
     #[serde(default, skip_serializing_if = "Color::is_default")]
@@ -53,6 +57,7 @@ pub struct TextBlock {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct HeadingBlock {
     pub level: HeadingLevel,
     pub rich_text: RichText,
@@ -61,6 +66,7 @@ pub struct HeadingBlock {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(rename_all = "snake_case")]
 pub enum HeadingLevel {
     H1,
@@ -69,12 +75,14 @@ pub enum HeadingLevel {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct TodoBlock {
     pub rich_text: RichText,
     pub checked: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct CodeBlock {
     pub rich_text: RichText,
     pub language: String,
@@ -83,6 +91,7 @@ pub struct CodeBlock {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct CalloutBlock {
     pub rich_text: RichText,
     pub icon: Option<Icon>,
@@ -91,11 +100,13 @@ pub struct CalloutBlock {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct EquationBlock {
     pub expression: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct MediaBlock {
     pub source: MediaSource,
     #[serde(default)]
@@ -109,6 +120,7 @@ pub struct MediaBlock {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum MediaSource {
     Asset { asset_id: String },
@@ -116,6 +128,7 @@ pub enum MediaSource {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct BookmarkBlock {
     pub url: String,
     #[serde(default)]
@@ -123,12 +136,14 @@ pub struct BookmarkBlock {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct EmbedBlock {
     pub url: String,
     pub provider: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct CustomBlock {
     pub namespace: String,
     pub kind: String,
@@ -137,10 +152,12 @@ pub struct CustomBlock {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(transparent)]
 pub struct RichText(pub Vec<InlineNode>);
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(tag = "type", content = "data", rename_all = "snake_case")]
 pub enum InlineNode {
     Text(TextRun),
@@ -149,6 +166,7 @@ pub enum InlineNode {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct TextRun {
     pub content: String,
     #[serde(default, skip_serializing_if = "Annotations::is_default")]
@@ -158,6 +176,7 @@ pub struct TextRun {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct Annotations {
     #[serde(default)]
     pub bold: bool,
@@ -180,6 +199,7 @@ impl Annotations {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", content = "ref", rename_all = "snake_case")]
 pub enum Mention {
     User(String),
@@ -191,11 +211,13 @@ pub enum Mention {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct InlineEquation {
     pub expression: String,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(rename_all = "snake_case")]
 pub enum Color {
     #[default]
@@ -226,6 +248,7 @@ impl Color {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(tag = "type", content = "data", rename_all = "snake_case")]
 pub enum Icon {
     Emoji(String),

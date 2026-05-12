@@ -3,6 +3,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 use super::ContentDocument;
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
+#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 #[serde(tag = "content_type", content = "data", rename_all = "snake_case")]
 pub enum ContentBody {
     StructuredContent(ContentDocument),
