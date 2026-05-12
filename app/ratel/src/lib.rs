@@ -21,12 +21,12 @@ pub use features::*;
 
 pub use dioxus::fullstack::{Loader, Loading};
 
-// Re-export `axum` from `bdk` (which re-exports it from its own deps) at the
-// crate root so all `crate::axum::...` paths resolve. `axum` is only used in
-// server-side code, so this is gated behind `feature = "server"` to match
-// where `bdk` itself is pulled in.
+// Re-export real `axum` at the crate root so all `crate::axum::...` paths
+// resolve to the upstream crate (not the `by_axum` `BiyardRouter` wrapper).
+// Gated behind `feature = "server"` since axum is only used in server-side
+// code paths.
 #[cfg(feature = "server")]
-pub use ::bdk::prelude::axum;
+pub use ::axum;
 use dioxus_primitives::dioxus_attributes::attributes;
 use dioxus_primitives::merge_attributes;
 use features::auth::{OptionalUser, User};

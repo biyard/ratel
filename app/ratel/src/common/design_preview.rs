@@ -1,9 +1,9 @@
 use crate::axum::{
     extract::Path as AxumPath,
     http::{header, StatusCode},
-    native_routing::get,
+    routing::get,
     response::{Html, IntoResponse, Response},
-    AxumRouter,
+    Router,
 };
 use std::path::{Path, PathBuf};
 
@@ -33,12 +33,12 @@ fn content_type_for(ext: &str) -> Option<&'static str> {
 /// Merge design preview routes into the app router.
 /// - `GET /designs`             — lists top-level directories + root HTML files
 /// - `GET /designs/{*path}`     — directory listing or HTML file serving
-pub fn merge_design_routes(app: AxumRouter, design_dir: &Path) -> AxumRouter {
+pub fn merge_design_routes(app: Router, design_dir: &Path) -> Router {
     let root = design_dir.to_path_buf();
     let root_index = root.clone();
     let root_catch = root.clone();
 
-    let design_router = AxumRouter::new()
+    let design_router = Router::new()
         .route(
             "/",
             get(move || {
@@ -61,12 +61,12 @@ pub fn merge_design_routes(app: AxumRouter, design_dir: &Path) -> AxumRouter {
 /// Merge roadmap viewer routes into the app router.
 /// - `GET /roadmap`             — lists every .md spec file in the roadmap directory
 /// - `GET /roadmap/{file}`      — renders that markdown file through a styled viewer
-pub fn merge_roadmap_routes(app: AxumRouter, roadmap_dir: &Path) -> AxumRouter {
+pub fn merge_roadmap_routes(app: Router, roadmap_dir: &Path) -> Router {
     let root = roadmap_dir.to_path_buf();
     let root_index = root.clone();
     let root_catch = root.clone();
 
-    let router = AxumRouter::new()
+    let router = Router::new()
         .route(
             "/",
             get(move || {

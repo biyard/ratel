@@ -87,6 +87,7 @@ by-macros = { workspace = true }
 dioxus-translate = { workspace = true }
 lucide-dioxus = { workspace = true }
 bdk = { workspace = true, optional = true }
+axum = { workspace = true, optional = true }
 ssi = { version = "0.12.0", features = ["bbs"], optional = true }
 aws-credential-types = { version = "1.2.6", optional = true }
 strum = { version = "0.27.2", features = ["derive"] }
@@ -125,6 +126,7 @@ desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile", "tokio"]
 server = [
   "aide",
+  "axum",
   "aws-config",
   "aws-credential-types",
   "aws-sdk-bedrockagentruntime",

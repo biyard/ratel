@@ -9,7 +9,7 @@ pub const MAIN_CSS: Asset = asset!("/assets/main.css");
 pub const MAIN_JS: Asset = asset!("/assets/ratel-app-shell.js");
 
 #[cfg(feature = "server")]
-pub fn app() -> crate::axum::AxumRouter {
+pub fn app() -> crate::axum::Router {
     dioxus::server::router(App)
 }
 

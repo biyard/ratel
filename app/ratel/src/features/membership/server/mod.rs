@@ -1,10 +1,5 @@
-use crate::common::axum::{
-    AxumRouter, Json,
-    http::StatusCode,
-    native_routing::post,
-    response::IntoResponse,
-};
-use crate::features::membership::controllers::{PortoneRequest, handle_portone_webhook};
+use crate::common::axum::{http::StatusCode, response::IntoResponse, routing::post, Json, Router};
+use crate::features::membership::controllers::{handle_portone_webhook, PortoneRequest};
 use serde::Serialize;
 
 #[derive(Debug, Serialize)]
@@ -19,11 +14,7 @@ struct WebhookErrorResponse {
 
 async fn portone_webhook(Json(req): Json<PortoneRequest>) -> impl IntoResponse {
     match handle_portone_webhook(req).await {
-        Ok(()) => (
-            StatusCode::OK,
-            Json(WebhookResponse { status: "ok" }),
-        )
-            .into_response(),
+        Ok(()) => (StatusCode::OK, Json(WebhookResponse { status: "ok" })).into_response(),
         Err(err) => (
             StatusCode::BAD_REQUEST,
             Json(WebhookErrorResponse {
@@ -34,6 +25,6 @@ async fn portone_webhook(Json(req): Json<PortoneRequest>) -> impl IntoResponse {
     }
 }
 
-pub fn router() -> AxumRouter {
-    AxumRouter::new().route("/hooks/portone", post(portone_webhook))
+pub fn router() -> Router {
+    Router::new().route("/hooks/portone", post(portone_webhook))
 }
