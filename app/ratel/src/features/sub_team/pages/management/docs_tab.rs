@@ -23,7 +23,16 @@ fn format_updated_date(updated_at: i64) -> String {
 }
 
 #[component]
-pub fn DocsTab(username: String) -> Element {
+pub fn DocsTab(
+    username: String,
+    // Default category for newly-added docs. Computed by the parent
+    // management component from `team_data.parent_team_id`:
+    // - team without parent (=상위팀) → "Bylaws"
+    // - team with parent (=하위팀)  → "ClubBylaws"
+    // Empty string disables auto-category and the existing
+    // non-bylaws compose route is used.
+    #[props(default)] category: String,
+) -> Element {
     let tr: SubTeamTranslate = use_translate();
     let UseSubTeamDocs {
         docs,
@@ -40,6 +49,7 @@ pub fn DocsTab(username: String) -> Element {
     let nav = use_navigator();
     let username_for_new = username.clone();
 
+    let username_for_bylaws = username.clone();
     rsx! {
         section { class: "card",
             div { class: "card__head",
@@ -47,6 +57,17 @@ pub fn DocsTab(username: String) -> Element {
                 span { class: "card__dash" }
                 span { class: "card__meta",
                     "{item_count} documents · {required_count} {tr.required_reading}"
+                }
+                // "View bylaws" — public reader page that mirrors the
+                // documents list with the bylaws-section visual treatment.
+                // Anchor href instead of `nav.push` for the same dioxus
+                // 0.7 reconciler workaround used by deregister/leave.
+                a {
+                    class: "card-head__link",
+                    "data-testid": "sub-team-docs-view-bylaws",
+                    href: "/{username_for_bylaws}/bylaws",
+                    lucide_dioxus::FileText { class: "w-3 h-3 [&>path]:stroke-current" }
+                    "{tr.docs_view_bylaws}"
                 }
             }
 
@@ -91,10 +112,18 @@ pub fn DocsTab(username: String) -> Element {
                 id: "add-doc",
                 "data-testid": "sub-team-doc-add-btn",
                 style: "margin-top: 12px",
-                onclick: move |_| {
-                    nav.push(Route::TeamSubTeamDocComposePage {
-                        username: username_for_new.clone(),
-                    });
+                onclick: {
+                    let category = category.clone();
+                    move |_| {
+                        // Every doc gets a category (parent's "Bylaws"
+                        // or sub-team's "ClubBylaws") so the dual-write
+                        // (SubTeamDocument + backing Post) always fires
+                        // and the doc shows up on the bylaws page.
+                        nav.push(Route::TeamSubTeamBylawsComposePage {
+                            username: username_for_new.clone(),
+                            category: category.clone(),
+                        });
+                    }
                 },
                 svg {
                     view_box: "0 0 24 24",

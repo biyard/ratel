@@ -776,6 +776,51 @@ translate! {
         en: "Required",
         ko: "필독",
     },
+    bylaws_status_chip: { en: "Public", ko: "공개" },
+    bylaws_add_team: { en: "Add bylaw", ko: "학칙 항목 추가" },
+    bylaws_add_club: { en: "Add club rule", ko: "회칙 항목 추가" },
+    bylaws_page_title: {
+        en: "Bylaws — publish your rules so every member follows the same playbook.",
+        ko: "학칙을 공개 게시하여 모두가 같은 규칙을 따르게 합니다.",
+    },
+    bylaws_page_sub: {
+        en: "Bylaws behave like regular posts but are grouped in a dedicated section on the team page. Sub-teams can review the parent's bylaws side-by-side.",
+        ko: "Bylaws는 일반 게시물과 동일하게 동작하지만, 팀 페이지에서 전용 섹션으로 묶여 보입니다. 자식 팀은 부모 팀의 Bylaws를 바로 확인할 수 있습니다.",
+    },
+    bylaws_parent_link_eyebrow: {
+        en: "Parent team bylaws",
+        ko: "상위팀 학칙",
+    },
+    bylaws_parent_link_meta: {
+        en: "View the parent team's bylaws",
+        ko: "상위팀이 관리하는 학칙 보기",
+    },
+    bylaws_view_parent: { en: "Parent view", ko: "PARENT VIEW" },
+    bylaws_view_sub: { en: "Sub-team view", ko: "SUB-TEAM VIEW" },
+    bylaws_page_eyebrow_fr: { en: "FR-2 · Bylaws", ko: "FR-2 · BYLAWS" },
+    // Title is split into a `_strong` lead and a `_rest` tail so the
+    // template can render `<strong>{lead}</strong>{rest}` without
+    // duplicating the noun (Korean has 학칙 at the front, English keeps
+    // it as a single highlighted word).
+    bylaws_page_title_strong: { en: "Bylaws", ko: "학칙" },
+    bylaws_page_title_rest: {
+        en: " — publish your rules so every member follows the same playbook.",
+        ko: "을 공개 게시하여 모두가 같은 규칙을 따르게 합니다.",
+    },
+    bylaws_section_team_regulations: {
+        en: "Team regulations · BYLAWS",
+        ko: "학과 학칙 · BYLAWS",
+    },
+    bylaws_section_club_rules: {
+        en: "Club rules · CLUB BYLAWS",
+        ko: "동아리 회칙 · CLUB BYLAWS",
+    },
+    bylaws_section_count_items: { en: "{n} items", ko: "{n}개 항목" },
+    bylaws_card_bylaw_num: { en: "BYLAW {n}", ko: "BYLAW {n}" },
+    bylaws_card_rule_num: { en: "RULE {n}", ko: "RULE {n}" },
+    bylaws_required_meta: { en: "Required", ko: "필독" },
+    // Documents tab → "View bylaws" entry point
+    docs_view_bylaws: { en: "View bylaws", ko: "학칙 자세히 보기" },
 }
 
 // ── Enum Translate derives ──────────────────────────────────────────

@@ -67,15 +67,69 @@ pub async fn create_sub_team_doc_handler(
     let order = body.order.unwrap_or(0);
     let attachments = body.attachments.unwrap_or_default();
 
-    let doc = SubTeamDocument::new(
+    let mut doc = SubTeamDocument::new(
         team.pk.clone(),
-        body.title,
-        body.body,
+        body.title.clone(),
+        body.body.clone(),
         body.required,
         order,
         user.username.clone(),
-        attachments,
+        attachments.clone(),
     );
+
+    // Bylaws / ClubBylaws docs are dual-written: the SubTeamDocument
+    // is the canonical record, and a backing `Post` (with the same
+    // category) carries likes/comments + the public detail page.
+    // Plain (uncategorised) docs skip the backing post entirely — that
+    // preserves the Documents tab "required reading" workflow.
+    if let Some(cat) = body.category.as_ref() {
+        let trimmed = cat.trim();
+        if !trimmed.is_empty() {
+            use crate::features::posts::models::Post;
+            use crate::features::posts::types::{PostStatus, PostType, Visibility};
+            doc.category = Some(trimmed.to_string());
+
+            let now = crate::common::utils::time::get_now_timestamp_millis();
+            let backing_post = Post {
+                pk: Partition::Feed(uuid::Uuid::now_v7().to_string()),
+                sk: EntityType::Post,
+                created_at: now,
+                updated_at: now,
+                title: doc.title.clone(),
+                html_contents: doc.body.clone(),
+                post_type: PostType::Post,
+                status: PostStatus::Published,
+                visibility: Some(Visibility::Public),
+                shares: 0,
+                likes: 0,
+                comments: 0,
+                reports: 0,
+                user_pk: team.pk.clone(),
+                author_display_name: team.display_name.clone(),
+                author_profile_url: team.profile_url.clone(),
+                author_username: team.username.clone(),
+                author_type: crate::common::types::UserType::Team,
+                space_pk: None,
+                space_type: None,
+                space_visibility: None,
+                booster: None,
+                rewards: None,
+                urls: vec![],
+                categories: vec![trimmed.to_string()],
+                announcement_id: None,
+                announcement_parent_team_id: None,
+                pinned_as_announcement: false,
+            };
+            if let Err(e) = backing_post.create(cli).await {
+                crate::error!(
+                    "create_sub_team_doc backing post create failed: {e}"
+                );
+                return Err(SubTeamError::DocumentNotFound.into());
+            }
+            doc.backing_post_id = Some(backing_post.pk.to_string());
+        }
+    }
+
     doc.create(cli).await.map_err(|e| {
         crate::error!("create_sub_team_doc execute failed: {e}");
         SubTeamError::DocumentNotFound
@@ -297,4 +351,87 @@ pub async fn reorder_sub_team_docs_handler(
     }
 
     Ok(String::new())
+}
+
+// ── GET public bylaws list (no admin gate) ───────────────────────
+//
+// Bylaws page entry point. Lists this team's documents filtered by
+// category (`"Bylaws"` / `"ClubBylaws"`) and enriches each response
+// with the backing post's likes/comments (single batch_get).
+//
+// Public — no role check — because the bylaws page is a read-only
+// reader surface. Admin-only listing keeps using
+// `list_sub_team_docs_handler` for the Documents tab.
+#[get(
+    "/api/teams/:team_pk/sub-teams/bylaws?category",
+    user: crate::features::auth::OptionalUser
+)]
+pub async fn list_team_bylaws_handler(
+    team_pk: TeamPartition,
+    category: Option<String>,
+) -> Result<ListResponse<SubTeamDocumentResponse>> {
+    let _ = user;
+    let cfg = crate::common::CommonConfig::default();
+    let cli = cfg.dynamodb();
+    let pk: Partition = team_pk.into();
+
+    let opts = SubTeamDocument::opt()
+        .sk(format!("{DOC_SK_PREFIX}#"))
+        .limit(LIST_PAGE_LIMIT);
+    let (mut items, next) = SubTeamDocument::query(cli, pk, opts)
+        .await
+        .map_err(|e| {
+            crate::error!("list_team_bylaws query failed: {e}");
+            SubTeamError::DocumentNotFound
+        })?;
+    sort_docs(&mut items);
+
+    let category_filter = category.as_deref().map(|c| c.trim().to_string());
+    let filtered: Vec<SubTeamDocument> = items
+        .into_iter()
+        .filter(|d| match category_filter.as_deref() {
+            Some(c) => d.category.as_deref() == Some(c),
+            None => d.category.is_some(),
+        })
+        .collect();
+
+    // Batch-get backing posts so likes/comments come from the canonical
+    // engagement source.
+    use crate::features::posts::models::Post;
+    use std::collections::HashMap;
+    let post_keys: Vec<(Partition, EntityType)> = filtered
+        .iter()
+        .filter_map(|d| {
+            d.backing_post_id
+                .as_ref()
+                .and_then(|s| s.parse::<Partition>().ok())
+                .map(|pk| (pk, EntityType::Post))
+        })
+        .collect();
+    let engagement: HashMap<String, (i64, i64)> = if post_keys.is_empty() {
+        HashMap::new()
+    } else {
+        Post::batch_get(cli, post_keys)
+            .await
+            .unwrap_or_default()
+            .into_iter()
+            .map(|p| (p.pk.to_string(), (p.likes, p.comments)))
+            .collect()
+    };
+
+    let items: Vec<SubTeamDocumentResponse> = filtered
+        .into_iter()
+        .map(|d| {
+            let backing_key = d.backing_post_id.clone();
+            let mut resp: SubTeamDocumentResponse = d.into();
+            if let Some(key) = backing_key {
+                if let Some((likes, comments)) = engagement.get(&key) {
+                    resp.likes = *likes;
+                    resp.comments = *comments;
+                }
+            }
+            resp
+        })
+        .collect();
+    Ok((items, next).into())
 }

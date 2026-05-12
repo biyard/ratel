@@ -355,7 +355,22 @@ pub fn TeamSubTeamManagementPage(username: String) -> Element {
                     "data-tab": "documents",
                     "data-active": "{active_tab() == ManagementTab::Documents}",
                     if active_tab() == ManagementTab::Documents {
-                        DocsTab { username: username.clone() }
+                        DocsTab {
+                            username: username.clone(),
+                            // Team without a parent (상위팀) → Bylaws.
+                            // Team with a parent (하위팀)   → ClubBylaws.
+                            // Documents added from this tab inherit the
+                            // category so they show up on the bylaws
+                            // page (dual-write fires backend-side).
+                            category: {
+                                let t = team_resource();
+                                if t.parent_team_id.as_deref().is_some_and(|s| !s.is_empty()) {
+                                    "ClubBylaws".to_string()
+                                } else {
+                                    "Bylaws".to_string()
+                                }
+                            },
+                        }
                     }
                 }
                 div {

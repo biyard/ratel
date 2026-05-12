@@ -46,7 +46,7 @@ use crate::features::admin::{AdminLayout, AdminMainPage};
 use crate::features::sub_team::pages::{
     TeamBylawsPage, TeamLeaveParentPage, TeamSubTeamApplicationStatusPage, TeamSubTeamApplyPage,
     TeamSubTeamBroadcastComposePage, TeamSubTeamBroadcastEditPage, TeamSubTeamDeregisterPage,
-    TeamSubTeamDetailPage, TeamSubTeamDocComposePage, TeamSubTeamDocEditPage,
+    TeamSubTeamBylawsComposePage, TeamSubTeamDetailPage, TeamSubTeamDocEditPage,
     TeamSubTeamManagementPage,
 };
 
@@ -144,8 +144,6 @@ pub enum Route {
             // focused editors that intentionally do NOT inherit the
             // TeamArenaLayout (parent topbar, sidemenu) since they
             // already render their own topbar with Back / Save.
-            #[route("/sub-teams/docs/compose")]
-            TeamSubTeamDocComposePage { username: String },
             #[route("/sub-teams/docs/:doc_id/edit")]
             TeamSubTeamDocEditPage { username: String, doc_id: String },
             #[route("/sub-teams/announcements/compose")]
@@ -165,6 +163,13 @@ pub enum Route {
             TeamLeaveParentPage { username: String },
             #[route("/sub-teams/:sub_team_id/deregister")]
             TeamSubTeamDeregisterPage { username: String, sub_team_id: String },
+            #[route("/bylaws")]
+            TeamBylawsPage { username: String },
+            // Bylaws-mode compose — same UI as `TeamSubTeamDocComposePage`
+            // but with the category preset baked into the route so the
+            // dual-write (SubTeamDocument + backing Post) kicks in.
+            #[route("/bylaws/compose/:category")]
+            TeamSubTeamBylawsComposePage { username: String, category: String },
             #[layout(SocialLayout)]
                 #[route("/")]
                 SocialIndex { username: String },
@@ -199,8 +204,6 @@ pub enum Route {
                 // controller hooks.
                 #[route("/sub-teams/manage")]
                 TeamSubTeamManagementPage { username: String },
-                #[route("/bylaws")]
-                TeamBylawsPage { username: String },
             #[end_layout]
 
             // Sub-team detail — declared AFTER the layout block so the

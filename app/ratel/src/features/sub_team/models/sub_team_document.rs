@@ -56,6 +56,20 @@ pub struct SubTeamDocument {
     /// `SpaceQuiz` / `SpaceFile` / discussion `SpacePost`.
     #[serde(default)]
     pub attachments: Vec<File>,
+
+    /// Category tag attached at create-time when the doc is authored
+    /// as a bylaw (`"Bylaws"`) or a club rule (`"ClubBylaws"`). Drives
+    /// the bylaws page filter. Empty / `None` = regular sub-team doc
+    /// (the existing "required reading" use case).
+    #[serde(default)]
+    pub category: Option<String>,
+
+    /// `Post.pk` of the backing post written alongside the doc at
+    /// create time. The post carries the same body + category and is
+    /// the source of truth for likes/comments — the bylaws card pulls
+    /// engagement counts from this post and links to it on click.
+    #[serde(default)]
+    pub backing_post_id: Option<String>,
 }
 
 #[cfg(feature = "server")]
@@ -85,6 +99,8 @@ impl SubTeamDocument {
             version: 1,
             editor_username,
             attachments,
+            category: None,
+            backing_post_id: None,
         }
     }
 

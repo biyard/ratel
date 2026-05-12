@@ -126,6 +126,22 @@ pub struct SubTeamDocumentResponse {
     pub editor_username: String,
     #[serde(default)]
     pub attachments: Vec<File>,
+    /// `"Bylaws"` / `"ClubBylaws"` when this doc was authored via the
+    /// bylaws page. Empty / `None` for regular sub-team docs.
+    #[serde(default)]
+    pub category: Option<String>,
+    /// `Post.pk` of the backing post (carries the same body + category).
+    /// Card click on the bylaws page routes to this post's detail page.
+    #[serde(default)]
+    pub backing_post_id: Option<String>,
+    /// Likes on the backing post — populated server-side by the list /
+    /// get handlers (batch-get from `Post.likes`). 0 when no backing
+    /// post exists (regular sub-team docs).
+    #[serde(default)]
+    pub likes: i64,
+    /// Comments on the backing post.
+    #[serde(default)]
+    pub comments: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -139,6 +155,12 @@ pub struct CreateSubTeamDocumentRequest {
     pub order: Option<i32>,
     #[serde(default)]
     pub attachments: Option<Vec<File>>,
+    /// Optional category — when set to `"Bylaws"` / `"ClubBylaws"`,
+    /// the handler also writes a backing Post with the same body so
+    /// the bylaws page can show likes/comments + deep-link to the
+    /// post detail.
+    #[serde(default)]
+    pub category: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -252,6 +274,12 @@ impl From<crate::features::sub_team::models::SubTeamDocument> for SubTeamDocumen
             version: d.version.max(1),
             editor_username: d.editor_username,
             attachments: d.attachments,
+            category: d.category,
+            backing_post_id: d.backing_post_id,
+            // Engagement counts are populated by the handler after a
+            // batch-get against backing posts. Default to 0 here.
+            likes: 0,
+            comments: 0,
         }
     }
 }

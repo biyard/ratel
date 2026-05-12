@@ -76,17 +76,35 @@ fn file_ext_label(ext: &FileExtension) -> &'static str {
     }
 }
 
-#[component]
-pub fn TeamSubTeamDocComposePage(username: String) -> Element {
-    render_compose(username, None)
-}
+/// Newtype seeded via `use_context_provider` from the bylaws-mode
+/// route so `DocComposeForm` can pass it into
+/// `CreateSubTeamDocumentRequest.category` on save. A bare `String`
+/// would collide with the `doc_id` context the page already provides.
+#[derive(Clone, Debug, Default)]
+pub struct DocComposeCategory(pub String);
 
 #[component]
 pub fn TeamSubTeamDocEditPage(username: String, doc_id: String) -> Element {
-    render_compose(username, Some(doc_id))
+    // Existing edits stay on the pre-category compose path — the
+    // category is already on the row and update_sub_team_doc doesn't
+    // touch it.
+    render_compose(username, Some(doc_id), String::new())
 }
 
-fn render_compose(username: String, doc_id: Option<String>) -> Element {
+/// Single entry point for NEW documents. Always takes a category
+/// (`"Bylaws"` / `"ClubBylaws"`) — Documents tab passes the team's
+/// own category, bylaws page passes the section's category, and the
+/// save handler dual-writes a backing Post.
+#[component]
+pub fn TeamSubTeamBylawsComposePage(username: String, category: String) -> Element {
+    render_compose(username, None, category)
+}
+
+fn render_compose(
+    username: String,
+    doc_id: Option<String>,
+    category: String,
+) -> Element {
     let tr: SubTeamTranslate = use_translate();
 
     let username_for_load = username.clone();
@@ -103,6 +121,11 @@ fn render_compose(username: String, doc_id: Option<String>) -> Element {
 
     let doc_id_for_ctx = doc_id.clone();
     use_context_provider(move || doc_id_for_ctx.clone());
+
+    // Bylaws-mode preset — empty string means "no category" (regular
+    // doc) and the save handler skips the dual-write.
+    let category_for_ctx = category.clone();
+    use_context_provider(move || DocComposeCategory(category_for_ctx.clone()));
 
     rsx! {
         SeoMeta { title: if doc_id.is_some() { "{tr.doc_compose_title_edit}" } else { "{tr.doc_compose_title_new}" } }
@@ -162,8 +185,18 @@ fn DocComposeForm(username: String) -> Element {
     // mid-await and silently drop the future, so the doc would never
     // hit the server (see CLAUDE.md anti-patterns § "Async Event
     // Handlers" / hooks-and-actions guidance).
+    // Bylaws-mode category seeded via `DocComposeCategory` context. Empty
+    // string = regular doc; non-empty = bylaws/club-bylaws.
+    let category_ctx: DocComposeCategory =
+        try_consume_context().unwrap_or_default();
+    let category_value: Option<String> = if category_ctx.0.trim().is_empty() {
+        None
+    } else {
+        Some(category_ctx.0.clone())
+    };
     let save_action = move |_| {
         let username_for_after = username_for_after.clone();
+        let category_value = category_value.clone();
         async move {
             let t = title();
             let b = body();
@@ -193,6 +226,7 @@ fn DocComposeForm(username: String) -> Element {
                             body: b,
                             required: r,
                             attachments: Some(files),
+                            category: category_value.clone(),
                             ..Default::default()
                         },
                     )
