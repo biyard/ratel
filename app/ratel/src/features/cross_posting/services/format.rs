@@ -161,6 +161,7 @@ fn take_chars(s: &str, n: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::common::types::ContentBody;
     use crate::features::posts::models::Post;
 
     fn make_post(title: &str, html: &str) -> Post {

@@ -1,6 +1,6 @@
 use super::*;
 
-use crate::common::types::{EntityType, InboxPayload, ListResponse, Partition};
+use crate::common::types::{ContentBody, EntityType, InboxPayload, ListResponse, Partition};
 use crate::features::auth::{UserTeam, UserTeamQueryOption};
 use crate::features::posts::models::Team;
 use crate::features::social::pages::member::dto::TeamRole;
@@ -1872,7 +1872,7 @@ async fn seed_team_post(
         pk: Partition::Feed(post_id),
         sk: EntityType::Post,
         title: "T".to_string(),
-        html_contents: "B".to_string(),
+        body: ContentBody::html("B"),
         created_at: created,
         updated_at: created,
         status,
