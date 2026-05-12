@@ -28,52 +28,54 @@ async fn test_create_post_without_auth() {
 
 /// Backward-compat test: rows persisted under the legacy `html_contents: String`
 /// schema must still deserialize cleanly into the new `body: ContentBody` field.
-/// `#[serde(alias = "html_contents")]` on `Post.body` + `ContentBody`'s custom
-/// `Deserialize` (which accepts a bare JSON string) carry the legacy shape.
+///
+/// Round-trips a Post through DynamoDB but **overwrites** `body` with the
+/// legacy `html_contents` attribute name + raw JSON string, then reads it back.
+/// Exercises both `#[serde(alias = "html_contents")]` on `Post.body` and
+/// `ContentBody`'s custom `Deserialize` (which accepts a bare JSON string).
 #[tokio::test]
 async fn legacy_html_contents_string_loads_as_html_content_body() {
+    use aws_sdk_dynamodb::types::AttributeValue;
+    use crate::common::DynamoEntity;
+    use crate::features::posts::models::Post;
+    use crate::features::posts::types::{Author, PostType};
+
     let ctx = TestContext::setup().await;
     let cli = &ctx.ddb;
     let table = std::env::var("DYNAMO_TABLE_PREFIX").unwrap() + "-main";
-    let pk = format!("POST#{}", uuid::Uuid::new_v4());
 
-    let item = serde_dynamo::to_item(serde_json::json!({
-        "pk": pk,
-        "sk": "POST",
-        "title": "Legacy",
-        "html_contents": "<p>legacy body</p>",
-        "post_type": "Post",
-        "status": "Draft",
-        "user_pk": "USER#legacy",
-        "shares": 0, "likes": 0, "comments": 0, "reports": 0,
-        "created_at": 0, "updated_at": 0,
-        "author_display_name": "x",
-        "author_profile_url": "x",
-        "author_username": "x",
-        "author_type": "Individual",
-        "urls": [],
-        "categories": [],
-    }))
-    .unwrap();
-    cli.put_item()
+    // 1) Create a normal post via the model so all GSI fields land correctly.
+    let author = Author {
+        pk: ctx.test_user.0.pk.clone(),
+        display_name: ctx.test_user.0.display_name.clone(),
+        profile_url: ctx.test_user.0.profile_url.clone(),
+        username: ctx.test_user.0.username.clone(),
+        user_type: ctx.test_user.0.user_type.clone(),
+    };
+    let post = Post::new("Legacy title", "irrelevant initial body", PostType::Post, author);
+    post.create(cli).await.unwrap();
+
+    // 2) Surgically rewrite the row to the LEGACY schema: drop `body`, add
+    //    `html_contents: String` (the old shape DynamoDB rows had before this
+    //    migration). The model must still read this row as
+    //    `ContentBody::HtmlContent` thanks to the alias + custom Deserialize.
+    cli.update_item()
         .table_name(&table)
-        .set_item(Some(item))
+        .key("pk", AttributeValue::S(post.pk.to_string()))
+        .key("sk", AttributeValue::S(post.sk.to_string()))
+        .update_expression("REMOVE body SET html_contents = :v")
+        .expression_attribute_values(":v", AttributeValue::S("<p>legacy body</p>".into()))
         .send()
         .await
         .unwrap();
 
-    let res = cli
-        .get_item()
-        .table_name(&table)
-        .key("pk", aws_sdk_dynamodb::types::AttributeValue::S(pk.clone()))
-        .key("sk", aws_sdk_dynamodb::types::AttributeValue::S("POST".into()))
-        .send()
+    // 3) Read via the model.
+    let loaded = Post::get(cli, &post.pk, Some(post.sk.clone()))
         .await
-        .unwrap();
-    let post: crate::features::posts::models::Post =
-        serde_dynamo::from_item(res.item.unwrap()).unwrap();
+        .unwrap()
+        .expect("post should be present");
     assert_eq!(
-        post.body,
-        ContentBody::HtmlContent("<p>legacy body</p>".into())
+        loaded.body,
+        ContentBody::HtmlContent("<p>legacy body</p>".into()),
     );
 }
