@@ -143,6 +143,76 @@ translate! {
     broadcast_draft: { en: "Draft", ko: "드래프트" },
     broadcast_delete: { en: "Delete", ko: "삭제" },
     broadcast_published: { en: "Published", ko: "발행됨" },
+    broadcast_title_placeholder: { en: "Enter a title…", ko: "제목을 입력하세요…" },
+    broadcast_body_placeholder: {
+        en: "Tell your story… use the toolbar to add formatting, links and images.",
+        ko: "이야기를 들려주세요… 도구 모음을 사용해 서식, 링크, 이미지를 추가할 수 있어요.",
+    },
+    broadcast_posting_as: { en: "Posting as", ko: "게시자" },
+    broadcast_section_tags: { en: "Tags", ko: "태그" },
+    broadcast_discard_draft: { en: "Discard draft", ko: "초안 버리기" },
+    broadcast_status_idle: { en: "Auto-save enabled", ko: "자동 저장 활성화" },
+    broadcast_status_dirty: { en: "Unsaved changes", ko: "저장되지 않은 변경" },
+    broadcast_status_saving: { en: "Saving…", ko: "저장 중…" },
+    broadcast_status_saved: { en: "Auto-saved just now", ko: "자동 저장됨 방금" },
+    broadcast_status_error: { en: "Save failed", ko: "저장 실패" },
+    broadcast_save_draft_manual: { en: "Save draft", ko: "초안 저장" },
+    broadcast_compose_sub: {
+        en: "Publish to every recognized sub-team — in-app notifications.",
+        ko: "인식된 모든 하위팀에 발행 · 인앱 알림.",
+    },
+    broadcast_draft_chars: { en: "{n} chars", ko: "{n}자" },
+    broadcast_draft_posting_as: { en: "Posting as", ko: "게시자" },
+    broadcast_draft_target: { en: "Broadcast", ko: "Broadcast" },
+    broadcast_drafts_card_title: { en: "Drafts", ko: "작성 중 · Drafts" },
+    broadcast_untitled: { en: "(Untitled draft)", ko: "(제목 없음)" },
+    broadcast_published_card_title: {
+        en: "Published",
+        ko: "발행된 공지 · Published",
+    },
+    broadcast_published_count: { en: "{n} published", ko: "{n}건" },
+    broadcast_drafts_count: { en: "{n} drafts", ko: "{n}건" },
+    broadcast_pinned: { en: "Pinned", ko: "Pinned" },
+    broadcast_unpinned: { en: "Unpinned", ko: "Unpinned" },
+    broadcast_fanout_meta: {
+        en: "{n} sub-teams notified",
+        ko: "{n} 하위팀 알림",
+    },
+    broadcast_comments_meta: { en: "{n} comments", ko: "{n} 댓글" },
+    broadcast_autosaved_idle: { en: "Saved", ko: "저장됨" },
+    broadcast_autosaved_just_now: { en: "Just now", ko: "방금 자동 저장" },
+    broadcast_autosaved_minutes: {
+        en: "{n} min ago auto-saved",
+        ko: "{n}분 전 자동 저장",
+    },
+    broadcast_autosaved_hours: {
+        en: "{n} hours ago auto-saved",
+        ko: "{n}시간 전 자동 저장",
+    },
+    broadcast_autosaved_yesterday: {
+        en: "Yesterday auto-saved",
+        ko: "어제 자동 저장",
+    },
+    broadcast_autosaved_days: {
+        en: "{n} days ago auto-saved",
+        ko: "{n}일 전 자동 저장",
+    },
+    broadcast_time_today: { en: "Today", ko: "오늘" },
+    broadcast_time_yesterday: { en: "Yesterday", ko: "어제" },
+    broadcast_time_days_ago: { en: "{n} days ago", ko: "{n}일 전" },
+    // Space toggle copy reused from post_edit (Korean translation
+    // mirrored verbatim so the broadcast composer looks identical).
+    broadcast_enable_space: { en: "Enable Space", ko: "스페이스 활성화" },
+    broadcast_space_hint: {
+        en: "Turn this announcement into a Space — every recognized sub-team's members can vote, discuss, and earn rewards together.",
+        ko: "이 게시물을 스페이스로 전환하세요. 투표하고, 토론하고, 보상을 함께 받을 수 있는 전용 공간을 제공합니다.",
+    },
+    broadcast_space_active_hint: {
+        en: "Publish will take you to the Space designer to configure quests, rewards, and members.",
+        ko: "게시하면 퀘스트, 보상, 멤버를 설정하는 스페이스 디자이너로 이동합니다.",
+    },
+    broadcast_tag_placeholder: { en: "Add a tag…", ko: "태그 추가…" },
+    broadcast_remove_tag: { en: "Remove tag", ko: "태그 제거" },
 
     // Apply UI
     select_parent_team: { en: "Select a parent team", ko: "팀 선택" },

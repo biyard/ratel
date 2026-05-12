@@ -13,9 +13,11 @@
 //! switch read from the same context the tabs reuse via `try_use_context`.
 
 use crate::features::social::controllers::find_team::find_team_handler;
+use crate::features::sub_team::models::SubTeamAnnouncementStatus;
 use crate::features::sub_team::{
-    use_sub_team_list, use_sub_team_queue, use_sub_team_settings, SubTeamTranslate,
-    UpdateSubTeamSettingsRequest, UseSubTeamList, UseSubTeamQueue, UseSubTeamSettings,
+    use_sub_team_broadcast, use_sub_team_list, use_sub_team_queue, use_sub_team_settings,
+    SubTeamTranslate, UpdateSubTeamSettingsRequest, UseSubTeamBroadcast, UseSubTeamList,
+    UseSubTeamQueue, UseSubTeamSettings,
 };
 use crate::*;
 
@@ -61,10 +63,26 @@ pub fn TeamSubTeamManagementPage(username: String) -> Element {
     } = use_sub_team_settings()?;
     let UseSubTeamList { teams, .. } = use_sub_team_list()?;
     let UseSubTeamQueue { queue, .. } = use_sub_team_queue()?;
+    // Install the broadcast controller here too — same pattern as the
+    // other KPI sources. The `BroadcastTab` re-uses this context via
+    // `try_use_context`, so we don't pay for a second loader when the
+    // user clicks into the tab. We only need `announcements.items()`
+    // to find the most recent `published_at` for the KPI cell.
+    let UseSubTeamBroadcast { announcements, .. } = use_sub_team_broadcast()?;
 
     let is_on = settings().is_parent_eligible;
     let recognized_count = teams().items.len();
     let pending_count = queue.items().len();
+    let last_broadcast_at: Option<i64> = announcements
+        .items()
+        .iter()
+        .filter(|a| matches!(a.status, SubTeamAnnouncementStatus::Published))
+        .filter_map(|a| a.published_at)
+        .max();
+    let last_broadcast_label = match last_broadcast_at {
+        Some(ts) if ts > 0 => format_last_broadcast(ts, &tr),
+        _ => tr.kpi_no_broadcast.to_string(),
+    };
 
     let mut active_tab: Signal<ManagementTab> = use_signal(|| ManagementTab::Requirements);
 
@@ -198,7 +216,7 @@ pub fn TeamSubTeamManagementPage(username: String) -> Element {
                         span {
                             class: "kpi__value kpi__value--purple",
                             style: "font-size:22px;font-weight:800;letter-spacing:0.02em;color:var(--sub-team-purple);",
-                            "{tr.kpi_no_broadcast}"
+                            "{last_broadcast_label}"
                         }
                     }
                 }
@@ -361,7 +379,13 @@ pub fn TeamSubTeamManagementPage(username: String) -> Element {
                     "data-tab": "broadcast",
                     "data-active": "{active_tab() == ManagementTab::Broadcast}",
                     if active_tab() == ManagementTab::Broadcast {
-                        BroadcastTab { username: username.clone() }
+                        BroadcastTab {
+                            username: username.clone(),
+                            team_display_name: {
+                                let t = team_resource();
+                                if t.nickname.is_empty() { t.username.clone() } else { t.nickname.clone() }
+                            },
+                        }
                     }
                 }
             }
@@ -390,6 +414,28 @@ fn TabButton(
             if let Some(b) = badge {
                 {b}
             }
+        }
+    }
+}
+
+/// Format the "Last broadcast" KPI value. Today / Yesterday / N days
+/// ago (localised) with a YYYY-MM-DD fallback past a week. The caller
+/// passes the active `SubTeamTranslate` instance so the label switches
+/// with locale.
+fn format_last_broadcast(ts_ms: i64, tr: &SubTeamTranslate) -> String {
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    let diff_days = ((now - ts_ms) / 86_400_000).max(0);
+    match diff_days {
+        0 => tr.broadcast_time_today.to_string(),
+        1 => tr.broadcast_time_yesterday.to_string(),
+        2..=6 => tr.broadcast_time_days_ago.replace("{n}", &diff_days.to_string()),
+        _ => {
+            use chrono::TimeZone;
+            chrono::Utc
+                .timestamp_millis_opt(ts_ms)
+                .single()
+                .map(|t| t.format("%Y-%m-%d").to_string())
+                .unwrap_or_default()
         }
     }
 }

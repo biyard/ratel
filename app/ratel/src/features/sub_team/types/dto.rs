@@ -483,10 +483,29 @@ pub struct SubTeamAnnouncementResponse {
     pub id: String,
     pub title: String,
     pub body: String,
+    #[serde(default)]
+    pub html_contents: String,
+    #[serde(default)]
+    pub tags: Vec<String>,
     pub author_user_id: String,
     pub status: SubTeamAnnouncementStatus,
     pub target_type: BroadcastTarget,
+    #[serde(default)]
+    pub visibility: crate::features::posts::types::Visibility,
+    #[serde(default)]
+    pub space_enabled: bool,
+    #[serde(default)]
+    pub space_type: Option<crate::features::posts::types::SpaceType>,
+    #[serde(default)]
+    pub space_pk: Option<String>,
     pub fan_out_count: i32,
+    /// Comment count surfaced for the management Published list. Phase 1
+    /// always returns 0 (per-post comments are not aggregated up to
+    /// the announcement source-of-truth yet); kept as a field on the
+    /// DTO so the UI doesn't need a follow-up schema change when
+    /// aggregation lands.
+    #[serde(default)]
+    pub comments_count: i32,
     pub created_at: i64,
     pub updated_at: i64,
     pub published_at: Option<i64>,
@@ -496,7 +515,16 @@ pub struct SubTeamAnnouncementResponse {
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct CreateSubTeamAnnouncementRequest {
     pub title: String,
+    #[serde(default)]
     pub body: String,
+    #[serde(default)]
+    pub html_contents: String,
+    #[serde(default)]
+    pub tags: Vec<String>,
+    #[serde(default)]
+    pub space_enabled: bool,
+    #[serde(default)]
+    pub space_type: Option<crate::features::posts::types::SpaceType>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -506,6 +534,14 @@ pub struct UpdateSubTeamAnnouncementRequest {
     pub title: Option<String>,
     #[serde(default)]
     pub body: Option<String>,
+    #[serde(default)]
+    pub html_contents: Option<String>,
+    #[serde(default)]
+    pub tags: Option<Vec<String>>,
+    #[serde(default)]
+    pub space_enabled: Option<bool>,
+    #[serde(default)]
+    pub space_type: Option<crate::features::posts::types::SpaceType>,
 }
 
 #[cfg(feature = "server")]
@@ -515,10 +551,17 @@ impl From<crate::features::sub_team::models::SubTeamAnnouncement> for SubTeamAnn
             id: a.announcement_id,
             title: a.title,
             body: a.body,
+            html_contents: a.html_contents,
+            tags: a.tags,
             author_user_id: a.author_user_id,
             status: a.status,
             target_type: a.target_type,
+            visibility: a.visibility,
+            space_enabled: a.space_enabled,
+            space_type: a.space_type,
+            space_pk: a.space_pk,
             fan_out_count: a.fan_out_count,
+            comments_count: 0,
             created_at: a.created_at,
             updated_at: a.updated_at,
             published_at: a.published_at,

@@ -3,6 +3,9 @@ use crate::features::posts::models::*;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
 use crate::features::auth::OptionalUser;
+use crate::common::models::space::SpaceCommon;
+use crate::common::types::SpacePublishState;
+use std::collections::HashMap;
 
 #[get("/api/posts/by-user/:username?bookmark", user: OptionalUser)]
 pub async fn list_user_posts_handler(
@@ -120,6 +123,15 @@ pub async fn list_team_posts_handler(
         posts
     };
 
+    // Hide fanned-out broadcast Posts from OTHER teams whose attached
+    // Space is still Draft. The Space designer's "Publish" button is
+    // what flips publish_state → Published, and until then the sub-team
+    // shouldn't see the half-built Space in their feed.
+    // The parent team's own anchor post (announcement_parent_team_id ==
+    // team being queried) bypasses this gate so the parent admin still
+    // sees their own broadcasts before designing the Space.
+    let posts = filter_unpublished_broadcast_spaces(cli, &team_pk, posts).await;
+
     tracing::debug!(
         "list_team_posts_handler: found {} posts, next bookmark = {:?}",
         posts.len(),
@@ -154,4 +166,69 @@ pub async fn list_team_posts_handler(
         .collect();
 
     Ok(ListItemsResponse { items, bookmark })
+}
+
+/// Hide broadcast Posts fanned-out from a different parent team whose
+/// linked Space hasn't been published yet. Posts without a Space, posts
+/// without an announcement linkage, and the parent's OWN anchor post
+/// (announcement_parent_team_id == team being queried) all pass through.
+#[cfg(feature = "server")]
+async fn filter_unpublished_broadcast_spaces(
+    cli: &aws_sdk_dynamodb::Client,
+    team_pk: &Partition,
+    posts: Vec<Post>,
+) -> Vec<Post> {
+    let team_id_str = match team_pk {
+        Partition::Team(id) => id.clone(),
+        _ => String::new(),
+    };
+
+    let mut to_check: Vec<Partition> = posts
+        .iter()
+        .filter(|p| {
+            let is_fanned_out = p
+                .announcement_parent_team_id
+                .as_deref()
+                .is_some_and(|parent_id| parent_id != team_id_str);
+            is_fanned_out && p.space_pk.is_some()
+        })
+        .filter_map(|p| p.space_pk.clone())
+        .collect();
+    to_check.sort_by(|a, b| a.to_string().cmp(&b.to_string()));
+    to_check.dedup_by(|a, b| a.to_string() == b.to_string());
+
+    if to_check.is_empty() {
+        return posts;
+    }
+
+    let keys: Vec<(Partition, EntityType)> = to_check
+        .iter()
+        .cloned()
+        .map(|pk| (pk, EntityType::SpaceCommon))
+        .collect();
+    let spaces: Vec<SpaceCommon> = SpaceCommon::batch_get(cli, keys).await.unwrap_or_default();
+    let publish_states: HashMap<String, SpacePublishState> = spaces
+        .into_iter()
+        .map(|s| (s.pk.to_string(), s.publish_state))
+        .collect();
+
+    posts
+        .into_iter()
+        .filter(|p| {
+            let is_fanned_out = p
+                .announcement_parent_team_id
+                .as_deref()
+                .is_some_and(|parent_id| parent_id != team_id_str);
+            if !is_fanned_out {
+                return true;
+            }
+            let Some(space_pk) = p.space_pk.as_ref() else {
+                return true;
+            };
+            matches!(
+                publish_states.get(&space_pk.to_string()),
+                Some(SpacePublishState::Published)
+            )
+        })
+        .collect()
 }

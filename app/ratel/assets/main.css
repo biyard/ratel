@@ -31410,7 +31410,34 @@ body.comments-panel-resizing {
   .sub-team-broadcast-compose .composer-page {
     grid-template-columns: 1fr;
     padding: 20px 16px 110px;
+    gap: 16px;
   }
+}
+@media (max-width: 500px) {
+  .sub-team-broadcast-compose .arena-topbar {
+    padding: 10px 12px;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .sub-team-broadcast-compose .topbar-title__main { font-size: 12px; }
+  .sub-team-broadcast-compose .topbar-title__eyebrow { font-size: 9px; }
+  .sub-team-broadcast-compose .autosave-chip {
+    padding: 3px 8px;
+    font-size: 9px;
+  }
+  .sub-team-broadcast-compose .composer-page {
+    padding: 14px 12px 80px;
+    gap: 12px;
+  }
+  .sub-team-broadcast-compose .composer { gap: 14px; }
+  .sub-team-broadcast-compose .title-input {
+    font-size: 24px;
+    padding: 10px 0;
+  }
+  .sub-team-broadcast-compose .sub-team-broadcast-body {
+    font-size: 14px;
+  }
+  .sub-team-broadcast-compose .side-card { padding: 14px; }
 }
 .sub-team-broadcast-compose .composer {
   display: flex;
@@ -31572,6 +31599,86 @@ body.comments-panel-resizing {
   text-transform: uppercase;
   cursor: pointer;
   justify-content: center;
+}
+
+/* ── Composer upgrade (Phase 2): autosave chip, rich editor wrap,
+ *    space toggle + space-type chips, tag input. */
+.sub-team-broadcast-compose .autosave-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--sub-team-border);
+  background: var(--sub-team-input-bg);
+  color: var(--sub-team-muted);
+}
+.sub-team-broadcast-compose .autosave-chip__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentcolor;
+  opacity: 0.7;
+}
+.sub-team-broadcast-compose .autosave-chip[data-state="saved"] {
+  color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.32);
+  background: rgba(34, 197, 94, 0.06);
+}
+.sub-team-broadcast-compose .autosave-chip[data-state="saving"] {
+  color: var(--sub-team-cyan);
+  border-color: rgba(34, 211, 238, 0.32);
+  background: rgba(34, 211, 238, 0.06);
+}
+.sub-team-broadcast-compose .autosave-chip[data-state="error"] {
+  color: var(--sub-team-coral);
+  border-color: rgba(239, 68, 68, 0.32);
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.sub-team-broadcast-compose .sub-team-broadcast-body {
+  min-height: 280px;
+  color: var(--sub-team-text);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.sub-team-broadcast-compose .u-hidden {
+  display: none;
+}
+
+/* The global `.switch__*` rules reference `--qc-*` CSS variables that
+ * are only defined inside `.arena` scope. The broadcast composer
+ * lives OUTSIDE `.arena`, so the track + thumb resolve to undefined
+ * (transparent) and the toggle renders as an empty oval. Re-declare
+ * the colors against the sub-team palette already scoped on this page. */
+.sub-team-broadcast-compose .switch__track {
+  background: var(--sub-team-input-bg);
+  border-color: var(--sub-team-border);
+}
+.sub-team-broadcast-compose .switch__thumb {
+  background: var(--sub-team-dim);
+}
+.sub-team-broadcast-compose .switch[aria-checked="true"] .switch__track {
+  background: rgba(252, 179, 0, 0.20);
+  border-color: rgba(252, 179, 0, 0.45);
+}
+.sub-team-broadcast-compose .switch[aria-checked="true"] .switch__thumb {
+  background: var(--sub-team-gold);
+  box-shadow: 0 0 8px rgba(252, 179, 0, 0.5);
+}
+/* Cancel browser button chrome on the switch so only our track/thumb
+ * visuals show. */
+.sub-team-broadcast-compose button.switch {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 
@@ -35453,8 +35560,21 @@ body.comments-panel-resizing {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+  align-items: center;
   font-size: 10px;
   color: var(--sub-team-dim);
+}
+/* Each meta cell stays a single inline row (icon + text). Without this
+ * the lucide SVG breaks onto its own line and "Today · N chars" wraps
+ * below the clock. */
+.sub-team-management .draft-row__meta-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.sub-team-management .draft-row__meta strong {
+  color: var(--sub-team-gold);
+  font-weight: 700;
 }
 .sub-team-management .draft-row__edit {
   display: inline-flex;
@@ -35478,6 +35598,10 @@ body.comments-panel-resizing {
   border: 1px solid var(--sub-team-border);
   color: var(--sub-team-dim);
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 .sub-team-management .draft-row__del:hover {
   border-color: rgba(239, 68, 68, 0.30);
@@ -35523,6 +35647,13 @@ body.comments-panel-resizing {
   gap: 14px;
   font-size: 9.5px;
   color: var(--sub-team-dim);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.sub-team-management .bc-item__meta-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .sub-team-management .inline-note {
