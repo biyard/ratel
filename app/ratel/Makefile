@@ -262,15 +262,21 @@ $(ANDROID_HOME)/system-images/android-34/google_apis/$(ARCH):
 android-emulator: $(HOME)/.android/debug.keystore $(HOME)/.android/avd/$(AVD_NAME).avd $(ANDROID_HOME)/emulator/emulator
 	$(ANDROID_HOME)/emulator/emulator -avd $(AVD_NAME) -netdelay none -netspeed full &
 
-.PHONY: $(ANDROID_DX_RES_BASE_DIR)/%/android/app/app/src/main
-$(ANDROID_DX_RES_BASE_DIR)/%/android/app/app/src/main:
+.PHONY: $(ANDROID_DX_RES_BASE_DIR)/release/android/app/app/src/main $(ANDROID_DX_RES_BASE_DIR)/debug/android/app/app/src/main/res
+$(ANDROID_DX_RES_BASE_DIR)/release/android/app/app/src/main:
+	rm -rf $@/res
 	mkdir -p $@
 	cp -rf android/res $@/
 
-android: $(HOME)/.android/debug.keystore $(ANDROID_DX_RES_DIR)
+$(ANDROID_DX_RES_BASE_DIR)/debug/android/app/app/src/main/res:
+	rm -rf $@/res
+	mkdir -p $@
+	cp -rf android/res $@/
+
+android: $(HOME)/.android/debug.keystore $(ANDROID_DX_RES_BASE_DIR)/debug/android/app/app/src/main
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --features $(RUN_FEATURES) --no-default-features @client --android --target $(ANDROID_TARGET) $(DEVICE_FLAG)
 
-build-android: $(HOME)/.android/debug.keystore $(ANDROID_DX_RES_DIR)
+build-android: $(HOME)/.android/debug.keystore $(ANDROID_DX_RES_BASE_DIR)/release/android/app/app/src/main
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx bundle --release --features $(RUN_FEATURES) --no-default-features @client --android --target $(ANDROID_TARGET) $(DEVICE_FLAG)
 
 ios:
