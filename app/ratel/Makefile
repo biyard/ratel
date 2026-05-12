@@ -56,7 +56,7 @@ else
 	ARCH ?= $(shell uname -m)
 endif
 
-MOBILE_API_URL ?= https://dev.ratel.foundation
+MOBILE_API_URL ?= http://$(HOST_IP):$(PORT)
 
 REPOSITORY ?= ratel/app-shell
 ECR ?= $(shell aws ecr describe-repositories --repository-names $(REPOSITORY)  --query "repositories[0].repositoryUri" --output text)
@@ -261,14 +261,13 @@ $(ANDROID_HOME)/system-images/android-34/google_apis/$(ARCH):
 android-emulator: $(HOME)/.android/debug.keystore $(HOME)/.android/avd/$(AVD_NAME).avd $(ANDROID_HOME)/emulator/emulator
 	$(ANDROID_HOME)/emulator/emulator -avd $(AVD_NAME) -netdelay none -netspeed full &
 
-.PHONY: $(ANDROID_DX_RES_DIR)
 $(ANDROID_DX_RES_DIR):
 	rm -rf $@/res
 	mkdir -p $@
 	cp -rf android/res $@/
 
 android: $(HOME)/.android/debug.keystore $(ANDROID_DX_RES_DIR)
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx bundle --release --features $(RUN_FEATURES) --no-default-features --platform android --target $(ANDROID_TARGET) --verbose --trace --fullstack false
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx bundle --release --features $(RUN_FEATURES) --no-default-features --platform android --target $(ANDROID_TARGET)
 	adb $(LOGCAT_FLAG) install -r $(ANDROID_DX_RES_BASE_DIR)/$(MODE)/android/app/app/build/outputs/apk/debug/app-debug.apk
 	adb $(LOGCAT_FLAG) shell am start -n "co.biyard.ratel/.MainActivity" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER
 

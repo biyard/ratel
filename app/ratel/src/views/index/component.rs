@@ -26,7 +26,9 @@ pub fn Index() -> Element {
     let t: HomeArenaTranslate = use_translate();
     let nav = use_navigator();
     let mut popup = use_popup();
+    debug!("before user context");
     let user_ctx = crate::features::auth::hooks::use_user_context();
+    debug!("after user context");
     let username = use_memo(move || {
         user_ctx()
             .user
@@ -48,8 +50,9 @@ pub fn Index() -> Element {
     let mut teams_open = use_signal(|| false);
     let mut notifications_open = use_signal(|| false);
 
+    debug!("before hot spaces");
     let hot_spaces = use_loader(|| async move { list_hot_spaces_handler().await })?;
-    debug!("hot spaces");
+    debug!("after hot spaces");
 
     // Read user_ctx inside the async so the fetch reflects the current
     // login state at invocation time. Login from the home page triggers
