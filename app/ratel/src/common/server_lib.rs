@@ -3,8 +3,6 @@ pub use uuid;
 
 pub use aide::OperationIo;
 
-pub use bdk::prelude::*;
-
 pub use axum::{
     extract::{Extension, FromRef, FromRequest, FromRequestParts, Request, State},
     http::request::Parts,
@@ -12,7 +10,6 @@ pub use axum::{
 pub use dioxus::fullstack::axum;
 
 pub use aws_sdk_dynamodb;
-pub use bdk;
 pub use ethers;
 
 // Re-export for DynamoEntity

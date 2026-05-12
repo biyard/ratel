@@ -8,8 +8,8 @@ macro_rules! test_call {
         headers: $headers:expr,
         response_type: $resp_ty:ty
     ) => {{
-        use axum::body::HttpBody;
-        use axum::http::header::{self, HeaderValue};
+        use ::axum::body::HttpBody;
+        use ::axum::http::header::{self, HeaderValue};
 
         let path = $path.replace("#", "%23");
         let mut req_builder = axum::http::Request::builder()
@@ -29,11 +29,11 @@ macro_rules! test_call {
 
         let req = req_builder.body($body).unwrap();
 
-        let res: axum::http::Response<axum::body::Body> =
+        let res: ::axum::http::Response<::axum::body::Body> =
             tower::ServiceExt::oneshot($app.clone(), req).await.unwrap();
 
         let (parts, body) = res.into_parts();
-        let body_bytes = axum::body::to_bytes(body, 10 * 1024 * 1024)
+        let body_bytes = ::axum::body::to_bytes(body, 10 * 1024 * 1024)
             .await
             .unwrap()
             .to_vec();
@@ -60,7 +60,7 @@ macro_rules! test_send {
         body: { $($body:tt)* },
         response_type: $resp_ty:ty
     ) => {{
-        let body = axum::body::Body::from(serde_json::to_vec(&serde_json::json!({ $($body)* })).unwrap());
+        let body = ::axum::body::Body::from(serde_json::to_vec(&serde_json::json!({ $($body)* })).unwrap());
         $crate::test_call! { app: $app, path: $path, method: $method, body: body, headers: $headers, response_type: $resp_ty }
     }};
 
@@ -71,7 +71,7 @@ macro_rules! test_send {
         headers: $headers:expr,
         response_type: $resp_ty:ty
     ) => {{
-        let body = axum::body::Body::empty();
+        let body = ::axum::body::Body::empty();
         $crate::test_call! { app: $app, path: $path, method: $method, body: body, headers: $headers, response_type: $resp_ty }
     }};
 }
@@ -87,7 +87,7 @@ macro_rules! test_http {
             app: $app,
             method: $method,
             path: $path,
-            headers: axum::http::HeaderMap::new(),
+            headers: ::axum::http::HeaderMap::new(),
             response_type: serde_json::Value
         }
     }};
@@ -117,7 +117,7 @@ macro_rules! test_http {
             app: $app,
             method: $method,
             path: $path,
-            headers: axum::http::HeaderMap::new(),
+            headers: ::axum::http::HeaderMap::new(),
             body: { $($body)* },
             response_type: serde_json::Value
         }
@@ -133,7 +133,7 @@ macro_rules! test_http {
             app: $app,
             method: $method,
             path: $path,
-            headers: axum::http::HeaderMap::new(),
+            headers: ::axum::http::HeaderMap::new(),
             response_type: $resp_ty
         }
     }};
@@ -149,7 +149,7 @@ macro_rules! test_http {
             app: $app,
             method: $method,
             path: $path,
-            headers: axum::http::HeaderMap::new(),
+            headers: ::axum::http::HeaderMap::new(),
             body: { $($body)* },
             response_type: $resp_ty
         }

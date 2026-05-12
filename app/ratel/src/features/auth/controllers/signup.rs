@@ -79,11 +79,10 @@ pub async fn signup_handler(req: SignupRequest) -> Result<SignupResponse> {
     let Extension(session) = session;
 
     tracing::info!("signup_handler: req = {:?}", req);
-    req.validate()
-        .map_err(|e| {
-            crate::error!("signup: {e}");
-            AuthError::InvalidInput
-        })?;
+    req.validate().map_err(|e| {
+        crate::error!("signup: {e}");
+        AuthError::InvalidInput
+    })?;
 
     let user = match req.signup_type.clone() {
         SignupType::Email {
@@ -150,8 +149,7 @@ async fn ensure_username_available(cli: &aws_sdk_dynamodb::Client, username: &st
     // Check team username
     use crate::features::posts::models::Team;
     let opt = Team::opt().limit(1);
-    let (teams, _): (Vec<Team>, _) =
-        Team::find_by_username_prefix(cli, username, opt).await?;
+    let (teams, _): (Vec<Team>, _) = Team::find_by_username_prefix(cli, username, opt).await?;
     if teams.iter().any(|t| t.username == username) {
         return Err(Error::UsernameAlreadyExists);
     }

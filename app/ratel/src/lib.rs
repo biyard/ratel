@@ -21,12 +21,6 @@ pub use features::*;
 
 pub use dioxus::fullstack::{Loader, Loading};
 
-// Re-export real `axum` at the crate root so all `crate::axum::...` paths
-// resolve to the upstream crate (not the `by_axum` `BiyardRouter` wrapper).
-// Gated behind `feature = "server"` since axum is only used in server-side
-// code paths.
-#[cfg(feature = "server")]
-pub use ::axum;
 use dioxus_primitives::dioxus_attributes::attributes;
 use dioxus_primitives::merge_attributes;
 use features::auth::{OptionalUser, User};

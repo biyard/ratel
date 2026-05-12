@@ -38,7 +38,7 @@ pub mod middlewares;
 pub mod models;
 pub mod services;
 pub mod utils;
-pub use macros::dynamo_entity::DynamoEntity;
+pub use macros::{DynamoEntity, DynamoEnum};
 pub use regex;
 
 pub use components::*;

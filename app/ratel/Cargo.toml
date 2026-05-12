@@ -77,7 +77,7 @@ hex = { version = "0.4.3", optional = true }
 k256 = { version = "0.13", features = ["ecdsa"], optional = true }
 hmac = { version = "0.12.1", optional = true }
 url = { version = "2", optional = true }
-validator = { version = "0.20.0", optional = true }
+validator = { version = "0.20.0", features = ["derive"], optional = true }
 aws-sdk-sns = { version = "1.83.0", optional = true }
 aws-sdk-sesv2 = { version = "1.83.0", optional = true }
 thiserror = { workspace = true }
@@ -86,8 +86,6 @@ thiserror = { workspace = true }
 by-macros = { workspace = true }
 dioxus-translate = { workspace = true }
 lucide-dioxus = { workspace = true }
-bdk = { workspace = true, optional = true }
-axum = { workspace = true, optional = true }
 ssi = { version = "0.12.0", features = ["bbs"], optional = true }
 aws-credential-types = { version = "1.2.6", optional = true }
 strum = { version = "0.27.2", features = ["derive"] }
@@ -126,7 +124,6 @@ desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile", "tokio"]
 server = [
   "aide",
-  "axum",
   "aws-config",
   "aws-credential-types",
   "aws-sdk-bedrockagentruntime",
@@ -137,7 +134,6 @@ server = [
   "aws-sdk-sesv2",
   "aws-sdk-sns",
   "aws-smithy-types",
-  "bdk/be",
   "candid",
   "dioxus/server",
   "ethers",
@@ -185,7 +181,6 @@ rand_chacha = ["dep:rand_chacha"]
 tracing-android = "0.2"
 
 [dev-dependencies]
-axum = { workspace = true }
 tower = { version = "0.5" }
 tokio = { workspace = true }
 tracing = { workspace = true }

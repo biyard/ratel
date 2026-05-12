@@ -15,11 +15,7 @@ repository = "https://github.com/biyard/ratel"
 license = "MIT"
 
 [workspace.dependencies]
-bdk = { path = "packages/bdk", version = "0.1.*" }
 btracing = { path = "packages/btracing", version = "0.1.*" }
-by-axum = { path = "packages/by-axum", version = "0.2.*" }
-by-types = { path = "packages/by-types", version = "0.3.*" }
-rest-api = { path = "packages/rest-api", version = "0.1.*" }
 dioxus-translate = { path = "packages/dioxus-translate", version = "0.1.*", features = [
   "ko",
 ] }
