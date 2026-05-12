@@ -1,6 +1,6 @@
 use convert_case::Casing;
 
-pub fn write_file(_model_name: String, _key: &str, _output: String) {
+pub fn write_file(model_name: String, key: &str, output: String) {
     if option_env!("WRITE_OUTPUT").is_none() {
         return;
     }
