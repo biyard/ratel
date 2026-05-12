@@ -113,7 +113,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
         // `disallowed_useragent` or where `signInWithPopup` can't work.
         // This must run before `sign_in()` and inside the click handler
         // itself so custom-scheme redirects are treated as user-gesture.
-        #[cfg(feature = "web")]
+        #[cfg(all(feature = "web", not(feature = "server")))]
         {
             use crate::features::auth::interop::init_firebase;
 
@@ -201,7 +201,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
         error_message.set(None);
         loading.set(true);
 
-        #[cfg(feature = "web")]
+        #[cfg(all(feature = "web", not(feature = "server")))]
         {
             use crate::features::auth::interop::wallet_connect_initialize;
             let wc_conf = crate::common::WalletConnectConfig::default();
