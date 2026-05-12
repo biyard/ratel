@@ -11,7 +11,8 @@ pub struct PostResponse {
     pub updated_at: i64,
 
     pub title: String,
-    pub html_contents: String,
+    #[serde(alias = "html_contents")]
+    pub body: ContentBody,
 
     pub shares: i64,
     pub likes: i64,
@@ -65,7 +66,7 @@ impl From<Post> for PostResponse {
             created_at: post.created_at,
             updated_at: post.updated_at,
             title: post.title,
-            html_contents: post.html_contents,
+            body: post.body,
             shares: post.shares,
             likes: post.likes,
             comments: post.comments,

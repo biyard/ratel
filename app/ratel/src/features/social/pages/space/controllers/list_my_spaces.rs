@@ -113,7 +113,7 @@ pub async fn list_my_spaces_handler(
         .collect();
     let description_map: HashMap<String, String> = posts
         .into_iter()
-        .map(|p| (p.pk.to_string(), extract_description(&p.html_contents)))
+        .map(|p| (p.pk.to_string(), extract_description(&p.body.to_html())))
         .collect();
 
     let items: Vec<MySpaceResponse> = collected_spaces

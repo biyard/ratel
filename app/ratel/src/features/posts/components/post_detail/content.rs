@@ -10,9 +10,10 @@ pub fn PostContent(
     post_type: PostType,
     urls: Vec<String>,
     title: String,
-    html_contents: String,
+    body: ContentBody,
     artwork_metadata: Vec<PostArtworkMetadata>,
 ) -> Element {
+    let html_contents = body.to_html();
     if post_type == PostType::Artwork {
         let image_url = urls.first().cloned();
         let bg_color = artwork_metadata

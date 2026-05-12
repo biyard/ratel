@@ -10,7 +10,7 @@ pub async fn index_post(post: Post) -> Result<()> {
         return Ok(());
     }
 
-    let plain_text = crate::features::posts::utils::extract_plain_text(&post.html_contents);
+    let plain_text = post.body.to_plain_text();
     let plain_text_preview: String = plain_text.chars().take(500).collect();
 
     if post.title.is_empty() && plain_text_preview.is_empty() {

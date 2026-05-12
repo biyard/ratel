@@ -83,7 +83,7 @@ pub async fn list_my_home_spaces_handler(
         .collect();
     let desc_map: HashMap<String, String> = posts
         .iter()
-        .map(|p| (p.pk.to_string(), extract_description(&p.html_contents)))
+        .map(|p| (p.pk.to_string(), extract_description(&p.body.to_html())))
         .collect();
 
     let mut items: Vec<HotSpaceResponse> = Vec::with_capacity(spaces.len());

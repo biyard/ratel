@@ -167,7 +167,7 @@ pub async fn update_space(
             let post_pk = space_pk.clone().to_post_key()?;
             let post_updater = Post::updater(post_pk, EntityType::Post)
                 .with_updated_at(now)
-                .with_html_contents(content.clone());
+                .with_body(ContentBody::html(content.clone()));
             pu = Some(post_updater);
 
             updated_space.content = content;

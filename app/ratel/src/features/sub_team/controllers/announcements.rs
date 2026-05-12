@@ -318,7 +318,7 @@ pub async fn publish_announcement_handler(
         created_at: now,
         updated_at: now,
         title: existing.title.clone(),
-        html_contents: anchor_post_body,
+        body: ContentBody::html(anchor_post_body),
         post_type: PostType::Post,
         status: PostStatus::Published,
         visibility: Some(existing.visibility.clone()),

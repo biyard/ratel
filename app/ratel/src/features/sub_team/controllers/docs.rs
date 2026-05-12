@@ -96,7 +96,7 @@ pub async fn create_sub_team_doc_handler(
                 created_at: now,
                 updated_at: now,
                 title: doc.title.clone(),
-                html_contents: doc.body.clone(),
+                body: ContentBody::html(doc.body.clone()),
                 post_type: PostType::Post,
                 status: PostStatus::Published,
                 visibility: Some(Visibility::Public),

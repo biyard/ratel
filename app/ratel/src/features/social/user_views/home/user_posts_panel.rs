@@ -25,7 +25,7 @@ pub fn UserPostsPanel(username: String, view_mode: HomeViewMode) -> Element {
 
     if items.is_empty() {
         return rsx! {
-            div { class: "flex justify-center items-center w-full py-20 text-foreground-muted text-base",
+            div { class: "flex justify-center items-center py-20 w-full text-base text-foreground-muted",
                 "No posts yet"
             }
         };
@@ -67,49 +67,45 @@ fn UserPostCard(post: PostResponse) -> Element {
     let likes = post.likes;
     let comments = post.comments;
     let thumbnail = post.urls.first().cloned();
-    let html_contents = post.html_contents.clone();
+    let html_contents = post.body.to_html();
     let category = post.categories.first().cloned().unwrap_or_default();
 
     rsx! {
-        Link {
-            to: "{post_url}",
-            class: "block",
+        Link { to: "{post_url}", class: "block",
             div { class: "flex flex-col gap-5 py-6 border-b border-separator",
                 if !category.is_empty() {
-                    div { class: "flex items-center justify-between",
-                        div { class: "flex items-center border border-tag-stroke rounded-[8px] px-2 py-0.5",
-                            span { class: "text-[12px] font-bold text-text-primary leading-[14px] tracking-[-0.12px]",
+                    div { class: "flex justify-between items-center",
+                        div { class: "flex items-center py-0.5 px-2 border border-tag-stroke rounded-[8px]",
+                            span { class: "font-bold text-[12px] text-text-primary leading-[14px] tracking-[-0.12px]",
                                 "{category}"
                             }
                         }
-                        div { class: "flex items-center gap-2",
-                            icons::edit::Edit1 {
-                                class: "w-5 h-5 [&>path]:stroke-icon-primary cursor-pointer",
-                            }
+                        div { class: "flex gap-2 items-center",
+                            icons::edit::Edit1 { class: "w-5 h-5 cursor-pointer [&>path]:stroke-icon-primary" }
                         }
                     }
                 }
 
-                h2 { class: "text-[20px] font-bold text-text-primary tracking-[0.5px] leading-[25px] line-clamp-2",
+                h2 { class: "font-bold text-[20px] text-text-primary tracking-[0.5px] leading-[25px] line-clamp-2",
                     "{title}"
                 }
 
-                div { class: "flex items-center justify-between",
+                div { class: "flex justify-between items-center",
                     span { class: "text-[15px] text-foreground-muted leading-[22px]",
                         {format_post_date(created_at)}
                     }
-                    div { class: "flex items-center gap-2.5",
-                        div { class: "flex items-center gap-1",
-                            icons::emoji::ThumbsUp {
-                                class: "w-5 h-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
+                    div { class: "flex gap-2.5 items-center",
+                        div { class: "flex gap-1 items-center",
+                            icons::emoji::ThumbsUp { class: "w-5 h-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                            span { class: "font-medium text-[15px] text-text-primary",
+                                "{likes}"
                             }
-                            span { class: "text-[15px] font-medium text-text-primary", "{likes}" }
                         }
-                        div { class: "flex items-center gap-1",
-                            icons::chat::SquareChat {
-                                class: "w-5 h-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
+                        div { class: "flex gap-1 items-center",
+                            icons::chat::SquareChat { class: "w-5 h-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                            span { class: "font-medium text-[15px] text-text-primary",
+                                "{comments}"
                             }
-                            span { class: "text-[15px] font-medium text-text-primary", "{comments}" }
                         }
                     }
                 }
@@ -117,7 +113,7 @@ fn UserPostCard(post: PostResponse) -> Element {
                 if let Some(thumb_url) = thumbnail {
                     img {
                         src: "{thumb_url}",
-                        class: "w-full h-[280px] rounded-[24px] object-cover",
+                        class: "object-cover w-full h-[280px] rounded-[24px]",
                     }
                 } else {
                     div { class: "w-full h-[280px] rounded-[24px] bg-thumbnail-placeholder-bg" }
@@ -148,38 +144,34 @@ fn UserPostListItem(post: PostResponse) -> Element {
     };
 
     rsx! {
-        Link {
-            to: "{post_url}",
-            class: "block",
+        Link { to: "{post_url}", class: "block",
             div { class: "flex flex-col gap-4 py-5 border-b border-separator",
                 if !category.is_empty() {
-                    div { class: "flex items-center border border-tag-stroke rounded-[8px] px-2 py-0.5 w-fit",
-                        span { class: "text-[12px] font-bold text-text-primary leading-[14px] tracking-[-0.12px]",
+                    div { class: "flex items-center py-0.5 px-2 border border-tag-stroke rounded-[8px] w-fit",
+                        span { class: "font-bold text-[12px] text-text-primary leading-[14px] tracking-[-0.12px]",
                             "{category}"
                         }
                     }
                 }
 
-                h2 { class: "{title_class}",
-                    "{title}"
-                }
+                h2 { class: "{title_class}", "{title}" }
 
-                div { class: "flex items-center justify-between",
+                div { class: "flex justify-between items-center",
                     span { class: "text-[15px] text-foreground-muted leading-[22px]",
                         {format_post_date(created_at)}
                     }
-                    div { class: "flex items-center gap-2.5",
-                        div { class: "flex items-center gap-1",
-                            icons::emoji::ThumbsUp {
-                                class: "w-5 h-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
+                    div { class: "flex gap-2.5 items-center",
+                        div { class: "flex gap-1 items-center",
+                            icons::emoji::ThumbsUp { class: "w-5 h-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                            span { class: "font-medium text-[15px] text-text-primary",
+                                "{likes}"
                             }
-                            span { class: "text-[15px] font-medium text-text-primary", "{likes}" }
                         }
-                        div { class: "flex items-center gap-1",
-                            icons::chat::SquareChat {
-                                class: "w-5 h-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent",
+                        div { class: "flex gap-1 items-center",
+                            icons::chat::SquareChat { class: "w-5 h-5 [&>path]:stroke-icon-primary [&>path]:fill-transparent" }
+                            span { class: "font-medium text-[15px] text-text-primary",
+                                "{comments}"
                             }
-                            span { class: "text-[15px] font-medium text-text-primary", "{comments}" }
                         }
                     }
                 }
