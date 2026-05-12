@@ -48,9 +48,7 @@ pub fn Index() -> Element {
     let mut teams_open = use_signal(|| false);
     let mut notifications_open = use_signal(|| false);
 
-    debug!("before hot space");
     let hot_spaces = use_loader(|| async move { list_hot_spaces_handler().await })?;
-    debug!("after hot space");
 
     // Read user_ctx inside the async so the fetch reflects the current
     // login state at invocation time. Login from the home page triggers
@@ -93,7 +91,6 @@ pub fn Index() -> Element {
     let brand_logo = "https://metadata.ratel.foundation/logos/logo-symbol.png".to_string();
 
     let my_spaces = use_my_spaces()?.my_spaces;
-    debug!("after my space");
 
     let hot_cards = hot_spaces().items;
     let mine_cards = my_spaces().items;
@@ -114,6 +111,7 @@ pub fn Index() -> Element {
     let active_spaces = hot_cards.len() as i64;
 
     let go_create_post = move |_: Event<MouseData>| async move {
+        debug!("Create post clicked; has_user={has_user}");
         if !has_user {
             popup
                 .open(rsx! {

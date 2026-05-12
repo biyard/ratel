@@ -1,4 +1,4 @@
-#![allow(unused_imports, dead_code)]
+#![allow(unused_imports, dead_code, ambiguous_glob_reexports)]
 mod app;
 pub mod common;
 pub mod components;

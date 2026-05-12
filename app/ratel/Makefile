@@ -233,7 +233,7 @@ js/node_modules:
 	cd ../.. && npm i
 
 run: ../../node_modules js/node_modules
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES)
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES) --no-default-features
 
 $(HOME)/.android/debug.keystore:
 	keytool -genkey -v -keystore $@ -storepass android -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Korea,O=Biyard,C=KR"
@@ -258,19 +258,19 @@ $(ANDROID_DX_RES_DIR):
 	cp -rf android/res $(ANDROID_DX_RES_DIR)/
 
 android: $(HOME)/.android/debug.keystore $(ANDROID_DX_RES_DIR)
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --features $(RUN_FEATURES) @client --android --target $(ANDROID_TARGET) $(DEVICE_FLAG)
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --features $(RUN_FEATURES) --no-default-features @client --android --target $(ANDROID_TARGET) $(DEVICE_FLAG)
 
 ios:
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --ios --features $(RUN_FEATURES)
 
 build:
-	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server --platform server
+	$(BUILD_ENV) dx build --release --no-default-features --debug-symbols false @client --features web --platform web @server --features server --platform server
 
 build-testing:
-	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web,bypass,beta --platform web @server --features server,bypass,local-dev --platform server
+	$(BUILD_ENV) dx build --release --no-default-features --debug-symbols false @client --features web,bypass,beta --platform web @server --features server,bypass,local-dev --platform server
 
 build-arm:
-	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server --platform server --target aarch64-unknown-linux-gnu
+	$(BUILD_ENV) dx build --release --no-default-features --debug-symbols false @client --features web --platform web @server --features server --platform server --target aarch64-unknown-linux-gnu
 
 build-lambda: env.sh
 	docker run -v $(PWD)/../..:/app -v $(HOME)/.cargo/bin:/root/.cargo/bin -w /app public.ecr.aws/sam/build-provided.al2023 /bin/bash -c "scripts/building-lambda-bootstrap.sh"
