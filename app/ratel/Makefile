@@ -97,9 +97,12 @@ endif
 
 MODE ?= debug
 
+
 ifneq ($(CARGO_TARGET_DIR),)
+	ANDROID_DX_RES_BASE_DIR ?= $(CARGO_TARGET_DIR)/dx/app-shell
 	ANDROID_DX_RES_DIR ?= $(CARGO_TARGET_DIR)/dx/app-shell/$(MODE)/android/app/app/src/main
 else
+	ANDROID_DX_RES_BASE_DIR ?= target/dx/app-shell
 	ANDROID_DX_RES_DIR ?= target/dx/app-shell/$(MODE)/android/app/app/src/main
 endif
 
@@ -223,10 +226,15 @@ env.sh:
 	@echo "export CROSS_POSTING_DATA_KEY_PREVIOUS='$(CROSS_POSTING_DATA_KEY_PREVIOUS)'" >> $@
 
 
+# Run integration tests. Pass TEST=<name> to run only matching tests:
+#   make test                                  # all tests
+#   make test TEST=pending_reward_retry        # only matching tests
+TEST ?=
+
 test:
 	mkdir -p ./test-build-target/debug/deps/public
 	npx @tailwindcss/cli -i tailwind.css -o ./assets/tailwind.css
-	$(BUILD_ENV) CARGO_TARGET_DIR=./test-build-target cargo test --features server,bypass --tests -- --test-threads=1
+	$(BUILD_ENV) CARGO_TARGET_DIR=./test-build-target cargo test --features server,bypass --tests $(TEST) -- --test-threads=1 --nocapture
 
 js/node_modules:
 	npm i
@@ -254,10 +262,10 @@ $(ANDROID_HOME)/system-images/android-34/google_apis/$(ARCH):
 android-emulator: $(HOME)/.android/debug.keystore $(HOME)/.android/avd/$(AVD_NAME).avd $(ANDROID_HOME)/emulator/emulator
 	$(ANDROID_HOME)/emulator/emulator -avd $(AVD_NAME) -netdelay none -netspeed full &
 
-.PHONY: $(ANDROID_DX_RES_DIR)
-$(ANDROID_DX_RES_DIR):
-	mkdir -p $(ANDROID_DX_RES_DIR)
-	cp -rf android/res $(ANDROID_DX_RES_DIR)/
+.PHONY: $(ANDROID_DX_RES_BASE_DIR)/%/android/app/app/src/main
+$(ANDROID_DX_RES_BASE_DIR)/%/android/app/app/src/main:
+	mkdir -p $@
+	cp -rf android/res $@/
 
 android: $(HOME)/.android/debug.keystore $(ANDROID_DX_RES_DIR)
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --features $(RUN_FEATURES) --no-default-features @client --android --target $(ANDROID_TARGET) $(DEVICE_FLAG)

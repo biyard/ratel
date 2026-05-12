@@ -107,7 +107,7 @@ Use the URL `/<team-handle>/team-settings/subscription` when you want to land di
 
 ### Tiers — same five as personal
 
-The Team subscription uses the same five tiers as the user subscription, with the same Credit allotments and per-Space caps. See [Glossary → Membership Tier](../intro/glossary#membership-tier) for the full feature matrix:
+The Team subscription uses the same five tiers as the user subscription, with the same Credit allotments and per-Space caps:
 
 - **Free** — included with every Team.
 - **Pro** — 40 monthly Credits, up to 2 per reward Space, ₩30,000 / month.
@@ -143,4 +143,3 @@ A handful of Team-level controls aren't part of `/team-settings`:
 
 - [Create a Team](./create.md) — the foundational Team walkthrough (members, drafts, DAO basics).
 - [Sub-teams](./sub-teams.md) — the full governance lifecycle for parent / child Team relationships.
-- [Glossary → Membership Tier](../intro/glossary#membership-tier) — pick the tier whose monthly Credits will pay for your Team's reward Spaces.

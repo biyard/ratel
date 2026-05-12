@@ -60,4 +60,3 @@ Below the donut sits a 6-cycle monthly chart (Points earned + Tokens received ov
 - [Tokens](./tokens.md) — the on-chain payout Points convert into when you claim a past cycle.
 - [Credits](./credits.md) — the host-funded upstream of Points.
 - [Experience Points (XP)](./xp.md) — the progression unit; SP from XP buys Money Tree, which multiplies every Point payout.
-- [Glossary → Rewards](../intro/glossary#rewards) — formal definitions of Point, Credit, Token, Cycle, and the on-chain / off-chain split.

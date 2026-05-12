@@ -1821,5 +1821,6 @@ export class DynamoStreamEventStack extends Stack {
       },
       targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
     });
+
   }
 }

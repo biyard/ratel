@@ -63,7 +63,7 @@ The deferred state is rare in practice — the pool's pre-allocated nature means
 
 ## Pair with Analyzes for monetized Spaces
 
-A Space that publishes paid Reports often runs an Incentive Pool *alongside* the [Analyzes app](../spaces/apps#-analyzes). The pool drives participation, while the Phase 4 [Report Revenue Share](../intro/glossary#report-revenue-share) (10% platform · 60% host · 30% contributors) rewards the contributors whose input made the Report worth selling.
+A Space that publishes paid Reports often runs an Incentive Pool *alongside* the [Analyzes app](../spaces/apps#-analyzes). The pool drives participation, while the Phase 4 **Report Revenue Share** (10% platform · 60% host · 30% contributors) rewards the contributors whose input made the Report worth selling.
 
 The two feed each other: a well-funded pool pulls richer participation, which makes for a richer Report, which sells better, which feeds the contributor share — a virtuous loop the platform's Phase 4 economy is designed around.
 

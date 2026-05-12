@@ -71,6 +71,19 @@ pub async fn get_post_handler(post_id: FeedPartition) -> Result<PostDetailRespon
     )
         .into();
 
+    // Direct role/ownership signals — preferred over the legacy `permissions`
+    // bitmask on the client. Mirrors the Spaces pattern (server resolves the
+    // viewer's role; client just reads it).
+    if let Some(user) = &user {
+        if post.user_pk == user.pk {
+            resp.is_post_owner = true;
+        }
+        if matches!(post.user_pk, Partition::Team(_)) {
+            resp.viewer_role =
+                Team::get_user_role(cli, &post.user_pk, &user.pk).await?;
+        }
+    }
+
     if !can_read_space {
         resp.post.as_mut().map(|p| {
             p.space_pk = None;

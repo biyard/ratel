@@ -13,7 +13,9 @@ use crate::features::cross_posting::models::ConnectionStatus;
 use crate::features::cross_posting::types::{ConnectionResponse, SocialPlatform};
 use crate::features::posts::controllers::get_post::get_post_handler;
 use crate::features::posts::controllers::update_post::{update_post_handler, UpdatePostRequest};
-use crate::features::posts::controllers::{create_space_handler, CreateSpaceRequest};
+use crate::features::posts::controllers::{
+    create_space_handler, delete_post_handler, CreateSpaceRequest,
+};
 use crate::features::posts::models::Post;
 use crate::features::posts::types::{PostStatus, Visibility};
 use crate::features::posts::*;
@@ -858,7 +860,22 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                         class: "danger-row",
                         onclick: move |_| {
                             popup.open(rsx! {
-                                DiscardDraftConfirm { on_cancel: move |_| popup.close() }
+                                DiscardDraftConfirm {
+                                    on_cancel: move |_| popup.close(),
+                                    on_confirm: move |_| {
+                                        let nav = nav.clone();
+                                        let pk = post_id();
+                                        spawn(async move {
+                                            // `Some(false)` mirrors the post_detail
+                                            // header delete: hard-removes the post
+                                            // record (the row is a draft; nothing
+                                            // depends on it post-deletion).
+                                            let _ = delete_post_handler(pk, Some(false)).await;
+                                            popup.close();
+                                            nav.push("/");
+                                        });
+                                    },
+                                }
                             });
                         },
                         svg {
@@ -1045,7 +1062,10 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
 }
 
 #[component]
-fn DiscardDraftConfirm(on_cancel: EventHandler<()>) -> Element {
+fn DiscardDraftConfirm(
+    on_cancel: EventHandler<()>,
+    on_confirm: EventHandler<()>,
+) -> Element {
     let tr: PostEditTranslate = use_translate();
     rsx! {
         Card { class: "gap-4 p-6 min-w-[320px]",
@@ -1056,6 +1076,11 @@ fn DiscardDraftConfirm(on_cancel: EventHandler<()>) -> Element {
                     style: ButtonStyle::Outline,
                     onclick: move |_| on_cancel.call(()),
                     "{tr.cancel}"
+                }
+                Button {
+                    class: "bg-destructive text-destructive-foreground hover:bg-destructive/90".to_string(),
+                    onclick: move |_| on_confirm.call(()),
+                    "{tr.discard_draft}"
                 }
             }
         }
