@@ -1,4 +1,5 @@
 use crate::common::*;
+use crate::features::posts::types::{SpaceType, Visibility};
 
 /// Canonical record of a parent team's broadcast announcement. Fan-out Posts
 /// in each recognized sub-team's feed are derived from this; this row is the
@@ -20,13 +21,47 @@ pub struct SubTeamAnnouncement {
     pub announcement_id: String,
 
     pub title: String,
+    /// Plain-text legacy field. Kept for back-compat with pre-rich-text
+    /// rows; new content lives in `html_contents`. When both are set the
+    /// fanout/UI prefer `html_contents`.
+    #[serde(default)]
     pub body: String,
+
+    /// Rich-text (HTML) body produced by the post composer's editor.
+    /// Populated for all rows created after the broadcast composer
+    /// upgrade; older Draft rows fall back to `body`.
+    #[serde(default)]
+    pub html_contents: String,
+
+    /// Free-form tags entered in the composer's right-panel tag input.
+    #[serde(default)]
+    pub tags: Vec<String>,
 
     /// Parent-team admin user pk who authored.
     pub author_user_id: String,
 
     pub status: SubTeamAnnouncementStatus,
     pub target_type: BroadcastTarget,
+
+    /// Visibility of the fanned-out Posts. Phase 1 always Public — kept
+    /// as a field so future Phase 2 can flip without a schema change.
+    #[serde(default)]
+    pub visibility: Visibility,
+
+    /// When ON, publish creates a Space (pk in `space_pk`) and every
+    /// fanned-out child Post references it.
+    #[serde(default)]
+    pub space_enabled: bool,
+
+    /// Space type chosen in the composer when `space_enabled` is true.
+    #[serde(default)]
+    pub space_type: Option<SpaceType>,
+
+    /// Populated by `publish_announcement_handler` once the Space is
+    /// created — used by the fanout service so every child Post points
+    /// at the same Space.
+    #[serde(default)]
+    pub space_pk: Option<String>,
 
     /// Populated by the fan-out Lambda after publish — how many sub-teams
     /// actually received this announcement.
@@ -71,9 +106,15 @@ impl SubTeamAnnouncement {
             announcement_id,
             title,
             body,
+            html_contents: String::new(),
+            tags: Vec::new(),
             author_user_id,
             status: SubTeamAnnouncementStatus::Draft,
             target_type: BroadcastTarget::AllRecognizedSubTeams,
+            visibility: Visibility::Public,
+            space_enabled: false,
+            space_type: None,
+            space_pk: None,
             fan_out_count: 0,
         }
     }

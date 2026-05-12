@@ -14,7 +14,7 @@ dist/
 node_modules/
 .build/
 trace.zip
-
+/test-build-target/
 # Playwright
 /test-results/
 /playwright-report/

@@ -1,5 +1,6 @@
 pub mod activity;
 pub mod announcements;
+pub mod application_drafts;
 pub mod applications_child;
 pub mod applications_parent;
 pub mod apply_context;
@@ -10,6 +11,7 @@ pub mod settings;
 
 pub use activity::*;
 pub use announcements::*;
+pub use application_drafts::*;
 pub use applications_child::*;
 pub use applications_parent::*;
 pub use apply_context::*;

@@ -89,6 +89,8 @@ pub fn ArenaTeamCreationPopup() -> Element {
                                         user_type: UserType::Team,
                                         permissions: TeamRole::Admin.into(),
                                         description: description.clone(),
+                                        created_at: response.created_at,
+                                        member_count: 1,
                                     });
                                 team_ctx.select_team(&response.team_pk);
                                 popup.close();

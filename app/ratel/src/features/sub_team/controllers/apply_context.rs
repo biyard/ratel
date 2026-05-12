@@ -50,12 +50,21 @@ pub async fn get_sub_team_apply_context_handler(
             crate::error!("apply_context form fields query failed: {e}");
             SubTeamError::FormFieldNotFound
         })?;
-    fields.sort_by(|a, b| a.order.cmp(&b.order).then(a.created_at.cmp(&b.created_at)));
+    // Locked defaults (제안하는 팀 이름 / 설립 목적) always render at
+    // the top of the apply form, regardless of `order`. Matches the
+    // admin-side `sort_fields` ordering in `form_fields.rs`.
+    fields.sort_by(|a, b| {
+        b.locked
+            .cmp(&a.locked)
+            .then(a.order.cmp(&b.order))
+            .then(a.created_at.cmp(&b.created_at))
+    });
     let form_fields: Vec<SubTeamFormFieldResponse> = fields.into_iter().map(Into::into).collect();
 
-    // 3. Required docs only.
+    // 3. Required docs only. Trailing `#` keeps `SUB_TEAM_DOCUMENT_VERSION#…`
+    // snapshot rows out of the result set.
     let doc_opts = SubTeamDocument::opt()
-        .sk(DOC_SK_PREFIX.to_string())
+        .sk(format!("{DOC_SK_PREFIX}#"))
         .limit(PAGE_LIMIT);
     let (mut docs, _) = SubTeamDocument::query(cli, parent_pk.clone(), doc_opts)
         .await
@@ -63,8 +72,15 @@ pub async fn get_sub_team_apply_context_handler(
             crate::error!("apply_context docs query failed: {e}");
             SubTeamError::DocumentNotFound
         })?;
-    docs.retain(|d| d.required);
-    docs.sort_by(|a, b| a.order.cmp(&b.order).then(a.created_at.cmp(&b.created_at)));
+    // Returns ALL parent docs (required + reference-only). The apply
+    // page renders both — required ones must be agreed to before
+    // submit; reference-only ones are read-only links.
+    docs.sort_by(|a, b| {
+        b.required
+            .cmp(&a.required)
+            .then(a.order.cmp(&b.order))
+            .then(a.created_at.cmp(&b.created_at))
+    });
     let required_docs: Vec<ApplyContextDocument> = docs.into_iter().map(Into::into).collect();
 
     // 4. Recognized count — query SubTeamLink rows under parent pk.
@@ -82,6 +98,7 @@ pub async fn get_sub_team_apply_context_handler(
     Ok(ApplyContextResponse {
         is_parent_eligible: team.is_parent_eligible,
         min_sub_team_members: team.min_sub_team_members,
+        min_sub_team_age_days: team.min_sub_team_age_days,
         recognized_count,
         pending_count,
         form_fields,

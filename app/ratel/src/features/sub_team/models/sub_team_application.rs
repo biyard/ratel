@@ -6,6 +6,14 @@ use super::SubTeamFormFieldType;
 /// parent's pk (`Partition::Team(parent_team_id)`) so the parent's queue is a
 /// bounded sk-prefix query. A denormalized `applicant_team_pk` field projects
 /// into GSI1 so the applying team can list its own application history.
+///
+/// **Every non-key field carries `#[serde(default)]`.** The model evolved
+/// over time (added `applicant_team_pk`, `submitted_at`, `decided_at`,
+/// `form_snapshot`, etc.), and stale rows written by older code paths
+/// would otherwise fail entire `query` calls with
+/// `SerdeDynamo: missing field <x>`. Falling back to default values for
+/// missing attributes keeps queries succeeding; broken rows simply
+/// surface as obviously-empty records that are easy to spot and clean.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
 pub struct SubTeamApplication {
@@ -22,9 +30,7 @@ pub struct SubTeamApplication {
 
     pub updated_at: i64,
 
-    #[serde(default)]
     pub submitted_at: Option<i64>,
-    #[serde(default)]
     pub decided_at: Option<i64>,
 
     /// Human-readable id (equals the uuid carried in `sk`).
@@ -42,17 +48,14 @@ pub struct SubTeamApplication {
     pub status: SubTeamApplicationStatus,
 
     /// Used for both Reject (reason) and Return (revision comment).
-    #[serde(default)]
     pub decision_reason: Option<String>,
 
     /// Snapshot of the parent's form fields at submission time, so edits to
     /// the form after this submission don't invalidate it.
-    #[serde(default)]
     pub form_snapshot: Vec<SubTeamFormFieldSnapshot>,
 
     /// field_id → applicant-entered value. JSON value so different field
     /// types (text, number, date, multi-select) share one shape.
-    #[serde(default)]
     pub form_values: std::collections::HashMap<String, serde_json::Value>,
 }
 
@@ -72,7 +75,9 @@ pub enum SubTeamApplicationStatus {
 }
 
 /// Immutable snapshot of a single form field as it existed at submission time.
-/// Mirrors `SubTeamFormField` minus ownership/index metadata.
+/// Mirrors `SubTeamFormField` minus ownership/index metadata. Every field
+/// is `#[serde(default)]`-guarded for the same model-evolution reason as
+/// `SubTeamApplication` itself.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
 pub struct SubTeamFormFieldSnapshot {
@@ -82,6 +87,11 @@ pub struct SubTeamFormFieldSnapshot {
     pub required: bool,
     pub order: i32,
     pub options: Vec<String>,
+    /// Locked default field (`제안하는 팀 이름`, `설립 목적`) — kept so
+    /// the applicant-facing status snapshot can sort default fields to
+    /// the top, mirroring the apply page's ordering.
+    #[serde(default)]
+    pub locked: bool,
 }
 
 #[cfg(feature = "server")]

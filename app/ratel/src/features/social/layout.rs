@@ -371,6 +371,8 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                         user_type: UserType::Team,
                         permissions: permissions_vec.clone(),
                         description: team.html_contents.clone(),
+                        created_at: 0,
+                        member_count: 0,
                     });
                 }
                 let selected_label = if team.nickname.is_empty() {

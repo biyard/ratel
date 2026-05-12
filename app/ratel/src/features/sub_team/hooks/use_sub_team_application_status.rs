@@ -1,23 +1,31 @@
-//! Controller for the child-side "my applications" status page.
+//! Controller for the child-side "my application status" page.
+//!
+//! Route: `/{parent_username}/sub-teams/application`. The URL's
+//! `:username` is the **parent** team — semantically "the status of my
+//! application TO this parent team". The hook reads the parent's
+//! `TeamPartition` from context (provided by the page after a
+//! `find_team_handler` lookup) and calls
+//! `find_my_application_for_parent_handler`, which walks the viewer's
+//! admin/owner teams to locate the one application targeting this
+//! parent. Cancel still mutates by the applicant team's pk that lives
+//! on the returned application DTO.
 
-use crate::common::hooks::{use_infinite_query, InfiniteQuery};
 use crate::features::sub_team::controllers::{
-    cancel_child_application_handler, get_parent_relationship_handler,
-    list_child_applications_handler,
+    cancel_child_application_handler, find_my_application_for_parent_handler,
 };
-use crate::features::sub_team::types::{ParentRelationshipResponse, SubTeamApplicationResponse};
+use crate::features::sub_team::types::SubTeamApplicationResponse;
 use crate::*;
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct UseSubTeamApplicationStatus {
-    pub team_id: ReadSignal<TeamPartition>,
-    pub relationship: Loader<ParentRelationshipResponse>,
-    pub applications: InfiniteQuery<
-        String,
-        SubTeamApplicationResponse,
-        ListResponse<SubTeamApplicationResponse>,
-    >,
-    pub handle_cancel: Action<(String,), ()>,
+    /// Parent team's pk — taken from URL via the page-provided context.
+    pub parent_team_id: ReadSignal<TeamPartition>,
+    /// The viewer's application targeting this parent. `None` means
+    /// the viewer's admin teams have never applied here.
+    pub application: Loader<Option<SubTeamApplicationResponse>>,
+    /// Cancels the in-flight application. Idempotent — succeeds even
+    /// if the application is already in a terminal state.
+    pub handle_cancel: Action<(), ()>,
 }
 
 #[track_caller]
@@ -27,30 +35,32 @@ pub fn use_sub_team_application_status(
         return Ok(ctx);
     }
 
-    let team_id: TeamPartition = use_context();
-    let team_id_signal: ReadSignal<TeamPartition> = use_signal(|| team_id).into();
+    let parent_team_id: TeamPartition = use_context();
+    let parent_team_id_signal: ReadSignal<TeamPartition> = use_signal(|| parent_team_id).into();
 
-    let relationship = use_loader(move || {
-        let id = team_id_signal();
-        async move { get_parent_relationship_handler(id).await }
+    let application = use_loader(move || {
+        let parent_pk = parent_team_id_signal();
+        async move { find_my_application_for_parent_handler(parent_pk).await }
     })?;
 
-    let mut applications = use_infinite_query(move |bookmark| {
-        let id = team_id_signal();
-        async move { list_child_applications_handler(id, bookmark).await }
-    })?;
-
-    let team_id_for_cancel = team_id_signal;
-    let handle_cancel = use_action(move |application_id: String| async move {
-        cancel_child_application_handler(team_id_for_cancel(), application_id).await?;
-        applications.refresh();
+    // Cancel uses the applicant team's pk (carried on the returned
+    // application DTO via `sub_team_id`) — the parent only stores
+    // its own perspective. If there's no application yet, the action
+    // is a no-op.
+    let mut application_for_cancel = application;
+    let handle_cancel = use_action(move || async move {
+        let Some(app) = application_for_cancel.read().clone() else {
+            return Ok::<(), crate::common::Error>(());
+        };
+        let applicant_pk = TeamPartition(app.sub_team_id.clone());
+        cancel_child_application_handler(applicant_pk, app.id.clone()).await?;
+        application_for_cancel.restart();
         Ok::<(), crate::common::Error>(())
     });
 
     Ok(use_context_provider(|| UseSubTeamApplicationStatus {
-        team_id: team_id_signal,
-        relationship,
-        applications,
+        parent_team_id: parent_team_id_signal,
+        application,
         handle_cancel,
     }))
 }
