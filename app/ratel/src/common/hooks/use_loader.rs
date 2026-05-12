@@ -87,32 +87,43 @@ where
     dioxus::prelude::use_loader(move || {
         let shared = shared.clone();
         async move {
-            let join_handle = std::thread::spawn(move || {
-                let rt = match tokio::runtime::Builder::new_current_thread()
-                    .enable_all()
-                    .build()
-                {
-                    Ok(rt) => rt,
-                    Err(e) => {
-                        unimplemented!(
-                            "Failed to build Tokio runtime in use_loader bridge thread: {e:?}"
-                        )
-                    }
-                };
-                // Lock only long enough to copy the closure out, then
-                // drop the guard so it never crosses the `.await` below.
-                let f: FutFn = {
-                    let guard = shared.lock().expect("future_fn mutex poisoned");
-                    guard.0
-                };
-                rt.block_on(async move { f().await })
+            use std::sync::mpsc;
+
+            let (tx, rx) = mpsc::channel::<std::result::Result<T, E>>();
+
+            std::thread::spawn(move || {
+                let result = (move || -> std::result::Result<T, E> {
+                    let rt = match tokio::runtime::Builder::new_current_thread()
+                        .enable_all()
+                        .build()
+                    {
+                        Ok(rt) => rt,
+                        Err(e) => {
+                            unimplemented!(
+                                "Failed to build Tokio runtime in use_loader bridge thread: {e:?}"
+                            )
+                        }
+                    };
+                    // Lock only long enough to copy the closure out, then
+                    // drop the guard so it never crosses the `.await` below.
+                    let f: FutFn = {
+                        let guard = shared.lock().expect("future_fn mutex poisoned");
+                        guard.0
+                    };
+                    rt.block_on(async move { f().await })
+                })();
+                let _ = tx.send(result);
             });
 
-            let res = join_handle
-                .join()
-                .unwrap_or_else(|e| unimplemented!("use_loader bridge thread panicked: {e:?}"));
-
-            res
+            match rx.recv() {
+                Ok(v) => {
+                    crate::debug!("Received value from use_loader bridge thread:");
+                    v
+                }
+                Err(e) => {
+                    unimplemented!("Failed to receive result from use_loader bridge thread: {e:?}")
+                }
+            }
         }
     })
 }
