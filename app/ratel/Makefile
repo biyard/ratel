@@ -72,11 +72,13 @@ HOST_GID ?= $(shell id -g)
 
 ifneq ($(ANDROID_EMULATOR_ID),)
 	DEVICE_FLAG ?= --device $(ANDROID_EMULATOR_ID)
+	LOGCAT_FLAG ?= -s $(ANDROID_EMULATOR_ID)
 else
 	FIRST_ANDROID_DEVICE := $(shell adb devices | awk 'NR>1 {print $$1; exit}')
 	ifneq ($(FIRST_ANDROID_DEVICE),)
 		DEVICE_FLAG ?= --device $(FIRST_ANDROID_DEVICE)
 		ANDROID_TARGET ?= aarch64-linux-android
+		LOGCAT_FLAG ?= -s $(FIRST_ANDROID_DEVICE)
 	endif
 endif
 
@@ -293,4 +295,4 @@ docker.login:
 	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
 
 android.log:
-	adb logcat -c && adb logcat -s RatelRust
+	adb $(LOGCAT_FLAG) logcat -c && adb $(LOGCAT_FLAG) logcat | grep -iE "RatelRust|co.biyard.ratel"
