@@ -63,11 +63,7 @@ fn render_compose(username: String, announcement_id: Option<String>) -> Element 
 #[component]
 fn ComposeForm(username: String, team_display: String, team_handle: String) -> Element {
     let tr: SubTeamTranslate = use_translate();
-    // `nav` is intentionally unused here. All inter-page navigation
-    // out of this composer is intentionally routed through anchor
-    // `href` attributes (FIXME: dioxus 0.7 reconciler bug — see notes
-    // on the back/publish/discard elements below).
-    let _ = use_navigator;
+    let nav = use_navigator();
 
     let UseSubTeamBroadcastCompose {
         mut announcement_id,
@@ -179,25 +175,25 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
         }
     });
 
-    let username_for_back = username.clone();
-    let username_for_after = username.clone();
+    let username_for_publish = username.clone();
+    let username_for_discard = username.clone();
     let _ = username;
-
     let publish = move |_| {
         if let Some(id) = announcement_id() {
             handle_publish.call(id);
         }
-        // Navigation is handled by the anchor `href` on the publish
-        // element itself (FIXME: dioxus reconciler workaround — see
-        // RSX comment below).
+        nav.push(Route::TeamSubTeamManagementPage {
+            username: username_for_publish.clone(),
+        });
     };
 
     let discard = move |_| {
         if let Some(id) = announcement_id() {
             handle_delete.call(id);
         }
-        // Navigation is handled by the anchor `href` on the discard
-        // element itself (FIXME: see above).
+        nav.push(Route::TeamSubTeamManagementPage {
+            username: username_for_discard.clone(),
+        });
     };
 
     let status_text = match draft_status() {
@@ -216,16 +212,13 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
             // ── Topbar ─────────────────────────────────────────────
             div { class: "arena-topbar",
                 div { class: "arena-topbar__left",
-                    // FIXME: anchor `href` (full-page reload) instead of
-                    // `nav.go_back()` because SPA navigation between
-                    // compose ↔ management hits the dioxus 0.7
-                    // reconciler ElementId-reclaim bug. Switch back to
-                    // a button + `nav.go_back()` once the reconciler
-                    // bug is resolved.
-                    a {
+                    div {
                         class: "back-btn",
+                        role: "button",
                         "aria-label": "Back",
-                        href: "/{username_for_back}/sub-teams/manage",
+                        onclick: move |_| {
+                            nav.go_back();
+                        },
                         lucide_dioxus::ChevronLeft { class: "w-4 h-4 [&>path]:stroke-current" }
                     }
                     div { class: "topbar-title",
@@ -245,19 +238,11 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                         span { class: "autosave-chip__dot" }
                         "{status_text}"
                     }
-                    // FIXME: anchor `href` (full-page reload) instead of
-                    // `nav.push` for the same reconciler workaround
-                    // documented on the back button above. The publish
-                    // server call is fired synchronously via
-                    // `handle_publish.call(id)` before the browser
-                    // navigation kicks in; the spawned action survives
-                    // long enough to enqueue the HTTP request thanks to
-                    // the underlying tokio runtime.
-                    a {
+                    div {
                         class: "topbar-btn topbar-btn--primary",
                         id: "publish-btn",
                         "data-testid": "sub-team-broadcast-publish-btn",
-                        href: "/{username_for_after}/sub-teams/manage",
+                        role: "button",
                         onclick: publish,
                         "aria-disabled": announcement_id().is_none() || title().is_empty(),
                         lucide_dioxus::Send { class: "w-3 h-3 [&>path]:stroke-current" }
@@ -396,7 +381,9 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                             }
                             "{tr.broadcast_section_tags}"
                         }
-                        div { class: "tag-input", "data-testid": "sub-team-broadcast-tag-input",
+                        div {
+                            class: "tag-input",
+                            "data-testid": "sub-team-broadcast-tag-input",
                             for tag in tags().iter().cloned() {
                                 span {
                                     class: "tag",
@@ -425,8 +412,18 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                                             stroke_width: "2.5",
                                             stroke_linecap: "round",
                                             stroke_linejoin: "round",
-                                            line { x1: "18", y1: "6", x2: "6", y2: "18" }
-                                            line { x1: "6", y1: "6", x2: "18", y2: "18" }
+                                            line {
+                                                x1: "18",
+                                                y1: "6",
+                                                x2: "6",
+                                                y2: "18",
+                                            }
+                                            line {
+                                                x1: "6",
+                                                y1: "6",
+                                                x2: "18",
+                                                y2: "18",
+                                            }
                                         }
                                     }
                                 }
@@ -457,23 +454,18 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                         }
                     }
 
-                    // Discard draft. FIXME: anchor `href` (full-page
-                    // reload) instead of `nav.go_back()` to dodge the
-                    // dioxus 0.7 reconciler ElementId-reclaim bug.
+                    // Discard draft — fires `handle_delete` then routes
+                    // back to the broadcast tab via the SPA `nav.push`.
                     if announcement_id().is_some() {
-                        a {
+                        div {
                             class: "danger-row",
                             "data-testid": "sub-team-broadcast-discard-btn",
-                            href: "/{username_for_back}/sub-teams/manage",
+                            role: "button",
                             onclick: discard,
                             lucide_dioxus::Trash2 { class: "w-3 h-3 [&>path]:stroke-current" }
                             "{tr.broadcast_discard_draft}"
                         }
                     }
-
-                    // Hidden anchor to keep `username_for_back` consumed
-                    // for the FIXME-tagged future hard-nav fallback.
-                    span { class: "u-hidden", "{username_for_back}" }
                 }
             }
         }

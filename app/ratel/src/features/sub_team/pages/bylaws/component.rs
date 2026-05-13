@@ -16,6 +16,7 @@ const CATEGORY_BYLAWS: &str = "Bylaws";
 
 #[component]
 pub fn TeamBylawsPage(username: String) -> Element {
+    let nav = use_navigator();
     let tr: SubTeamTranslate = use_translate();
 
     let username_for_load = username.clone();
@@ -71,8 +72,8 @@ pub fn TeamBylawsPage(username: String) -> Element {
     // BYLAWS section themselves; ClubBylaws is editable by any admin.
     let can_add_bylaw = is_admin && !has_parent;
 
-    let username_for_back = username.clone();
     let username_for_add_bylaw = username.clone();
+    let _ = username;
 
     let bylaws_count_label = tr
         .bylaws_section_count_items
@@ -85,10 +86,12 @@ pub fn TeamBylawsPage(username: String) -> Element {
             // ── Topbar ─────────────────────────────────────────────
             div { class: "arena-topbar",
                 div { class: "arena-topbar__brand",
-                    a {
+                    div {
                         class: "brand-home",
                         "aria-label": "Back",
-                        href: "/{username_for_back}",
+                        onclick: move |_| {
+                            nav.go_back();
+                        },
                         lucide_dioxus::ChevronLeft { class: "w-4 h-4 [&>path]:stroke-current" }
                     }
                     span { class: "brand-home__divider" }
@@ -133,7 +136,7 @@ pub fn TeamBylawsPage(username: String) -> Element {
                         span { class: "group-header__count", "{bylaws_count_label}" }
                     }
                     div { class: "bylaws-grid",
-                        for (i , doc) in bylaws_docs.iter().enumerate() {
+                        for (i, doc) in bylaws_docs.iter().enumerate() {
                             BylawCard {
                                 key: "{doc.id}",
                                 index: i,
@@ -145,11 +148,16 @@ pub fn TeamBylawsPage(username: String) -> Element {
                         // grid cell. Anchored to the bylaws-compose route
                         // with the section's category.
                         if can_add_bylaw {
-                            a {
+                            div {
                                 class: "bylaw-add",
                                 "data-role": "parent",
                                 "data-testid": "sub-team-bylaws-add-bylaw",
-                                href: "/{username_for_add_bylaw}/bylaws/compose/Bylaws",
+                                onclick: move |_| {
+                                    nav.push(Route::TeamSubTeamBylawsComposePage {
+                                        username: username_for_add_bylaw.clone(),
+                                        category: CATEGORY_BYLAWS.to_string(),
+                                    });
+                                },
                                 lucide_dioxus::Plus { class: "w-5 h-5 [&>path]:stroke-current" }
                                 "{tr.bylaws_add_team}"
                             }

@@ -118,8 +118,6 @@ fn DetailView(username: String, sub_team_id: String) -> Element {
     let member_rows = members.items();
 
     let mut member_search: Signal<String> = use_signal(String::new);
-
-    let username_for_back = username.clone();
     rsx! {
         // Detail page lives OUTSIDE `SocialLayout → TeamArenaLayout` —
         // it owns its own back/home topbar so navigating in from the
@@ -129,23 +127,12 @@ fn DetailView(username: String, sub_team_id: String) -> Element {
         div { class: "sub-team-detail",
             div { class: "arena-topbar",
                 div { class: "arena-topbar__brand",
-                    // FIXME: anti-pattern — anchor `href` instead of
-                    // `nav.push` because SPA navigation between this
-                    // detail page and `TeamSubTeamManagementPage`
-                    // triggers a dioxus 0.7 reconciler bug. Bouncing
-                    // in/out repeatedly logs hundreds of
-                    // `cannot reclaim ElementId(N)` errors and ends
-                    // with `HierarchyRequestError: replaceWith on
-                    // CharacterData: The new child element contains
-                    // the parent.` A full-page navigation sidesteps
-                    // the whole virtual-dom-reuse codepath. Should be
-                    // switched back to `nav.push(Route::...)` once
-                    // the underlying reconciler / mount-cycle issue
-                    // is rooted out.
-                    a {
+                    div {
                         class: "brand-home",
                         "aria-label": "Back",
-                        href: "/{username_for_back}/sub-teams/manage",
+                        onclick: move |_| {
+                            nav.go_back();
+                        },
                         lucide_dioxus::ChevronLeft { class: "w-4 h-4 [&>path]:stroke-current" }
                     }
                     span { class: "brand-home__divider" }
