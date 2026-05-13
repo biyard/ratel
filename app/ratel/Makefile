@@ -244,6 +244,9 @@ js/node_modules:
 run: ../../node_modules js/node_modules
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES) --no-default-features
 
+run-tauri: ../../node_modules js/node_modules
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port 8000 --no-default-features @client --features $(RUN_FEATURES),tauri-web --web @server --features $(RUN_FEATURES) --platform server
+
 $(HOME)/.android/debug.keystore:
 	keytool -genkey -v -keystore $@ -storepass android -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Korea,O=Biyard,C=KR"
 
@@ -279,6 +282,9 @@ ios:
 
 build:
 	$(BUILD_ENV) dx build --release --no-default-features --debug-symbols false @client --features web --platform web @server --features server --platform server
+
+build-tauri: ../../node_modules js/node_modules
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx build --release --no-default-features @client --features tauri-web --web @server --platform server
 
 build-testing:
 	$(BUILD_ENV) dx build --release --no-default-features --debug-symbols false @client --features web,bypass,beta --platform web @server --features server,bypass,local-dev --platform server

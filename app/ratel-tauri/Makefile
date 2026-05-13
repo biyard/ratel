@@ -8,11 +8,26 @@
 
 ENV ?= local
 MODE ?= debug
+PORT ?= 8000
 # Rustup-style target triple (for cross-compile / verification commands).
 ANDROID_TARGET ?= aarch64-linux-android
 # Tauri's `--target` accepts short names: aarch64 | armv7 | i686 | x86_64.
 # Derive from ANDROID_TARGET so a single override stays consistent.
 TAURI_TARGET ?= $(firstword $(subst -, ,$(ANDROID_TARGET)))
+
+# Auto-detect host LAN IP so a physical device on the same Wi-Fi can reach
+# `dx serve` and the backend running on this workstation. Same detection
+# logic as app/ratel/Makefile. Falls back to 10.0.2.2 (Android emulator's
+# alias for host loopback). Override with `make HOST_IP=10.20.30.40 ...`.
+ifeq ($(shell uname -s),Darwin)
+  HOST_IP ?= $(shell iface=$$(route -n get default 2>/dev/null | awk '/interface:/ {print $$2}'); \
+                     [ -n "$$iface" ] && ipconfig getifaddr "$$iface" || echo 10.0.2.2)
+else
+  HOST_IP ?= $(shell ip route get 1.1.1.1 2>/dev/null | awk '/src/ {for(i=1;i<=NF;i++) if($$i=="src") {print $$(i+1); exit}}')
+  ifeq ($(strip $(HOST_IP)),)
+    HOST_IP := 10.0.2.2
+  endif
+endif
 
 ifeq ($(ENV),prod)
   MOBILE_API_URL ?= https://ratel.foundation
@@ -21,9 +36,7 @@ else ifeq ($(ENV),staging)
 else ifeq ($(ENV),dev)
   MOBILE_API_URL ?= https://dev.ratel.foundation
 else
-  # Android emulator alias for the host loopback. Override with the
-  # workstation's LAN IP when targeting a physical device.
-  MOBILE_API_URL ?= http://10.0.2.2:8000
+  MOBILE_API_URL ?= http://$(HOST_IP):$(PORT)
 endif
 
 DYNAMO_TABLE_PREFIX ?= ratel-$(ENV)
@@ -56,11 +69,23 @@ ANDROID_ENV = \
 	NDK_HOME=$(NDK_HOME) \
 	JAVA_HOME=$(JAVA_HOME)
 
+# WebView dev source URL for `make android-dev`. Defaults to the auto-detected
+# host LAN IP (so physical devices on the same Wi-Fi work out of the box).
+# Falls back to 10.0.2.2 (emulator loopback alias) if detection fails.
+# Override with `make android-dev DEV_URL=http://10.20.30.40:8000` when needed.
+DEV_URL ?= http://$(HOST_IP):$(PORT)
+
 DIST_DIR := $(CURDIR)/dist
 RATEL_DIR := $(CURDIR)/../ratel
 # dx writes its output under the workspace root's target/dx, not app/ratel/target/dx,
 # because the cargo workspace shares one target directory.
 WORKSPACE_ROOT := $(CURDIR)/../..
+
+ifneq ($(CARGO_TARGET_DIR),)
+	DX_BUILD_DIR = $(CARGO_TARGET_DIR)/dx/app-shell/release/web/public
+else
+	DX_BUILD_DIR = $(RATEL_DIR)/target/dx/app-shell/release/web/public
+endif
 
 .PHONY: help install-tauri-cli dx-build android-dev build-release install-debug clean
 
@@ -82,26 +107,9 @@ install-tauri-cli:
 
 # Run `dx build` and copy the produced web bundle into ./dist for Tauri.
 dx-build:
-	@echo "Building dioxus-web bundle with MOBILE_API_URL=$(MOBILE_API_URL) ENV=$(ENV)"
-	cd $(RATEL_DIR) && \
-		MOBILE_API_URL=$(MOBILE_API_URL) \
-		DYNAMO_TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX) \
-		ENV=$(ENV) \
-		RUSTFLAGS='$(RUSTFLAGS)' \
-		dx build --web --release --features tauri-web --no-default-features
-	@mkdir -p $(DIST_DIR)
-	@# dx output location has drifted across versions. Locate the most-recently
-	@# produced index.html under target/dx/**/release/** and rsync its directory
-	@# tree into ./dist. Portable across macOS (BSD find) and Linux (GNU find).
-	@INDEX=$$(find $(WORKSPACE_ROOT)/target/dx $(RATEL_DIR)/target/dx -name index.html -path "*release*" 2>/dev/null \
-	         | xargs ls -t 2>/dev/null | head -1); \
-	if [ -z "$$INDEX" ]; then \
-		echo "ERROR: could not locate dx-built index.html under target/dx"; \
-		exit 1; \
-	fi; \
-	SRC=$$(dirname "$$INDEX"); \
-	echo "Copying $$SRC -> $(DIST_DIR)"; \
-	rsync -a --delete "$$SRC/" "$(DIST_DIR)/"
+	cd $(RATEL_DIR) && make build-tauri
+	rsync -a --delete "$(DX_BUILD_DIR)/" "$(DIST_DIR)/"
+
 	@# dx 0.7's bundle JS unconditionally calls atob(window.initial_dioxus_hydration_data)
 	@# at boot. In a fullstack/SSR deployment the server injects this variable into the
 	@# HTML response. Tauri serves the static bundle without SSR, so atob() chokes on
@@ -118,9 +126,12 @@ dx-build:
 	fi
 
 # Live dev — dioxus serves WASM on :8000, Tauri WebView points there via devUrl.
+# Pass DEV_URL=http://<lan-ip>:8000 to override the default emulator-loopback
+# address baked into tauri.conf.json (useful for physical devices).
 android-dev: install-tauri-cli
-	@echo "Run 'cd ../ratel && DYNAMO_TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX) MOBILE_API_URL=$(MOBILE_API_URL) dx serve --features tauri-web --no-default-features --port 8000' in another terminal first."
-	cd src-tauri && $(ANDROID_ENV) cargo tauri android dev --target $(TAURI_TARGET)
+	@echo "Run 'cd ../ratel && PORT=8000 make run-tauri' in another terminal first."
+	cd src-tauri && $(ANDROID_ENV) cargo tauri android dev \
+		$(if $(DEV_URL),--config '{"build":{"devUrl":"$(DEV_URL)"}}',)
 
 build-release: install-tauri-cli dx-build
 	cd src-tauri && $(ANDROID_ENV) cargo tauri android build --target $(TAURI_TARGET) $(if $(filter debug,$(MODE)),--debug,)

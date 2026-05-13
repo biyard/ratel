@@ -1,6 +1,5 @@
 use crate::common::*;
 use crate::config;
-use crate::features::auth::AuthProvider;
 use crate::*;
 
 use crate::*;
