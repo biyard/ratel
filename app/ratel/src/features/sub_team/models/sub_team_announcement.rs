@@ -70,6 +70,24 @@ pub struct SubTeamAnnouncement {
     /// actually received this announcement.
     #[serde(default)]
     pub fan_out_count: i32,
+
+    /// When `Some(child_team_id)` the announcement is a **direct message**
+    /// to a single recognized sub-team — the fanout writes ONE Post to
+    /// that child's feed instead of looping every `SubTeamLink`. Used by
+    /// the parent's sub-team detail page ("이 하위팀에만 공지"). Direct
+    /// messages are immutable post-publish and excluded from the
+    /// broadcast tab's stats. `None` keeps the legacy broadcast-to-all
+    /// behaviour.
+    #[serde(default)]
+    pub target_child_team_id: Option<String>,
+
+    /// pk of the fan-out Post created by `handle_announcement_published`
+    /// in the target child's feed. Populated by the fanout service via a
+    /// raw `update_item` write-back so the parent's direct-msg history
+    /// row can deep-link to the actual Post (its pk differs from
+    /// `announcement_id`, hence the explicit field).
+    #[serde(default)]
+    pub target_post_pk: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -119,6 +137,46 @@ impl SubTeamAnnouncement {
             space_type: None,
             space_pk: None,
             fan_out_count: 0,
+            target_child_team_id: None,
+            target_post_pk: None,
+        }
+    }
+
+    /// Direct announcement to a single recognized sub-team. Created as
+    /// `Published` immediately — no draft step. The fanout handler picks
+    /// up the `target_child_team_id` and writes exactly one Post to that
+    /// child's feed, demoting any prior direct-message Post from this
+    /// parent so only the latest stays pinned.
+    pub fn new_direct(
+        parent_team_pk: Partition,
+        target_child_team_id: String,
+        title: String,
+        body: String,
+        author_user_id: String,
+    ) -> Self {
+        let announcement_id = uuid::Uuid::new_v4().to_string();
+        let now = crate::common::utils::time::get_now_timestamp_millis();
+        Self {
+            pk: parent_team_pk,
+            sk: EntityType::SubTeamAnnouncement(announcement_id.clone()),
+            created_at: now,
+            updated_at: now,
+            published_at: Some(now),
+            announcement_id,
+            title,
+            body: String::new(),
+            html_contents: body,
+            tags: Vec::new(),
+            author_user_id,
+            status: SubTeamAnnouncementStatus::Published,
+            target_type: BroadcastTarget::AllRecognizedSubTeams,
+            visibility: Visibility::Public,
+            space_enabled: false,
+            space_type: None,
+            space_pk: None,
+            fan_out_count: 0,
+            target_child_team_id: Some(target_child_team_id),
+            target_post_pk: None,
         }
     }
 }

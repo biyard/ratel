@@ -176,6 +176,7 @@ pub fn TeamArenaLayout(username: ReadSignal<String>) -> Element {
                 profile_url: profile_url.clone(),
                 active: ctx.active_tab(),
                 can_edit,
+                is_member,
                 is_parent_eligible,
                 pending_applicant_username: (ctx.viewer_pending_applicant_username)(),
                 show_follow: logged_in && !is_member,

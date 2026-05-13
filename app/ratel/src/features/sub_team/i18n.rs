@@ -64,8 +64,8 @@ translate! {
         ko: "팀이 만들어진 후 최소 일수 후에 신청 가능",
     },
     req_inline_note: {
-        en: "For per-team info like a faculty advisor, mark the field as required in the Application form. Bylaws and similar documents go in the Documents tab — set them as required reading and applicants must read & agree before submitting.",
-        ko: "지도교수·담당자 같은 팀별 정보는 신청폼에서 \"필수\" 체크로 받으세요. 학칙·규정 같은 문서는 문서 탭에서 만들고 \"필독\"으로 지정하면 가입 신청 때 반드시 읽고 동의해야 제출됩니다.",
+        en: "For per-team info, mark the field as required in the Application form. Bylaws and similar documents go in the Documents tab — set them as required reading and applicants must read & agree before submitting.",
+        ko: "팀별 정보는 신청폼에서 \"필수\" 체크로 받으세요. 규정 같은 문서는 문서 탭에서 만들고 \"필독\"으로 지정하면 가입 신청 때 반드시 읽고 동의해야 제출됩니다.",
     },
 
     // Form card (mockup line 433-505)
@@ -115,8 +115,8 @@ translate! {
     docs_card_title: { en: "Documents · DOCUMENTS", ko: "문서 · DOCUMENTS" },
     docs_banner_title: { en: "Documents shown on apply", ko: "가입 신청에서 보이는 문서" },
     docs_banner_text: {
-        en: "Manage bylaws / operating guides / regulations here. Docs marked as Required reading must be read & agreed to before sub-teams submit. Past agreements stay anchored to the version that was published at submit time.",
-        ko: "학칙·운영 가이드·기타 규정을 여기서 관리하세요. 가입 신청 필독으로 지정한 문서는 하위팀이 신청할 때 반드시 읽고 동의해야 제출됩니다. 문서 내용을 나중에 수정해도 기존 신청의 동의 기록은 당시 문구로 고정됩니다.",
+        en: "Manage operating guides / regulations here. Docs marked as Required reading must be read & agreed to before sub-teams submit. Past agreements stay anchored to the version that was published at submit time.",
+        ko: "운영 가이드·기타 규정을 여기서 관리하세요. 가입 신청 필독으로 지정한 문서는 하위팀이 신청할 때 반드시 읽고 동의해야 제출됩니다. 문서 내용을 나중에 수정해도 기존 신청의 동의 기록은 당시 문구로 고정됩니다.",
     },
     docs_updated_suffix: { en: "edited", ko: "수정" },
     docs_edit_btn: { en: "Edit", ko: "편집" },
@@ -272,7 +272,7 @@ translate! {
     },
     parent_action_view_bylaws_title: {
         en: "View parent bylaws",
-        ko: "상위팀 학칙 보기",
+        ko: "상위팀 운영 수칙 보기",
     },
     parent_action_view_bylaws_sub: {
         en: "Read the regulations and documents",
@@ -320,7 +320,7 @@ translate! {
     },
 
     // Bylaws
-    bylaws_title: { en: "Bylaws", ko: "학칙" },
+    bylaws_title: { en: "Bylaws", ko: "운영 수칙" },
     bylaws_regulations: { en: "Regulations", ko: "규정" },
 
     // Activity dashboard
@@ -352,6 +352,22 @@ translate! {
         ko: "이 하위팀에만 보낼 공지를 작성하세요…",
     },
     direct_announce_send: { en: "Send", ko: "발송" },
+    direct_announce_title_input: {
+        en: "Announcement title",
+        ko: "공지 제목",
+    },
+    direct_announce_note: {
+        en: "Pinned to this sub-team's feed only · not counted as a broadcast",
+        ko: "이 하위팀에만 핀 고정됩니다 · 전체 공지와 별개로 집계",
+    },
+    direct_announce_history_title: {
+        en: "Past direct announcements",
+        ko: "이전 공지 이력",
+    },
+    direct_announce_history_empty: {
+        en: "No direct announcements sent yet.",
+        ko: "아직 보낸 공지가 없습니다.",
+    },
     danger_zone: { en: "Danger zone", ko: "위험 영역" },
     member_handle_header: { en: "Handle", ko: "멤버" },
     member_posts_header: { en: "Posts", ko: "포스트" },
@@ -378,7 +394,7 @@ translate! {
     },
     deregister_header_sub: {
         en: "This only removes the parent-child link. The team keeps running standalone — the parent cannot edit or delete its content.",
-        ko: "이 동작은 부모-자식 관계만 해제합니다. 동아리 자체는 독립 팀으로 계속 운영됩니다. 학과는 이 동아리의 콘텐츠를 수정하거나 삭제할 수 없습니다.",
+        ko: "이 동작은 부모-자식 관계만 해제합니다. 동아리 자체는 독립 팀으로 계속 운영됩니다. 상위 팀은 이 동아리의 콘텐츠를 수정하거나 삭제할 수 없습니다.",
     },
     deregister_consequences_title: {
         en: "What happens after deregister?",
@@ -555,7 +571,7 @@ translate! {
     },
     status_hero_pending_sub: {
         en: "The parent team is reviewing your application. It usually takes 3–5 business days. You'll be notified by Ratel + email.",
-        ko: "학과사무실 담당자가 신청서를 검토하고 있습니다. 보통 영업일 기준 3–5일이 소요됩니다. 결과는 Ratel 알림 + 이메일로 안내됩니다.",
+        ko: "담당자가 신청서를 검토하고 있습니다. 보통 영업일 기준 3–5일이 소요됩니다. 결과는 Ratel 알림 + 이메일로 안내됩니다.",
     },
     status_hero_returned_eyebrow: { en: "Returned", ko: "수정 반송됨" },
     status_hero_returned_title: {
@@ -564,7 +580,7 @@ translate! {
     },
     status_hero_returned_sub: {
         en: "The parent team requested edits. Review the comment below, then edit and resubmit. There is no cooldown.",
-        ko: "학과 담당자가 신청서 수정을 요청했습니다. 아래 코멘트를 확인하고 수정 후 재제출해주세요. 쿨다운은 없습니다.",
+        ko: "담당자가 신청서 수정을 요청했습니다. 아래 코멘트를 확인하고 수정 후 재제출해주세요. 쿨다운은 없습니다.",
     },
     status_hero_approved_eyebrow: { en: "Approved", ko: "승인됨" },
     status_hero_approved_title: {
@@ -656,8 +672,8 @@ translate! {
     doc_compose_preview: { en: "Preview", ko: "미리보기" },
     doc_compose_banner_label: { en: "Document editor · Rich text + attachments", ko: "DOCUMENT EDITOR · RICH TEXT + 첨부" },
     doc_compose_banner_text: {
-        en: "Bylaws / regulations / operating guides — composed with the Ratel rich editor. Mark a document as Required and sub-teams must read & agree before submitting their application.",
-        ko: "학칙·규정·운영 가이드를 Ratel rich editor 로 작성합니다. 필독으로 지정하면 하위팀이 가입 신청 때 반드시 읽고 동의해야 제출됩니다.",
+        en: "regulations / operating guides — composed with the Ratel rich editor. Mark a document as Required and sub-teams must read & agree before submitting their application.",
+        ko: "규정·운영 가이드를 Ratel rich editor 로 작성합니다. 필독으로 지정하면 하위팀이 가입 신청 때 반드시 읽고 동의해야 제출됩니다.",
     },
     doc_compose_attachments_title: { en: "Attachments", ko: "첨부 파일 · ATTACHMENTS" },
     doc_compose_upload_title: { en: "Add file · Upload", ko: "파일 추가 · UPLOAD" },
@@ -708,7 +724,7 @@ translate! {
     },
     leave_parent_lose_badge: {
         en: "The parent affiliation badge is removed from your team profile.",
-        ko: "팀 프로필의 학과 소속 표시가 제거됩니다.",
+        ko: "팀 프로필의 소속 표시가 제거됩니다.",
     },
     leave_parent_lose_reapply: {
         en: "Rejoining requires a brand-new application.",
@@ -759,7 +775,7 @@ translate! {
     },
 
     // Bylaws page
-    bylaws_page_eyebrow: { en: "Bylaws", ko: "학칙" },
+    bylaws_page_eyebrow: { en: "Bylaws", ko: "운영 수칙" },
     bylaws_team_regulations: {
         en: "Team regulations",
         ko: "팀 규정",
@@ -770,18 +786,18 @@ translate! {
     },
     bylaws_empty: {
         en: "No bylaws published yet",
-        ko: "공개된 학칙이 없습니다",
+        ko: "공개된 운영 수칙이 없습니다",
     },
     bylaws_required_badge: {
         en: "Required",
         ko: "필독",
     },
     bylaws_status_chip: { en: "Public", ko: "공개" },
-    bylaws_add_team: { en: "Add bylaw", ko: "학칙 항목 추가" },
+    bylaws_add_team: { en: "Add bylaw", ko: "운영 수칙 항목 추가" },
     bylaws_add_club: { en: "Add club rule", ko: "회칙 항목 추가" },
     bylaws_page_title: {
         en: "Bylaws — publish your rules so every member follows the same playbook.",
-        ko: "학칙을 공개 게시하여 모두가 같은 규칙을 따르게 합니다.",
+        ko: "운영 수칙을 공개 게시하여 모두가 같은 규칙을 따르게 합니다.",
     },
     bylaws_page_sub: {
         en: "Bylaws behave like regular posts but are grouped in a dedicated section on the team page. Sub-teams can review the parent's bylaws side-by-side.",
@@ -789,27 +805,27 @@ translate! {
     },
     bylaws_parent_link_eyebrow: {
         en: "Parent team bylaws",
-        ko: "상위팀 학칙",
+        ko: "상위팀 운영 수칙",
     },
     bylaws_parent_link_meta: {
         en: "View the parent team's bylaws",
-        ko: "상위팀이 관리하는 학칙 보기",
+        ko: "상위팀이 관리하는 운영 수칙 보기",
     },
     bylaws_view_parent: { en: "Parent view", ko: "PARENT VIEW" },
     bylaws_view_sub: { en: "Sub-team view", ko: "SUB-TEAM VIEW" },
     bylaws_page_eyebrow_fr: { en: "FR-2 · Bylaws", ko: "FR-2 · BYLAWS" },
     // Title is split into a `_strong` lead and a `_rest` tail so the
     // template can render `<strong>{lead}</strong>{rest}` without
-    // duplicating the noun (Korean has 학칙 at the front, English keeps
+    // duplicating the noun (Korean has 운영 수칙 at the front, English keeps
     // it as a single highlighted word).
-    bylaws_page_title_strong: { en: "Bylaws", ko: "학칙" },
+    bylaws_page_title_strong: { en: "Bylaws", ko: "운영 수칙" },
     bylaws_page_title_rest: {
         en: " — publish your rules so every member follows the same playbook.",
         ko: "을 공개 게시하여 모두가 같은 규칙을 따르게 합니다.",
     },
     bylaws_section_team_regulations: {
         en: "Team regulations · BYLAWS",
-        ko: "학과 학칙 · BYLAWS",
+        ko: "팀 운영 수칙 · BYLAWS",
     },
     bylaws_section_club_rules: {
         en: "Club rules · CLUB BYLAWS",
@@ -820,7 +836,7 @@ translate! {
     bylaws_card_rule_num: { en: "RULE {n}", ko: "RULE {n}" },
     bylaws_required_meta: { en: "Required", ko: "필독" },
     // Documents tab → "View bylaws" entry point
-    docs_view_bylaws: { en: "View bylaws", ko: "학칙 자세히 보기" },
+    docs_view_bylaws: { en: "View bylaws", ko: "운영 수칙 자세히 보기" },
 }
 
 // ── Enum Translate derives ──────────────────────────────────────────

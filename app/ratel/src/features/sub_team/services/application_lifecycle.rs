@@ -51,13 +51,19 @@ pub async fn resolve_team_admins(
         .collect())
 }
 
-/// Count members (user_team rows) currently on the applying team.
+/// Count distinct members currently on the applying team.
+///
+/// `Team::create_new_team` writes BOTH a `UserTeam` row (role=Owner) and
+/// a `TeamOwner` row for the creator — so naively counting both sources
+/// double-counts the owner ("팀 멤버가 1명인데 2 members 로 표시되는"
+/// 버그). We collect distinct user pks from UserTeam rows first, then
+/// only add the owner if their pk is not already present.
 pub async fn count_team_members(
     cli: &aws_sdk_dynamodb::Client,
     team_pk: &Partition,
 ) -> Result<i64> {
     let user_team_sk = EntityType::UserTeam(team_pk.to_string());
-    let mut count: i64 = 0;
+    let mut user_pks: std::collections::HashSet<String> = std::collections::HashSet::new();
     let mut bookmark: Option<String> = None;
     for _ in 0..MAX_PAGES {
         let mut opt = crate::features::auth::UserTeamQueryOption::builder().limit(PAGE_SIZE);
@@ -65,17 +71,18 @@ pub async fn count_team_members(
             opt = opt.bookmark(bm.clone());
         }
         let (rows, next) = UserTeam::find_by_team(cli, &user_team_sk, opt).await?;
-        count += rows.len() as i64;
+        for row in rows {
+            user_pks.insert(row.pk.to_string());
+        }
         match next {
             Some(b) => bookmark = Some(b),
             None => break,
         }
     }
-    // Owner record is separate from UserTeam; count it once if distinct.
-    if let Ok(Some(_)) = TeamOwner::get(cli, team_pk, Some(&EntityType::TeamOwner)).await {
-        count += 1;
+    if let Ok(Some(owner)) = TeamOwner::get(cli, team_pk, Some(&EntityType::TeamOwner)).await {
+        user_pks.insert(owner.user_pk.to_string());
     }
-    Ok(count)
+    Ok(user_pks.len() as i64)
 }
 
 /// Load an application by its id from the parent's queue.

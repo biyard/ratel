@@ -114,7 +114,6 @@ fn DeregisterForm(
     };
     let ready = confirmed() && !reason_trimmed.is_empty();
 
-    let username_for_after = username.clone();
     let _ = sub_team_id;
     let _ = username;
 
@@ -132,7 +131,9 @@ fn DeregisterForm(
                         r#type: "button",
                         class: "brand-home",
                         "aria-label": "Back",
-                        onclick: move |_| { nav.go_back(); },
+                        onclick: move |_| {
+                            nav.go_back();
+                        },
                         lucide_dioxus::ChevronLeft { class: "w-4 h-4 [&>path]:stroke-current" }
                     }
                     span { class: "brand-home__divider" }
@@ -154,9 +155,7 @@ fn DeregisterForm(
             div { class: "page page--narrow",
                 // ── Context: sub-team being deregistered ───────────
                 div { class: "context",
-                    div { class: "avatar avatar--purple avatar--lg",
-                        "{sub_team_initials}"
-                    }
+                    div { class: "avatar avatar--purple avatar--lg", "{sub_team_initials}" }
                     div { class: "context__body",
                         span { class: "context__name", "{sub_team_display}" }
                         if !sub_team_username.is_empty() {
@@ -190,9 +189,7 @@ fn DeregisterForm(
 
                     // Consequences
                     div { class: "consequences",
-                        span { class: "consequences__title",
-                            "{tr.deregister_consequences_title}"
-                        }
+                        span { class: "consequences__title", "{tr.deregister_consequences_title}" }
                         div { class: "consequences__item",
                             lucide_dioxus::Check { class: "w-3 h-3 [&>path]:stroke-current" }
                             span { "{tr.deregister_consequence_unlink}" }
@@ -234,9 +231,7 @@ fn DeregisterForm(
 
                     // Notification preview
                     div { class: "notif-preview",
-                        span { class: "notif-preview__label",
-                            "{tr.deregister_notif_preview_label}"
-                        }
+                        span { class: "notif-preview__label", "{tr.deregister_notif_preview_label}" }
                         div { class: "notif-preview__body",
                             div { class: "notif-preview__avatar",
                                 {parent_display_name.chars().take(2).collect::<String>().to_uppercase()}
@@ -246,8 +241,7 @@ fn DeregisterForm(
                                     em { "{parent_display_name}" }
                                     "{tr.deregister_notif_preview_title_suffix}"
                                 }
-                                div {
-                                    class: if preview_empty { "notif-preview__text notif-preview__text--placeholder" } else { "notif-preview__text" },
+                                div { class: if preview_empty { "notif-preview__text notif-preview__text--placeholder" } else { "notif-preview__text" },
                                     "{preview_text}"
                                 }
                             }
@@ -275,9 +269,12 @@ fn DeregisterForm(
                     }
 
                     div { class: "u-flex u-gap-10 u-justify-between dereg__actions",
-                        a {
+                        div {
                             class: "btn btn--ghost",
-                            href: "/{username_for_after}/sub-teams/manage",
+                            role: "button",
+                            onclick: move |_| {
+                                nav.go_back();
+                            },
                             "{tr.cancel}"
                         }
                         button {

@@ -13,10 +13,10 @@ use crate::features::sub_team::{SubTeamDocumentResponse, SubTeamTranslate};
 use crate::*;
 
 const CATEGORY_BYLAWS: &str = "Bylaws";
-const CATEGORY_CLUB_BYLAWS: &str = "ClubBylaws";
 
 #[component]
 pub fn TeamBylawsPage(username: String) -> Element {
+    let nav = use_navigator();
     let tr: SubTeamTranslate = use_translate();
 
     let username_for_load = username.clone();
@@ -42,15 +42,15 @@ pub fn TeamBylawsPage(username: String) -> Element {
         .as_deref()
         .is_some_and(|s| !s.is_empty());
     let parent_username = team_data.parent_username.clone();
-    let is_admin = matches!(team_data.role, Some(TeamRole::Owner) | Some(TeamRole::Admin));
+    let is_admin = matches!(
+        team_data.role,
+        Some(TeamRole::Owner) | Some(TeamRole::Admin)
+    );
 
     // BYLAWS section source — parent team's bylaws if this team is a
     // recognized sub-team, otherwise this team's own bylaws.
     let bylaws_owner_pk_str = match (has_parent, parent_username.clone()) {
-        (true, Some(_)) => team_data
-            .parent_team_id
-            .clone()
-            .unwrap_or_default(),
+        (true, Some(_)) => team_data.parent_team_id.clone().unwrap_or_default(),
         _ => team_data
             .pk
             .parse::<TeamPartition>()
@@ -58,47 +58,26 @@ pub fn TeamBylawsPage(username: String) -> Element {
             .unwrap_or_default(),
     };
     let bylaws_owner_team_id: TeamPartition = TeamPartition(bylaws_owner_pk_str.clone());
-    let team_pk_str = team_data
-        .pk
-        .parse::<TeamPartition>()
-        .map(|tp| tp.0)
-        .unwrap_or_default();
-    let club_owner_team_id: TeamPartition = TeamPartition(team_pk_str);
 
     let bylaws_owner_for_load = bylaws_owner_team_id.clone();
     let bylaws_resource = use_loader(move || {
         let id = bylaws_owner_for_load.clone();
-        async move {
-            list_team_bylaws_handler(id, Some(CATEGORY_BYLAWS.to_string())).await
-        }
-    })?;
-    let club_owner_for_load = club_owner_team_id.clone();
-    let club_resource = use_loader(move || {
-        let id = club_owner_for_load.clone();
-        async move {
-            list_team_bylaws_handler(id, Some(CATEGORY_CLUB_BYLAWS.to_string())).await
-        }
+        async move { list_team_bylaws_handler(id, Some(CATEGORY_BYLAWS.to_string())).await }
     })?;
 
     let bylaws_docs: Vec<SubTeamDocumentResponse> = bylaws_resource().items.clone();
-    let club_docs: Vec<SubTeamDocumentResponse> = club_resource().items.clone();
     let bylaws_count = bylaws_docs.len();
-    let club_count = club_docs.len();
 
     // Add gating: only teams without a parent (=상위팀) manage the
     // BYLAWS section themselves; ClubBylaws is editable by any admin.
     let can_add_bylaw = is_admin && !has_parent;
 
-    let username_for_back = username.clone();
     let username_for_add_bylaw = username.clone();
-    let username_for_add_club = username.clone();
+    let _ = username;
 
     let bylaws_count_label = tr
         .bylaws_section_count_items
         .replace("{n}", &bylaws_count.to_string());
-    let club_count_label = tr
-        .bylaws_section_count_items
-        .replace("{n}", &club_count.to_string());
 
     rsx! {
         SeoMeta { title: "{tr.bylaws_title}" }
@@ -107,16 +86,16 @@ pub fn TeamBylawsPage(username: String) -> Element {
             // ── Topbar ─────────────────────────────────────────────
             div { class: "arena-topbar",
                 div { class: "arena-topbar__brand",
-                    a {
+                    div {
                         class: "brand-home",
                         "aria-label": "Back",
-                        href: "/{username_for_back}",
+                        onclick: move |_| {
+                            nav.go_back();
+                        },
                         lucide_dioxus::ChevronLeft { class: "w-4 h-4 [&>path]:stroke-current" }
                     }
                     span { class: "brand-home__divider" }
-                    div { class: "arena-topbar__logo arena-topbar__logo--child",
-                        "{team_initials}"
-                    }
+                    div { class: "arena-topbar__logo arena-topbar__logo--child", "{team_initials}" }
                     div { class: "u-col",
                         span { class: "arena-topbar__title", "{team_display}" }
                         span { class: "arena-topbar__handle", "@{team_handle}" }
@@ -126,9 +105,7 @@ pub fn TeamBylawsPage(username: String) -> Element {
                     }
                 }
                 div { class: "arena-topbar__actions",
-                    button {
-                        class: "hud-btn",
-                        "aria-label": "History",
+                    button { class: "hud-btn", "aria-label": "History",
                         lucide_dioxus::Clock { class: "w-3 h-3 [&>circle]:stroke-current [&>polyline]:stroke-current" }
                     }
                 }
@@ -155,9 +132,7 @@ pub fn TeamBylawsPage(username: String) -> Element {
                         div { class: "group-header__icon group-header__icon--parent",
                             lucide_dioxus::Star { class: "w-4 h-4 [&>path]:stroke-current" }
                         }
-                        h2 { class: "group-header__title",
-                            "{tr.bylaws_section_team_regulations}"
-                        }
+                        h2 { class: "group-header__title", "{tr.bylaws_section_team_regulations}" }
                         span { class: "group-header__count", "{bylaws_count_label}" }
                     }
                     div { class: "bylaws-grid",
@@ -173,53 +148,22 @@ pub fn TeamBylawsPage(username: String) -> Element {
                         // grid cell. Anchored to the bylaws-compose route
                         // with the section's category.
                         if can_add_bylaw {
-                            a {
+                            div {
                                 class: "bylaw-add",
                                 "data-role": "parent",
                                 "data-testid": "sub-team-bylaws-add-bylaw",
-                                href: "/{username_for_add_bylaw}/bylaws/compose/Bylaws",
+                                onclick: move |_| {
+                                    nav.push(Route::TeamSubTeamBylawsComposePage {
+                                        username: username_for_add_bylaw.clone(),
+                                        category: CATEGORY_BYLAWS.to_string(),
+                                    });
+                                },
                                 lucide_dioxus::Plus { class: "w-5 h-5 [&>path]:stroke-current" }
                                 "{tr.bylaws_add_team}"
                             }
                         }
                     }
                     if bylaws_docs.is_empty() && !can_add_bylaw {
-                        div { class: "empty-state", "{tr.bylaws_empty}" }
-                    }
-                }
-
-                // CLUB BYLAWS section (teal)
-                section { class: "bylaws-section",
-                    div { class: "group-header",
-                        div { class: "group-header__icon group-header__icon--child",
-                            lucide_dioxus::FileText { class: "w-4 h-4 [&>path]:stroke-current" }
-                        }
-                        h2 { class: "group-header__title",
-                            "{tr.bylaws_section_club_rules}"
-                        }
-                        span { class: "group-header__count", "{club_count_label}" }
-                    }
-                    div { class: "bylaws-grid",
-                        for (i, doc) in club_docs.iter().enumerate() {
-                            BylawCard {
-                                key: "{doc.id}",
-                                index: i,
-                                doc: doc.clone(),
-                                parent: false,
-                            }
-                        }
-                        if is_admin {
-                            a {
-                                class: "bylaw-add",
-                                "data-role": "child",
-                                "data-testid": "sub-team-bylaws-add-club",
-                                href: "/{username_for_add_club}/bylaws/compose/ClubBylaws",
-                                lucide_dioxus::Plus { class: "w-5 h-5 [&>path]:stroke-current" }
-                                "{tr.bylaws_add_club}"
-                            }
-                        }
-                    }
-                    if club_docs.is_empty() && !is_admin {
                         div { class: "empty-state", "{tr.bylaws_empty}" }
                     }
                 }
@@ -257,8 +201,12 @@ fn BylawCard(index: usize, doc: SubTeamDocumentResponse, parent: bool) -> Elemen
             class: "{variant_class}",
             "data-testid": "{testid}",
             onclick: move |_| {
-                let Some(pk) = backing_post_id.clone() else { return; };
-                let Ok(parsed) = pk.parse::<Partition>() else { return; };
+                let Some(pk) = backing_post_id.clone() else {
+                    return;
+                };
+                let Ok(parsed) = pk.parse::<Partition>() else {
+                    return;
+                };
                 if let Partition::Feed(id) = parsed {
                     nav.push(crate::Route::PostDetail {
                         post_id: FeedPartition(id),
