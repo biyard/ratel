@@ -59,6 +59,8 @@ translate! {
     stat_tokens: { en: "Tokens", ko: "토큰" },
     past_empty_title: { en: "No past cycles yet", ko: "아직 이전 사이클이 없습니다" },
     past_empty_desc: { en: "Your first cycle wraps up at month-end. Tokens become claimable on the 1st of next month.", ko: "첫 사이클은 월말에 마감됩니다." },
+    past_coming_soon_title: { en: "Coming soon", ko: "준비 중" },
+    past_coming_soon_desc: { en: "Past cycle history and token claim will be available shortly.", ko: "이전 사이클 이력과 토큰 청구는 곧 제공될 예정입니다." },
 
     pts_unit: { en: "pts", ko: "pts" },
 }
