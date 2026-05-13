@@ -1,8 +1,11 @@
 use super::EligibleAdminResponse;
 use super::super::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct TeamDaoTeamResponse {
     pub team_pk: TeamPartition,
     pub username: String,
@@ -11,7 +14,7 @@ pub struct TeamDaoTeamResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct TeamDao {
     pub team: TeamDaoTeamResponse,
     pub permissions: i64,

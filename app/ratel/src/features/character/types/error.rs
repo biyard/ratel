@@ -29,11 +29,11 @@ pub enum CharacterError {
 
 #[cfg(feature = "server")]
 impl CharacterError {
-    pub fn status_code(&self) -> bdk::prelude::axum::http::StatusCode {
+    pub fn status_code(&self) -> crate::axum::http::StatusCode {
         // All variants are validation / preconditions on the request — they
         // map cleanly to 400 Bad Request (vs. 500 Internal Server Error,
         // which would be misleading for "v2 skill not yet released" or
         // "you don't have enough SP").
-        bdk::prelude::axum::http::StatusCode::BAD_REQUEST
+        crate::axum::http::StatusCode::BAD_REQUEST
     }
 }

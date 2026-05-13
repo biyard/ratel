@@ -3,13 +3,13 @@ use crate::config;
 use crate::features::auth::AuthProvider;
 use crate::*;
 
-use dioxus::prelude::*;
+use crate::*;
 
 pub const MAIN_CSS: Asset = asset!("/assets/main.css");
 pub const MAIN_JS: Asset = asset!("/assets/ratel-app-shell.js");
 
 #[cfg(feature = "server")]
-pub fn app() -> by_axum::axum::AxumRouter {
+pub fn app() -> crate::axum::Router {
     dioxus::server::router(App)
 }
 
@@ -61,8 +61,7 @@ pub fn App() -> Element {
         document::Script { src: "https://cdn.portone.io/v2/browser-sdk.js" }
         document::Stylesheet { href: asset!("/assets/tailwind.css") }
 
-        crate::common::Provider {}
-
+        // crate::common::Provider {}
         Router::<Route> {}
     }
 }

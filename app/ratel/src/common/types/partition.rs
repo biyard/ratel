@@ -7,18 +7,15 @@ use std::str::FromStr;
 
 use super::EntityType;
 
-#[derive(
-    Debug,
-    Clone,
-    SerializeDisplay,
-    DeserializeFromStr,
-    Default,
-    DynamoEnum,
-    SubPartition,
-    PartialEq,
-    Eq,
-)]
-#[cfg_attr(feature = "server", derive(JsonSchema, OperationIo))]
+// `SubPartition` emits `#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]`
+// on each generated wrapper struct; the schemars derive expansion uses
+// unqualified `schemars::...` paths, so we alias the rmcp re-export here.
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
+
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum, SubPartition, PartialEq, Eq)]
 pub enum Partition {
     #[default]
     None,

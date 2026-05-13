@@ -3,7 +3,6 @@ use crate::features::social::pages::team_arena::{use_team_arena, TeamArenaTab};
 use crate::route::Route;
 
 #[allow(unused_imports)]
-use dioxus::prelude::*;
 
 mod admin_page;
 mod management_page;

@@ -16,7 +16,6 @@ const SECONDS_PER_WEEK: u64 = 7 * SECONDS_PER_DAY;
 const SECONDS_PER_MONTH: u64 = 30 * SECONDS_PER_DAY;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Default, PartialEq, Eq)]
-#[cfg_attr(feature = "server", derive(JsonSchema, OperationIo))]
 pub enum TimeBucket {
     /// Realtime resolution. With a 30-day window, max freshness =
     /// 30 * 24 * 3600 = 2,592,000 — well within `SCORE_DIGITS=20` base-62.
@@ -50,7 +49,6 @@ impl TimeBucket {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[cfg_attr(feature = "server", derive(JsonSchema, OperationIo))]
 pub struct Factor {
     pub value: u64,
     pub multiplier: u64,
@@ -79,7 +77,6 @@ impl Factor {
 ///   rebuild with the new timestamp; the new key falls into a newer window
 ///   and naturally outranks every older-window entry.
 #[derive(Debug, Clone, SerializeDisplay, DeserializeFromStr, PartialEq, Eq)]
-#[cfg_attr(feature = "server", derive(JsonSchema, OperationIo))]
 pub struct WindowedRankKey {
     pub window_idx: u64,
     pub score: u64,

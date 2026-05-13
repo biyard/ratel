@@ -2,9 +2,12 @@ use std::fmt::Display;
 use std::str::FromStr;
 
 use crate::common::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum AuthorPartition {
     #[default]
     Unknown,

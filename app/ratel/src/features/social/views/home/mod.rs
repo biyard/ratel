@@ -1,7 +1,7 @@
 mod some_component;
 use some_component::SomeComponent;
 
-use dioxus::prelude::*;
+use crate::common::*;
 
 #[component]
 pub fn Home() -> Element {

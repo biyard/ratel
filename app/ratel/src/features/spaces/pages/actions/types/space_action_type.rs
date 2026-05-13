@@ -2,8 +2,11 @@ use crate::{
     common::RewardUserBehavior, features::spaces::pages::actions::*,
     spaces::pages::actions::actions::quiz::SpaceQuiz,
 };
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 #[derive(Debug, Clone, Default, Translate, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum SpaceActionType {
     #[default]
     // #[translate(ko = "숙의 및 퀴즈", en = "Quiz")]

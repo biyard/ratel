@@ -2,9 +2,12 @@ use crate::common::*;
 use crate::common::models::auth::AdminUser;
 use crate::common::utils::time::get_now_timestamp_millis;
 use crate::features::spaces::pages::apps::apps::analyzes::AnalyzeQuotaConfig;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "server", derive(aide::OperationIo, schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UpdateAnalyzeQuotaRequest {
     /// New limit for non-Enterprise members, applied space-wide.
     /// Must be `>= 0`. Setting to `0` effectively blocks every

@@ -4,6 +4,11 @@ use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
 
 fn main() {
+    if option_env!("REBUILD_ICONS").is_none() {
+        println!("cargo:warning=Skipping icon generation (set REBUILD_ICONS=1 to force)");
+        return;
+    }
+
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let svg_dir = manifest_dir.join("resources");
     let output_dir = manifest_dir.join("src/icons");

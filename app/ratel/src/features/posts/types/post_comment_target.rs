@@ -1,11 +1,14 @@
 use crate::features::posts::*;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 use std::str::FromStr;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// A type that can represent both PostComment and PostCommentReply EntityTypes.
 /// Used for like/unlike operations that apply to both comments and replies.
 #[derive(Debug, Clone, SerializeDisplay, DeserializeFromStr, Default, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct PostCommentTargetEntityType(pub String);
 
 impl std::fmt::Display for PostCommentTargetEntityType {

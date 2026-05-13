@@ -1,6 +1,6 @@
 use super::super::TeamDaoTranslate;
 use super::super::*;
-use dioxus::prelude::*;
+use crate::common::*;
 
 #[component]
 pub fn DaoRegistrationCard(

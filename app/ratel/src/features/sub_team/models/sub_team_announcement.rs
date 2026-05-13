@@ -1,5 +1,8 @@
 use crate::common::*;
 use crate::features::posts::types::{SpaceType, Visibility};
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Canonical record of a parent team's broadcast announcement. Fan-out Posts
 /// in each recognized sub-team's feed are derived from this; this row is the
@@ -7,7 +10,7 @@ use crate::features::posts::types::{SpaceType, Visibility};
 /// `status` → `Published` and sets `published_at`, which in turn triggers the
 /// DynamoDB-Stream-driven fan-out Lambda.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamAnnouncement {
     pub pk: Partition,  // Partition::Team(parent_team_id)
     pub sk: EntityType, // EntityType::SubTeamAnnouncement(announcement_id)
@@ -70,7 +73,7 @@ pub struct SubTeamAnnouncement {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum SubTeamAnnouncementStatus {
     #[default]
     Draft,
@@ -81,7 +84,7 @@ pub enum SubTeamAnnouncementStatus {
 /// Phase 1 ships `AllRecognizedSubTeams` only; subset targeting (spec FR-5 #29)
 /// is a Phase 2 expansion of this enum.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum BroadcastTarget {
     #[default]
     AllRecognizedSubTeams,

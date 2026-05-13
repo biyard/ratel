@@ -14,7 +14,7 @@
 //! instead of re-rolling another `document::eval` snippet.
 
 #[cfg(not(feature = "server"))]
-use dioxus::prelude::*;
+use crate::common::*;
 
 fn quote(s: &str) -> String {
     serde_json::to_string(s).unwrap_or_else(|_| "\"\"".to_string())

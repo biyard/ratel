@@ -3,9 +3,12 @@ use tower_sessions::Session;
 
 use crate::common::types::UserType;
 use crate::common::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct User {
     pub pk: Partition,
     #[dynamo(index = "gsi6", name = "find_by_follwers", pk)]

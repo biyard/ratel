@@ -1,4 +1,7 @@
 use crate::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Per-user aggregate counters for the Essence list. Maintained by atomic
 /// DynamoDB `ADD` operations from `Essence::put` and the delete paths, so
@@ -14,7 +17,7 @@ use crate::*;
 /// use a single counter per chip and the server-side kind-filter query
 /// returns a consistent total.
 #[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UserEssenceStats {
     pub pk: Partition,
     pub sk: EntityType,

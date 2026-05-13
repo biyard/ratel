@@ -484,9 +484,9 @@ impl From<base64::DecodeError> for Error {
 
 #[cfg(feature = "server")]
 impl dioxus::fullstack::axum::response::IntoResponse for Error {
-    fn into_response(self) -> bdk::prelude::axum::response::Response {
-        use bdk::prelude::axum::http::StatusCode;
-        use bdk::prelude::axum::response::IntoResponse;
+    fn into_response(self) -> crate::axum::response::Response {
+        use crate::axum::http::StatusCode;
+        use crate::axum::response::IntoResponse;
 
         let status = match &self {
             Error::UnauthorizedAccess
@@ -597,8 +597,8 @@ impl From<ServerFnError> for Error {
 
 #[cfg(feature = "server")]
 impl dioxus::fullstack::AsStatusCode for Error {
-    fn as_status_code(&self) -> bdk::prelude::axum::http::StatusCode {
-        use bdk::prelude::axum::http::StatusCode;
+    fn as_status_code(&self) -> crate::axum::http::StatusCode {
+        use crate::axum::http::StatusCode;
         match self {
             Error::UnauthorizedAccess
             | Error::NoSessionFound

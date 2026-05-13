@@ -13,9 +13,12 @@
 use crate::common::ListResponse;
 use crate::features::spaces::pages::apps::apps::analyzes::*;
 use crate::features::spaces::pages::apps::models::SpaceApp;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(aide::OperationIo, schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct GetAnalyzeReportResponse {
     pub report: AnalyzeReport,
 
@@ -37,7 +40,7 @@ pub struct GetAnalyzeReportResponse {
 /// fields. The DynamoEntity itself can't cross the wire as-is because
 /// `pk` / `sk` aren't useful to the client.
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(aide::OperationIo, schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct AnalyzeReportResultPayload {
     pub respondent_count: i64,
     pub poll_aggregates: Vec<PollQuestionAggregate>,

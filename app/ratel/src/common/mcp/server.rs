@@ -2,6 +2,11 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use dioxus::server::axum::{self, Router};
+// The `rmcp::schemars::JsonSchema` derive expansion emits unqualified
+// `schemars::...` paths; the host crate has no direct `schemars` dep, so we
+// alias the rmcp re-export here to make those paths resolve.
+#[allow(unused_imports)]
+use rmcp::schemars;
 use rmcp::{
     handler::server::{tool::ToolRouter, wrapper::Parameters},
     model::{

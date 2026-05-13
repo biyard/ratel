@@ -1,6 +1,6 @@
 use super::*;
 use crate::common::FileUploader;
-use dioxus::prelude::*;
+use crate::common::*;
 
 mod my_info_tab;
 mod my_settins_tab;

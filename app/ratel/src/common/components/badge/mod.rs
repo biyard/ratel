@@ -13,17 +13,7 @@ pub fn Badge(
     }
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    DeserializeFromStr,
-    SerializeDisplay,
-    strum::Display,
-    strum::EnumString,
-    Default,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, DeserializeFromStr, SerializeDisplay, strum::Display, strum::EnumString, Default)]
 pub enum BadgeColor {
     #[default]
     #[strum(serialize = "text-badge-grey bg-badge-grey/20 border-badge-grey/30")]
@@ -42,17 +32,7 @@ pub enum BadgeColor {
     Red,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    DeserializeFromStr,
-    SerializeDisplay,
-    strum::Display,
-    strum::EnumString,
-    Default,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, DeserializeFromStr, SerializeDisplay, strum::Display, strum::EnumString, Default)]
 pub enum BadgeSize {
     #[default]
     #[strum(serialize = "px-[13px] py-[7px] text-[12px]/[16px] font-semibold")]
@@ -62,17 +42,7 @@ pub enum BadgeSize {
     Small,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    DeserializeFromStr,
-    SerializeDisplay,
-    strum::Display,
-    strum::EnumString,
-    Default,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, DeserializeFromStr, SerializeDisplay, strum::Display, strum::EnumString, Default)]
 pub enum BadgeVariant {
     #[default]
     Default,

@@ -2,9 +2,12 @@ use crate::features::auth::User;
 use crate::features::posts::controllers::dto::*;
 use crate::features::posts::models::Category;
 use crate::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct CreateCategoryRequest {
     pub name: String,
 }

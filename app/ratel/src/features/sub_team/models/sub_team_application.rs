@@ -1,6 +1,9 @@
 use crate::common::*;
 
 use super::SubTeamFormFieldType;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// A sub-team application to a parent team. The canonical copy lives under the
 /// parent's pk (`Partition::Team(parent_team_id)`) so the parent's queue is a
@@ -15,7 +18,7 @@ use super::SubTeamFormFieldType;
 /// missing attributes keeps queries succeeding; broken rows simply
 /// surface as obviously-empty records that are easy to spot and clean.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamApplication {
     pub pk: Partition,  // Partition::Team(parent_team_id)
     pub sk: EntityType, // EntityType::SubTeamApplication(application_id)
@@ -60,7 +63,7 @@ pub struct SubTeamApplication {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum SubTeamApplicationStatus {
     /// Being filled in; not yet submitted to the parent.
     #[default]
@@ -79,7 +82,7 @@ pub enum SubTeamApplicationStatus {
 /// is `#[serde(default)]`-guarded for the same model-evolution reason as
 /// `SubTeamApplication` itself.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamFormFieldSnapshot {
     pub field_id: String,
     pub label: String,

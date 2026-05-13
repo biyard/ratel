@@ -6,12 +6,15 @@ use std::collections::HashMap;
 
 use crate::features::cross_posting::models::PostSyndicationDirective;
 use crate::features::cross_posting::types::SocialPlatform;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[cfg(feature = "server")]
 use crate::features::posts::utils::validator::{validate_content, validate_title};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum UpdatePostRequest {
     Publish {

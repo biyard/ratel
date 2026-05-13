@@ -1,6 +1,9 @@
 use crate::common::*;
 use crate::features::cross_posting::types::SocialPlatform;
 use std::collections::HashMap;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Sidecar entity that carries per-post cross-posting intent **without**
 /// polluting the canonical `Post` entity with per-platform fields.
@@ -12,7 +15,7 @@ use std::collections::HashMap;
 /// Design doc: docs/superpowers/specs/2026-04-28-cross-posting-design.md
 /// (`PostSyndicationDirective` section).
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct PostSyndicationDirective {
     #[dynamo(prefix = "PSD", pk)]
     pub pk: Partition, // Feed(post_id)

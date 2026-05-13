@@ -336,28 +336,10 @@ impl ApiModel<'_> {
             objs.push(object_field(n, v.ty, meta));
         }
 
-        quote! {
-            #[cfg(feature = "server")]
-            impl schemars::JsonSchema for #name {
-                fn schema_name() -> std::borrow::Cow<'static, str> {
-                    #name_str.to_string()
-                }
-
-                fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
-                    let mut schema_obj = schemars::SchemaObject::default();
-                    schema_obj.metadata = Some(Box::new(schemars::Metadata {
-                        title: Some(#title.to_string()),
-                        ..Default::default()
-                    }));
-
-                    #(#objs)*
-
-                    schema_obj.object().required.insert("size".to_string());
-
-                    schemars::Schema::Object(schema_obj)
-                }
-            }
-        }
+        // schemars/aide were dropped from this crate; the param JSON-schema
+        // impl is no longer emitted.
+        let _ = (name, name_str, title, objs);
+        quote! {}
     }
 
     pub fn generate_client_impl(&self) -> proc_macro2::TokenStream {
@@ -569,7 +551,7 @@ impl ApiModel<'_> {
                 action_requests.push(quote! {
                     #validator_derive
                     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, PartialEq)]
-                    #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+                    
                     pub struct #request_struct_name {
                         #(#fields)*
                     }
@@ -588,7 +570,7 @@ impl ApiModel<'_> {
                 action_requests.push(quote! {
                     #validator_derive
                     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, PartialEq)]
-                    #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+                    
                     pub struct #request_struct_name {
                         #(#fields)*
                     }
@@ -650,7 +632,7 @@ impl ApiModel<'_> {
         let output = quote! {
             #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
             #[serde(rename_all = "snake_case")]
-            #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+            
             pub enum #action_name {
                 #(#action_fields)*
             }
@@ -870,7 +852,7 @@ impl ApiModel<'_> {
                 quote! {
                     #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
                     #[serde(rename_all = "kebab-case")]
-                    #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+                    
                     pub enum #read_action_enum_name {
                         #(#read_action_types)*
                     }
@@ -886,7 +868,7 @@ impl ApiModel<'_> {
         quote! {
             #validator_derive
             #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, PartialEq, by_macros::QueryDisplay)]
-            #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+            
             pub struct #read_action_struct_name {
                 #read_action_type_field
                 #(#query_fields)*
@@ -931,7 +913,7 @@ impl ApiModel<'_> {
 
         quote! {
             #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, PartialEq)]
-            #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo, sqlx::FromRow))]
+            #[cfg_attr(feature = "server", derive(sqlx::FromRow))]
             pub struct #summary_name {
                 #(#fields)*
             }
@@ -1161,7 +1143,7 @@ impl ApiModel<'_> {
                 quote! {
                     #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
                     #[serde(rename_all = "kebab-case")]
-                    #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+                    
                     pub enum #read_action_enum_name {
                         #(#read_action_types)*
                     }
@@ -1192,7 +1174,7 @@ impl ApiModel<'_> {
             #validator_derive
             #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, PartialEq, by_macros::QueryDisplay)]
             #[serde(rename_all = "kebab-case")]
-            #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+            
             pub struct #query_name {
                 #[serde(deserialize_with = #size_fname_str, default)]
                 pub size: usize,
@@ -1381,7 +1363,7 @@ impl ApiModel<'_> {
                 action_requests.push(quote! {
                 #validator_derive
                 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, PartialEq)]
-                #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+                
                 pub struct #request_struct_name {
                     #(#fields)*
                 }
@@ -1444,7 +1426,7 @@ impl ApiModel<'_> {
 
             #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
             #[serde(rename_all = "snake_case")]
-            #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+            
             pub enum #action_name {
                 #(#action_fields)*
             }
@@ -1660,7 +1642,7 @@ impl ApiModel<'_> {
 
         let output = quote! {
             #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, by_macros::QueryDisplay)]
-            #[cfg_attr(feature = "server", derive(aide::OperationIo, schemars::JsonSchema))]
+            
             #[serde(tag = "param-type", rename_all = "kebab-case")]
             pub enum #name {
                 #(#enums)*
@@ -1713,7 +1695,7 @@ impl ApiModel<'_> {
             #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
             #[serde(tag = "param_type")]
             #[serde(rename_all = "snake_case")]
-            #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+            
             pub enum #response {
                 #(#enums)*
             }
@@ -3060,7 +3042,7 @@ impl ApiModel<'_> {
 
         quote! {
             #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default)]
-            #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+            
             pub struct #name {
                 #(#fields),*
             }

@@ -1,8 +1,11 @@
 // Migrated from packages/main-api/src/controllers/v3/auth/logout.rs
 use crate::features::auth::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct LogoutResponse {
     pub status: String,
 }

@@ -1,5 +1,8 @@
 use crate::features::membership::models::MembershipTier;
 use crate::features::membership::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[cfg(feature = "server")]
 use crate::features::auth::utils::uuid::sorted_uuid;
@@ -9,7 +12,7 @@ use crate::features::membership::models::PurchaseEntity;
 use crate::features::membership::services::portone::PortOne;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct CardInfo {
     pub card_number: String,
     pub expiry_year: String,
@@ -19,7 +22,7 @@ pub struct CardInfo {
 }
 
 #[derive(Debug, Clone, Copy, Default, SerializeDisplay, DeserializeFromStr)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum Currency {
     #[default]
     Usd,
@@ -51,10 +54,8 @@ impl std::str::FromStr for Currency {
     }
 }
 
-#[derive(
-    Debug, Clone, serde::Serialize, serde::Deserialize, Default, DynamoEnum, Eq, PartialEq,
-)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, DynamoEnum, Eq, PartialEq)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum PurchaseStatus {
     #[default]
     Success,
@@ -63,7 +64,7 @@ pub enum PurchaseStatus {
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default, DynamoEnum)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum TransactionType {
     #[default]
     None,
@@ -71,7 +72,7 @@ pub enum TransactionType {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct PaymentReceipt {
     pub id: String,
     pub paid_at: i64,
@@ -82,7 +83,7 @@ pub struct PaymentReceipt {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UserPurchase {
     #[dynamo(prefix = "PAYMENT", name = "find_by_user", index = "gsi1", pk)]
     #[dynamo(prefix = "PAYMENT", name = "find_by_status", index = "gsi2", pk)]
@@ -155,7 +156,7 @@ impl PurchaseEntity for UserPurchase {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UserPayment {
     pub pk: CompositePartition,
     pub sk: EntityType,
@@ -332,7 +333,7 @@ impl UserPayment {
 // ── Team Payment & Purchase ──────────────────────────────────────────
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct TeamPurchase {
     #[dynamo(prefix = "PAYMENT", name = "find_by_team", index = "gsi1", pk)]
     #[dynamo(prefix = "PAYMENT", name = "find_by_status", index = "gsi2", pk)]
@@ -405,7 +406,7 @@ impl PurchaseEntity for TeamPurchase {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct TeamPayment {
     pub pk: CompositePartition,
     pub sk: EntityType,

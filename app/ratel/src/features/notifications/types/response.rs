@@ -1,7 +1,10 @@
 use crate::common::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct InboxNotificationResponse {
     pub id: UserInboxNotificationEntityType,
     pub kind: InboxKind,
@@ -29,13 +32,13 @@ impl From<crate::common::models::notification::UserInboxNotification>
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UnreadCountResponse {
     pub count: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct MarkAllReadResponse {
     pub affected: i64,
     pub has_more: bool,

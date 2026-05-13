@@ -4,9 +4,12 @@ use super::question::{
     CheckboxQuestion, ChoiceQuestion, DropdownQuestion, LinearScaleQuestion, Question,
     SubjectiveQuestion,
 };
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(rename_all = "snake_case", tag = "answer_type")]
 pub enum Answer {
     SingleChoice {

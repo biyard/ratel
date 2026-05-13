@@ -1,9 +1,12 @@
 use crate::features::spaces::pages::report::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[cfg_attr(
     feature = "server",
-    derive(DynamoEntity, schemars::JsonSchema, aide::OperationIo)
+    derive(DynamoEntity, rmcp::schemars::JsonSchema)
 )]
 pub struct SpaceAnalyze {
     pub pk: Partition,
@@ -29,28 +32,28 @@ pub struct SpaceAnalyze {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct TopicRow {
     pub topic: String,
     pub keyword: String,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct TfidfRow {
     pub keyword: String,
     pub tf_idf: f64,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct NetworkGraph {
     pub nodes: Vec<NetworkCentralityRow>,
     pub edges: Vec<NetworkEdgeRow>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct NetworkCentralityRow {
     pub node: String,
     pub degree_centrality: f64,
@@ -58,7 +61,7 @@ pub struct NetworkCentralityRow {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct NetworkEdgeRow {
     pub source: String,
     pub target: String,

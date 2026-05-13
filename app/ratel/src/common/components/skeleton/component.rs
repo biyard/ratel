@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use crate::common::*;
 
 #[component]
 pub fn Skeleton(#[props(extends=GlobalAttributes)] attributes: Vec<Attribute>) -> Element {

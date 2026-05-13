@@ -71,7 +71,7 @@ pub fn api_model_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
 
         #struct_comment
         #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, Default, PartialEq)]
-        #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+        
         #stripped_input
 
         #action_struct

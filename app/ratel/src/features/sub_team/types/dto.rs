@@ -3,11 +3,14 @@ use crate::common::*;
 use crate::features::sub_team::models::{
     BroadcastTarget, SubTeamAnnouncementStatus, SubTeamApplicationStatus, SubTeamFormFieldType,
 };
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 // ── Settings ─────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamSettingsResponse {
     pub is_parent_eligible: bool,
     pub min_sub_team_members: i32,
@@ -16,7 +19,7 @@ pub struct SubTeamSettingsResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UpdateSubTeamSettingsRequest {
     #[serde(default)]
     pub is_parent_eligible: Option<bool>,
@@ -33,7 +36,7 @@ pub struct UpdateSubTeamSettingsRequest {
 /// the apply page prefills it with the applicant team's matching
 /// attribute and renders the field read-only.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum TeamProfileLink {
     /// `Team.display_name`
     TeamName,
@@ -46,7 +49,7 @@ pub enum TeamProfileLink {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamFormFieldResponse {
     pub id: String,
     pub label: String,
@@ -65,7 +68,7 @@ pub struct SubTeamFormFieldResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct CreateSubTeamFormFieldRequest {
     pub label: String,
     pub field_type: SubTeamFormFieldType,
@@ -80,7 +83,7 @@ pub struct CreateSubTeamFormFieldRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UpdateSubTeamFormFieldRequest {
     #[serde(default)]
     pub label: Option<String>,
@@ -103,7 +106,7 @@ pub struct UpdateSubTeamFormFieldRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct ReorderFormFieldsRequest {
     pub field_ids: Vec<String>,
 }
@@ -111,7 +114,7 @@ pub struct ReorderFormFieldsRequest {
 // ── Documents ────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamDocumentResponse {
     pub id: String,
     pub title: String,
@@ -145,7 +148,7 @@ pub struct SubTeamDocumentResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct CreateSubTeamDocumentRequest {
     pub title: String,
     pub body: String,
@@ -164,7 +167,7 @@ pub struct CreateSubTeamDocumentRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UpdateSubTeamDocumentRequest {
     #[serde(default)]
     pub title: Option<String>,
@@ -181,7 +184,7 @@ pub struct UpdateSubTeamDocumentRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct ReorderDocumentsRequest {
     pub doc_ids: Vec<String>,
 }
@@ -189,7 +192,7 @@ pub struct ReorderDocumentsRequest {
 // ── Document versions (immutable history) ───────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamDocumentVersionResponse {
     /// Parent doc id (same value across every snapshot for one doc).
     pub doc_id: String,
@@ -207,7 +210,7 @@ pub struct SubTeamDocumentVersionResponse {
 // ── Public apply context ────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct ApplyContextDocument {
     pub id: String,
     pub title: String,
@@ -222,7 +225,7 @@ pub struct ApplyContextDocument {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct ApplyContextResponse {
     pub is_parent_eligible: bool,
     pub min_sub_team_members: i32,
@@ -325,7 +328,7 @@ impl From<crate::features::sub_team::models::SubTeamDocument> for ApplyContextDo
 // ── Application lifecycle ──────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamFormFieldSnapshotDto {
     pub field_id: String,
     pub label: String,
@@ -340,7 +343,7 @@ pub struct SubTeamFormFieldSnapshotDto {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamApplicationResponse {
     pub id: String,
     pub parent_team_id: String,
@@ -378,7 +381,7 @@ pub struct SubTeamApplicationResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamDocAgreementResponse {
     pub doc_id: String,
     pub doc_title_snapshot: String,
@@ -388,7 +391,7 @@ pub struct SubTeamDocAgreementResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamApplicationDetailResponse {
     #[serde(flatten)]
     pub application: SubTeamApplicationResponse,
@@ -396,7 +399,7 @@ pub struct SubTeamApplicationDetailResponse {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum ParentRelationshipStatus {
     #[default]
     Standalone,
@@ -405,7 +408,7 @@ pub enum ParentRelationshipStatus {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct ParentRelationshipResponse {
     pub status: ParentRelationshipStatus,
     pub parent_team_id: Option<String>,
@@ -428,14 +431,14 @@ pub struct ParentRelationshipResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct DocAgreementInput {
     pub doc_id: String,
     pub body_hash: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubmitApplicationRequest {
     pub parent_team_id: String,
     pub form_values: std::collections::HashMap<String, serde_json::Value>,
@@ -443,7 +446,7 @@ pub struct SubmitApplicationRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UpdateApplicationRequest {
     #[serde(default)]
     pub form_values: Option<std::collections::HashMap<String, serde_json::Value>>,
@@ -452,7 +455,7 @@ pub struct UpdateApplicationRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct ApplicationDecisionReasonRequest {
     /// Optional welcome message for approve / reject / cancel.
     /// Defaults to empty string when the caller sends `{}`.
@@ -463,7 +466,7 @@ pub struct ApplicationDecisionReasonRequest {
 // ── Application drafts (autosave) ────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SaveApplicationDraftRequest {
     pub parent_team_id: String,
     pub form_values: std::collections::HashMap<String, serde_json::Value>,
@@ -471,7 +474,7 @@ pub struct SaveApplicationDraftRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct ApplicationDraftResponse {
     pub parent_team_id: String,
     pub form_values: std::collections::HashMap<String, serde_json::Value>,
@@ -480,7 +483,7 @@ pub struct ApplicationDraftResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct ApplicationReturnCommentRequest {
     pub comment: String,
 }
@@ -488,20 +491,20 @@ pub struct ApplicationReturnCommentRequest {
 // ── Leave / deregister ──────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct DeregisterRequest {
     pub reason: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct LeaveParentRequest {
     #[serde(default)]
     pub reason: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct TerminationAck {
     pub ok: bool,
 }
@@ -509,7 +512,7 @@ pub struct TerminationAck {
 // ── Announcements ──────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamAnnouncementResponse {
     pub id: String,
     pub title: String,
@@ -543,7 +546,7 @@ pub struct SubTeamAnnouncementResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct CreateSubTeamAnnouncementRequest {
     pub title: String,
     #[serde(default)]
@@ -559,7 +562,7 @@ pub struct CreateSubTeamAnnouncementRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UpdateSubTeamAnnouncementRequest {
     #[serde(default)]
     pub title: Option<String>,
@@ -664,7 +667,7 @@ impl From<crate::features::sub_team::models::SubTeamDocAgreement> for SubTeamDoc
 /// Time window for activity aggregation. Phase 1 only supports weekly and
 /// monthly; daily is deferred to Phase 2 (per design doc Scope section).
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum ActivityWindow {
     Weekly,
     #[default]
@@ -685,7 +688,7 @@ impl ActivityWindow {
 /// the UI to display this at all times — we return it inline so the UI does
 /// not have to make a second request.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct PrivacyNotice {
     pub en: String,
     pub ko: String,
@@ -704,7 +707,7 @@ impl PrivacyNotice {
 
 /// Item returned by GET /sub-teams — one row per recognized sub-team.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamSummaryResponse {
     pub sub_team_id: String,
     pub display_name: String,
@@ -720,7 +723,7 @@ pub struct SubTeamSummaryResponse {
 /// bookmark) plus a `truncated` flag indicating the Phase 1 50-sub-team cap
 /// has been hit.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamListResponse {
     pub items: Vec<SubTeamSummaryResponse>,
     pub bookmark: Option<String>,
@@ -731,7 +734,7 @@ pub struct SubTeamListResponse {
 
 /// Numeric-only counts for the activity dashboard.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct ActivityCountsResponse {
     pub window: ActivityWindow,
     pub range_start_ms: i64,
@@ -745,7 +748,7 @@ pub struct ActivityCountsResponse {
 
 /// Sub-team detail response for the overview page.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamDetailResponse {
     pub sub_team_id: String,
     pub display_name: String,
@@ -764,7 +767,7 @@ pub struct SubTeamDetailResponse {
 /// | last active date`. `space_count_participated` counts public/team-shared
 /// spaces authored by the user within the window.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct MemberActivityResponse {
     pub user_id: String,
     pub handle: String,

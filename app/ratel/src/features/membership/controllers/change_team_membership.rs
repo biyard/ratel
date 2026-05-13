@@ -6,6 +6,9 @@ use crate::features::membership::models::{
     TeamMembership, TeamPayment, TransactionType,
 };
 #[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
+#[cfg(feature = "server")]
 use crate::features::membership::models::{handle_downgrade, handle_upgrade};
 #[cfg(feature = "server")]
 use crate::features::membership::services::portone::PortOne;
@@ -15,7 +18,7 @@ use crate::features::social::pages::member::dto::TeamRole;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ChangeTeamMembershipRequest {
     pub membership: MembershipTier,
@@ -24,7 +27,7 @@ pub struct ChangeTeamMembershipRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ChangeTeamMembershipResponse {
     pub renewal_date: i64,

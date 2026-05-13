@@ -4,7 +4,6 @@ mod i18n;
 mod types;
 mod views;
 
-use dioxus::prelude::*;
 
 use hooks::*;
 use i18n::*;

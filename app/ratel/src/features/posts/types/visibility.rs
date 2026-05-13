@@ -1,9 +1,10 @@
 use crate::features::posts::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum,
-)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[derive(Debug, Clone, PartialEq, Eq, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum Visibility {
     #[default]
     Public,

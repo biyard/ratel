@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use crate::common::*;
 use dioxus_primitives::scroll_area::{self, ScrollAreaProps};
 
 #[component]

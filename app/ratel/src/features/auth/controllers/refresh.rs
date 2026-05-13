@@ -12,16 +12,19 @@
 #[cfg(feature = "server")]
 use crate::common::utils::sha256::sha256_base64url;
 use crate::features::auth::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct RefreshSessionRequest {
     pub refresh_token: String,
     pub device_id: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct RefreshSessionResponse {
     #[serde(flatten)]
     pub user: User,

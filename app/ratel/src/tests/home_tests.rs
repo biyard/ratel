@@ -199,7 +199,7 @@ async fn test_hot_spaces_anonymous_sees_global_stream() {
 
     let (status, _, body) = crate::test_get! {
         app: ctx.app,
-        path: "/api/home/hot-spaces",
+        path: "/api/hot-spaces",
         response_type: crate::common::types::ListResponse<HotSpaceResponse>,
     };
     assert_eq!(status, 200, "hot-spaces (anon): {:?}", body);
@@ -225,7 +225,7 @@ async fn test_hot_spaces_logged_in_sees_same_stream_as_anonymous() {
 
     let (status, _, body) = crate::test_get! {
         app: ctx.app.clone(),
-        path: "/api/home/hot-spaces",
+        path: "/api/hot-spaces",
         headers: viewer_headers,
         response_type: crate::common::types::ListResponse<HotSpaceResponse>,
     };
@@ -251,7 +251,7 @@ async fn test_hot_spaces_excludes_low_participant_space() {
 
     let (status, _, body) = crate::test_get! {
         app: ctx.app,
-        path: "/api/home/hot-spaces",
+        path: "/api/hot-spaces",
         response_type: crate::common::types::ListResponse<HotSpaceResponse>,
     };
     assert_eq!(status, 200, "hot-spaces: {:?}", body);

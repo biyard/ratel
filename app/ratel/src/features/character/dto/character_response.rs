@@ -2,9 +2,12 @@ use crate::common::*;
 use crate::features::character::leveling;
 use crate::features::character::models::CharacterXp;
 use crate::features::character::types::SkillId;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct CharacterResponse {
     pub total_xp: i64,
     pub level: i32,
@@ -21,7 +24,7 @@ pub struct CharacterResponse {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct CharacterSkillResponse {
     pub skill_id: SkillId,
     pub level: i32,
@@ -36,7 +39,7 @@ pub struct CharacterSkillResponse {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct PublicCharacterResponse {
     /// Only level is exposed publicly (per spec Q5).
     pub level: i32,

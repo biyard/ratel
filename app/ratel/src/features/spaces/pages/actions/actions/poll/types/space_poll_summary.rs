@@ -3,9 +3,12 @@ use crate::features::spaces::pages::actions::actions::poll::*;
 use super::Question;
 
 use std::collections::HashMap;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(rename_all = "snake_case", tag = "answer_type")]
 pub enum SpacePollSummary {
     SingleChoice {

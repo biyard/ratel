@@ -1,15 +1,16 @@
 use crate::*;
 use dioxus_translate::Translate;
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// The kind of source feeding a user's Essence House. One enum used by both
 /// server (model field, API DTO) and client (filter pill + row icon). When a
 /// source is a comment we split it into `PostComment` vs `DiscussionComment`
 /// so the UI can render a parent-context tag without re-querying.
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize, Translate,
-)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize, Translate)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum EssenceSourceKind {
     #[default]
     #[translate(en = "Post", ko = "포스트")]

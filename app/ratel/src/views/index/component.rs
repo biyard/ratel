@@ -2,9 +2,8 @@ use super::space_card::*;
 use super::*;
 use crate::common::components::{Robots, SeoMeta};
 use crate::common::contexts::TeamItem;
-use crate::common::hooks::use_infinite_query;
+use crate::common::hooks::{use_infinite_query, use_loader};
 use crate::common::types::ListResponse;
-use crate::common::use_loader;
 use crate::features::auth::LoginModal;
 use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::social::pages::team_arena::ArenaTeamCreationPopup;
@@ -27,12 +26,16 @@ pub fn Index() -> Element {
     let t: HomeArenaTranslate = use_translate();
     let nav = use_navigator();
     let mut popup = use_popup();
+    debug!("before user context");
     let user_ctx = crate::features::auth::hooks::use_user_context();
-    let username = user_ctx()
-        .user
-        .as_ref()
-        .map(|u| u.username.clone())
-        .unwrap_or_default();
+    debug!("after user context");
+    let username = use_memo(move || {
+        user_ctx()
+            .user
+            .as_ref()
+            .map(|u| u.username.clone())
+            .unwrap_or_default()
+    });
     let has_user = user_ctx().user.is_some();
     // Admin users get a shield button next to Settings in the topbar
     // HUD that jumps straight to `/admin/`. Non-admins see nothing —
@@ -47,16 +50,23 @@ pub fn Index() -> Element {
     let mut teams_open = use_signal(|| false);
     let mut notifications_open = use_signal(|| false);
 
+    debug!("before hot spaces");
+    let hot_spaces = use_loader(|| async move { list_hot_spaces_handler().await })?;
+    debug!("after hot spaces");
+
     // Read user_ctx inside the async so the fetch reflects the current
     // login state at invocation time. Login from the home page triggers
     // `teams_query.restart()` via the LoginModal's `on_success` callback
     // (wired into each HUD button below) instead of a use_effect.
-    let mut teams_query = use_infinite_query(move |bookmark| async move {
+    let mut teams_query = use_infinite_query(move |bookmark| {
         let logged_in = user_ctx().user.is_some();
-        if logged_in {
-            crate::features::social::controllers::get_user_teams_handler(bookmark).await
-        } else {
-            Ok(ListResponse::<TeamItem>::default())
+
+        async move {
+            if logged_in {
+                crate::features::social::controllers::get_user_teams_handler(bookmark).await
+            } else {
+                Ok(ListResponse::<TeamItem>::default())
+            }
         }
     })?;
     let teams: Vec<TeamItem> = teams_query.items();
@@ -84,7 +94,6 @@ pub fn Index() -> Element {
 
     let brand_logo = "https://metadata.ratel.foundation/logos/logo-symbol.png".to_string();
 
-    let hot_spaces = use_loader(move || async move { list_hot_spaces_handler(None).await })?;
     let my_spaces = use_my_spaces()?.my_spaces;
 
     let hot_cards = hot_spaces().items;
@@ -105,7 +114,8 @@ pub fn Index() -> Element {
 
     let active_spaces = hot_cards.len() as i64;
 
-    let go_create_post = move |_: Event<MouseData>| {
+    let go_create_post = move |_: Event<MouseData>| async move {
+        debug!("Create post clicked; has_user={has_user}");
         if !has_user {
             popup
                 .open(rsx! {
@@ -114,21 +124,18 @@ pub fn Index() -> Element {
                 .with_title("Start building your Essence");
             return;
         }
-        spawn(async move {
-            match create_post_handler(None).await {
-                Ok(resp) => {
-                    nav.push(Route::PostEdit {
-                        post_id: resp.post_pk.into(),
-                    });
-                }
-                Err(e) => {
-                    dioxus::logger::tracing::error!("Failed to create post: {:?}", e);
-                }
+        match create_post_handler(None).await {
+            Ok(resp) => {
+                nav.push(Route::PostEdit {
+                    post_id: resp.post_pk.into(),
+                });
             }
-        });
+            Err(e) => {
+                dioxus::logger::tracing::error!("Failed to create post: {:?}", e);
+            }
+        }
     };
 
-    let drafts_username = username.clone();
     let go_drafts = move |_: Event<MouseData>| {
         if !has_user {
             popup
@@ -139,11 +146,10 @@ pub fn Index() -> Element {
             return;
         }
         nav.push(Route::SocialDraft {
-            username: drafts_username.clone(),
+            username: username(),
         });
     };
 
-    let rewards_username = username.clone();
     let go_rewards = move |_: Event<MouseData>| {
         if !has_user {
             popup
@@ -154,7 +160,7 @@ pub fn Index() -> Element {
             return;
         }
         nav.push(Route::SocialReward {
-            username: rewards_username.clone(),
+            username: username(),
         });
     };
 
@@ -189,6 +195,12 @@ pub fn Index() -> Element {
     // let go_browse_all = move |_: Event<MouseData>| {
     //     nav.push(Route::PostIndex {});
     // };
+
+    debug!(
+        "Rendering Index with {} hot spaces and {} mine spaces",
+        hot_cards.len(),
+        mine_cards.len()
+    );
 
     rsx! {
         SeoMeta {

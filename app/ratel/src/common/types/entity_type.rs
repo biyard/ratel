@@ -3,18 +3,15 @@ use serde_with::{DeserializeFromStr, SerializeDisplay};
 
 use super::Partition;
 
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    SerializeDisplay,
-    DeserializeFromStr,
-    Default,
-    DynamoEnum,
-    SubPartition,
-)]
-#[cfg_attr(feature = "server", derive(JsonSchema))]
+// `SubPartition` emits `#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]`
+// on each generated wrapper struct; the schemars derive expansion uses
+// unqualified `schemars::...` paths, so we alias the rmcp re-export here.
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
+
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, PartialEq, Eq, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum, SubPartition)]
 pub enum EntityType {
     #[default]
     None,

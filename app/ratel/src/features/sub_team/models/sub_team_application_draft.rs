@@ -1,5 +1,8 @@
 use crate::common::*;
 use std::collections::HashMap;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// In-progress (unsubmitted) sub-team application — written when the
 /// applicant fills the form on `/:username/sub-teams/apply` and read
@@ -8,7 +11,7 @@ use std::collections::HashMap;
 /// One draft per (applicant team, parent team) pair: pk is the
 /// applicant's team partition; sk encodes the parent team id.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamApplicationDraft {
     pub pk: Partition,  // Partition::Team(applicant_team_id)
     pub sk: EntityType, // EntityType::SubTeamApplicationDraft(parent_team_id)
@@ -31,7 +34,7 @@ pub struct SubTeamApplicationDraft {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct DocAgreementSnapshot {
     pub doc_id: String,
     pub body_hash: String,

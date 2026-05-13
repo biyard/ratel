@@ -1,6 +1,6 @@
 use super::TeamDaoTranslate;
 use super::super::*;
-use dioxus::prelude::*;
+use crate::common::*;
 
 #[component]
 pub fn ViewerPage(username: String) -> Element {

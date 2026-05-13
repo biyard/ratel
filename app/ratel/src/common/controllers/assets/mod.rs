@@ -1,8 +1,11 @@
 use crate::common::models::User;
 use crate::common::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct AssetPresignedUris {
     pub presigned_uris: Vec<String>,
     pub uris: Vec<String>,

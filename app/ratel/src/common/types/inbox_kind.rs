@@ -2,9 +2,12 @@ use crate::common::*;
 use crate::features::cross_posting::models::ErrorCategory;
 use crate::features::cross_posting::types::SocialPlatform;
 use crate::features::spaces::pages::actions::types::SpaceActionType;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(rename_all = "snake_case")]
 pub enum InboxKind {
     ReplyOnComment,
@@ -56,7 +59,7 @@ impl InboxKind {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum InboxPayload {
     ReplyOnComment {

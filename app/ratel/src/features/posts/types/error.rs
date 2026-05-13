@@ -72,8 +72,8 @@ pub enum PostError {
 
 #[cfg(feature = "server")]
 impl PostError {
-    pub fn status_code(&self) -> bdk::prelude::axum::http::StatusCode {
-        use bdk::prelude::axum::http::StatusCode;
+    pub fn status_code(&self) -> crate::axum::http::StatusCode {
+        use crate::axum::http::StatusCode;
         match self {
             PostError::InvalidCommentKey
             | PostError::ContentTooShort
@@ -91,15 +91,15 @@ impl PostError {
 
 #[cfg(feature = "server")]
 impl dioxus::fullstack::axum::response::IntoResponse for PostError {
-    fn into_response(self) -> bdk::prelude::axum::response::Response {
-        use bdk::prelude::axum::response::IntoResponse;
+    fn into_response(self) -> crate::axum::response::Response {
+        use crate::axum::response::IntoResponse;
         (self.status_code(), self.to_string()).into_response()
     }
 }
 
 #[cfg(feature = "server")]
 impl dioxus::fullstack::AsStatusCode for PostError {
-    fn as_status_code(&self) -> bdk::prelude::axum::http::StatusCode {
+    fn as_status_code(&self) -> crate::axum::http::StatusCode {
         self.status_code()
     }
 }

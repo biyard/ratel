@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use crate::common::*;
 use dioxus_primitives::tabs::{self, TabContentProps, TabListProps, TabTriggerProps};
 
 /// The props for the [`Tabs`] component.

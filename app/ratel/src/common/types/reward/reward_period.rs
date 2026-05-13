@@ -1,17 +1,7 @@
 use crate::common::*;
 use chrono::Datelike;
 
-#[derive(
-    Debug,
-    Default,
-    Clone,
-    Serialize,
-    Deserialize,
-    DynamoEnum,
-    Eq,
-    PartialEq,
-    Translate,
-)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEnum, Eq, PartialEq, Translate)]
 pub enum RewardPeriod {
     #[default]
     #[translate(en = "Once", ko = "1회")]

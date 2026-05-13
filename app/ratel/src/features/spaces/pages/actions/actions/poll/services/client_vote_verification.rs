@@ -27,6 +27,8 @@ pub fn voter_key_storage_key(poll_id: &str) -> String {
     format!("{STORAGE_KEY_PREFIX}{poll_id}")
 }
 
+/// **Mobile is not supported** — `attr-voting` is gated to `web`/`server`.
+#[cfg(any(feature = "web", feature = "server"))]
 pub fn build_stored_voter_key(
     material: &VoteVerificationMaterialResponse,
     user_secret: &str,
@@ -45,6 +47,14 @@ pub fn build_stored_voter_key(
         voter_tag: material.voter_tag.clone(),
         key_bundle_json,
     })
+}
+
+#[cfg(not(any(feature = "web", feature = "server")))]
+pub fn build_stored_voter_key(
+    _material: &VoteVerificationMaterialResponse,
+    _user_secret: &str,
+) -> Result<StoredVoterKey, String> {
+    Err("Encrypted voting is not supported on this platform".to_string())
 }
 
 pub fn save_stored_voter_key(record: &StoredVoterKey) -> Result<(), String> {
@@ -66,7 +76,7 @@ pub async fn load_session_vote_secret() -> Option<String> {
 
     #[cfg(not(feature = "server"))]
     {
-        use dioxus::prelude::*;
+        use crate::common::*;
 
         let script = format!(
             r#"try {{
@@ -90,7 +100,7 @@ pub fn save_session_vote_secret(user_secret: &str) {
 
     #[cfg(not(feature = "server"))]
     {
-        use dioxus::prelude::*;
+        use crate::common::*;
 
         let script = format!(
             r#"try {{ window.sessionStorage.setItem({k}, {v}); }} catch (_e) {{}}"#,
@@ -101,6 +111,9 @@ pub fn save_session_vote_secret(user_secret: &str) {
     }
 }
 
+/// **Mobile is not supported** — `attr-voting` / `sha2` / `hex` are gated
+/// to `web`/`server`.
+#[cfg(any(feature = "web", feature = "server"))]
 pub fn verify_client_vote_material(
     material: &VoteVerificationMaterialResponse,
     stored_key: &StoredVoterKey,
@@ -135,4 +148,13 @@ pub fn verify_client_vote_material(
         decrypted_choice: payload.choice,
         decrypted_metadata: payload.metadata,
     })
+}
+
+#[cfg(not(any(feature = "web", feature = "server")))]
+pub fn verify_client_vote_material(
+    _material: &VoteVerificationMaterialResponse,
+    _stored_key: &StoredVoterKey,
+    _user_secret: &str,
+) -> Result<ClientVoteVerification, String> {
+    Err("Encrypted voting is not supported on this platform".to_string())
 }

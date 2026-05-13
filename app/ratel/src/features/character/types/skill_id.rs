@@ -1,11 +1,14 @@
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Stable string-keyed skill identifier. The serialization (`snake_case`) is
 /// what gets stored in `EntityType::CharacterSkill(...)`, sent over the wire,
 /// and used as the path parameter on `/api/me/skills/:skill_id/level-up`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Hash, Default)]
 #[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum SkillId {
     #[default]
     MoneyTree,

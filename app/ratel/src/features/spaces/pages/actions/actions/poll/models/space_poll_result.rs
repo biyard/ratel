@@ -2,9 +2,12 @@ use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::common::macros::DynamoEntity;
 use crate::common::utils::time::get_now_timestamp_millis;
 use std::collections::HashMap;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 
 pub struct SpacePollResult {
     pub pk: Partition,

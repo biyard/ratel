@@ -1,7 +1,10 @@
 use crate::features::did::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct DidAttributeItem {
     /// Stable attribute key. Known values: "age", "gender", "university",
     /// "employer", "membership".
@@ -14,7 +17,7 @@ pub struct DidAttributeItem {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct DidSummaryResponse {
     pub did: String,
     pub issued_at: i64,

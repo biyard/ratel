@@ -1,4 +1,7 @@
 use crate::common::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Recognized parent→child relationship record. One row per approved sub-team,
 /// stored under the parent team's pk so the parent can list its sub-teams with
@@ -6,7 +9,7 @@ use crate::common::*;
 /// child team's `parent_team_id` update on approval; deleted on deregister,
 /// leave-parent, or parent deletion cascade.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamLink {
     pub pk: Partition,  // Partition::Team(parent_team_id)
     pub sk: EntityType, // EntityType::SubTeamLink(child_team_id)

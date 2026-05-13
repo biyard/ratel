@@ -2,7 +2,7 @@ use super::super::components::*;
 use super::super::controllers::{list_members_handler, remove_team_member_handler};
 use super::super::dto::RemoveMemberRequest;
 use super::super::*;
-use dioxus::prelude::*;
+use crate::common::*;
 
 #[component]
 pub fn AdminPage(username: String, team_pk: TeamPartition) -> Element {

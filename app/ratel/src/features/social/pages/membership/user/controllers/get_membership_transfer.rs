@@ -1,7 +1,10 @@
 use super::super::{models::UserPurchaseLocal, *};
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct PurchaseHistoryItem {
     pub tx_type: String,
     pub amount: i64,
@@ -23,7 +26,7 @@ impl From<UserPurchaseLocal> for PurchaseHistoryItem {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct PurchaseHistoryResponse {
     pub items: Vec<PurchaseHistoryItem>,
     pub bookmark: Option<String>,

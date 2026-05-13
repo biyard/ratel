@@ -6,7 +6,6 @@ use crate::components::sheet::{
 use crate::components::tooltip::{Tooltip, TooltipContent, TooltipTrigger};
 use crate::*;
 use dioxus::core::use_drop;
-use dioxus::prelude::*;
 use dioxus_primitives::dioxus_attributes::attributes;
 use dioxus_primitives::merge_attributes;
 use dioxus_primitives::use_controlled;

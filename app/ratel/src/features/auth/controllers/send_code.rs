@@ -1,9 +1,12 @@
 // Migrated from packages/main-api/src/controllers/v3/auth/verification/send_code.rs
 use crate::features::auth::models::*;
 use crate::features::auth::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum SendCodeRequest {
     SMS { phone: String },
@@ -11,13 +14,13 @@ pub enum SendCodeRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SendCodeResponse {
     pub expired_at: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SendPasswordResetCodeRequest {
     pub email: String,
 }

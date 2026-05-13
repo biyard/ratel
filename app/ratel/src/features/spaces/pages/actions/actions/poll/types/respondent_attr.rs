@@ -1,8 +1,11 @@
 use crate::features::spaces::pages::actions::actions::poll::*;
 use crate::common::attribute::{Age, Attribute, Gender};
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct RespondentAttr {
     pub gender: Option<Gender>,
     pub age: Option<Age>,

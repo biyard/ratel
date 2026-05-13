@@ -6,11 +6,14 @@
 /// handler just fires a `NotificationData::ReplyOnComment` with identifiers
 /// and the stream/event poller does the heavy work via `send_reply_on_comment`.
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Origin of a reply-on-comment notification. Determines which model the
 /// parent comment and its prior replies live under.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum ReplyCommentSource {
     Post,
     SpaceDiscussion,

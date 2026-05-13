@@ -1,9 +1,12 @@
 // Migrated from packages/main-api/src/controllers/v3/auth/verification/verify_code.rs
 use crate::features::auth::models::*;
 use crate::features::auth::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum VerifyCodeRequest {
     Email {
@@ -17,7 +20,7 @@ pub enum VerifyCodeRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct VerifyCodeResponse {
     pub success: bool,
 }

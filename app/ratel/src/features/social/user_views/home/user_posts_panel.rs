@@ -3,7 +3,6 @@ use crate::common::hooks::use_infinite_query;
 use crate::common::*;
 use crate::features::posts::controllers::dto::PostResponse;
 use crate::features::posts::controllers::list_user_posts::list_user_posts_handler;
-use dioxus::prelude::*;
 
 #[component]
 pub fn UserPostsPanel(username: String, view_mode: HomeViewMode) -> Element {

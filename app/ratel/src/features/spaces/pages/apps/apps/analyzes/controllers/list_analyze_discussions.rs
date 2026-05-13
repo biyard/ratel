@@ -2,9 +2,12 @@ use crate::common::ListResponse;
 use crate::features::spaces::pages::actions::actions::discussion::SpacePost;
 use crate::features::spaces::pages::apps::apps::analyzes::*;
 use crate::features::spaces::pages::apps::models::SpaceApp;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "server", derive(aide::OperationIo, schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct AnalyzeDiscussionItem {
     pub discussion_id: SpacePostEntityType,
     pub title: String,

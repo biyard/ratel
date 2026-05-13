@@ -1,6 +1,9 @@
 #[cfg(feature = "server")]
 use crate::common::models::space::SpaceCommon;
 #[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
+#[cfg(feature = "server")]
 use crate::common::SpaceUserRole;
 #[cfg(feature = "server")]
 use crate::features::posts::models::Post;

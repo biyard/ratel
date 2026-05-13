@@ -3,16 +3,19 @@ use crate::common::models::space::SpaceCommon;
 use crate::features::spaces::pages::apps::apps::analyzes::*;
 use crate::features::spaces::pages::apps::models::SpaceApp;
 use crate::features::spaces::pages::apps::types::SpaceAppError;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "server", derive(aide::OperationIo, schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct CreateAnalyzeReportRequest {
     pub name: String,
     pub filters: Vec<AnalyzeReportFilter>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "server", derive(aide::OperationIo, schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct CreateAnalyzeReportResponse {
     pub report_id: String,
 }

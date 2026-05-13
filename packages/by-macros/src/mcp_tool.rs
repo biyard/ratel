@@ -346,12 +346,27 @@ pub fn mcp_tool_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
     let request_struct = if struct_fields.is_empty() {
         quote! {}
     } else {
+        // Wrap the struct in a private sub-module so we can `use rmcp::schemars;`
+        // without polluting the parent module's namespace. The `rmcp::schemars::JsonSchema`
+        // derive expansion emits unqualified `schemars::...` paths, so `schemars` must
+        // be in scope at the same module as the struct definition. The host crate
+        // does not have a direct `schemars` dependency — only the `rmcp::schemars`
+        // re-export — so this local alias is the only way to make the derive resolve.
+        let mod_name = format_ident!("__mcp_req_{}", struct_name.to_string().to_case(Case::Snake));
         quote! {
             #[cfg(feature = "server")]
-            #[derive(Debug, serde::Serialize, serde::Deserialize, rmcp::schemars::JsonSchema)]
-            #vis struct #struct_name {
-                #(#struct_fields),*
+            #[allow(non_snake_case, non_camel_case_types)]
+            mod #mod_name {
+                use super::*;
+                #[allow(unused_imports)]
+                use rmcp::schemars;
+                #[derive(Debug, serde::Serialize, serde::Deserialize, rmcp::schemars::JsonSchema)]
+                pub struct #struct_name {
+                    #(#struct_fields),*
+                }
             }
+            #[cfg(feature = "server")]
+            #vis use #mod_name::#struct_name;
         }
     };
 

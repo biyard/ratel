@@ -6,7 +6,6 @@ use crate::features::membership::controllers::{
 };
 use crate::features::membership::models::TeamMembershipResponse;
 use crate::features::social::pages::membership::user::components::format_membership_tier_label;
-use dioxus::prelude::*;
 use i18n::TeamMembershipTranslate;
 
 #[derive(Clone, Copy, PartialEq, Eq)]

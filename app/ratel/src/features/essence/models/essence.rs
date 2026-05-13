@@ -1,5 +1,8 @@
 use crate::features::essence::types::*;
 #[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
+#[cfg(feature = "server")]
 use crate::features::essence::models::UserEssenceStats;
 use crate::*;
 
@@ -18,7 +21,7 @@ use crate::*;
 /// - **GSI3 (`find_by_user_by_title`)** — `sk = title` for "title A–Z"
 ///   pagination. Raw string sort, same convention as `Team.display_name`.
 #[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct Essence {
     /// Primary pk AND every GSI's pk — the same `USER#{user_id}` serves all
     /// indexes, they just differ in their sort key.

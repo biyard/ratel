@@ -672,7 +672,7 @@ async fn main() {
     let app = Router::new()
         .route("/api/custom", get(custom_handler))
         .merge(
-            axum::Router::new()
+            ::axum::Router::new()
                 .serve_dioxus_application(ServeConfig::new(), app)
         );
 

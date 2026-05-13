@@ -1,9 +1,12 @@
 use crate::features::spaces::pages::actions::actions::discussion::*;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 use std::str::FromStr;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, SerializeDisplay, DeserializeFromStr, Default, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SpacePostCommentTargetEntityType(pub String);
 
 impl std::fmt::Display for SpacePostCommentTargetEntityType {

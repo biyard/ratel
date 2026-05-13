@@ -8,7 +8,7 @@ use super::controllers::{
 use super::dto::RewardsResponse;
 use super::*;
 use crate::common::services::{MonthlySummaryItem, PointTransactionResponse};
-use dioxus::prelude::*;
+use crate::common::*;
 
 pub use i18n::UserRewardsTranslate;
 
