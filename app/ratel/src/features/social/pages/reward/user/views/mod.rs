@@ -498,6 +498,45 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                             div { class: "empty__desc", "{tr.past_coming_soon_desc}" }
                         }
                     }
+                
+                // div { class: "section-head",
+                //     span { class: "section-head__title", "{tr.past_cycles}" }
+                //     span { class: "section-head__count",
+                //         strong { "{claimable_count}" }
+                //         " {tr.claimable}"
+                //     }
+                // }
+                // div { class: "cycles",
+                //     if past_months.is_empty() {
+                //         div { class: "empty",
+                //             div { class: "empty__icon",
+                //                 svg {
+                //                     view_box: "0 0 24 24",
+                //                     fill: "none",
+                //                     stroke: "currentColor",
+                //                     stroke_width: "1.6",
+                //                     stroke_linecap: "round",
+                //                     stroke_linejoin: "round",
+                //                     circle { cx: "12", cy: "12", r: "10" }
+                //                     path { d: "M12 6v12" }
+                //                     path { d: "M16 10H8" }
+                //                 }
+                //             }
+                //             div { class: "empty__title", "{tr.past_empty_title}" }
+                //             div { class: "empty__desc", "{tr.past_empty_desc}" }
+                //         }
+                //     } else {
+                //         for item in past_months.iter() {
+                //             CycleCard {
+                //                 key: "{item.month}",
+                //                 username,
+                //                 item: item.clone(),
+                //                 token_symbol: token_symbol.clone(),
+                //                 tr: tr.clone(),
+                //             }
+                //         }
+                //     }
+                // }
                 }
             }
         }
