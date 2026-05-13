@@ -8,7 +8,11 @@
 
 ENV ?= local
 MODE ?= debug
+# Rustup-style target triple (for cross-compile / verification commands).
 ANDROID_TARGET ?= aarch64-linux-android
+# Tauri's `--target` accepts short names: aarch64 | armv7 | i686 | x86_64.
+# Derive from ANDROID_TARGET so a single override stays consistent.
+TAURI_TARGET ?= $(firstword $(subst -, ,$(ANDROID_TARGET)))
 
 ifeq ($(ENV),prod)
   MOBILE_API_URL ?= https://ratel.foundation
@@ -29,14 +33,19 @@ RUSTFLAGS ?= -D warnings
 # legacy dioxus-native build (matched here so a single env profile works for
 # both). Override in CI or non-standard installs.
 HOST_OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
+# Force-override these even if the shell exports stale values pointing at
+# empty directories (which is common — e.g. ANDROID_HOME=/opt/android-sdk
+# left over from an Android Studio install that's not actually there).
+# Use `make ANDROID_HOME=... ANDROID_NDK_HOME=... JAVA_HOME=...` on the
+# command line to override per-invocation.
 ifeq ($(HOST_OS),darwin)
-  ANDROID_HOME ?= /opt/homebrew/share/android-commandlinetools
-  ANDROID_NDK_HOME ?= /opt/homebrew/share/android-ndk
-  JAVA_HOME ?= /Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+  ANDROID_HOME := $(if $(filter override,$(origin ANDROID_HOME)),$(ANDROID_HOME),/opt/homebrew/share/android-commandlinetools)
+  ANDROID_NDK_HOME := $(if $(filter override,$(origin ANDROID_NDK_HOME)),$(ANDROID_NDK_HOME),/opt/homebrew/share/android-ndk)
+  JAVA_HOME := $(if $(filter override,$(origin JAVA_HOME)),$(JAVA_HOME),/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home)
 else
-  ANDROID_HOME ?= /opt/android-sdk
-  ANDROID_NDK_HOME ?= /opt/android-ndk
-  JAVA_HOME ?= /usr/lib/jvm/java-21-openjdk
+  ANDROID_HOME := $(if $(filter override,$(origin ANDROID_HOME)),$(ANDROID_HOME),/opt/android-sdk)
+  ANDROID_NDK_HOME := $(if $(filter override,$(origin ANDROID_NDK_HOME)),$(ANDROID_NDK_HOME),/opt/android-ndk)
+  JAVA_HOME := $(if $(filter override,$(origin JAVA_HOME)),$(JAVA_HOME),/usr/lib/jvm/java-21-openjdk)
 endif
 NDK_HOME ?= $(ANDROID_NDK_HOME)
 
@@ -93,20 +102,34 @@ dx-build:
 	SRC=$$(dirname "$$INDEX"); \
 	echo "Copying $$SRC -> $(DIST_DIR)"; \
 	rsync -a --delete "$$SRC/" "$(DIST_DIR)/"
+	@# dx 0.7's bundle JS unconditionally calls atob(window.initial_dioxus_hydration_data)
+	@# at boot. In a fullstack/SSR deployment the server injects this variable into the
+	@# HTML response. Tauri serves the static bundle without SSR, so atob() chokes on
+	@# undefined.
+	@#
+	@# Stub `atob` to return "" when its argument is undefined/null. The wasm's
+	@# hydration check separately tests whether real hydration data is present (via a
+	@# different code path) and falls through to client-only mounting when absent.
+	@# This is less invasive than setting initial_dioxus_hydration_data="" which the
+	@# wasm misinterprets as "empty manifest, try to hydrate" and then panics.
+	@if ! grep -q "patched_atob" $(DIST_DIR)/index.html; then \
+		echo "Injecting atob shim into index.html"; \
+		python3 -c "p='$(DIST_DIR)/index.html'; t=open(p).read(); s='<script>(function(){var __o=window.atob;window.atob=function(x){return (x===undefined||x===null)?\"\":__o.call(this,x);};window.__patched_atob=true;})();</script>'; open(p,'w').write(t.replace('<body>','<body>'+s,1))"; \
+	fi
 
 # Live dev — dioxus serves WASM on :8000, Tauri WebView points there via devUrl.
 android-dev: install-tauri-cli
 	@echo "Run 'cd ../ratel && DYNAMO_TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX) MOBILE_API_URL=$(MOBILE_API_URL) dx serve --features tauri-web --no-default-features --port 8000' in another terminal first."
-	cd src-tauri && $(ANDROID_ENV) cargo tauri android dev --target $(ANDROID_TARGET)
+	cd src-tauri && $(ANDROID_ENV) cargo tauri android dev --target $(TAURI_TARGET)
 
 build-release: install-tauri-cli dx-build
-	cd src-tauri && $(ANDROID_ENV) cargo tauri android build --target $(ANDROID_TARGET) $(if $(filter release,$(MODE)),--release,)
+	cd src-tauri && $(ANDROID_ENV) cargo tauri android build --target $(TAURI_TARGET) $(if $(filter debug,$(MODE)),--debug,)
 	@echo
 	@echo "APK output:"
 	@find src-tauri/gen/android -name "*.apk" -newer Makefile 2>/dev/null
 
 install-debug: build-release
-	@APK=$$(find src-tauri/gen/android -name "app-*-debug.apk" 2>/dev/null \
+	@APK=$$(find src-tauri/gen/android -name "app-*.apk" -not -name "*unsigned*" 2>/dev/null \
 	       | xargs ls -t 2>/dev/null | head -1); \
 	if [ -z "$$APK" ]; then echo "ERROR: no debug APK found under src-tauri/gen/android"; exit 1; fi; \
 	echo "Installing $$APK"; \
