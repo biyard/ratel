@@ -154,6 +154,62 @@ body {
   display: none;
 }
 
+/* --- Mobile navbar + drawer: solid background ---------------------------
+   Infima's `.navbar` and `.navbar-sidebar` both pull from
+   `--ifm-navbar-background-color`, which we set to `transparent` so the
+   desktop chrome blends with the body. That same rule makes the mobile
+   top navbar and the mobile menu drawer see-through — body text bleeds
+   through the menu. Force a solid surface on mobile only. */
+@media (max-width: 996px) {
+  .navbar,
+  .navbar-sidebar,
+  .navbar-sidebar__brand {
+    background-color: var(--ifm-background-color);
+  }
+
+  [data-theme="dark"] .navbar,
+  [data-theme="dark"] .navbar-sidebar,
+  [data-theme="dark"] .navbar-sidebar__brand {
+    background-color: var(--ratel-bg);
+  }
+
+  /* Subtle separator under the mobile top navbar so the content scroll
+     edge is visible against the now-opaque bar. */
+  [data-theme="dark"] .navbar {
+    border-bottom: 1px solid var(--ratel-line-soft);
+  }
+
+  /* Reverse Infima's mobile defaults so the locale dropdown and color-mode
+     toggle render in the mobile top navbar (right side), instead of being
+     hidden until the user opens the hamburger drawer.
+     - Infima sets `.navbar__item { display: none }` at <=996px.
+     - theme-classic sets `Navbar/Content/styles.module.css .colorModeToggle
+       { display: none }` at <=996px (hashed class, hence the attr selector).
+   */
+  .navbar__items--right .navbar__item {
+    display: flex;
+    align-items: center;
+  }
+  .navbar__items--right > [class*="colorModeToggle"] {
+    display: inline-flex !important;
+  }
+
+  /* Compact the locale dropdown so it fits next to the theme toggle. */
+  .navbar__items--right .navbar__item.dropdown .navbar__link {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.85rem;
+    color: var(--ifm-navbar-link-color);
+  }
+  /* Hide the dropdown caret triangle — globe icon + label is enough */
+  .navbar__items--right .navbar__item.dropdown .navbar__link::after {
+    display: none;
+  }
+  [data-theme="dark"] .navbar__items--right .dropdown__menu {
+    background: var(--ratel-card-2);
+    border: 1px solid var(--ratel-line);
+  }
+}
+
 /* --- Desktop layout ---------------------------------------------------- */
 @media (min-width: 996px) {
   :root {
