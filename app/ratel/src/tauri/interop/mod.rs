@@ -1,7 +1,9 @@
-//! Dioxus-web side bridges for Tauri commands.
+//! Web-side bridges to Tauri native commands.
 //!
-//! Each sub-module provides a Rust `async fn` that sends a JSON payload to the
-//! native shell via `window.__TAURI__.invoke(...)` using a tiny embedded JS
-//! driver (the `dioxus::document::eval` channel pattern).
-//!
-//! Populated by Task 3.1 (open_external_url bridge).
+//! Each submodule exposes one or more `pub async fn` callers paired with a
+//! JS driver embedded via `include_str!`. The Rust side sends JSON via
+//! `dioxus::document::eval`, the JS calls `window.__TAURI__.invoke(...)`,
+//! and the response comes back as the same DTOs defined in
+//! `crate::tauri::types`.
+
+pub mod external_url;
