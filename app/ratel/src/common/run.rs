@@ -73,6 +73,42 @@ fn serve(app: fn() -> Element) {
     let session_layer =
         crate::common::middlewares::session_layer::get_session_layer(cli, cfg.env.to_string());
 
+    // Allow cross-origin requests from the Tauri Android/iOS WebView
+    // (http://tauri.localhost / https://tauri.localhost) and from the
+    // production frontend (https://ratel.foundation and its subdomains).
+    // Web traffic is same-origin so it never triggers CORS — these entries
+    // exist only for the Tauri shell and any subdomain frontends.
+    //
+    // CORS layer is placed OUTSIDE the session layer so preflight OPTIONS
+    // requests never hit session lookup (they carry no credentials).
+    let cors_layer = {
+        use tower_http::cors::{AllowOrigin, CorsLayer};
+        let allow = AllowOrigin::predicate(|origin, _req_parts| {
+            let bytes = origin.as_bytes();
+            bytes == b"http://tauri.localhost"
+                || bytes == b"https://tauri.localhost"
+                || bytes == b"https://ratel.foundation"
+                || (bytes.starts_with(b"https://") && bytes.ends_with(b".ratel.foundation"))
+        });
+        CorsLayer::new()
+            .allow_origin(allow)
+            .allow_credentials(true)
+            .allow_methods([
+                axum::http::Method::GET,
+                axum::http::Method::POST,
+                axum::http::Method::PUT,
+                axum::http::Method::PATCH,
+                axum::http::Method::DELETE,
+                axum::http::Method::OPTIONS,
+            ])
+            .allow_headers([
+                axum::http::header::CONTENT_TYPE,
+                axum::http::header::AUTHORIZATION,
+                axum::http::header::ACCEPT,
+                axum::http::header::COOKIE,
+            ])
+    };
+
     let mcp_router = crate::common::mcp::mcp_router();
     let membership_router = crate::features::membership::server::router();
     let dioxus_router = dioxus::server::router(app)
@@ -84,6 +120,7 @@ fn serve(app: fn() -> Element) {
     // panic hook below so we still capture the backtrace in logs.
     let app = dioxus_router
         .layer(tower_http::catch_panic::CatchPanicLayer::new())
+        .layer(cors_layer)
         .layer(session_layer);
 
     crate::common::mcp::set_app_router(app.clone());

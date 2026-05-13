@@ -41,7 +41,7 @@ futures = { version = "0.3", optional = true }
 urlencoding = { version = "2" }
 tokio = { workspace = true, optional = true }
 tower = { version = "0.5", features = ["util"], optional = true }
-tower-http = { version = "0.6", features = ["catch-panic"], optional = true }
+tower-http = { version = "0.6", features = ["catch-panic", "cors"], optional = true }
 pulldown-cmark = { version = "0.12", default-features = false, features = ["html"], optional = true }
 
 web-sys = { workspace = true, features = [
