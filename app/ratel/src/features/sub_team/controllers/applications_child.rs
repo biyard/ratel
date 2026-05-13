@@ -39,9 +39,13 @@ pub async fn get_parent_relationship_handler(
 ) -> Result<ParentRelationshipResponse> {
     let _ = team_pk;
     let _ = user;
-    if !role.is_admin_or_owner() {
-        return Err(Error::UnauthorizedAccess);
-    }
+    // Membership is already enforced by the `role: TeamRole` extractor —
+    // non-members get `UnauthorizedAccess` before this body runs. We
+    // intentionally do NOT gate on admin-or-owner here so plain members
+    // can see the parent HUD on their own team home (read-only). The
+    // mutation endpoints (leave / cancel / approve / etc.) keep their
+    // admin checks.
+    let _ = role;
 
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
@@ -237,7 +241,7 @@ pub async fn submit_application_handler(
         })?;
 
     if let Some(existing) = returned_existing {
-        // Member count is the only gate we re-check on update; form &
+        // Member count + age are the gates we re-check on update; form &
         // doc snapshots stay frozen at v1.
         let member_count = count_team_members(cli, &team.pk).await.map_err(|e| {
             crate::error!("member count failed: {e}");
@@ -245,6 +249,9 @@ pub async fn submit_application_handler(
         })?;
         if member_count < parent.min_sub_team_members as i64 {
             return Err(SubTeamError::MemberCountBelowMinimum.into());
+        }
+        if !meets_min_age(team.created_at, parent.min_sub_team_age_days, now) {
+            return Err(SubTeamError::TeamAgeBelowMinimum.into());
         }
         validate_form_values(&[], &body.form_values).ok();
 
@@ -297,6 +304,11 @@ pub async fn submit_application_handler(
     })?;
     if member_count < parent.min_sub_team_members as i64 {
         return Err(SubTeamError::MemberCountBelowMinimum.into());
+    }
+
+    // 5b. Team age ≥ parent.min_sub_team_age_days.
+    if !meets_min_age(team.created_at, parent.min_sub_team_age_days, now) {
+        return Err(SubTeamError::TeamAgeBelowMinimum.into());
     }
 
     // 6+7. Load parent's form fields and docs.
@@ -462,6 +474,10 @@ pub async fn update_child_application_handler(
     if member_count < parent.min_sub_team_members as i64 {
         return Err(SubTeamError::MemberCountBelowMinimum.into());
     }
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    if !meets_min_age(team.created_at, parent.min_sub_team_age_days, now) {
+        return Err(SubTeamError::TeamAgeBelowMinimum.into());
+    }
 
     let parent_form_fields = load_form_fields(cli, &parent.pk).await.map_err(|e| {
         crate::error!("form fields load failed: {e}");
@@ -471,7 +487,6 @@ pub async fn update_child_application_handler(
 
     let mut items: Vec<aws_sdk_dynamodb::types::TransactWriteItem> = Vec::new();
 
-    let now = crate::common::utils::time::get_now_timestamp_millis();
     if let Some(new_agreements) = doc_agreements.as_ref() {
         let parent_docs = load_docs(cli, &parent.pk).await.map_err(|e| {
             crate::error!("docs load failed: {e}");
@@ -612,6 +627,28 @@ fn _unused_silencer() {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────
+
+/// Whether the applying team is old enough to satisfy the parent's
+/// `min_sub_team_age_days` requirement.
+///
+/// * `min_age_days <= 0`         → always met (no constraint)
+/// * `created_at <= 0`           → cannot prove age → fail
+/// * else                        → `(now_ms - created_at) / 86_400_000 >= min_age_days`
+///
+/// Mirrors the client-side `min_days_met` check in
+/// `features/sub_team/pages/apply/component.rs` so the eligibility panel
+/// and the server stay in sync.
+#[cfg(feature = "server")]
+fn meets_min_age(created_at: i64, min_age_days: i32, now_ms: i64) -> bool {
+    if min_age_days <= 0 {
+        return true;
+    }
+    if created_at <= 0 {
+        return false;
+    }
+    let age_days = ((now_ms - created_at) / 86_400_000).max(0);
+    age_days >= min_age_days as i64
+}
 
 #[cfg(feature = "server")]
 fn sub_team_form_field_id(f: &SubTeamFormField) -> String {

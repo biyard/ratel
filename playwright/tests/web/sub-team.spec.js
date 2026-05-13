@@ -9,21 +9,20 @@ import {
 } from "../utils";
 
 /**
- * Sub-team governance — 13-step end-to-end flow.
+ * Sub-team governance — 12-step end-to-end flow.
  *
- *  1. 상위팀: application form + 학칙 작성, 신청 받기 ON
+ *  1. 상위팀: application form + 운영 수칙 작성, 신청 받기 ON
  *  2. 하위팀: 상위팀에 application 작성
  *  3. 상위팀: 수정 요청 (Return)
  *  4. 하위팀: 수정 후 재제출
  *  5. 상위팀: Approve
  *  6. 하위팀: Approve 상태 확인
  *  7. 상위팀: 공지 broadcast
- *  8. 상위팀: 학칙 재작성 (doc edit)
+ *  8. 상위팀: 운영 수칙 재작성 (doc edit)
  *  9. 하위팀: 탈퇴 (leave parent)
  * 10. 하위팀: 재신청
  * 11. 상위팀: 재승인
  * 12. 상위팀: 하위팀 강제 탈퇴 (deregister)
- * 13. 하위팀: 독립팀 상태 확인 (parent HUD hidden)
  *
  * Two actors:
  *   • user1 — parent department-team admin (default storage state).
@@ -101,7 +100,26 @@ async function agreeAllRequiredDocs(page) {
     const row = docRows.nth(i);
     if ((await row.getAttribute("data-agreed")) === "true") continue;
     await row.click();
-    await click(page, { testId: "doc-agreement-agree-btn" });
+    // After the modal opens, the agree button is `disabled` when
+    // `agreed_doc_ids` was hydrated from a prior Returned application
+    // — but the outer row's `data-agreed` can still read "false" mid-
+    // hydration, so we'd land here even for already-agreed docs.
+    // Branch on the button's live state instead of trying to click a
+    // disabled button (which `click` would wait on forever).
+    const agreeBtn = page.getByTestId("doc-agreement-agree-btn");
+    await expect(agreeBtn).toBeVisible({ timeout: 5000 });
+    if (await agreeBtn.isDisabled()) {
+      // Already agreed — close the modal via its X button instead of
+      // re-confirming. (Escape isn't bound; the cancel button has no
+      // testid and uses translated text.)
+      await page.locator(".doc-modal__close-x").first().click();
+    } else {
+      await agreeBtn.click();
+    }
+    // Wait for backdrop to close before iterating to the next doc.
+    await expect(
+      page.locator(".sub-team-apply-doc-modal"),
+    ).toHaveAttribute("data-open", "false", { timeout: 5000 });
   }
 }
 
@@ -127,7 +145,7 @@ async function fillRequiredFormFields(page) {
 
 // ───────────────────────── test suite ────────────────────────────────────
 
-test.describe.serial("Sub-team governance — 13-step flow", () => {
+test.describe.serial("Sub-team governance — 12-step flow", () => {
   test.setTimeout(180000);
 
   const stamp = Date.now();

@@ -60,12 +60,15 @@ pub fn DocsTab(
                 }
                 // "View bylaws" — public reader page that mirrors the
                 // documents list with the bylaws-section visual treatment.
-                // Anchor href instead of `nav.push` for the same dioxus
-                // 0.7 reconciler workaround used by deregister/leave.
-                a {
+                div {
                     class: "card-head__link",
                     "data-testid": "sub-team-docs-view-bylaws",
-                    href: "/{username_for_bylaws}/bylaws",
+                    role: "link",
+                    onclick: move |_| {
+                        nav.push(Route::TeamBylawsPage {
+                            username: username_for_bylaws.clone(),
+                        });
+                    },
                     lucide_dioxus::FileText { class: "w-3 h-3 [&>path]:stroke-current" }
                     "{tr.docs_view_bylaws}"
                 }

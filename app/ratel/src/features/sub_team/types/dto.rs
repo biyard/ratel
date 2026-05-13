@@ -543,6 +543,29 @@ pub struct SubTeamAnnouncementResponse {
     pub created_at: i64,
     pub updated_at: i64,
     pub published_at: Option<i64>,
+    /// `Some(child_team_id)` for direct-to-one-sub-team announcements
+    /// (rendered on the parent's sub-team detail page); `None` for the
+    /// standard broadcast-to-all flow.
+    #[serde(default)]
+    pub target_child_team_id: Option<String>,
+    /// Fan-out Post pk in the target child's feed (raw uuid, no "FEED#"
+    /// prefix). Set after `handle_announcement_published` writes the
+    /// Post — used by the parent's history row to link to the actual
+    /// Post detail page rather than rebuilding URLs from announcement_id.
+    #[serde(default)]
+    pub target_post_pk: Option<String>,
+}
+
+/// Request body for `POST /sub-teams/:sub_team_id/direct-message` — the
+/// "이 하위팀에만 공지" card on the parent's sub-team detail page.
+/// Single-step (no draft); publishes immediately on call.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+pub struct SendDirectMessageRequest {
+    pub title: String,
+    /// HTML body. Rendered as-is in the child team's fanned-out Post.
+    #[serde(default)]
+    pub body: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -599,6 +622,8 @@ impl From<crate::features::sub_team::models::SubTeamAnnouncement> for SubTeamAnn
             created_at: a.created_at,
             updated_at: a.updated_at,
             published_at: a.published_at,
+            target_child_team_id: a.target_child_team_id,
+            target_post_pk: a.target_post_pk,
         }
     }
 }

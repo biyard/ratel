@@ -40,6 +40,13 @@ pub enum SubTeamError {
     )]
     MemberCountBelowMinimum,
 
+    #[error("team age below minimum")]
+    #[translate(
+        en = "The applying team is younger than the parent's minimum age requirement",
+        ko = "신청 팀의 생성 기간이 상위팀 최소 기준에 미달합니다."
+    )]
+    TeamAgeBelowMinimum,
+
     #[error("missing required form field")]
     #[translate(
         en = "One or more required application fields are missing",

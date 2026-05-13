@@ -191,6 +191,32 @@ pub async fn handle_stream_record(
                 }
             } else if sk.starts_with("SYNDICATION_JOB#") {
                 try_dispatch_pending_syndication_job(image, "INSERT").await?;
+            } else if sk.starts_with("SUB_TEAM_ANNOUNCEMENT#") {
+                // Direct ("이 하위팀에만 공지") announcements skip the Draft
+                // step and write `status: Published` straight on INSERT,
+                // so the MODIFY-only branch below never sees them. Mirror
+                // the same Published-status guard here so broadcasts that
+                // were created+published in a single Put (rare, but
+                // possible) still fan out.
+                let status = get_string_field(image, "status").unwrap_or_default();
+                if status == "Published" {
+                    let announcement: crate::features::sub_team::models::SubTeamAnnouncement =
+                        deserialize(image)?;
+                    let cfg = crate::common::CommonConfig::default();
+                    let cli = cfg.dynamodb();
+                    if let Err(e) =
+                        crate::features::sub_team::services::announcement_fanout::handle_announcement_published(
+                            cli,
+                            announcement,
+                        )
+                        .await
+                    {
+                        tracing::error!(
+                            error = %e,
+                            "stream: SubTeamAnnouncementPublished (INSERT) failed",
+                        );
+                    }
+                }
             }
         }
         "MODIFY" => {
