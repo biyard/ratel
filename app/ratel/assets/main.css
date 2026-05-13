@@ -33314,6 +33314,164 @@ body.comments-panel-resizing {
   }
 }
 
+/* ── Direct announcement card (이 하위팀에만 공지) ──
+ * Mirrors `.direct-msg` block from
+ * `assets/design/sub-team/subteam-management-detail-page.html`.
+ * Scoped under `.sub-team-detail` so class names ("direct-msg",
+ * "direct-msg__title", "direct-msg__body", "direct-msg__foot",
+ * "direct-msg__note") can't collide with any global utility.
+ */
+.sub-team-detail .direct-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sub-team-detail .direct-msg__title {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--dark, rgba(6, 6, 14, 0.55))
+    var(--light, rgba(255, 255, 255, 0.85));
+  border: 1px solid var(--sub-team-border);
+  color: var(--sub-team-text);
+  font-family: var(--font-display, "Orbitron", system-ui);
+  font-size: 14px;
+  font-weight: 700;
+  outline: none;
+}
+.sub-team-detail .direct-msg__title::placeholder {
+  color: var(--sub-team-muted);
+  font-weight: 500;
+}
+.sub-team-detail .direct-msg__title:focus {
+  border-color: rgba(168, 85, 247, 0.35);
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.1);
+}
+.sub-team-detail .direct-msg__body {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--dark, rgba(6, 6, 14, 0.55))
+    var(--light, rgba(255, 255, 255, 0.85));
+  border: 1px solid var(--sub-team-border);
+  color: var(--sub-team-text);
+  font-size: 13px;
+  line-height: 1.6;
+  outline: none;
+  resize: vertical;
+}
+.sub-team-detail .direct-msg__body::placeholder {
+  color: var(--sub-team-muted);
+}
+.sub-team-detail .direct-msg__body:focus {
+  border-color: rgba(168, 85, 247, 0.35);
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.1);
+}
+.sub-team-detail .direct-msg__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.sub-team-detail .direct-msg__note {
+  font-family: var(--font-display, "Orbitron", system-ui);
+  font-size: 10px;
+  color: var(--sub-team-dim);
+  letter-spacing: 0.06em;
+}
+.sub-team-detail .direct-msg__error {
+  font-size: 12px;
+  color: var(--sub-team-coral);
+}
+/* Send button — uses the existing `.btn .btn--primary` scaffold but
+ * recoloured to the mockup's purple-ish gradient so it visually maps to
+ * "direct, not broadcast". Text colour space-toggles so the light
+ * theme doesn't end up with near-white-on-near-white. */
+.sub-team-detail .direct-msg [data-testid="sub-team-direct-msg-send"] {
+  background: linear-gradient(
+    135deg,
+    rgba(168, 85, 247, 0.3),
+    rgba(168, 85, 247, 0.14)
+  );
+  border-color: rgba(168, 85, 247, 0.4);
+  color: var(--dark, #e9d5ff) var(--light, #6b21a8);
+}
+.sub-team-detail .direct-msg [data-testid="sub-team-direct-msg-send"]:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(168, 85, 247, 0.42),
+    rgba(168, 85, 247, 0.2)
+  );
+}
+.sub-team-detail .direct-msg [data-testid="sub-team-direct-msg-send"][disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* History — past direct announcements stacked under the compose card. */
+.sub-team-detail .direct-msg__history {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sub-team-detail .direct-msg__history-title {
+  font-family: var(--font-display, "Orbitron", system-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sub-team-muted);
+}
+.sub-team-detail .direct-msg__empty {
+  font-size: 12px;
+  color: var(--sub-team-dim);
+  font-style: italic;
+}
+.sub-team-detail .direct-msg__row {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--dark, rgba(6, 6, 14, 0.4))
+    var(--light, rgba(255, 255, 255, 0.65));
+  border: 1px solid var(--sub-team-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.sub-team-detail .direct-msg__row:hover {
+  border-color: rgba(168, 85, 247, 0.4);
+  background: var(--dark, rgba(168, 85, 247, 0.06))
+    var(--light, rgba(168, 85, 247, 0.06));
+}
+.sub-team-detail .direct-msg__row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.sub-team-detail .direct-msg__row-title {
+  font-family: var(--font-display, "Orbitron", system-ui);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sub-team-text);
+}
+.sub-team-detail .direct-msg__row-when {
+  font-size: 11px;
+  color: var(--sub-team-dim);
+  letter-spacing: 0.04em;
+}
+.sub-team-detail .direct-msg__row-body {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--sub-team-muted);
+}
+
 
 /* === src/features/sub_team/pages/doc_compose/style.css === */
 /* Sub-team doc compose page. Mirrors

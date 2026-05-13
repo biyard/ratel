@@ -352,6 +352,22 @@ translate! {
         ko: "이 하위팀에만 보낼 공지를 작성하세요…",
     },
     direct_announce_send: { en: "Send", ko: "발송" },
+    direct_announce_title_input: {
+        en: "Announcement title",
+        ko: "공지 제목",
+    },
+    direct_announce_note: {
+        en: "Pinned to this sub-team's feed only · not counted as a broadcast",
+        ko: "이 하위팀에만 핀 고정됩니다 · 전체 공지와 별개로 집계",
+    },
+    direct_announce_history_title: {
+        en: "Past direct announcements",
+        ko: "이전 공지 이력",
+    },
+    direct_announce_history_empty: {
+        en: "No direct announcements sent yet.",
+        ko: "아직 보낸 공지가 없습니다.",
+    },
     danger_zone: { en: "Danger zone", ko: "위험 영역" },
     member_handle_header: { en: "Handle", ko: "멤버" },
     member_posts_header: { en: "Posts", ko: "포스트" },

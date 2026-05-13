@@ -315,6 +315,9 @@ fn DetailView(username: String, sub_team_id: String) -> Element {
                     {members.more_element()}
                 }
 
+                // Direct announcement (only-to-this-sub-team)
+                DirectAnnouncementCard {}
+
                 // Danger zone (deregister)
                 section { class: "card",
                     div { class: "card__head",
@@ -341,6 +344,150 @@ fn DetailView(username: String, sub_team_id: String) -> Element {
                             "{tr.deregister_confirm}"
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+/// "이 하위팀에만 공지" card. Inline compose (no draft) + history list.
+/// Posts to `POST /api/teams/:parent/sub-teams/:child/direct-message`
+/// then re-fetches `GET /...direct-messages` so the new entry shows up
+/// without a full page reload.
+#[component]
+fn DirectAnnouncementCard() -> Element {
+    use crate::features::sub_team::types::SendDirectMessageRequest;
+
+    let tr: SubTeamTranslate = use_translate();
+
+    let UseSubTeamActivity {
+        direct_messages,
+        mut handle_send_direct,
+        ..
+    } = use_sub_team_activity()?;
+
+    let mut title: Signal<String> = use_signal(String::new);
+    let mut body: Signal<String> = use_signal(String::new);
+    let mut error_msg: Signal<Option<String>> = use_signal(|| None);
+
+    let send_disabled = title().trim().is_empty() || handle_send_direct.pending();
+    let items = direct_messages();
+
+    rsx! {
+        section { class: "card",
+            div { class: "card__head",
+                h2 { class: "card__title", "{tr.direct_announce_title}" }
+                span { class: "card__dash" }
+            }
+
+            div { class: "direct-msg",
+                input {
+                    class: "direct-msg__title",
+                    r#type: "text",
+                    "data-testid": "sub-team-direct-msg-title",
+                    placeholder: "{tr.direct_announce_title_input}",
+                    value: "{title()}",
+                    oninput: move |e| {
+                        title.set(e.value());
+                        error_msg.set(None);
+                    },
+                }
+                textarea {
+                    class: "direct-msg__body",
+                    "data-testid": "sub-team-direct-msg-body",
+                    placeholder: "{tr.direct_announce_placeholder}",
+                    value: "{body()}",
+                    oninput: move |e| body.set(e.value()),
+                }
+                div { class: "direct-msg__foot",
+                    span { class: "direct-msg__note", "{tr.direct_announce_note}" }
+                    button {
+                        class: "btn btn--primary btn--small",
+                        "data-testid": "sub-team-direct-msg-send",
+                        r#type: "button",
+                        disabled: send_disabled,
+                        onclick: move |_| {
+                            if !send_disabled {
+                                let req = SendDirectMessageRequest {
+                                    title: title(),
+                                    body: body(),
+                                };
+                                handle_send_direct.call(req);
+                                title.set(String::new());
+                                body.set(String::new());
+                                error_msg.set(None);
+                            }
+                        },
+                        lucide_dioxus::Send { class: "w-3 h-3 [&>path]:stroke-current" }
+                        "{tr.direct_announce_send}"
+                    }
+                }
+                if let Some(msg) = error_msg() {
+                    div { class: "direct-msg__error", "{msg}" }
+                }
+            }
+
+            // History
+            div { class: "direct-msg__history",
+                div { class: "direct-msg__history-title", "{tr.direct_announce_history_title}" }
+                if items.items.is_empty() {
+                    div { class: "direct-msg__empty", "{tr.direct_announce_history_empty}" }
+                } else {
+                    for ann in items.items.iter() {
+                        DirectAnnouncementRow {
+                            key: "{ann.id}",
+                            target_post_pk: ann.target_post_pk.clone(),
+                            title: ann.title.clone(),
+                            body: ann.html_contents.clone(),
+                            created_at: ann.created_at,
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn DirectAnnouncementRow(
+    target_post_pk: Option<String>,
+    title: String,
+    body: String,
+    created_at: i64,
+) -> Element {
+    let nav = use_navigator();
+    let lang_signal = use_language();
+    let when = format_last_active(created_at, lang_signal());
+    // Backend persists the fan-out Post pk on the announcement row
+    // (`target_post_pk`); we strip the optional `FEED#` prefix before
+    // parsing into a `FeedPartition` because the route segment is the
+    // raw uuid only.
+    let parsed_pk: Option<FeedPartition> = target_post_pk.and_then(|s| {
+        s.strip_prefix("FEED#")
+            .unwrap_or(s.as_str())
+            .parse::<FeedPartition>()
+            .ok()
+    });
+    let clickable = parsed_pk.is_some();
+    rsx! {
+        a {
+            class: "direct-msg__row",
+            "data-testid": "sub-team-direct-msg-row",
+            r#type: "button",
+            "data-clickable": "{clickable}",
+            onclick: move |_| {
+                if let Some(pk) = parsed_pk.clone() {
+                    nav.push(Route::PostDetail { post_id: pk });
+                }
+            },
+            div { class: "direct-msg__row-head",
+                span { class: "direct-msg__row-title", "{title}" }
+                span { class: "direct-msg__row-when", "{when}" }
+            }
+            if !body.is_empty() {
+                div {
+                    class: "direct-msg__row-body",
+                    dangerous_inner_html: "{body}",
                 }
             }
         }

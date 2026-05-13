@@ -145,7 +145,31 @@ pub async fn handle_announcement_published(
         }
     };
 
-    let links = list_recognized_sub_teams(cli, &announcement.pk).await?;
+    // Direct messages target a single recognized sub-team — verify the
+    // link still exists (the relationship may have been deregistered
+    // between send time and stream delivery) and bypass the cap check.
+    // Broadcast announcements use the full recognized-sub-teams list.
+    let links: Vec<SubTeamLink> = if let Some(target_id) = &announcement.target_child_team_id {
+        let link_sk = EntityType::SubTeamLink(target_id.clone());
+        match SubTeamLink::get(cli, &announcement.pk, Some(link_sk)).await {
+            Ok(Some(link)) => vec![link],
+            Ok(None) => {
+                tracing::warn!(
+                    "[fanout] direct-message target {} is not (or no longer) a recognized \
+                     sub-team of {}; skipping",
+                    target_id,
+                    parent_team_id,
+                );
+                return Ok(());
+            }
+            Err(e) => {
+                crate::error!("[fanout] direct-message link lookup failed: {e}");
+                return Err(SubTeamError::AnnouncementPublishFailed.into());
+            }
+        }
+    } else {
+        list_recognized_sub_teams(cli, &announcement.pk).await?
+    };
     if links.len() > MAX_RECOGNIZED_SUB_TEAMS {
         crate::error!(
             "handle_announcement_published: {} > MAX_RECOGNIZED_SUB_TEAMS for parent {}",
@@ -181,8 +205,19 @@ pub async fn handle_announcement_published(
     for link in &links {
         let child_team_id = link.child_team_id.clone();
         let child_team_pk: Partition = Partition::Team(child_team_id.clone());
+        // Direct messages have a 1:1 announcement↔post relationship, so
+        // we pin the fan-out Post pk to the announcement_id. That gives
+        // the parent's history rows a deterministic `/posts/{id}` link
+        // without an extra "find post by announcement_id" lookup.
+        // Broadcasts still use random uuids per child (N children →
+        // N posts → can't all share one pk).
+        let post_pk = if announcement.target_child_team_id.is_some() {
+            Partition::Feed(announcement.announcement_id.clone())
+        } else {
+            Partition::Feed(uuid::Uuid::now_v7().to_string())
+        };
         let mut new_post = Post {
-            pk: Partition::Feed(uuid::Uuid::now_v7().to_string()),
+            pk: post_pk,
             sk: EntityType::Post,
             created_at: now,
             updated_at: now,
@@ -235,6 +270,45 @@ pub async fn handle_announcement_published(
             .await
         {
             Ok(_) => {
+                // For direct messages, persist the fan-out Post pk back
+                // onto the announcement row so the parent's history can
+                // build accurate `/posts/{pk}` links without rebuilding
+                // them from announcement_id. Done BEFORE demote so a
+                // mid-write crash leaves a consistent (newer) link.
+                if announcement.target_child_team_id.is_some() {
+                    if let Err(e) = persist_target_post_pk(
+                        cli,
+                        &announcement.pk,
+                        &announcement.sk,
+                        &new_post.pk,
+                        now,
+                    )
+                    .await
+                    {
+                        crate::error!(
+                            "[fanout] persist_target_post_pk failed: {e}"
+                        );
+                    }
+
+                    // Demote every prior direct-message Post from this
+                    // parent in this child's feed so only the latest
+                    // stays pinned. Broadcasts intentionally keep all
+                    // pinned (see comment above).
+                    if let Err(e) = demote_prior_direct_posts(
+                        cli,
+                        &child_team_pk,
+                        &parent_team_id,
+                        &new_post.pk,
+                        now,
+                    )
+                    .await
+                    {
+                        crate::error!(
+                            "[fanout] demote_prior_direct_posts failed for child={}: {e}",
+                            child_team_id,
+                        );
+                    }
+                }
                 fan_out_count += 1;
                 new_post.created_at = now;
                 new_post.updated_at = now;
@@ -297,4 +371,103 @@ fn build_post_detail_url(post_pk: &Partition) -> String {
         Partition::Feed(id) => format!("/posts/{id}"),
         other => format!("/posts/{other}"),
     }
+}
+
+/// Write the fan-out Post pk back onto the source `SubTeamAnnouncement`
+/// row so the parent's history view can deep-link to the actual Post.
+///
+/// Uses the macro updater. `SubTeamAnnouncement` declares no GSI
+/// composite keys, so neither `with_target_post_pk` nor `with_updated_at`
+/// triggers GSI sort-key regeneration — the macro path is safe here.
+async fn persist_target_post_pk(
+    cli: &aws_sdk_dynamodb::Client,
+    announcement_pk: &Partition,
+    announcement_sk: &EntityType,
+    post_pk: &Partition,
+    now_ms: i64,
+) -> Result<()> {
+    SubTeamAnnouncement::updater(announcement_pk, announcement_sk.clone())
+        .with_target_post_pk(post_pk.to_string())
+        .with_updated_at(now_ms)
+        .execute(cli)
+        .await
+        .map(|_| ())
+        .map_err(|e| {
+            crate::error!(
+                "persist_target_post_pk: updater.execute failed pk={:?} sk={:?}: {:?}",
+                announcement_pk,
+                announcement_sk,
+                e,
+            );
+            Error::from(SubTeamError::AnnouncementPublishFailed)
+        })
+}
+
+/// Unpin every prior direct-message Post from `parent_team_id` in
+/// `child_team_pk`'s feed except the new one.
+///
+/// Uses the macro updater with ONLY `with_pinned_as_announcement(false)`.
+/// `pinned_as_announcement` is not part of any Post GSI composite key,
+/// so its setter touches only that attribute. Crucially we do NOT call
+/// `with_updated_at(..)` here — `updated_at` participates in `gsi5_sk`
+/// (the "Published feed" index), and the macro re-derives that
+/// composite key from a default-initialised inner struct
+/// (`status: Draft`, `visibility: None`), corrupting the live row's
+/// `gsi5_sk` to `"Draft##<now>"` and making it vanish from
+/// `find_by_user_and_status` ("Published" begins-with). Leaving
+/// `updated_at` stale on a demotion write is intentional — the post's
+/// content didn't change, only its pinning flag.
+async fn demote_prior_direct_posts(
+    cli: &aws_sdk_dynamodb::Client,
+    child_team_pk: &Partition,
+    parent_team_id: &str,
+    new_post_pk: &Partition,
+    _now_ms: i64,
+) -> Result<()> {
+    // Walk the child's feed, bounded — direct-message posts are rare so
+    // a few pages is plenty.
+    let mut bookmark: Option<String> = None;
+    let mut to_demote: Vec<Post> = Vec::new();
+    for _ in 0..MAX_PAGES {
+        let mut opt = Post::opt().limit(PAGE_SIZE);
+        if let Some(bm) = bookmark.as_ref() {
+            opt = opt.bookmark(bm.clone());
+        }
+        let (posts, next) = Post::find_by_user_pk(cli, child_team_pk, opt).await?;
+        for p in posts {
+            if !p.pinned_as_announcement {
+                continue;
+            }
+            if p.pk == *new_post_pk {
+                continue;
+            }
+            // Only demote posts that came from THIS parent (covers both
+            // broadcast and direct fan-outs — but in practice this only
+            // fires for direct fan-outs since broadcasts call this with
+            // `target_child_team_id.is_none()` and skip the demotion).
+            if p.announcement_parent_team_id.as_deref() == Some(parent_team_id) {
+                to_demote.push(p);
+            }
+        }
+        match next {
+            Some(b) => bookmark = Some(b),
+            None => break,
+        }
+    }
+
+    for p in to_demote {
+        if let Err(e) = Post::updater(&p.pk, p.sk.clone())
+            .with_pinned_as_announcement(false)
+            .execute(cli)
+            .await
+        {
+            crate::error!(
+                "demote_prior_direct_posts: updater.execute failed pk={:?} sk={:?}: {:?}",
+                p.pk,
+                p.sk,
+                e,
+            );
+        }
+    }
+    Ok(())
 }
