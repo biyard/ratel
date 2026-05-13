@@ -63,10 +63,29 @@ pub fn DaoInfoCard(dao_address: String, explorer_url: Option<String>) -> Element
 
             if let Some(url) = explorer_url {
                 a {
-                    href: url,
+                    href: "{url}",
                     target: "_blank",
                     rel: "noopener noreferrer",
                     class: "inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors",
+                    onclick: move |evt| {
+                        // Under tauri-web: intercept and open via the native bridge so the URL
+                        // opens in the user's default external browser instead of the WebView.
+                        // Under plain web: the anchor's default behaviour is preserved.
+                        #[cfg(feature = "tauri-web")]
+                        {
+                            let url = url.clone();
+                            evt.prevent_default();
+                            spawn(async move {
+                                use crate::tauri::types::external_url::ExternalUrlRequest;
+                                use crate::tauri::interop::external_url::open;
+                                if let Err(e) = open(ExternalUrlRequest { url }).await {
+                                    crate::error!("open_external_url failed: {e}");
+                                }
+                            });
+                        }
+                        #[cfg(not(feature = "tauri-web"))]
+                        let _ = evt;
+                    },
                     {tr.view_on_explorer}
                     icons::ratel::ExternalLinkIcon { width: "16", height: "16", class: "w-4 h-4" }
                 }
