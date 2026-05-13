@@ -18,7 +18,7 @@ pub struct TestContext {
 impl TestContext {
     pub async fn setup() -> Self {
         let _ = tracing_subscriber::fmt()
-            .with_env_filter("debug")
+            .with_env_filter("error")
             .try_init();
 
         let config = crate::config::get();
