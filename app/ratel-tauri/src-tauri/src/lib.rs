@@ -13,10 +13,6 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::external_url::open_external_url
         ])
-        // tauri::generate_context!() reads tauri.conf.json and validates icon
-        // paths. Icon assets are generated in Task 4.2 (`cargo tauri android init`).
-        // Restore once icons/ directory exists:
-        //   .run(tauri::generate_context!())
-        //   .expect("error while running tauri application");
-        .run(todo!("icon assets not yet scaffolded; resume after Task 4.2"));
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }

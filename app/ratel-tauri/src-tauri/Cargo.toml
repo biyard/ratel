@@ -14,12 +14,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "=2.9.5", features = [] }
-# Pin tauri-runtime to 2.9.2 which matches tauri-runtime-wry 2.9.3.
-# tauri-runtime 2.11.x has a new eval_script_with_callback API that
-# tauri-runtime-wry 2.9.3 does not implement, causing a compile error.
-tauri-runtime = "=2.9.2"
-tauri-runtime-wry = "=2.9.3"
+tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 serde = { workspace = true }
 serde_json = { workspace = true }

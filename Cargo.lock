@@ -12488,8 +12488,6 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tauri-plugin-opener",
- "tauri-runtime",
- "tauri-runtime-wry",
  "thiserror 2.0.18",
 ]
 
