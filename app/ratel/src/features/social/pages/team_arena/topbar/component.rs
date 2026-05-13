@@ -218,12 +218,12 @@ pub fn ArenaTopbar(
                             id: "arena-teams-dd-list",
                             onscroll: move |_| {
                                 let js = r#"
-                                                                                                                                                                                                                                    const el = document.getElementById('arena-teams-dd-list');
-                                                                                                                                                                                                                                    if (!el) { dioxus.send(false); return; }
-                                                                                                                                                                                                                                    const nearBottom =
-                                                                                                                                                                                                                                        el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
-                                                                                                                                                                                                                                    dioxus.send(nearBottom);
-                                                                                                                                                                                                                                "#;
+                                                                                                                                                                                                                                                            const el = document.getElementById('arena-teams-dd-list');
+                                                                                                                                                                                                                                                            if (!el) { dioxus.send(false); return; }
+                                                                                                                                                                                                                                                            const nearBottom =
+                                                                                                                                                                                                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+                                                                                                                                                                                                                                                            dioxus.send(nearBottom);
+                                                                                                                                                                                                                                                        "#;
                                 let mut ctrl = teams_query;
                                 spawn(async move {
                                     let mut eval = document::eval(js);
@@ -417,32 +417,56 @@ pub fn ArenaTopbar(
                     crate::features::sub_team::ParentHudPanel {}
                 }
 
-                // Sub-teams icon — admin-only entry to the management
-                // page. Non-admins (and logged-out viewers) don't see
-                // the icon. Applicant-side flows (status / apply) are
-                // reachable through the team's other surfaces; this
-                // chip is reserved for the team's own admins.
-                if can_edit {
-                    HudButton {
-                        label: tr.sub_teams.to_string(),
-                        active: active == TeamArenaTab::SubTeams,
-                        to: Route::TeamSubTeamManagementPage {
+                // Sub-teams icon — routes based on the viewer's relationship
+                // with this team:
+                //   • Team admin/owner   → management dashboard
+                //   • Viewer's other team has an in-flight application
+                //                        → that application's status page
+                //   • Parent-eligible team, viewer logged in
+                //                        → apply page (no role check;
+                //                          visitors from other teams MUST
+                //                          be able to start an application)
+                //   • Otherwise          → icon hidden
+                {
+                    let sub_team_route: Option<Route> = if can_edit {
+                        Some(Route::TeamSubTeamManagementPage {
                             username: username.clone(),
-                        },
-                        icon: rsx! {
-                            svg {
-                                view_box: "0 0 24 24",
-                                fill: "none",
-                                stroke: "currentColor",
-                                stroke_width: "2",
-                                stroke_linecap: "round",
-                                stroke_linejoin: "round",
-                                path { d: "M12 2l2.09 4.23 4.66.68-3.38 3.29.8 4.64L12 12.67l-4.17 2.17.8-4.64L5.25 6.91l4.66-.68L12 2z" }
-                                circle { cx: "6", cy: "19", r: "3" }
-                                circle { cx: "18", cy: "19", r: "3" }
-                                path { d: "M9 19h6" }
+                        })
+                    } else if pending_applicant_username.is_some() {
+                        Some(Route::TeamSubTeamApplicationStatusPage {
+                            username: username.clone(),
+                        })
+                    } else if is_parent_eligible && has_user {
+                        Some(Route::TeamSubTeamApplyPage {
+                            username: username.clone(),
+                        })
+                    } else {
+                        None
+                    };
+                    if let Some(route) = sub_team_route {
+                        rsx! {
+                            HudButton {
+                                label: tr.sub_teams.to_string(),
+                                active: active == TeamArenaTab::SubTeams,
+                                to: route,
+                                icon: rsx! {
+                                    svg {
+                                        view_box: "0 0 24 24",
+                                        fill: "none",
+                                        stroke: "currentColor",
+                                        stroke_width: "2",
+                                        stroke_linecap: "round",
+                                        stroke_linejoin: "round",
+                                        path { d: "M12 2l2.09 4.23 4.66.68-3.38 3.29.8 4.64L12 12.67l-4.17 2.17.8-4.64L5.25 6.91l4.66-.68L12 2z" }
+                                        circle { cx: "6", cy: "19", r: "3" }
+                                        circle { cx: "18", cy: "19", r: "3" }
+                                        path { d: "M9 19h6" }
+                                    }
+                                },
                             }
-                        },
+                        }
+                    } else {
+                        rsx! {}
                     }
                 }
 
