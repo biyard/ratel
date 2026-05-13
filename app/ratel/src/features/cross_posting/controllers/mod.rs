@@ -16,6 +16,7 @@
 //   POST /api/cross-posting/onboarding/dismiss                (1D)
 
 pub mod connect_bluesky;
+pub mod connect_linkedin_init;
 pub mod disconnect;
 pub mod get_syndication_panel;
 pub mod list_connections;
@@ -23,6 +24,7 @@ pub mod retry_job;
 pub mod toggle_auto_post;
 
 pub use connect_bluesky::*;
+pub use connect_linkedin_init::*;
 pub use disconnect::*;
 pub use get_syndication_panel::*;
 pub use list_connections::*;

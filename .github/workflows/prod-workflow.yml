@@ -179,6 +179,13 @@ jobs:
           # unrecoverable. PREVIOUS is set only during a key rotation transition.
           CROSS_POSTING_DATA_KEY: ${{ secrets.PROD_CROSS_POSTING_DATA_KEY }}
           CROSS_POSTING_DATA_KEY_PREVIOUS: ${{ secrets.PROD_CROSS_POSTING_DATA_KEY_PREVIOUS }}
+
+          # LinkedIn OAuth (Phase 1B). Two values from the LinkedIn Developer
+          # Portal → app → "Auth" tab. CLIENT_ID is public-ish (gets sent in
+          # the redirect URL), CLIENT_SECRET is server-only and used during
+          # the token-exchange POST.
+          LINKEDIN_CLIENT_ID: ${{ secrets.PROD_LINKEDIN_CLIENT_ID }}
+          LINKEDIN_CLIENT_SECRET: ${{ secrets.PROD_LINKEDIN_CLIENT_SECRET }}
         run: |
           rm -rf target/dx
 

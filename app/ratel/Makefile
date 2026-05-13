@@ -223,6 +223,8 @@ env.sh:
 	@echo "export BIYARD_API_URL='$(BIYARD_API_URL)'" >> $@
 	@echo "export CROSS_POSTING_DATA_KEY='$(CROSS_POSTING_DATA_KEY)'" >> $@
 	@echo "export CROSS_POSTING_DATA_KEY_PREVIOUS='$(CROSS_POSTING_DATA_KEY_PREVIOUS)'" >> $@
+	@echo "export LINKEDIN_CLIENT_ID='$(LINKEDIN_CLIENT_ID)'" >> $@
+	@echo "export LINKEDIN_CLIENT_SECRET='$(LINKEDIN_CLIENT_SECRET)'" >> $@
 
 
 # Run integration tests. Pass TEST=<name> to run only matching tests:

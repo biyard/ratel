@@ -21,7 +21,8 @@
 
 use crate::common::*;
 use crate::features::cross_posting::controllers::{
-    connect_bluesky_handler, disconnect_handler, list_connections_handler, toggle_auto_post_handler,
+    connect_bluesky_handler, connect_linkedin_init_handler, disconnect_handler,
+    list_connections_handler, toggle_auto_post_handler,
 };
 use crate::features::cross_posting::models::ConnectionStatus;
 use crate::features::cross_posting::types::{
@@ -97,6 +98,35 @@ impl UseCrossPosting {
     pub async fn disconnect(&mut self, platform: SocialPlatform) -> crate::common::Result<()> {
         disconnect_handler(platform).await?;
         self.connections.restart();
+        Ok(())
+    }
+
+    /// Kick off the LinkedIn OAuth flow. Calls the init endpoint to mint
+    /// a signed state token + LinkedIn authorize URL, then navigates the
+    /// browser there via `window.location.href` — `nav.push(Route)` is
+    /// SPA-internal and would lose the redirect to LinkedIn's domain.
+    ///
+    /// Server-side seal/upsert happens in the `/callback` handler after
+    /// LinkedIn bounces the user back; this method does NOT refresh
+    /// `connections` because the page is about to leave anyway.
+    pub async fn connect_linkedin(&mut self) -> crate::common::Result<()> {
+        let resp = connect_linkedin_init_handler().await?;
+        // Hard navigation — leaves the SPA and lands on LinkedIn's
+        // consent page. The callback controller bounces the user back to
+        // `/settings/connections?linkedin=ok|denied|error` once the
+        // OAuth round-trip completes. Gated to wasm32 so `cargo check
+        // --features server` (or mobile / desktop) builds without
+        // pulling web-sys into the non-web target's call path.
+        #[cfg(target_arch = "wasm32")]
+        {
+            if let Some(window) = web_sys::window() {
+                let _ = window.location().set_href(&resp.authorize_url);
+            }
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let _ = resp; // suppress unused-binding warning on non-web targets
+        }
         Ok(())
     }
 }

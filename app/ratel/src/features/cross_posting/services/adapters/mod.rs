@@ -6,8 +6,10 @@
 //! is unchanged.
 
 mod bluesky;
+mod linkedin;
 
 pub use bluesky::*;
+pub use linkedin::*;
 
 use crate::features::cross_posting::types::SocialPlatform;
 use async_trait::async_trait;
