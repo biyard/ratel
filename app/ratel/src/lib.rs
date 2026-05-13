@@ -19,6 +19,8 @@ pub use contexts::*;
 pub mod features;
 pub use features::*;
 
+pub mod tauri;
+
 pub use dioxus::fullstack::{Loader, Loading};
 
 // `axum` is pulled in transitively through `dioxus-fullstack` and exposed at
