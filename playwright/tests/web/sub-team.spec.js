@@ -9,21 +9,20 @@ import {
 } from "../utils";
 
 /**
- * Sub-team governance — 13-step end-to-end flow.
+ * Sub-team governance — 12-step end-to-end flow.
  *
- *  1. 상위팀: application form + 학칙 작성, 신청 받기 ON
+ *  1. 상위팀: application form + 운영 수칙 작성, 신청 받기 ON
  *  2. 하위팀: 상위팀에 application 작성
  *  3. 상위팀: 수정 요청 (Return)
  *  4. 하위팀: 수정 후 재제출
  *  5. 상위팀: Approve
  *  6. 하위팀: Approve 상태 확인
  *  7. 상위팀: 공지 broadcast
- *  8. 상위팀: 학칙 재작성 (doc edit)
+ *  8. 상위팀: 운영 수칙 재작성 (doc edit)
  *  9. 하위팀: 탈퇴 (leave parent)
  * 10. 하위팀: 재신청
  * 11. 상위팀: 재승인
  * 12. 상위팀: 하위팀 강제 탈퇴 (deregister)
- * 13. 하위팀: 독립팀 상태 확인 (parent HUD hidden)
  *
  * Two actors:
  *   • user1 — parent department-team admin (default storage state).
@@ -127,7 +126,7 @@ async function fillRequiredFormFields(page) {
 
 // ───────────────────────── test suite ────────────────────────────────────
 
-test.describe.serial("Sub-team governance — 13-step flow", () => {
+test.describe.serial("Sub-team governance — 12-step flow", () => {
   test.setTimeout(180000);
 
   const stamp = Date.now();

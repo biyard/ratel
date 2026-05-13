@@ -5,7 +5,7 @@
 //! relationship status:
 //!
 //!   • RecognizedSubTeam → parent card (name · @handle · 인증 since)
-//!     + actions (홈으로 이동 / 학칙 보기 / 이탈).
+//!     + actions (홈으로 이동 / 운영 수칙 보기 / 이탈).
 //!   • PendingSubTeam → pending card + 신청 상태 확인 action.
 //!   • Standalone → "독립 팀" empty state (no apply action — the user
 //!     intentionally dropped it).
