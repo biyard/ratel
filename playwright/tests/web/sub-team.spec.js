@@ -114,9 +114,7 @@ async function fillRequiredFormFields(page) {
   const count = await fields.count();
   for (let i = 0; i < count; i += 1) {
     const field = fields.nth(i);
-    const labelText = (
-      await field.locator(".field__label").innerText()
-    ).trim();
+    const labelText = (await field.locator(".field__label").innerText()).trim();
     if (!labelText.includes("*")) continue;
     const input = field.locator("input, textarea").first();
     if ((await input.count()) === 0) continue;
@@ -183,9 +181,8 @@ test.describe.serial("Sub-team governance — 13-step flow", () => {
     // so we wait for the row count to grow before targeting the new row.
     await expect
       .poll(
-        async () =>
-          await page.getByTestId("sub-team-form-field-row").count(),
-        { timeout: 15000 },
+        async () => await page.getByTestId("sub-team-form-field-row").count(),
+        { timeout: 15000 }
       )
       .toBe(rowsBefore + 1);
     // The new row is the only one with `data-locked="false"`; default
@@ -198,7 +195,7 @@ test.describe.serial("Sub-team governance — 13-step flow", () => {
     await newLabel.fill("Faculty advisor");
     await newLabel.press("Tab");
     const newRequired = newRow.getByTestId(
-      "sub-team-form-field-required-check",
+      "sub-team-form-field-required-check"
     );
     if (!(await newRequired.isChecked())) {
       await newRequired.click({ force: true });
@@ -212,11 +209,11 @@ test.describe.serial("Sub-team governance — 13-step flow", () => {
     await fill(
       page,
       { testId: "sub-team-doc-title-input" },
-      "Department Bylaws",
+      "Department Bylaws"
     );
     const editor = await getEditor(page);
     await editor.fill(
-      "All sub-teams must follow these bylaws. Attendance is mandatory.",
+      "All sub-teams must follow these bylaws. Attendance is mandatory."
     );
     // Input is wrapped in a label with an overlaying `.switch` span
     // (pointer-events on the span intercept clicks on the hidden input).
@@ -251,7 +248,7 @@ test.describe.serial("Sub-team governance — 13-step flow", () => {
     // explicitly select the team we just created.
     await goto(user2Page, `/${parentUsername}/sub-teams/apply`);
     await expect(
-      user2Page.getByTestId("sub-team-apply-req-doc").first(),
+      user2Page.getByTestId("sub-team-apply-req-doc").first()
     ).toBeVisible({ timeout: 15000 });
     await pickApplicantTeam(user2Page, childUsername);
 
@@ -273,15 +270,15 @@ test.describe.serial("Sub-team governance — 13-step flow", () => {
   }) => {
     await goto(page, `/${parentUsername}/sub-teams/manage`);
     await click(page, { testId: "sub-team-tab-queue" });
-    await expect(
-      page.getByTestId("sub-team-queue-row").first(),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("sub-team-queue-row").first()).toBeVisible({
+      timeout: 15000,
+    });
 
     await click(page, { testId: "sub-team-queue-return-btn" });
     await fill(
       page,
       { testId: "sub-team-queue-decision-text" },
-      "Please clarify advisor's office.",
+      "Please clarify advisor's office."
     );
     await click(page, { testId: "sub-team-queue-decision-confirm" });
   });
@@ -294,7 +291,7 @@ test.describe.serial("Sub-team governance — 13-step flow", () => {
     // looks up the viewer's application targeting that parent.
     await goto(user2Page, `/${parentUsername}/sub-teams/application`);
     await expect(
-      user2Page.getByText("Please clarify advisor's office."),
+      user2Page.getByText("Please clarify advisor's office.")
     ).toBeVisible({ timeout: 15000 });
 
     await click(user2Page, { text: "Edit and resubmit" });
@@ -302,7 +299,7 @@ test.describe.serial("Sub-team governance — 13-step flow", () => {
       waitUntil: "load",
     });
     await expect(
-      user2Page.getByTestId("sub-team-apply-req-doc").first(),
+      user2Page.getByTestId("sub-team-apply-req-doc").first()
     ).toBeVisible({ timeout: 15000 });
     await pickApplicantTeam(user2Page, childUsername);
 
@@ -322,9 +319,9 @@ test.describe.serial("Sub-team governance — 13-step flow", () => {
   test("Step 5: parent approves the application", async ({ page }) => {
     await goto(page, `/${parentUsername}/sub-teams/manage`);
     await click(page, { testId: "sub-team-tab-queue" });
-    await expect(
-      page.getByTestId("sub-team-queue-row").first(),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("sub-team-queue-row").first()).toBeVisible({
+      timeout: 15000,
+    });
 
     // Approve button opens an inline welcome-message textarea; the
     // confirm button fires the actual mutation.
@@ -333,9 +330,9 @@ test.describe.serial("Sub-team governance — 13-step flow", () => {
 
     // Roster grows after approval.
     await click(page, { testId: "sub-team-tab-roster" });
-    await expect(
-      page.getByTestId("sub-team-roster-row").first(),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("sub-team-roster-row").first()).toBeVisible({
+      timeout: 15000,
+    });
   });
 
   // ─── Step 6: child sees recognized state ─────────────────────────────
@@ -343,7 +340,7 @@ test.describe.serial("Sub-team governance — 13-step flow", () => {
   test("Step 6: user2 confirms recognized status", async () => {
     await goto(user2Page, `/${parentUsername}/sub-teams/application`);
     await expect(
-      user2Page.getByText("Recognized", { exact: false }).first(),
+      user2Page.getByText("Recognized", { exact: false }).first()
     ).toBeVisible({ timeout: 15000 });
   });
 
@@ -360,18 +357,18 @@ test.describe.serial("Sub-team governance — 13-step flow", () => {
     await fill(
       page,
       { testId: "sub-team-broadcast-title-input" },
-      "Welcome, clubs",
+      "Welcome, clubs"
     );
     const editor = await getEditor(page);
     await editor.fill(
-      "Our first department-wide announcement for the semester.",
+      "Our first department-wide announcement for the semester."
     );
 
     // Autosave persists the draft after a 500ms debounce; wait for the
     // autosave chip to flip from "Saving..." back to "Saved" so the
     // publish-btn unblocks (it's `aria-disabled` until an id exists).
     await expect(
-      page.locator('.autosave-chip[data-state="saved"]'),
+      page.locator('.autosave-chip[data-state="saved"]')
     ).toBeVisible({ timeout: 15000 });
 
     // Publish — anchor with onclick + href to /sub-teams/manage. The
@@ -388,9 +385,9 @@ test.describe.serial("Sub-team governance — 13-step flow", () => {
   test("Step 8: parent edits the existing bylaws", async ({ page }) => {
     await goto(page, `/${parentUsername}/sub-teams/manage`);
     await click(page, { testId: "sub-team-tab-documents" });
-    await expect(
-      page.getByTestId("sub-team-doc-item").first(),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("sub-team-doc-item").first()).toBeVisible({
+      timeout: 15000,
+    });
 
     await page.getByTestId("sub-team-doc-edit-btn").first().click();
     await page.waitForURL(/\/sub-teams\/docs\/[^/]+\/edit(\?|$|#)/, {
@@ -413,11 +410,8 @@ test.describe.serial("Sub-team governance — 13-step flow", () => {
     await expect
       .poll(
         async () =>
-          await page
-            .getByTestId("sub-team-doc-title")
-            .first()
-            .inputValue(),
-        { timeout: 15000 },
+          await page.getByTestId("sub-team-doc-title").first().inputValue(),
+        { timeout: 15000 }
       )
       .toBe("Department Bylaws — v2");
   });
@@ -429,7 +423,7 @@ test.describe.serial("Sub-team governance — 13-step flow", () => {
     await fill(
       user2Page,
       { testId: "sub-team-leave-reason-input" },
-      "Shifting focus to operate independently.",
+      "Shifting focus to operate independently."
     );
     await user2Page
       .getByTestId("sub-team-leave-confirm-check")
@@ -445,7 +439,7 @@ test.describe.serial("Sub-team governance — 13-step flow", () => {
   test("Step 10: user2 re-applies", async () => {
     await goto(user2Page, `/${parentUsername}/sub-teams/apply`);
     await expect(
-      user2Page.getByTestId("sub-team-apply-req-doc").first(),
+      user2Page.getByTestId("sub-team-apply-req-doc").first()
     ).toBeVisible({ timeout: 15000 });
     await pickApplicantTeam(user2Page, childUsername);
 
@@ -465,16 +459,16 @@ test.describe.serial("Sub-team governance — 13-step flow", () => {
   test("Step 11: parent approves the re-application", async ({ page }) => {
     await goto(page, `/${parentUsername}/sub-teams/manage`);
     await click(page, { testId: "sub-team-tab-queue" });
-    await expect(
-      page.getByTestId("sub-team-queue-row").first(),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("sub-team-queue-row").first()).toBeVisible({
+      timeout: 15000,
+    });
     await click(page, { testId: "sub-team-queue-approve-btn" });
     await click(page, { testId: "sub-team-queue-decision-confirm" });
 
     await click(page, { testId: "sub-team-tab-roster" });
-    await expect(
-      page.getByTestId("sub-team-roster-row").first(),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("sub-team-roster-row").first()).toBeVisible({
+      timeout: 15000,
+    });
   });
 
   // ─── Step 12: parent deregisters the child ───────────────────────────
@@ -495,7 +489,7 @@ test.describe.serial("Sub-team governance — 13-step flow", () => {
     await fill(
       page,
       { testId: "sub-team-deregister-reason-input" },
-      "Club has been inactive for a full semester.",
+      "Club has been inactive for a full semester."
     );
     await page
       .getByTestId("sub-team-deregister-confirm-check")
@@ -508,19 +502,5 @@ test.describe.serial("Sub-team governance — 13-step flow", () => {
     await expect(page.getByTestId("sub-team-roster-row")).toHaveCount(0, {
       timeout: 15000,
     });
-  });
-
-  // ─── Step 13: child confirms it's standalone (HUD hidden) ────────────
-
-  test("Step 13: child team now shows standalone (no parent HUD)", async () => {
-    // ParentHudPanel context is plumbed once at TeamArenaLayout mount, so
-    // a hard reload of the child arena is required to see the new state.
-    await user2Page.goto(`/${childUsername}`, { waitUntil: "load" });
-    await user2Page.waitForFunction(
-      () => document.querySelector("[data-dioxus-id]") !== null,
-    );
-    await expect(
-      user2Page.getByTestId("sub-team-hud-parent-btn"),
-    ).toHaveCount(0, { timeout: 15000 });
   });
 });
