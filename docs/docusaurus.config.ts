@@ -70,16 +70,23 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      // The desktop navbar is hidden by the swizzled `theme/Navbar/Layout`
-      // (mobile keeps the default behavior so users can open the doc-nav drawer).
-      // Logo, locale dropdown, theme toggle, and GitHub link are owned by
-      // the swizzled `theme/DocRoot/Layout/Sidebar` component
-      // (`docs/src/theme/DocRoot/Layout/Sidebar/index.tsx`).
+      // Desktop (>=996px): the entire navbar is hidden by the swizzled
+      // `theme/Navbar/Layout` — logo, locale, theme toggle, github icon all
+      // live in the swizzled `theme/DocRoot/Layout/Sidebar`.
+      // Mobile (<996px): the top navbar shows hamburger | logo on the left
+      // and locale dropdown + theme toggle on the right. The custom CSS in
+      // `custom.css` reverses Infima's "hide-on-mobile" defaults so these
+      // items are visible without opening the drawer.
       logo: {
         alt: "Ratel Logo",
         src: "img/logo.png",
       },
-      items: [],
+      items: [
+        {
+          type: "localeDropdown",
+          position: "right",
+        },
+      ],
     },
     // Footer intentionally omitted — site has no footer.
     prism: {
