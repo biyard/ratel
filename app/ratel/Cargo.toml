@@ -121,6 +121,14 @@ bypass = []
 web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2", "uuid/js"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile", "tokio"]
+# Type-only feature: compiles app/ratel/src/tauri/types/ and nothing else.
+# Pulled by app/ratel-tauri so the native shell shares DTO definitions with the
+# web bundle. MUST NOT bring in dioxus, reqwest, or any web/server-only deps.
+tauri-types = []
+# Web build for the Tauri Android shell. Additive on `web` so the dioxus-web
+# code path is identical; only adds compilation of app/ratel/src/tauri/interop/
+# (the JS-eval drivers that call window.__TAURI__.invoke).
+tauri-web = ["web", "tauri-types"]
 server = [
   "aws-config",
   "aws-credential-types",
