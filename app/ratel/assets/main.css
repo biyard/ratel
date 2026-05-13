@@ -33666,7 +33666,10 @@ body.comments-panel-resizing {
   gap: 14px;
   padding: 14px 16px;
   border-radius: 12px;
-  background: rgba(6, 6, 14, 0.45);
+  /* Dark / light flip — the `rgba(6,6,14,0.45)` voidish original makes
+   * the card near-black in light theme. */
+  background: var(--dark, rgba(6, 6, 14, 0.45))
+    var(--light, rgba(255, 255, 255, 0.85));
   border: 1px solid var(--sub-team-border);
   cursor: pointer;
 }
@@ -36008,7 +36011,9 @@ body.comments-panel-resizing {
   border-radius: 13px;
   background: rgba(168, 85, 247, 0.18);
   border: 1px solid rgba(168, 85, 247, 0.38);
-  color: #e9d5ff;
+  /* Pale purple icon glyph reads on dark; darken to deep purple for
+   * light mode (the gradient bg is near-white so #e9d5ff disappears). */
+  color: var(--dark, #e9d5ff) var(--light, #6b21a8);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -36018,7 +36023,9 @@ body.comments-panel-resizing {
 .sub-team-management .bc-cta__label {
   font-size: 15px;
   font-weight: 800;
-  color: #e9d5ff;
+  /* Same dark/light flip as `.bc-cta__icon` — `#e9d5ff` on light
+   * background is the "공지 작성 글자가 안 보여" bug. */
+  color: var(--dark, #e9d5ff) var(--light, #6b21a8);
   letter-spacing: 0.04em;
   margin-bottom: 3px;
 }
