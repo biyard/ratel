@@ -34842,7 +34842,6 @@ body.comments-panel-resizing {
  */
 
 .sub-team-management {
-  --sub-team-bg: var(--dark, #06060e) var(--light, #f7f7fb);
   --sub-team-glass: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, rgba(255, 255, 255, 0.72));
   --sub-team-border: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(0, 0, 0, 0.08));
   --sub-team-text: var(--dark, #f0f0f5) var(--light, #12121a);
@@ -34856,9 +34855,12 @@ body.comments-panel-resizing {
   --sub-team-coral: #ef4444;
   --sub-team-input-bg: var(--dark, rgba(255, 255, 255, 0.025)) var(--light, rgba(0, 0, 0, 0.03));
 
-  background: var(--sub-team-bg);
+  /* Background + min-height inherited from the wrapping `.team-arena`
+   * layout — declaring our own would create a horizontal seam between
+   * the topbar's reserved area (team-arena bg) and the content (this
+   * page's bg) because the two backgrounds are slightly different
+   * cream tones. */
   color: var(--sub-team-text);
-  min-height: 100vh;
 }
 
 .sub-team-management .page {
