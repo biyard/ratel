@@ -281,6 +281,10 @@ pub fn Home(username: ReadSignal<String>) -> Element {
     let price_svg = render_price_spark();
 
     let claimable_count = past_months.iter().filter(|m| !m.exchanged).count();
+    // Past-cycles UI is currently hidden behind a Coming Soon block;
+    // these stay bound so the commented-out reference in the rsx body
+    // below stays self-consistent if it's re-enabled.
+    let _ = claimable_count;
 
     rsx! {
         document::Script { defer: true, src: asset!("./script.js") }
@@ -389,7 +393,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                                 if donut_items.is_empty() {
                                     div { class: "empty-desc", "{tr.activity_empty}" }
                                 } else {
-                                    for (name, value, color) in donut_items.iter() {
+                                    for (name , value , color) in donut_items.iter() {
                                         div {
                                             class: "legend-item",
                                             key: "{name}",
@@ -467,46 +471,72 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                     }
                 }
 
-                // Past cycles
+                // Past cycles — temporarily replaced with a Coming Soon
+                // placeholder. The original cycle-card list is preserved
+                // verbatim below in a `/* ... */` block; restore by
+                // swapping the two blocks.
                 div {
                     div { class: "section-head",
                         span { class: "section-head__title", "{tr.past_cycles}" }
-                        span { class: "section-head__count",
-                            strong { "{claimable_count}" }
-                            " {tr.claimable}"
-                        }
                     }
                     div { class: "cycles",
-                        if past_months.is_empty() {
-                            div { class: "empty",
-                                div { class: "empty__icon",
-                                    svg {
-                                        view_box: "0 0 24 24",
-                                        fill: "none",
-                                        stroke: "currentColor",
-                                        stroke_width: "1.6",
-                                        stroke_linecap: "round",
-                                        stroke_linejoin: "round",
-                                        circle { cx: "12", cy: "12", r: "10" }
-                                        path { d: "M12 6v12" }
-                                        path { d: "M16 10H8" }
-                                    }
-                                }
-                                div { class: "empty__title", "{tr.past_empty_title}" }
-                                div { class: "empty__desc", "{tr.past_empty_desc}" }
-                            }
-                        } else {
-                            for item in past_months.iter() {
-                                CycleCard {
-                                    key: "{item.month}",
-                                    username,
-                                    item: item.clone(),
-                                    token_symbol: token_symbol.clone(),
-                                    tr: tr.clone(),
+                        div { class: "empty",
+                            div { class: "empty__icon",
+                                svg {
+                                    view_box: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_width: "1.6",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    circle { cx: "12", cy: "12", r: "10" }
+                                    path { d: "M12 6v12" }
+                                    path { d: "M16 10H8" }
                                 }
                             }
+                            div { class: "empty__title", "{tr.past_coming_soon_title}" }
+                            div { class: "empty__desc", "{tr.past_coming_soon_desc}" }
                         }
                     }
+                
+                // div { class: "section-head",
+                //     span { class: "section-head__title", "{tr.past_cycles}" }
+                //     span { class: "section-head__count",
+                //         strong { "{claimable_count}" }
+                //         " {tr.claimable}"
+                //     }
+                // }
+                // div { class: "cycles",
+                //     if past_months.is_empty() {
+                //         div { class: "empty",
+                //             div { class: "empty__icon",
+                //                 svg {
+                //                     view_box: "0 0 24 24",
+                //                     fill: "none",
+                //                     stroke: "currentColor",
+                //                     stroke_width: "1.6",
+                //                     stroke_linecap: "round",
+                //                     stroke_linejoin: "round",
+                //                     circle { cx: "12", cy: "12", r: "10" }
+                //                     path { d: "M12 6v12" }
+                //                     path { d: "M16 10H8" }
+                //                 }
+                //             }
+                //             div { class: "empty__title", "{tr.past_empty_title}" }
+                //             div { class: "empty__desc", "{tr.past_empty_desc}" }
+                //         }
+                //     } else {
+                //         for item in past_months.iter() {
+                //             CycleCard {
+                //                 key: "{item.month}",
+                //                 username,
+                //                 item: item.clone(),
+                //                 token_symbol: token_symbol.clone(),
+                //                 tr: tr.clone(),
+                //             }
+                //         }
+                //     }
+                // }
                 }
             }
         }
