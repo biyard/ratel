@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "app/ratel",
+  "app/ratel-tauri/src-tauri",
   "packages/*",
   "design-system-preview",
 ]
