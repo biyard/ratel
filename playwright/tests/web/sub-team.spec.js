@@ -100,7 +100,26 @@ async function agreeAllRequiredDocs(page) {
     const row = docRows.nth(i);
     if ((await row.getAttribute("data-agreed")) === "true") continue;
     await row.click();
-    await click(page, { testId: "doc-agreement-agree-btn" });
+    // After the modal opens, the agree button is `disabled` when
+    // `agreed_doc_ids` was hydrated from a prior Returned application
+    // — but the outer row's `data-agreed` can still read "false" mid-
+    // hydration, so we'd land here even for already-agreed docs.
+    // Branch on the button's live state instead of trying to click a
+    // disabled button (which `click` would wait on forever).
+    const agreeBtn = page.getByTestId("doc-agreement-agree-btn");
+    await expect(agreeBtn).toBeVisible({ timeout: 5000 });
+    if (await agreeBtn.isDisabled()) {
+      // Already agreed — close the modal via its X button instead of
+      // re-confirming. (Escape isn't bound; the cancel button has no
+      // testid and uses translated text.)
+      await page.locator(".doc-modal__close-x").first().click();
+    } else {
+      await agreeBtn.click();
+    }
+    // Wait for backdrop to close before iterating to the next doc.
+    await expect(
+      page.locator(".sub-team-apply-doc-modal"),
+    ).toHaveAttribute("data-open", "false", { timeout: 5000 });
   }
 }
 

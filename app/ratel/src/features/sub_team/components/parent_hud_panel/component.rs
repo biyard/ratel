@@ -37,13 +37,24 @@ pub fn ParentHudPanel() -> Element {
     // viewer's own admin team, not the parent (which would 401).
     let arena = use_team_arena();
     let own_username = (arena.username)();
+    // Mutation actions (leave / edit application / cancel) are
+    // admin-only; plain members see the panel for context but no
+    // action buttons. The status-view link in the Pending branch is
+    // read-only and stays visible for everyone.
+    let is_admin = (arena.is_admin)();
 
     let rel = relationship();
     let status = rel.status;
 
-    // Icon stays visible in every status — for Standalone teams the
-    // dropdown renders the "독립 팀" empty state so admins always have
-    // a single entry point for parent-relationship surfaces.
+    // Visibility policy:
+    //   • Admin/Owner — icon visible in every status (Recognized /
+    //     Pending / Standalone), action buttons gated inline below.
+    //   • Plain member — icon ONLY when the team is fully Recognized.
+    //     Pending / Standalone is admin-facing noise for them.
+    if !is_admin && !matches!(status, ParentRelationshipStatus::RecognizedSubTeam) {
+        return rsx! {};
+    }
+
     let mut open: Signal<bool> = use_signal(|| false);
 
     let badge_state = match status {
@@ -208,30 +219,32 @@ pub fn ParentHudPanel() -> Element {
                                             lucide_dioxus::ChevronRight { class: "w-3 h-3 [&>path]:stroke-current" }
                                         }
                                     }
-                                    a {
-                                        class: "pp-action pp-action--danger",
-                                        onclick: {
-                                            let own_username = own_username.clone();
-                                            move |_| {
-                                                // URL `:username` MUST be the viewer's own
-                                                // team — leave page's role check runs against
-                                                // whatever team the path resolves to. Passing
-                                                // the parent's username 401s because the
-                                                // viewer isn't an admin of the parent.
-                                                nav.push(Route::TeamLeaveParentPage {
-                                                    username: own_username.clone(),
-                                                });
+                                    if is_admin {
+                                        a {
+                                            class: "pp-action pp-action--danger",
+                                            onclick: {
+                                                let own_username = own_username.clone();
+                                                move |_| {
+                                                    // URL `:username` MUST be the viewer's own
+                                                    // team — leave page's role check runs against
+                                                    // whatever team the path resolves to. Passing
+                                                    // the parent's username 401s because the
+                                                    // viewer isn't an admin of the parent.
+                                                    nav.push(Route::TeamLeaveParentPage {
+                                                        username: own_username.clone(),
+                                                    });
+                                                }
+                                            },
+                                            span { class: "pp-action__icon",
+                                                lucide_dioxus::LogOut { class: "w-3 h-3 [&>path]:stroke-current" }
                                             }
-                                        },
-                                        span { class: "pp-action__icon",
-                                            lucide_dioxus::LogOut { class: "w-3 h-3 [&>path]:stroke-current" }
-                                        }
-                                        span { class: "pp-action__body",
-                                            span { class: "pp-action__title", "{tr.parent_action_leave_title}" }
-                                            span { class: "pp-action__sub", "{tr.parent_action_leave_sub}" }
-                                        }
-                                        span { class: "pp-action__chev",
-                                            lucide_dioxus::ChevronRight { class: "w-3 h-3 [&>path]:stroke-current" }
+                                            span { class: "pp-action__body",
+                                                span { class: "pp-action__title", "{tr.parent_action_leave_title}" }
+                                                span { class: "pp-action__sub", "{tr.parent_action_leave_sub}" }
+                                            }
+                                            span { class: "pp-action__chev",
+                                                lucide_dioxus::ChevronRight { class: "w-3 h-3 [&>path]:stroke-current" }
+                                            }
                                         }
                                     }
                                 }
@@ -279,41 +292,43 @@ pub fn ParentHudPanel() -> Element {
                                             lucide_dioxus::ChevronRight { class: "w-3 h-3 [&>path]:stroke-current" }
                                         }
                                     }
-                                    a {
-                                        class: "pp-action",
-                                        onclick: move |_| {
-                                            if !username_for_edit.is_empty() {
-                                                nav.push(Route::TeamSubTeamApplyPage {
-                                                    username: username_for_edit.clone(),
-                                                });
+                                    if is_admin {
+                                        a {
+                                            class: "pp-action",
+                                            onclick: move |_| {
+                                                if !username_for_edit.is_empty() {
+                                                    nav.push(Route::TeamSubTeamApplyPage {
+                                                        username: username_for_edit.clone(),
+                                                    });
+                                                }
+                                            },
+                                            span { class: "pp-action__icon",
+                                                lucide_dioxus::Pencil { class: "w-3 h-3 [&>path]:stroke-current" }
                                             }
-                                        },
-                                        span { class: "pp-action__icon",
-                                            lucide_dioxus::Pencil { class: "w-3 h-3 [&>path]:stroke-current" }
+                                            span { class: "pp-action__body",
+                                                span { class: "pp-action__title", "{tr.parent_action_edit_application_title}" }
+                                                span { class: "pp-action__sub", "{tr.parent_action_edit_application_sub}" }
+                                            }
+                                            span { class: "pp-action__chev",
+                                                lucide_dioxus::ChevronRight { class: "w-3 h-3 [&>path]:stroke-current" }
+                                            }
                                         }
-                                        span { class: "pp-action__body",
-                                            span { class: "pp-action__title", "{tr.parent_action_edit_application_title}" }
-                                            span { class: "pp-action__sub", "{tr.parent_action_edit_application_sub}" }
-                                        }
-                                        span { class: "pp-action__chev",
-                                            lucide_dioxus::ChevronRight { class: "w-3 h-3 [&>path]:stroke-current" }
-                                        }
-                                    }
-                                    a {
-                                        class: "pp-action pp-action--danger",
-                                        onclick: move |_| {
-                                            handle_cancel_application.call();
-                                            open.set(false);
-                                        },
-                                        span { class: "pp-action__icon",
-                                            lucide_dioxus::X { class: "w-3 h-3 [&>path]:stroke-current" }
-                                        }
-                                        span { class: "pp-action__body",
-                                            span { class: "pp-action__title", "{tr.parent_action_cancel_application_title}" }
-                                            span { class: "pp-action__sub", "{tr.parent_action_cancel_application_sub}" }
-                                        }
-                                        span { class: "pp-action__chev",
-                                            lucide_dioxus::ChevronRight { class: "w-3 h-3 [&>path]:stroke-current" }
+                                        a {
+                                            class: "pp-action pp-action--danger",
+                                            onclick: move |_| {
+                                                handle_cancel_application.call();
+                                                open.set(false);
+                                            },
+                                            span { class: "pp-action__icon",
+                                                lucide_dioxus::X { class: "w-3 h-3 [&>path]:stroke-current" }
+                                            }
+                                            span { class: "pp-action__body",
+                                                span { class: "pp-action__title", "{tr.parent_action_cancel_application_title}" }
+                                                span { class: "pp-action__sub", "{tr.parent_action_cancel_application_sub}" }
+                                            }
+                                            span { class: "pp-action__chev",
+                                                lucide_dioxus::ChevronRight { class: "w-3 h-3 [&>path]:stroke-current" }
+                                            }
                                         }
                                     }
                                 }

@@ -31,6 +31,11 @@ pub fn ArenaTopbar(
     /// Whether the viewer can access admin-only tabs (Drafts, Settings).
     #[props(default = false)]
     can_edit: bool,
+    /// Whether the viewer is a member (any role) of this team. Drives
+    /// the parent HUD visibility — members see read-only info; non-
+    /// admins don't see the action buttons inside.
+    #[props(default = false)]
+    is_member: bool,
     /// Whether the parent team has flipped the sub-team activation
     /// switch ON. Non-members only see the sub-team HUD icon when
     /// this is true (otherwise the team isn't accepting apps yet).
@@ -218,12 +223,12 @@ pub fn ArenaTopbar(
                             id: "arena-teams-dd-list",
                             onscroll: move |_| {
                                 let js = r#"
-                                                                                                                                                                                                                                                            const el = document.getElementById('arena-teams-dd-list');
-                                                                                                                                                                                                                                                            if (!el) { dioxus.send(false); return; }
-                                                                                                                                                                                                                                                            const nearBottom =
-                                                                                                                                                                                                                                                                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
-                                                                                                                                                                                                                                                            dioxus.send(nearBottom);
-                                                                                                                                                                                                                                                        "#;
+                                                                                                                                                                                                                                                                                    const el = document.getElementById('arena-teams-dd-list');
+                                                                                                                                                                                                                                                                                    if (!el) { dioxus.send(false); return; }
+                                                                                                                                                                                                                                                                                    const nearBottom =
+                                                                                                                                                                                                                                                                                        el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+                                                                                                                                                                                                                                                                                    dioxus.send(nearBottom);
+                                                                                                                                                                                                                                                                                "#;
                                 let mut ctrl = teams_query;
                                 spawn(async move {
                                     let mut eval = document::eval(js);
@@ -409,11 +414,11 @@ pub fn ArenaTopbar(
 
                 // Parent HUD — graduation cap icon + dropdown panel
                 // showing the team's parent relationship status
-                // (recognized / pending / standalone) with quick
-                // actions. Admin-only because the underlying
-                // `get_parent_relationship` server function requires
-                // admin/owner role on the team.
-                if can_edit {
+                // (recognized / pending / standalone). Visible to any
+                // team member (read-only); non-admins don't see the
+                // action buttons (leave / edit application / cancel)
+                // inside — that filter happens inside ParentHudPanel.
+                if is_member {
                     crate::features::sub_team::ParentHudPanel {}
                 }
 

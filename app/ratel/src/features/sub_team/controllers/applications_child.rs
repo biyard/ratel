@@ -39,9 +39,13 @@ pub async fn get_parent_relationship_handler(
 ) -> Result<ParentRelationshipResponse> {
     let _ = team_pk;
     let _ = user;
-    if !role.is_admin_or_owner() {
-        return Err(Error::UnauthorizedAccess);
-    }
+    // Membership is already enforced by the `role: TeamRole` extractor —
+    // non-members get `UnauthorizedAccess` before this body runs. We
+    // intentionally do NOT gate on admin-or-owner here so plain members
+    // can see the parent HUD on their own team home (read-only). The
+    // mutation endpoints (leave / cancel / approve / etc.) keep their
+    // admin checks.
+    let _ = role;
 
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();

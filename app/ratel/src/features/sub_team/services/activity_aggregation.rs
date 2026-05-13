@@ -229,12 +229,17 @@ pub async fn compute_member_activity(
 
 // ── Private helpers ────────────────────────────────────────────────
 
+/// Count distinct members on a team. Walks UserTeam rows + the
+/// TeamOwner record, dedup'd via HashSet — `Team::create_new_team`
+/// writes BOTH rows for the creator, so a naive sum double-counts the
+/// owner. Bounded by `MAX_SCAN_PAGES` × `PAGE_SIZE` (same envelope as
+/// the rest of this module).
 async fn count_team_members(
     cli: &aws_sdk_dynamodb::Client,
     team_pk: &Partition,
 ) -> Result<i64> {
     let user_team_sk = EntityType::UserTeam(team_pk.to_string());
-    let mut count: i64 = 0;
+    let mut user_pks: HashSet<String> = HashSet::new();
     let mut bookmark: Option<String> = None;
     for _ in 0..MAX_SCAN_PAGES {
         let mut opt = UserTeamQueryOption::builder().limit(PAGE_SIZE);
@@ -247,16 +252,18 @@ async fn count_team_members(
                 crate::error!("count_team_members query failed: {e}");
                 SubTeamError::ActivityAggregationFailed
             })?;
-        count += rows.len() as i64;
+        for row in rows {
+            user_pks.insert(row.pk.to_string());
+        }
         match next {
             Some(b) => bookmark = Some(b),
             None => break,
         }
     }
-    if let Ok(Some(_)) = TeamOwner::get(cli, team_pk, Some(&EntityType::TeamOwner)).await {
-        count += 1;
+    if let Ok(Some(owner)) = TeamOwner::get(cli, team_pk, Some(&EntityType::TeamOwner)).await {
+        user_pks.insert(owner.user_pk.to_string());
     }
-    Ok(count)
+    Ok(user_pks.len() as i64)
 }
 
 async fn resolve_team_member_pks(
