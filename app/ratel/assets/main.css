@@ -11593,6 +11593,28 @@ html[data-theme="light"] .rewards-arena .donut text + text,
 }
 .rewards-arena .section-head__count strong { color: var(--text-muted); }
 
+/* Persistent inline notice below a section header. Currently used by the
+   Past Cycles section to flag that on-chain token swap isn't live yet —
+   the per-card Swap All button shows the same hint on hover, but this
+   line surfaces the same info without requiring hover. Small, dim, with
+   an info-circle leading icon so it reads as a system notice rather
+   than user content. */
+.rewards-arena .section-note {
+  display: flex; align-items: center; gap: 8px;
+  margin: 8px 4px 4px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--dark, rgba(110, 237, 216, 0.06)) var(--light, rgba(20, 120, 110, 0.08));
+  border: 1px solid var(--dark, rgba(110, 237, 216, 0.14)) var(--light, rgba(20, 120, 110, 0.18));
+  font-size: 11.5px; line-height: 1.4;
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+}
+.rewards-arena .section-note svg {
+  width: 13px; height: 13px; flex-shrink: 0;
+  color: var(--accent-teal);
+}
+
 /* Activity */
 .rewards-arena .activity {
   background: var(--bg-glass); backdrop-filter: blur(16px);
@@ -11722,6 +11744,26 @@ html[data-theme="light"] .rewards-arena .donut text + text,
   transform: translateY(-1px); color: #0a0a0a;
 }
 .rewards-arena .cycle-card__claim svg { width: 12px; height: 12px; }
+/* Disabled "Swap All" — claim/swap pipeline not yet ready. Native
+   button[disabled] strips clicks; this styling makes the button look
+   non-interactive so the user doesn't mistake it for an active CTA,
+   and the `title` attribute on the element provides a hover hint
+   ("Coming soon"). */
+.rewards-arena .cycle-card__claim:disabled {
+  background: var(--dark, rgba(255,255,255,0.04)) var(--light, rgba(0,0,0,0.04));
+  color: var(--dark, rgba(255,255,255,0.45)) var(--light, rgba(0,0,0,0.45));
+  border: 1px solid var(--dark, rgba(255,255,255,0.08)) var(--light, rgba(0,0,0,0.08));
+  box-shadow: none;
+  cursor: not-allowed;
+  filter: grayscale(1);
+  opacity: 0.7;
+}
+.rewards-arena .cycle-card__claim:disabled:hover {
+  background: var(--dark, rgba(255,255,255,0.04)) var(--light, rgba(0,0,0,0.04));
+  color: var(--dark, rgba(255,255,255,0.45)) var(--light, rgba(0,0,0,0.45));
+  box-shadow: none;
+  transform: none;
+}
 .rewards-arena .cycle-card__expand {
   width: 36px; height: 36px; border-radius: 9px;
   background: transparent; border: 1px solid var(--border-subtle);
@@ -16056,29 +16098,34 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
 
 @media (max-width: 880px) {
   .rewards-arena .page { padding: 24px 18px 50px; gap: 22px; }
-  .hero { grid-template-columns: 1fr; gap: 22px; padding: 24px 22px; }
-  .hero__points-value { font-size: 52px; }
-  .token-card { grid-template-columns: 1fr; }
-  .token-card__main { border-right: none; border-bottom: 1px solid var(--border-subtle); }
-  .token-card__price-num { font-size: 38px; }
-  .charts { grid-template-columns: 1fr; }
-  .donut-wrap { grid-template-columns: 140px 1fr; gap: 14px; }
-  .donut { width: 140px; height: 140px; }
-  .cycle-card { grid-template-columns: 1fr; gap: 16px; padding: 18px 20px; }
-  .cycle-card__action { justify-content: flex-start; }
-  .activity__row { grid-template-columns: 36px 1fr auto; gap: 11px; padding: 12px 14px; }
-  .activity__time { display: none; }
+  .rewards-arena .hero { grid-template-columns: 1fr; gap: 22px; padding: 24px 22px; }
+  .rewards-arena .hero__points-value { font-size: 52px; }
+  .rewards-arena .token-card { grid-template-columns: 1fr; }
+  .rewards-arena .token-card__main { border-right: none; border-bottom: 1px solid var(--border-subtle); }
+  .rewards-arena .token-card__price-num { font-size: 38px; }
+  .rewards-arena .charts { grid-template-columns: 1fr; }
+  .rewards-arena .donut-wrap { grid-template-columns: 140px 1fr; gap: 14px; }
+  .rewards-arena .donut { width: 140px; height: 140px; }
+  /* Cycle cards stack their three regions (month / stats / action) into a
+     single column on tablet+mobile so the SWAP button doesn't squeeze the
+     stats column into overlap. Without the `.rewards-arena` prefix the
+     desktop rule `.rewards-arena .cycle-card { grid-template-columns: 120px 1fr auto }`
+     has higher specificity than this mobile override and stays in effect. */
+  .rewards-arena .cycle-card { grid-template-columns: 1fr; gap: 16px; padding: 18px 20px; }
+  .rewards-arena .cycle-card__action { justify-content: flex-start; }
+  .rewards-arena .activity__row { grid-template-columns: 36px 1fr auto; gap: 11px; padding: 12px 14px; }
+  .rewards-arena .activity__time { display: none; }
 }
 @media (max-width: 500px) {
   .rewards-arena .arena-topbar { padding: 14px 16px; gap: 10px; }
   .rewards-arena .topbar-title__cycle { display: none; }
-  .chain-chip { padding: 6px 10px; font-size: 11px; }
-  .chain-chip__addr { display: none; }
-  .hero__points-value { font-size: 42px; }
-  .hero__token-value strong { font-size: 24px; }
-  .cycle-card__stats { grid-template-columns: repeat(2, 1fr) 1fr; gap: 10px; }
-  .cycle-stat__value { font-size: 13px; }
-  .cycle-card__claim { padding: 8px 14px; font-size: 9.5px; }
+  .rewards-arena .chain-chip { padding: 6px 10px; font-size: 11px; }
+  .rewards-arena .chain-chip__addr { display: none; }
+  .rewards-arena .hero__points-value { font-size: 42px; }
+  .rewards-arena .hero__token-value strong { font-size: 24px; }
+  .rewards-arena .cycle-card__stats { grid-template-columns: repeat(2, 1fr) 1fr; gap: 10px; }
+  .rewards-arena .cycle-stat__value { font-size: 13px; }
+  .rewards-arena .cycle-card__claim { padding: 8px 14px; font-size: 9.5px; }
 }
 
 
