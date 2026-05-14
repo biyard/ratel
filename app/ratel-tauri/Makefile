@@ -77,6 +77,19 @@ ANDROID_ENV = \
 # Override with `make android-dev DEV_URL=http://10.20.30.40:8000` when needed.
 DEV_URL ?= http://$(HOST_IP):$(PORT)
 
+# CSP override per environment. Dev allows any http/https origin so a
+# physical device or emulator can reach `dx serve` on any LAN IP, ngrok
+# tunnel, etc. without rebuilding the APK for each address change. Prod
+# narrows back down to known origins. Pass via cargo tauri's --config flag
+# at build/run time (see build-android / run-android below).
+ifeq ($(ENV),prod)
+  CSP_CONNECT := 'self' tauri: ipc: http://tauri.localhost https://ratel.foundation https://*.ratel.foundation https://*.googleapis.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com
+else
+  CSP_CONNECT := 'self' tauri: ipc: http: https: wss:
+endif
+
+CSP_OVERRIDE := default-src 'self' tauri: http://tauri.localhost https://ratel.foundation https://*.ratel.foundation; script-src 'self' 'wasm-unsafe-eval' tauri: http://tauri.localhost https://www.gstatic.com; connect-src $(CSP_CONNECT); img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com
+
 DIST_DIR := $(CURDIR)/dist
 RATEL_DIR := $(CURDIR)/../ratel
 # dx writes its output under the workspace root's target/dx, not app/ratel/target/dx,
@@ -89,7 +102,7 @@ else
 	DX_BUILD_DIR = $(WORKSPACE_ROOT)/app/ratel/target/dx/app-shell/release/web/public
 endif
 
-.PHONY: help install-tauri-cli dx-build android-dev build-release install-debug clean
+.PHONY: help install-tauri-cli dx-build run-android build-android build-android-debug sign-apk run-apk debug-apk clean keystore.sha1 apk.sha1
 
 help:
 	@echo "Targets:"
@@ -136,30 +149,75 @@ dx-build:
 	cd $(RATEL_DIR) && make build-tauri
 	rsync -a --delete "$(DX_BUILD_DIR)/" "$(DIST_DIR)/"
 
-	@if ! grep -q "patched_atob" $(DIST_DIR)/index.html; then \
-		echo "Injecting atob shim into index.html"; \
-		python3 -c "p='$(DIST_DIR)/index.html'; t=open(p).read(); s='<script>(function(){var __o=window.atob;window.atob=function(x){return (x===undefined||x===null)?\"\":__o.call(this,x);};window.__patched_atob=true;})();</script>'; open(p,'w').write(t.replace('<body>','<body>'+s,1))"; \
-	fi
-
 run: run-android
 
-run-android: install-tauri-cli
+# Write a one-off JSON override merging per-ENV CSP and the DEV_URL into
+# /tmp/tauri-override.json. Tauri's `--config` accepts a file path, which
+# avoids shell-quoting hell with the embedded `'self'` quotes in CSP.
+# Always regenerated so DEV_URL / ENV changes are picked up.
+TAURI_OVERRIDE_FILE := $(PWD)/tauri-override.json
+
+$(TAURI_OVERIDE_FILE):
+	@printf '{"build":{"devUrl":"%s"},"app":{"security":{"csp":"%s"}}}' \
+			"$(DEV_URL)" "$(CSP_OVERRIDE)" > $(TAURI_OVERRIDE_FILE)
+
+
+run-android: install-tauri-cli $(TAURI_OVERIDE_FILE)
 	@echo "Run 'cd ../ratel && PORT=8000 make run-tauri' in another terminal first."
-	cd src-tauri && $(ANDROID_ENV) cargo tauri android dev \
-		$(if $(DEV_URL),--config '{"build":{"devUrl":"$(DEV_URL)"}}',)
+	$(WRITE_TAURI_OVERRIDE)
+	cd src-tauri && $(ANDROID_ENV) cargo tauri android dev --config $(TAURI_OVERRIDE_FILE)
 
 build-android: install-tauri-cli dx-build
-	cd src-tauri && $(ANDROID_ENV) cargo tauri android build --target $(TAURI_TARGET) $(if $(filter debug,$(MODE)),--debug,)
+	$(WRITE_TAURI_OVERRIDE)
+	cd src-tauri && $(ANDROID_ENV) cargo tauri android build --target $(TAURI_TARGET) --apk
+	@$(MAKE) sign-apk
 	@echo
 	@echo "APK output:"
-	@find src-tauri/gen/android -name "*.apk" -newer Makefile 2>/dev/null
+	@find src-tauri/gen/android -name "*.apk" -newer Makefile -not -name "*unsigned*" 2>/dev/null
 
-install-debug: build-release
-	@APK=$$(find src-tauri/gen/android -name "app-*.apk" -not -name "*unsigned*" 2>/dev/null \
+# Sign every fresh release-unsigned APK with the local debug keystore so it
+# can be `adb install`ed without the user manually invoking apksigner.
+# Output: same path with `-unsigned` stripped from the filename. Idempotent:
+# skips files that are already signed (apksigner verify succeeds).
+sign-apk: $(HOME)/.android/debug.keystore
+	@APKSIGNER=$$(find $(ANDROID_HOME)/build-tools -name apksigner 2>/dev/null | sort -r | head -1); \
+	if [ -z "$$APKSIGNER" ]; then echo "ERROR: apksigner not found under $(ANDROID_HOME)/build-tools"; exit 1; fi; \
+	for APK in $$(find src-tauri/gen/android -name "*-unsigned.apk" 2>/dev/null); do \
+		OUT=$$(echo "$$APK" | sed 's/-unsigned\.apk$$/.apk/'); \
+		echo "Signing $$APK -> $$OUT"; \
+		"$$APKSIGNER" sign \
+			--ks $(HOME)/.android/debug.keystore \
+			--ks-pass pass:android \
+			--key-pass pass:android \
+			--ks-key-alias androiddebugkey \
+			--in "$$APK" \
+			--out "$$OUT"; \
+	done
+
+run-apk: build-android
+	adb install -r "src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk"
+	adb shell am start -n "co.biyard.ratel/.MainActivity"
+
+# Debug variant of build-android. Passes --debug to `cargo tauri android build`
+# so AGP produces a debug-signed APK directly (no separate sign-apk step) and
+# enables: WebView chrome://inspect, lldb attach, BuildConfig.DEBUG=true,
+# no R8 minify. Useful when you need Chrome DevTools on the WebView or to
+# attach a debugger. Slower compile + larger APK than the release variant.
+build-android-debug: install-tauri-cli dx-build
+	$(WRITE_TAURI_OVERRIDE)
+	cd src-tauri && $(ANDROID_ENV) cargo tauri android build --target $(TAURI_TARGET) --apk --debug
+	@echo
+	@echo "APK output:"
+	@find src-tauri/gen/android -name "*-debug.apk" -newer Makefile 2>/dev/null
+
+# Install and launch the debug-signed APK on the connected adb device.
+# Mirrors run-apk but for the debug variant.
+debug-apk: build-android-debug
+	@APK=$$(find src-tauri/gen/android -name "app-*-debug.apk" 2>/dev/null \
 	       | xargs ls -t 2>/dev/null | head -1); \
 	if [ -z "$$APK" ]; then echo "ERROR: no debug APK found under src-tauri/gen/android"; exit 1; fi; \
 	echo "Installing $$APK"; \
-	adb install -r "$$APK"; \
+	adb install -r "$$APK"
 	adb shell am start -n "co.biyard.ratel/.MainActivity"
 
 clean:

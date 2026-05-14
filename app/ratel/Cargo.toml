@@ -118,6 +118,7 @@ strip-tags = "0.1.0"
 [features]
 default = ["web", "server", "mobile"]
 bypass = []
+skip-server = []
 web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2", "uuid/js"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile", "tokio"]

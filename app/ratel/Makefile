@@ -63,7 +63,6 @@ ECR ?= $(shell aws ecr describe-repositories --repository-names $(REPOSITORY)  -
 QDRANT_PREFIX ?= ratel-$(ENV)
 QDRANT_URL ?= http://localhost:6334
 QDRANT_API_KEY ?= ""
-AVD_NAME ?= Pixel6_$(ARCH)
 ANDROID_EMULATOR_ID ?= $(shell adb devices | grep emulator | cut -f1)
 DISABLE_ANSI ?= false
 BUCKET_NAME ?= metadata.ratel.foundation
@@ -107,6 +106,9 @@ ANDROID_ENV = \
 	JAVA_HOME=$(ANDROID_JAVA_HOME) \
 	ANDROID_NDK_HOME=$(ANDROID_NDK_HOME)
 
+SDK_IMAGE_PATH ?= system-images/android-36/google_apis/$(ARCH)
+SDK_IMAGE ?= system-images;android-36;google_apis;$(ARCH)
+AVD_NAME ?= Pixel6_36_$(ARCH)
 
 BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
@@ -256,8 +258,8 @@ AVD_DATA ?= 16G
 AVD_SDCARD ?= 2048M
 AVD_KEYBOARD ?= yes
 
-$(HOME)/.android/avd/$(AVD_NAME).avd: $(ANDROID_HOME)/system-images/android-34/google_apis/$(ARCH)
-	avdmanager create avd -n $(AVD_NAME) -k "system-images;android-34;google_apis;$(ARCH)" -d "pixel_6" -c $(AVD_SDCARD)
+$(HOME)/.android/avd/$(AVD_NAME).avd: $(ANDROID_HOME)/$(SDK_IMAGE_PATH)
+	avdmanager create avd -n $(AVD_NAME) -k "$(SDK_IMAGE)" -d "pixel_6" -c $(AVD_SDCARD)
 	@CFG=$@/config.ini; \
 	for kv in "hw.ramSize=$(AVD_RAM)" \
 	          "vm.heapSize=$(AVD_HEAP)" \
@@ -276,8 +278,8 @@ $(HOME)/.android/avd/$(AVD_NAME).avd: $(ANDROID_HOME)/system-images/android-34/g
 $(ANDROID_HOME)/emulator/emulator:
 	sdkmanager --install emulator
 
-$(ANDROID_HOME)/system-images/android-34/google_apis/$(ARCH):
-	sdkmanager --install "system-images;android-34;google_apis;$(ARCH)"
+$(ANDROID_HOME)/$(SDK_IMAGE_PATH):
+	sdkmanager --install "$(SDK_IMAGE)"
 
 android-emulator: $(HOME)/.android/debug.keystore $(HOME)/.android/avd/$(AVD_NAME).avd $(ANDROID_HOME)/emulator/emulator
 	$(ANDROID_HOME)/emulator/emulator -avd $(AVD_NAME) -netdelay none -netspeed full &
@@ -309,7 +311,8 @@ build:
 	$(BUILD_ENV) dx build --release --no-default-features --debug-symbols false @client --features web --platform web @server --features server --platform server
 
 build-tauri: ../../node_modules js/node_modules
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx build --release --no-default-features @client --features tauri-web --web @server --platform server
+	rm -rf $(CARGO_TARGET_DIR)/dx
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx build --release --debug-symbols false --no-default-features @client --features tauri-web --platform web @server --platform server --features skip-server --release
 
 build-testing:
 	$(BUILD_ENV) dx build --release --no-default-features --debug-symbols false @client --features web,bypass,beta --platform web @server --features server,bypass,local-dev --platform server

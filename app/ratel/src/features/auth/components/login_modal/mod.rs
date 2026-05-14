@@ -126,6 +126,7 @@ pub fn LoginModal(#[props(optional)] on_success: Option<Callback<()>>) -> Elemen
 
         match sign_in().await {
             Ok(user_info) => {
+                debug!("Google sign-in successful, got user info: {:?}", user_info);
                 let oauth_email = user_info
                     .email
                     .clone()

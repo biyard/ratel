@@ -5,6 +5,16 @@ pub fn run(app: fn() -> Element) {
 
     crate::common::logger::init(cfg.log_level.into()).expect("logger failed to init");
 
+    debug!("Logger initialized with level {:?}", cfg.log_level);
+
+    #[cfg(feature = "tauri-web")]
+    {
+        use crate::common::CommonConfig;
+        let endpoint = CommonConfig::default().env.mobile_endpoint();
+        debug!("Setting server URL to {endpoint}");
+        dioxus::fullstack::set_server_url(endpoint);
+    }
+
     #[cfg(not(feature = "server"))]
     launch(app);
 
@@ -118,10 +128,15 @@ fn serve(app: fn() -> Element) {
     // instead of letting it propagate up the spawn_pinned worker thread, which
     // would terminate the worker (and drop the connection). Pairs with the
     // panic hook below so we still capture the backtrace in logs.
+    //
+    // log_request is the OUTERMOST layer so its post-handler log sees the
+    // final response (status, latency) including anything cors / session
+    // appended.
     let app = dioxus_router
         .layer(tower_http::catch_panic::CatchPanicLayer::new())
         .layer(cors_layer)
-        .layer(session_layer);
+        .layer(session_layer)
+        .layer(axum::middleware::from_fn(log_request));
 
     crate::common::mcp::set_app_router(app.clone());
 
@@ -208,4 +223,88 @@ fn serve(app: fn() -> Element) {
                 .block_on(app_future);
         }
     }
+}
+
+/// Axum middleware that logs every incoming request as a single string,
+/// including the request body (buffered into memory, UTF-8 decoded when
+/// possible). Authorization / Cookie are reported as flags only to keep
+/// secrets out of logs.
+///
+/// Body is buffered up to 1 MiB; anything bigger is replaced with a
+/// length-only summary. The buffered bytes are then rewrapped into a new
+/// `Body` so the downstream handler still sees the original payload.
+#[cfg(feature = "server")]
+async fn log_request(
+    req: axum::extract::Request,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    const MAX_BODY_LOG: usize = 1024 * 1024;
+
+    let method = req.method().clone();
+    let uri = req.uri().clone();
+    let headers = req.headers().clone();
+
+    let origin = headers
+        .get(axum::http::header::ORIGIN)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("-")
+        .to_string();
+    let user_agent = headers
+        .get(axum::http::header::USER_AGENT)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("-")
+        .to_string();
+    let content_type = headers
+        .get(axum::http::header::CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("-")
+        .to_string();
+    let content_length = headers
+        .get(axum::http::header::CONTENT_LENGTH)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("-")
+        .to_string();
+    let has_auth = headers.contains_key(axum::http::header::AUTHORIZATION);
+    let has_cookie = headers.contains_key(axum::http::header::COOKIE);
+
+    let (parts, body) = req.into_parts();
+    let body_bytes = match axum::body::to_bytes(body, MAX_BODY_LOG).await {
+        Ok(b) => b,
+        Err(e) => {
+            tracing::warn!(target: "http", "failed to buffer request body: {e}");
+            axum::body::Bytes::new()
+        }
+    };
+    let body_summary = if body_bytes.is_empty() {
+        "<empty>".to_string()
+    } else {
+        match std::str::from_utf8(&body_bytes) {
+            Ok(s) if s.len() <= 2048 => s.to_string(),
+            Ok(s) => format!("{}...({} bytes total)", &s[..2048], s.len()),
+            Err(_) => format!("<binary {} bytes>", body_bytes.len()),
+        }
+    };
+    let req = axum::extract::Request::from_parts(parts, axum::body::Body::from(body_bytes));
+
+    let start = std::time::Instant::now();
+    let response = next.run(req).await;
+    let elapsed = start.elapsed();
+
+    tracing::info!(
+        target: "http",
+        "{method} {uri} -> {status} {elapsed:.2?} origin={origin} ua={user_agent} ct={content_type} cl={content_length} auth={auth} cookie={cookie} body={body_summary}",
+        method = method,
+        uri = uri,
+        status = response.status().as_u16(),
+        elapsed = elapsed,
+        origin = origin,
+        user_agent = user_agent,
+        content_type = content_type,
+        content_length = content_length,
+        auth = if has_auth { "yes" } else { "no" },
+        cookie = if has_cookie { "yes" } else { "no" },
+        body_summary = body_summary,
+    );
+
+    response
 }

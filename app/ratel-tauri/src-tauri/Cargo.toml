@@ -19,6 +19,14 @@ tauri = { version = "2", features = [] }
 tauri-common = { workspace = true }
 tauri-plugin-opener = "2"
 
+# Routes window.fetch from the WebView through Rust's reqwest, bypassing
+# Android WebView's request stack (avoids streaming-body drop, CORS
+# preflight, and CSP for outbound requests). Pair with a JS-side
+# `window.fetch = window.__TAURI__.http.fetch` override (see dist/index.html
+# injection in app/ratel-tauri/Makefile) to actually divert dioxus-fullstack
+# traffic through it.
+tauri-plugin-http = "2"
+
 # Native Google Sign In: Android Credential Manager + Google
 # AuthorizationClient. Reads OAuth client_id from the web bundle (the
 # bundle passes it as a sign_in() argument, extracted at compile time
