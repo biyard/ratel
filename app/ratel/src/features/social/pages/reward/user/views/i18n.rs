@@ -53,6 +53,11 @@ translate! {
     past_cycles: { en: "Past Cycles", ko: "이전 사이클" },
     claimable: { en: "claimable", ko: "청구 가능" },
     swap_all: { en: "Swap All", ko: "전체 스왑" },
+    swap_coming_soon: { en: "Coming soon", ko: "준비 중" },
+    swap_coming_soon_note: {
+        en: "Token swap is coming soon",
+        ko: "토큰 스왑은 곧 출시됩니다"
+    },
     claimed: { en: "Claimed", ko: "청구 완료" },
     stat_points: { en: "Points", ko: "포인트" },
     stat_share: { en: "Share", ko: "비율" },
