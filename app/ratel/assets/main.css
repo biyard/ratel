@@ -45864,3 +45864,205 @@ body.comments-panel-resizing {
   color: var(--ff-text-muted);
   font-size: 13px;
 }
+
+/* === src/features/fact_or_fold/pages/lobby === */
+
+.ff-lobby {
+  --ff-bg-glass: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, rgba(255, 255, 255, 0.78));
+  --ff-border: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(10, 10, 30, 0.08));
+  --ff-text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
+  --ff-text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+  --ff-pink: #db2780;
+  --ff-gold: #fcb300;
+
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  color: var(--ff-text-primary);
+}
+
+.ff-lobby__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ff-lobby__brand-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #fcb300 0%, #db2780 100%);
+  color: #06060e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.ff-lobby__brand-name {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  color: var(--ff-text-primary);
+}
+
+.ff-lobby__brand-sub {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  color: var(--ff-text-muted);
+}
+
+.ff-lobby__featured {
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 18px;
+  backdrop-filter: blur(14px);
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: relative;
+  overflow: hidden;
+}
+.ff-lobby__featured::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 80% 0%,
+    rgba(252, 179, 0, 0.08),
+    transparent 55%
+  );
+  pointer-events: none;
+}
+.ff-lobby__featured > * { position: relative; }
+
+.ff-lobby__tag {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--ff-border);
+  border-radius: 4px;
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ff-text-muted);
+}
+.ff-lobby__tag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+}
+.ff-lobby__tag[data-variant="open"]    { color: var(--ff-gold); border-color: rgba(252,179,0,0.4); }
+.ff-lobby__tag[data-variant="waiting"] { color: var(--ff-gold); border-color: rgba(252,179,0,0.4); }
+.ff-lobby__tag[data-variant="live"]    { color: var(--ff-pink); border-color: rgba(219,39,128,0.5); }
+.ff-lobby__tag[data-variant="settled"] { color: #6eedd8; border-color: rgba(110,237,216,0.4); }
+.ff-lobby__tag[data-variant="closed"]  { color: var(--ff-text-muted); }
+
+.ff-lobby__title {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-weight: 800;
+  font-size: 38px;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.ff-lobby__tagline {
+  font-size: 15px;
+  color: var(--ff-text-muted);
+  line-height: 1.6;
+  max-width: 640px;
+  margin: 0;
+}
+
+.ff-lobby__meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ff-border);
+  margin-top: 4px;
+  padding-top: 14px;
+}
+
+.ff-lobby__meta-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ff-lobby__meta-label {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ff-text-muted);
+}
+
+.ff-lobby__meta-value {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--ff-text-primary);
+}
+
+.ff-lobby__cta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.ff-lobby__status-line {
+  font-size: 12px;
+  color: var(--ff-text-muted);
+}
+.ff-lobby__status-line--muted { font-style: italic; }
+
+.ff-lobby__error {
+  flex-basis: 100%;
+  color: #ff4d6d;
+  font-size: 12px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 77, 109, 0.3);
+  background: rgba(255, 77, 109, 0.08);
+  border-radius: 6px;
+}
+
+.ff-lobby__rules {
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 12px;
+  padding: 18px 22px;
+  font-size: 13px;
+  color: var(--ff-text-muted);
+}
+.ff-lobby__rules strong {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--ff-text-primary);
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.ff-lobby__rules ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  line-height: 1.5;
+}

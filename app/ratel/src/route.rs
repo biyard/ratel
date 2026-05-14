@@ -41,11 +41,12 @@ use crate::features::spaces::pages::actions::SpaceActionsPage;
 use crate::features::admin::{AdminLayout, AdminMainPage};
 
 // Fact or Fold — admin pages share `FactFoldAdminLayout` (sub-tabs)
-// nested under the global `AdminLayout` (admin-only guard).
+// nested under the global `AdminLayout` (admin-only guard). The
+// player-facing lobby page lives at top level.
 use crate::features::fact_or_fold::pages::{
     FactFoldAdminHeadlinesPage, FactFoldAdminLayout, FactFoldAdminNewHeadlinePage,
     FactFoldAdminReportsPage, FactFoldAdminSchedulePage, FactFoldAdminSettingsPage,
-    FactFoldAdminStatsPage,
+    FactFoldAdminStatsPage, FactFoldLobbyPage,
 };
 
 // Sub-team governance pages — placeholders wired up now; content lives
@@ -137,6 +138,9 @@ pub enum Route {
 
         #[route("/me/character")]
         CharacterPage { },
+
+        #[route("/fact-or-fold")]
+        FactFoldLobbyPage { },
 
         #[nest("/admin")]
             #[layout(AdminLayout)]
