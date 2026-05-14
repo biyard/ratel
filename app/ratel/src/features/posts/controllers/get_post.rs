@@ -1,10 +1,10 @@
 use std::collections::HashSet;
 
+use crate::features::auth::OptionalUser;
 use crate::features::posts::controllers::dto::*;
 use crate::features::posts::models::*;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
-use crate::features::auth::OptionalUser;
 
 #[mcp_tool(name = "get_post", description = "Get post details by ID.")]
 #[get("/api/posts/:post_id", user: OptionalUser)]
@@ -40,6 +40,15 @@ pub async fn get_post_handler(post_id: FeedPartition) -> Result<PostDetailRespon
     }
 
     let post = post.ok_or(Error::NotFound("Post not found".into()))?;
+
+    // Sub-team broadcast / direct-message Posts are NEVER publicly readable.
+    // The extension method short-circuits to Ok for ordinary posts and
+    // resolves the broadcast audience (parent + relevant child team
+    // members) for Broadcast-visibility ones. Defined in
+    // `sub_team::services::broadcast_access`.
+    use crate::features::sub_team::services::broadcast_access::PostBroadcastAccessExt;
+    post.assert_broadcast_access(cli, user.as_ref().map(|u| &u.pk))
+        .await?;
 
     let permissions = post.get_permissions(cli, user.clone()).await?;
     if !permissions.contains(TeamGroupPermission::PostRead) {
@@ -79,8 +88,7 @@ pub async fn get_post_handler(post_id: FeedPartition) -> Result<PostDetailRespon
             resp.is_post_owner = true;
         }
         if matches!(post.user_pk, Partition::Team(_)) {
-            resp.viewer_role =
-                Team::get_user_role(cli, &post.user_pk, &user.pk).await?;
+            resp.viewer_role = Team::get_user_role(cli, &post.user_pk, &user.pk).await?;
         }
     }
 

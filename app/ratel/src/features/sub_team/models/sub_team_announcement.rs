@@ -40,6 +40,12 @@ pub struct SubTeamAnnouncement {
     #[serde(default)]
     pub tags: Vec<String>,
 
+    /// File attachments uploaded in the composer's right-panel uploader.
+    /// Mirrored onto the fan-out anchor Post so apply/detail surfaces can
+    /// render them next to the body — same pattern as `SubTeamDocument`.
+    #[serde(default)]
+    pub attachments: Vec<File>,
+
     /// Parent-team admin user pk who authored.
     pub author_user_id: String,
 
@@ -129,6 +135,7 @@ impl SubTeamAnnouncement {
             body,
             html_contents: String::new(),
             tags: Vec::new(),
+            attachments: Vec::new(),
             author_user_id,
             status: SubTeamAnnouncementStatus::Draft,
             target_type: BroadcastTarget::AllRecognizedSubTeams,
@@ -167,6 +174,7 @@ impl SubTeamAnnouncement {
             body: String::new(),
             html_contents: body,
             tags: Vec::new(),
+            attachments: Vec::new(),
             author_user_id,
             status: SubTeamAnnouncementStatus::Published,
             target_type: BroadcastTarget::AllRecognizedSubTeams,

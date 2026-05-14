@@ -107,8 +107,8 @@ Phase 0's full Essence pipeline — embedding every Space action into your perso
 
 > 🎬 **Walkthrough:** opening a Space and exploring the arena, panels, and action carousel.
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/overview.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-  Your browser doesn't support embedded video. <a href={useBaseUrl('/media/overview.mov')}>Download the walkthrough</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/overview.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+  Your browser doesn't support embedded video. <a href="https://metadata.ratel.foundation/mov/overview.mov">Download the walkthrough</a>.
 </video>
 
 ## Where to go next

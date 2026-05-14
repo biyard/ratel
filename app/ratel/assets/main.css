@@ -7022,6 +7022,52 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   object-fit: cover;
 }
 
+/* Attachment links rendered between the post body and the action bar.
+   Populated by the sub-team docs dual-write path; styled to read as a
+   downloadable file list rather than an inline link. */
+.post-hero__attachments {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 16px 0 4px;
+}
+.post-hero__attachment {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--dark, rgba(255, 255, 255, 0.03)) var(--light, rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 13px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.post-hero__attachment:hover {
+  border-color: var(--accent-gold);
+  background: var(--dark, rgba(252, 179, 0, 0.06)) var(--light, rgba(252, 179, 0, 0.08));
+}
+.post-hero__attachment svg {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.post-hero__attachment-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.post-hero__attachment-size {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
 .post-hero__actions {
   display: flex;
   align-items: center;
@@ -30443,6 +30489,51 @@ body.comments-panel-resizing {
   line-height: 1.6;
 }
 
+/* Attachment list inside the agreement modal — sits between the
+   doc body and the agree notice, links open in a new tab. */
+.sub-team-apply-doc-modal .doc-modal__attachments {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 16px 0 12px;
+}
+.sub-team-apply-doc-modal .doc-modal__attachment {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--dark, rgba(168, 85, 247, 0.06)) var(--light, rgba(168, 85, 247, 0.08));
+  border: 1px solid var(--dark, rgba(168, 85, 247, 0.22)) var(--light, rgba(168, 85, 247, 0.28));
+  color: var(--sub-team-text);
+  text-decoration: none;
+  font-size: 12.5px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.sub-team-apply-doc-modal .doc-modal__attachment:hover {
+  border-color: var(--dark, rgba(168, 85, 247, 0.45)) var(--light, rgba(168, 85, 247, 0.55));
+  background: var(--dark, rgba(168, 85, 247, 0.10)) var(--light, rgba(168, 85, 247, 0.14));
+}
+.sub-team-apply-doc-modal .doc-modal__attachment svg {
+  color: var(--sub-team-purple);
+  flex-shrink: 0;
+}
+.sub-team-apply-doc-modal .doc-modal__attachment-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.sub-team-apply-doc-modal .doc-modal__attachment-size {
+  font-size: 10.5px;
+  color: var(--sub-team-dim);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
 .sub-team-apply-doc-modal .doc-modal__foot {
   padding: 18px 26px;
   border-top: 1px solid var(--sub-team-border);
@@ -31738,6 +31829,109 @@ body.comments-panel-resizing {
   -webkit-appearance: none;
 }
 
+/* Attachments — file list + dropzone inside the right-panel side-card.
+   The base `.file-dropzone` rule sets `display: none` and is only
+   unhidden by parent-scoped overrides; without this block the dropzone
+   stays invisible. Mirrors the dashed-purple style used by the docs
+   composer (.sub-team-doc-compose .attachments .file-dropzone). */
+.sub-team-broadcast-compose .file-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.025);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 6px;
+}
+.sub-team-broadcast-compose .file-row__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(168, 85, 247, 0.10);
+  color: #a855f7;
+  flex-shrink: 0;
+}
+.sub-team-broadcast-compose .file-row__icon svg { width: 14px; height: 14px; }
+.sub-team-broadcast-compose .file-row__body { flex: 1; min-width: 0; }
+.sub-team-broadcast-compose .file-row__name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #12121a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sub-team-broadcast-compose .file-row__meta {
+  font-size: 10.5px;
+  color: #6b6b80;
+  margin-top: 2px;
+}
+.sub-team-broadcast-compose .file-row__remove {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #6b6b80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.sub-team-broadcast-compose .file-row__remove:hover {
+  color: #db2780;
+  border-color: rgba(219, 39, 128, 0.32);
+}
+.sub-team-broadcast-compose .file-row__remove svg { width: 12px; height: 12px; }
+.sub-team-broadcast-compose .file-dropzone {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(168, 85, 247, 0.03);
+  border: 1.5px dashed rgba(168, 85, 247, 0.32);
+  color: #a855f7;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sub-team-broadcast-compose .file-dropzone:hover {
+  background: rgba(168, 85, 247, 0.06);
+  border-color: rgba(168, 85, 247, 0.5);
+}
+.sub-team-broadcast-compose .file-dropzone svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.sub-team-broadcast-compose .file-dropzone__label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+}
+.sub-team-broadcast-compose .file-dropzone__label small {
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: #8888a8;
+}
+
 
 /* === src/features/sub_team/pages/bylaws/style.css === */
 /* Public bylaws reader page. Mirrors
@@ -32186,6 +32380,14 @@ body.comments-panel-resizing {
   font-size: 12px;
   color: var(--sub-team-muted);
   line-height: 1.55;
+  /* Clamp long excerpts to 4 lines so cards in the same grid row stay
+     visually balanced. Trailing content is replaced with "…" via the
+     standard `-webkit-line-clamp` recipe. */
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .sub-team-bylaws .bylaw-card__meta {
   font-size: 9px;
@@ -32198,7 +32400,10 @@ body.comments-panel-resizing {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-top: 6px;
+  /* `margin-top: auto` pushes the foot row to the bottom of the card
+     so the like / comment counts line up across cards of different
+     content lengths in the same grid row. */
+  margin-top: auto;
   padding-top: 10px;
   border-top: 1px solid var(--sub-team-border);
 }
@@ -34028,7 +34233,11 @@ body.comments-panel-resizing {
   margin: 0;
   padding: 10px 14px;
   border-radius: 11px;
-  background: rgba(6, 6, 14, 0.55);
+  /* Was a hardcoded dark glass (`rgba(6,6,14,0.55)`), which left the
+     file row reading as a dark card sitting on top of the light-mode
+     background. Use a space-toggle so dark mode keeps the glass look
+     while light mode reads as a subtle tint over the page. */
+  background: var(--dark, rgba(6, 6, 14, 0.55)) var(--light, rgba(0, 0, 0, 0.03));
   border: 1px solid var(--sub-team-border);
   transition: border-color 0.2s;
 }

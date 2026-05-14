@@ -3,13 +3,16 @@ use crate::features::posts::*;
 #[allow(unused_imports)]
 use rmcp::schemars;
 
-#[derive(Debug, Clone, PartialEq, Eq, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum)]
+#[derive(
+    Debug, Clone, PartialEq, Eq, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum,
+)]
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum Visibility {
     #[default]
     Public,
     Private,
     TeamOnly(String),
+    Broadcast,
 }
 
 impl From<SpaceVisibility> for Visibility {

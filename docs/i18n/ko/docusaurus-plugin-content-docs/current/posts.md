@@ -169,6 +169,6 @@ Essence 파이프라인의 전체 기능 (임베딩 · 검색 · House Q&A) 은 
 
 > 🎬 **워크스루:** 게시글을 처음부터 끝까지 작성하고 발행하는 흐름.
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/post.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-  브라우저가 비디오 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/post.mov')}>워크스루 다운로드</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/post.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+  브라우저가 비디오 임베드를 지원하지 않습니다. <a href="https://metadata.ratel.foundation/mov/post.mov">워크스루 다운로드</a>.
 </video>

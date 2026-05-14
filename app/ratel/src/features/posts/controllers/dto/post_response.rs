@@ -33,6 +33,11 @@ pub struct PostResponse {
     pub rewards: Option<i64>,
 
     pub urls: Vec<String>,
+    /// File attachments mirrored from the source Post. Used by
+    /// post-detail and sub-team doc surfaces to render a downloadable
+    /// list of files attached at compose time.
+    #[serde(default)]
+    pub attachments: Vec<crate::common::types::File>,
     pub liked: bool,
     #[serde(default)]
     pub categories: Vec<String>,
@@ -88,6 +93,7 @@ impl From<Post> for PostResponse {
             booster: post.booster.unwrap_or(BoosterType::NoBoost),
             rewards: post.rewards,
             urls: post.urls.clone(),
+            attachments: post.attachments,
             liked: false,
             auth_pk: post.user_pk,
             space_type: post.space_type,

@@ -173,8 +173,8 @@ The full Essence pipeline (embeddings, retrieval, House Q&A) is rolling out in p
   controls
   preload="metadata"
   width="100%"
-  src={useBaseUrl('/media/post.mov')}
+  src="https://metadata.ratel.foundation/mov/post.mov"
   style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}
 >
-  Your browser doesn't support embedded video. <a href={useBaseUrl('/media/post.mov')}>Download the walkthrough</a>.
+  Your browser doesn't support embedded video. <a href="https://metadata.ratel.foundation/mov/post.mov">Download the walkthrough</a>.
 </video>
