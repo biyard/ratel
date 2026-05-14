@@ -45572,3 +45572,295 @@ body.comments-panel-resizing {
   color: #ff4d6d;
   font-size: 12px;
 }
+
+/* === src/features/fact_or_fold/pages/admin/schedule === */
+
+.ff-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ff-schedule__banner {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--ff-border);
+}
+
+.ff-schedule__banner--alert {
+  background: rgba(219, 39, 128, 0.08);
+  border-color: rgba(219, 39, 128, 0.4);
+}
+.ff-schedule__banner--ok {
+  background: rgba(110, 237, 216, 0.05);
+  border-color: rgba(110, 237, 216, 0.25);
+}
+
+.ff-schedule__banner-icon {
+  font-size: 22px;
+}
+.ff-schedule__banner--alert .ff-schedule__banner-icon { color: var(--ff-pink); }
+.ff-schedule__banner--ok .ff-schedule__banner-icon { color: #6eedd8; }
+
+.ff-schedule__banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ff-schedule__banner-text strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ff-text-primary);
+}
+.ff-schedule__banner-text p {
+  font-size: 12px;
+  color: var(--ff-text-muted);
+  margin: 0;
+}
+
+.ff-schedule__banner-cta {
+  padding: 8px 14px;
+  border: 1px solid rgba(252, 179, 0, 0.4);
+  background: rgba(252, 179, 0, 0.08);
+  color: var(--ff-gold);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.ff-schedule__banner-cta:hover { background: rgba(252, 179, 0, 0.16); }
+
+.ff-schedule__panel {
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 14px;
+  backdrop-filter: blur(14px);
+  overflow: hidden;
+}
+
+.ff-schedule__panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--ff-border);
+}
+.ff-schedule__panel-title {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.ff-schedule__panel-sub {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  color: var(--ff-text-muted);
+}
+
+.ff-schedule__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ff-schedule__row {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 16px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--ff-border);
+}
+.ff-schedule__row:first-child { border-top: none; }
+
+.ff-schedule__when {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 12px;
+  color: var(--ff-gold);
+}
+
+.ff-schedule__row-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ff-text-primary);
+  margin-bottom: 4px;
+}
+
+.ff-schedule__row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--ff-text-muted);
+  align-items: baseline;
+}
+.ff-schedule__row-source {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+}
+.ff-schedule__row-tag {
+  padding: 1px 6px;
+  border: 1px solid var(--ff-border);
+  border-radius: 3px;
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.ff-schedule__empty {
+  padding: 32px;
+  text-align: center;
+  font-style: italic;
+  color: var(--ff-text-muted);
+}
+
+/* === src/features/fact_or_fold/pages/admin/stats === */
+/* === src/features/fact_or_fold/pages/admin/reports === */
+
+.ff-stats,
+.ff-reports {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ff-stats__notice,
+.ff-reports__notice {
+  padding: 14px 18px;
+  border: 1px dashed var(--ff-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--ff-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.ff-stats__notice strong,
+.ff-reports__notice strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ff-text-primary);
+  font-size: 13px;
+}
+.ff-stats__notice p,
+.ff-reports__notice p { margin: 0; }
+
+.ff-stats__kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.ff-stats__kpi-tile {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--ff-border);
+  background: var(--ff-bg-glass);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ff-stats__kpi-label {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ff-text-muted);
+}
+.ff-stats__kpi-value {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--ff-text-muted);
+}
+.ff-stats__kpi-sub {
+  font-size: 11px;
+  color: var(--ff-text-muted);
+  font-style: italic;
+}
+
+.ff-stats__panel {
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  backdrop-filter: blur(14px);
+}
+.ff-stats__panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.ff-stats__panel-title {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.ff-stats__panel-sub {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  color: var(--ff-text-muted);
+}
+.ff-stats__chart-placeholder {
+  height: 180px;
+  border: 1px dashed var(--ff-border);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ff-text-muted);
+  font-size: 12px;
+  font-style: italic;
+}
+.ff-stats__empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--ff-text-muted);
+  font-style: italic;
+  font-size: 13px;
+}
+
+.ff-reports__tabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--ff-border);
+  border-radius: 8px;
+  padding: 4px;
+}
+.ff-reports__tab {
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  color: var(--ff-text-muted);
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.ff-reports__tab[aria-selected="true"] {
+  color: var(--ff-gold);
+  background: rgba(252, 179, 0, 0.08);
+  opacity: 1;
+}
+
+.ff-reports__panel {
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 14px;
+  padding: 24px;
+}
+.ff-reports__empty {
+  text-align: center;
+  font-style: italic;
+  color: var(--ff-text-muted);
+  font-size: 13px;
+}
