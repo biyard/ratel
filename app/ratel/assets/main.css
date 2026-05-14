@@ -37957,6 +37957,24 @@ body.comments-panel-resizing {
   .home-arena .hud-btn__label {
     display: none;
   }
+  /* Mobile dropdown: anchor menu to the actions row instead of the
+     group so leftmost groups (Create) don't extend off the left
+     viewport edge with their 220px `min-width`. The actions row
+     wraps onto a second line on mobile (order: 2), making it the
+     natural positioning context for menus shared across groups. */
+  .home-arena .arena-topbar__actions {
+    position: relative;
+  }
+  .home-arena .hud-group {
+    position: static;
+  }
+  .home-arena .hud-menu {
+    /* Span the full actions row, indented by 16px so the menu sits
+       inside the viewport regardless of which group triggered it. */
+    left: 0;
+    right: 0;
+    min-width: 0;
+  }
   .home-arena .section-label__dash {
     width: 24px;
   }
