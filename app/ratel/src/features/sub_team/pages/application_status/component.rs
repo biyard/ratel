@@ -221,10 +221,9 @@ fn StatusBody(username: String, team_display: String) -> Element {
                                 }
                                 div { class: "snapshot",
                                     if snapshot_rows.is_empty() {
-                                        div { class: "",
-                                            {tr.status_no_applications}
-                                            empty-row {}
-                                            ","
+                                        div {
+                                            class: "empty-row",
+                                            "{tr.status_no_applications}"
                                         }
                                     }
                                     for (key , value) in snapshot_rows.iter() {
@@ -249,10 +248,9 @@ fn StatusBody(username: String, team_display: String) -> Element {
                         }
                     }
                 } else {
-                    div { class: "",
-                        {tr.status_no_applications}
-                        empty-row {}
-                        ","
+                    div {
+                        class: "empty-row",
+                        "{tr.status_no_applications}"
                     }
                 }
             }
