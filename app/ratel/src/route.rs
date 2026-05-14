@@ -46,7 +46,7 @@ use crate::features::admin::{AdminLayout, AdminMainPage};
 use crate::features::sub_team::pages::{
     TeamBylawsPage, TeamLeaveParentPage, TeamSubTeamApplicationStatusPage, TeamSubTeamApplyPage,
     TeamSubTeamBroadcastComposePage, TeamSubTeamBroadcastEditPage, TeamSubTeamDeregisterPage,
-    TeamSubTeamDetailPage, TeamSubTeamDocComposePage, TeamSubTeamDocEditPage,
+    TeamSubTeamBylawsComposePage, TeamSubTeamDetailPage, TeamSubTeamDocEditPage,
     TeamSubTeamManagementPage,
 };
 
@@ -140,6 +140,36 @@ pub enum Route {
         #[nest("/:username")]
             #[route("/settings/connections")]
             UserSettingsConnectionsPage { username: String },
+            // Sub-team document / broadcast composers — full-screen
+            // focused editors that intentionally do NOT inherit the
+            // TeamArenaLayout (parent topbar, sidemenu) since they
+            // already render their own topbar with Back / Save.
+            #[route("/sub-teams/docs/:doc_id/edit")]
+            TeamSubTeamDocEditPage { username: String, doc_id: String },
+            #[route("/sub-teams/announcements/compose")]
+            TeamSubTeamBroadcastComposePage { username: String },
+            #[route("/sub-teams/announcements/:announcement_id/edit")]
+            TeamSubTeamBroadcastEditPage { username: String, announcement_id: String },
+            // Apply / status / leave pages — focused full-screen pages
+            // that render their own back-button + topbar, so they live
+            // OUTSIDE the `SocialLayout → TeamArenaLayout` chain (which
+            // would add a second team-level topbar and clip the form
+            // with `.arena`).
+            #[route("/sub-teams/apply")]
+            TeamSubTeamApplyPage { username: String },
+            #[route("/sub-teams/application")]
+            TeamSubTeamApplicationStatusPage { username: String },
+            #[route("/parent/leave")]
+            TeamLeaveParentPage { username: String },
+            #[route("/sub-teams/:sub_team_id/deregister")]
+            TeamSubTeamDeregisterPage { username: String, sub_team_id: String },
+            #[route("/bylaws")]
+            TeamBylawsPage { username: String },
+            // Bylaws-mode compose — same UI as `TeamSubTeamDocComposePage`
+            // but with the category preset baked into the route so the
+            // dual-write (SubTeamDocument + backing Post) kicks in.
+            #[route("/bylaws/compose/:category")]
+            TeamSubTeamBylawsComposePage { username: String, category: String },
             #[layout(SocialLayout)]
                 #[route("/")]
                 SocialIndex { username: String },
@@ -174,27 +204,15 @@ pub enum Route {
                 // controller hooks.
                 #[route("/sub-teams/manage")]
                 TeamSubTeamManagementPage { username: String },
-                #[route("/sub-teams/apply")]
-                TeamSubTeamApplyPage { username: String },
-                #[route("/sub-teams/application")]
-                TeamSubTeamApplicationStatusPage { username: String },
-                #[route("/sub-teams/docs/compose")]
-                TeamSubTeamDocComposePage { username: String },
-                #[route("/sub-teams/docs/:doc_id/edit")]
-                TeamSubTeamDocEditPage { username: String, doc_id: String },
-                #[route("/sub-teams/announcements/compose")]
-                TeamSubTeamBroadcastComposePage { username: String },
-                #[route("/sub-teams/announcements/:announcement_id/edit")]
-                TeamSubTeamBroadcastEditPage { username: String, announcement_id: String },
-                #[route("/sub-teams/:sub_team_id")]
-                TeamSubTeamDetailPage { username: String, sub_team_id: String },
-                #[route("/sub-teams/:sub_team_id/deregister")]
-                TeamSubTeamDeregisterPage { username: String, sub_team_id: String },
-                #[route("/parent/leave")]
-                TeamLeaveParentPage { username: String },
-                #[route("/bylaws")]
-                TeamBylawsPage { username: String },
             #[end_layout]
+
+            // Sub-team detail — declared AFTER the layout block so the
+            // dioxus router matches the more specific `/sub-teams/manage`
+            // (inside the layout) before falling back to this wildcard.
+            // The page itself lives OUTSIDE SocialLayout so it owns its
+            // own topbar.
+            #[route("/sub-teams/:sub_team_id")]
+            TeamSubTeamDetailPage { username: String, sub_team_id: String },
         #[end_nest]
 
         #[nest("/spaces/:space_id")]

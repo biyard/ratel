@@ -53,13 +53,29 @@ where
     F: FnOnce() -> Fut,
     Fut: std::future::Future<Output = T>,
 {
-    let prev = std::env::var(key).ok();
-    std::env::set_var(key, val);
+    run_with_envs(&[(key, val)], f).await
+}
+
+/// Same as `run_with_env` but sets multiple vars atomically.
+pub async fn run_with_envs<F, Fut, T>(pairs: &[(&str, &str)], f: F) -> T
+where
+    F: FnOnce() -> Fut,
+    Fut: std::future::Future<Output = T>,
+{
+    let prev: Vec<(String, Option<String>)> = pairs
+        .iter()
+        .map(|(k, v)| {
+            let p = std::env::var(k).ok();
+            std::env::set_var(k, v);
+            ((*k).to_string(), p)
+        })
+        .collect();
     let r = f().await;
-    if let Some(p) = prev {
-        std::env::set_var(key, p);
-    } else {
-        std::env::remove_var(key);
+    for (k, p) in prev {
+        match p {
+            Some(v) => std::env::set_var(&k, v),
+            None => std::env::remove_var(&k),
+        }
     }
     r
 }

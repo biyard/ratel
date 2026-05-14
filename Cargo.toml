@@ -15,11 +15,7 @@ repository = "https://github.com/biyard/ratel"
 license = "MIT"
 
 [workspace.dependencies]
-bdk = { path = "packages/bdk", version = "0.1.*" }
 btracing = { path = "packages/btracing", version = "0.1.*" }
-by-axum = { path = "packages/by-axum", version = "0.2.*" }
-by-types = { path = "packages/by-types", version = "0.3.*" }
-rest-api = { path = "packages/rest-api", version = "0.1.*" }
 dioxus-translate = { path = "packages/dioxus-translate", version = "0.1.*", features = [
   "ko",
 ] }
@@ -44,7 +40,7 @@ sqlx = { version = "0.8.3", features = [
 tokio = { version = "1.40.0", features = ["full"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
-reqwest = { version = "0.12.12", features = ["blocking", "json", "multipart"] }
+reqwest = { version = "0.12", features = ["blocking", "json", "multipart"] }
 schemars = { version = "1.0.4", features = ["uuid1"] }
 aide = { version = "0.15", git = "https://github.com/tamasfe/aide.git", features = [
   "axum",
@@ -74,7 +70,7 @@ percent-encoding = "2.3.2"
 base64 = "0.22.1"
 hyper = "1.6.0"
 
-dioxus = { version = "0.7.7", features = ["fullstack", "router"] }
+dioxus = { version = "0.7.9", features = ["fullstack", "router"] }
 manganis = "0.7"
 lucide-dioxus = { version = "2.569.0", features = ["all-icons"] }
 

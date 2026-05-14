@@ -3,17 +3,7 @@ use crate::common::utils::time;
 use serde::{Deserialize, Serialize};
 use crate::features::auth::models::user::User;
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    serde_repr::Serialize_repr,
-    serde_repr::Deserialize_repr,
-    Default,
-    DynamoEnum,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde_repr::Serialize_repr, serde_repr::Deserialize_repr, Default, DynamoEnum)]
 #[repr(u8)]
 pub enum InvitationStatus {
     #[default]

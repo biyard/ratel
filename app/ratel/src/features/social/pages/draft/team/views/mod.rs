@@ -254,7 +254,7 @@ fn DraftCard(draft: PostResponse, on_delete: EventHandler<FeedPartition>) -> Ele
     } else {
         draft.title.clone()
     };
-    let preview = strip_html(&draft.html_contents);
+    let preview = draft.body.to_plain_text();
     let updated = format_relative(draft.updated_at, &tr);
 
     let author_initial = draft

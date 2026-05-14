@@ -40,6 +40,13 @@ pub enum SubTeamError {
     )]
     MemberCountBelowMinimum,
 
+    #[error("team age below minimum")]
+    #[translate(
+        en = "The applying team is younger than the parent's minimum age requirement",
+        ko = "신청 팀의 생성 기간이 상위팀 최소 기준에 미달합니다."
+    )]
+    TeamAgeBelowMinimum,
+
     #[error("missing required form field")]
     #[translate(
         en = "One or more required application fields are missing",
@@ -72,6 +79,13 @@ pub enum SubTeamError {
         ko = "이 작업을 수행하기에 신청 상태가 맞지 않습니다."
     )]
     ApplicationStateMismatch,
+
+    #[error("application draft operation failed")]
+    #[translate(
+        en = "Could not save your draft. Please try again.",
+        ko = "임시저장에 실패했습니다. 잠시 후 다시 시도해주세요."
+    )]
+    DraftOperationFailed,
 
     // ── Doc / form-field CRUD ─────────────────────────────────────────
     #[error("sub-team document not found")]
@@ -141,8 +155,8 @@ pub enum SubTeamError {
 
 #[cfg(feature = "server")]
 impl SubTeamError {
-    pub fn status_code(&self) -> bdk::prelude::axum::http::StatusCode {
-        use bdk::prelude::axum::http::StatusCode;
+    pub fn status_code(&self) -> crate::axum::http::StatusCode {
+        use crate::axum::http::StatusCode;
         use SubTeamError::*;
         match self {
             ApplicationNotFound
@@ -161,15 +175,15 @@ impl SubTeamError {
 
 #[cfg(feature = "server")]
 impl dioxus::fullstack::axum::response::IntoResponse for SubTeamError {
-    fn into_response(self) -> bdk::prelude::axum::response::Response {
-        use bdk::prelude::axum::response::IntoResponse;
+    fn into_response(self) -> crate::axum::response::Response {
+        use crate::axum::response::IntoResponse;
         (self.status_code(), self.to_string()).into_response()
     }
 }
 
 #[cfg(feature = "server")]
 impl dioxus::fullstack::AsStatusCode for SubTeamError {
-    fn as_status_code(&self) -> bdk::prelude::axum::http::StatusCode {
+    fn as_status_code(&self) -> crate::axum::http::StatusCode {
         self.status_code()
     }
 }

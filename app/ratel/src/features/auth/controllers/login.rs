@@ -1,11 +1,14 @@
 // Migrated from packages/main-api/src/controllers/v3/auth/login.rs
 use crate::features::auth::models::*;
 #[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
+#[cfg(feature = "server")]
 use crate::features::auth::utils::evm::{build_siwe_message, generate_nonce, recover_address};
 use crate::features::auth::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum LoginRequest {
     Phone {
@@ -44,7 +47,7 @@ pub enum LoginRequest {
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct LoginResponse {
     #[serde(flatten)]
     pub user: User,
@@ -370,13 +373,13 @@ pub async fn wallet_login_handler(
 // ── Wallet address check ────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct WalletCheckRequest {
     pub evm_address: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct WalletCheckResponse {
     pub exists: bool,
 }
@@ -399,7 +402,7 @@ pub async fn wallet_check_handler(req: WalletCheckRequest) -> Result<WalletCheck
 // ── Nonce generation ────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct WalletNonceResponse {
     pub nonce: String,
     pub message: String,

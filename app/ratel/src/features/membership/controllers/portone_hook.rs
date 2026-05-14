@@ -4,12 +4,15 @@ use crate::features::membership::models::{
     TransactionType, UserMembership, UserPayment, UserPurchase,
 };
 #[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
+#[cfg(feature = "server")]
 use crate::features::membership::services::portone::PortOne;
 use crate::features::membership::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct PortoneRequest {
     pub payment_id: String,
     pub status: String,

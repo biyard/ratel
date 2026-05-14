@@ -1,8 +1,11 @@
 use super::super::models::VerifiedAttributes;
 use super::super::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct CredentialResponse {
     pub age: Option<u32>,
     pub gender: Option<String>,

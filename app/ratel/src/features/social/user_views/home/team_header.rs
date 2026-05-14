@@ -1,6 +1,5 @@
 use crate::common::assets::TEAM_BANNER_DEFAULT;
 use crate::common::*;
-use dioxus::prelude::*;
 
 #[component]
 pub fn TeamHeader(

@@ -1,5 +1,8 @@
 use crate::common::*;
 use crate::features::cross_posting::types::SocialPlatform;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Per-(post, platform) engagement counts mirror, refreshed by Stage 4 on an
 /// adaptive cadence (1 h while < 24 h old, 6 h up to 7 d, 24 h up to 30 d,
@@ -12,7 +15,7 @@ use crate::features::cross_posting::types::SocialPlatform;
 /// Design doc: docs/superpowers/specs/2026-04-28-cross-posting-design.md
 /// (`EngagementSnapshot` section). FR-7 #45.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct EngagementSnapshot {
     #[dynamo(prefix = "ES", pk)]
     pub pk: Partition, // Feed(post_id)

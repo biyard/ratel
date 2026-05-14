@@ -4,9 +4,12 @@ use crate::features::membership::controllers::normalize_error;
 use crate::features::membership::models::UserPayment;
 use crate::features::membership::*;
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct BillingInfoResponse {
     pub has_card: bool,

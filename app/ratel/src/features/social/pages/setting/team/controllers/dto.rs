@@ -1,7 +1,10 @@
 use super::super::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct TeamResponse {
     pub id: TeamPartition,
     pub created_at: i64,
@@ -46,7 +49,7 @@ impl From<(crate::features::posts::models::Team, i64)> for TeamResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UpdateTeamRequest {
     pub nickname: Option<String>,
     pub description: Option<String>,
@@ -56,7 +59,7 @@ pub struct UpdateTeamRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct DeleteTeamResponse {
     pub message: String,
     pub deleted_count: usize,

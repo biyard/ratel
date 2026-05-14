@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use crate::common::*;
 
 #[derive(Clone)]
 pub struct PopupConfig {

@@ -6,7 +6,7 @@ use crate::features::social::controllers::{
 use crate::posts::types::TeamGroupPermissions;
 use crate::route::Route;
 use crate::social::pages::member::dto::TeamRole;
-use dioxus::prelude::*;
+use crate::common::*;
 
 /// Arena-styled wrapper around the existing `TeamCreationForm`.
 /// Reuses the form contents verbatim but hosts it inside a glass panel that
@@ -89,6 +89,8 @@ pub fn ArenaTeamCreationPopup() -> Element {
                                         user_type: UserType::Team,
                                         permissions: TeamRole::Admin.into(),
                                         description: description.clone(),
+                                        created_at: response.created_at,
+                                        member_count: 1,
                                     });
                                 team_ctx.select_team(&response.team_pk);
                                 popup.close();

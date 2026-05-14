@@ -1,8 +1,9 @@
 use super::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
-#[derive(
-    Debug, Clone, Copy, Serialize, Deserialize, Default, DynamoEnum, Eq, PartialEq, Translate,
-)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default, DynamoEnum, Eq, PartialEq, Translate)]
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum SpaceAppType {
     #[default]

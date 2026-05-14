@@ -24,4 +24,11 @@ fn main() {
 
     println!("cargo:rerun-if-changed={}", "build.rs");
     println!("cargo:rerun-if-changed={}", js_dir.join("src").display());
+
+    // `option_env!()` in `src/common/config/environment.rs` reads these at
+    // compile time. Without `rerun-if-env-changed`, cargo caches stale values
+    // into the binary even when the env vars change between builds — which
+    // silently breaks `make android` when `MOBILE_API_URL` is overridden.
+    println!("cargo:rerun-if-env-changed=MOBILE_API_URL");
+    println!("cargo:rerun-if-env-changed=ENV");
 }

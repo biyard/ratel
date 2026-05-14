@@ -1,11 +1,14 @@
 use crate::features::posts::types::*;
 use crate::features::posts::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[cfg(feature = "server")]
 use super::{PostComment, PostCommentLike, PostLike, Team};
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct Post {
     pub pk: Partition,
     pub sk: EntityType,
@@ -18,7 +21,8 @@ pub struct Post {
     pub updated_at: i64,
 
     pub title: String,
-    pub html_contents: String,
+    #[serde(alias = "html_contents")]
+    pub body: ContentBody,
     pub post_type: PostType,
 
     #[dynamo(index = "gsi5", order = 1, sk)]
@@ -182,7 +186,7 @@ impl Post {
             updated_at: now,
             post_type,
             title: title.into(),
-            html_contents: html_contents.into(),
+            body: ContentBody::html(html_contents.into()),
             status: PostStatus::Draft,
             visibility: None,
             shares: 0,

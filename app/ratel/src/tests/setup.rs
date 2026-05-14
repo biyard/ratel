@@ -1,9 +1,10 @@
+use crate::axum;
+use crate::axum::Router;
 use crate::common::aws_sdk_dynamodb;
 use crate::common::mcp::mcp_router;
 use crate::common::models::auth::User;
 use crate::common::types::UserType;
 use crate::common::utils::password::hash_password;
-use axum::Router;
 
 use crate::App;
 
@@ -17,7 +18,7 @@ pub struct TestContext {
 impl TestContext {
     pub async fn setup() -> Self {
         let _ = tracing_subscriber::fmt()
-            .with_env_filter("debug")
+            .with_env_filter("error")
             .try_init();
 
         let config = crate::config::get();

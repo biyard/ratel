@@ -3,6 +3,9 @@ use crate::features::auth::User;
 use crate::features::membership::controllers::normalize_error;
 use crate::features::membership::models::TeamPayment;
 #[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
+#[cfg(feature = "server")]
 use crate::features::membership::services::portone::PortOne;
 use crate::features::membership::services::portone::VerifiedCustomer;
 use crate::features::membership::*;
@@ -11,7 +14,7 @@ use crate::features::social::pages::member::dto::TeamRole;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct TeamIdentificationRequest {
     pub id: String,

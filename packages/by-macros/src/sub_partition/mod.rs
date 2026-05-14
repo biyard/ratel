@@ -46,6 +46,7 @@ fn generate_enum_impl(ident: Ident, ds: &DataEnum) -> proc_macro2::TokenStream {
             );
 
             let struct_def = quote! {
+                #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
                 #[derive(
                     Debug,
                     Clone,
@@ -55,7 +56,6 @@ fn generate_enum_impl(ident: Ident, ds: &DataEnum) -> proc_macro2::TokenStream {
                     PartialEq,
                     Eq,
                 )]
-                #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
                 pub struct #struct_name;
 
                 impl std::fmt::Display for #struct_name {
@@ -119,6 +119,7 @@ fn generate_enum_impl(ident: Ident, ds: &DataEnum) -> proc_macro2::TokenStream {
                 );
 
                 let struct_def = quote! {
+                    #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
                     #[derive(
                         Debug,
                         Clone,
@@ -128,8 +129,7 @@ fn generate_enum_impl(ident: Ident, ds: &DataEnum) -> proc_macro2::TokenStream {
                         PartialEq,
                         Eq,
                     )]
-                    #[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
-                    pub struct #struct_name(pub String);
+                        pub struct #struct_name(pub String);
 
                     impl std::fmt::Display for #struct_name {
                         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

@@ -26,8 +26,8 @@ pub enum ActivityError {
 
 #[cfg(feature = "server")]
 impl ActivityError {
-    pub fn status_code(&self) -> bdk::prelude::axum::http::StatusCode {
-        use bdk::prelude::axum::http::StatusCode;
+    pub fn status_code(&self) -> crate::axum::http::StatusCode {
+        use crate::axum::http::StatusCode;
         match self {
             ActivityError::AlreadyRecorded => StatusCode::CONFLICT,
             ActivityError::AggregationFailed
@@ -40,15 +40,15 @@ impl ActivityError {
 
 #[cfg(feature = "server")]
 impl dioxus::fullstack::axum::response::IntoResponse for ActivityError {
-    fn into_response(self) -> bdk::prelude::axum::response::Response {
-        use bdk::prelude::axum::response::IntoResponse;
+    fn into_response(self) -> crate::axum::response::Response {
+        use crate::axum::response::IntoResponse;
         (self.status_code(), self.to_string()).into_response()
     }
 }
 
 #[cfg(feature = "server")]
 impl dioxus::fullstack::AsStatusCode for ActivityError {
-    fn as_status_code(&self) -> bdk::prelude::axum::http::StatusCode {
+    fn as_status_code(&self) -> crate::axum::http::StatusCode {
         self.status_code()
     }
 }

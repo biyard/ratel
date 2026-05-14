@@ -2,9 +2,12 @@ use super::super::models::{AttributeCode, VerifiedAttributes};
 use super::super::*;
 use super::get_credentials::CredentialResponse;
 use crate::features::social::types::SocialError;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(rename_all = "snake_case", tag = "type")]
 pub enum SignAttributesRequest {
     PortOne { id: String },

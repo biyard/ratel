@@ -1,5 +1,5 @@
 use super::*;
-use dioxus::prelude::*;
+use crate::common::*;
 
 mod admin_page;
 mod viewer_page;

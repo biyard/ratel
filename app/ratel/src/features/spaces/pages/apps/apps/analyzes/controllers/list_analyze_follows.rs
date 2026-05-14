@@ -2,13 +2,16 @@ use crate::common::ListResponse;
 use crate::features::spaces::pages::actions::actions::follow::SpaceFollowUser;
 use crate::features::spaces::pages::apps::apps::analyzes::*;
 use crate::features::spaces::pages::apps::models::SpaceApp;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// One follow target a creator has registered for the space's follow
 /// campaign. Each target maps directly to one filter chip in the
 /// analyze cross-filter — there is no item / question hierarchy for
 /// follow, just a flat list of targets.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "server", derive(aide::OperationIo, schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct AnalyzeFollowItem {
     pub user_pk: Partition,
     pub display_name: String,

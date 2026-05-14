@@ -3,18 +3,15 @@ use serde_with::{DeserializeFromStr, SerializeDisplay};
 
 use super::Partition;
 
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    SerializeDisplay,
-    DeserializeFromStr,
-    Default,
-    DynamoEnum,
-    SubPartition,
-)]
-#[cfg_attr(feature = "server", derive(JsonSchema))]
+// `SubPartition` emits `#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]`
+// on each generated wrapper struct; the schemars derive expansion uses
+// unqualified `schemars::...` paths, so we alias the rmcp re-export here.
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
+
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, PartialEq, Eq, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum, SubPartition)]
 pub enum EntityType {
     #[default]
     None,
@@ -249,9 +246,18 @@ pub enum EntityType {
     // agreements for many applications).
     SubTeamLink(String),                  // SUB_TEAM_LINK#{child_team_id}
     SubTeamDocument(String),              // SUB_TEAM_DOCUMENT#{doc_id}
+    /// Immutable snapshot of a `SubTeamDocument` at a specific version.
+    /// Second segment is the version **zero-padded to 8 digits** so the
+    /// lexicographic sk order matches numeric order (v1 < v2 < … < v10).
+    SubTeamDocumentVersion(String, String), // SUB_TEAM_DOCUMENT_VERSION#{doc_id}#{version:08}
     SubTeamDocAgreement(String, String),  // SUB_TEAM_DOC_AGREEMENT#{app_id}#{doc_id}
     SubTeamFormField(String),             // SUB_TEAM_FORM_FIELD#{field_id}
     SubTeamApplication(String),           // SUB_TEAM_APPLICATION#{application_id}
+    /// In-progress (not yet submitted) sub-team application body —
+    /// stored under the *applicant* team pk and keyed by the parent
+    /// team id so a single applicant can hold one draft per parent
+    /// they're considering.
+    SubTeamApplicationDraft(String),      // SUB_TEAM_APPLICATION_DRAFT#{parent_team_id}
     SubTeamAnnouncement(String),          // SUB_TEAM_ANNOUNCEMENT#{announcement_id}
 
     // Cross-posting feature (Phase 1: Bluesky / LinkedIn / Threads). All entities

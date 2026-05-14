@@ -1,5 +1,8 @@
 use crate::common::*;
 #[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
+#[cfg(feature = "server")]
 use crate::common::models::auth::AdminUser;
 #[cfg(feature = "server")]
 use crate::features::essence::models::{Essence, UserEssenceStats};
@@ -13,7 +16,7 @@ use std::collections::HashMap;
 /// Response shape for the admin migration endpoint. Counts per source kind
 /// so the operator can spot obvious undercounts.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct MigrateEssencesResponse {
     pub posts_scanned: u32,
     pub spaces_scanned: u32,

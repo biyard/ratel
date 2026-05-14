@@ -2,7 +2,6 @@ use crate::common::types::*;
 use crate::common::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default)]
-#[cfg_attr(feature = "server", derive(JsonSchema, OperationIo))]
 pub struct SpaceAdmin {
     pub pk: Partition,   // SPACE#{space_id}
     pub sk: EntityType,  // SPACE_ADMIN#{user_pk}

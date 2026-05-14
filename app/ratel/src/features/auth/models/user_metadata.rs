@@ -1,5 +1,8 @@
 use super::*;
 use crate::features::auth::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity)]
 #[serde(untagged)]
@@ -19,7 +22,7 @@ pub enum UserMetadata {
 }
 
 #[derive(Default, Serialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UserResponse {
     pub pk: String,
     pub email: String,
@@ -55,7 +58,7 @@ impl From<User> for UserResponse {
 }
 
 #[derive(Default, Serialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UserDetailResponse {
     #[serde(flatten)]
     pub user: UserResponse,

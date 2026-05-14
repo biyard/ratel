@@ -4,9 +4,12 @@ use crate::features::spaces::pages::actions::actions::discussion::macros::Dynamo
 use crate::features::spaces::pages::actions::actions::discussion::models::{
     SpacePostComment, SpacePostCommentLike,
 };
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity, PartialEq, Eq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SpacePost {
     #[dynamo(index = "gsi3", name = "find_by_space_ordered", pk)]
     #[dynamo(index = "gsi6", name = "find_by_category", order = 1, pk)]

@@ -7,7 +7,7 @@ use crate::features::posts::controllers::list_user_drafts::{
     list_team_drafts_handler, list_user_drafts_handler,
 };
 use crate::features::posts::*;
-use dioxus::prelude::*;
+use crate::common::*;
 use icons::edit::Delete2;
 use std::collections::HashSet;
 
@@ -51,7 +51,12 @@ pub fn MyDrafts() -> Element {
                 {
                     let post_pk_for_nav = post.pk.clone();
                     let post_pk_for_delete = post.pk.clone();
-                    let contents_preview: String = post.html_contents.chars().take(200).collect();
+                    let contents_preview: String = post
+                        .body
+                        .to_plain_text()
+                        .chars()
+                        .take(200)
+                        .collect();
                     rsx! {
                         div {
                             key: "{post.pk}",
@@ -149,7 +154,12 @@ pub fn TeamDrafts(username: String) -> Element {
                 {
                     let post_pk_for_nav = post.pk.clone();
                     let post_pk_for_delete = post.pk.clone();
-                    let contents_preview: String = post.html_contents.chars().take(200).collect();
+                    let contents_preview: String = post
+                        .body
+                        .to_plain_text()
+                        .chars()
+                        .take(200)
+                        .collect();
                     rsx! {
                         div {
                             key: "{post.pk}",

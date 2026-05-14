@@ -39,9 +39,13 @@ pub async fn get_parent_relationship_handler(
 ) -> Result<ParentRelationshipResponse> {
     let _ = team_pk;
     let _ = user;
-    if !role.is_admin_or_owner() {
-        return Err(Error::UnauthorizedAccess);
-    }
+    // Membership is already enforced by the `role: TeamRole` extractor —
+    // non-members get `UnauthorizedAccess` before this body runs. We
+    // intentionally do NOT gate on admin-or-owner here so plain members
+    // can see the parent HUD on their own team home (read-only). The
+    // mutation endpoints (leave / cancel / approve / etc.) keep their
+    // admin checks.
+    let _ = role;
 
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
@@ -62,12 +66,70 @@ pub async fn get_parent_relationship_handler(
         }
     };
 
+    // Resolve the parent (or pending-parent) team's display info so
+    // the HUD panel can show the name + handle without a client-side
+    // re-fetch. `recognized_at` is set only when the team is fully
+    // recognized — pulled from the matching SubTeamLink row on the
+    // parent's pk.
+    let parent_uuid_for_join = team
+        .parent_team_id
+        .clone()
+        .or_else(|| team.pending_parent_team_id.clone());
+    let (parent_display_name, parent_username, recognized_at) = match parent_uuid_for_join {
+        Some(uuid) => {
+            let parent_pk = Partition::Team(uuid.clone());
+            let display = Team::get(cli, &parent_pk, Some(EntityType::Team))
+                .await
+                .ok()
+                .flatten();
+            let (name, username) = match display {
+                Some(t) => (Some(t.display_name), Some(t.username)),
+                None => (None, None),
+            };
+            let recognized_at = if matches!(status, ParentRelationshipStatus::RecognizedSubTeam) {
+                find_recognition_timestamp(cli, &parent_pk, &team.pk)
+                    .await
+                    .ok()
+                    .flatten()
+            } else {
+                None
+            };
+            (name, username, recognized_at)
+        }
+        None => (None, None, None),
+    };
+
     Ok(ParentRelationshipResponse {
         status,
         parent_team_id: team.parent_team_id,
         pending_parent_team_id: team.pending_parent_team_id,
         latest_application_id,
+        parent_team_display_name: parent_display_name,
+        parent_team_username: parent_username,
+        recognized_at,
     })
+}
+
+// Walks SubTeamLink rows under `parent_pk` and returns the
+// `created_at` of the link whose child team matches `child_pk`. Used by
+// the HUD panel to show "인증 YYYY-MM-DD ~" for recognized sub-teams.
+#[cfg(feature = "server")]
+async fn find_recognition_timestamp(
+    cli: &aws_sdk_dynamodb::Client,
+    parent_pk: &Partition,
+    child_pk: &Partition,
+) -> Result<Option<i64>> {
+    let prefix = format!("{LINK_SK_PREFIX}#");
+    let opts = SubTeamLink::opt().sk(prefix).limit(PAGE_LIMIT);
+    let (links, _) = SubTeamLink::query(cli, parent_pk.clone(), opts).await?;
+    let child_uuid = match child_pk {
+        Partition::Team(id) => id.clone(),
+        _ => return Ok(None),
+    };
+    Ok(links
+        .into_iter()
+        .find(|l| l.child_team_id == child_uuid)
+        .map(|l| l.approved_at))
 }
 
 // ── GET /api/teams/:team_pk/parent/applications ────────────────────
@@ -95,8 +157,30 @@ pub async fn list_child_applications_handler(
             SubTeamError::ApplicationNotFound
         })?;
 
-    let items: Vec<SubTeamApplicationResponse> = items.into_iter().map(Into::into).collect();
-    Ok((items, next).into())
+    // Join each application to its parent team so the status page can
+    // render the feedback card's author as the parent (not the
+    // applicant team). N joins, but pages are capped to PAGE_LIMIT.
+    let mut response: Vec<SubTeamApplicationResponse> = Vec::new();
+    for app in items.into_iter() {
+        let mut dto: SubTeamApplicationResponse = app.clone().into();
+        // Applicant is the caller's `team` already — fill those fields
+        // from the extractor instead of an extra ddb read.
+        dto.applicant_team_display_name = team.display_name.clone();
+        dto.applicant_team_username = team.username.clone();
+        let parent_pk = crate::common::types::Partition::Team(app.parent_team_id.clone());
+        if let Ok(Some(parent)) = crate::features::posts::models::Team::get(
+            cli,
+            &parent_pk,
+            Some(crate::common::types::EntityType::Team),
+        )
+        .await
+        {
+            dto.parent_team_display_name = parent.display_name;
+            dto.parent_team_username = parent.username;
+        }
+        response.push(dto);
+    }
+    Ok((response, next).into())
 }
 
 // ── POST /api/teams/:team_pk/parent/applications — submit ──────────
@@ -142,7 +226,70 @@ pub async fn submit_application_handler(
         return Err(SubTeamError::CycleDetected.into());
     }
 
-    // 3. No in-flight application under this applicant team.
+    // 3. Resubmit path — if this applicant already has a Returned
+    //    application for THIS parent, update it in place instead of
+    //    creating a new one. Keeps `application_id` stable so the
+    //    parent's reviewer sees one continuous timeline. Doc
+    //    agreements + form_snapshot from the original submission are
+    //    preserved (snapshot at v1 stays immutable).
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    let returned_existing = find_returned_application(cli, &team.pk, &body.parent_team_id)
+        .await
+        .map_err(|e| {
+            crate::error!("returned lookup failed: {e}");
+            Error::from(SubTeamError::ApplicationStateMismatch)
+        })?;
+
+    if let Some(existing) = returned_existing {
+        // Member count + age are the gates we re-check on update; form &
+        // doc snapshots stay frozen at v1.
+        let member_count = count_team_members(cli, &team.pk).await.map_err(|e| {
+            crate::error!("member count failed: {e}");
+            Error::from(SubTeamError::MemberCountBelowMinimum)
+        })?;
+        if member_count < parent.min_sub_team_members as i64 {
+            return Err(SubTeamError::MemberCountBelowMinimum.into());
+        }
+        if !meets_min_age(team.created_at, parent.min_sub_team_age_days, now) {
+            return Err(SubTeamError::TeamAgeBelowMinimum.into());
+        }
+        validate_form_values(&[], &body.form_values).ok();
+
+        SubTeamApplication::updater(&existing.pk, existing.sk.clone())
+            .with_status(SubTeamApplicationStatus::Pending)
+            .with_submitted_at(now)
+            .with_updated_at(now)
+            .with_decision_reason(String::new())
+            .with_form_values(body.form_values.clone())
+            .execute(cli)
+            .await
+            .map_err(|e| {
+                crate::error!("resubmit application update failed: {:?}", e);
+                Error::from(SubTeamError::ApplicationStateMismatch)
+            })?;
+
+        notify_parent_of_submission(
+            cli,
+            &parent.pk,
+            &body.parent_team_id,
+            &existing.application_id,
+            &existing.sub_team_id,
+            &team.display_name,
+        )
+        .await;
+
+        // Load fresh row so the response carries the updated fields.
+        let refreshed = SubTeamApplication::get(cli, &existing.pk, Some(existing.sk.clone()))
+            .await
+            .map_err(|e| {
+                crate::error!("resubmit refresh failed: {:?}", e);
+                Error::from(SubTeamError::ApplicationStateMismatch)
+            })?
+            .unwrap_or(existing);
+        return Ok(refreshed.into());
+    }
+
+    // 4. New-submit path — block when any in-flight app exists.
     if has_in_flight_application(cli, &team.pk).await.map_err(|e| {
         crate::error!("in-flight lookup failed: {e}");
         Error::from(SubTeamError::ApplicationInFlight)
@@ -157,6 +304,11 @@ pub async fn submit_application_handler(
     })?;
     if member_count < parent.min_sub_team_members as i64 {
         return Err(SubTeamError::MemberCountBelowMinimum.into());
+    }
+
+    // 5b. Team age ≥ parent.min_sub_team_age_days.
+    if !meets_min_age(team.created_at, parent.min_sub_team_age_days, now) {
+        return Err(SubTeamError::TeamAgeBelowMinimum.into());
     }
 
     // 6+7. Load parent's form fields and docs.
@@ -188,7 +340,6 @@ pub async fn submit_application_handler(
         }
     };
 
-    let now = crate::common::utils::time::get_now_timestamp_millis();
     let mut application = SubTeamApplication::new(
         parent.pk.clone(),
         team.pk.clone(),
@@ -209,6 +360,7 @@ pub async fn submit_application_handler(
             required: f.required,
             order: f.order,
             options: f.options.clone(),
+            locked: f.locked,
         })
         .collect();
 
@@ -322,6 +474,10 @@ pub async fn update_child_application_handler(
     if member_count < parent.min_sub_team_members as i64 {
         return Err(SubTeamError::MemberCountBelowMinimum.into());
     }
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    if !meets_min_age(team.created_at, parent.min_sub_team_age_days, now) {
+        return Err(SubTeamError::TeamAgeBelowMinimum.into());
+    }
 
     let parent_form_fields = load_form_fields(cli, &parent.pk).await.map_err(|e| {
         crate::error!("form fields load failed: {e}");
@@ -331,7 +487,6 @@ pub async fn update_child_application_handler(
 
     let mut items: Vec<aws_sdk_dynamodb::types::TransactWriteItem> = Vec::new();
 
-    let now = crate::common::utils::time::get_now_timestamp_millis();
     if let Some(new_agreements) = doc_agreements.as_ref() {
         let parent_docs = load_docs(cli, &parent.pk).await.map_err(|e| {
             crate::error!("docs load failed: {e}");
@@ -473,6 +628,28 @@ fn _unused_silencer() {
 
 // ── Helpers ────────────────────────────────────────────────────────
 
+/// Whether the applying team is old enough to satisfy the parent's
+/// `min_sub_team_age_days` requirement.
+///
+/// * `min_age_days <= 0`         → always met (no constraint)
+/// * `created_at <= 0`           → cannot prove age → fail
+/// * else                        → `(now_ms - created_at) / 86_400_000 >= min_age_days`
+///
+/// Mirrors the client-side `min_days_met` check in
+/// `features/sub_team/pages/apply/component.rs` so the eligibility panel
+/// and the server stay in sync.
+#[cfg(feature = "server")]
+fn meets_min_age(created_at: i64, min_age_days: i32, now_ms: i64) -> bool {
+    if min_age_days <= 0 {
+        return true;
+    }
+    if created_at <= 0 {
+        return false;
+    }
+    let age_days = ((now_ms - created_at) / 86_400_000).max(0);
+    age_days >= min_age_days as i64
+}
+
 #[cfg(feature = "server")]
 fn sub_team_form_field_id(f: &SubTeamFormField) -> String {
     match &f.sk {
@@ -506,8 +683,10 @@ async fn load_docs(
     cli: &aws_sdk_dynamodb::Client,
     parent_pk: &Partition,
 ) -> Result<Vec<SubTeamDocument>> {
+    // Trailing `#` keeps `SUB_TEAM_DOCUMENT_VERSION#…` snapshot rows
+    // out of the result set.
     let opts = SubTeamDocument::opt()
-        .sk(DOC_SK_PREFIX.to_string())
+        .sk(format!("{DOC_SK_PREFIX}#"))
         .limit(PAGE_LIMIT);
     let (items, _) = SubTeamDocument::query(cli, parent_pk.clone(), opts).await?;
     Ok(items)
@@ -592,6 +771,38 @@ async fn has_in_flight_application(
     Ok(false)
 }
 
+/// Looks for the most recent application under `applicant_pk` whose
+/// status is `Returned` and parent matches `parent_team_id`. When such
+/// an application exists, "Edit and resubmit" UPDATES it back to
+/// `Pending` instead of creating a brand-new row — the original
+/// application id stays stable so reviewers see one continuous timeline
+/// rather than a fresh queue entry.
+#[cfg(feature = "server")]
+async fn find_returned_application(
+    cli: &aws_sdk_dynamodb::Client,
+    applicant_pk: &Partition,
+    parent_team_id: &str,
+) -> Result<Option<SubTeamApplication>> {
+    let mut bookmark: Option<String> = None;
+    for _ in 0..MAX_PAGES {
+        let opts = SubTeamApplication::opt_with_bookmark(bookmark.clone()).limit(PAGE_LIMIT);
+        let (items, next) =
+            SubTeamApplication::find_by_applicant(cli, applicant_pk.clone(), opts).await?;
+        for a in items {
+            if matches!(a.status, SubTeamApplicationStatus::Returned)
+                && a.parent_team_id == parent_team_id
+            {
+                return Ok(Some(a));
+            }
+        }
+        match next {
+            Some(b) => bookmark = Some(b),
+            None => return Ok(None),
+        }
+    }
+    Ok(None)
+}
+
 #[cfg(feature = "server")]
 async fn is_parent_already_sub_team_of_child(
     cli: &aws_sdk_dynamodb::Client,
@@ -668,5 +879,120 @@ async fn list_agreements(
     let opts = SubTeamDocAgreement::opt().sk(prefix).limit(PAGE_LIMIT);
     let (items, _) = SubTeamDocAgreement::query(cli, parent_pk.clone(), opts).await?;
     Ok(items)
+}
+
+// ── GET /api/parent-teams/:parent_team_pk/my-application ──────────
+//
+// "Given this parent team, find MY application as one of its
+// would-be sub-teams." Walks the viewer's admin/owner teams and
+// returns the most recent application (Pending / Returned /
+// Approved / Rejected) targeting `parent_team_pk`. Used by the
+// `/{parent_username}/sub-teams/application` status page so the URL
+// stays parent-centric ("status of my application TO this parent")
+// while the data is the applicant team's row.
+#[get(
+    "/api/parent-teams/:parent_team_pk/my-application",
+    user: crate::features::auth::User
+)]
+pub async fn find_my_application_for_parent_handler(
+    parent_team_pk: TeamPartition,
+) -> Result<Option<SubTeamApplicationResponse>> {
+    let cfg = crate::common::CommonConfig::default();
+    let cli = cfg.dynamodb();
+    let user_pk = user.pk.clone();
+    let parent_pk_full: Partition = parent_team_pk.clone().into();
+    let parent_uuid = match &parent_pk_full {
+        Partition::Team(id) => id.clone(),
+        _ => return Ok(None),
+    };
+
+    // 1. Enumerate viewer's admin/owner teams (UserTeam rows under
+    //    `user_pk` with sk prefix `USER_TEAM#`). Pagination capped —
+    //    in practice users belong to 1–2 admin teams.
+    let sk_prefix = crate::common::types::EntityType::UserTeam(String::new()).to_string();
+    let ut_opts = crate::features::auth::UserTeam::opt()
+        .sk(sk_prefix)
+        .limit(PAGE_LIMIT);
+    let (user_teams, _): (Vec<crate::features::auth::UserTeam>, _) =
+        crate::features::auth::UserTeam::query(cli, &user_pk, ut_opts)
+            .await
+            .map_err(|e| {
+                crate::error!("find_my_application_for_parent UserTeam query failed: {e}");
+                SubTeamError::ApplicationStateMismatch
+            })?;
+
+    // 2. For each admin team, walk its application history (GSI1,
+    //    DESC by created_at) and find the first row whose parent
+    //    matches. Returning the freshest match overall handles the
+    //    edge case where the user has multiple admin teams that all
+    //    applied to the same parent.
+    let mut best: Option<SubTeamApplication> = None;
+    for ut in user_teams {
+        if !ut.role.is_admin_or_owner() {
+            continue;
+        }
+        let applicant_pk = match &ut.sk {
+            crate::common::types::EntityType::UserTeam(s) => match s.parse::<Partition>() {
+                Ok(pk) => pk,
+                Err(_) => continue,
+            },
+            _ => continue,
+        };
+        let opts = SubTeamApplication::opt()
+            .limit(PAGE_LIMIT)
+            .scan_index_forward(false);
+        let Ok((apps, _)) =
+            SubTeamApplication::find_by_applicant(cli, applicant_pk.clone(), opts).await
+        else {
+            continue;
+        };
+        for app in apps {
+            if app.parent_team_id != parent_uuid {
+                continue;
+            }
+            // Skip applications that have no meaningful "status view".
+            // `Draft` was never submitted and `Cancelled` is a closed
+            // record (the team left or withdrew). Leaving them in would
+            // make the applicant's status page keep showing
+            // "Approved · 정식 하위팀으로 등록되었습니다" even after
+            // they left the parent team.
+            if matches!(
+                app.status,
+                SubTeamApplicationStatus::Draft | SubTeamApplicationStatus::Cancelled
+            ) {
+                continue;
+            }
+            let candidate_ts = app.submitted_at.unwrap_or(app.created_at);
+            let beat = match &best {
+                Some(b) => {
+                    let b_ts = b.submitted_at.unwrap_or(b.created_at);
+                    candidate_ts > b_ts
+                }
+                None => true,
+            };
+            if beat {
+                best = Some(app);
+            }
+            break;
+        }
+    }
+
+    let Some(app) = best else { return Ok(None) };
+
+    // 3. Join the applicant + parent teams for display metadata
+    //    (avatar / name / @username) so the status page can render
+    //    "fddffd → subteam" without extra client fetches.
+    let mut dto: SubTeamApplicationResponse = app.clone().into();
+    if let Ok(Some(applicant)) =
+        Team::get(cli, &app.applicant_team_pk, Some(EntityType::Team)).await
+    {
+        dto.applicant_team_display_name = applicant.display_name.clone();
+        dto.applicant_team_username = applicant.username.clone();
+    }
+    if let Ok(Some(parent)) = Team::get(cli, &parent_pk_full, Some(EntityType::Team)).await {
+        dto.parent_team_display_name = parent.display_name.clone();
+        dto.parent_team_username = parent.username.clone();
+    }
+    Ok(Some(dto))
 }
 

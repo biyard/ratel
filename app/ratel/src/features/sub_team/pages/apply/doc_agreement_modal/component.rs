@@ -15,6 +15,10 @@ pub fn DocAgreementModal(
     on_agree: EventHandler<()>,
 ) -> Element {
     let tr: SubTeamTranslate = use_translate();
+    // Reference-only docs are shown for the applicant to read but
+    // never require an agreement — render the modal in read-only
+    // mode (no Agree button, just Close).
+    let is_required = doc.required;
 
     rsx! {
         div {
@@ -61,20 +65,22 @@ pub fn DocAgreementModal(
                             r#type: "button",
                             class: "doc-modal__cancel",
                             onclick: move |_| on_cancel.call(()),
-                            "{tr.doc_modal_cancel}"
+                            if is_required { "{tr.doc_modal_cancel}" } else { "{tr.apply_close}" }
                         }
-                        button {
-                            r#type: "button",
-                            class: "doc-modal__agree-btn",
-                            "data-agreed": "{already_agreed}",
-                            "data-testid": "doc-agreement-agree-btn",
-                            disabled: already_agreed,
-                            onclick: move |_| on_agree.call(()),
-                            lucide_dioxus::Check { class: "w-3 h-3 [&>path]:stroke-current" }
-                            if already_agreed {
-                                "{tr.doc_modal_agreed}"
-                            } else {
-                                "{tr.doc_modal_agree}"
+                        if is_required {
+                            button {
+                                r#type: "button",
+                                class: "doc-modal__agree-btn",
+                                "data-agreed": "{already_agreed}",
+                                "data-testid": "doc-agreement-agree-btn",
+                                disabled: already_agreed,
+                                onclick: move |_| on_agree.call(()),
+                                lucide_dioxus::Check { class: "w-3 h-3 [&>path]:stroke-current" }
+                                if already_agreed {
+                                    "{tr.doc_modal_agreed}"
+                                } else {
+                                    "{tr.doc_modal_agree}"
+                                }
                             }
                         }
                     }

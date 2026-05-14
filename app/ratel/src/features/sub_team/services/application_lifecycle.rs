@@ -51,13 +51,19 @@ pub async fn resolve_team_admins(
         .collect())
 }
 
-/// Count members (user_team rows) currently on the applying team.
+/// Count distinct members currently on the applying team.
+///
+/// `Team::create_new_team` writes BOTH a `UserTeam` row (role=Owner) and
+/// a `TeamOwner` row for the creator — so naively counting both sources
+/// double-counts the owner ("팀 멤버가 1명인데 2 members 로 표시되는"
+/// 버그). We collect distinct user pks from UserTeam rows first, then
+/// only add the owner if their pk is not already present.
 pub async fn count_team_members(
     cli: &aws_sdk_dynamodb::Client,
     team_pk: &Partition,
 ) -> Result<i64> {
     let user_team_sk = EntityType::UserTeam(team_pk.to_string());
-    let mut count: i64 = 0;
+    let mut user_pks: std::collections::HashSet<String> = std::collections::HashSet::new();
     let mut bookmark: Option<String> = None;
     for _ in 0..MAX_PAGES {
         let mut opt = crate::features::auth::UserTeamQueryOption::builder().limit(PAGE_SIZE);
@@ -65,17 +71,18 @@ pub async fn count_team_members(
             opt = opt.bookmark(bm.clone());
         }
         let (rows, next) = UserTeam::find_by_team(cli, &user_team_sk, opt).await?;
-        count += rows.len() as i64;
+        for row in rows {
+            user_pks.insert(row.pk.to_string());
+        }
         match next {
             Some(b) => bookmark = Some(b),
             None => break,
         }
     }
-    // Owner record is separate from UserTeam; count it once if distinct.
-    if let Ok(Some(_)) = TeamOwner::get(cli, team_pk, Some(&EntityType::TeamOwner)).await {
-        count += 1;
+    if let Ok(Some(owner)) = TeamOwner::get(cli, team_pk, Some(&EntityType::TeamOwner)).await {
+        user_pks.insert(owner.user_pk.to_string());
     }
-    Ok(count)
+    Ok(user_pks.len() as i64)
 }
 
 /// Load an application by its id from the parent's queue.
@@ -104,6 +111,7 @@ pub async fn approve_application(
     parent_team: &Team,
     app: SubTeamApplication,
     approver_user_pk: &Partition,
+    welcome_message: String,
 ) -> Result<SubTeamApplication> {
     if !matches!(
         app.status,
@@ -123,9 +131,13 @@ pub async fn approve_application(
     let sub_team_id = app.sub_team_id.clone();
     let sub_team_pk: Partition = Partition::Team(sub_team_id.clone());
 
-    // 1. application update
+    // 1. application update — store the welcome message in
+    //    `decision_reason` so the applicant's status page can surface
+    //    it under the "환영 메시지" feedback card. Empty string is OK
+    //    (admin skipped the optional note).
     let app_update = SubTeamApplication::updater(&parent_team.pk, &app.sk)
         .with_status(SubTeamApplicationStatus::Approved)
+        .with_decision_reason(welcome_message)
         .with_decided_at(now)
         .with_updated_at(now)
         .transact_write_item();
@@ -157,7 +169,7 @@ pub async fn approve_application(
 
     // Notifications to sub-team admins
     let parent_team_name = parent_team.display_name.clone();
-    let cta_url = build_sub_team_apply_status_url(&sub_team_id);
+    let cta_url = build_sub_team_apply_status_url(cli, &sub_team_id).await;
     let admins = resolve_team_admins(cli, &sub_team_pk)
         .await
         .unwrap_or_default();
@@ -227,7 +239,7 @@ pub async fn reject_application(
         })?;
 
     let parent_team_name = parent_team.display_name.clone();
-    let cta_url = build_sub_team_apply_status_url(&sub_team_id);
+    let cta_url = build_sub_team_apply_status_url(cli, &sub_team_id).await;
     let admins = resolve_team_admins(cli, &sub_team_pk)
         .await
         .unwrap_or_default();
@@ -287,7 +299,7 @@ pub async fn return_application(
         })?;
 
     let parent_team_name = parent_team.display_name.clone();
-    let cta_url = build_sub_team_apply_status_url(&sub_team_id);
+    let cta_url = build_sub_team_apply_status_url(cli, &sub_team_id).await;
     let admins = resolve_team_admins(cli, &sub_team_pk)
         .await
         .unwrap_or_default();
@@ -321,7 +333,7 @@ pub async fn notify_parent_of_submission(
     sub_team_id: &str,
     sub_team_name: &str,
 ) {
-    let cta_url = build_sub_team_management_url(parent_team_id);
+    let cta_url = build_sub_team_management_url(cli, parent_team_id).await;
     let admins = resolve_team_admins(cli, parent_pk).await.unwrap_or_default();
     for u in admins {
         let payload = InboxPayload::SubTeamApplicationSubmitted {
@@ -337,10 +349,53 @@ pub async fn notify_parent_of_submission(
     }
 }
 
-fn build_sub_team_apply_status_url(sub_team_id: &str) -> String {
-    format!("/teams/{sub_team_id}/parent")
+/// URL of the sub-team's "Application status" page. The Dioxus route is
+/// `/:username/sub-teams/application`, so we resolve the sub-team's
+/// `username` from its team id before building the link. Fallback is
+/// the team home (`/:username`) when the lookup fails.
+async fn build_sub_team_apply_status_url(
+    cli: &aws_sdk_dynamodb::Client,
+    sub_team_id: &str,
+) -> String {
+    let pk = Partition::Team(sub_team_id.to_string());
+    let username = crate::features::posts::models::Team::get(
+        cli,
+        &pk,
+        Some(EntityType::Team),
+    )
+    .await
+    .ok()
+    .flatten()
+    .map(|t| t.username)
+    .unwrap_or_default();
+    if username.is_empty() {
+        // Better to land on the home route than a 404 with the bare id.
+        format!("/{sub_team_id}")
+    } else {
+        format!("/{username}/sub-teams/application")
+    }
 }
 
-fn build_sub_team_management_url(parent_team_id: &str) -> String {
-    format!("/teams/{parent_team_id}/sub-teams")
+/// URL of the parent's "Sub-team management" page. Route is
+/// `/:username/sub-teams/manage`.
+async fn build_sub_team_management_url(
+    cli: &aws_sdk_dynamodb::Client,
+    parent_team_id: &str,
+) -> String {
+    let pk = Partition::Team(parent_team_id.to_string());
+    let username = crate::features::posts::models::Team::get(
+        cli,
+        &pk,
+        Some(EntityType::Team),
+    )
+    .await
+    .ok()
+    .flatten()
+    .map(|t| t.username)
+    .unwrap_or_default();
+    if username.is_empty() {
+        format!("/{parent_team_id}")
+    } else {
+        format!("/{username}/sub-teams/manage")
+    }
 }

@@ -3,9 +3,12 @@ use crate::features::posts::models::*;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
 use crate::features::auth::User;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct CreatePostResponse {
     pub post_pk: Partition,
 }

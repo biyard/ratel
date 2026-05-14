@@ -36,12 +36,26 @@ PORT ?= 8080
 RUN_FEATURES ?= local-dev,bypass
 
 # Auto-detect the host's LAN IP so Android devices / emulators on the same
-# network can reach `dx serve` running on this workstation. Tries Linux
-# (`ip route get`) then macOS (`ipconfig getifaddr en0`); falls back to the
-# Android emulator loopback alias `10.0.2.2`, which works for emulators but
-# not physical phones. Override explicitly when needed:
+# network can reach `dx serve` running on this workstation. OS branch is
+# split so each side's failure doesn't silently zero the other (a piped
+# `awk` exits 0 on empty input, which broke the previous `||` chain on
+# macOS). Falls back to the Android emulator loopback alias `10.0.2.2`,
+# which works for emulators but not physical phones. Override explicitly
+# when needed:
 #   MOBILE_API_URL=http://10.20.30.40:8080 make android
-HOST_IP ?= $(shell ip route get 1.1.1.1 2>/dev/null | awk '/src/ {for(i=1;i<=NF;i++) if($$i=="src") {print $$(i+1); exit}}' || ipconfig getifaddr en0 2>/dev/null || echo 10.0.2.2)
+ifeq ($(shell uname -s),Darwin)
+  HOST_IP ?= $(shell iface=$$(route -n get default 2>/dev/null | awk '/interface:/ {print $$2}'); \
+                     [ -n "$$iface" ] && ipconfig getifaddr "$$iface" || echo 10.0.2.2)
+	ARCH ?= arm64-v8a
+else
+  HOST_IP ?= $(shell ip route get 1.1.1.1 2>/dev/null | awk '/src/ {for(i=1;i<=NF;i++) if($$i=="src") {print $$(i+1); exit}}')
+  ifeq ($(strip $(HOST_IP)),)
+    HOST_IP := 10.0.2.2
+  endif
+
+	ARCH ?= $(shell uname -m)
+endif
+
 MOBILE_API_URL ?= http://$(HOST_IP):$(PORT)
 
 REPOSITORY ?= ratel/app-shell
@@ -49,18 +63,54 @@ ECR ?= $(shell aws ecr describe-repositories --repository-names $(REPOSITORY)  -
 QDRANT_PREFIX ?= ratel-$(ENV)
 QDRANT_URL ?= http://localhost:6334
 QDRANT_API_KEY ?= ""
-ARCH ?= $(shell uname -m)
-AVD_NAME ?= Pixel_6_API_34
+AVD_NAME ?= Pixel6_$(ARCH)
 ANDROID_EMULATOR_ID ?= $(shell adb devices | grep emulator | cut -f1)
 DISABLE_ANSI ?= false
 BUCKET_NAME ?= metadata.ratel.foundation
 HOST_UID ?= $(shell id -u)
 HOST_GID ?= $(shell id -g)
 
-
 ifneq ($(ANDROID_EMULATOR_ID),)
-	DEVICE_FLAG ?= --device $(AVD_NAME)
+	DEVICE_FLAG ?= --device $(ANDROID_EMULATOR_ID)
+	LOGCAT_FLAG ?= -s $(ANDROID_EMULATOR_ID)
+else
+	FIRST_ANDROID_DEVICE := $(shell adb devices | awk 'NR>1 {print $$1; exit}')
+	ifneq ($(FIRST_ANDROID_DEVICE),)
+		DEVICE_FLAG ?= --device $(FIRST_ANDROID_DEVICE)
+		ANDROID_TARGET ?= aarch64-linux-android
+		LOGCAT_FLAG ?= -s $(FIRST_ANDROID_DEVICE)
+	endif
 endif
+
+HOST_OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
+ifeq ($(HOST_OS),darwin)
+  ANDROID_NDK_HOME ?= /opt/homebrew/share/android-ndk
+  ANDROID_JAVA_HOME ?= /Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+	ANDROID_TARGET ?= aarch64-linux-android
+else
+  ANDROID_NDK_HOME ?= /opt/android-ndk
+  # Gradle + Android Gradle Plugin 8.x don't parse class-file major 70
+  # (OpenJDK 26+). Force a JDK that Gradle supports.
+  ANDROID_JAVA_HOME ?= /usr/lib/jvm/java-21-openjdk
+	ANDROID_TARGET ?= x86_64-linux-android
+endif
+
+MODE ?= release
+
+ifneq ($(CARGO_TARGET_DIR),)
+	ANDROID_DX_RES_BASE_DIR ?= $(CARGO_TARGET_DIR)/dx/app-shell
+	ANDROID_DX_RES_DIR ?= $(CARGO_TARGET_DIR)/dx/app-shell/$(MODE)/android/app/app/src/main
+else
+	ANDROID_DX_RES_BASE_DIR ?= target/dx/app-shell
+	ANDROID_DX_RES_DIR ?= target/dx/app-shell/$(MODE)/android/app/app/src/main
+endif
+
+ANDROID_MIPMAP_DENSITIES ?= mdpi hdpi xhdpi xxhdpi xxxhdpi
+
+ANDROID_ENV = \
+	JAVA_HOME=$(ANDROID_JAVA_HOME) \
+	ANDROID_NDK_HOME=$(ANDROID_NDK_HOME)
+
 
 BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
@@ -98,7 +148,7 @@ BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					BUCKET_NAME=$(BUCKET_NAME) \
 					SLACK_HOOK=$(SLACK_HOOK) \
 
-.PHONY: env.sh
+.PHONY: env.sh test run android android-emulator ios build build-testing build-arm build-lambda docker
 env.sh:
 	@echo "export AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID)" > $@
 	@echo "export AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY)" >> $@
@@ -175,10 +225,15 @@ env.sh:
 	@echo "export CROSS_POSTING_DATA_KEY_PREVIOUS='$(CROSS_POSTING_DATA_KEY_PREVIOUS)'" >> $@
 
 
+# Run integration tests. Pass TEST=<name> to run only matching tests:
+#   make test                                  # all tests
+#   make test TEST=pending_reward_retry        # only matching tests
+TEST ?=
+
 test:
 	mkdir -p ./test-build-target/debug/deps/public
 	npx @tailwindcss/cli -i tailwind.css -o ./assets/tailwind.css
-	$(BUILD_ENV) CARGO_TARGET_DIR=./test-build-target cargo test --features server,bypass --tests -- --test-threads=1
+	$(BUILD_ENV) CARGO_TARGET_DIR=./test-build-target cargo test --features server,bypass --tests $(TEST) -- --test-threads=1 --nocapture
 
 js/node_modules:
 	npm i
@@ -187,29 +242,7 @@ js/node_modules:
 	cd ../.. && npm i
 
 run: ../../node_modules js/node_modules
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES)
-
-ANDROID_NDK_HOME ?= /opt/android-ndk
-ANDROID_NDK_TOOLCHAIN ?= $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64
-ANDROID_API_LEVEL ?= 24
-ANDROID_TARGET ?= aarch64-linux-android
-ANDROID_CC ?= $(ANDROID_NDK_TOOLCHAIN)/bin/$(ANDROID_TARGET)$(ANDROID_API_LEVEL)-clang
-
-# Gradle + Android Gradle Plugin 8.x don't parse class-file major 70 (OpenJDK 26+).
-# Force a JDK that Gradle supports; override ANDROID_JAVA_HOME if yours lives elsewhere.
-ANDROID_JAVA_HOME ?= /usr/lib/jvm/java-17-openjdk
-
-ANDROID_ENV = \
-	JAVA_HOME=$(ANDROID_JAVA_HOME) \
-	PATH="$(ANDROID_JAVA_HOME)/bin:$(PATH)" \
-	CC_aarch64_linux_android=$(ANDROID_CC) \
-	CXX_aarch64_linux_android=$(ANDROID_CC)++ \
-	AR_aarch64_linux_android=$(ANDROID_NDK_TOOLCHAIN)/bin/llvm-ar \
-	CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$(ANDROID_CC) \
-	CC_armv7_linux_androideabi=$(ANDROID_NDK_TOOLCHAIN)/bin/armv7a-linux-androideabi$(ANDROID_API_LEVEL)-clang \
-	CXX_armv7_linux_androideabi=$(ANDROID_NDK_TOOLCHAIN)/bin/armv7a-linux-androideabi$(ANDROID_API_LEVEL)-clang++ \
-	AR_armv7_linux_androideabi=$(ANDROID_NDK_TOOLCHAIN)/bin/llvm-ar \
-	CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER=$(ANDROID_NDK_TOOLCHAIN)/bin/armv7a-linux-androideabi$(ANDROID_API_LEVEL)-clang
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES) --no-default-features
 
 $(HOME)/.android/debug.keystore:
 	keytool -genkey -v -keystore $@ -storepass android -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Korea,O=Biyard,C=KR"
@@ -228,20 +261,30 @@ $(ANDROID_HOME)/system-images/android-34/google_apis/$(ARCH):
 android-emulator: $(HOME)/.android/debug.keystore $(HOME)/.android/avd/$(AVD_NAME).avd $(ANDROID_HOME)/emulator/emulator
 	$(ANDROID_HOME)/emulator/emulator -avd $(AVD_NAME) -netdelay none -netspeed full &
 
-android: $(HOME)/.android/debug.keystore
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --android --target $(ANDROID_TARGET) --features $(RUN_FEATURES) $(DEVICE_FLAG)
+$(ANDROID_DX_RES_DIR):
+	rm -rf $@/res
+	mkdir -p $@
+	cp -rf android/res $@/
+
+android: $(HOME)/.android/debug.keystore $(ANDROID_DX_RES_DIR)
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx bundle --release --features $(RUN_FEATURES) --no-default-features --platform android --target $(ANDROID_TARGET)
+	adb $(LOGCAT_FLAG) install -r $(ANDROID_DX_RES_BASE_DIR)/$(MODE)/android/app/app/build/outputs/apk/debug/app-debug.apk
+	adb $(LOGCAT_FLAG) shell am start -n "co.biyard.ratel/.MainActivity" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER
+
+build-android: $(HOME)/.android/debug.keystore $(ANDROID_DX_RES_DIR)
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx bundle --release --features $(RUN_FEATURES) --no-default-features --android --target $(ANDROID_TARGET) --fullstack false
 
 ios:
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --ios --features $(RUN_FEATURES)
 
 build:
-	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server --platform server
+	$(BUILD_ENV) dx build --release --no-default-features --debug-symbols false @client --features web --platform web @server --features server --platform server
 
 build-testing:
-	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web,bypass,beta --platform web @server --features server,bypass,local-dev --platform server
+	$(BUILD_ENV) dx build --release --no-default-features --debug-symbols false @client --features web,bypass,beta --platform web @server --features server,bypass,local-dev --platform server
 
 build-arm:
-	$(BUILD_ENV) dx build --release --debug-symbols false @client --features web --platform web @server --features server --platform server --target aarch64-unknown-linux-gnu
+	$(BUILD_ENV) dx build --release --no-default-features --debug-symbols false @client --features web --platform web @server --features server --platform server --target aarch64-unknown-linux-gnu
 
 build-lambda: env.sh
 	docker run -v $(PWD)/../..:/app -v $(HOME)/.cargo/bin:/root/.cargo/bin -w /app public.ecr.aws/sam/build-provided.al2023 /bin/bash -c "scripts/building-lambda-bootstrap.sh"
@@ -262,3 +305,6 @@ docker.rm:
 
 docker.login:
 	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
+
+android.log:
+	adb $(LOGCAT_FLAG) logcat -c && adb $(LOGCAT_FLAG) logcat | grep -iE "RatelRust|co.biyard.ratel"

@@ -38,7 +38,7 @@ pub mod middlewares;
 pub mod models;
 pub mod services;
 pub mod utils;
-pub use macros::dynamo_entity::DynamoEntity;
+pub use macros::{DynamoEntity, DynamoEnum};
 pub use regex;
 
 pub use components::*;
@@ -49,6 +49,7 @@ pub use providers::*;
 pub use run::*;
 
 pub use dioxus::prelude::*;
+
 // NOTE: it replaces dioxus::prelude::* and should be used after it.
 pub use components::SuspenseBoundary;
 use serde_repr::{Deserialize_repr, Serialize_repr};

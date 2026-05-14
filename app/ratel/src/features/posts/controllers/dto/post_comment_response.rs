@@ -1,9 +1,12 @@
 use crate::features::posts::models::*;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct PostCommentResponse {
     pub pk: FeedPartition,
     pub sk: PostCommentTargetEntityType,

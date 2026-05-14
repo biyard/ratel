@@ -1,6 +1,6 @@
 use crate::common::components::Button;
 use crate::features::spaces::space_common::*;
-use dioxus::prelude::*;
+use crate::common::*;
 
 translate! {
     VisibilityModalTranslate;

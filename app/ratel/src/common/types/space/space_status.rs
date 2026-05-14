@@ -1,16 +1,11 @@
 use crate::common::*;
 use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
-#[derive(
-    Debug,
-    Clone,
-    Default,
-    DynamoEnum,
-    Eq,
-    PartialEq,
-    Translate,
-)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, DynamoEnum, Eq, PartialEq, Translate)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum SpaceStatus {
     #[default]
     #[translate(en = "Designing", ko = "설계중")]

@@ -1,5 +1,8 @@
 use super::source_kind::EssenceSourceKind;
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Client-side filter chip over the breakdown cards. `All` bypasses the
 /// kind filter; every other variant maps to a single `EssenceSourceKind`.
@@ -36,7 +39,7 @@ impl KindFilter {
 /// corresponds to a GSI on `Essence`, so pagination stays correct no
 /// matter how many rows a user has.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(rename_all = "snake_case")]
 pub enum EssenceSort {
     /// GSI1 — `updated_at` descending.

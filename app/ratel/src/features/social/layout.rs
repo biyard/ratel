@@ -42,13 +42,19 @@ pub fn UserLayout(username: ReadSignal<String>) -> Element {
 
     rsx! {
         div {
-            class: "grid overflow-hidden grid-cols-1 w-full h-screen tablet:grid-cols-[250px_1fr] bg-team-bg text-text-primary",
+            class: "grid overflow-hidden grid-cols-1 w-full h-screen bg-team-bg text-text-primary",
             "data-testid": "social-layout",
             div { class: "hidden overflow-hidden h-screen tablet:flex",
                 TeamSidemenu { key: "{username}", username: username(), logged_in }
             }
             div { class: "flex overflow-hidden flex-col min-w-0 min-h-0",
-                div { class: "flex overflow-auto flex-1 p-5 w-full bg-background rounded-tl-[10px] max-tablet:p-3 max-mobile:p-2",
+                // `flex-col` here is non-negotiable — without it the
+                // wrapper defaults to row flex and the single child
+                // (`<div class="rewards-arena">`, `<div class="...">` etc.)
+                // becomes a `flex: 0 1 auto` item that shrinks to its
+                // intrinsic content width, leaving the right half of
+                // the viewport empty.
+                div { class: "flex overflow-auto flex-col flex-1 p-5 w-full bg-background rounded-tl-[10px] max-tablet:p-3 max-mobile:p-2",
                     Outlet::<Route> {}
                 }
             }
@@ -371,6 +377,8 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                         user_type: UserType::Team,
                         permissions: permissions_vec.clone(),
                         description: team.html_contents.clone(),
+                        created_at: 0,
+                        member_count: 0,
                     });
                 }
                 let selected_label = if team.nickname.is_empty() {

@@ -1,8 +1,10 @@
 pub mod activity;
 pub mod announcements;
+pub mod application_drafts;
 pub mod applications_child;
 pub mod applications_parent;
 pub mod apply_context;
+pub mod direct_message;
 pub mod docs;
 pub mod form_fields;
 pub mod parent_link;
@@ -10,9 +12,11 @@ pub mod settings;
 
 pub use activity::*;
 pub use announcements::*;
+pub use application_drafts::*;
 pub use applications_child::*;
 pub use applications_parent::*;
 pub use apply_context::*;
+pub use direct_message::*;
 pub use docs::*;
 pub use form_fields::*;
 pub use parent_link::*;

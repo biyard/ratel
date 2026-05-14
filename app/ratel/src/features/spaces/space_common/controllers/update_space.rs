@@ -1,6 +1,9 @@
 #[cfg(feature = "server")]
 use crate::common::models::space::SpaceCommon;
 #[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
+#[cfg(feature = "server")]
 use crate::common::SpaceUserRole;
 #[cfg(feature = "server")]
 use crate::features::posts::models::Post;
@@ -167,7 +170,7 @@ pub async fn update_space(
             let post_pk = space_pk.clone().to_post_key()?;
             let post_updater = Post::updater(post_pk, EntityType::Post)
                 .with_updated_at(now)
-                .with_html_contents(content.clone());
+                .with_body(ContentBody::html(content.clone()));
             pu = Some(post_updater);
 
             updated_space.content = content;

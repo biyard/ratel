@@ -9,7 +9,6 @@ use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::posts::*;
 use crate::features::my_follower::controllers::{check_follow_status_handler, follow_user, unfollow_user};
 use crate::features::social::controllers::{find_user_handler, FindUserQueryType};
-use dioxus::prelude::*;
 
 #[derive(Clone, Copy, PartialEq, Default)]
 pub enum HomeViewMode {

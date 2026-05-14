@@ -1,6 +1,9 @@
 // Migrated from packages/main-api/src/controllers/v3/auth/signup.rs
 use crate::features::auth::models::*;
 #[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
+#[cfg(feature = "server")]
 use crate::features::auth::utils::evm::recover_address;
 #[cfg(feature = "server")]
 use crate::features::auth::utils::{
@@ -15,7 +18,7 @@ use validator::Validate;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(
     feature = "server",
-    derive(aide::OperationIo, schemars::JsonSchema, Validate)
+    derive(rmcp::schemars::JsonSchema, Validate)
 )]
 pub struct SignupRequest {
     #[serde(flatten)]
@@ -34,7 +37,7 @@ pub struct SignupRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(aide::OperationIo, schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum SignupType {
     Email {
@@ -61,7 +64,7 @@ pub enum SignupType {
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SignupResponse {
     #[serde(flatten)]
     pub user: User,
@@ -79,11 +82,10 @@ pub async fn signup_handler(req: SignupRequest) -> Result<SignupResponse> {
     let Extension(session) = session;
 
     tracing::info!("signup_handler: req = {:?}", req);
-    req.validate()
-        .map_err(|e| {
-            crate::error!("signup: {e}");
-            AuthError::InvalidInput
-        })?;
+    req.validate().map_err(|e| {
+        crate::error!("signup: {e}");
+        AuthError::InvalidInput
+    })?;
 
     let user = match req.signup_type.clone() {
         SignupType::Email {
@@ -150,8 +152,7 @@ async fn ensure_username_available(cli: &aws_sdk_dynamodb::Client, username: &st
     // Check team username
     use crate::features::posts::models::Team;
     let opt = Team::opt().limit(1);
-    let (teams, _): (Vec<Team>, _) =
-        Team::find_by_username_prefix(cli, username, opt).await?;
+    let (teams, _): (Vec<Team>, _) = Team::find_by_username_prefix(cli, username, opt).await?;
     if teams.iter().any(|t| t.username == username) {
         return Err(Error::UsernameAlreadyExists);
     }

@@ -1,16 +1,6 @@
 use crate::common::*;
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Serialize,
-    Deserialize,
-    strum::Display,
-    strum::EnumString,
-    Default,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, strum::Display, strum::EnumString, Default)]
 pub enum InputType {
     #[default]
     #[strum(serialize = "text")]
@@ -162,17 +152,7 @@ fn handle_confirm_cancel(
 ) {
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    DeserializeFromStr,
-    SerializeDisplay,
-    strum::Display,
-    strum::EnumString,
-    Default,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, DeserializeFromStr, SerializeDisplay, strum::Display, strum::EnumString, Default)]
 pub enum InputVariant {
     #[default]
     #[strum(

@@ -1,4 +1,7 @@
 use crate::common::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Maximum stored body length (64 KB) — enforced on create / update. Keeps
 /// the DynamoDB item under the 400 KB per-item ceiling with headroom for the
@@ -14,7 +17,7 @@ pub const SUB_TEAM_DOCUMENT_MAX_BODY_BYTES: usize = 64 * 1024;
 /// update we recompute it, which invalidates any in-flight agreements that
 /// were hashed against the previous version.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SubTeamDocument {
     pub pk: Partition,  // Partition::Team(team_id) — same team that owns the doc
     pub sk: EntityType, // EntityType::SubTeamDocument(doc_id)
@@ -37,11 +40,52 @@ pub struct SubTeamDocument {
 
     /// sha256 of `body` at last update — re-agreement anchor.
     pub body_hash: String,
+
+    /// Monotonically-increasing revision; starts at 1 on create and
+    /// bumps by 1 on every successful update. Surfaced in the
+    /// composer's "문서 정보 · Version" row (`v{version}`).
+    #[serde(default)]
+    pub version: i32,
+
+    /// Username of the last editor — denormalized for the composer
+    /// "Editor" row (`@{editor_username}`). Empty on legacy rows; UI
+    /// falls back to `—`.
+    #[serde(default)]
+    pub editor_username: String,
+
+    /// File attachments shown next to the body in the composer and
+    /// reflected as `{N} 파일 · {size}` on the docs tab. Embedded
+    /// (not a separate entity) — mirrors the pattern used by
+    /// `SpaceQuiz` / `SpaceFile` / discussion `SpacePost`.
+    #[serde(default)]
+    pub attachments: Vec<File>,
+
+    /// Category tag attached at create-time when the doc is authored
+    /// as a bylaw (`"Bylaws"`) or a club rule (`"ClubBylaws"`). Drives
+    /// the bylaws page filter. Empty / `None` = regular sub-team doc
+    /// (the existing "required reading" use case).
+    #[serde(default)]
+    pub category: Option<String>,
+
+    /// `Post.pk` of the backing post written alongside the doc at
+    /// create time. The post carries the same body + category and is
+    /// the source of truth for likes/comments — the bylaws card pulls
+    /// engagement counts from this post and links to it on click.
+    #[serde(default)]
+    pub backing_post_id: Option<String>,
 }
 
 #[cfg(feature = "server")]
 impl SubTeamDocument {
-    pub fn new(team_pk: Partition, title: String, body: String, required: bool, order: i32) -> Self {
+    pub fn new(
+        team_pk: Partition,
+        title: String,
+        body: String,
+        required: bool,
+        order: i32,
+        editor_username: String,
+        attachments: Vec<File>,
+    ) -> Self {
         let doc_id = uuid::Uuid::new_v4().to_string();
         let now = crate::common::utils::time::get_now_timestamp_millis();
         let body_hash = hash_body(&body);
@@ -55,6 +99,11 @@ impl SubTeamDocument {
             required,
             order,
             body_hash,
+            version: 1,
+            editor_username,
+            attachments,
+            category: None,
+            backing_post_id: None,
         }
     }
 

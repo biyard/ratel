@@ -1,16 +1,6 @@
 use crate::common::*;
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Serialize,
-    Deserialize,
-    strum::Display,
-    strum::EnumString,
-    Default,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, strum::Display, strum::EnumString, Default)]
 pub enum CardDirection {
     #[default]
     #[strum(serialize = "flex flex-col")]
@@ -20,17 +10,7 @@ pub enum CardDirection {
     Row,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Serialize,
-    Deserialize,
-    strum::Display,
-    strum::EnumString,
-    Default,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, strum::Display, strum::EnumString, Default)]
 pub enum MainAxisAlign {
     #[default]
     #[strum(serialize = "justify-start")]
@@ -47,17 +27,7 @@ pub enum MainAxisAlign {
     Evenly,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Serialize,
-    Deserialize,
-    strum::Display,
-    strum::EnumString,
-    Default,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, strum::Display, strum::EnumString, Default)]
 pub enum CrossAxisAlign {
     #[default]
     #[strum(serialize = "items-start")]
@@ -72,17 +42,7 @@ pub enum CrossAxisAlign {
     Baseline,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Serialize,
-    Deserialize,
-    strum::Display,
-    strum::EnumString,
-    Default,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, strum::Display, strum::EnumString, Default)]
 pub enum CardVariant {
     #[default]
     #[strum(serialize = "bg-card-bg border bg-card-bg border-card-border")]
@@ -95,17 +55,7 @@ pub enum CardVariant {
     Filled,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Serialize,
-    Deserialize,
-    strum::Display,
-    strum::EnumString,
-    Default,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, strum::Display, strum::EnumString, Default)]
 pub enum CardShape {
     #[default]
     #[strum(serialize = "rounded-[10px]")]

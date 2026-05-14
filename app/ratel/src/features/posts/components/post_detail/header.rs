@@ -7,7 +7,7 @@ use crate::features::posts::controllers::{
 };
 use crate::features::posts::types::*;
 use crate::features::posts::*;
-use dioxus::prelude::*;
+use crate::common::*;
 
 #[component]
 pub fn PostDetailHeader(detail: PostDetailResponse, post_pk: FeedPartition) -> Element {

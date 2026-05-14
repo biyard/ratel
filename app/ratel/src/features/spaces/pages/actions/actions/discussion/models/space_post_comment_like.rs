@@ -2,9 +2,12 @@ use crate::features::spaces::pages::actions::actions::discussion::*;
 
 use crate::features::spaces::pages::actions::actions::discussion::macros::DynamoEntity;
 use crate::features::spaces::pages::actions::actions::discussion::models::SpacePostComment;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SpacePostCommentLike {
     pub pk: Partition,
     pub sk: EntityType,

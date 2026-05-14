@@ -54,7 +54,41 @@ pub async fn list_announcements_handler(
         })
         .collect();
     items.sort_by(|a, b| b.created_at.cmp(&a.created_at));
-    let items: Vec<SubTeamAnnouncementResponse> = items.into_iter().map(Into::into).collect();
+
+    // Comments aggregate: each announcement's anchor Post lives at
+    // `Partition::Feed(announcement_id)` (created by
+    // `publish_announcement_handler`). Batch-get them all and map
+    // pk → comments so the response surfaces the real count instead
+    // of the hardcoded 0 placeholder.
+    use crate::features::posts::models::Post;
+    use std::collections::HashMap;
+    let anchor_keys: Vec<(Partition, EntityType)> = items
+        .iter()
+        .filter(|a| matches!(a.status, SubTeamAnnouncementStatus::Published))
+        .map(|a| (Partition::Feed(a.announcement_id.clone()), EntityType::Post))
+        .collect();
+    let comment_counts: HashMap<String, i64> = if anchor_keys.is_empty() {
+        HashMap::new()
+    } else {
+        Post::batch_get(cli, anchor_keys)
+            .await
+            .unwrap_or_default()
+            .into_iter()
+            .map(|p| (p.pk.to_string(), p.comments))
+            .collect()
+    };
+
+    let items: Vec<SubTeamAnnouncementResponse> = items
+        .into_iter()
+        .map(|a| {
+            let pk_key = Partition::Feed(a.announcement_id.clone()).to_string();
+            let mut resp: SubTeamAnnouncementResponse = a.into();
+            if let Some(c) = comment_counts.get(&pk_key) {
+                resp.comments_count = (*c) as i32;
+            }
+            resp
+        })
+        .collect();
     Ok((items, next).into())
 }
 
@@ -80,7 +114,21 @@ pub async fn get_announcement_handler(
             SubTeamError::AnnouncementNotFound
         })?
         .ok_or(SubTeamError::AnnouncementNotFound)?;
-    Ok(ann.into())
+    let mut resp: SubTeamAnnouncementResponse = ann.clone().into();
+    // Anchor Post lives at Feed(announcement_id); pull its comment count.
+    if matches!(ann.status, SubTeamAnnouncementStatus::Published) {
+        let anchor_pk = Partition::Feed(ann.announcement_id.clone());
+        if let Ok(Some(p)) = crate::features::posts::models::Post::get(
+            cli,
+            &anchor_pk,
+            Some(EntityType::Post),
+        )
+        .await
+        {
+            resp.comments_count = p.comments as i32;
+        }
+    }
+    Ok(resp)
 }
 
 // ── POST /api/teams/:team_pk/sub-teams/announcements ────────────────
@@ -96,12 +144,16 @@ pub async fn create_announcement_handler(
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
 
-    let ann = SubTeamAnnouncement::new_draft(
+    let mut ann = SubTeamAnnouncement::new_draft(
         team.pk.clone(),
         body.title,
         body.body,
         user.pk.to_string(),
     );
+    ann.html_contents = body.html_contents;
+    ann.tags = body.tags;
+    ann.space_enabled = body.space_enabled;
+    ann.space_type = body.space_type;
     ann.create(cli).await.map_err(|e| {
         crate::error!("create_announcement create failed: {e}");
         SubTeamError::AnnouncementPublishFailed
@@ -156,6 +208,30 @@ pub async fn update_announcement_handler(
         changed = true;
     }
 
+    if let Some(html) = body.html_contents {
+        updater = updater.with_html_contents(html.clone());
+        existing.html_contents = html;
+        changed = true;
+    }
+
+    if let Some(tags) = body.tags {
+        updater = updater.with_tags(tags.clone());
+        existing.tags = tags;
+        changed = true;
+    }
+
+    if let Some(se) = body.space_enabled {
+        updater = updater.with_space_enabled(se);
+        existing.space_enabled = se;
+        changed = true;
+    }
+
+    if let Some(st) = body.space_type {
+        updater = updater.with_space_type(st);
+        existing.space_type = Some(st);
+        changed = true;
+    }
+
     if changed {
         updater.execute(cli).await.map_err(|e| {
             crate::error!("update_announcement execute failed: {e}");
@@ -199,16 +275,98 @@ pub async fn publish_announcement_handler(
     }
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
-    SubTeamAnnouncement::updater(&team.pk, &sk)
+
+    // Build the Space FIRST (if enabled) so the anchor Post can be
+    // created with `space_pk` already populated in a single Put. An
+    // earlier version used `Post::updater(...).with_space_pk(...)` to
+    // link the two after the Post existed, but the DynamoEntity updater
+    // re-derives every GSI sort key from its default-initialised inner
+    // struct — so `with_updated_at(now)` ended up writing
+    // gsi5_sk=`"Draft##<now>"` on the live row and the anchor Post
+    // vanished from the parent's feed (the `Published` prefix query
+    // stopped matching it). Putting once with all fields correct
+    // sidesteps the updater entirely.
+    use crate::common::models::space::SpaceCommon;
+    use crate::features::posts::models::Post;
+    use crate::features::posts::types::{PostStatus, PostType};
+
+    let parent_team_id_str = match &team.pk {
+        Partition::Team(id) => id.clone(),
+        _ => String::new(),
+    };
+    let anchor_post_body = if !existing.html_contents.is_empty() {
+        existing.html_contents.clone()
+    } else {
+        existing.body.clone()
+    };
+
+    let space: Option<SpaceCommon> = if existing.space_enabled && existing.space_pk.is_none() {
+        Some(SpaceCommon::new(
+            FeedPartition(existing.announcement_id.clone()),
+            team.pk.clone(),
+            team.display_name.clone(),
+            team.profile_url.clone(),
+            team.username.clone(),
+        ))
+    } else {
+        None
+    };
+
+    let anchor_post = Post {
+        pk: Partition::Feed(existing.announcement_id.clone()),
+        sk: EntityType::Post,
+        created_at: now,
+        updated_at: now,
+        title: existing.title.clone(),
+        body: ContentBody::html(anchor_post_body),
+        post_type: PostType::Post,
+        status: PostStatus::Published,
+        visibility: Some(existing.visibility.clone()),
+        shares: 0,
+        likes: 0,
+        comments: 0,
+        reports: 0,
+        user_pk: team.pk.clone(),
+        author_display_name: team.display_name.clone(),
+        author_profile_url: team.profile_url.clone(),
+        author_username: team.username.clone(),
+        author_type: crate::common::types::UserType::Team,
+        space_pk: space.as_ref().map(|s| s.pk.clone()),
+        space_type: existing.space_type,
+        space_visibility: None,
+        booster: None,
+        rewards: None,
+        urls: vec![],
+        categories: existing.tags.clone(),
+        announcement_id: Some(existing.announcement_id.clone()),
+        announcement_parent_team_id: Some(parent_team_id_str),
+        pinned_as_announcement: false,
+    };
+    if let Err(e) = anchor_post.create(cli).await {
+        crate::error!("publish_announcement: anchor post create failed: {e}");
+        return Err(SubTeamError::AnnouncementPublishFailed.into());
+    }
+
+    if let Some(space) = space {
+        let space_pk_str = space.pk.to_string();
+        if let Err(e) = space.create(cli).await {
+            crate::error!("publish_announcement: space create failed: {e}");
+            return Err(SubTeamError::AnnouncementPublishFailed.into());
+        }
+        existing.space_pk = Some(space_pk_str);
+    }
+
+    let mut updater = SubTeamAnnouncement::updater(&team.pk, &sk)
         .with_status(SubTeamAnnouncementStatus::Published)
         .with_published_at(now)
-        .with_updated_at(now)
-        .execute(cli)
-        .await
-        .map_err(|e| {
-            crate::error!("publish_announcement execute failed: {e}");
-            SubTeamError::AnnouncementPublishFailed
-        })?;
+        .with_updated_at(now);
+    if let Some(space_pk) = existing.space_pk.clone() {
+        updater = updater.with_space_pk(space_pk);
+    }
+    updater.execute(cli).await.map_err(|e| {
+        crate::error!("publish_announcement execute failed: {e}");
+        SubTeamError::AnnouncementPublishFailed
+    })?;
 
     existing.status = SubTeamAnnouncementStatus::Published;
     existing.published_at = Some(now);

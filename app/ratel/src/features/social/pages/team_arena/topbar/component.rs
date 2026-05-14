@@ -12,6 +12,7 @@ pub enum TeamArenaTab {
     Members,
     Rewards,
     Subscription,
+    SubTeams,
     Settings,
 }
 
@@ -30,6 +31,23 @@ pub fn ArenaTopbar(
     /// Whether the viewer can access admin-only tabs (Drafts, Settings).
     #[props(default = false)]
     can_edit: bool,
+    /// Whether the viewer is a member (any role) of this team. Drives
+    /// the parent HUD visibility — members see read-only info; non-
+    /// admins don't see the action buttons inside.
+    #[props(default = false)]
+    is_member: bool,
+    /// Whether the parent team has flipped the sub-team activation
+    /// switch ON. Non-members only see the sub-team HUD icon when
+    /// this is true (otherwise the team isn't accepting apps yet).
+    #[props(default = false)]
+    is_parent_eligible: bool,
+    /// `Some(applicant_username)` if the viewer is admin/owner of a
+    /// team that has already submitted an in-flight (Pending /
+    /// Returned) application to this team. When set, the sub-team
+    /// HUD icon routes to the applicant's status page instead of the
+    /// apply page so they can resume tracking.
+    #[props(default = None)]
+    pending_applicant_username: Option<String>,
     /// Whether the Follow action should show "Unfollow" instead.
     #[props(default = false)]
     is_following: bool,
@@ -205,12 +223,12 @@ pub fn ArenaTopbar(
                             id: "arena-teams-dd-list",
                             onscroll: move |_| {
                                 let js = r#"
-                                                                                                                                                                                    const el = document.getElementById('arena-teams-dd-list');
-                                                                                                                                                                                    if (!el) { dioxus.send(false); return; }
-                                                                                                                                                                                    const nearBottom =
-                                                                                                                                                                                        el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
-                                                                                                                                                                                    dioxus.send(nearBottom);
-                                                                                                                                                                                "#;
+                                                                                                                                                                                                                                                                                    const el = document.getElementById('arena-teams-dd-list');
+                                                                                                                                                                                                                                                                                    if (!el) { dioxus.send(false); return; }
+                                                                                                                                                                                                                                                                                    const nearBottom =
+                                                                                                                                                                                                                                                                                        el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+                                                                                                                                                                                                                                                                                    dioxus.send(nearBottom);
+                                                                                                                                                                                                                                                                                "#;
                                 let mut ctrl = teams_query;
                                 spawn(async move {
                                     let mut eval = document::eval(js);
@@ -391,6 +409,69 @@ pub fn ArenaTopbar(
                                 }
                             }
                         },
+                    }
+                }
+
+                // Parent HUD — graduation cap icon + dropdown panel
+                // showing the team's parent relationship status
+                // (recognized / pending / standalone). Visible to any
+                // team member (read-only); non-admins don't see the
+                // action buttons (leave / edit application / cancel)
+                // inside — that filter happens inside ParentHudPanel.
+                if is_member {
+                    crate::features::sub_team::ParentHudPanel {}
+                }
+
+                // Sub-teams icon — routes based on the viewer's relationship
+                // with this team:
+                //   • Team admin/owner   → management dashboard
+                //   • Viewer's other team has an in-flight application
+                //                        → that application's status page
+                //   • Parent-eligible team, viewer logged in
+                //                        → apply page (no role check;
+                //                          visitors from other teams MUST
+                //                          be able to start an application)
+                //   • Otherwise          → icon hidden
+                {
+                    let sub_team_route: Option<Route> = if can_edit {
+                        Some(Route::TeamSubTeamManagementPage {
+                            username: username.clone(),
+                        })
+                    } else if pending_applicant_username.is_some() {
+                        Some(Route::TeamSubTeamApplicationStatusPage {
+                            username: username.clone(),
+                        })
+                    } else if is_parent_eligible && has_user {
+                        Some(Route::TeamSubTeamApplyPage {
+                            username: username.clone(),
+                        })
+                    } else {
+                        None
+                    };
+                    if let Some(route) = sub_team_route {
+                        rsx! {
+                            HudButton {
+                                label: tr.sub_teams.to_string(),
+                                active: active == TeamArenaTab::SubTeams,
+                                to: route,
+                                icon: rsx! {
+                                    svg {
+                                        view_box: "0 0 24 24",
+                                        fill: "none",
+                                        stroke: "currentColor",
+                                        stroke_width: "2",
+                                        stroke_linecap: "round",
+                                        stroke_linejoin: "round",
+                                        path { d: "M12 2l2.09 4.23 4.66.68-3.38 3.29.8 4.64L12 12.67l-4.17 2.17.8-4.64L5.25 6.91l4.66-.68L12 2z" }
+                                        circle { cx: "6", cy: "19", r: "3" }
+                                        circle { cx: "18", cy: "19", r: "3" }
+                                        path { d: "M9 19h6" }
+                                    }
+                                },
+                            }
+                        }
+                    } else {
+                        rsx! {}
                     }
                 }
 

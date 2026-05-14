@@ -2,9 +2,12 @@ use std::collections::HashMap;
 
 use super::super::*;
 use crate::common::models::space::{SpaceCommon, SpaceParticipant};
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct MySpaceResponse {
     pub space_pk: Partition,
     pub post_pk: Partition,
@@ -113,7 +116,7 @@ pub async fn list_my_spaces_handler(
         .collect();
     let description_map: HashMap<String, String> = posts
         .into_iter()
-        .map(|p| (p.pk.to_string(), extract_description(&p.html_contents)))
+        .map(|p| (p.pk.to_string(), extract_description(&p.body.to_html())))
         .collect();
 
     let items: Vec<MySpaceResponse> = collected_spaces

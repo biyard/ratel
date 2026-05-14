@@ -20,6 +20,12 @@ struct ClientVotePayloadMetadata {
 /// `/encryption-material` endpoint. `answers` is serialized into the choice
 /// field of the ABE payload. The result is sent back to the server, which
 /// uploads it verbatim to the canister.
+///
+/// **Mobile (Android/iOS) is not supported** — the `attr-voting` ABE crate
+/// is gated to the `web` / `server` features in `Cargo.toml`. Callers on
+/// mobile receive an error and the UI surfaces it to the voter; encrypted
+/// voting is a web/desktop-only feature for the current iteration.
+#[cfg(any(feature = "web", feature = "server"))]
 pub fn encrypt_answers_for_canister(
     material: &VoteEncryptionMaterialResponse,
     answers: &[Answer],
@@ -50,10 +56,22 @@ pub fn encrypt_answers_for_canister(
     })
 }
 
+#[cfg(not(any(feature = "web", feature = "server")))]
+pub fn encrypt_answers_for_canister(
+    _material: &VoteEncryptionMaterialResponse,
+    _answers: &[Answer],
+    _submitted_at_ms: i64,
+) -> Result<ClientEncryptedVote, String> {
+    Err("Encrypted voting is not supported on this platform".to_string())
+}
+
 /// Build a `StoredVoterKey` for an encryption-material payload.
 ///
 /// Mirrors `build_stored_voter_key` for the verification material so the same
 /// localStorage record can be re-used by the verification panel after submit.
+///
+/// **Mobile is not supported** — see `encrypt_answers_for_canister` for why.
+#[cfg(any(feature = "web", feature = "server"))]
 pub fn build_stored_voter_key_from_encryption_material(
     material: &VoteEncryptionMaterialResponse,
     user_secret: &str,
@@ -72,4 +90,12 @@ pub fn build_stored_voter_key_from_encryption_material(
         voter_tag: material.voter_tag.clone(),
         key_bundle_json,
     })
+}
+
+#[cfg(not(any(feature = "web", feature = "server")))]
+pub fn build_stored_voter_key_from_encryption_material(
+    _material: &VoteEncryptionMaterialResponse,
+    _user_secret: &str,
+) -> Result<StoredVoterKey, String> {
+    Err("Encrypted voting is not supported on this platform".to_string())
 }

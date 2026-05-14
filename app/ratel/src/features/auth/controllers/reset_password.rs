@@ -1,11 +1,14 @@
 // Migrated from packages/main-api/src/controllers/v3/auth/reset_password.rs
 use crate::features::auth::models::*;
 #[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
+#[cfg(feature = "server")]
 use crate::features::auth::utils::password::hash_password;
 use crate::features::auth::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct ResetPasswordRequest {
     pub email: String,
     pub password: String,

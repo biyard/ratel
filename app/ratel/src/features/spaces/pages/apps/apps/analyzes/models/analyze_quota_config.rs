@@ -1,4 +1,7 @@
 use crate::features::spaces::pages::apps::apps::analyzes::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Singleton row controlling the analyze-report creation quota for
 /// non-enterprise tiers. A single deployment-wide value — bumped or
@@ -7,7 +10,7 @@ use crate::features::spaces::pages::apps::apps::analyzes::*;
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(
     feature = "server",
-    derive(DynamoEntity, schemars::JsonSchema, aide::OperationIo)
+    derive(DynamoEntity, rmcp::schemars::JsonSchema)
 )]
 pub struct AnalyzeQuotaConfig {
     pub pk: Partition,

@@ -3,9 +3,12 @@ use crate::features::auth::*;
 use crate::features::membership::models::{
     Membership, MembershipTier, UserMembership, UserMembershipResponse,
 };
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct GetMeResponse {
     pub user: Option<User>,
     pub membership: Option<UserMembershipResponse>,

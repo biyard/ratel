@@ -1,6 +1,9 @@
 #[cfg(feature = "server")]
 use crate::features::auth::OptionalUser;
 #[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
+#[cfg(feature = "server")]
 use crate::features::auth::UserTeamGroup;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
@@ -9,7 +12,7 @@ use crate::features::posts::*;
 use super::{TeamGroup, TeamOwner};
 
 #[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct Team {
     pub pk: Partition,
     #[dynamo(
@@ -64,6 +67,11 @@ pub struct Team {
     #[serde(default)]
     pub min_sub_team_members: i32,
 
+    // Minimum age (in days, since `created_at`) an applicant team must
+    // be before its Submit button is enabled. `0` means no minimum.
+    #[serde(default)]
+    pub min_sub_team_age_days: i32,
+
     // Parent-child scalars. Invariants:
     //   recognized sub-team ⇔ parent_team_id.is_some()
     //   pending sub-team    ⇔ pending_parent_team_id.is_some() && parent_team_id.is_none()
@@ -105,6 +113,7 @@ impl Team {
             allow_create_space: false,
             is_parent_eligible: false,
             min_sub_team_members: 0,
+            min_sub_team_age_days: 0,
             parent_team_id: None,
             pending_parent_team_id: None,
         }
@@ -117,13 +126,14 @@ impl Team {
         profile_url: String,
         username: String,
         description: String,
-    ) -> Result<Partition> {
+    ) -> Result<(Partition, i64)> {
         let team = Team::new(display_name, profile_url, username, description);
 
         let team_owner = TeamOwner::new(team.pk.clone(), user.clone());
 
         let user_pk = user.pk.clone();
         let team_pk = team.pk.clone();
+        let created_at = team.created_at;
 
         let user_team = crate::features::auth::UserTeam::new(
             user_pk,
@@ -146,7 +156,7 @@ impl Team {
             .await
             .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
 
-        Ok(team_pk)
+        Ok((team_pk, created_at))
     }
 
     pub async fn get_permitted_team(

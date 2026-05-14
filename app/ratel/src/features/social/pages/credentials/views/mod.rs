@@ -7,7 +7,7 @@ use crate::features::auth::hooks::use_user_context;
 use crate::features::did::controllers::{
     get_did_summary::get_did_summary_handler, DidAttributeItem, DidSummaryResponse,
 };
-use dioxus::prelude::*;
+use crate::common::*;
 
 pub use i18n::CredentialsTranslate;
 

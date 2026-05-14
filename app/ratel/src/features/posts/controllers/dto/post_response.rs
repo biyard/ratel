@@ -1,9 +1,12 @@
 use crate::features::posts::models::Post;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct PostResponse {
     pub pk: FeedPartition,
 
@@ -11,7 +14,8 @@ pub struct PostResponse {
     pub updated_at: i64,
 
     pub title: String,
-    pub html_contents: String,
+    #[serde(alias = "html_contents")]
+    pub body: ContentBody,
 
     pub shares: i64,
     pub likes: i64,
@@ -65,7 +69,7 @@ impl From<Post> for PostResponse {
             created_at: post.created_at,
             updated_at: post.updated_at,
             title: post.title,
-            html_contents: post.html_contents,
+            body: post.body,
             shares: post.shares,
             likes: post.likes,
             comments: post.comments,

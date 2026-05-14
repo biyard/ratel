@@ -1,7 +1,6 @@
 use crate::common::{types::*, *};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(JsonSchema, OperationIo))]
 pub enum HotSpaceHeat {
     Blazing,
     Trending,

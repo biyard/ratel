@@ -3,8 +3,8 @@ use crate::common::axum::{
     extract::Path,
     http::StatusCode,
     response::IntoResponse,
-    AxumRouter, Extension, Json,
-    native_routing::{delete, get, post},
+    Router, Extension, Json,
+    routing::{delete, get, post},
 };
 use serde::{Deserialize, Serialize};
 
@@ -72,8 +72,8 @@ async fn unregister_endpoint(
     }
 }
 
-pub fn admin_router(registry: ProxyRegistry) -> AxumRouter {
-    AxumRouter::new()
+pub fn admin_router(registry: ProxyRegistry) -> Router {
+    Router::new()
         .route("/admin/proxy/endpoints", post(register_endpoint))
         .route("/admin/proxy/endpoints", get(list_endpoints))
         .route(

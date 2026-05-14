@@ -44,4 +44,3 @@ cd ../..
 
 chown -R $HOST_UID:$HOST_GID target
 chown -R $HOST_UID:$HOST_GID /root/.cargo
-chown -R $HOST_UID:$HOST_GID .build

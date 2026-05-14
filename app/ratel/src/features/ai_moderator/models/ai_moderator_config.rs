@@ -1,7 +1,10 @@
 use crate::features::ai_moderator::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct AiModeratorConfig {
     pub pk: CompositePartition<SpacePartition, String>,
     pub sk: EntityType,

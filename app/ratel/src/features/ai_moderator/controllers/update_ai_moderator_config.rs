@@ -1,6 +1,9 @@
 use crate::features::ai_moderator::*;
 
 use super::get_ai_moderator_config::AiModeratorConfigResponse;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]

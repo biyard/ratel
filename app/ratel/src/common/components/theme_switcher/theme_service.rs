@@ -1,6 +1,5 @@
 use super::*;
 use crate::common::*;
-use dioxus::prelude::*;
 
 #[derive(Clone, Copy)]
 pub struct ThemeService {

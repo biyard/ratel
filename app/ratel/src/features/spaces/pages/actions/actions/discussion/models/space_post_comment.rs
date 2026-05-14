@@ -2,12 +2,15 @@ use crate::features::spaces::pages::actions::actions::discussion::*;
 
 use crate::features::spaces::pages::actions::actions::discussion::macros::DynamoEntity;
 use crate::features::spaces::pages::actions::actions::discussion::models::SpacePostCommentLike;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Value for `parent_id_for_likes` indicating a top-level comment (not a reply).
 pub const ROOT_PARENT: &str = "ROOT";
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct SpacePostComment {
     #[dynamo(index = "gsi2", pk, name = "find_by_post_order_by_likes")]
     pub pk: Partition,

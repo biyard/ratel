@@ -1,4 +1,7 @@
 use crate::common::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[cfg(feature = "server")]
 use super::ServiceError;
@@ -6,6 +9,8 @@ use super::ServiceError;
 use reqwest;
 #[cfg(feature = "server")]
 use serde::de::DeserializeOwned;
+#[cfg(feature = "server")]
+use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct TokenResponse {
@@ -121,7 +126,7 @@ struct ClaimSignatureRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct ClaimSignatureResponse {
     pub month_index: String,
     pub amount: String,
@@ -150,8 +155,15 @@ impl BiyardService {
             reqwest::header::HeaderValue::from_str(&format!("Bearer {}", api_secret)).unwrap(),
         );
 
+        // Bound the request lifecycle so a hung connection (e.g. missing
+        // NAT path to api.biyard.co) returns Err inside the Lambda
+        // invocation timeout (30s) and lets the caller's PendingReward
+        // fallback execute, instead of leaving the future stuck on .await
+        // until the runtime kills the process and skips the catch arm.
         let cli = reqwest::Client::builder()
             .default_headers(headers)
+            .connect_timeout(Duration::from_secs(10))
+            .timeout(Duration::from_secs(20))
             .build()
             .unwrap();
 

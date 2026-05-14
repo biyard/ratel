@@ -18,11 +18,14 @@
 //! `AnalyzeReport.status` to `Finish`.
 
 use crate::features::spaces::pages::apps::apps::analyzes::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(
     feature = "server",
-    derive(DynamoEntity, schemars::JsonSchema, aide::OperationIo)
+    derive(DynamoEntity, rmcp::schemars::JsonSchema)
 )]
 pub struct SpaceAnalyzeReportResult {
     pub pk: Partition,

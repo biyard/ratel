@@ -1,9 +1,9 @@
-use crate::features::social::*;
 use crate::features::social::types::SocialError;
+use crate::features::social::*;
 
 #[derive(Debug, Clone)]
 pub struct PortOneClient {
-    cli: crate::common::reqwest::Client,
+    cli: reqwest::Client,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -28,16 +28,13 @@ impl PortOneClient {
             "your_default_api_secret"
         });
 
-        let cli = crate::common::reqwest::Client::builder()
+        let cli = reqwest::Client::builder()
             .default_headers({
-                let mut headers = crate::common::reqwest::header::HeaderMap::new();
+                let mut headers = reqwest::header::HeaderMap::new();
                 headers.insert(
                     "Authorization",
-                    crate::common::reqwest::header::HeaderValue::from_str(&format!(
-                        "PortOne {}",
-                        api_secret
-                    ))
-                    .unwrap(),
+                    reqwest::header::HeaderValue::from_str(&format!("PortOne {}", api_secret))
+                        .unwrap(),
                 );
                 headers
             })

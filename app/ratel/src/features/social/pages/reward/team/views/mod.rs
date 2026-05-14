@@ -8,7 +8,7 @@ use super::dto::TeamRewardsResponse;
 use super::*;
 use crate::common::services::PointTransactionResponse;
 use crate::features::social::pages::team_arena::{use_team_arena, TeamArenaTab};
-use dioxus::prelude::*;
+use crate::common::*;
 
 pub use i18n::TeamRewardsTranslate;
 

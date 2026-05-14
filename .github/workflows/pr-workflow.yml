@@ -32,6 +32,31 @@ jobs:
         run: |
           make test
 
+  docs-build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: docs
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Docusaurus site (en + ko)
+        env:
+          ENV: dev
+        run: npm run build
+
   dx-check:
     runs-on: ubuntu-latest
 
@@ -229,6 +254,13 @@ jobs:
           AWS_ACCOUNT_ID: test
           RUST_LOG: info
           ENV: local
+          # ubuntu-latest has 7 GB RAM and 4 vCPUs. The full server+bypass
+          # compile peaks around 6 GB with the default 4 parallel rustc jobs
+          # and OOM-kills the runner when the cache is cold (recently
+          # observed after merges from dev). Cap parallelism at 2 to fit
+          # within the runner's memory budget at the cost of ~1.3x compile
+          # wall time.
+          CARGO_BUILD_JOBS: "2"
         run: |
           npm i
           make test

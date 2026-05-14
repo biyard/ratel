@@ -6,7 +6,7 @@
 //! `window.ratel.common.theme` by the bundled `ratel-app-shell.js`.
 
 #[cfg(not(feature = "server"))]
-use dioxus::prelude::*;
+use crate::common::*;
 
 const LOAD_SCRIPT: &str = r#"
 try {

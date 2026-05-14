@@ -2,7 +2,7 @@ use crate::features::auth::*;
 
 #[component]
 pub fn Provider() -> Element {
-    #[cfg(feature = "web")]
+    #[cfg(all(feature = "web", not(feature = "server")))]
     {
         use crate::features::auth::interop::init_firebase;
 

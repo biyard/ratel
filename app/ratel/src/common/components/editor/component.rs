@@ -1,5 +1,4 @@
 use crate::common::*;
-use dioxus::prelude::*;
 
 #[derive(Props, Clone, PartialEq)]
 pub struct EditorProps {

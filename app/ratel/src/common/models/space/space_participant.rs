@@ -5,7 +5,6 @@ use crate::common::utils::time::get_now_timestamp_millis;
 use crate::common::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default)]
-#[cfg_attr(feature = "server", derive(JsonSchema, OperationIo))]
 pub struct SpaceParticipant {
     pub pk: CompositePartition,
     pub sk: EntityType,

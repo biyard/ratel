@@ -1,4 +1,7 @@
 use crate::common::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 /// Stores a per-user MCP client secret for authenticating MCP tool calls.
 ///
@@ -9,7 +12,7 @@ use crate::common::*;
 /// - sk: McpClientSecret
 /// - gsi1 pk: MCS#<hashed_secret> (for lookup by hashed secret)
 #[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct McpClientSecret {
     pub pk: Partition,
     pub sk: EntityType,

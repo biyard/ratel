@@ -2,10 +2,13 @@ use crate::common::models::auth::UserFollow;
 use crate::features::auth::OptionalUser;
 use crate::features::my_follower::*;
 #[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
+#[cfg(feature = "server")]
 use crate::features::posts::models::Team;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct FollowStatusResponse {
     pub target_pk: Partition,
     pub target_display_name: String,

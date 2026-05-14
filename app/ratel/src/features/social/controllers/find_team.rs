@@ -30,5 +30,5 @@ pub async fn find_team_handler(username: String) -> Result<TeamResponse> {
         None
     };
 
-    Ok(TeamResponse::from((team, role)))
+    Ok(TeamResponse::from((team, role)).with_parent_username(cli).await)
 }

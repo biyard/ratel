@@ -18,9 +18,7 @@ pub struct InviteSpaceParticipantsResponse {
 }
 
 #[cfg(feature = "server")]
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr, Default, DynamoEnum,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr, Default, DynamoEnum)]
 #[repr(u8)]
 enum InvitationStatus {
     #[default]

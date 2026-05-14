@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use crate::common::*;
 use dioxus_primitives::progress::{self, ProgressIndicatorProps, ProgressProps};
 
 #[component]

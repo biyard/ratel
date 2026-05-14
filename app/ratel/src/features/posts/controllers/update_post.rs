@@ -6,17 +6,20 @@ use std::collections::HashMap;
 
 use crate::features::cross_posting::models::PostSyndicationDirective;
 use crate::features::cross_posting::types::SocialPlatform;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[cfg(feature = "server")]
 use crate::features::posts::utils::validator::{validate_content, validate_title};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum UpdatePostRequest {
     Publish {
         title: String,
-        content: String,
+        content: ContentBody,
         image_urls: Option<Vec<String>>,
         publish: bool,
         visibility: Option<Visibility>,
@@ -38,7 +41,7 @@ pub enum UpdatePostRequest {
     },
     Writing {
         title: String,
-        content: String,
+        content: ContentBody,
         categories: Option<Vec<String>>,
     },
     Image {
@@ -90,12 +93,12 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
             categories,
         } => {
             post.title = title.clone();
-            post.html_contents = content.clone();
+            post.body = content.clone();
             if let Some(ref cats) = categories {
                 post.categories = cats.clone();
             }
 
-            let mut updater = updater.with_title(title).with_html_contents(content);
+            let mut updater = updater.with_title(title).with_body(content);
             if let Some(cats) = categories {
                 updater = updater.with_categories(cats);
             }
@@ -140,14 +143,14 @@ pub async fn update_post_handler(post_id: FeedPartition, req: UpdatePostRequest)
             };
             post.status = status;
             post.title = title.clone();
-            post.html_contents = content.clone();
+            post.body = content.clone();
             if let Some(ref cats) = categories {
                 post.categories = cats.clone();
             }
             let mut updater = updater
                 .with_status(status)
                 .with_title(title)
-                .with_html_contents(content)
+                .with_body(content)
                 .with_visibility(visibility);
             if let Some(cats) = categories {
                 updater = updater.with_categories(cats);

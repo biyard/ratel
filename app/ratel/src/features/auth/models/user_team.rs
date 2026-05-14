@@ -1,8 +1,11 @@
 use crate::features::auth::*;
 use crate::features::social::pages::member::dto::TeamRole;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, DynamoEntity)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema, aide::OperationIo))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UserTeam {
     pub pk: Partition,
     #[dynamo(prefix = "TEAM_PK", index = "gsi1", name = "find_by_team", pk)]
@@ -53,7 +56,7 @@ impl UserTeam {
 }
 
 #[derive(Default, Serialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UserTeamResponse {
     pub nickname: String,
     pub profile_url: String,
