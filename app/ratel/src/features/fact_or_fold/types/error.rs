@@ -39,6 +39,49 @@ pub enum FactOrFoldError {
     )]
     PublishInvariantViolation,
 
+    // ── Round play (PR4) ──────────────────────────────────────────
+    #[error("round is not in the bet stage")]
+    #[translate(
+        en = "Bets can only be placed during stage 2",
+        ko = "1차 베팅 단계에서만 베팅할 수 있습니다.",
+    )]
+    BetStageMismatch,
+
+    #[error("round is not in the rationale stage")]
+    #[translate(
+        en = "Rationales can only be submitted during stage 3",
+        ko = "근거는 단계 3에서만 제출할 수 있습니다.",
+    )]
+    RationaleStageMismatch,
+
+    #[error("bet amount out of allowed range")]
+    #[translate(
+        en = "Bet amount is outside the allowed min..=max range",
+        ko = "베팅 금액이 허용 범위를 벗어났습니다.",
+    )]
+    BetAmountOutOfRange,
+
+    #[error("rationale text invalid")]
+    #[translate(
+        en = "Rationale text is empty or exceeds the max length",
+        ko = "근거 텍스트가 비어있거나 최대 길이를 초과했습니다.",
+    )]
+    RationaleInvalid,
+
+    #[error("not a round participant")]
+    #[translate(
+        en = "Only round participants can post bets, rationales, or chat",
+        ko = "라운드 참가자만 베팅·근거·채팅을 게시할 수 있습니다.",
+    )]
+    NotRoundParticipant,
+
+    #[error("not the round insider")]
+    #[translate(
+        en = "Only the insider can read this private statement",
+        ko = "인사이더 본인만 비공개 진술을 조회할 수 있습니다.",
+    )]
+    NotRoundInsider,
+
     // ── Lobby + round (PR3) ───────────────────────────────────────
     #[error("no headline available for a new round")]
     #[translate(
@@ -112,7 +155,13 @@ impl FactOrFoldError {
             | FactOrFoldError::SettingsOutOfRange
             | FactOrFoldError::LobbyAlreadyJoined
             | FactOrFoldError::LobbyNotJoined
-            | FactOrFoldError::LobbyInsufficientBalance(_) => StatusCode::BAD_REQUEST,
+            | FactOrFoldError::LobbyInsufficientBalance(_)
+            | FactOrFoldError::BetStageMismatch
+            | FactOrFoldError::RationaleStageMismatch
+            | FactOrFoldError::BetAmountOutOfRange
+            | FactOrFoldError::RationaleInvalid
+            | FactOrFoldError::NotRoundParticipant => StatusCode::BAD_REQUEST,
+            FactOrFoldError::NotRoundInsider => StatusCode::FORBIDDEN,
             FactOrFoldError::LobbyFull => StatusCode::CONFLICT,
             FactOrFoldError::LobbyNoHeadlineAvailable => StatusCode::SERVICE_UNAVAILABLE,
             FactOrFoldError::RoundNotFound => StatusCode::NOT_FOUND,

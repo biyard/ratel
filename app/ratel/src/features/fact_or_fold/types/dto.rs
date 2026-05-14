@@ -185,6 +185,108 @@ pub struct LobbyResponse {
     pub headline_available: bool,
 }
 
+// ── Bet + Rationale + Participant (PR4) ───────────────────────────
+
+/// Which side a player bet on. Mirrors `Verdict` shape; kept
+/// separate so future "side options" extensions (e.g. abstain) can
+/// land here without mutating the verdict enum used by headlines.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub enum BetSide {
+    #[default]
+    #[serde(rename = "REAL")]
+    Real,
+    #[serde(rename = "FAKE")]
+    Fake,
+}
+
+impl From<Verdict> for BetSide {
+    fn from(v: Verdict) -> Self {
+        match v {
+            Verdict::Real => BetSide::Real,
+            Verdict::Fake => BetSide::Fake,
+        }
+    }
+}
+
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct PlaceBetRequest {
+    pub side: BetSide,
+    /// RatelPoints staked. Server validates against
+    /// `FactFoldSettings::min_bet_rp..=max_bet_rp`.
+    pub amount_rp: i64,
+}
+
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct BetResponse {
+    pub user_pk: String,
+    pub side: BetSide,
+    pub amount_rp: i64,
+    pub locked_at: i64,
+    /// Set after the §FR-29 last-10s flip — the side the player
+    /// switched to.
+    pub flipped_to: Option<BetSide>,
+    /// User pk whose rationale was cited as the flip trigger.
+    pub flip_cite_user_pk: Option<String>,
+    pub created_at: i64,
+    pub updated_at: i64,
+}
+
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct SubmitRationaleRequest {
+    /// 50–200 chars per spec. Texts shorter than 50 still post but
+    /// are flagged `essence_eligible = false` (not promoted).
+    pub text: String,
+}
+
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct RationaleResponse {
+    pub user_pk: String,
+    pub text: String,
+    pub submitted_at: i64,
+    /// True iff `text.chars().count() >= RATIONALE_ESSENCE_MIN_CHARS`.
+    pub essence_eligible: bool,
+    /// Set once the player has registered this rationale to their
+    /// Essence (PR6 wires the actual upsert).
+    pub essence_registered: bool,
+}
+
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct ParticipantResponse {
+    pub user_pk: String,
+    pub joined_at: i64,
+    /// True only on the row returned to the insider themselves;
+    /// always false on rows surfaced to other players (insider
+    /// protection per design doc §Constraints).
+    pub is_insider: bool,
+    /// Latest heartbeat — used by the reconnect-grace window.
+    pub last_seen_at: i64,
+    /// True once the round auto-forfeited the player after the
+    /// reconnect grace expired.
+    pub forfeited: bool,
+}
+
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct InsiderStatementResponse {
+    /// `Some(text)` only when the caller is the insider for this
+    /// round; `None` for everyone else.
+    pub statement: Option<String>,
+}
+
+// ── Bet + Rationale constants ─────────────────────────────────────
+
+/// Minimum chars for a rationale to count as "Essence-eligible"
+/// (per spec §FR-37).
+pub const RATIONALE_ESSENCE_MIN_CHARS: usize = 50;
+/// Hard upper bound to keep rows small and submissions skim-able.
+pub const RATIONALE_TEXT_MAX_CHARS: usize = 200;
+
 // ── Queue health ──────────────────────────────────────────────────
 
 /// Queue depth + FR-45 alert flag for the admin dashboard. Computed

@@ -288,6 +288,13 @@ pub enum EntityType {
     // participant_pks list for the join/leave + capacity check.
     FactFoldRound(String),          // pk=FactFold(round_id), inner=round_id
     FactFoldLobby,                  // pk=FactFoldLobbySingleton (singleton)
+
+    // PR4 — per-participant round state. All keyed by user_id under
+    // the same Partition::FactFold(round_id) as the Round itself, so
+    // a single sk-prefix query lists everything for a round.
+    FactFoldParticipant(String),    // pk=FactFold(round_id), inner=user_id
+    FactFoldBet(String),            // pk=FactFold(round_id), inner=user_id
+    FactFoldRationale(String),      // pk=FactFold(round_id), inner=user_id
 }
 
 impl TryInto<Partition> for EntityType {
