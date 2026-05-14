@@ -5,6 +5,7 @@ use crate::features::posts::*;
 use crate::features::auth::OptionalUser;
 use crate::common::models::space::SpaceCommon;
 use crate::common::types::SpacePublishState;
+use crate::features::sub_team::models::SubTeamAnnouncementFanout;
 use std::collections::HashMap;
 
 #[get("/api/posts/by-user/:username?bookmark", user: OptionalUser)]
@@ -117,6 +118,14 @@ pub async fn list_team_posts_handler(
 
     let (posts, bookmark) = Post::find_by_user_and_status(cli, &team_pk, query_options).await?;
 
+    // Union the team's own Posts with anchor Posts pointed at by every
+    // `SubTeamAnnouncementFanout` marker filed under this team — those
+    // are broadcasts a parent team published, surfaced into this team's
+    // wall WITHOUT cloning the Post row (the anchor lives at
+    // `Feed(announcement_id)` on the parent team's pk). One row per
+    // announcement, same URL / likes / comments everywhere.
+    let posts = merge_broadcast_anchors(cli, &team_pk, posts).await;
+
     // Category filter:
     // - When caller passes `category`, return ONLY posts that carry it
     //   (used by the bylaws page with "Bylaws" / "ClubBylaws").
@@ -139,13 +148,12 @@ pub async fn list_team_posts_handler(
             .collect::<Vec<_>>()
     };
 
-    // Hide fanned-out broadcast Posts from OTHER teams whose attached
-    // Space is still Draft. The Space designer's "Publish" button is
-    // what flips publish_state → Published, and until then the sub-team
-    // shouldn't see the half-built Space in their feed.
-    // The parent team's own anchor post (announcement_parent_team_id ==
-    // team being queried) bypasses this gate so the parent admin still
-    // sees their own broadcasts before designing the Space.
+    // Hide broadcast Posts whose attached Space is still Draft. The
+    // Space designer's "Publish" button is what flips publish_state →
+    // Published, and until then no team should see the half-built Space
+    // in their feed — children via the fanout markers, parent via the
+    // anchor on their own wall. (The broadcast management tab still
+    // surfaces the row so the parent admin can find and design it.)
     let posts = filter_unpublished_broadcast_spaces(cli, &team_pk, posts).await;
 
     tracing::debug!(
@@ -184,30 +192,81 @@ pub async fn list_team_posts_handler(
     Ok(ListItemsResponse { items, bookmark })
 }
 
-/// Hide broadcast Posts fanned-out from a different parent team whose
-/// linked Space hasn't been published yet. Posts without a Space, posts
-/// without an announcement linkage, and the parent's OWN anchor post
-/// (announcement_parent_team_id == team being queried) all pass through.
+/// Union the team's own Posts with anchor Posts pointed at by every
+/// `SubTeamAnnouncementFanout` marker filed under this team's pk.
+///
+/// The marker pattern replaces the older "clone the Post into every
+/// child team's feed" fanout. One anchor Post lives on the parent's
+/// pk; each recognized child gets a single lightweight marker row
+/// pointing at it. This function reads those markers, batch-gets the
+/// anchor Posts, and merges them into the wall result, dedup'd against
+/// the team's own Posts (which is mostly redundant — the markers point
+/// at the parent's pk space — but defends against future paths that
+/// might emit both).
+///
+/// Sort order is `created_at` desc to keep the merged feed
+/// time-consistent with `find_by_user_and_status`'s gsi5 ordering.
+#[cfg(feature = "server")]
+async fn merge_broadcast_anchors(
+    cli: &aws_sdk_dynamodb::Client,
+    team_pk: &Partition,
+    own_posts: Vec<Post>,
+) -> Vec<Post> {
+    let opt = SubTeamAnnouncementFanout::opt()
+        .limit(100)
+        .sk("SUB_TEAM_ANNOUNCEMENT_FANOUT".to_string());
+    let markers: Vec<SubTeamAnnouncementFanout> =
+        match SubTeamAnnouncementFanout::query(cli, team_pk.clone(), opt).await {
+            Ok((items, _)) => items,
+            Err(e) => {
+                tracing::warn!("merge_broadcast_anchors: marker query failed: {e}");
+                return own_posts;
+            }
+        };
+    if markers.is_empty() {
+        return own_posts;
+    }
+
+    let keys: Vec<(Partition, EntityType)> = markers
+        .iter()
+        .map(|m| (Partition::Feed(m.announcement_id.clone()), EntityType::Post))
+        .collect();
+    let anchors: Vec<Post> = Post::batch_get(cli, keys).await.unwrap_or_default();
+    let anchors: Vec<Post> = anchors
+        .into_iter()
+        .filter(|p| matches!(p.status, PostStatus::Published))
+        .collect();
+
+    let mut by_pk: HashMap<String, Post> = HashMap::new();
+    for p in own_posts {
+        by_pk.insert(p.pk.to_string(), p);
+    }
+    for p in anchors {
+        by_pk.entry(p.pk.to_string()).or_insert(p);
+    }
+
+    let mut merged: Vec<Post> = by_pk.into_values().collect();
+    merged.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+    merged
+}
+
+/// Hide broadcast Posts whose attached Space is still in `Draft`
+/// publish-state. Applies to every Post carrying an `announcement_id` +
+/// `space_pk`, regardless of whether the row is the parent's anchor or
+/// surfaced into a child's wall via a fanout marker — until the parent
+/// admin opens the Space designer and publishes the Space, no team
+/// should see a half-built Space card they can't open.
 #[cfg(feature = "server")]
 async fn filter_unpublished_broadcast_spaces(
     cli: &aws_sdk_dynamodb::Client,
     team_pk: &Partition,
     posts: Vec<Post>,
 ) -> Vec<Post> {
-    let team_id_str = match team_pk {
-        Partition::Team(id) => id.clone(),
-        _ => String::new(),
-    };
+    let _ = team_pk;
 
     let mut to_check: Vec<Partition> = posts
         .iter()
-        .filter(|p| {
-            let is_fanned_out = p
-                .announcement_parent_team_id
-                .as_deref()
-                .is_some_and(|parent_id| parent_id != team_id_str);
-            is_fanned_out && p.space_pk.is_some()
-        })
+        .filter(|p| p.announcement_id.is_some() && p.space_pk.is_some())
         .filter_map(|p| p.space_pk.clone())
         .collect();
     to_check.sort_by(|a, b| a.to_string().cmp(&b.to_string()));
@@ -231,11 +290,7 @@ async fn filter_unpublished_broadcast_spaces(
     posts
         .into_iter()
         .filter(|p| {
-            let is_fanned_out = p
-                .announcement_parent_team_id
-                .as_deref()
-                .is_some_and(|parent_id| parent_id != team_id_str);
-            if !is_fanned_out {
+            if p.announcement_id.is_none() {
                 return true;
             }
             let Some(space_pk) = p.space_pk.as_ref() else {

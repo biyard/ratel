@@ -68,13 +68,75 @@ pub async fn send_direct_message_handler(
         .ok_or(SubTeamError::SubTeamLinkNotFound)?;
     let _ = link;
 
-    let announcement = SubTeamAnnouncement::new_direct(
+    let mut announcement = SubTeamAnnouncement::new_direct(
         team.pk.clone(),
-        sub_team_id,
-        body.title,
-        body.body,
+        sub_team_id.clone(),
+        body.title.clone(),
+        body.body.clone(),
         user.pk.to_string(),
     );
+
+    // Write the anchor Post BEFORE the announcement row. Anchor pk is
+    // deterministic (`Feed(announcement_id)`), and we want the row that
+    // children's `/posts/{id}` deep-links land on to exist by the time
+    // any inbox notification fires.
+    //
+    // Anchor `user_pk` is the **target child team** (not the parent),
+    // so the Post surfaces naturally in that child's
+    // `Post::find_by_user_and_status` wall query and stays off the
+    // parent's wall. Author metadata still records the parent team so
+    // the rendered card shows "parent team posted in your wall".
+    use crate::features::posts::models::Post;
+    use crate::features::posts::types::{PostStatus, PostType};
+
+    let parent_team_id_str = match &team.pk {
+        Partition::Team(id) => id.clone(),
+        _ => String::new(),
+    };
+    let child_team_pk = Partition::Team(sub_team_id.clone());
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    let anchor_post = Post {
+        pk: Partition::Feed(announcement.announcement_id.clone()),
+        sk: EntityType::Post,
+        created_at: now,
+        updated_at: now,
+        title: body.title.clone(),
+        body: ContentBody::html(body.body.clone()),
+        post_type: PostType::Post,
+        status: PostStatus::Published,
+        visibility: Some(announcement.visibility.clone()),
+        shares: 0,
+        likes: 0,
+        comments: 0,
+        reports: 0,
+        user_pk: child_team_pk,
+        author_display_name: team.display_name.clone(),
+        author_profile_url: team.profile_url.clone(),
+        author_username: team.username.clone(),
+        author_type: crate::common::types::UserType::Team,
+        space_pk: None,
+        space_type: None,
+        space_visibility: None,
+        booster: None,
+        rewards: None,
+        urls: vec![],
+        categories: vec![],
+        announcement_id: Some(announcement.announcement_id.clone()),
+        announcement_parent_team_id: Some(parent_team_id_str),
+        pinned_as_announcement: false,
+    };
+    anchor_post.create(cli).await.map_err(|e| {
+        crate::error!("send_direct_message anchor post create failed: {e}");
+        SubTeamError::AnnouncementPublishFailed
+    })?;
+
+    // Pre-populate `target_post_pk` on the announcement row so the
+    // parent's direct-message history can render deep links without
+    // a backfill. Stream-driven fanout will overwrite this with the
+    // same value later, but writing it now keeps the row consistent
+    // even if the stream is delayed.
+    announcement.target_post_pk = Some(anchor_post.pk.to_string());
+
     announcement.create(cli).await.map_err(|e| {
         crate::error!("send_direct_message create failed: {e}");
         SubTeamError::AnnouncementPublishFailed
@@ -127,44 +189,13 @@ pub async fn list_direct_messages_handler(
         .collect();
     items.sort_by(|a, b| b.created_at.cmp(&a.created_at));
 
-    // Backfill `target_post_pk` for rows fanned out before the field
-    // existed. We can't query Posts by `announcement_id` directly (no
-    // GSI), so walk the child team's feed once and index by
-    // announcement_id, then attach.
-    let needs_backfill = items.iter().any(|a| a.target_post_pk.is_none());
-    if needs_backfill {
-        use crate::features::posts::models::Post;
-        let child_team_pk = Partition::Team(sub_team_id.clone());
-        let mut bookmark: Option<String> = None;
-        let mut by_ann: std::collections::HashMap<String, String> =
-            std::collections::HashMap::new();
-        for _ in 0..10 {
-            let mut opt = Post::opt().limit(100);
-            if let Some(bm) = bookmark.as_ref() {
-                opt = opt.bookmark(bm.clone());
-            }
-            let (posts, next_bm) = Post::find_by_user_pk(cli, &child_team_pk, opt)
-                .await
-                .map_err(|e| {
-                    crate::error!("list_direct_messages backfill find_by_user_pk failed: {e}");
-                    SubTeamError::AnnouncementNotFound
-                })?;
-            for p in posts {
-                if let Some(ann_id) = &p.announcement_id {
-                    by_ann.entry(ann_id.clone()).or_insert_with(|| p.pk.to_string());
-                }
-            }
-            match next_bm {
-                Some(b) => bookmark = Some(b),
-                None => break,
-            }
-        }
-        for a in items.iter_mut() {
-            if a.target_post_pk.is_none() {
-                if let Some(post_pk) = by_ann.get(&a.announcement_id) {
-                    a.target_post_pk = Some(post_pk.clone());
-                }
-            }
+    // Anchor Post pk for every direct message is deterministic
+    // (`Feed(announcement_id)`) in the new model, so we can fill in
+    // `target_post_pk` directly without a feed walk. Old rows that
+    // didn't carry the field still resolve correctly.
+    for a in items.iter_mut() {
+        if a.target_post_pk.is_none() {
+            a.target_post_pk = Some(Partition::Feed(a.announcement_id.clone()).to_string());
         }
     }
 

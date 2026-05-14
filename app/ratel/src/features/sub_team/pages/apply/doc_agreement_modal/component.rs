@@ -52,7 +52,17 @@ pub fn DocAgreementModal(
                     }
                 }
                 div { class: "doc-modal__body",
-                    div { class: "doc-modal__content", "{doc.body}" }
+                    // SAFETY: `doc.body` is rich-text produced by the
+                    // parent admin via the docs composer (Tiptap →
+                    // server-side allowlist sanitize in
+                    // `update_sub_team_doc_handler`), so the HTML reaching
+                    // here has been stripped of executable script. Render
+                    // it as rich content rather than escaped text so
+                    // `<b>` / `<div>` formatting actually renders.
+                    div {
+                        class: "doc-modal__content",
+                        dangerous_inner_html: "{doc.body}",
+                    }
                     div { class: "doc-modal__notice",
                         lucide_dioxus::Info { class: "w-4 h-4 [&>path]:stroke-current" }
                         div { class: "doc-modal__notice-text", "{tr.doc_modal_notice}" }
@@ -65,7 +75,11 @@ pub fn DocAgreementModal(
                             r#type: "button",
                             class: "doc-modal__cancel",
                             onclick: move |_| on_cancel.call(()),
-                            if is_required { "{tr.doc_modal_cancel}" } else { "{tr.apply_close}" }
+                            if is_required {
+                                "{tr.doc_modal_cancel}"
+                            } else {
+                                "{tr.apply_close}"
+                            }
                         }
                         if is_required {
                             button {

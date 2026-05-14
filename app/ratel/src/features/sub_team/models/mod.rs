@@ -1,4 +1,5 @@
 mod sub_team_announcement;
+mod sub_team_announcement_fanout;
 mod sub_team_application;
 mod sub_team_application_draft;
 mod sub_team_doc_agreement;
@@ -8,6 +9,7 @@ mod sub_team_form_field;
 mod sub_team_link;
 
 pub use sub_team_announcement::*;
+pub use sub_team_announcement_fanout::*;
 pub use sub_team_application::*;
 pub use sub_team_application_draft::*;
 pub use sub_team_doc_agreement::*;

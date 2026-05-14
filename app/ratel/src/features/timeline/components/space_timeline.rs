@@ -149,6 +149,7 @@ fn space_to_post(space: MySpaceResponse) -> PostResponse {
         liked: false,
         categories: vec![],
         status: PostStatus::Published,
+        announcement_id: None,
     }
 }
 

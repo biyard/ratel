@@ -259,6 +259,16 @@ pub enum EntityType {
     /// they're considering.
     SubTeamApplicationDraft(String),      // SUB_TEAM_APPLICATION_DRAFT#{parent_team_id}
     SubTeamAnnouncement(String),          // SUB_TEAM_ANNOUNCEMENT#{announcement_id}
+    /// Lightweight marker that exposes a parent's anchor announcement
+    /// Post on a recognized child team's wall WITHOUT cloning the Post
+    /// row. One row per (child team, announcement). Listed by
+    /// `list_team_posts_handler` for the child team; each marker's
+    /// `anchor_post_pk` resolves to the parent's single anchor `Post`,
+    /// so likes / comments / shares accumulate on ONE row across every
+    /// child, the URL is the same anchor URL everywhere, and the parent
+    /// admin sees the full reception on their own anchor detail page.
+    /// pk = TEAM#{child_team_id}, this sk encodes the announcement id.
+    SubTeamAnnouncementFanout(String),    // SUB_TEAM_ANNOUNCEMENT_FANOUT#{announcement_id}
 
     // Cross-posting feature (Phase 1: Bluesky / LinkedIn / Threads). All entities
     // share an existing Partition variant (User or Feed) — no new Partition.
