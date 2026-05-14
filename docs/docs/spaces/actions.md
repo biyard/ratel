@@ -46,8 +46,8 @@ Discussions are intentionally open-ended — they're the Space's way of asking *
 
 You can read other participants' contributions while you write yours, but the host decides whether replies are visible immediately or only after you've posted your own — so a Space designed to gather independent opinions doesn't get anchored by whoever speaks first.
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/discussion.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-  Your browser doesn't support embedded video. <a href={useBaseUrl('/media/discussion.mov')}>Download the walkthrough</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/discussion.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+  Your browser doesn't support embedded video. <a href="https://metadata.ratel.foundation/mov/discussion.mov">Download the walkthrough</a>.
 </video>
 
 ## <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><polyline points="20 6 9 17 4 12"/></svg> Poll
@@ -60,8 +60,8 @@ Polls are the lightest-touch way to participate — one tap and you're in. Despi
 
 After you vote, you'll typically see the live results immediately. Some Spaces hide the tally until a deadline passes (so the result isn't biased by whoever votes first); the host configures that per poll. Either way, your vote is recorded against your account and counts toward your reward share.
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/poll.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-  Your browser doesn't support embedded video. <a href={useBaseUrl('/media/poll.mov')}>Download the walkthrough</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/poll.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+  Your browser doesn't support embedded video. <a href="https://metadata.ratel.foundation/mov/poll.mov">Download the walkthrough</a>.
 </video>
 
 ## <img src={useBaseUrl('/img/icons/file.svg')} width="22" height="22" alt="File" style={{verticalAlign: 'middle'}} /> Quiz
@@ -74,8 +74,8 @@ Quizzes are scored, and your score determines whether you've **passed**. The hos
 
 Quiz results are useful inputs to your Essence too — they signal what you know, not just what you think.
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/quiz.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-  Your browser doesn't support embedded video. <a href={useBaseUrl('/media/quiz.mov')}>Download the walkthrough</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/quiz.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+  Your browser doesn't support embedded video. <a href="https://metadata.ratel.foundation/mov/quiz.mov">Download the walkthrough</a>.
 </video>
 
 ## <img src={useBaseUrl('/img/icons/users.svg')} width="22" height="22" alt="Users" style={{verticalAlign: 'middle'}} /> Follow
@@ -88,8 +88,8 @@ Each follow card shows you the target accounts, who they are, and why the host i
 
 Follow actions feed Essence in a different way from polls or discussions: they tell your Essence *who* you align with, which helps recommendations and routing across the platform.
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/follow.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-  Your browser doesn't support embedded video. <a href={useBaseUrl('/media/follow.mov')}>Download the walkthrough</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/follow.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+  Your browser doesn't support embedded video. <a href="https://metadata.ratel.foundation/mov/follow.mov">Download the walkthrough</a>.
 </video>
 
 ## <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Meet

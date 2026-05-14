@@ -40,10 +40,10 @@ A Team can host its own Spaces and run normal activity regardless of whether it 
   controls
   preload="metadata"
   width="100%"
-  src={useBaseUrl('/media/subteam-register.mov')}
+  src="https://metadata.ratel.foundation/mov/subteam-register.mov"
   style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}
 >
-  Your browser doesn't support embedded video. <a href={useBaseUrl('/media/subteam-register.mov')}>Download the walkthrough</a>.
+  Your browser doesn't support embedded video. <a href="https://metadata.ratel.foundation/mov/subteam-register.mov">Download the walkthrough</a>.
 </video>
 
 The application surface lives at a single child-side URL, plus a status tracker the child uses while waiting:
@@ -82,10 +82,10 @@ If the parent **Rejects**, the child can re-apply later (typically after address
   controls
   preload="metadata"
   width="100%"
-  src={useBaseUrl('/media/parent-setting.mov')}
+  src="https://metadata.ratel.foundation/mov/parent-setting.mov"
   style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}
 >
-  Your browser doesn't support embedded video. <a href={useBaseUrl('/media/parent-setting.mov')}>Download the walkthrough</a>.
+  Your browser doesn't support embedded video. <a href="https://metadata.ratel.foundation/mov/parent-setting.mov">Download the walkthrough</a>.
 </video>
 
 Everything a parent does to operate the relationship lives at one URL, with five tabs along the top:
@@ -155,10 +155,10 @@ The Documents tab on `/sub-teams/manage` also exposes per-document delete and re
   controls
   preload="metadata"
   width="100%"
-  src={useBaseUrl('/media/announcement.mov')}
+  src="https://metadata.ratel.foundation/mov/announcement.mov"
   style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}
 >
-  Your browser doesn't support embedded video. <a href={useBaseUrl('/media/announcement.mov')}>Download the walkthrough</a>.
+  Your browser doesn't support embedded video. <a href="https://metadata.ratel.foundation/mov/announcement.mov">Download the walkthrough</a>.
 </video>
 
 Parents can broadcast to every recognized sub-team without needing each child to subscribe. The composer is a full-screen focused editor (it does NOT inherit the team-arena layout) so the author can write distraction-free:

@@ -46,8 +46,8 @@ URL: `/spaces/:space_id/actions/discussions/:discussion_id/edit`
 
 작성 중에 다른 참여자의 답변을 함께 읽을 수 있지만, 본인이 먼저 게시한 후에야 다른 사람의 답변이 보이도록 호스트가 설정할 수도 있습니다 — 독립적인 의견을 모으도록 설계된 스페이스는 먼저 말한 사람에게 휘둘리지 않습니다.
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/discussion.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-  브라우저가 비디오 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/discussion.mov')}>워크스루 다운로드</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/discussion.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+  브라우저가 비디오 임베드를 지원하지 않습니다. <a href="https://metadata.ratel.foundation/mov/discussion.mov">워크스루 다운로드</a>.
 </video>
 
 ## <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><polyline points="20 6 9 17 4 12"/></svg> Poll (투표)
@@ -60,8 +60,8 @@ URL: `/spaces/:space_id/actions/polls/:poll_id`
 
 투표 후에는 일반적으로 결과가 즉시 보입니다. 어떤 스페이스는 마감 시각이 지나기 전까지는 집계를 숨깁니다 (먼저 투표한 사람에 의해 결과가 편향되지 않도록) — 호스트가 투표별로 설정합니다. 어느 쪽이든 본인의 표는 본인 계정에 기록되며 보상 몫에 반영됩니다.
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/poll.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-  브라우저가 비디오 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/poll.mov')}>워크스루 다운로드</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/poll.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+  브라우저가 비디오 임베드를 지원하지 않습니다. <a href="https://metadata.ratel.foundation/mov/poll.mov">워크스루 다운로드</a>.
 </video>
 
 ## <img src={useBaseUrl('/img/icons/file.svg')} width="22" height="22" alt="File" style={{verticalAlign: 'middle'}} /> Quiz (퀴즈)
@@ -74,8 +74,8 @@ URL: `/spaces/:space_id/actions/quizzes/:quiz_id`
 
 퀴즈 결과는 Essence 에도 유용한 입력이 됩니다 — 본인이 *무엇을 생각하는지* 뿐 아니라 *무엇을 알고 있는지* 에 대한 신호이기 때문입니다.
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/quiz.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-  브라우저가 비디오 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/quiz.mov')}>워크스루 다운로드</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/quiz.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+  브라우저가 비디오 임베드를 지원하지 않습니다. <a href="https://metadata.ratel.foundation/mov/quiz.mov">워크스루 다운로드</a>.
 </video>
 
 ## <img src={useBaseUrl('/img/icons/users.svg')} width="22" height="22" alt="Users" style={{verticalAlign: 'middle'}} /> Follow (팔로우)
@@ -88,8 +88,8 @@ URL: `/spaces/:space_id/actions/follows/:follow_id`
 
 팔로우 액션은 투표나 토론과는 다른 방식으로 Essence 에 쌓입니다 — *누구* 와 정렬되어 있는지를 Essence 에 알려주어, 플랫폼 전체의 추천과 라우팅에 영향을 줍니다.
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/follow.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-  브라우저가 비디오 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/follow.mov')}>워크스루 다운로드</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/follow.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+  브라우저가 비디오 임베드를 지원하지 않습니다. <a href="https://metadata.ratel.foundation/mov/follow.mov">워크스루 다운로드</a>.
 </video>
 
 ## <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Meet (미팅)

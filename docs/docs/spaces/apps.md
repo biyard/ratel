@@ -42,8 +42,8 @@ The page is a single scrollable arena with these sections, in order:
 General is **not** where you write a long welcome page or pin a manifesto — that's the Overview panel (the topbar file-text icon on the Space arena). General is for switches and lists; Overview is for narrative.
 :::
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/general.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-Your browser doesn't support embedded video. <a href={useBaseUrl('/media/general.mov')}>Download the walkthrough</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/general.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+Your browser doesn't support embedded video. <a href="https://metadata.ratel.foundation/mov/general.mov">Download the walkthrough</a>.
 </video>
 
 ## <img src={useBaseUrl('/img/icons/file.svg')} width="22" height="22" alt="File" style={{verticalAlign: 'middle'}} /> Files
@@ -68,8 +68,8 @@ The arena layout, top to bottom:
 To add a file you intend participants to reference, attach it on the Overview panel (for a manifesto/spec accompanying the Space), inside a Discussion board, or on a Quiz question. The Files app then aggregates them into one browseable view.
 :::
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/file.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-Your browser doesn't support embedded video. <a href={useBaseUrl('/media/file.mov')}>Download the walkthrough</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/file.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+Your browser doesn't support embedded video. <a href="https://metadata.ratel.foundation/mov/file.mov">Download the walkthrough</a>.
 </video>
 
 ## <img src={useBaseUrl('/img/icons/grid.svg')} width="22" height="22" alt="Grid" style={{verticalAlign: 'middle'}} /> Analyzes
@@ -131,8 +131,8 @@ In other words: section 2 picks **which** demographic axes matter for this Space
 There is no "send invitation" or "import from another Space" flow in the Panels app today — interest tags, reputation tiers, cross-Space membership filters, and per-action audience scoping are _not_ implemented. The current build only models demographic quotas (university / age / gender).
 :::
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/panel.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-Your browser doesn't support embedded video. <a href={useBaseUrl('/media/panel.mov')}>Download the walkthrough</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/panel.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+Your browser doesn't support embedded video. <a href="https://metadata.ratel.foundation/mov/panel.mov">Download the walkthrough</a>.
 </video>
 
 ## <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><path d="M8 19c.53 0 1.04-.21 1.41-.59.38-.37.59-.88.59-1.41V9c0-1.06-.42-2.08-1.17-2.83C8.08 5.42 7.06 5 6 5M6 5c-1.06 0-2.08.42-2.83 1.17C2.42 6.92 2 7.94 2 9v8c0 .53.21 1.04.59 1.41.37.38.88.59 1.41.59h16c.53 0 1.04-.21 1.41-.59.38-.37.59-.88.59-1.41V9c0-1.06-.42-2.08-1.17-2.83C19.92 5.42 18.94 5 18 5H6zM2 11h20M16 11v3"/></svg> Incentive Pool (Beta)

@@ -42,8 +42,8 @@ General 앱은 스페이스의 **운영 설정** 화면입니다. Action 이 아
 General 은 긴 환영 페이지나 선언문을 작성하는 곳이 **아닙니다** — 그건 Overview 패널 (스페이스 아레나의 상단바 file-text 아이콘) 의 역할입니다. General 은 스위치와 리스트, Overview 는 내러티브입니다.
 :::
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/general.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-브라우저가 비디오 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/general.mov')}>워크스루 다운로드</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/general.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+브라우저가 비디오 임베드를 지원하지 않습니다. <a href="https://metadata.ratel.foundation/mov/general.mov">워크스루 다운로드</a>.
 </video>
 
 ## <img src={useBaseUrl('/img/icons/file.svg')} width="22" height="22" alt="File" style={{verticalAlign: 'middle'}} /> Files
@@ -68,8 +68,8 @@ Files 앱은 스페이스 다른 곳 (Overview 내러티브, Discussion 보드, 
 참여자가 참고할 파일을 추가하려면 Overview 패널 (스페이스에 동봉되는 선언문/명세서), Discussion 보드 내부, 또는 Quiz 문항에 첨부하세요. Files 앱은 그렇게 첨부된 파일들을 한 화면에 모아서 둘러볼 수 있게 해줍니다.
 :::
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/file.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-브라우저가 비디오 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/file.mov')}>워크스루 다운로드</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/file.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+브라우저가 비디오 임베드를 지원하지 않습니다. <a href="https://metadata.ratel.foundation/mov/file.mov">워크스루 다운로드</a>.
 </video>
 
 ## <img src={useBaseUrl('/img/icons/grid.svg')} width="22" height="22" alt="Grid" style={{verticalAlign: 'middle'}} /> Analyzes
@@ -131,8 +131,8 @@ Panels 앱은 스페이스의 **인구통계 쿼터(quota) 설계** 화면입니
 현재 Panels 앱에는 "초대 보내기" 나 "다른 스페이스에서 가져오기" 흐름이 없습니다 — 관심사 태그, 평판 등급, 다른 스페이스 멤버십 필터, 액션별 오디언스 범위 지정 모두 _미구현_ 입니다. 현 빌드는 인구통계 쿼터 (학교 / 연령 / 성별) 만 모델링합니다.
 :::
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/panel.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-브라우저가 비디오 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/panel.mov')}>워크스루 다운로드</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/panel.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+브라우저가 비디오 임베드를 지원하지 않습니다. <a href="https://metadata.ratel.foundation/mov/panel.mov">워크스루 다운로드</a>.
 </video>
 
 ## <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><path d="M8 19c.53 0 1.04-.21 1.41-.59.38-.37.59-.88.59-1.41V9c0-1.06-.42-2.08-1.17-2.83C8.08 5.42 7.06 5 6 5M6 5c-1.06 0-2.08.42-2.83 1.17C2.42 6.92 2 7.94 2 9v8c0 .53.21 1.04.59 1.41.37.38.88.59 1.41.59h16c.53 0 1.04-.21 1.41-.59.38-.37.59-.88.59-1.41V9c0-1.06-.42-2.08-1.17-2.83C19.92 5.42 18.94 5 18 5H6zM2 11h20M16 11v3"/></svg> Incentive Pool (베타)

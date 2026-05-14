@@ -40,10 +40,10 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   controls
   preload="metadata"
   width="100%"
-  src={useBaseUrl('/media/subteam-register.mov')}
+  src="https://metadata.ratel.foundation/mov/subteam-register.mov"
   style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}
 >
-  브라우저가 동영상 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/subteam-register.mov')}>워크스루 다운로드</a>.
+  브라우저가 동영상 임베드를 지원하지 않습니다. <a href="https://metadata.ratel.foundation/mov/subteam-register.mov">워크스루 다운로드</a>.
 </video>
 
 신청 화면은 하나의 하위팀 측 URL 에 모여 있고, 대기 중에 진행 상황을 보는 별도의 트래커가 있습니다.
@@ -82,10 +82,10 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   controls
   preload="metadata"
   width="100%"
-  src={useBaseUrl('/media/parent-setting.mov')}
+  src="https://metadata.ratel.foundation/mov/parent-setting.mov"
   style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}
 >
-  브라우저가 동영상 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/parent-setting.mov')}>워크스루 다운로드</a>.
+  브라우저가 동영상 임베드를 지원하지 않습니다. <a href="https://metadata.ratel.foundation/mov/parent-setting.mov">워크스루 다운로드</a>.
 </video>
 
 상위팀이 관계를 운영하기 위해 하는 모든 작업은 한 URL 에, 상단의 다섯 개 탭으로 구성됩니다.
@@ -153,10 +153,10 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   controls
   preload="metadata"
   width="100%"
-  src={useBaseUrl('/media/announcement.mov')}
+  src="https://metadata.ratel.foundation/mov/announcement.mov"
   style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}
 >
-  브라우저가 동영상 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/announcement.mov')}>워크스루 다운로드</a>.
+  브라우저가 동영상 임베드를 지원하지 않습니다. <a href="https://metadata.ratel.foundation/mov/announcement.mov">워크스루 다운로드</a>.
 </video>
 
 상위팀은 인정된 모든 하위팀에게 한 번에 브로드캐스트할 수 있어요 — 각 하위팀이 별도로 구독하지 않아도 됩니다. 작성기는 작성에 집중할 수 있도록 팀 아레나 레이아웃을 상속하지 않는 풀스크린 에디터예요:
