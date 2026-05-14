@@ -118,6 +118,27 @@ pub struct HeadlineResponse {
     pub updated_at: i64,
 }
 
+// ── Queue health ──────────────────────────────────────────────────
+
+/// Queue depth + FR-45 alert flag for the admin dashboard. Computed
+/// over `Scheduled` headlines whose `scheduled_at` is in the future.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct QueueAlarmResponse {
+    /// Days from "now" to the latest scheduled headline. `0.0` when the
+    /// queue is empty.
+    pub queue_days_remaining: f64,
+    /// Snapshot of `FactFoldSettings::queue_low_alert_days` at read time
+    /// — the threshold the UI should compare against locally if it
+    /// re-renders before the next poll.
+    pub alert_threshold_days: i32,
+    /// True when `queue_days_remaining <= alert_threshold_days`. The UI
+    /// uses this directly to drive a banner.
+    pub alert: bool,
+    /// Number of `Scheduled` headlines with `scheduled_at >= now`.
+    pub scheduled_future_count: i32,
+}
+
 // ── Settings DTOs ─────────────────────────────────────────────────
 
 /// Admin-tunable parameters mirrored from roadmap §"Tunable parameters".

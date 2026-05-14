@@ -17,7 +17,7 @@
 use super::*;
 
 use crate::features::fact_or_fold::types::{
-    FactOrFoldSettingsResponse, HeadlineResponse, HeadlineStatus,
+    FactOrFoldSettingsResponse, HeadlineResponse, HeadlineStatus, QueueAlarmResponse,
 };
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -409,6 +409,103 @@ async fn test_update_settings_persists_patch() {
     let reread = body;
     assert_eq!(reread.round_capacity, 6);
     assert_eq!(reread.min_bet_rp, 200);
+}
+
+// ── Queue alarm (FR-45) ──────────────────────────────────────────
+
+#[tokio::test]
+async fn test_queue_alarm_rejects_non_admin() {
+    let ctx = TestContext::setup().await;
+    let (status, _, _) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: "/api/fact-or-fold/admin/queue/alarm",
+        headers: ctx.test_user.1.clone(),
+    };
+    assert_ne!(status, 200, "non-admin must be rejected from queue alarm");
+}
+
+#[tokio::test]
+async fn test_queue_alarm_alerts_when_empty_or_near_threshold() {
+    let ctx = TestContext::setup().await;
+    let (_, admin_headers) = ctx.create_admin_user().await;
+
+    // Empty queue → alert=true, days_remaining=0
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: "/api/fact-or-fold/admin/queue/alarm",
+        headers: admin_headers.clone(),
+        response_type: QueueAlarmResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(body.alert, "empty queue must trigger alert");
+    assert_eq!(body.queue_days_remaining, 0.0);
+    assert_eq!(body.scheduled_future_count, 0);
+
+    // Schedule a headline 1 day out (well inside the 5-day default threshold)
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    let one_day_out = now + 86_400_000;
+    let _ = create_headline_scheduled(&ctx, &admin_headers, one_day_out).await;
+
+    let (_, _, body) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: "/api/fact-or-fold/admin/queue/alarm",
+        headers: admin_headers.clone(),
+        response_type: QueueAlarmResponse,
+    };
+    assert!(body.alert, "1-day out queue must still trigger alert");
+    assert!(body.queue_days_remaining > 0.0 && body.queue_days_remaining < 2.0);
+    assert_eq!(body.scheduled_future_count, 1);
+}
+
+#[tokio::test]
+async fn test_queue_alarm_clears_when_far_future_scheduled() {
+    let ctx = TestContext::setup().await;
+    let (_, admin_headers) = ctx.create_admin_user().await;
+
+    // Schedule far enough out (10 days) to clear the default 5-day alert.
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    let ten_days_out = now + 10 * 86_400_000;
+    let _ = create_headline_scheduled(&ctx, &admin_headers, ten_days_out).await;
+
+    let (_, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/admin/queue/alarm",
+        headers: admin_headers,
+        response_type: QueueAlarmResponse,
+    };
+    assert!(!body.alert, "far-future queue must clear the alert");
+    assert!(body.queue_days_remaining > 5.0);
+}
+
+/// Like `create_headline` but with a non-null `scheduled_at` so the
+/// resulting row lands in `Scheduled` status.
+async fn create_headline_scheduled(
+    ctx: &TestContext,
+    admin: &axum::http::HeaderMap,
+    scheduled_at: i64,
+) -> HeadlineResponse {
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/fact-or-fold/admin/headlines",
+        headers: admin.clone(),
+        body: {
+            "req": {
+                "headline_text": "Headline",
+                "body_excerpt": valid_body(),
+                "verdict": "REAL",
+                "difficulty": 3,
+                "category_tags": ["경제"],
+                "source_label": "Korea Times",
+                "insider_statement": "The insider knows.",
+                "reveal_summary": "Confirmed by source.",
+                "reveal_sources": [],
+                "scheduled_at": scheduled_at,
+            }
+        },
+        response_type: HeadlineResponse,
+    };
+    assert_eq!(status, 200, "create_headline_scheduled expected 200");
+    body
 }
 
 #[tokio::test]
