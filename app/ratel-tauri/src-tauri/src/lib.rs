@@ -12,7 +12,8 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            commands::external_url::open_external_url
+            commands::external_url::open_external_url,
+            commands::google_sign_in::google_sign_in,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

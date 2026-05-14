@@ -1,17 +1,16 @@
-//! Web-side caller for Google Sign In via `tauri-plugin-google-auth`.
+//! Web-side caller for Google Sign In.
 //!
-//! The plugin's native flow uses Android Credential Manager + Google
-//! AuthorizationClient. It returns tokens directly from Google (no Firebase
-//! Auth exchange). The backend's OAuth handler hits
-//! `https://openidconnect.googleapis.com/v1/userinfo` with the returned
-//! `access_token`, so no extra Firebase round-trip is needed.
+//! The native shell wraps `tauri-plugin-google-auth`'s `signIn` command and
+//! injects the OAuth client_id from `google-services.json` at compile time
+//! (see `app/ratel-tauri/src-tauri/build.rs` +
+//! `commands/google_sign_in.rs`). The web bundle has no knowledge of any
+//! OAuth client_id — it just asks the shell to sign in.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use crate::tauri::invoke::{InvokeError, invoke};
 
-/// Shape returned by `tauri-plugin-google-auth`'s `signIn` command.
-/// Matches the plugin's TokenResponse interface (camelCase wire format).
+/// Mirrors `tauri_plugin_google_auth::TokenResponse` (camelCase wire format).
 #[derive(Debug, Clone, Deserialize)]
 pub struct TokenResponse {
     #[serde(rename = "idToken")]
@@ -26,27 +25,10 @@ pub struct TokenResponse {
     pub scopes: Vec<String>,
 }
 
-#[derive(Serialize)]
-struct SignInArgs<'a> {
-    #[serde(rename = "clientId")]
-    client_id: &'a str,
-    scopes: &'static [&'static str],
-    #[serde(rename = "flowType")]
-    flow_type: &'static str,
-}
-
-/// Launch the Google Sign-In flow. Resolves to a `TokenResponse` containing
-/// at least `access_token` (and usually `id_token` because we request the
-/// `openid` scope).
+/// Launch the Google Sign-In flow on Android (Credential Manager + Google
+/// AuthorizationClient). Resolves to a `TokenResponse` with `access_token`
+/// (and usually `id_token` because the native command requests the `openid`
+/// scope).
 pub async fn sign_in() -> Result<TokenResponse, InvokeError> {
-    let client_id = option_env!("GOOGLE_OAUTH_CLIENT_ID").unwrap_or("");
-    invoke(
-        "plugin:google-auth|sign_in",
-        SignInArgs {
-            client_id,
-            scopes: &["openid", "email", "profile"],
-            flow_type: "native",
-        },
-    )
-    .await
+    invoke("google_sign_in", ()).await
 }
