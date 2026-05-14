@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>관리자 · 인사이더 풀 · 라텔 오락실</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    />
+    <link rel="stylesheet" href="shared.css" />
+    <link rel="stylesheet" href="admin-shared.css" />
+  </head>
+  <body>
+    <div class="app">
+
+      <div class="top-bar">
+        <div class="brand">
+          <div class="brand-logo">R</div>
+          <div class="brand-text">
+            <div class="brand-name">RATEL ARCADE</div>
+            <div class="brand-sub">관리자 · 인사이더 풀</div>
+          </div>
+        </div>
+        <nav class="top-nav" role="tablist">
+          <button class="top-nav-btn" onclick="window.location.href='lobby.html'">
+            <span class="top-nav-btn-icon">⌂</span><span>오락실</span>
+          </button>
+          <button class="top-nav-btn" onclick="window.location.href='round-stage.html'">
+            <span class="top-nav-btn-icon">⏵</span><span>라운드 미리보기</span>
+          </button>
+        </nav>
+        <div class="user-stats">
+          <span class="admin-tag">⚐ ADMIN</span>
+          <div class="avatar">DY</div>
+        </div>
+      </div>
+
+      <div class="layout">
+
+      <aside class="sidebar">
+        <nav class="admin-nav">
+          <div class="admin-nav-label">콘텐츠</div>
+          <button class="admin-nav-item" onclick="window.location.href='admin-headlines.html'">
+            <span class="admin-nav-icon">📰</span>
+            <span>헤드라인</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-schedule.html'">
+            <span class="admin-nav-icon">📅</span>
+            <span>라운드 스케줄</span>
+          </button>
+          <button class="admin-nav-item" data-active="true" onclick="window.location.href='admin-insiders.html'">
+            <span class="admin-nav-icon">⚐</span>
+            <span>인사이더 풀</span>
+          </button>
+
+          <div class="admin-nav-divider"></div>
+          <div class="admin-nav-label">운영</div>
+          <button class="admin-nav-item" onclick="window.location.href='admin-stats.html'">
+            <span class="admin-nav-icon">📊</span>
+            <span>결과 / 통계</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-reports.html'">
+            <span class="admin-nav-icon">🚩</span>
+            <span>사용자 신고</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-settings.html'">
+            <span class="admin-nav-icon">⚙</span>
+            <span>설정</span>
+          </button>
+        </nav>
+      </aside>
+
+      <div class="view-stack">
+
+        <div class="admin-page-head">
+          <div>
+            <h1>인사이더 풀</h1>
+            <p>재사용 가능한 인사이더 진술 템플릿. 헤드라인 생성 시 풀에서 선택해 빠르게 채울 수 있습니다.</p>
+          </div>
+          <div class="admin-page-actions">
+            <button class="btn btn-ghost">가져오기</button>
+            <button class="btn btn-primary">+ 새 템플릿</button>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-tile">
+            <div class="kpi-label">총 템플릿</div>
+            <div class="kpi-value">28</div>
+            <div class="kpi-delta">FAKE 17 · REAL 11</div>
+          </div>
+          <div class="kpi-tile">
+            <div class="kpi-label">평균 마음 돌림 영향력</div>
+            <div class="kpi-value gold">42%</div>
+            <div class="kpi-delta up">+4%p</div>
+          </div>
+          <div class="kpi-tile">
+            <div class="kpi-label">최다 인용 패턴</div>
+            <div class="kpi-value teal">형식</div>
+            <div class="kpi-delta">23회 인용</div>
+          </div>
+          <div class="kpi-tile">
+            <div class="kpi-label">사용된 헤드라인</div>
+            <div class="kpi-value">142</div>
+            <div class="kpi-delta">평균 5.1회 재사용</div>
+          </div>
+        </div>
+
+        <div class="filter-tabs" style="margin-bottom: 14px">
+          <button class="filter-tab" data-active="true">전체 <span class="count">28</span></button>
+          <button class="filter-tab">FAKE <span class="count">17</span></button>
+          <button class="filter-tab">REAL <span class="count">11</span></button>
+          <button class="filter-tab">고효과 <span class="count">9</span></button>
+        </div>
+
+        <div class="insider-grid">
+
+          <div class="insider-template">
+            <div class="insider-template-head">
+              <span class="insider-template-name">형식 단서 · 부서명 누락</span>
+              <span class="insider-template-tag fake">FAKE</span>
+            </div>
+            <div class="insider-template-body">
+              한국은행 보고서는 단독 출처가 아닌 6개월 전 폐기된 내부 시나리오 문서이며, 실제 5월 회의록에는 동결 기조가 명시돼 있습니다. 발신부서 미명시는 곧 위조.
+            </div>
+            <div class="insider-template-foot">
+              <span>사용 12회 · 평균 영향력 64%</span>
+              <span>5/11 r-2026-05-11</span>
+            </div>
+          </div>
+
+          <div class="insider-template">
+            <div class="insider-template-head">
+              <span class="insider-template-name">시장 반응 위조</span>
+              <span class="insider-template-tag real">REAL</span>
+            </div>
+            <div class="insider-template-body">
+              채권시장 반응이 진실의 근거. 어제 6시간 동안 30bp 움직임이 있었으며, 이는 인하 시나리오와 일치합니다. 통화정책국 내 라이트닝 보드…
+            </div>
+            <div class="insider-template-foot">
+              <span>사용 8회 · 평균 영향력 38%</span>
+              <span>5/11 r-2026-05-11</span>
+            </div>
+          </div>
+
+          <div class="insider-template">
+            <div class="insider-template-name" style="margin-bottom: 0">표현 패턴 분석</div>
+            <div class="insider-template-head" style="margin-top: -10px">
+              <span class="insider-template-tag fake">FAKE</span>
+              <span class="panel-sub">3 카테고리</span>
+            </div>
+            <div class="insider-template-body">
+              한은 내부 문서 표현은 항상 "안 1·안 2·안 3" 식. "시나리오 1순위로 올렸다" 같은 표현은 외부 추정이지 내부 문건이 아님.
+            </div>
+            <div class="insider-template-foot">
+              <span>사용 23회 · 평균 영향력 71%</span>
+              <span>★ 최고 효과</span>
+            </div>
+          </div>
+
+          <div class="insider-template">
+            <div class="insider-template-head">
+              <span class="insider-template-name">반박 봉쇄 — 데이터 인용</span>
+              <span class="insider-template-tag real">REAL</span>
+            </div>
+            <div class="insider-template-body">
+              KOSIS 4월 CPI 둔화 (2.7→2.4) + 가계부채 안정세 (3분기 연속) = 인하 트리거 충족. 통계청 5월 19일 발표 예정 데이터까지 봤을 때 가능성 매우 높음.
+            </div>
+            <div class="insider-template-foot">
+              <span>사용 5회 · 평균 영향력 28%</span>
+              <span>5/06 r-2026-05-06</span>
+            </div>
+          </div>
+
+          <div class="insider-template">
+            <div class="insider-template-head">
+              <span class="insider-template-name">맥락 누락 지적</span>
+              <span class="insider-template-tag fake">FAKE</span>
+            </div>
+            <div class="insider-template-body">
+              해당 정책은 "검토 중"이지 "발표"가 아님. 보도 헤드라인이 단정형으로 쓰일 때는 거의 다 가공. 검토 → 발표까지 평균 6개월 갭.
+            </div>
+            <div class="insider-template-foot">
+              <span>사용 14회 · 평균 영향력 55%</span>
+              <span>최근: 5/14</span>
+            </div>
+          </div>
+
+          <div class="insider-template">
+            <div class="insider-template-head">
+              <span class="insider-template-name">출처 불일치</span>
+              <span class="insider-template-tag fake">FAKE</span>
+            </div>
+            <div class="insider-template-body">
+              "단독 입수"라고 했지만 동일 보도가 3시간 후 다른 언론사에도 동일 표현으로 등장. 진짜 단독이면 이런 동시성 불가능.
+            </div>
+            <div class="insider-template-foot">
+              <span>사용 9회 · 평균 영향력 48%</span>
+              <span>최근: 5/04</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="panel" style="margin-top: 22px">
+          <div class="panel-head">
+            <span class="panel-title">템플릿 효과 분석</span>
+            <span class="panel-sub">최근 30일</span>
+          </div>
+          <div style="font-size: 13px; color: var(--text-muted); line-height: 1.7">
+            <strong style="color: var(--text-primary)">표현 패턴 분석</strong> 계열 템플릿이 평균 영향력 71%로 가장 효과적입니다. 형식 단서(부서명, 발신처) 계열은 64%로 그 뒤를 따릅니다. 시장 반응 위조처럼 검증이 까다로운 진술은 영향력이 낮은 편(38%) — 참가자들이 잘 안 속음. 새 템플릿 작성 시 <strong style="color: var(--gold)">형식·표현 단서</strong>를 우선 고려하세요.
+          </div>
+        </div>
+
+      </div>
+
+      </div>
+    </div>
+
+    <script>
+      document.querySelectorAll(".filter-tab").forEach((t) => {
+        t.addEventListener("click", () => {
+          document.querySelectorAll(".filter-tab").forEach((x) => x.removeAttribute("data-active"));
+          t.setAttribute("data-active", "true");
+        });
+      });
+    </script>
+  </body>
+</html>

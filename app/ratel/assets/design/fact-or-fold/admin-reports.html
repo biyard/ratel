@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>관리자 · 사용자 신고 · 라텔 오락실</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    />
+    <link rel="stylesheet" href="shared.css" />
+    <link rel="stylesheet" href="admin-shared.css" />
+  </head>
+  <body>
+    <div class="app">
+
+      <div class="top-bar">
+        <div class="brand">
+          <div class="brand-logo">R</div>
+          <div class="brand-text">
+            <div class="brand-name">RATEL ARCADE</div>
+            <div class="brand-sub">관리자 · 사용자 신고</div>
+          </div>
+        </div>
+        <nav class="top-nav" role="tablist">
+          <button class="top-nav-btn" onclick="window.location.href='lobby.html'">
+            <span class="top-nav-btn-icon">⌂</span><span>오락실</span>
+          </button>
+          <button class="top-nav-btn" onclick="window.location.href='round-stage.html'">
+            <span class="top-nav-btn-icon">⏵</span><span>라운드 미리보기</span>
+          </button>
+        </nav>
+        <div class="user-stats">
+          <span class="admin-tag">⚐ ADMIN</span>
+          <div class="avatar">DY</div>
+        </div>
+      </div>
+
+      <div class="layout">
+
+      <aside class="sidebar">
+        <nav class="admin-nav">
+          <div class="admin-nav-label">콘텐츠</div>
+          <button class="admin-nav-item" onclick="window.location.href='admin-headlines.html'">
+            <span class="admin-nav-icon">📰</span>
+            <span>헤드라인</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-schedule.html'">
+            <span class="admin-nav-icon">📅</span>
+            <span>라운드 스케줄</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-insiders.html'">
+            <span class="admin-nav-icon">⚐</span>
+            <span>인사이더 풀</span>
+          </button>
+
+          <div class="admin-nav-divider"></div>
+          <div class="admin-nav-label">운영</div>
+          <button class="admin-nav-item" onclick="window.location.href='admin-stats.html'">
+            <span class="admin-nav-icon">📊</span>
+            <span>결과 / 통계</span>
+          </button>
+          <button class="admin-nav-item" data-active="true" onclick="window.location.href='admin-reports.html'">
+            <span class="admin-nav-icon">🚩</span>
+            <span>사용자 신고</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-settings.html'">
+            <span class="admin-nav-icon">⚙</span>
+            <span>설정</span>
+          </button>
+        </nav>
+      </aside>
+
+      <div class="view-stack">
+
+        <div class="admin-page-head">
+          <div>
+            <h1>사용자 신고</h1>
+            <p>채팅 부적절 발화, 라운드 룰 위반, 헤드라인 오류 등을 처리합니다.</p>
+          </div>
+          <div class="admin-page-actions">
+            <button class="btn btn-ghost">처리 정책</button>
+            <button class="btn btn-ghost">대량 처리</button>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-tile">
+            <div class="kpi-label">미처리</div>
+            <div class="kpi-value pink">7</div>
+            <div class="kpi-delta">2건 7일 초과</div>
+          </div>
+          <div class="kpi-tile">
+            <div class="kpi-label">이번 주 접수</div>
+            <div class="kpi-value">14</div>
+            <div class="kpi-delta down">−3</div>
+          </div>
+          <div class="kpi-tile">
+            <div class="kpi-label">평균 처리 시간</div>
+            <div class="kpi-value gold">8.4h</div>
+            <div class="kpi-delta up">−2.1h</div>
+          </div>
+          <div class="kpi-tile">
+            <div class="kpi-label">반복 신고자</div>
+            <div class="kpi-value">2</div>
+            <div class="kpi-delta">검토 필요</div>
+          </div>
+        </div>
+
+        <div class="filter-tabs" style="margin-bottom: 16px">
+          <button class="filter-tab" data-active="true">미처리 <span class="count">7</span></button>
+          <button class="filter-tab">처리 중 <span class="count">3</span></button>
+          <button class="filter-tab">해결 <span class="count">128</span></button>
+          <button class="filter-tab">반려 <span class="count">22</span></button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px">
+
+          <div class="report-row">
+            <div class="report-severity high"></div>
+            <div class="report-meta">
+              <div class="report-title">채팅 — 인종 비하 발언</div>
+              <div class="report-sub">
+                <span>R-038 · @minkyu가 @jenny를 신고</span>
+                <span>·</span>
+                <span>r-2026-05-13 토론 단계</span>
+                <span>·</span>
+                <span>2시간 전</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px">
+              <button class="btn btn-ghost" style="font-size: 12px; padding: 6px 12px">로그 보기</button>
+              <button class="btn btn-primary" style="font-size: 12px; padding: 6px 12px">처리</button>
+            </div>
+          </div>
+
+          <div class="report-row">
+            <div class="report-severity high"></div>
+            <div class="report-meta">
+              <div class="report-title">의도적 시간 끌기 (3회 반복)</div>
+              <div class="report-sub">
+                <span>R-037 · @sehoon가 @yuna를 신고</span>
+                <span>·</span>
+                <span>r-2026-05-12 1차 베팅</span>
+                <span>·</span>
+                <span>5시간 전</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px">
+              <button class="btn btn-ghost" style="font-size: 12px; padding: 6px 12px">로그 보기</button>
+              <button class="btn btn-primary" style="font-size: 12px; padding: 6px 12px">처리</button>
+            </div>
+          </div>
+
+          <div class="report-row">
+            <div class="report-severity mid"></div>
+            <div class="report-meta">
+              <div class="report-title">헤드라인 오류 — 출처 링크 만료</div>
+              <div class="report-sub">
+                <span>R-036 · @jenny가 r-2026-05-09 신고</span>
+                <span>·</span>
+                <span>콘텐츠 수정 필요</span>
+                <span>·</span>
+                <span>1일 전</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px">
+              <button class="btn btn-ghost" style="font-size: 12px; padding: 6px 12px">헤드라인 열기</button>
+              <button class="btn btn-primary" style="font-size: 12px; padding: 6px 12px">처리</button>
+            </div>
+          </div>
+
+          <div class="report-row">
+            <div class="report-severity mid"></div>
+            <div class="report-meta">
+              <div class="report-title">채팅 — 외부 링크 도배</div>
+              <div class="report-sub">
+                <span>R-035 · @minkyu가 @anon-7271을 신고</span>
+                <span>·</span>
+                <span>r-2026-05-12 토론 단계</span>
+                <span>·</span>
+                <span>2일 전</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px">
+              <button class="btn btn-ghost" style="font-size: 12px; padding: 6px 12px">로그 보기</button>
+              <button class="btn btn-primary" style="font-size: 12px; padding: 6px 12px">처리</button>
+            </div>
+          </div>
+
+          <div class="report-row">
+            <div class="report-severity mid"></div>
+            <div class="report-meta">
+              <div class="report-title">근거 짧음 — 50자 미만 자동 제출</div>
+              <div class="report-sub">
+                <span>R-034 · 시스템 자동</span>
+                <span>·</span>
+                <span>r-2026-05-12 근거 작성</span>
+                <span>·</span>
+                <span>2일 전</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px">
+              <button class="btn btn-ghost" style="font-size: 12px; padding: 6px 12px">상세</button>
+              <button class="btn btn-primary" style="font-size: 12px; padding: 6px 12px">처리</button>
+            </div>
+          </div>
+
+          <div class="report-row">
+            <div class="report-severity low"></div>
+            <div class="report-meta">
+              <div class="report-title">UI 버그 — 모바일에서 카드 잘림</div>
+              <div class="report-sub">
+                <span>R-033 · @yuna 일반 피드백</span>
+                <span>·</span>
+                <span>스크린샷 첨부 (iOS 17)</span>
+                <span>·</span>
+                <span>3일 전</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px">
+              <button class="btn btn-ghost" style="font-size: 12px; padding: 6px 12px">스크린샷</button>
+              <button class="btn btn-primary" style="font-size: 12px; padding: 6px 12px">처리</button>
+            </div>
+          </div>
+
+          <div class="report-row" style="opacity: 0.65">
+            <div class="report-severity low"></div>
+            <div class="report-meta">
+              <div class="report-title">근거 미작성 — 시간 만료</div>
+              <div class="report-sub">
+                <span>R-032 · 시스템 자동</span>
+                <span>·</span>
+                <span>r-2026-05-11</span>
+                <span>·</span>
+                <span>7일 전 · 누적 3회</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px">
+              <button class="btn btn-ghost" style="font-size: 12px; padding: 6px 12px">상세</button>
+              <button class="btn btn-primary" style="font-size: 12px; padding: 6px 12px">처리</button>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 22px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted)">
+          <span>전체 7건 · 심각도 순</span>
+          <div style="display: flex; gap: 6px">
+            <span class="status-badge live">high 2</span>
+            <span class="status-badge warn">mid 3</span>
+            <span class="status-badge draft">low 2</span>
+          </div>
+        </div>
+
+      </div>
+
+      </div>
+    </div>
+
+    <script>
+      document.querySelectorAll(".filter-tab").forEach((t) => {
+        t.addEventListener("click", () => {
+          document.querySelectorAll(".filter-tab").forEach((x) => x.removeAttribute("data-active"));
+          t.setAttribute("data-active", "true");
+        });
+      });
+    </script>
+  </body>
+</html>

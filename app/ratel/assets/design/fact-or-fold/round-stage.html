@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fact or Fold · r-2026-05-11 · 라텔 오락실</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    />
+    <link rel="stylesheet" href="shared.css" />
+  </head>
+  <body>
+    <div class="app">
+      <!-- ═══ TOP BAR — 메타 화면은 부모 페이지로 이동 ═══ -->
+      <div class="top-bar">
+        <div class="brand">
+          <div class="brand-logo">R</div>
+          <div class="brand-text">
+            <div class="brand-name">RATEL ARCADE</div>
+            <div class="brand-sub">Fact or Fold · r-2026-05-11 · LIVE</div>
+          </div>
+        </div>
+        <nav class="top-nav" role="tablist">
+          <button class="top-nav-btn" onclick="window.location.href='lobby.html'">
+            <span class="top-nav-btn-icon">⌂</span><span>오락실</span>
+          </button>
+          <button class="top-nav-btn" onclick="window.location.href='lobby.html#leaderboard'">
+            <span class="top-nav-btn-icon">♛</span><span>리더보드</span>
+          </button>
+        </nav>
+        <div class="user-stats">
+          <div class="stat-chip gold">
+            <span class="stat-chip-icon">◆</span>
+            <span>4,820 RP</span>
+          </div>
+          <div class="avatar">DY</div>
+        </div>
+      </div>
+
+      <!-- ═══ LAYOUT — 왼쪽 사이드바 + 오른쪽 뷰 스택 ═══ -->
+      <div class="layout">
+
+      <!-- ═══ SIDEBAR — 타임라인 + 라이브 타이머 ═══ -->
+      <aside class="sidebar">
+
+      <!-- ═══ GLOBAL STAGE TIMELINE — 왼쪽 세로 ═══ -->
+      <div class="stage-timeline stage-timeline-global" id="globalTimeline">
+        <div class="stage-step" data-state="active" data-view="round">
+          <div class="stage-dot">1</div>
+          <div class="stage-label">
+            <div class="stage-label-name">뉴스 공개</div>
+            <div class="stage-label-time">30초</div>
+          </div>
+        </div>
+        <div class="stage-step" data-state="upcoming" data-view="bet">
+          <div class="stage-dot">2</div>
+          <div class="stage-label">
+            <div class="stage-label-name">1차 베팅</div>
+            <div class="stage-label-time">10초</div>
+          </div>
+        </div>
+        <div class="stage-step" data-state="upcoming" data-view="reason">
+          <div class="stage-dot">3</div>
+          <div class="stage-label">
+            <div class="stage-label-name">근거 작성</div>
+            <div class="stage-label-time">30초</div>
+          </div>
+        </div>
+        <div class="stage-step" data-state="upcoming" data-view="reveal">
+          <div class="stage-dot">4</div>
+          <div class="stage-label">
+            <div class="stage-label-name">근거 공개</div>
+            <div class="stage-label-time">20초</div>
+          </div>
+        </div>
+        <div class="stage-step" data-state="upcoming" data-view="debate">
+          <div class="stage-dot">5</div>
+          <div class="stage-label">
+            <div class="stage-label-name">실시간 토론</div>
+            <div class="stage-label-time">70초</div>
+          </div>
+        </div>
+        <div class="stage-step" data-state="upcoming" data-view="result">
+          <div class="stage-dot">6</div>
+          <div class="stage-label">
+            <div class="stage-label-name">정산</div>
+            <div class="stage-label-time">자동</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 라이브 타이머 — 사이드바 (live-bar 역할 흡수) -->
+      <div class="timer-card">
+        <div class="section-label">⏵ LIVE · 현재 단계</div>
+        <div class="timer-stage" id="sideStage">뉴스 공개</div>
+        <div class="timer-deadline" id="sideDeadline">30초 · 다음: 1차 베팅</div>
+        <div class="timer-ring">
+          <svg width="140" height="140" viewBox="0 0 140 140">
+            <defs>
+              <linearGradient id="timerGradSide" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#fcb300" />
+                <stop offset="100%" stop-color="#db2780" />
+              </linearGradient>
+            </defs>
+            <circle cx="70" cy="70" r="60" class="timer-ring-bg" />
+            <circle cx="70" cy="70" r="60" class="timer-ring-fg" stroke-dasharray="377" stroke-dashoffset="100" style="stroke: url(#timerGradSide)" />
+          </svg>
+          <div class="timer-display">
+            <div>
+              <div class="timer-display-time" id="sideTime">22s</div>
+              <div class="timer-display-sub">남음</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      </aside>
+
+      <!-- ═══ VIEW STACK — 오른쪽 ═══ -->
+      <div class="view-stack">
+
+      <!-- ═══ VIEW 2 — ROUND MAIN (뉴스 공개 단계) ═══ -->
+      <section class="view" data-view="round" data-active="true">
+        <div class="round-grid">
+          <!-- LEFT: 뉴스 -->
+          <div>
+            <!-- 뉴스 카드 -->
+            <div class="news-card">
+              <div class="news-source">
+                <span>📰</span>
+                <span>국내 종합지 · 2026.05.09 06:42</span>
+                <span class="news-source-dot"></span>
+                <span>출처 비공개 (정산 시 공개)</span>
+              </div>
+              <h2 class="news-headline">
+                "한국은행, 6월 금리 0.5%p 전격 인하 검토 중 — 내부 보고서 단독 입수"
+              </h2>
+              <p class="news-excerpt">
+                본지가 단독 입수한 한국은행 내부 보고서에 따르면, 통화정책국이 다음 달 금융통화위원회에서
+                기준금리를 현재 3.25%에서 2.75%로 0.5%p 인하하는 시나리오를 1순위 안으로 올렸다. 보고서는
+                4월 소비자물가지수 둔화와 가계부채 안정세를 근거로 들었으며, 일부 위원은 추가 인하 가능성도
+                언급한 것으로 알려졌다.
+              </p>
+              <div class="news-meta">
+                <span class="pill">경제</span>
+                <span class="pill">단독</span>
+                <span class="pill purple">난이도 ★★★☆☆</span>
+                <button class="btn btn-primary news-cta" onclick="switchView('bet')">
+                  1차 베팅하러 가기 →
+                </button>
+              </div>
+            </div>
+
+            <!-- 4명 참가자 -->
+            <div class="players-card">
+              <div class="players-head">
+                <div class="section-label">라운드 참가자</div>
+                <span class="sub" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted)">
+                  4 / 4 도착 · 뉴스 읽는 중
+                </span>
+              </div>
+              <div class="players-list">
+                <div class="player-row me">
+                  <div class="p-avatar">DY</div>
+                  <div class="p-info">
+                    <div class="p-name">
+                      doyoon
+                      <span class="lb-you-badge">YOU</span>
+                    </div>
+                    <div class="p-status">뉴스 읽는 중 · 1차 베팅 대기</div>
+                  </div>
+                  <div class="p-state-pill waiting">대기</div>
+                </div>
+
+                <div class="player-row">
+                  <div class="p-avatar a2">SH</div>
+                  <div class="p-info">
+                    <div class="p-name">sehoon</div>
+                    <div class="p-status">뉴스 읽는 중 · 1차 베팅 대기</div>
+                  </div>
+                  <div class="p-state-pill waiting">대기</div>
+                </div>
+
+                <div class="player-row">
+                  <div class="p-avatar a3">JE</div>
+                  <div class="p-info">
+                    <div class="p-name">jenny</div>
+                    <div class="p-status">뉴스 읽는 중 · 1차 베팅 대기</div>
+                  </div>
+                  <div class="p-state-pill waiting">대기</div>
+                </div>
+
+                <div class="player-row">
+                  <div class="p-avatar a4">MK</div>
+                  <div class="p-info">
+                    <div class="p-name">minkyu</div>
+                    <div class="p-status">뉴스 읽는 중 · 1차 베팅 대기</div>
+                  </div>
+                  <div class="p-state-pill waiting">대기</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ═══ VIEW 3 — 1ST BET (LIVE 10초) ═══ -->
+      <section class="view" data-view="bet">
+        <div class="live-bet-grid">
+          <!-- LEFT: 베팅 입력 -->
+          <div>
+            <!-- 마피아 비공개 정보 -->
+            <div class="insider-card" style="margin-bottom: 18px">
+              <div class="insider-head">
+                <div class="insider-icon">⚐</div>
+                <div class="insider-title">INSIDER · 진실 정보</div>
+              </div>
+              <div class="insider-body">
+                이 뉴스는 <strong>가짜입니다</strong>. 한국은행 보고서는 단독 출처가 아닌 6개월 전 폐기된
+                내부 시나리오 문서이며, 실제 5월 회의록에는 동결 기조가 명시돼 있습니다.
+              </div>
+              <div class="insider-foot">
+                팁: 다른 참가자가 당신 근거를 인용해 가짜로 베팅을 바꾸면 그 사람 베팅의 30%를 가져옵니다.
+              </div>
+            </div>
+
+            <div class="bet-card">
+              <h3 class="card-title">진짜인가, 가짜인가?</h3>
+              <p class="card-sub">
+                10초 안에 결정. 근거는 다음 단계에서 30초간 따로 적습니다.
+              </p>
+
+              <div class="bet-toggle">
+                <div class="bet-option" data-side="real" data-selected="false" onclick="selectSide(this, 'real')">
+                  <div class="bet-option-icon">◎</div>
+                  <div class="bet-option-label">REAL</div>
+                  <div class="bet-option-sub">이 뉴스는 진짜다</div>
+                </div>
+                <div class="bet-option" data-side="fake" data-selected="true" onclick="selectSide(this, 'fake')">
+                  <div class="bet-option-icon">⊘</div>
+                  <div class="bet-option-label">FAKE</div>
+                  <div class="bet-option-sub">이 뉴스는 가짜다</div>
+                </div>
+              </div>
+
+              <div class="rp-slider-wrap">
+                <div class="rp-slider-head">
+                  <span class="rp-slider-label">베팅 RatelPoint</span>
+                  <span class="rp-slider-value" id="rpVal">300 RP</span>
+                </div>
+                <input
+                  type="range"
+                  class="rp-slider"
+                  min="100"
+                  max="1000"
+                  step="50"
+                  value="300"
+                  id="rpSlider"
+                  oninput="document.getElementById('rpVal').textContent = this.value + ' RP'"
+                />
+                <div class="rp-slider-ticks">
+                  <span>100</span>
+                  <span>300</span>
+                  <span>500</span>
+                  <span>700</span>
+                  <span>1000</span>
+                </div>
+              </div>
+
+              <div class="submit-row">
+                <button class="btn btn-primary" onclick="switchView('reason')">
+                  베팅 확정 → 근거 작성으로
+                </button>
+                <span style="font-size: 12px; color: var(--text-muted)">확정 후 변경 불가</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ═══ VIEW 4 — REASON WRITE (LIVE 30초) ═══ -->
+      <section class="view" data-view="reason">
+        <div class="bet-grid">
+          <div>
+            <div class="reason-live-card">
+              <div class="reason-prompt">
+                <div class="reason-prompt-label">내 1차 베팅</div>
+                <div class="reason-prompt-text">
+                  <span class="pink-mark">FAKE</span> · 300 RP — 왜 그렇게 봤나요?
+                </div>
+              </div>
+
+              <div class="reason-wrap">
+                <div class="reason-head">
+                  <span class="reason-label">한 줄 근거 (50~200자, 한 번만 제출)</span>
+                  <span class="char-counter ok" id="charCount">147 / 200</span>
+                </div>
+                <textarea
+                  class="reason-textarea"
+                  id="reasonInput"
+                  oninput="updateCount(this)"
+                  placeholder="왜 그렇게 판단했는지 한두 문장으로..."
+                >출처가 단독 보도이고 보고서 발신부서가 명시되지 않았다. 한은이 0.5%p 인하 같은 큰 폭을 사전에 흘리는 패턴이 거의 없다는 점도 근거. 4월 CPI는 둔화됐지만 여전히 목표 위.</textarea>
+                <div class="reason-warn">
+                  ⚠ 첫 답이 최종 답입니다. 다시 쓰기 불가능. 토론 단계에서 발화 큐 + 채팅으로 추가 의견 가능.
+                </div>
+              </div>
+
+              <div class="submit-row">
+                <button class="btn btn-primary" onclick="switchView('reveal')">
+                  근거 제출
+                </button>
+                <span style="font-size: 12px; color: var(--text-muted)">제출 후 다른 사람이 끝낼 때까지 대기</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="bet-summary">
+              <h3 class="card-title">근거 작성 팁</h3>
+              <div style="font-size: 13px; color: var(--text-muted); line-height: 1.7; margin-bottom: 14px">
+                다음 단계에서 4명 근거가 동시에 공개됩니다. 누가 누구의 어느 문장 때문에 마음을 바꿨는지가
+                정산에 영향. <strong style="color: var(--text-primary)">설득력 있는 한 줄</strong>이 RP를 만듭니다.
+              </div>
+
+              <div class="section-label">다른 참가자 (LIVE)</div>
+              <div class="player-pulses">
+                <div class="pulse-chip done">
+                  <div class="pulse-chip-avatar" style="background: linear-gradient(135deg, #af7d3a, #fcb300); color: #1a0a00">MK</div>
+                  <div class="pulse-chip-state">제출</div>
+                </div>
+                <div class="pulse-chip done">
+                  <div class="pulse-chip-avatar" style="background: linear-gradient(135deg, #3aaf7d, #6eedd8); color: #042a1f">SH</div>
+                  <div class="pulse-chip-state">제출</div>
+                </div>
+                <div class="pulse-chip thinking">
+                  <div class="pulse-chip-avatar" style="background: linear-gradient(135deg, #af3a7d, #db2780)">JE</div>
+                  <div class="pulse-chip-state">작성 중 88자</div>
+                </div>
+              </div>
+
+              <div style="margin-top: 18px; padding: 12px 14px; background: var(--purple-soft); border: 1px solid rgba(167,139,250,0.3); border-radius: var(--r-md); font-size: 12.5px; color: var(--text-muted); line-height: 1.6">
+                <strong style="color: var(--purple)">INSIDER</strong>: 가짜라는 진실을 알고 있다면, 진짜라고
+                판단할 사람들의 직관을 흔들 만한 *표현 분석*이나 *형식 단서*가 강한 무기예요.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ VIEW 5 — REVEAL (20초 · 4명 근거 공개) ═══ -->
+      <section class="view" data-view="reveal">
+        <!-- 진영 분포 -->
+        <div class="camp-bar">
+          <div class="camp-side real" style="flex: 700">
+            <div class="camp-side-head">
+              <span class="camp-label">◎ REAL</span>
+              <span class="camp-count">2명 · 700 RP</span>
+            </div>
+            <div class="camp-avatars">
+              <div class="p-avatar a2" style="width: 28px; height: 28px; font-size: 11px">SH</div>
+              <div class="p-avatar a3" style="width: 28px; height: 28px; font-size: 11px">JE</div>
+            </div>
+          </div>
+          <div class="camp-vs">VS</div>
+          <div class="camp-side fake" style="flex: 450">
+            <div class="camp-side-head">
+              <span class="camp-label">⊘ FAKE</span>
+              <span class="camp-count">2명 · 450 RP</span>
+            </div>
+            <div class="camp-avatars">
+              <div class="p-avatar" style="width: 28px; height: 28px; font-size: 11px">DY</div>
+              <div class="p-avatar a4" style="width: 28px; height: 28px; font-size: 11px">MK</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="reveal-hint">
+          <strong>20초 안에 모두의 근거를 읽으세요.</strong> 결정적이라고 느낀 문장에 ⌬ 표시 — 토론 단계에서
+          마음 변경 시 자동 첨부됩니다.
+        </div>
+
+        <!-- 큰 4명 근거 카드 -->
+        <div class="reveal-grid">
+          <div class="reveal-card me" data-side="fake">
+            <div class="reveal-card-head">
+              <div class="debate-card-author">
+                <div class="p-avatar">DY</div>
+                <div>
+                  <div class="p-name">doyoon <span class="lb-you-badge">YOU</span></div>
+                  <div class="p-status">베팅 #1</div>
+                </div>
+              </div>
+              <div class="reveal-card-bet fake">FAKE · 300 RP</div>
+            </div>
+            <div class="reveal-card-text">
+              출처가 단독 보도이고 보고서 발신부서가 명시되지 않았다. 한은이 0.5%p 인하 같은 큰 폭을
+              사전에 흘리는 패턴이 거의 없다는 점도 근거. 4월 CPI는 둔화됐지만 여전히 목표 위.
+            </div>
+          </div>
+
+          <div class="reveal-card" data-side="real">
+            <div class="reveal-card-head">
+              <div class="debate-card-author">
+                <div class="p-avatar a2">SH</div>
+                <div>
+                  <div class="p-name">
+                    sehoon
+                    <span class="pill" style="margin-left: 4px">⚐ 알고 있다고 주장</span>
+                  </div>
+                  <div class="p-status">베팅 #2 · 최대 베팅</div>
+                </div>
+              </div>
+              <div class="reveal-card-bet real">REAL · 500 RP</div>
+            </div>
+            <div class="reveal-card-text">
+              내부 보고서 형식이 진짜다. 4월 CPI 둔화 + 가계부채 안정세 = 0.5%p 가능. 큰 폭 인하 직전엔
+              항상 시나리오 비교가 먼저 돈다. 어제 채권시장 반응도 일치.
+            </div>
+            <div class="reveal-card-actions">
+              <button class="quote-btn">⌬ 결정적 인용</button>
+            </div>
+          </div>
+
+          <div class="reveal-card" data-side="real">
+            <div class="reveal-card-head">
+              <div class="debate-card-author">
+                <div class="p-avatar a3">JE</div>
+                <div>
+                  <div class="p-name">jenny</div>
+                  <div class="p-status">베팅 #3</div>
+                </div>
+              </div>
+              <div class="reveal-card-bet real">REAL · 200 RP</div>
+            </div>
+            <div class="reveal-card-text">
+              한은 내부 시나리오 보도는 종종 이렇게 새어나옴. 액수보다 시기가 중요한데 6월은 위원 교체기라
+              과감한 결정 나올 가능성 있다. 다만 자신은 50%~60% 정도.
+            </div>
+            <div class="reveal-card-actions">
+              <button class="quote-btn">⌬ 결정적 인용</button>
+            </div>
+          </div>
+
+          <div class="reveal-card" data-side="fake">
+            <div class="reveal-card-head">
+              <div class="debate-card-author">
+                <div class="p-avatar a4">MK</div>
+                <div>
+                  <div class="p-name">minkyu</div>
+                  <div class="p-status">베팅 #4</div>
+                </div>
+              </div>
+              <div class="reveal-card-bet fake">FAKE · 150 RP</div>
+            </div>
+            <div class="reveal-card-text">
+              "통화정책국이 시나리오를 1순위로 올렸다"는 표현이 어색하다. 한은 내부 문서 표현은 항상
+              "안 1·안 2·안 3" 식. 이 보도는 형식부터 부자연스러움.
+            </div>
+            <div class="reveal-card-actions">
+              <button class="quote-btn" data-marked="true">⌬ 결정적 인용</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 토론으로 넘어가기 CTA -->
+        <div class="reveal-cta">
+          <span class="reveal-cta-hint">
+            결정적 인용 표시한 1건 · 20초 안 모두 끝나면 자동 진행
+          </span>
+          <button class="btn btn-primary" onclick="switchView('debate')">
+            토론 시작 →
+          </button>
+        </div>
+      </section>
+
+      <!-- ═══ VIEW 6 — LIVE DEBATE (70초 · 토론) ═══ -->
+      <section class="view" data-view="debate">
+        <!-- 자유 채팅 — 풀 너비 -->
+        <div class="live-chat-card">
+          <div class="section-head">
+            <h2>자유 토론 · 채팅</h2>
+            <span class="sub">짧게 던지기 · 80자 제한 · 70초</span>
+          </div>
+
+          <div class="live-chat-list">
+            <div class="chat-msg">
+              <span class="chat-msg-author">MK</span>
+              <span class="chat-msg-time">00:08</span>
+              <span class="chat-msg-body">표현 분석은 다시 봐도 결정적. 부서명 없는 케이스 0건이었음</span>
+            </div>
+            <div class="chat-msg">
+              <span class="chat-msg-author">SH</span>
+              <span class="chat-msg-time">00:12</span>
+              <span class="chat-msg-body">부서 미명시는 정보 보호 차원일 수도. 이번 건은 워낙 민감해서</span>
+            </div>
+            <div class="chat-msg">
+              <span class="chat-msg-author">JE</span>
+              <span class="chat-msg-time">00:18</span>
+              <span class="chat-msg-body">근데 채권시장 반응이라는 게 너무 단편적 신호 아닌가?</span>
+            </div>
+            <div class="chat-msg">
+              <span class="chat-msg-author">SH</span>
+              <span class="chat-msg-time">00:24</span>
+              <span class="chat-msg-body">단편이라기엔 어제 6시간 동안 30bp 움직임</span>
+            </div>
+            <div class="chat-msg">
+              <span class="chat-msg-author me">DY</span>
+              <span class="chat-msg-time">00:29</span>
+              <span class="chat-msg-body">30bp는 인하보다 유동성 이슈로 더 잘 설명됨</span>
+            </div>
+            <div class="chat-msg">
+              <span class="chat-msg-author">MK</span>
+              <span class="chat-msg-time">00:33</span>
+              <span class="chat-msg-body">jenny 어떻게 생각? 아직 50%?</span>
+            </div>
+            <div class="chat-msg">
+              <span class="chat-msg-author">JE</span>
+              <span class="chat-msg-time">00:37</span>
+              <span class="chat-msg-body">민규 + dy 보고 좀 흔들림. 표현 분석은 진짜 결정적</span>
+            </div>
+            <div class="chat-msg">
+              <span class="chat-msg-author">SH</span>
+              <span class="chat-msg-time">00:42</span>
+              <span class="chat-msg-body">근데 표현은 기자가 정리한 거 아닌가요</span>
+            </div>
+            <div class="chat-msg">
+              <span class="chat-msg-author me">DY</span>
+              <span class="chat-msg-time">00:48</span>
+              <span class="chat-msg-body">기자 정리라기엔 너무 일관됨. 6번 케이스 다 같은 패턴</span>
+            </div>
+          </div>
+
+          <div class="chat-input-row">
+            <input type="text" class="chat-input" placeholder="짧게 (Enter로 전송, 80자 제한)" maxlength="80" />
+            <button class="btn btn-ghost" style="padding: 9px 14px; font-size: 12.5px">⏎ 전송</button>
+          </div>
+        </div>
+
+        <!-- 마지막 10초: 최종 베팅 변경 슬롯 -->
+        <div class="final-bet-bar">
+          <div class="final-bet-tag">⚐ FINAL</div>
+          <div class="final-bet-text">
+            마지막 <strong>10초</strong>에 최종 베팅 변경 가능 (지금은 잠금)
+          </div>
+          <button class="mini-btn" disabled style="opacity: 0.5">유지</button>
+          <button class="mini-btn" disabled style="opacity: 0.5">변경</button>
+          <div class="final-bet-countdown">−23s</div>
+        </div>
+      </section>
+
+      <!-- ═══ VIEW 5 — RESULT ═══ -->
+      <section class="view" data-view="result">
+        <!-- 진실 공개 배너 -->
+        <div class="reveal-banner">
+          <div class="reveal-label">진실 공개 · 5월 10일 09:00</div>
+          <div class="reveal-verdict">FAKE</div>
+          <p class="reveal-headline">
+            "한국은행 6월 0.5%p 인하 검토" 보도는 출처 없는 픽션이었습니다. 한은은 5월 9일 오전 보도 자체를
+            공식 부인했습니다.
+          </p>
+          <div class="reveal-source">
+            검증 출처:
+            <a href="#">한은 보도자료</a>
+            ·
+            <a href="#">팩트체크 한국</a>
+          </div>
+        </div>
+
+        <div class="result-grid">
+          <!-- 4명 결과 -->
+          <div class="result-table">
+            <div class="section-head">
+              <h2>4명 결과</h2>
+              <span class="sub">베팅 + 영향력 + 인사이더 보너스 합산</span>
+            </div>
+
+            <div class="result-row">
+              <div class="p-avatar a4">MK</div>
+              <div class="result-meta">
+                <div class="result-name">minkyu</div>
+                <div class="result-judgement">정답 + 표현 분석으로 2명 마음 돌림</div>
+              </div>
+              <div class="result-bet-side fake">FAKE 150</div>
+              <div class="result-delta up">+520</div>
+            </div>
+
+            <div class="result-row">
+              <div class="p-avatar">DY</div>
+              <div class="result-meta">
+                <div class="result-name">
+                  doyoon
+                  <span class="you-tag">YOU</span>
+                  <span class="insider-truth-badge">⚐ INSIDER · 진실</span>
+                </div>
+                <div class="result-judgement">정답 + 인사이더 보너스 + jenny 마음 돌림</div>
+              </div>
+              <div class="result-bet-side fake">FAKE 300</div>
+              <div class="result-delta up">+840</div>
+            </div>
+
+            <div class="result-row">
+              <div class="p-avatar a3">JE</div>
+              <div class="result-meta">
+                <div class="result-name">jenny</div>
+                <div class="result-judgement">REAL → FAKE 변경 (minkyu 인용) · 작은 보상</div>
+              </div>
+              <div class="result-bet-side fake">FAKE 200</div>
+              <div class="result-delta up">+90</div>
+            </div>
+
+            <div class="result-row">
+              <div class="p-avatar a2">SH</div>
+              <div class="result-meta">
+                <div class="result-name">
+                  sehoon
+                  <span class="liar-badge">⚐ LIAR · 거짓</span>
+                </div>
+                <div class="result-judgement">"안다"고 주장했지만 거짓. 마지막까지 REAL 유지.</div>
+              </div>
+              <div class="result-bet-side real">REAL 500</div>
+              <div class="result-delta down">−500</div>
+            </div>
+          </div>
+
+          <!-- 내 정산 디테일 -->
+          <div>
+            <div class="essence-card">
+              <h3 class="card-title">내 정산</h3>
+              <div class="formula-row">
+                <span class="lbl">기본 베팅 회수</span>
+                <span class="val">+300 RP</span>
+              </div>
+              <div class="formula-row">
+                <span class="lbl">정답 보너스 (×1.6)</span>
+                <span class="val">+180 RP</span>
+              </div>
+              <div class="formula-row">
+                <span class="lbl">⚐ INSIDER 정답 보너스 (×0.5)</span>
+                <span class="val">+150 RP</span>
+              </div>
+              <div class="formula-row">
+                <span class="lbl">jenny 마음 돌림 영향력 (200 × 30%)</span>
+                <span class="val">+60 RP</span>
+              </div>
+              <div class="formula-row">
+                <span class="lbl">sehoon 베팅에서 (분배 25%)</span>
+                <span class="val">+125 RP</span>
+              </div>
+              <div class="formula-row total">
+                <span class="lbl">총 손익</span>
+                <span class="val">+840 RP</span>
+              </div>
+            </div>
+
+            <!-- Essence 옵트인 -->
+            <div class="essence-card" style="margin-top: 18px">
+              <div class="section-head">
+                <h2>Essence 등록</h2>
+                <span class="sub">기본 ON · 빼고 싶은 항목 체크 해제</span>
+              </div>
+              <div class="essence-list">
+                <div class="essence-item">
+                  <div class="essence-checkbox" data-checked="true" onclick="toggleCheck(this)">✓</div>
+                  <div>
+                    <div class="essence-meta">
+                      <span class="pill">근거</span>
+                      <span class="pill purple">⚐ INSIDER 진영</span>
+                    </div>
+                    <div class="essence-text">
+                      "한국은행 0.5%p 인하 보도는 부서 미명시 + 단독 출처 + 한은의 사전 누출 패턴 부재 ⇒ 가짜 가능성 높음"
+                    </div>
+                  </div>
+                </div>
+
+                <div class="essence-item">
+                  <div class="essence-checkbox" data-checked="true" onclick="toggleCheck(this)">✓</div>
+                  <div>
+                    <div class="essence-meta">
+                      <span class="pill teal">결정적 인용</span>
+                    </div>
+                    <div class="essence-text">
+                      minkyu의 "한은 내부 문서 표현은 항상 '안 1·안 2·안 3' 식" — 표현 분석 자체로 진위 판별 가능하다는 통찰
+                    </div>
+                  </div>
+                </div>
+
+                <div class="essence-item">
+                  <div class="essence-checkbox" data-checked="false" onclick="toggleCheck(this)"></div>
+                  <div>
+                    <div class="essence-meta">
+                      <span class="pill">자유 토론</span>
+                    </div>
+                    <div class="essence-text">
+                      "한은이 큰 폭 인하 흘리는 케이스 직전 6번 모두 부서명 명시" — 직접 검증한 통계
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="essence-foot">
+                <span class="essence-foot-label">선택된 2건이 Essence에 등록됩니다</span>
+                <button class="btn btn-primary">Essence에 등록</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      </div>
+      </div>
+
+    </div>
+
+    <script>
+      // 라운드 단계 순서
+      const ROUND_VIEWS = ["round", "bet", "reason", "reveal", "debate", "result"];
+
+      // 단계별 사이드바 표시 정보 (live-bar 역할 흡수)
+      const STAGE_INFO = {
+        round:  { stage: "뉴스 공개",    deadline: "30초 · 다음: 1차 베팅",   time: "22s" },
+        bet:    { stage: "1차 베팅",     deadline: "10초 · 다음: 근거 작성",  time: "06s" },
+        reason: { stage: "근거 작성",    deadline: "30초 · 다음: 근거 공개",  time: "18s" },
+        reveal: { stage: "근거 공개",    deadline: "20초 · 다음: 토론",       time: "13s" },
+        debate: { stage: "실시간 토론",  deadline: "70초 · 다음: 정산",       time: "33s" },
+        result: { stage: "정산 완료",    deadline: "라운드 종료",             time: "—"  },
+      };
+
+      const views = document.querySelectorAll(".view");
+      const stageSteps = document.querySelectorAll(
+        ".stage-timeline-global .stage-step",
+      );
+
+      function updateSidebar(target) {
+        const info = STAGE_INFO[target];
+        if (!info) return;
+        const stage = document.getElementById("sideStage");
+        const dl    = document.getElementById("sideDeadline");
+        const time  = document.getElementById("sideTime");
+        if (stage) stage.textContent = info.stage;
+        if (dl)    dl.textContent    = info.deadline;
+        if (time)  time.textContent  = info.time;
+      }
+
+      function switchView(target) {
+        views.forEach((v) =>
+          v.setAttribute("data-active", v.dataset.view === target),
+        );
+
+        // 단계 도트 상태 갱신
+        const currentIdx = ROUND_VIEWS.indexOf(target);
+        if (currentIdx === -1) return;
+        stageSteps.forEach((step, idx) => {
+          let state = "upcoming";
+          let dot = String(idx + 1);
+          if (idx < currentIdx) {
+            state = "done";
+            dot = "✓";
+          } else if (idx === currentIdx) {
+            state = "active";
+          }
+          step.setAttribute("data-state", state);
+          step.querySelector(".stage-dot").textContent = dot;
+        });
+
+        // 사이드바 타이머 / 버튼 갱신
+        updateSidebar(target);
+      }
+
+      // 모든 [data-view] 클릭 → 화면 전환 (timeline step + 카드 내부 버튼)
+      document.addEventListener("click", (e) => {
+        const trigger = e.target.closest("[data-view]");
+        if (!trigger || trigger.classList.contains("view")) return;
+        const target = trigger.dataset.view;
+        if (ROUND_VIEWS.includes(target)) switchView(target);
+      });
+
+      // 키보드 단축키 1~5 = 라운드 단계
+      document.addEventListener("keydown", (e) => {
+        const idx = parseInt(e.key) - 1;
+        if (idx >= 0 && idx < ROUND_VIEWS.length) {
+          switchView(ROUND_VIEWS[idx]);
+        }
+      });
+
+      // ── 라운드 내부 헬퍼들 ─────────────────────────
+      // 베팅 토글 (REAL / FAKE)
+      function selectSide(el, side) {
+        document.querySelectorAll(".bet-option").forEach((o) => {
+          o.setAttribute("data-selected", o === el ? "true" : "false");
+        });
+        const summaryRow = document.querySelector(
+          ".bet-summary .summary-row .val.pink, .bet-summary .summary-row .val.gold",
+        );
+        if (summaryRow) {
+          summaryRow.textContent = side.toUpperCase();
+          summaryRow.style.color = side === "real" ? "var(--gold)" : "var(--pink)";
+          summaryRow.classList.toggle("pink", side === "fake");
+          summaryRow.classList.toggle("gold", side === "real");
+        }
+      }
+
+      // 근거 글자수 카운터
+      function updateCount(textarea) {
+        const len = textarea.value.length;
+        const counter = document.getElementById("charCount");
+        counter.textContent = `${len} / 200`;
+        counter.classList.toggle("ok", len >= 50 && len <= 200);
+        counter.classList.toggle("warn", len < 50 || len > 200);
+      }
+
+      // Essence 체크박스 토글
+      function toggleCheck(box) {
+        const next = box.dataset.checked === "true" ? "false" : "true";
+        box.dataset.checked = next;
+        box.textContent = next === "true" ? "✓" : "";
+        const checked = document.querySelectorAll(
+          '.essence-checkbox[data-checked="true"]',
+        ).length;
+        const label = document.querySelector(".essence-foot-label");
+        if (label) label.textContent = `선택된 ${checked}건이 Essence에 등록됩니다`;
+      }
+
+      // 인용 버튼 토글
+      document.querySelectorAll(".quote-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          if (btn.textContent.includes("⌬")) {
+            btn.dataset.marked = btn.dataset.marked === "true" ? "false" : "true";
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

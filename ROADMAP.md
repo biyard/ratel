@@ -8,6 +8,7 @@ This is the product index. Each checkbox maps to **exactly one spec file** in `r
 - [ ] [Meet action (video meetings as space action)](roadmap/meet-action.md)
 - [ ] [Character XP & Skill Tree (cross-space progression)](roadmap/character-xp-skills.md)
 - [ ] [Cross-posting (Bluesky / LinkedIn / Threads)](roadmap/cross-posting.md)
+- [ ] [Fact or Fold (4-player news judgment game for Essence)](roadmap/fact-or-fold.md)
 
 ## Planned
 

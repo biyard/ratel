@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>관리자 · 헤드라인 · 라텔 오락실</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    />
+    <link rel="stylesheet" href="shared.css" />
+    <link rel="stylesheet" href="admin-shared.css" />
+    <style>
+      /* 헤드라인 페이지 전용 ─ 검색바 + 필터 라인 */
+      .toolbar {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        margin-bottom: 16px;
+        align-items: center;
+      }
+
+      .toolbar-search {
+        position: relative;
+      }
+
+      .toolbar-search::before {
+        content: "⌕";
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-faint);
+        font-size: 14px;
+      }
+
+      .toolbar-search input {
+        padding-left: 38px;
+      }
+
+      .row-headline-preview {
+        max-width: 360px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .row-cat-tags {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+      }
+
+      .row-cat-tags .pill {
+        font-size: 10.5px;
+        padding: 2px 7px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+
+      <!-- TOP BAR -->
+      <div class="top-bar">
+        <div class="brand">
+          <div class="brand-logo">R</div>
+          <div class="brand-text">
+            <div class="brand-name">RATEL ARCADE</div>
+            <div class="brand-sub">관리자 · 헤드라인 관리</div>
+          </div>
+        </div>
+        <nav class="top-nav" role="tablist">
+          <button class="top-nav-btn" onclick="window.location.href='lobby.html'">
+            <span class="top-nav-btn-icon">⌂</span><span>오락실</span>
+          </button>
+          <button class="top-nav-btn" onclick="window.location.href='round-stage.html'">
+            <span class="top-nav-btn-icon">⏵</span><span>라운드 미리보기</span>
+          </button>
+        </nav>
+        <div class="user-stats">
+          <span class="admin-tag">⚐ ADMIN</span>
+          <div class="avatar">DY</div>
+        </div>
+      </div>
+
+      <!-- LAYOUT -->
+      <div class="layout">
+
+      <aside class="sidebar">
+        <nav class="admin-nav">
+          <div class="admin-nav-label">콘텐츠</div>
+          <button class="admin-nav-item" data-active="true" onclick="window.location.href='admin-headlines.html'">
+            <span class="admin-nav-icon">📰</span>
+            <span>헤드라인</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-schedule.html'">
+            <span class="admin-nav-icon">📅</span>
+            <span>라운드 스케줄</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-insiders.html'">
+            <span class="admin-nav-icon">⚐</span>
+            <span>인사이더 풀</span>
+          </button>
+
+          <div class="admin-nav-divider"></div>
+          <div class="admin-nav-label">운영</div>
+          <button class="admin-nav-item" onclick="window.location.href='admin-stats.html'">
+            <span class="admin-nav-icon">📊</span>
+            <span>결과 / 통계</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-reports.html'">
+            <span class="admin-nav-icon">🚩</span>
+            <span>사용자 신고</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-settings.html'">
+            <span class="admin-nav-icon">⚙</span>
+            <span>설정</span>
+          </button>
+        </nav>
+      </aside>
+
+      <div class="view-stack">
+
+        <!-- 페이지 헤더 -->
+        <div class="admin-page-head">
+          <div>
+            <h1>헤드라인 관리</h1>
+            <p>발행된 / 예정된 / 초안 상태의 모든 라운드 콘텐츠를 관리합니다.</p>
+          </div>
+          <div class="admin-page-actions">
+            <button class="btn btn-ghost">CSV 가져오기</button>
+            <button class="btn btn-primary" onclick="window.location.href='admin-new-headline.html'">+ 새 헤드라인</button>
+          </div>
+        </div>
+
+        <!-- KPI -->
+        <div class="kpi-grid">
+          <div class="kpi-tile">
+            <div class="kpi-label">총 발행</div>
+            <div class="kpi-value">142</div>
+            <div class="kpi-delta up">+12 이번 주</div>
+          </div>
+          <div class="kpi-tile">
+            <div class="kpi-label">진행 중</div>
+            <div class="kpi-value pink">1</div>
+            <div class="kpi-delta">r-2026-05-14</div>
+          </div>
+          <div class="kpi-tile">
+            <div class="kpi-label">예약</div>
+            <div class="kpi-value">5</div>
+            <div class="kpi-delta">앞으로 5일</div>
+          </div>
+          <div class="kpi-tile">
+            <div class="kpi-label">초안</div>
+            <div class="kpi-value teal">3</div>
+            <div class="kpi-delta">검토 필요</div>
+          </div>
+        </div>
+
+        <!-- 필터 -->
+        <div class="filter-tabs" style="margin-bottom: 14px">
+          <button class="filter-tab" data-active="true">전체 <span class="count">9</span></button>
+          <button class="filter-tab">LIVE <span class="count">1</span></button>
+          <button class="filter-tab">예약 <span class="count">5</span></button>
+          <button class="filter-tab">초안 <span class="count">3</span></button>
+          <button class="filter-tab">완료 <span class="count">142</span></button>
+        </div>
+
+        <!-- 검색 -->
+        <div class="toolbar">
+          <div class="toolbar-search">
+            <input type="text" class="search-input" placeholder="헤드라인, 라운드 ID, 카테고리로 검색…" />
+          </div>
+          <div style="display: flex; gap: 8px">
+            <button class="btn btn-ghost">필터</button>
+            <button class="btn btn-ghost">↓ 정렬</button>
+          </div>
+        </div>
+
+        <!-- 테이블 -->
+        <div class="panel" style="padding: 0; overflow: hidden">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>라운드 ID</th>
+                <th>헤드라인</th>
+                <th>정답</th>
+                <th>카테고리</th>
+                <th>공개 일시</th>
+                <th>참여 / 정답률</th>
+                <th>상태</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="col-mono">r-2026-05-14</td>
+                <td>
+                  <div class="row-headline-preview">"정부 4일제 시범 사업 확대 발표… 7월 시행"</div>
+                </td>
+                <td><span class="status-badge fake">FAKE</span></td>
+                <td>
+                  <div class="row-cat-tags"><span class="pill">정책</span><span class="pill">노동</span></div>
+                </td>
+                <td class="col-muted">오늘 06:00</td>
+                <td class="col-num">3 / 4 · —</td>
+                <td><span class="status-badge live">LIVE</span></td>
+                <td>
+                  <div class="row-actions">
+                    <button class="icon-btn" title="미리보기">◉</button>
+                    <button class="icon-btn" title="편집">✎</button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="col-mono">r-2026-05-15</td>
+                <td>
+                  <div class="row-headline-preview">"한국은행, 6월 금리 0.5%p 전격 인하 검토…"</div>
+                </td>
+                <td><span class="status-badge fake">FAKE</span></td>
+                <td>
+                  <div class="row-cat-tags"><span class="pill">경제</span><span class="pill">단독</span></div>
+                </td>
+                <td class="col-muted">내일 06:00</td>
+                <td class="col-muted">—</td>
+                <td><span class="status-badge draft">초안</span></td>
+                <td>
+                  <div class="row-actions">
+                    <button class="icon-btn" title="편집" onclick="window.location.href='admin-new-headline.html'">✎</button>
+                    <button class="icon-btn danger" title="삭제">✕</button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="col-mono">r-2026-05-16</td>
+                <td>
+                  <div class="row-headline-preview">"SK하이닉스, 차세대 HBM4 양산 9월 시작"</div>
+                </td>
+                <td><span class="status-badge real">REAL</span></td>
+                <td>
+                  <div class="row-cat-tags"><span class="pill">테크</span><span class="pill">반도체</span></div>
+                </td>
+                <td class="col-muted">5/16 06:00</td>
+                <td class="col-muted">—</td>
+                <td><span class="status-badge scheduled">예약</span></td>
+                <td>
+                  <div class="row-actions">
+                    <button class="icon-btn">◉</button>
+                    <button class="icon-btn">✎</button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="col-mono">r-2026-05-17</td>
+                <td>
+                  <div class="row-headline-preview">"서울시 25개구 모두 카페 흡연실 의무 폐지…"</div>
+                </td>
+                <td><span class="status-badge fake">FAKE</span></td>
+                <td>
+                  <div class="row-cat-tags"><span class="pill">행정</span><span class="pill">건강</span></div>
+                </td>
+                <td class="col-muted">5/17 06:00</td>
+                <td class="col-muted">—</td>
+                <td><span class="status-badge scheduled">예약</span></td>
+                <td>
+                  <div class="row-actions">
+                    <button class="icon-btn">◉</button>
+                    <button class="icon-btn">✎</button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="col-mono">r-2026-05-13</td>
+                <td>
+                  <div class="row-headline-preview">"카카오뱅크, 6월부터 1만원 미만 이체 무료화"</div>
+                </td>
+                <td><span class="status-badge real">REAL</span></td>
+                <td>
+                  <div class="row-cat-tags"><span class="pill">금융</span></div>
+                </td>
+                <td class="col-muted">어제 06:00</td>
+                <td class="col-num">4 / 4 · 75%</td>
+                <td><span class="status-badge done">완료</span></td>
+                <td>
+                  <div class="row-actions">
+                    <button class="icon-btn" title="결과 보기">▦</button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="col-mono">r-2026-05-12</td>
+                <td>
+                  <div class="row-headline-preview">"네이버 AI 챗봇 '클로바X 3.0', 무료 전환"</div>
+                </td>
+                <td><span class="status-badge fake">FAKE</span></td>
+                <td>
+                  <div class="row-cat-tags"><span class="pill">AI</span><span class="pill">테크</span></div>
+                </td>
+                <td class="col-muted">5/12 06:00</td>
+                <td class="col-num">4 / 4 · 50%</td>
+                <td><span class="status-badge done">완료</span></td>
+                <td>
+                  <div class="row-actions">
+                    <button class="icon-btn" title="결과 보기">▦</button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="col-mono">r-2026-05-11</td>
+                <td>
+                  <div class="row-headline-preview">"한국은행, 6월 금리 0.5%p 전격 인하 검토 중…"</div>
+                </td>
+                <td><span class="status-badge fake">FAKE</span></td>
+                <td>
+                  <div class="row-cat-tags"><span class="pill">경제</span><span class="pill">단독</span></div>
+                </td>
+                <td class="col-muted">5/11 06:00</td>
+                <td class="col-num">4 / 4 · 75%</td>
+                <td><span class="status-badge done">완료</span></td>
+                <td>
+                  <div class="row-actions">
+                    <button class="icon-btn" title="결과" onclick="window.location.href='round-stage.html'">▦</button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="col-mono">r-2026-05-18</td>
+                <td>
+                  <div class="row-headline-preview" style="color: var(--text-faint); font-style: italic">제목 미작성…</div>
+                </td>
+                <td class="col-muted">—</td>
+                <td class="col-muted">—</td>
+                <td class="col-muted">5/18 06:00</td>
+                <td class="col-muted">—</td>
+                <td><span class="status-badge draft">초안</span></td>
+                <td>
+                  <div class="row-actions">
+                    <button class="icon-btn">✎</button>
+                    <button class="icon-btn danger">✕</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 페이지네이션 -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted)">
+          <span>전체 142건 중 1–8</span>
+          <div style="display: flex; gap: 6px">
+            <button class="icon-btn" disabled style="opacity: 0.4">‹</button>
+            <button class="icon-btn">1</button>
+            <button class="icon-btn">2</button>
+            <button class="icon-btn">3</button>
+            <button class="icon-btn">›</button>
+          </div>
+        </div>
+
+      </div>
+
+      </div>
+    </div>
+
+    <script>
+      // 필터 탭 활성화
+      document.querySelectorAll(".filter-tab").forEach((t) => {
+        t.addEventListener("click", () => {
+          document.querySelectorAll(".filter-tab").forEach((x) => x.removeAttribute("data-active"));
+          t.setAttribute("data-active", "true");
+        });
+      });
+    </script>
+  </body>
+</html>

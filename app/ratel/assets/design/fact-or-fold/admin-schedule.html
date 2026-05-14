@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>관리자 · 라운드 스케줄 · 라텔 오락실</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    />
+    <link rel="stylesheet" href="shared.css" />
+    <link rel="stylesheet" href="admin-shared.css" />
+    <style>
+      .month-nav {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .month-title {
+        font-family: "Orbitron", sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        min-width: 140px;
+        text-align: center;
+      }
+      .legend {
+        display: flex;
+        gap: 12px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-bottom: 14px;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .legend-swatch {
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+        border: 1px solid;
+      }
+      .legend-swatch.live { background: rgba(219, 39, 128, 0.15); border-color: var(--pink); }
+      .legend-swatch.scheduled { background: rgba(167, 139, 250, 0.1); border-color: var(--purple); }
+      .legend-swatch.draft { background: transparent; border-color: var(--border); }
+      .legend-swatch.done { background: rgba(110, 237, 216, 0.08); border-color: var(--teal); }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+
+      <div class="top-bar">
+        <div class="brand">
+          <div class="brand-logo">R</div>
+          <div class="brand-text">
+            <div class="brand-name">RATEL ARCADE</div>
+            <div class="brand-sub">관리자 · 라운드 스케줄</div>
+          </div>
+        </div>
+        <nav class="top-nav" role="tablist">
+          <button class="top-nav-btn" onclick="window.location.href='lobby.html'">
+            <span class="top-nav-btn-icon">⌂</span><span>오락실</span>
+          </button>
+          <button class="top-nav-btn" onclick="window.location.href='round-stage.html'">
+            <span class="top-nav-btn-icon">⏵</span><span>라운드 미리보기</span>
+          </button>
+        </nav>
+        <div class="user-stats">
+          <span class="admin-tag">⚐ ADMIN</span>
+          <div class="avatar">DY</div>
+        </div>
+      </div>
+
+      <div class="layout">
+
+      <aside class="sidebar">
+        <nav class="admin-nav">
+          <div class="admin-nav-label">콘텐츠</div>
+          <button class="admin-nav-item" onclick="window.location.href='admin-headlines.html'">
+            <span class="admin-nav-icon">📰</span>
+            <span>헤드라인</span>
+          </button>
+          <button class="admin-nav-item" data-active="true" onclick="window.location.href='admin-schedule.html'">
+            <span class="admin-nav-icon">📅</span>
+            <span>라운드 스케줄</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-insiders.html'">
+            <span class="admin-nav-icon">⚐</span>
+            <span>인사이더 풀</span>
+          </button>
+
+          <div class="admin-nav-divider"></div>
+          <div class="admin-nav-label">운영</div>
+          <button class="admin-nav-item" onclick="window.location.href='admin-stats.html'">
+            <span class="admin-nav-icon">📊</span>
+            <span>결과 / 통계</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-reports.html'">
+            <span class="admin-nav-icon">🚩</span>
+            <span>사용자 신고</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-settings.html'">
+            <span class="admin-nav-icon">⚙</span>
+            <span>설정</span>
+          </button>
+        </nav>
+      </aside>
+
+      <div class="view-stack">
+
+        <div class="admin-page-head">
+          <div>
+            <h1>라운드 스케줄</h1>
+            <p>매일 06:00 KST에 1라운드씩 자동 발행. 비어있는 날은 빨리 채우세요.</p>
+          </div>
+          <div class="admin-page-actions">
+            <div class="month-nav">
+              <button class="icon-btn">‹</button>
+              <span class="month-title">2026년 5월</span>
+              <button class="icon-btn">›</button>
+            </div>
+            <button class="btn btn-ghost">오늘로</button>
+            <button class="btn btn-primary" onclick="window.location.href='admin-new-headline.html'">+ 새 헤드라인</button>
+          </div>
+        </div>
+
+        <div class="legend">
+          <span class="legend-item"><span class="legend-swatch live"></span> LIVE</span>
+          <span class="legend-item"><span class="legend-swatch scheduled"></span> 예약</span>
+          <span class="legend-item"><span class="legend-swatch draft"></span> 초안</span>
+          <span class="legend-item"><span class="legend-swatch done"></span> 완료</span>
+        </div>
+
+        <div class="panel">
+          <div class="calendar" style="margin-bottom: 6px">
+            <div class="cal-weekday">월</div>
+            <div class="cal-weekday">화</div>
+            <div class="cal-weekday">수</div>
+            <div class="cal-weekday">목</div>
+            <div class="cal-weekday">금</div>
+            <div class="cal-weekday">토</div>
+            <div class="cal-weekday">일</div>
+          </div>
+          <div class="calendar">
+            <!-- 첫째 주 (4월 잔여) -->
+            <div class="cal-cell empty"><span class="cal-day">27</span></div>
+            <div class="cal-cell empty"><span class="cal-day">28</span></div>
+            <div class="cal-cell empty"><span class="cal-day">29</span></div>
+            <div class="cal-cell empty"><span class="cal-day">30</span></div>
+            <div class="cal-cell past">
+              <span class="cal-day">1</span>
+              <div class="cal-event done"><span class="ev-id">r-2026-05-01</span><span class="ev-title">근로자의 날 임시공휴일 지정…</span></div>
+            </div>
+            <div class="cal-cell past">
+              <span class="cal-day">2</span>
+              <div class="cal-event done"><span class="ev-id">r-2026-05-02</span><span class="ev-title">반려동물 보유세 신설 검토…</span></div>
+            </div>
+            <div class="cal-cell past">
+              <span class="cal-day">3</span>
+              <div class="cal-event done"><span class="ev-id">r-2026-05-03</span><span class="ev-title">전세금 반환보증 단계 폐지…</span></div>
+            </div>
+
+            <!-- 둘째 주 -->
+            <div class="cal-cell past">
+              <span class="cal-day">4</span>
+              <div class="cal-event done"><span class="ev-id">r-2026-05-04</span><span class="ev-title">대학 등록금 동결 5년 연장…</span></div>
+            </div>
+            <div class="cal-cell past">
+              <span class="cal-day">5</span>
+              <div class="cal-event done"><span class="ev-id">r-2026-05-05</span><span class="ev-title">어린이날 — 휴일 라운드 패스</span></div>
+            </div>
+            <div class="cal-cell past">
+              <span class="cal-day">6</span>
+              <div class="cal-event done"><span class="ev-id">r-2026-05-06</span><span class="ev-title">현대차, EV 배터리 자체 생산…</span></div>
+            </div>
+            <div class="cal-cell past">
+              <span class="cal-day">7</span>
+              <div class="cal-event done"><span class="ev-id">r-2026-05-07</span><span class="ev-title">국세청 코인 자동 신고 시스템…</span></div>
+            </div>
+            <div class="cal-cell past">
+              <span class="cal-day">8</span>
+              <div class="cal-event done"><span class="ev-id">r-2026-05-08</span><span class="ev-title">어버이날 특별 — 가족 동시 라운드</span></div>
+            </div>
+            <div class="cal-cell past">
+              <span class="cal-day">9</span>
+              <div class="cal-event done"><span class="ev-id">r-2026-05-09</span><span class="ev-title">2분기 GDP 성장률 3.1% 발표…</span></div>
+            </div>
+            <div class="cal-cell past">
+              <span class="cal-day">10</span>
+              <div class="cal-event done"><span class="ev-id">r-2026-05-10</span><span class="ev-title">테슬라 한국 공장 부지 발표…</span></div>
+            </div>
+
+            <!-- 셋째 주 -->
+            <div class="cal-cell past">
+              <span class="cal-day">11</span>
+              <div class="cal-event done"><span class="ev-id">r-2026-05-11</span><span class="ev-title">한국은행 6월 금리 0.5%p…</span></div>
+            </div>
+            <div class="cal-cell past">
+              <span class="cal-day">12</span>
+              <div class="cal-event done"><span class="ev-id">r-2026-05-12</span><span class="ev-title">네이버 클로바X 3.0 무료 전환…</span></div>
+            </div>
+            <div class="cal-cell past">
+              <span class="cal-day">13</span>
+              <div class="cal-event done"><span class="ev-id">r-2026-05-13</span><span class="ev-title">카카오뱅크 1만원 미만 이체…</span></div>
+            </div>
+            <div class="cal-cell today">
+              <span class="cal-day">14 · 오늘</span>
+              <div class="cal-event live"><span class="ev-id">r-2026-05-14</span><span class="ev-title">정부 4일제 시범 확대 발표</span></div>
+            </div>
+            <div class="cal-cell">
+              <span class="cal-day">15</span>
+              <div class="cal-event draft"><span class="ev-id">r-2026-05-15</span><span class="ev-title">한국은행 금리 인하 검토…</span></div>
+            </div>
+            <div class="cal-cell">
+              <span class="cal-day">16</span>
+              <div class="cal-event scheduled"><span class="ev-id">r-2026-05-16</span><span class="ev-title">SK하이닉스 HBM4 양산…</span></div>
+            </div>
+            <div class="cal-cell">
+              <span class="cal-day">17</span>
+              <div class="cal-event scheduled"><span class="ev-id">r-2026-05-17</span><span class="ev-title">서울시 카페 흡연실 폐지…</span></div>
+            </div>
+
+            <!-- 넷째 주 -->
+            <div class="cal-cell">
+              <span class="cal-day">18</span>
+              <div class="cal-event draft"><span class="ev-id">r-2026-05-18</span><span class="ev-title" style="color: var(--text-faint); font-style: italic">제목 미작성</span></div>
+            </div>
+            <div class="cal-cell">
+              <span class="cal-day">19</span>
+              <div class="cal-event scheduled"><span class="ev-id">r-2026-05-19</span><span class="ev-title">전기차 보조금 차등 폐지…</span></div>
+            </div>
+            <div class="cal-cell">
+              <span class="cal-day">20</span>
+              <div class="cal-event scheduled"><span class="ev-id">r-2026-05-20</span><span class="ev-title">삼성 갤럭시 폴드7 출시…</span></div>
+            </div>
+            <div class="cal-cell">
+              <span class="cal-day">21</span>
+            </div>
+            <div class="cal-cell">
+              <span class="cal-day">22</span>
+            </div>
+            <div class="cal-cell">
+              <span class="cal-day">23</span>
+            </div>
+            <div class="cal-cell">
+              <span class="cal-day">24</span>
+            </div>
+
+            <!-- 다섯째 주 -->
+            <div class="cal-cell">
+              <span class="cal-day">25</span>
+            </div>
+            <div class="cal-cell">
+              <span class="cal-day">26</span>
+            </div>
+            <div class="cal-cell">
+              <span class="cal-day">27</span>
+            </div>
+            <div class="cal-cell">
+              <span class="cal-day">28</span>
+            </div>
+            <div class="cal-cell">
+              <span class="cal-day">29</span>
+            </div>
+            <div class="cal-cell">
+              <span class="cal-day">30</span>
+            </div>
+            <div class="cal-cell">
+              <span class="cal-day">31</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 빈 칸 알림 -->
+        <div class="panel" style="margin-top: 16px; padding: 14px 18px; background: rgba(252, 179, 0, 0.05); border-color: rgba(252, 179, 0, 0.2)">
+          <div style="display: flex; align-items: center; gap: 14px">
+            <div style="font-size: 22px">⚠</div>
+            <div style="flex: 1">
+              <div style="font-family: 'Orbitron', sans-serif; font-size: 13px; color: var(--gold); margin-bottom: 4px">스케줄 비어있는 날 8건</div>
+              <div style="font-size: 12.5px; color: var(--text-muted)">5/21–5/24, 5/25–5/31 · 라운드가 비면 그날은 자동 휴장. 자동 백필을 켜면 인사이더 풀에서 자동 매칭.</div>
+            </div>
+            <button class="btn btn-ghost">자동 백필 켜기</button>
+          </div>
+        </div>
+
+      </div>
+
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fact or Fold — 라텔 오락실</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    />
+    <link rel="stylesheet" href="shared.css" />
+  </head>
+  <body>
+    <div class="app">
+      <!-- ═══ TOP BAR ═══ -->
+      <div class="top-bar">
+        <div class="brand">
+          <div class="brand-logo">R</div>
+          <div class="brand-text">
+            <div class="brand-name">RATEL ARCADE</div>
+            <div class="brand-sub">Fact or Fold · v0.1 mockup</div>
+          </div>
+        </div>
+        <nav class="top-nav" role="tablist">
+          <button class="top-nav-btn" data-view="lobby" aria-selected="true">
+            <span class="top-nav-btn-icon">⌂</span><span>오락실</span>
+          </button>
+          <button class="top-nav-btn" data-view="leaderboard">
+            <span class="top-nav-btn-icon">♛</span><span>리더보드</span>
+          </button>
+        </nav>
+        <div class="user-stats">
+          <button class="top-nav-btn admin-cta" onclick="window.location.href='admin-new-headline.html'" style="border: 1px solid rgba(219, 39, 128, 0.4); color: var(--pink); background: rgba(219, 39, 128, 0.06);">
+            <span class="top-nav-btn-icon">⚐</span><span>라운드 생성하기</span>
+          </button>
+          <div class="stat-chip gold">
+            <span class="stat-chip-icon">◆</span>
+            <span>4,820 RP</span>
+          </div>
+          <div class="avatar">DY</div>
+        </div>
+      </div>
+
+
+      <!-- ═══ VIEW 1 — LOBBY ═══ -->
+      <section class="view" data-view="lobby" data-active="true">
+        <div class="lobby-grid">
+          <!-- Featured: 오늘의 라운드 -->
+          <div class="featured">
+            <div class="featured-tag">
+              <span class="featured-tag-dot"></span>
+              <span>LIVE · 오늘의 라운드 진행 중</span>
+            </div>
+            <h1 class="featured-title">Fact or Fold</h1>
+            <p class="featured-tagline">
+              4명이 모여 하루 한 건의 뉴스를 판별합니다. 둘 중 한 명은 거짓을 알고 있죠. 당신의 RatelPoint와
+              근거가 무기입니다.
+            </p>
+            <div class="featured-meta">
+              <div class="meta-cell">
+                <div class="meta-cell-label">라운드 인원</div>
+                <div class="meta-cell-value">4명</div>
+              </div>
+              <div class="meta-cell">
+                <div class="meta-cell-label">베팅 단위</div>
+                <div class="meta-cell-value"><span class="accent">100</span> RP+</div>
+              </div>
+              <div class="meta-cell">
+                <div class="meta-cell-label">진행 시간</div>
+                <div class="meta-cell-value"><span class="teal">24시간</span></div>
+              </div>
+              <div class="meta-cell">
+                <div class="meta-cell-label">현재 단계</div>
+                <div class="meta-cell-value">4 / 6</div>
+              </div>
+            </div>
+            <div class="featured-cta">
+              <button class="btn btn-primary" onclick="window.location.href='round-stage.html'">
+                라운드 입장 →
+              </button>
+              <span class="featured-status">
+                <span class="green">●</span> 라이브 진행 중 · 4명 만석
+              </span>
+            </div>
+          </div>
+
+          <!-- Side: 내 통계 + 최근 -->
+          <div class="lobby-side">
+            <div class="my-stats-card">
+              <div class="section-head">
+                <h2>나의 시즌</h2>
+                <span class="sub">2026 SPRING</span>
+              </div>
+              <div class="my-stats-row">
+                <span>참여 라운드</span>
+                <span class="num">28</span>
+              </div>
+              <div class="my-stats-row">
+                <span>정답률</span>
+                <span class="num teal">68%</span>
+              </div>
+              <div class="my-stats-row">
+                <span>거짓말 성공률</span>
+                <span class="num purple">2 / 3</span>
+              </div>
+              <div class="my-stats-row">
+                <span>누적 손익</span>
+                <span class="num gold">+1,420 RP</span>
+              </div>
+              <div class="my-stats-row">
+                <span>Essence 등록</span>
+                <span class="num">38건</span>
+              </div>
+            </div>
+
+            <div class="history-card">
+              <div class="section-head">
+                <h2>최근 라운드</h2>
+                <span class="sub">최근 7일</span>
+              </div>
+              <div class="history-row">
+                <div class="history-icon win">▲</div>
+                <div class="history-row-meta">
+                  <div class="history-row-title">"AI 일자리 12% 감소" 보도</div>
+                  <div class="history-row-sub">FAKE · 정답 · 5/9</div>
+                </div>
+                <div class="history-row-delta up">+340 RP</div>
+              </div>
+              <div class="history-row">
+                <div class="history-icon win">▲</div>
+                <div class="history-row-meta">
+                  <div class="history-row-title">"한강 수온 역대 최고" 보도</div>
+                  <div class="history-row-sub">REAL · 정답 · 5/8</div>
+                </div>
+                <div class="history-row-delta up">+180 RP</div>
+              </div>
+              <div class="history-row">
+                <div class="history-icon lose">▼</div>
+                <div class="history-row-meta">
+                  <div class="history-row-title">"비트코인 ETF 승인 임박"</div>
+                  <div class="history-row-sub">속았음 · 5/7</div>
+                </div>
+                <div class="history-row-delta down">-220 RP</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 다른 게임 카탈로그 -->
+        <div class="catalog-section">
+          <div class="section-head">
+            <h2>다른 게임</h2>
+            <span class="sub">라텔 오락실 · 1개</span>
+          </div>
+          <div class="catalog-grid">
+            <div class="game-tile">
+              <div class="game-tile-icon gold">◆</div>
+              <div class="game-tile-name">Fact or Fold</div>
+              <div class="game-tile-desc">
+                4명이 가짜뉴스를 판별합니다. 베팅과 근거로 승부.
+              </div>
+              <div class="game-tile-foot">
+                <span>라이브 · 4인 · 약 3분</span>
+                <span class="pill gold">PLAYING</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ VIEW 6 — LEADERBOARD ═══ -->
+      <section class="view" data-view="leaderboard">
+        <!-- 정확도 랭킹: 풀 너비 -->
+        <div class="lb-table">
+          <div class="section-head">
+            <h2>정확도 랭킹 · 시즌 SPRING</h2>
+            <span class="sub">최소 10라운드 참여자 대상</span>
+          </div>
+
+          <div class="lb-row head">
+            <div>#</div>
+            <div></div>
+            <div>이름</div>
+            <div>참여</div>
+            <div>정답률</div>
+            <div>누적 RP</div>
+          </div>
+
+          <div class="lb-row">
+            <div class="lb-rank top1">1</div>
+            <div class="p-avatar a4">MK</div>
+            <div class="lb-name-cell"><span class="lb-name">minkyu</span></div>
+            <div class="lb-stat">42라운드 · 정답 36회</div>
+            <div class="lb-accuracy">85.7%</div>
+            <div class="lb-primary">+8,420</div>
+          </div>
+
+          <div class="lb-row">
+            <div class="lb-rank top2">2</div>
+            <div class="p-avatar a2">YA</div>
+            <div class="lb-name-cell"><span class="lb-name">yangwoo</span></div>
+            <div class="lb-stat">38라운드 · 정답 31회</div>
+            <div class="lb-accuracy">81.6%</div>
+            <div class="lb-primary">+6,180</div>
+          </div>
+
+          <div class="lb-row">
+            <div class="lb-rank top3">3</div>
+            <div class="p-avatar a3">SR</div>
+            <div class="lb-name-cell"><span class="lb-name">surin</span></div>
+            <div class="lb-stat">29라운드 · 정답 23회</div>
+            <div class="lb-accuracy">79.3%</div>
+            <div class="lb-primary">+5,050</div>
+          </div>
+
+          <div class="lb-row">
+            <div class="lb-rank">4</div>
+            <div class="p-avatar a4">JH</div>
+            <div class="lb-name-cell"><span class="lb-name">jihoon</span></div>
+            <div class="lb-stat">31라운드 · 정답 24회</div>
+            <div class="lb-accuracy">77.4%</div>
+            <div class="lb-primary">+4,720</div>
+          </div>
+
+          <div class="lb-row me">
+            <div class="lb-rank">12</div>
+            <div class="p-avatar">DY</div>
+            <div class="lb-name-cell">
+              <span class="lb-name">doyoon</span>
+              <span class="lb-you-badge">YOU</span>
+            </div>
+            <div class="lb-stat">28라운드 · 정답 19회</div>
+            <div class="lb-accuracy">67.9%</div>
+            <div class="lb-primary">+1,420</div>
+          </div>
+
+          <div class="lb-row">
+            <div class="lb-rank">13</div>
+            <div class="p-avatar a3">HJ</div>
+            <div class="lb-name-cell"><span class="lb-name">hyunji</span></div>
+            <div class="lb-stat">22라운드 · 정답 14회</div>
+            <div class="lb-accuracy">63.6%</div>
+            <div class="lb-primary">+860</div>
+          </div>
+        </div>
+
+        <!-- 하단 grid: 명예 배지 + 시즌 통계 -->
+        <div class="lb-bottom-grid">
+          <div class="badges-card">
+              <div class="section-head">
+                <h2>명예 배지</h2>
+                <span class="sub">획득 4 / 9</span>
+              </div>
+              <div class="badge-grid">
+                <div class="badge gold">
+                  <div class="badge-icon">◎</div>
+                  <div class="badge-name">FIRST WIN</div>
+                  <div class="badge-desc">첫 정답</div>
+                </div>
+                <div class="badge teal">
+                  <div class="badge-icon">⌬</div>
+                  <div class="badge-name">INFLUENCER</div>
+                  <div class="badge-desc">5명 마음 돌림</div>
+                </div>
+                <div class="badge purple">
+                  <div class="badge-icon">⚐</div>
+                  <div class="badge-name">FIRST LIE</div>
+                  <div class="badge-desc">첫 거짓말 성공</div>
+                </div>
+                <div class="badge gold">
+                  <div class="badge-icon">★</div>
+                  <div class="badge-name">5-WIN STREAK</div>
+                  <div class="badge-desc">5연승</div>
+                </div>
+                <div class="badge locked">
+                  <div class="badge-icon">⊕</div>
+                  <div class="badge-name">10-WIN STREAK</div>
+                  <div class="badge-desc">10연승 (잠금)</div>
+                </div>
+                <div class="badge locked">
+                  <div class="badge-icon">⌖</div>
+                  <div class="badge-name">SHARPSHOOTER</div>
+                  <div class="badge-desc">정확도 90% (잠금)</div>
+                </div>
+                <div class="badge pink">
+                  <div class="badge-icon">⚑</div>
+                  <div class="badge-name">EXPOSED</div>
+                  <div class="badge-desc">거짓말쟁이 적발</div>
+                </div>
+                <div class="badge locked">
+                  <div class="badge-icon">⚙</div>
+                  <div class="badge-name">SEASON CLEAR</div>
+                  <div class="badge-desc">시즌 100라운드 (잠금)</div>
+                </div>
+                <div class="badge locked">
+                  <div class="badge-icon">♛</div>
+                  <div class="badge-name">CHAMPION</div>
+                  <div class="badge-desc">시즌 1위 (잠금)</div>
+                </div>
+              </div>
+            </div>
+
+          <!-- 나의 시즌 -->
+          <div class="badges-card">
+            <h3 class="card-title">나의 시즌</h3>
+
+            <div class="section-label" style="margin-top: 8px">정확도 외 지표</div>
+            <div class="my-stats-row">
+              <span>마음 돌린 횟수</span>
+              <span class="num teal">7회</span>
+            </div>
+            <div class="my-stats-row">
+              <span>⚐ 인사이더 정답률</span>
+              <span class="num purple">3 / 4</span>
+            </div>
+            <div class="my-stats-row">
+              <span>거짓말 성공률</span>
+              <span class="num purple">2 / 3</span>
+            </div>
+            <div class="my-stats-row">
+              <span>거짓말쟁이 적발</span>
+              <span class="num pink">5회</span>
+            </div>
+
+            <div class="section-label" style="margin-top: 18px">시즌 정보</div>
+            <div class="my-stats-row">
+              <span>시즌 기간</span>
+              <span class="num">04.01 — 06.30</span>
+            </div>
+            <div class="my-stats-row">
+              <span>참여자 수</span>
+              <span class="num teal">1,284명</span>
+            </div>
+            <div class="my-stats-row">
+              <span>당신의 백분위</span>
+              <span class="num gold">상위 22%</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      // 메타 화면만 (라운드는 round-stage.html에서 처리)
+      const META_VIEWS = ["lobby", "leaderboard"];
+
+      const views = document.querySelectorAll(".view");
+      const topNavBtns = document.querySelectorAll(".top-nav-btn");
+
+      function switchView(target) {
+        views.forEach((v) =>
+          v.setAttribute("data-active", v.dataset.view === target),
+        );
+        topNavBtns.forEach((b) =>
+          b.setAttribute("aria-selected", b.dataset.view === target),
+        );
+      }
+
+      // 톱바 네비 + 카드 내부 [data-view] 클릭 → 화면 전환
+      document.addEventListener("click", (e) => {
+        const trigger = e.target.closest("[data-view]");
+        if (!trigger || trigger.classList.contains("view")) return;
+        const target = trigger.dataset.view;
+        if (META_VIEWS.includes(target)) switchView(target);
+      });
+
+      // 키보드: Q=오락실, W=리더보드
+      document.addEventListener("keydown", (e) => {
+        const k = e.key.toLowerCase();
+        if (k === "q") switchView("lobby");
+        else if (k === "w") switchView("leaderboard");
+      });
+
+      // 초기 상태: hash 라우팅 — 라운드 페이지에서 "리더보드" 클릭 시 ../index.html#leaderboard로 들어옴
+      const initial =
+        location.hash === "#leaderboard" ? "leaderboard" : "lobby";
+      switchView(initial);
+    </script>
+  </body>
+</html>
