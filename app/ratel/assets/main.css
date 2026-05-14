@@ -45098,3 +45098,259 @@ body.comments-panel-resizing {
   color: #5fd189;
   font-size: 12px;
 }
+
+/* === src/features/fact_or_fold/pages/admin/headlines === */
+
+.ff-headlines {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* KPI strip */
+.ff-headlines__kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.ff-headlines__kpi-tile {
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ff-headlines__kpi-label {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ff-text-muted);
+}
+
+.ff-headlines__kpi-value {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--ff-text-primary);
+}
+.ff-headlines__kpi-value[data-accent="pink"] { color: var(--ff-pink); }
+.ff-headlines__kpi-value[data-accent="gold"] { color: var(--ff-gold); }
+.ff-headlines__kpi-value[data-accent="teal"] { color: #6eedd8; }
+
+/* Filter tabs */
+.ff-headlines__tabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--ff-border);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.ff-headlines__tab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: var(--ff-text-muted);
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+.ff-headlines__tab:hover { color: var(--ff-text-primary); }
+.ff-headlines__tab[aria-selected="true"] {
+  color: var(--ff-gold);
+  background: rgba(252, 179, 0, 0.08);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.ff-headlines__tab-count {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+/* Table panel */
+.ff-headlines__panel {
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 12px;
+  overflow: hidden;
+  backdrop-filter: blur(14px);
+}
+
+.ff-headlines__empty {
+  padding: 32px;
+  text-align: center;
+  color: var(--ff-text-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.ff-headlines__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ff-headlines__table thead th {
+  text-align: left;
+  padding: 12px 14px;
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ff-text-muted);
+  border-bottom: 1px solid var(--ff-border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ff-headlines__table tbody td {
+  padding: 12px 14px;
+  border-top: 1px solid var(--ff-border);
+  vertical-align: middle;
+  font-size: 13px;
+  color: var(--ff-text-primary);
+}
+
+.ff-headlines__row:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ff-headlines__cell-mono {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11.5px;
+  color: var(--ff-text-muted);
+}
+
+.ff-headlines__cell-muted {
+  color: var(--ff-text-muted);
+  font-size: 12px;
+}
+
+.ff-headlines__headline-text {
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-headlines__row-error {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #ff4d6d;
+}
+
+.ff-headlines__tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.ff-headlines__pill {
+  padding: 2px 7px;
+  border: 1px solid var(--ff-border);
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  color: var(--ff-text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Verdict + status badges */
+.ff-headlines__verdict,
+.ff-headlines__status {
+  display: inline-block;
+  padding: 3px 8px;
+  border: 1px solid var(--ff-border);
+  border-radius: 4px;
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ff-headlines__verdict[data-variant="real"] {
+  border-color: rgba(110, 237, 216, 0.5);
+  color: #6eedd8;
+  background: rgba(110, 237, 216, 0.08);
+}
+.ff-headlines__verdict[data-variant="fake"] {
+  border-color: rgba(219, 39, 128, 0.5);
+  color: var(--ff-pink);
+  background: rgba(219, 39, 128, 0.08);
+}
+
+.ff-headlines__status[data-variant="draft"] {
+  color: #6eedd8;
+  border-color: rgba(110, 237, 216, 0.4);
+}
+.ff-headlines__status[data-variant="scheduled"] {
+  color: var(--ff-gold);
+  border-color: rgba(252, 179, 0, 0.4);
+}
+.ff-headlines__status[data-variant="live"] {
+  color: var(--ff-pink);
+  border-color: rgba(219, 39, 128, 0.5);
+  background: rgba(219, 39, 128, 0.08);
+  animation: ff-headlines-live-pulse 1.6s ease-in-out infinite alternate;
+}
+@keyframes ff-headlines-live-pulse {
+  from { box-shadow: 0 0 0 0 rgba(219, 39, 128, 0.0); }
+  to   { box-shadow: 0 0 0 4px rgba(219, 39, 128, 0.18); }
+}
+.ff-headlines__status[data-variant="settled"] {
+  color: var(--ff-text-muted);
+}
+.ff-headlines__status[data-variant="deleted"] {
+  color: var(--ff-text-muted);
+  opacity: 0.5;
+}
+
+/* Action buttons */
+.ff-headlines__row-actions {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.ff-headlines__icon-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--ff-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--ff-text-muted);
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.ff-headlines__icon-btn:hover {
+  color: var(--ff-gold);
+  border-color: rgba(252, 179, 0, 0.4);
+  background: rgba(252, 179, 0, 0.08);
+}
+.ff-headlines__icon-btn--danger:hover {
+  color: var(--ff-pink);
+  border-color: rgba(219, 39, 128, 0.4);
+  background: rgba(219, 39, 128, 0.08);
+}
+.ff-headlines__icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
