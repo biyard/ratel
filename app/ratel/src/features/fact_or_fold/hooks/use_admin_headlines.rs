@@ -7,8 +7,9 @@
 //! pick their own UX (toast / nav / row removal).
 
 use crate::features::fact_or_fold::{
-    HeadlineResponse, HeadlineStatus, PublishHeadlineRequest, delete_headline_handler,
-    get_settings_handler, list_headlines_handler, publish_headline_handler,
+    CreateHeadlineRequest, HeadlineResponse, HeadlineStatus, PublishHeadlineRequest,
+    create_headline_handler, delete_headline_handler, get_settings_handler,
+    list_headlines_handler, publish_headline_handler,
 };
 use crate::*;
 
@@ -25,6 +26,19 @@ pub struct UseFactFoldAdminHeadlines {
 }
 
 impl UseFactFoldAdminHeadlines {
+    /// Create a draft / scheduled headline. The freshly inserted row
+    /// doesn't always show up at the top of the next list page since
+    /// we sort by `created_at desc` server-side, so we restart the
+    /// loader to make sure the new row shows up immediately.
+    pub async fn create(
+        &mut self,
+        req: CreateHeadlineRequest,
+    ) -> crate::common::Result<HeadlineResponse> {
+        let res = create_headline_handler(req).await?;
+        self.headlines.restart();
+        Ok(res)
+    }
+
     pub async fn publish_now(
         &mut self,
         headline_id: crate::FactFoldHeadlineEntityType,
