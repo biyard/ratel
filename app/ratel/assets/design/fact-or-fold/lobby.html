@@ -32,7 +32,8 @@
           </button>
         </nav>
         <div class="user-stats">
-          <button class="top-nav-btn admin-cta" onclick="window.location.href='admin-new-headline.html'" style="border: 1px solid rgba(219, 39, 128, 0.4); color: var(--pink); background: rgba(219, 39, 128, 0.06);">
+          <!-- D5: admin-only conditional render — RSX 변환 시 is_admin() guard로 감쌀 것 -->
+          <button class="top-nav-btn admin-cta" data-admin-only="true" onclick="window.location.href='admin-new-headline.html'" style="border: 1px solid rgba(219, 39, 128, 0.4); color: var(--pink); background: rgba(219, 39, 128, 0.06);">
             <span class="top-nav-btn-icon">⚐</span><span>라운드 생성하기</span>
           </button>
           <div class="stat-chip gold">
@@ -68,8 +69,8 @@
                 <div class="meta-cell-value"><span class="accent">100</span> RP+</div>
               </div>
               <div class="meta-cell">
-                <div class="meta-cell-label">진행 시간</div>
-                <div class="meta-cell-value"><span class="teal">24시간</span></div>
+                <div class="meta-cell-label">라운드 주기</div>
+                <div class="meta-cell-value"><span class="teal">하루 1회</span></div>
               </div>
               <div class="meta-cell">
                 <div class="meta-cell-label">현재 단계</div>
@@ -90,8 +91,8 @@
           <div class="lobby-side">
             <div class="my-stats-card">
               <div class="section-head">
-                <h2>나의 시즌</h2>
-                <span class="sub">2026 SPRING</span>
+                <h2>나의 통계</h2>
+                <span class="sub">누적 (lifetime)</span>
               </div>
               <div class="my-stats-row">
                 <span>참여 라운드</span>
@@ -100,10 +101,6 @@
               <div class="my-stats-row">
                 <span>정답률</span>
                 <span class="num teal">68%</span>
-              </div>
-              <div class="my-stats-row">
-                <span>거짓말 성공률</span>
-                <span class="num purple">2 / 3</span>
               </div>
               <div class="my-stats-row">
                 <span>누적 손익</span>
@@ -171,12 +168,13 @@
       </section>
 
       <!-- ═══ VIEW 6 — LEADERBOARD ═══ -->
+      <!-- D3: v1은 정확도 기준 lifetime 글로벌 리더보드만. 시즌/명예 배지/백분위는 v2 deferred -->
       <section class="view" data-view="leaderboard">
         <!-- 정확도 랭킹: 풀 너비 -->
         <div class="lb-table">
           <div class="section-head">
-            <h2>정확도 랭킹 · 시즌 SPRING</h2>
-            <span class="sub">최소 10라운드 참여자 대상</span>
+            <h2>정확도 랭킹 · 누적</h2>
+            <span class="sub">최소 10라운드 참여자 대상 · lifetime</span>
           </div>
 
           <div class="lb-row head">
@@ -246,99 +244,8 @@
           </div>
         </div>
 
-        <!-- 하단 grid: 명예 배지 + 시즌 통계 -->
-        <div class="lb-bottom-grid">
-          <div class="badges-card">
-              <div class="section-head">
-                <h2>명예 배지</h2>
-                <span class="sub">획득 4 / 9</span>
-              </div>
-              <div class="badge-grid">
-                <div class="badge gold">
-                  <div class="badge-icon">◎</div>
-                  <div class="badge-name">FIRST WIN</div>
-                  <div class="badge-desc">첫 정답</div>
-                </div>
-                <div class="badge teal">
-                  <div class="badge-icon">⌬</div>
-                  <div class="badge-name">INFLUENCER</div>
-                  <div class="badge-desc">5명 마음 돌림</div>
-                </div>
-                <div class="badge purple">
-                  <div class="badge-icon">⚐</div>
-                  <div class="badge-name">FIRST LIE</div>
-                  <div class="badge-desc">첫 거짓말 성공</div>
-                </div>
-                <div class="badge gold">
-                  <div class="badge-icon">★</div>
-                  <div class="badge-name">5-WIN STREAK</div>
-                  <div class="badge-desc">5연승</div>
-                </div>
-                <div class="badge locked">
-                  <div class="badge-icon">⊕</div>
-                  <div class="badge-name">10-WIN STREAK</div>
-                  <div class="badge-desc">10연승 (잠금)</div>
-                </div>
-                <div class="badge locked">
-                  <div class="badge-icon">⌖</div>
-                  <div class="badge-name">SHARPSHOOTER</div>
-                  <div class="badge-desc">정확도 90% (잠금)</div>
-                </div>
-                <div class="badge pink">
-                  <div class="badge-icon">⚑</div>
-                  <div class="badge-name">EXPOSED</div>
-                  <div class="badge-desc">거짓말쟁이 적발</div>
-                </div>
-                <div class="badge locked">
-                  <div class="badge-icon">⚙</div>
-                  <div class="badge-name">SEASON CLEAR</div>
-                  <div class="badge-desc">시즌 100라운드 (잠금)</div>
-                </div>
-                <div class="badge locked">
-                  <div class="badge-icon">♛</div>
-                  <div class="badge-name">CHAMPION</div>
-                  <div class="badge-desc">시즌 1위 (잠금)</div>
-                </div>
-              </div>
-            </div>
-
-          <!-- 나의 시즌 -->
-          <div class="badges-card">
-            <h3 class="card-title">나의 시즌</h3>
-
-            <div class="section-label" style="margin-top: 8px">정확도 외 지표</div>
-            <div class="my-stats-row">
-              <span>마음 돌린 횟수</span>
-              <span class="num teal">7회</span>
-            </div>
-            <div class="my-stats-row">
-              <span>⚐ 인사이더 정답률</span>
-              <span class="num purple">3 / 4</span>
-            </div>
-            <div class="my-stats-row">
-              <span>거짓말 성공률</span>
-              <span class="num purple">2 / 3</span>
-            </div>
-            <div class="my-stats-row">
-              <span>거짓말쟁이 적발</span>
-              <span class="num pink">5회</span>
-            </div>
-
-            <div class="section-label" style="margin-top: 18px">시즌 정보</div>
-            <div class="my-stats-row">
-              <span>시즌 기간</span>
-              <span class="num">04.01 — 06.30</span>
-            </div>
-            <div class="my-stats-row">
-              <span>참여자 수</span>
-              <span class="num teal">1,284명</span>
-            </div>
-            <div class="my-stats-row">
-              <span>당신의 백분위</span>
-              <span class="num gold">상위 22%</span>
-            </div>
-          </div>
-        </div>
+        <!-- v2 deferred (D3): 명예 배지, 시즌 백분위, 거짓말 성공률 / 거짓말쟁이 적발 등
+             mafia mode 통계는 mockup에서 제거. 인사이더 정답률은 단일 진실 인사이더 도입 후 v2에서 다시 검토. -->
       </section>
     </div>
 

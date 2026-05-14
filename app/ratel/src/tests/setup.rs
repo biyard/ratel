@@ -47,6 +47,10 @@ impl TestContext {
     pub async fn create_another_user(&self) -> (User, axum::http::HeaderMap) {
         create_user_session(self.app.clone(), &self.ddb).await
     }
+
+    pub async fn create_admin_user(&self) -> (User, axum::http::HeaderMap) {
+        create_admin_user_session(self.app.clone(), &self.ddb).await
+    }
 }
 
 pub fn create_user_name() -> String {
@@ -83,6 +87,21 @@ pub async fn create_user_session(
     app: Router,
     cli: &aws_sdk_dynamodb::Client,
 ) -> (User, axum::http::HeaderMap) {
+    create_session_with_user_type(app, cli, UserType::Individual).await
+}
+
+pub async fn create_admin_user_session(
+    app: Router,
+    cli: &aws_sdk_dynamodb::Client,
+) -> (User, axum::http::HeaderMap) {
+    create_session_with_user_type(app, cli, UserType::Admin).await
+}
+
+async fn create_session_with_user_type(
+    app: Router,
+    cli: &aws_sdk_dynamodb::Client,
+    user_type: UserType,
+) -> (User, axum::http::HeaderMap) {
     let uid = uuid::Uuid::new_v4().to_string();
     let email = format!("{}@example.com", uid);
     let password = hash_password(&uid);
@@ -92,7 +111,7 @@ pub async fn create_user_session(
         "https://metadata.ratel.foundation/ratel/default-profile.png".to_string(),
         true,
         true,
-        UserType::Individual,
+        user_type,
         uid.clone(),
         Some(password),
     );

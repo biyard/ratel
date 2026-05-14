@@ -249,23 +249,18 @@
           </div>
         </div>
 
-        <!-- 3. 인사이더 -->
+        <!-- 3. 인사이더 (v1 — D1/D2: 단일 진실 인사이더 1명 고정, mafia mode v2 deferred) -->
         <div class="settings-section">
           <div class="settings-section-head">
-            <span class="settings-section-title">03 · 인사이더 모드</span>
-            <span class="settings-section-sub">역할 분포 / 비공개 룰</span>
+            <span class="settings-section-title">03 · 인사이더</span>
+            <span class="settings-section-sub">v1: 단일 진실 인사이더 (TRUTH-KNOWER)</span>
           </div>
           <div class="panel">
             <div class="setting-row">
-              <div class="setting-label">기본 인사이더 모드</div>
-              <div class="setting-desc">헤드라인 작성 시 디폴트로 켜지는 인사이더 구성.</div>
+              <div class="setting-label">인사이더 모드</div>
+              <div class="setting-desc">v1은 라운드당 진실 인사이더 1명 고정. 거짓 인사이더(mafia mode)는 v2에 도입 예정.</div>
               <div class="setting-control">
-                <select class="inline-select">
-                  <option>FAKE-knower만 (단일)</option>
-                  <option selected>FAKE + REAL (마피아)</option>
-                  <option>REAL-knower만 (단일)</option>
-                  <option>없음 (순수 추리)</option>
-                </select>
+                <span class="pill" style="opacity: 0.7">v1: TRUTH-KNOWER 1명 (고정)</span>
               </div>
             </div>
 
@@ -278,11 +273,11 @@
             </div>
 
             <div class="setting-row">
-              <div class="setting-label">인사이더 패배 시 RP 환수</div>
-              <div class="setting-desc">인사이더가 진영 설득 실패했을 때 베팅의 일부를 잃음.</div>
+              <div class="setting-label">인사이더 정답 보너스 (×stake)</div>
+              <div class="setting-desc">인사이더가 정답 진영(자신이 아는 진실)으로 베팅하고 라운드 결과가 일치할 때 추가 지급되는 stake 배수. 스펙 §FR-30 기본 0.5.</div>
               <div class="setting-control">
-                <input class="inline-input" value="50" />
-                <span class="unit-suffix">%</span>
+                <input class="inline-input" value="0.5" />
+                <span class="unit-suffix">×</span>
               </div>
             </div>
           </div>

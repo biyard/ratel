@@ -333,6 +333,10 @@ pub enum Error {
     #[translate(from)]
     CrossPosting(#[from] crate::features::cross_posting::types::CrossPostingError),
 
+    #[error("{0}")]
+    #[translate(from)]
+    FactOrFold(#[from] crate::features::fact_or_fold::types::FactOrFoldError),
+
     // Unit variants for common errors
     #[error("Internal error")]
     #[translate(
@@ -520,6 +524,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::SpaceApp(e) => e.status_code(),
             Error::SpaceReport(e) => e.status_code(),
             Error::Character(e) => e.status_code(),
+            Error::FactOrFold(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -643,6 +648,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::SpaceApp(e) => e.status_code(),
             Error::SpaceReport(e) => e.status_code(),
             Error::Character(e) => e.status_code(),
+            Error::FactOrFold(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

@@ -277,6 +277,11 @@ pub enum EntityType {
     SyndicationJob(String),         // pk=Feed(post_id), inner=platform.to_string()
     EngagementSnapshot(String),     // pk=Feed(post_id), inner=platform.to_string()
     UserOnboardingFlags,            // pk=User(user_id), singleton per user
+
+    // Ratel Arcade — *Fact or Fold*. v1 PR1 only registers headline + settings;
+    // round/participant/bet/rationale/chat/settlement entries are added in PR3+.
+    FactFoldHeadline(String),       // pk=FactFoldHeadlines, inner=headline_id
+    FactFoldSettings,               // pk=FactFoldSettings (singleton)
 }
 
 impl TryInto<Partition> for EntityType {

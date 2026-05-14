@@ -106,6 +106,22 @@ pub enum Partition {
     /// Pairs with `EntityType::LastBackfillVersion` to form a single
     /// (pk, sk) row at `MIGRATION` + `LAST_BACKFILL_VERSION`.
     Migration,
+
+    /// Ratel Arcade — *Fact or Fold*. One pk per round groups all rows
+    /// for that round (round state, participants, bets, rationales,
+    /// chat, settlements). Used starting PR3.
+    FactFold(String),
+
+    /// Anchor pk holding **all** *Fact or Fold* headline rows; each
+    /// headline lives at the same pk with a different sk
+    /// (`EntityType::FactFoldHeadline(headline_id)`) so listing /
+    /// scheduling queries work with a single `query` per pk.
+    FactFoldHeadlines,
+
+    /// Singleton row carrying admin-tunable parameters for the
+    /// *Fact or Fold* game (stage durations, bet caps, bonus rates).
+    /// One row per deployment.
+    FactFoldSettings,
 }
 
 impl Partition {

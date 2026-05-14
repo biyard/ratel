@@ -1,6 +1,6 @@
 # Fact or Fold — 4-player news judgment game
 
-**Status**: Ready for design (Stage 2 in progress · PO sign-off 2026-05-14)
+**Status**: Stage 3 entry approved · PO sign-off 2026-05-14 (D1–D5 decisions in `docs/superpower/2026-05-14-fact-or-fold.md`)
 **Slug**: `fact-or-fold`
 **Primary use case**: Four people meet to judge the truthfulness (REAL/FAKE) of a single news headline about *something happening now*, betting their own RatelPoints in a real-time round that takes ~3 minutes. This is Ratel's first *Essence-production game* — using social pressure, time constraint, and economic stake to make users produce short, sharp *position + rationale* writing, which then gets opt-in-registered to their personal Essence.
 
@@ -33,7 +33,7 @@ Things explicitly *not* in v1 (deferred to v2+):
 - **User-submitted news** — all news comes from a pool curated by the Ratel team
 - **External fact-check API integration** — to be revisited in v2 after v1 cold start
 - **Category / sub-team matchmaking** — v1 uses a single global pool, first-come
-- **Global leaderboard / seasons** — v1 shows per-round and lifetime accuracy only
+- **Seasons / honor badges** — v1 ships a flat lifetime leaderboard only; seasons, season percentile, and the 9-badge honor system are deferred to v2
 - **AI agent participation** — v1 is 4 humans only; agent participation tracks against the Ratel agents roadmap separately
 - **Rounds with fewer than 4** — if 4 spots aren't filled, the round doesn't start
 - **Rounds with more than 4** — capacity is fixed at 4
@@ -110,10 +110,10 @@ Numbered. Each MUST be *testable*.
 
 ### Insider (23-26)
 
-23. At round start, *1 of the 4* is randomly chosen as the *insider*. That user receives the *truth (REAL/FAKE) and an auxiliary statement privately* — this works the same on REAL rounds and FAKE rounds.
+23. At round start, *exactly 1 of the 4* is randomly chosen as the *insider*. That user receives the *truth (REAL/FAKE) and a single truth-statement privately* — this works the same on REAL rounds and FAKE rounds. v1 has *no other insider role*.
 24. The insider SHALL NOT publicly state that they are the insider — violation is a report-eligible offense, subject to operator action.
 25. The insider earns the influence bonus (§FR-29) by persuading others *in the direction of truth*.
-26. In v1 there is *no lying insider (REAL-knower lying)*. The insider's statement is always a truth-attempt (§Non-goals).
+26. In v1 there is *no lying insider (no "REAL-knower lying", no mafia mode)*. The insider's statement is always a truth-attempt. The admin form SHALL NOT collect a "possibly-false statement" field — only the single truth-statement is captured per headline (§Non-goals).
 
 ### Settlement (27-33)
 
@@ -139,12 +139,18 @@ Numbered. Each MUST be *testable*.
 ### Admin (39-45)
 
 39. An operator (admin role) SHALL register news (= headlines) from a *dedicated admin page*. One headline = one round's content.
-40. The headline form accepts: round ID, publish datetime, verdict label (REAL/FAKE), category tags, difficulty (★ 1–5), source label, headline text, body excerpt (200–500 chars), *private statement to be delivered to the insider*, *truth summary and 2–3 verification source URLs to reveal at settlement*.
+40. The headline form accepts: round ID, publish datetime, verdict label (REAL/FAKE), category tags, difficulty (★ 1–5), source label, headline text, body excerpt (200–500 chars), *a single private statement to be delivered to the insider* (no "possibly-false" field — see §FR-26), *truth summary and 2–3 verification source URLs to reveal at settlement*.
 41. Headlines MAY have a *scheduled datetime*. Scheduled headlines *auto-activate* as the live round at that time.
 42. Operators can choose three actions: *save draft*, *schedule publish*, *publish now*.
 43. Operators may *edit/delete existing headlines*. Once a round is in progress for a headline, the body/verdict cannot be changed; only *adding verification sources* is allowed.
 44. Operators view *past round stats* (accuracy, insider effect, mind-flip count) and *user reports* on separate admin pages.
 45. When the queue (scheduled future headlines) *drops to 5 days or fewer*, an alert is shown on the admin page.
+
+### Leaderboard (46-48)
+
+46. The system SHALL maintain a global leaderboard ranked by *lifetime accuracy* (correct rounds / total rounds), with a minimum-rounds gate (default 10) to qualify.
+47. Each row SHALL show rank, avatar, display name, participated rounds, correct count, accuracy %, and lifetime RP delta. The current user's row SHALL be highlighted if visible, and SHALL be appended at the bottom when outside the top page.
+48. Seasons, season percentile, and the 9-badge honor wall are NOT in v1 — only the flat lifetime leaderboard ships now (§Non-goals).
 
 ## Acceptance criteria
 
@@ -165,6 +171,7 @@ Numbered. Each MUST be *testable*.
 - [ ] When the queue drops to 5 days or fewer, the admin page shows an alert
 - [ ] A user reconnecting within 90 seconds resumes the round in the same stage
 - [ ] After 90 seconds, the round auto-forfeits and the stake is refunded
+- [ ] The leaderboard ranks users by lifetime accuracy with a minimum-rounds gate, and highlights the current user's own row
 
 ## Constraints
 
@@ -202,6 +209,18 @@ This spec rests on the following five decisions:
 3. **Matching** — single global lobby, first-come, instant start when 4 fill. Category/sub-team matching deferred to v2
 4. **Insider default** — 1 insider per round who knows the truth (FAKE-knower equivalent). The deceptive REAL-knower (mafia mode) is deferred to v2
 5. **Essence policy for lying-side text** — moot in v1 since no lying is emitted. To be decided when mafia mode lands
+
+### Stage 2 → Stage 3 entry decisions (2026-05-14)
+
+After Stage 2 mockup review, five mockup-vs-spec discrepancies were resolved by PO:
+
+- **D1**: All "lying insider" / mafia surface (REAL-knower-lying field, LIAR badge, 거짓말 성공률 stat) **removed**. Only the single truth-statement field remains on admin form. v1 ships exactly one insider role.
+- **D2**: Insider count **fixed at 1 per round**. The "1~2 명" hint in the admin form is corrected to "1 명".
+- **D3**: **Flat lifetime leaderboard is in v1** (new §FR-46–48 + acceptance criterion). Seasons, season percentile, and the 9-badge honor wall are out of v1 (§Non-goals updated).
+- **D4**: lobby "진행 시간: 24시간" label is corrected to convey "라운드 주기" / "하루 1회".
+- **D5**: The "라운드 생성하기" CTA on the top bar is rendered only for users with the admin role.
+
+Mockup files under `app/ratel/assets/design/fact-or-fold/` are cleaned in lockstep during the corresponding PR.
 
 ## Open questions
 

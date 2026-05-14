@@ -948,46 +948,34 @@
               </div>
             </div>
 
-            <!-- 섹션 4: INSIDER -->
+            <!-- 섹션 4: INSIDER (v1 — 단일 진실 인사이더 1명, mafia mode v2 deferred) -->
             <div class="form-section">
               <div class="form-section-title">
                 <span class="form-section-number">04</span>
                 <span class="form-section-name">인사이더 설정</span>
-                <span class="form-section-sub">라운드 시작 시 1~2명에게만 전달</span>
+                <span class="form-section-sub">라운드 시작 시 1명에게만 전달</span>
               </div>
 
               <div class="field">
-                <div class="field-label">활성 역할</div>
+                <div class="field-label">인사이더 역할</div>
                 <div class="role-check-list">
-                  <div class="role-check" data-checked="true" onclick="toggleRole(this)">
+                  <div class="role-check" data-checked="true" data-locked="true">
                     <div class="role-check-box">✓</div>
                     <div class="role-check-text">
-                      <div class="role-check-name">⊘ FAKE-KNOWER</div>
-                      <div class="role-check-desc">이 뉴스가 가짜임을 알고 있는 참가자. 다른 사람을 가짜 진영으로 끌면 영향력 보너스.</div>
-                    </div>
-                  </div>
-                  <div class="role-check" data-checked="true" onclick="toggleRole(this)">
-                    <div class="role-check-box">✓</div>
-                    <div class="role-check-text">
-                      <div class="role-check-name">◎ REAL-KNOWER</div>
-                      <div class="role-check-desc">이 뉴스가 진짜라고 *주장하는* 참가자. 거짓 진술 가능 — 토론 다이내믹 강화용.</div>
+                      <div class="role-check-name">⊘ TRUTH-KNOWER</div>
+                      <div class="role-check-desc">라운드 시작 시 4명 중 무작위 1명이 선택되어 진실(REAL/FAKE)을 알게 됩니다. 진실 방향으로 다른 참가자를 설득하면 영향력 보너스를 받습니다.</div>
                     </div>
                   </div>
                 </div>
-                <div class="field-hint">둘 다 켜면 마피아 구조 (한 명은 거짓말). 한 명만 켜면 단일 인사이더 모드.</div>
+                <div class="field-hint">v1은 단일 진실 인사이더만 운영합니다. 거짓 인사이더(mafia mode)는 v2에 도입 예정.</div>
               </div>
 
               <div class="field">
                 <div class="field-label">
-                  FAKE-KNOWER에게 보낼 진술 <span class="field-required">*</span>
+                  인사이더에게 보낼 진술 <span class="field-required">*</span>
                 </div>
-                <textarea class="field-textarea" placeholder="라운드 시작 시 비공개로 전달됨">이 뉴스는 가짜입니다. 한국은행 보고서는 단독 출처가 아닌 6개월 전 폐기된 내부 시나리오 문서이며, 실제 5월 회의록에는 동결 기조가 명시돼 있습니다.</textarea>
-              </div>
-
-              <div class="field">
-                <div class="field-label">REAL-KNOWER에게 보낼 진술</div>
-                <textarea class="field-textarea" placeholder="REAL-KNOWER가 참고할 (거짓일 수도 있는) 진술">이 뉴스는 진짜입니다. 한국은행 통화정책국이 실제로 0.5%p 인하 시나리오를 1순위로 검토 중이며, 채권시장 반응이 그 근거입니다. [실제로는 거짓 진술 — 라운드 dynamics용]</textarea>
-                <div class="field-hint">REAL-KNOWER 역할이 꺼져 있으면 무시됨.</div>
+                <textarea class="field-textarea" placeholder="라운드 시작 시 인사이더에게만 비공개 전달됨">이 뉴스는 가짜입니다. 한국은행 보고서는 단독 출처가 아닌 6개월 전 폐기된 내부 시나리오 문서이며, 실제 5월 회의록에는 동결 기조가 명시돼 있습니다.</textarea>
+                <div class="field-hint">한 줄 — 진실 진영의 근거 요약. 정확히 한 명에게 전달됩니다.</div>
               </div>
 
               <div class="field">
@@ -1094,7 +1082,7 @@
                 <li class="check-item done"><span class="check-mark">✓</span> 진실 판정 선택</li>
                 <li class="check-item done"><span class="check-mark">✓</span> 헤드라인 입력</li>
                 <li class="check-item done"><span class="check-mark">✓</span> 본문 발췌 입력</li>
-                <li class="check-item done"><span class="check-mark">✓</span> 인사이더 1명 이상 활성</li>
+                <li class="check-item done"><span class="check-mark">✓</span> 인사이더 진술 작성</li>
                 <li class="check-item done"><span class="check-mark">✓</span> 진실 요약 작성</li>
                 <li class="check-item"><span class="check-mark"></span> 검증 출처 2개 이상</li>
                 <li class="check-item"><span class="check-mark"></span> 원본 URL 검증</li>
@@ -1103,11 +1091,9 @@
 
             <!-- 도움말 -->
             <div class="tip-card">
-              <div class="tip-card-head">⚐ 인사이더 모드 가이드</div>
+              <div class="tip-card-head">⚐ 인사이더 가이드 (v1)</div>
               <div class="tip-card-body">
-                FAKE-KNOWER만 활성 시 진실 추적 게임,
-                REAL-KNOWER만 활성 시 가스라이팅 방어 게임,
-                <strong style="color: var(--purple)">둘 다 활성</strong> 시 한 명은 거짓말쟁이가 되어 마피아 구조가 만들어집니다.
+                v1은 <strong style="color: var(--purple)">단일 진실 인사이더</strong>만 운영합니다. 라운드 시작 시 4명 중 무작위 1명이 인사이더로 지정되어 진술을 비공개로 받습니다. 거짓 인사이더(mafia mode)는 v2에 도입 예정.
               </div>
             </div>
 
