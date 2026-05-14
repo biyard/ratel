@@ -208,6 +208,15 @@ impl CrossPostAdapter for LinkedInAdapter {
             }
         };
 
+        // No refresh token = app product tier doesn't grant one. Surface
+        // AuthExpired so the dispatcher commits Failed and the user gets
+        // the "reconnect" inbox CTA (FR-5 #35).
+        let refresh_token = refresh_token.ok_or_else(|| {
+            PlatformError::AuthExpired(
+                "linkedin connection has no refresh token; user must reconnect".into(),
+            )
+        })?;
+
         let (client_id, client_secret) = oauth_client_credentials()?;
 
         let url = format!("{}/oauth/v2/accessToken", self.oauth_host);
@@ -234,7 +243,7 @@ impl CrossPostAdapter for LinkedInAdapter {
 
         // refresh_token may be omitted in LinkedIn's response — fall back to
         // the prior value so the next refresh attempt still has a token.
-        let new_refresh = parsed.refresh_token.unwrap_or(refresh_token);
+        let new_refresh = parsed.refresh_token.or(Some(refresh_token));
 
         Ok(DecryptedCredentials::LinkedIn {
             access_token: parsed.access_token,
@@ -251,11 +260,22 @@ impl CrossPostAdapter for LinkedInAdapter {
 
 /// Newly-issued LinkedIn token pair, returned to the OAuth callback
 /// controller for AEAD-sealing into `SocialConnection.credential_ciphertext`.
+///
+/// `refresh_token` is `Option` because LinkedIn only issues it for apps
+/// with specific products attached. Standard OIDC-only apps get an
+/// access token (60-day TTL) and no refresh token — caller falls back
+/// to user-initiated reconnect when the access token expires.
 #[derive(Clone)]
 pub struct LinkedInSession {
     pub access_token: String,
-    pub refresh_token: String,
+    pub refresh_token: Option<String>,
     pub member_urn: String,
+    /// Human-readable name from OIDC `/v2/userinfo` (`name` field).
+    /// `Option` because OIDC spec lists `name` as optional — when the
+    /// requested scopes don't include `profile` or the member opts out,
+    /// the field can be absent. Callers should fall back to `member_urn`
+    /// for the UI label in that case.
+    pub display_name: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -274,6 +294,11 @@ struct UserinfoResponse {
     /// OIDC `sub` — the member's stable LinkedIn ID. Used to construct the
     /// `urn:li:person:{sub}` author URN required by `/v2/ugcPosts`.
     sub: String,
+    /// OIDC `name` — the member's full display name. Optional in the OIDC
+    /// spec; populated when the `profile` scope is granted (we always
+    /// request it). Used as the connection's `external_handle` for the
+    /// settings UI; falls back to `sub` (URN) when absent.
+    name: Option<String>,
 }
 
 impl LinkedInAdapter {
@@ -310,12 +335,13 @@ impl LinkedInAdapter {
             .await
             .map_err(|e| PlatformError::Unknown(format!("oauth exchange parse: {e}")))?;
 
-        // refresh_token IS issued on the initial code-exchange (unlike the
-        // refresh path). Missing it here is a hard error — without it we
-        // can't FR-5 #35 rotate later.
-        let refresh_token = token.refresh_token.ok_or_else(|| {
-            PlatformError::Unknown("oauth code exchange missing refresh_token".into())
-        })?;
+        // refresh_token is optional. LinkedIn only includes it when the
+        // app has a product attached that grants long-lived refresh
+        // (e.g. "Share on LinkedIn"). OIDC-only apps return an
+        // `access_token` (60-day TTL) and nothing else — the connection
+        // still works for publishing until expiry, after which the user
+        // reconnects via the inbox CTA (FR-5 #35 AuthExpired path).
+        let refresh_token = token.refresh_token;
 
         // Pull the member's `sub` from /v2/userinfo (OIDC). With the
         // `openid profile` scope LinkedIn returns `sub` in the userinfo
@@ -332,6 +358,7 @@ impl LinkedInAdapter {
             access_token: token.access_token,
             refresh_token,
             member_urn: userinfo.sub,
+            display_name: userinfo.name,
         })
     }
 }

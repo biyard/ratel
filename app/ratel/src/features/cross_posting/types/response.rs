@@ -108,7 +108,6 @@ impl SyndicationJobView {
 /// Front-end navigates `window.location.href = authorize_url` so the
 /// browser leaves the SPA context and lands on LinkedIn's consent page.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "server", derive(JsonSchema, OperationIo))]
 pub struct LinkedInOauthInitResponse {
     pub authorize_url: String,
 }

@@ -440,10 +440,20 @@ async fn try_acquire_lock(
 
     match resp {
         Ok(out) => {
+            // A brand-new job written by `services/factory.rs` carries
+            // `dispatch_lock_id: Option<String> = None`, which DynamoEntity
+            // serializes as an explicit NULL-typed attribute (not a missing
+            // attribute). `is_some()` here would treat that NULL as a real
+            // prior lock, sending every first-dispatch through the reconcile
+            // probe — which on LinkedIn surfaces a 403 (ugcPosts FINDER
+            // permission), and on Bluesky burns an extra `listRecords` call
+            // per publish. Only a String-typed attribute means a real
+            // dispatcher previously held the lock (and its TTL elapsed).
             let had_existing_lock = out
                 .attributes()
                 .and_then(|a| a.get("dispatch_lock_id"))
-                .is_some();
+                .map(|v| !matches!(v, AV::Null(_)))
+                .unwrap_or(false);
             Ok(Some(LockAcquired { had_existing_lock }))
         }
         Err(e) => {

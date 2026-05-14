@@ -8,11 +8,10 @@
 //! JSON-response contract that `#[get]/#[post]` macros generate.
 
 use crate::common::axum::{
-    AxumRouter, Extension,
+    Extension, Router,
     extract::Query,
-    http::StatusCode,
-    native_routing::get,
     response::{IntoResponse, Redirect, Response},
+    routing::get,
 };
 use crate::common::config::site_base_url;
 use crate::common::models::auth::SESSION_KEY_USER_ID;
@@ -56,12 +55,46 @@ async fn linkedin_callback(
     let user_pk_str: String = match session.get(SESSION_KEY_USER_ID).await {
         Ok(Some(s)) => s,
         _ => {
-            return Redirect::to(&format!(
-                "{}/login?return_to=/settings/connections",
-                site_base_url()
-            ))
-            .into_response();
+            return Redirect::to(&format!("{}/login", site_base_url())).into_response();
         }
+    };
+
+    // Parse the session's user_pk and look up the username. The connections
+    // page is nested under `#[nest("/:username")]` in `route.rs`, so every
+    // redirect from this handler MUST include the username segment —
+    // otherwise the Dioxus router renders "Page not found". We resolve it
+    // once up-front so every error / success branch below can call
+    // `connections_url(...)` without an extra DB hop.
+    let cfg = crate::common::CommonConfig::default();
+    let cli = cfg.dynamodb();
+    let user_pk: crate::common::Partition = match user_pk_str.parse() {
+        Ok(p) => p,
+        Err(_) => {
+            tracing::error!(
+                user_pk_str,
+                "linkedin callback: session user_pk failed to parse"
+            );
+            return Redirect::to(site_base_url()).into_response();
+        }
+    };
+    let username = match crate::features::auth::User::get(
+        cli,
+        &user_pk,
+        Some(crate::common::EntityType::User),
+    )
+    .await
+    {
+        Ok(Some(u)) => u.username,
+        _ => {
+            tracing::error!(?user_pk, "linkedin callback: user record not found");
+            return Redirect::to(site_base_url()).into_response();
+        }
+    };
+    let connections_url = |linkedin: &str| -> String {
+        format!(
+            "{}/{username}/settings/connections?linkedin={linkedin}",
+            site_base_url()
+        )
     };
 
     // (2) LinkedIn-side error. Either the user clicked Cancel
@@ -74,19 +107,19 @@ async fn linkedin_callback(
             error_description = ?q.error_description,
             "linkedin callback received error from provider"
         );
-        return Redirect::to(&connections_page_url("denied")).into_response();
+        return Redirect::to(&connections_url("denied")).into_response();
     }
 
     let code = match q.code {
         Some(c) if !c.is_empty() => c,
         _ => {
-            return Redirect::to(&connections_page_url("error")).into_response();
+            return Redirect::to(&connections_url("error")).into_response();
         }
     };
     let state = match q.state {
         Some(s) if !s.is_empty() => s,
         _ => {
-            return Redirect::to(&connections_page_url("error")).into_response();
+            return Redirect::to(&connections_url("error")).into_response();
         }
     };
 
@@ -95,14 +128,14 @@ async fn linkedin_callback(
         Ok(d) => d,
         Err(e) => {
             tracing::warn!(error = %e, "linkedin callback: state verify failed");
-            return Redirect::to(&connections_page_url("error")).into_response();
+            return Redirect::to(&connections_url("error")).into_response();
         }
     };
     if decoded.user_pk.to_string() != user_pk_str {
         tracing::warn!(
             "linkedin callback: state.user_pk does not match session user — possible cross-user replay"
         );
-        return Redirect::to(&connections_page_url("error")).into_response();
+        return Redirect::to(&connections_url("error")).into_response();
     }
 
     // (4) Code exchange → token + member URN. Redirect URI MUST match
@@ -114,7 +147,7 @@ async fn linkedin_callback(
         Ok(s) => s,
         Err(e) => {
             tracing::error!(error = %e, "linkedin callback: code exchange failed");
-            return Redirect::to(&connections_page_url("error")).into_response();
+            return Redirect::to(&connections_url("error")).into_response();
         }
     };
 
@@ -123,19 +156,6 @@ async fn linkedin_callback(
     // from the response (LinkedInAdapter::TokenResponse drops it) so we
     // pass `None`. The dispatcher's `try_refresh_credentials` handles
     // expiry-driven refresh based on AuthExpired errors.
-    let cfg = crate::common::CommonConfig::default();
-    let cli = cfg.dynamodb();
-    let user_pk: crate::common::Partition = match user_pk_str.parse() {
-        Ok(p) => p,
-        Err(_) => {
-            tracing::error!(
-                user_pk_str,
-                "linkedin callback: session user_pk failed to parse"
-            );
-            return Redirect::to(&connections_page_url("error")).into_response();
-        }
-    };
-
     let upsert = ConnectionUpsert {
         user_pk,
         platform: SocialPlatform::LinkedIn,
@@ -144,40 +164,33 @@ async fn linkedin_callback(
             refresh_token: session_data.refresh_token.clone(),
             member_urn: session_data.member_urn.clone(),
         },
-        // LinkedIn `/v2/userinfo` includes a `name` field, but we drop
-        // it on the floor here — the URN itself is what we need. The
-        // connections page already displays "@member URN" as the
-        // identity; a follow-up polish PR can pull `name` for nicer UX.
-        external_handle: session_data.member_urn.clone(),
+        // `external_handle` is the human-facing label shown on the
+        // connections page row. Prefer the OIDC `name` from /v2/userinfo
+        // when present; fall back to the raw member URN if LinkedIn
+        // omits it (OIDC spec lists `name` as optional). `external_user_id`
+        // always stays as the stable URN — it's what the dispatcher uses
+        // to build per-post URLs and run reconcile probes.
+        external_handle: session_data
+            .display_name
+            .clone()
+            .unwrap_or_else(|| session_data.member_urn.clone()),
         external_user_id: session_data.member_urn,
         token_expires_at: None,
     };
 
     if let Err(e) = seal_and_upsert_connection(cli, upsert).await {
         tracing::error!(error = %e, "linkedin callback: seal+upsert failed");
-        return Redirect::to(&connections_page_url("error")).into_response();
+        return Redirect::to(&connections_url("error")).into_response();
     }
 
     // (6) Success — bounce the user back to the connections page with a
     // success marker. The page reads `?linkedin=ok` and shows a toast.
-    Redirect::to(&connections_page_url("ok")).into_response()
+    Redirect::to(&connections_url("ok")).into_response()
 }
 
-fn connections_page_url(linkedin: &str) -> String {
-    format!("{}/settings/connections?linkedin={linkedin}", site_base_url())
-}
-
-pub fn router() -> AxumRouter {
-    AxumRouter::new().route(
+pub fn router() -> Router {
+    Router::new().route(
         "/api/cross-posting/connections/linkedin/callback",
         get(linkedin_callback),
     )
-}
-
-// Silence unused-import lints when this module is compiled but the
-// callback route isn't hit (e.g., during cargo check on web target —
-// though `server` feature gates the whole module via parent mod).
-#[allow(dead_code)]
-fn _unused_status_code() -> StatusCode {
-    StatusCode::OK
 }

@@ -22,11 +22,24 @@ pub fn get_session_layer(
     SessionManagerLayer::new(session_store)
         .with_secure(!is_local)
         .with_http_only(!is_local)
-        // .with_same_site(if is_local {
-        //     tower_sessions::cookie::SameSite::Lax
-        // } else {
-        //     tower_sessions::cookie::SameSite::None
-        // })
+        // OAuth providers (LinkedIn / Google / Kakao) bounce the browser
+        // back via top-level navigation from their own domain. The
+        // tower-sessions default `Strict` drops the session cookie on
+        // that hop, leaving the callback handler anonymous and
+        // redirecting the user to /login.
+        //
+        // `Lax` is the minimum relaxation: top-level GET navigations
+        // (i.e. OAuth callbacks) carry the cookie, but cross-site POST,
+        // XHR, image, and iframe loads still don't — which is exactly
+        // the CSRF surface we want to keep blocked.
+        //
+        // The original main-api layer used `None` on dev/prod for
+        // future iframe / cross-origin XHR scenarios, but the codebase
+        // has no such consumer today and `None` requires `Secure`
+        // (incompatible with local http dev). Picking `Lax` uniformly
+        // keeps every environment OAuth-functional while staying
+        // stricter than `None` was.
+        .with_same_site(tower_sessions::cookie::SameSite::Lax)
         .with_name(format!("{}_sid", env))
         .with_path("/")
         .with_expiry(tower_sessions::Expiry::AtDateTime(
