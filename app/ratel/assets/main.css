@@ -44780,3 +44780,167 @@ body.comments-panel-resizing {
     gap: 8px;
   }
 }
+
+/* === src/features/fact_or_fold/pages/admin/layout (FactFoldAdminLayout) === */
+
+/* Sub-layout for /admin/fact-or-fold/*. Sits inside .admin-arena and
+   provides the arcade-themed brand row + 5-tab navigation. Vars are
+   scoped so colors don't leak into other admin pages. */
+.ff-admin-arena {
+  --ff-bg-glass: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, rgba(255, 255, 255, 0.78));
+  --ff-border: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(10, 10, 30, 0.08));
+  --ff-text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
+  --ff-text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+  --ff-pink: #db2780;
+  --ff-gold: #fcb300;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 24px 32px;
+}
+
+.ff-admin-arena__topbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 18px;
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 14px;
+  backdrop-filter: blur(14px);
+  flex-wrap: wrap;
+}
+
+.ff-admin-arena__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ff-admin-arena__brand-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #fcb300 0%, #db2780 100%);
+  color: #06060e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.ff-admin-arena__brand-name {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  color: var(--ff-text-primary);
+}
+
+.ff-admin-arena__brand-sub {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  color: var(--ff-text-muted);
+}
+
+.ff-admin-arena__tabs {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  flex-wrap: wrap;
+  margin-left: 12px;
+}
+
+.ff-admin-arena__tab {
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ff-text-muted);
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.ff-admin-arena__tab:hover {
+  color: var(--ff-text-primary);
+}
+
+.ff-admin-arena__tab[aria-selected="true"] {
+  color: var(--ff-gold);
+  background: rgba(252, 179, 0, 0.08);
+  border-color: rgba(252, 179, 0, 0.3);
+}
+
+.ff-admin-arena__cta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ff-admin-arena__new-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid rgba(219, 39, 128, 0.4);
+  background: rgba(219, 39, 128, 0.08);
+  color: var(--ff-pink);
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ff-admin-arena__new-btn:hover {
+  background: rgba(219, 39, 128, 0.16);
+}
+
+.ff-admin-arena__new-icon {
+  font-size: 13px;
+}
+
+.ff-admin-arena__main {
+  min-height: 60vh;
+}
+
+/* === src/features/fact_or_fold/pages/admin/(stub pages) === */
+
+.ff-admin-page {
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 14px;
+  backdrop-filter: blur(14px);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ff-admin-page__title {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  margin: 0;
+  color: var(--ff-text-primary);
+}
+
+.ff-admin-page__hint {
+  font-size: 13px;
+  color: var(--ff-text-muted);
+  margin: 0;
+}
+
+.ff-admin-page--placeholder {
+  border-style: dashed;
+}

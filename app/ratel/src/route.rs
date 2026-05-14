@@ -40,6 +40,14 @@ use crate::features::spaces::pages::actions::SpaceActionsPage;
 
 use crate::features::admin::{AdminLayout, AdminMainPage};
 
+// Fact or Fold — admin pages share `FactFoldAdminLayout` (sub-tabs)
+// nested under the global `AdminLayout` (admin-only guard).
+use crate::features::fact_or_fold::pages::{
+    FactFoldAdminHeadlinesPage, FactFoldAdminLayout, FactFoldAdminNewHeadlinePage,
+    FactFoldAdminReportsPage, FactFoldAdminSchedulePage, FactFoldAdminSettingsPage,
+    FactFoldAdminStatsPage,
+};
+
 // Sub-team governance pages — placeholders wired up now; content lives
 // under `features::sub_team::pages::*` and will be fleshed out by the
 // UI-implementation dispatches.
@@ -134,6 +142,23 @@ pub enum Route {
             #[layout(AdminLayout)]
                 #[route("/")]
                 AdminMainPage {},
+
+                #[nest("/fact-or-fold")]
+                    #[layout(FactFoldAdminLayout)]
+                        #[route("/headlines")]
+                        FactFoldAdminHeadlinesPage {},
+                        #[route("/headlines/new")]
+                        FactFoldAdminNewHeadlinePage {},
+                        #[route("/schedule")]
+                        FactFoldAdminSchedulePage {},
+                        #[route("/stats")]
+                        FactFoldAdminStatsPage {},
+                        #[route("/reports")]
+                        FactFoldAdminReportsPage {},
+                        #[route("/settings")]
+                        FactFoldAdminSettingsPage {},
+                    #[end_layout]
+                #[end_nest]
             #[end_layout]
         #[end_nest]
 
