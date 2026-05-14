@@ -123,8 +123,12 @@ pub async fn list_team_posts_handler(
     // are broadcasts a parent team published, surfaced into this team's
     // wall WITHOUT cloning the Post row (the anchor lives at
     // `Feed(announcement_id)` on the parent team's pk). One row per
-    // announcement, same URL / likes / comments everywhere.
-    let posts = merge_broadcast_anchors(cli, &team_pk, posts).await;
+    // announcement, same URL / likes / comments everywhere. Broadcasts
+    // are only added to the result when the viewer is a member of this
+    // team — non-members and anonymous visitors see the team's own
+    // Posts only.
+    let posts =
+        merge_broadcast_anchors(cli, &team_pk, posts, user.as_ref().map(|u| &u.pk)).await;
 
     // Category filter:
     // - When caller passes `category`, return ONLY posts that carry it
@@ -200,9 +204,16 @@ pub async fn list_team_posts_handler(
 /// pk; each recognized child gets a single lightweight marker row
 /// pointing at it. This function reads those markers, batch-gets the
 /// anchor Posts, and merges them into the wall result, dedup'd against
-/// the team's own Posts (which is mostly redundant — the markers point
-/// at the parent's pk space — but defends against future paths that
-/// might emit both).
+/// the team's own Posts.
+///
+/// **Audience gate:** broadcast anchors are only included when the
+/// `viewer` is a member of this team (the wall's team) — non-members
+/// landing on a recognized child's wall URL don't see the parent's
+/// broadcast Posts. Anonymous viewers are also excluded. The full
+/// audience for a broadcast (parent's members + every recognized
+/// child's members) is enforced separately in `get_post_handler` via
+/// `broadcast_access::can_view_broadcast_post` so the canonical
+/// `/posts/{id}` URL also denies non-members.
 ///
 /// Sort order is `created_at` desc to keep the merged feed
 /// time-consistent with `find_by_user_and_status`'s gsi5 ordering.
@@ -211,6 +222,7 @@ async fn merge_broadcast_anchors(
     cli: &aws_sdk_dynamodb::Client,
     team_pk: &Partition,
     own_posts: Vec<Post>,
+    viewer: Option<&Partition>,
 ) -> Vec<Post> {
     let opt = SubTeamAnnouncementFanout::opt()
         .limit(100)
@@ -224,6 +236,20 @@ async fn merge_broadcast_anchors(
             }
         };
     if markers.is_empty() {
+        return own_posts;
+    }
+
+    // Membership gate — only surface broadcast anchors to members of
+    // this wall's team. Anonymous viewers never see them.
+    let viewer_is_member = match viewer {
+        Some(v) => crate::features::sub_team::services::broadcast_access::is_team_member_public(
+            cli, team_pk, v,
+        )
+        .await
+        .unwrap_or(false),
+        None => false,
+    };
+    if !viewer_is_member {
         return own_posts;
     }
 

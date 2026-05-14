@@ -328,7 +328,11 @@ pub async fn publish_announcement_handler(
         body: ContentBody::html(anchor_post_body),
         post_type: PostType::Post,
         status: PostStatus::Published,
-        visibility: Some(existing.visibility.clone()),
+        // Sub-team broadcasts are NEVER publicly visible — `Visibility::Broadcast`
+        // hands access control over to
+        // `sub_team::services::broadcast_access::can_view_broadcast_post`
+        // (parent team's members + every recognized child team's members).
+        visibility: Some(crate::features::posts::types::Visibility::Broadcast),
         shares: 0,
         likes: 0,
         comments: 0,

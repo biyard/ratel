@@ -107,7 +107,10 @@ pub async fn send_direct_message_handler(
         body: ContentBody::html(body.body.clone()),
         post_type: PostType::Post,
         status: PostStatus::Published,
-        visibility: Some(announcement.visibility.clone()),
+        // Direct messages share the same audience-gate as broadcasts:
+        // resolved at read time by `broadcast_access::can_view_broadcast_post`
+        // (parent's members + the one target child's members).
+        visibility: Some(crate::features::posts::types::Visibility::Broadcast),
         shares: 0,
         likes: 0,
         comments: 0,
