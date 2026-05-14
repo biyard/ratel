@@ -231,6 +231,32 @@ export async function getEditor(page) {
  * retry idempotent: if a previous click already opened the dropdown we
  * skip the click instead of toggling it back closed.
  */
+/**
+ * Open a home arena topbar hover-revealed menu (Create / Engage / Account)
+ * and click an item inside it.
+ *
+ * The renewed home topbar groups the old flat buttons (Compose, Drafts,
+ * AI assist, Rewards, Essence, Credentials, ...) into 3 dropdowns. The
+ * parent `.hud-btn` inside `.hud-group` has NO `onclick` — clicking it
+ * just gives it focus, which triggers `:focus-within` and reveals the
+ * `.hud-menu`. We hover first so the CSS transition completes before
+ * clicking the inner item.
+ *
+ * Usage:
+ *   await openHomeMenuItem(page, "home-btn-create", "home-menu-compose");
+ *   await openHomeMenuItem(page, "home-btn-create", "home-menu-drafts");
+ *   await openHomeMenuItem(page, "home-btn-engage", "home-menu-rewards");
+ *   await openHomeMenuItem(page, "home-btn-account", "home-menu-credentials");
+ */
+export async function openHomeMenuItem(page, parentTestId, itemTestId) {
+  const parent = page.getByTestId(parentTestId);
+  await expect(parent).toBeVisible({ timeout: 15000 });
+  await parent.hover();
+  const item = page.getByTestId(itemTestId);
+  await expect(item).toBeVisible({ timeout: 5000 });
+  await item.click();
+}
+
 export async function openHomeTeamsDropdown(page) {
   const button = page.getByTestId("home-btn-teams");
   await expect(button).toBeVisible({ timeout: 15000 });

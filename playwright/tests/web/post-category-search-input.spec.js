@@ -1,5 +1,12 @@
 import { test, expect } from "@playwright/test";
-import { click, fill, goto, getEditor, waitForHydrated } from "../utils";
+import {
+  click,
+  fill,
+  goto,
+  getEditor,
+  waitForHydrated,
+  openHomeMenuItem,
+} from "../utils";
 
 /**
  * Post tag input — E2E
@@ -39,7 +46,9 @@ test.describe.serial("Post tag input (post-edit renewal)", () => {
   test("Create a draft post for tag testing", async ({ page }) => {
     await goto(page, "/");
 
-    await click(page, { testId: "home-btn-create" });
+    // Compose moved into the Create ▾ dropdown after the home topbar
+    // regroup; the bare `home-btn-create` is now a hover trigger only.
+    await openHomeMenuItem(page, "home-btn-create", "home-menu-compose");
     await page.waitForURL(/\/posts\/.*\/edit/, { waitUntil: "load" });
     await page.waitForFunction(
       () => document.querySelector("[data-dioxus-id]") !== null,

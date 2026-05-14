@@ -164,12 +164,15 @@ test.describe.serial("Signup with email verification (event-driven notification)
 
   test("should be logged in after signup", async () => {
     // After signup, navigate to home to verify authenticated state.
-    // After the home-ui renewal the old "User Profile" sidebar is gone; on the
-    // arena top bar the logged-in-only Drafts button appears instead (unlogged
-    // users see the Sign In button in its place).
+    // After the topbar regroup (Compose/Drafts/AI-assist collapsed into a
+    // Create ▾ dropdown) there's no longer a top-level Drafts button. The
+    // most reliable logged-in-only element on the arena topbar is the
+    // Teams dropdown trigger (`home-btn-teams` is rendered only when
+    // `has_user` is true), and unlogged users see `home-btn-signin` in
+    // place of the account dropdown.
     await goto(page, "/");
 
-    await getLocator(page, { testId: "home-btn-drafts" });
+    await getLocator(page, { testId: "home-btn-teams" });
     await expect(page.getByTestId("home-btn-signin")).toBeHidden();
   });
 });
