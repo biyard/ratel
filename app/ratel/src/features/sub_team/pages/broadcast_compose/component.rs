@@ -85,6 +85,14 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
     // Local-only signal for the tag-input field. `tags` is the committed
     // chip list; this holds whatever the user is typing before Enter.
     let mut tag_draft: Signal<String> = use_signal(String::new);
+    // Korean IME composition guard. Enter pressed while the IME is still
+    // composing the trailing hangul character would otherwise fire the
+    // tag-commit handler twice: once with the in-progress text, then a
+    // second time after composition resolves and the leftover character
+    // reappears in the input. Track composition state explicitly and
+    // ignore Enter while it is active — matches the
+    // `common/components/search_input` pattern.
+    let mut tag_is_composing: Signal<bool> = use_signal(|| false);
 
     // ── Autosave effect ──────────────────────────────────────────────
     // Subscribe to every editor signal; on change, bump an internal
@@ -451,7 +459,15 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                                 placeholder: tr.broadcast_tag_placeholder,
                                 value: "{tag_draft()}",
                                 oninput: move |e: Event<FormData>| tag_draft.set(e.value()),
+                                oncompositionstart: move |_| tag_is_composing.set(true),
+                                oncompositionend: move |_| tag_is_composing.set(false),
                                 onkeydown: move |e: Event<KeyboardData>| {
+                                    // Korean IME: skip Enter while composing
+                                    // the trailing character — otherwise it
+                                    // leaks into a duplicate tag.
+                                    if tag_is_composing() {
+                                        return;
+                                    }
                                     if e.key() == Key::Enter {
                                         e.prevent_default();
                                         let v = tag_draft().trim().to_string();
