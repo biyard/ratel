@@ -36,6 +36,19 @@ pub struct FactFoldRound {
     pub started_at: Option<i64>,
     /// Set when the round reaches Settled.
     pub settled_at: Option<i64>,
+
+    /// Millis-since-epoch when the *current* stage began. Together
+    /// with `stage_deadline_at` this is the server-verified clock the
+    /// stage machine reads to decide auto-advancement (§FR-9).
+    /// `None` while `status == Waiting`; `Some` once NewsReveal kicks
+    /// off and re-stamped on every stage advance.
+    #[serde(default)]
+    pub stage_started_at: Option<i64>,
+    /// Millis-since-epoch when the current stage is scheduled to
+    /// auto-advance. Computed as `stage_started_at + duration` per
+    /// `FactFoldSettings`.
+    #[serde(default)]
+    pub stage_deadline_at: Option<i64>,
 }
 
 #[cfg(feature = "server")]
@@ -60,6 +73,8 @@ impl FactFoldRound {
             participant_pks: vec![first_user_pk],
             started_at: None,
             settled_at: None,
+            stage_started_at: None,
+            stage_deadline_at: None,
         }
     }
 

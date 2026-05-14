@@ -22,22 +22,31 @@ use crate::features::fact_or_fold::models::{
     FactFoldBet, FactFoldHeadline, FactFoldParticipant, FactFoldRationale, FactFoldRound,
     FactFoldSettings,
 };
+#[cfg(feature = "server")]
+use crate::features::fact_or_fold::services::stage_machine;
 
 // ── Helpers ───────────────────────────────────────────────────────
 
+/// Load the round and ratchet it forward through any stages whose
+/// deadline has already passed (§FR-9). All round-play endpoints
+/// route through this helper so a request that races a stage
+/// deadline still sees the correct stage rather than a stale one.
 #[cfg(feature = "server")]
-async fn load_round_or_404(
+async fn load_round_advanced_or_404(
     cli: &aws_sdk_dynamodb::Client,
     round_id: &str,
 ) -> Result<FactFoldRound> {
     let (pk, sk) = FactFoldRound::keys(round_id);
-    FactFoldRound::get(cli, &pk, Some(sk))
+    let round = FactFoldRound::get(cli, &pk, Some(sk))
         .await
         .map_err(|e| {
             crate::error!("round_play load_round failed: {e}");
             FactOrFoldError::StorageFailure
         })?
-        .ok_or_else(|| FactOrFoldError::RoundNotFound.into())
+        .ok_or(FactOrFoldError::RoundNotFound)?;
+    let settings = FactFoldSettings::get_or_default(cli).await.unwrap_or_default();
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    stage_machine::advance_round_if_due(cli, round, &settings, now).await
 }
 
 #[cfg(feature = "server")]
@@ -84,7 +93,7 @@ pub async fn place_bet_handler(
     let cli = cfg.dynamodb();
     let inner_round_id = round_id.0.clone();
 
-    let round = load_round_or_404(cli, &inner_round_id).await?;
+    let round = load_round_advanced_or_404(cli, &inner_round_id).await?;
     if !matches!(round.status, RoundStatus::Bet) {
         return Err(FactOrFoldError::BetStageMismatch.into());
     }
@@ -124,7 +133,7 @@ pub async fn submit_rationale_handler(
     let cli = cfg.dynamodb();
     let inner_round_id = round_id.0.clone();
 
-    let round = load_round_or_404(cli, &inner_round_id).await?;
+    let round = load_round_advanced_or_404(cli, &inner_round_id).await?;
     if !matches!(round.status, RoundStatus::Rationale) {
         return Err(FactOrFoldError::RationaleStageMismatch.into());
     }
@@ -161,7 +170,7 @@ pub async fn get_insider_statement_handler(
     let cli = cfg.dynamodb();
     let inner_round_id = round_id.0.clone();
 
-    let round = load_round_or_404(cli, &inner_round_id).await?;
+    let round = load_round_advanced_or_404(cli, &inner_round_id).await?;
     ensure_participant(&round, &user.pk.to_string())?;
 
     let participant = load_participant(cli, &inner_round_id, &user.pk).await?;
@@ -197,7 +206,7 @@ pub async fn heartbeat_handler(
     let cli = cfg.dynamodb();
     let inner_round_id = round_id.0.clone();
 
-    let round = load_round_or_404(cli, &inner_round_id).await?;
+    let round = load_round_advanced_or_404(cli, &inner_round_id).await?;
     ensure_participant(&round, &user.pk.to_string())?;
 
     let user_id = user

@@ -16,6 +16,7 @@
 
 use super::*;
 
+use crate::features::fact_or_fold::models::FactFoldRound;
 use crate::features::fact_or_fold::types::{
     BetResponse, BetSide, FactOrFoldSettingsResponse, HeadlineResponse, HeadlineStatus,
     InsiderStatementResponse, LobbyResponse, ParticipantResponse, QueueAlarmResponse,
@@ -860,6 +861,145 @@ async fn test_non_participant_cannot_bet_or_heartbeat() {
         headers: outsider,
     };
     assert_ne!(status, 200, "non-participant must be rejected from heartbeat");
+}
+
+// ── Stage state machine (PR4 step 3) ─────────────────────────────
+
+/// Reach into DynamoDB and rewind the round's `stage_deadline_at` so
+/// the next read/write triggers the lazy-advance ratchet without
+/// having to wait wall-clock seconds.
+async fn backdate_stage_deadline(
+    ctx: &TestContext,
+    round_id: &str,
+    millis_in_past: i64,
+) -> FactFoldRound {
+    let (pk, sk) = FactFoldRound::keys(round_id);
+    let mut row = FactFoldRound::get(&ctx.ddb, &pk, Some(sk))
+        .await
+        .expect("ddb read")
+        .expect("round must exist");
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    row.stage_started_at = Some(now - millis_in_past - 1);
+    row.stage_deadline_at = Some(now - millis_in_past);
+    row.upsert(&ctx.ddb).await.expect("backdate upsert");
+    row
+}
+
+#[tokio::test]
+async fn test_round_stage_clock_set_on_capacity_reached() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}", round_id),
+        headers: headers,
+        response_type: RoundResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(matches!(body.status, RoundStatus::NewsReveal));
+    let started = body.stage_started_at.expect("stage_started_at must be set");
+    let deadline = body.stage_deadline_at.expect("stage_deadline_at must be set");
+    // 30s NewsReveal default — exact bound is admin-tunable so test
+    // for ordering rather than the literal duration.
+    assert!(deadline > started, "deadline must be after start");
+}
+
+#[tokio::test]
+async fn test_get_round_advances_news_reveal_when_deadline_passed() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    // Backdate so NewsReveal has expired, but Bet (next stage) still
+    // has time on the clock. NewsReveal default is 30s → backdating
+    // 5s ago lands us inside the Bet window after one advance step.
+    backdate_stage_deadline(&ctx, &round_id, 5_000).await;
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}", round_id),
+        headers: headers,
+        response_type: RoundResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(
+        matches!(body.status, RoundStatus::Bet),
+        "stage must auto-advance to Bet, got {:?}",
+        body.status,
+    );
+}
+
+#[tokio::test]
+async fn test_get_round_rolls_through_multiple_stages_at_once() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    // Backdate so far that NewsReveal + Bet + Rationale all elapsed
+    // in one go. Defaults sum to ~70s — backdate 5 minutes to land
+    // squarely inside Reveal (PR4's terminal stage).
+    backdate_stage_deadline(&ctx, &round_id, 5 * 60 * 1000).await;
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}", round_id),
+        headers: headers,
+        response_type: RoundResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(
+        matches!(body.status, RoundStatus::Reveal),
+        "PR4 stops auto-advance at Reveal, got {:?}",
+        body.status,
+    );
+}
+
+#[tokio::test]
+async fn test_bet_succeeds_after_lazy_advance_into_bet_stage() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    // Rewind so NewsReveal just expired — the bet handler should
+    // ratchet into Bet *inside the handler* and accept the bet.
+    backdate_stage_deadline(&ctx, &round_id, 1_000).await;
+
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/bets", round_id),
+        headers: headers,
+        body: { "req": { "side": "REAL", "amount_rp": 100 } },
+        response_type: BetResponse,
+    };
+    assert_eq!(status, 200, "bet placement after lazy advance must succeed: {:?}", body);
+    assert!(matches!(body.side, BetSide::Real));
+    assert_eq!(body.amount_rp, 100);
+}
+
+#[tokio::test]
+async fn test_rationale_succeeds_after_lazy_advance_into_rationale_stage() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    // Backdate enough to roll NewsReveal + Bet into the past and
+    // land in Rationale. Defaults: 30s + 10s = 40s → backdate 45s
+    // ago (so NewsReveal expired 45s ago, Bet expired 35s ago,
+    // landing the wall clock 35s into the 30s Rationale window).
+    backdate_stage_deadline(&ctx, &round_id, 35_000).await;
+
+    let rationale_text = "x".repeat(60); // > 50 chars → essence_eligible
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/rationale", round_id),
+        headers: headers,
+        body: { "req": { "text": rationale_text } },
+        response_type: RationaleResponse,
+    };
+    assert_eq!(status, 200, "rationale post after lazy advance must succeed: {:?}", body);
+    assert!(body.essence_eligible, ">= 50-char rationale should be eligible");
 }
 
 #[allow(dead_code)]

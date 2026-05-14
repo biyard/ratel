@@ -156,6 +156,13 @@ pub struct RoundResponse {
     pub started_at: Option<i64>,
     /// Set when the round reaches Settled.
     pub settled_at: Option<i64>,
+    /// Millis-since-epoch when the *current* stage began. None while
+    /// the round is Waiting. Drives the client-side countdown.
+    pub stage_started_at: Option<i64>,
+    /// Millis-since-epoch when the current stage will auto-advance.
+    /// Server-verified by [`crate::features::fact_or_fold::services::
+    /// stage_machine`] on every round read/write (§FR-9).
+    pub stage_deadline_at: Option<i64>,
     pub created_at: i64,
     pub updated_at: i64,
 }

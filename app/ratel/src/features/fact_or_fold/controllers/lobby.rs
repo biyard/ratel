@@ -29,6 +29,8 @@ use crate::common::models::auth::User;
 use crate::features::fact_or_fold::models::{
     FactFoldHeadline, FactFoldLobby, FactFoldParticipant, FactFoldRound, FactFoldSettings,
 };
+#[cfg(feature = "server")]
+use crate::features::fact_or_fold::services::stage_machine;
 
 #[cfg(feature = "server")]
 const HEADLINE_SK_PREFIX: &str = "FACT_FOLD_HEADLINE";
@@ -132,7 +134,7 @@ async fn create_participants_for_round(
 }
 
 #[cfg(feature = "server")]
-fn round_to_response(row: &FactFoldRound) -> RoundResponse {
+pub(super) fn round_to_response(row: &FactFoldRound) -> RoundResponse {
     let id = row.id().unwrap_or_default();
     RoundResponse {
         id: FactFoldRoundEntityType(id),
@@ -145,6 +147,8 @@ fn round_to_response(row: &FactFoldRound) -> RoundResponse {
             .collect(),
         started_at: row.started_at,
         settled_at: row.settled_at,
+        stage_started_at: row.stage_started_at,
+        stage_deadline_at: row.stage_deadline_at,
         created_at: row.created_at,
         updated_at: row.updated_at,
     }
@@ -254,6 +258,7 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
                 if lobby_should_clear {
                     round.status = RoundStatus::NewsReveal;
                     round.started_at = Some(now);
+                    stage_machine::stamp_initial_stage(&mut round, &settings, now);
                 }
                 round.updated_at = now;
                 round.upsert(cli).await.map_err(|e| {
@@ -308,6 +313,7 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
         let now = crate::common::utils::time::get_now_timestamp_millis();
         round.status = RoundStatus::NewsReveal;
         round.started_at = Some(now);
+        stage_machine::stamp_initial_stage(&mut round, &settings, now);
         round.updated_at = now;
     }
 
@@ -393,5 +399,14 @@ pub async fn get_round_handler(round_id: FactFoldRoundEntityType) -> Result<Roun
             FactOrFoldError::StorageFailure
         })?
         .ok_or(FactOrFoldError::RoundNotFound)?;
+
+    // Lazy advance: any read of a round ratchets it through any
+    // stages whose deadline has already passed. PR4 follow-ups add
+    // a scheduled EventBridge trigger as the primary path; this
+    // stays as a safety net so a stale client read still observes
+    // the correct stage (§FR-9).
+    let settings = load_settings_or_default(cli).await;
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    let round = stage_machine::advance_round_if_due(cli, round, &settings, now).await?;
     Ok(round_to_response(&round))
 }
