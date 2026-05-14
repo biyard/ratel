@@ -4,6 +4,7 @@ mod commands;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_google_auth::init())
         .setup(|_app| {
             // Third-party cookie support for Android WebView is wired in
             // Task 7.3 once we have an APK to iterate on. For now this is

@@ -16,6 +16,11 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
+# Native Google Sign In: Android Credential Manager + Google
+# AuthorizationClient. Reads OAuth client_id from the web bundle (the
+# bundle passes it as a sign_in() argument, extracted at compile time
+# from src-tauri/google-services.json by app/ratel/build.rs).
+tauri-plugin-google-auth = "0.5.1"
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

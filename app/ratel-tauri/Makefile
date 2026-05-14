@@ -128,12 +128,20 @@ dx-build:
 # Live dev — dioxus serves WASM on :8000, Tauri WebView points there via devUrl.
 # Pass DEV_URL=http://<lan-ip>:8000 to override the default emulator-loopback
 # address baked into tauri.conf.json (useful for physical devices).
-android-dev: install-tauri-cli
+# Copy the canonical google-services.json into the Gradle module where the
+# Google Services Gradle plugin expects it. Single source of truth lives at
+# src-tauri/google-services.json (gitignored); this target keeps the Gradle
+# copy in sync before any Android build runs.
+src-tauri/gen/android/app/google-services.json: src-tauri/google-services.json
+	@cp $< $@
+	@echo "Synced google-services.json -> gen/android/app/"
+
+android-dev: install-tauri-cli src-tauri/gen/android/app/google-services.json
 	@echo "Run 'cd ../ratel && PORT=8000 make run-tauri' in another terminal first."
 	cd src-tauri && $(ANDROID_ENV) cargo tauri android dev \
 		$(if $(DEV_URL),--config '{"build":{"devUrl":"$(DEV_URL)"}}',)
 
-build-release: install-tauri-cli dx-build
+build-release: install-tauri-cli dx-build src-tauri/gen/android/app/google-services.json
 	cd src-tauri && $(ANDROID_ENV) cargo tauri android build --target $(TAURI_TARGET) $(if $(filter debug,$(MODE)),--debug,)
 	@echo
 	@echo "APK output:"

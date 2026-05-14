@@ -1,5 +1,14 @@
 /dist
 /src-tauri/target
+
+# Firebase config (canonical location for the Tauri shell). Contains the
+# Android OAuth client_id and Firebase API key. Treated like a secret in
+# this repo even though the Android API key is technically public.
+/src-tauri/google-services.json
+# Gradle-expected copy, populated by `make build-release` from the
+# canonical file above. Do not edit directly.
+/src-tauri/gen/android/app/google-services.json
+
 /src-tauri/gen/android/.gradle
 /src-tauri/gen/android/build
 /src-tauri/gen/android/app/build

@@ -114,6 +114,10 @@ rmcp = { version = "0.7.0", git = "https://github.com/modelcontextprotocol/rust-
 ], optional = true }
 strip-tags = "0.1.0"
 
+[build-dependencies]
+# build.rs parses google-services.json to expose GOOGLE_OAUTH_CLIENT_ID
+# as a cargo:rustc-env when feature "tauri-web" is active.
+serde_json = { workspace = true }
 
 [features]
 default = ["web", "server", "mobile"]

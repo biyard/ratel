@@ -13,4 +13,7 @@
 pub mod types;
 
 #[cfg(feature = "tauri-web")]
+pub mod invoke;
+
+#[cfg(feature = "tauri-web")]
 pub mod interop;

@@ -97,12 +97,8 @@ endif
 
 MODE ?= release
 
-ifneq ($(CARGO_TARGET_DIR),)
-	ANDROID_DX_RES_BASE_DIR ?= $(CARGO_TARGET_DIR)/dx/app-shell
-	ANDROID_DX_RES_DIR ?= $(CARGO_TARGET_DIR)/dx/app-shell/$(MODE)/android/app/app/src/main
-else
-	ANDROID_DX_RES_BASE_DIR ?= target/dx/app-shell
-	ANDROID_DX_RES_DIR ?= target/dx/app-shell/$(MODE)/android/app/app/src/main
+ifeq ($(CARGO_TARGET_DIR),)
+	CARGO_TARGET_DIR ?= target
 endif
 
 ANDROID_MIPMAP_DENSITIES ?= mdpi hdpi xhdpi xxhdpi xxxhdpi
@@ -252,8 +248,30 @@ $(HOME)/.android/debug.keystore:
 
 	keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android | grep SHA1
 
+# AVD hardware overrides. Override per-invocation, e.g.
+#   make android-emulator AVD_RAM=8192 AVD_DATA=32G
+AVD_RAM ?= 4096
+AVD_HEAP ?= 512
+AVD_DATA ?= 16G
+AVD_SDCARD ?= 2048M
+AVD_KEYBOARD ?= yes
+
 $(HOME)/.android/avd/$(AVD_NAME).avd: $(ANDROID_HOME)/system-images/android-34/google_apis/$(ARCH)
-	avdmanager create avd  -n $(AVD_NAME) -k "system-images;android-34;google_apis;$(ARCH)" -d "pixel_6"
+	avdmanager create avd -n $(AVD_NAME) -k "system-images;android-34;google_apis;$(ARCH)" -d "pixel_6" -c $(AVD_SDCARD)
+	@CFG=$@/config.ini; \
+	for kv in "hw.ramSize=$(AVD_RAM)" \
+	          "vm.heapSize=$(AVD_HEAP)" \
+	          "hw.keyboard=$(AVD_KEYBOARD)" \
+	          "disk.dataPartition.size=$(AVD_DATA)"; do \
+	    key=$${kv%%=*}; \
+	    if grep -q "^$$key=" $$CFG; then \
+	        sed -i.bak "s|^$$key=.*|$$kv|" $$CFG; \
+	    else \
+	        echo "$$kv" >> $$CFG; \
+	    fi; \
+	done; \
+	rm -f $$CFG.bak
+	@echo "AVD $(AVD_NAME) created with RAM=$(AVD_RAM) heap=$(AVD_HEAP) data=$(AVD_DATA) sdcard=$(AVD_SDCARD) keyboard=$(AVD_KEYBOARD)"
 
 $(ANDROID_HOME)/emulator/emulator:
 	sdkmanager --install emulator
@@ -264,18 +282,25 @@ $(ANDROID_HOME)/system-images/android-34/google_apis/$(ARCH):
 android-emulator: $(HOME)/.android/debug.keystore $(HOME)/.android/avd/$(AVD_NAME).avd $(ANDROID_HOME)/emulator/emulator
 	$(ANDROID_HOME)/emulator/emulator -avd $(AVD_NAME) -netdelay none -netspeed full &
 
-$(ANDROID_DX_RES_DIR):
-	rm -rf $@/res
-	mkdir -p $@
-	cp -rf android/res $@/
+dx-res-debug:
+	rm -rf $(CARGO_TARGET_DIR)/dx/app-shell/debug/android/app/app/src/main/res
+	mkdir -p $(CARGO_TARGET_DIR)/dx/app-shell/debug/android/app/app/src/main
+	cp -rf android/res $(CARGO_TARGET_DIR)/dx/app-shell/debug/android/app/app/src/main/
 
-android: $(HOME)/.android/debug.keystore $(ANDROID_DX_RES_DIR)
+dx-res-release:
+	rm -rf $(CARGO_TARGET_DIR)/dx/app-shell/release/android/app/app/src/main/res
+	mkdir -p $(CARGO_TARGET_DIR)/dx/app-shell/release/android/app/app/src/main
+	cp -rf android/res $(CARGO_TARGET_DIR)/dx/app-shell/release/android/app/app/src/main/
+
+android: $(HOME)/.android/debug.keystore dx-res-debug
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --features $(RUN_FEATURES) --no-default-features --platform android --target $(ANDROID_TARGET)
+
+build-android: $(HOME)/.android/debug.keystore dx-res-release
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx bundle --release --features $(RUN_FEATURES) --no-default-features --platform android --target $(ANDROID_TARGET)
-	adb $(LOGCAT_FLAG) install -r $(ANDROID_DX_RES_BASE_DIR)/$(MODE)/android/app/app/build/outputs/apk/debug/app-debug.apk
-	adb $(LOGCAT_FLAG) shell am start -n "co.biyard.ratel/.MainActivity" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER
 
-build-android: $(HOME)/.android/debug.keystore $(ANDROID_DX_RES_DIR)
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx bundle --release --features $(RUN_FEATURES) --no-default-features --android --target $(ANDROID_TARGET) --fullstack false
+install-android:
+	adb $(LOGCAT_FLAG) install -r $(CARGO_TARGET_DIR)/dx/app-shell/release/android/app/app/build/outputs/apk/debug/app-debug.apk
+	adb $(LOGCAT_FLAG) shell am start -n "co.biyard.ratel/.MainActivity"
 
 ios:
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --ios --features $(RUN_FEATURES)

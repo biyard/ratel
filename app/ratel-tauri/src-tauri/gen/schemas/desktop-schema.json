@@ -2313,6 +2313,48 @@
           "markdownDescription": "Denies the unminimize command without any pre-configured scope."
         },
         {
+          "description": "Default permissions for the Google Auth plugin\n#### This default permission set includes:\n\n- `allow-sign-in`\n- `allow-sign-out`\n- `allow-refresh-token`",
+          "type": "string",
+          "const": "google-auth:default",
+          "markdownDescription": "Default permissions for the Google Auth plugin\n#### This default permission set includes:\n\n- `allow-sign-in`\n- `allow-sign-out`\n- `allow-refresh-token`"
+        },
+        {
+          "description": "Enables the refresh_token command without any pre-configured scope.",
+          "type": "string",
+          "const": "google-auth:allow-refresh-token",
+          "markdownDescription": "Enables the refresh_token command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the sign_in command without any pre-configured scope.",
+          "type": "string",
+          "const": "google-auth:allow-sign-in",
+          "markdownDescription": "Enables the sign_in command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the sign_out command without any pre-configured scope.",
+          "type": "string",
+          "const": "google-auth:allow-sign-out",
+          "markdownDescription": "Enables the sign_out command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the refresh_token command without any pre-configured scope.",
+          "type": "string",
+          "const": "google-auth:deny-refresh-token",
+          "markdownDescription": "Denies the refresh_token command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the sign_in command without any pre-configured scope.",
+          "type": "string",
+          "const": "google-auth:deny-sign-in",
+          "markdownDescription": "Denies the sign_in command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the sign_out command without any pre-configured scope.",
+          "type": "string",
+          "const": "google-auth:deny-sign-out",
+          "markdownDescription": "Denies the sign_out command without any pre-configured scope."
+        },
+        {
           "description": "This permission set allows opening `mailto:`, `tel:`, `https://` and `http://` urls using their default application\nas well as reveal file in directories using default file explorer\n#### This default permission set includes:\n\n- `allow-open-url`\n- `allow-reveal-item-in-dir`\n- `allow-default-urls`",
           "type": "string",
           "const": "opener:default",
