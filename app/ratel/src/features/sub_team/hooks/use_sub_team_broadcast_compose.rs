@@ -42,6 +42,7 @@ pub struct UseSubTeamBroadcastCompose {
     pub title: Signal<String>,
     pub html_contents: Signal<String>,
     pub tags: Signal<Vec<String>>,
+    pub attachments: Signal<Vec<File>>,
     pub space_enabled: Signal<bool>,
     pub space_type: Signal<Option<SpaceType>>,
 
@@ -120,12 +121,17 @@ pub fn use_sub_team_broadcast_compose(
         .as_ref()
         .map(|a| a.tags.clone())
         .unwrap_or_default();
+    let initial_attachments = loaded
+        .as_ref()
+        .map(|a| a.attachments.clone())
+        .unwrap_or_default();
     let initial_space_enabled = loaded.as_ref().map(|a| a.space_enabled).unwrap_or(false);
     let initial_space_type = loaded.as_ref().and_then(|a| a.space_type);
 
     let title: Signal<String> = use_signal(|| initial_title);
     let html_contents: Signal<String> = use_signal(|| initial_html);
     let tags: Signal<Vec<String>> = use_signal(|| initial_tags);
+    let attachments: Signal<Vec<File>> = use_signal(|| initial_attachments);
     let space_enabled: Signal<bool> = use_signal(|| initial_space_enabled);
     let space_type: Signal<Option<SpaceType>> = use_signal(|| initial_space_type);
 
@@ -156,6 +162,7 @@ pub fn use_sub_team_broadcast_compose(
         title,
         html_contents,
         tags,
+        attachments,
         space_enabled,
         space_type,
         draft_status,

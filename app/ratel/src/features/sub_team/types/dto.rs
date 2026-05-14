@@ -527,6 +527,9 @@ pub struct SubTeamAnnouncementResponse {
     pub html_contents: String,
     #[serde(default)]
     pub tags: Vec<String>,
+    /// File attachments mirrored from the source announcement.
+    #[serde(default)]
+    pub attachments: Vec<File>,
     pub author_user_id: String,
     pub status: SubTeamAnnouncementStatus,
     pub target_type: BroadcastTarget,
@@ -585,6 +588,8 @@ pub struct CreateSubTeamAnnouncementRequest {
     #[serde(default)]
     pub tags: Vec<String>,
     #[serde(default)]
+    pub attachments: Vec<File>,
+    #[serde(default)]
     pub space_enabled: bool,
     #[serde(default)]
     pub space_type: Option<crate::features::posts::types::SpaceType>,
@@ -602,6 +607,8 @@ pub struct UpdateSubTeamAnnouncementRequest {
     #[serde(default)]
     pub tags: Option<Vec<String>>,
     #[serde(default)]
+    pub attachments: Option<Vec<File>>,
+    #[serde(default)]
     pub space_enabled: Option<bool>,
     #[serde(default)]
     pub space_type: Option<crate::features::posts::types::SpaceType>,
@@ -616,6 +623,7 @@ impl From<crate::features::sub_team::models::SubTeamAnnouncement> for SubTeamAnn
             body: a.body,
             html_contents: a.html_contents,
             tags: a.tags,
+            attachments: a.attachments,
             author_user_id: a.author_user_id,
             status: a.status,
             target_type: a.target_type,
