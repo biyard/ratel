@@ -2,10 +2,9 @@ use std::collections::HashSet;
 
 use crate::common::*;
 use crate::features::auth::UserTeam;
-use crate::features::posts::models::{Post, Team, TeamOwner};
-use crate::features::posts::types::{PostStatus, PostType, Visibility};
+use crate::features::posts::models::{Team, TeamOwner};
 use crate::features::sub_team::models::{
-    SubTeamAnnouncement, SubTeamAnnouncementStatus, SubTeamLink,
+    SubTeamAnnouncement, SubTeamAnnouncementFanout, SubTeamAnnouncementStatus, SubTeamLink,
 };
 use crate::features::sub_team::types::SubTeamError;
 
@@ -89,13 +88,19 @@ pub async fn list_recognized_sub_teams(
 /// Published. Called from `EventBridgeEnvelope::proc` in deployed envs and
 /// directly from `stream_handler` in local-dev.
 ///
-/// For each recognized sub-team, in one transact-write batch:
-///   - create a Post (pinned_as_announcement = true) in the child team's feed,
-///     authored by the parent team
-///   - demote the most-recent prior announcement post (if any)
+/// **New model (no Post cloning):** the parent's anchor Post — created
+/// synchronously in `publish_announcement_handler` — is the **only**
+/// Post row for this announcement. Likes, comments, shares, and the
+/// canonical `/posts/{announcement_id}` URL all live on that single row.
 ///
-/// After all fan-outs, update the source announcement's fan_out_count.
-/// Members of each sub-team receive an inbox notification.
+/// This fan-out writes one lightweight `SubTeamAnnouncementFanout`
+/// marker per recognized sub-team (or just the single targeted child,
+/// for direct messages). The marker points back at the anchor Post by
+/// pk. The child's wall query (`list_team_posts_handler`) reads these
+/// markers, batch-gets the anchor Posts they point at, and unions the
+/// result with the child's own Posts.
+///
+/// Members of each sub-team still receive an inbox notification.
 pub async fn handle_announcement_published(
     cli: &aws_sdk_dynamodb::Client,
     announcement: SubTeamAnnouncement,
@@ -130,7 +135,8 @@ pub async fn handle_announcement_published(
         }
     };
 
-    // Load parent team once so every fan-out Post can reuse the author copy.
+    // Load parent team once so the inbox notifications can quote the
+    // parent's display name without re-fetching per child.
     let parent_team = match Team::get(cli, &announcement.pk, Some(EntityType::Team)).await {
         Ok(Some(t)) => t,
         Ok(None) => {
@@ -180,174 +186,81 @@ pub async fn handle_announcement_published(
     }
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
+    let is_direct = announcement.target_child_team_id.is_some();
     let mut fan_out_count: i32 = 0;
-
-    // Prefer rich-text body when present; legacy plain `body` is the
-    // fallback for rows created before the composer upgrade.
-    let post_body = if !announcement.html_contents.is_empty() {
-        announcement.html_contents.clone()
-    } else {
-        announcement.body.clone()
-    };
-    // If the announcement created a Space, every Post (parent + children)
-    // points to the same Space pk (read at the parent pk's announcement
-    // row).
-    let space_pk: Option<Partition> = announcement
-        .space_pk
-        .as_ref()
-        .and_then(|s| s.parse::<Partition>().ok());
-
-    // NB: the parent's own anchor Post is created synchronously in
-    // `publish_announcement_handler` (so Space creation can hang off
-    // it and `get_space_handler` can resolve the Post back). The fanout
-    // is therefore responsible for the child Posts only.
+    let anchor_post_pk = Partition::Feed(announcement.announcement_id.clone());
+    let cta_url = build_post_detail_url(&anchor_post_pk);
+    let post_id_display = announcement.announcement_id.clone();
 
     for link in &links {
         let child_team_id = link.child_team_id.clone();
         let child_team_pk: Partition = Partition::Team(child_team_id.clone());
-        // Direct messages have a 1:1 announcement↔post relationship, so
-        // we pin the fan-out Post pk to the announcement_id. That gives
-        // the parent's history rows a deterministic `/posts/{id}` link
-        // without an extra "find post by announcement_id" lookup.
-        // Broadcasts still use random uuids per child (N children →
-        // N posts → can't all share one pk).
-        let post_pk = if announcement.target_child_team_id.is_some() {
-            Partition::Feed(announcement.announcement_id.clone())
-        } else {
-            Partition::Feed(uuid::Uuid::now_v7().to_string())
-        };
-        let mut new_post = Post {
-            pk: post_pk,
-            sk: EntityType::Post,
-            created_at: now,
-            updated_at: now,
-            title: announcement.title.clone(),
-            body: ContentBody::html(post_body.clone()),
-            post_type: PostType::Post,
-            status: PostStatus::Published,
-            visibility: Some(announcement.visibility.clone()),
-            shares: 0,
-            likes: 0,
-            comments: 0,
-            reports: 0,
-            user_pk: child_team_pk.clone(),
-            author_display_name: parent_team.display_name.clone(),
-            author_profile_url: parent_team.profile_url.clone(),
-            author_username: parent_team.username.clone(),
-            author_type: crate::common::types::UserType::Team,
-            space_pk: space_pk.clone(),
-            space_type: announcement.space_type,
-            space_visibility: None,
-            booster: None,
-            rewards: None,
-            urls: vec![],
-            categories: announcement.tags.clone(),
-            announcement_id: Some(announcement.announcement_id.clone()),
-            announcement_parent_team_id: Some(parent_team_id.clone()),
-            pinned_as_announcement: true,
-        };
 
-        // Write the new fanned-out Post. Earlier versions also "demoted"
-        // the previously pinned announcement post here via
-        // `Post::updater(..).with_pinned_as_announcement(false).with_updated_at(now)`,
-        // but that path is broken: `Post::updater(...)` starts with a
-        // default-initialised `inner` (status=Draft, visibility=None), and
-        // every `.with_*` call recomputes the gsi5 sort key attribute
-        // from that empty inner — overwriting the live row's gsi5 sk
-        // with `"Draft##<now>"`. The row data stays correct but it
-        // disappears from `find_by_user_and_status` ("Published"
-        // begins-with query), so every subsequent fan-out caused the
-        // PRIOR broadcast Post to vanish from the sub-team's feed.
-        // We don't need explicit demotion — newer broadcasts naturally
-        // sort above older ones in the feed by `created_at`.
-        let create_tx = new_post.create_transact_write_item();
-        let transacts = vec![create_tx];
-
-        match cli
-            .transact_write_items()
-            .set_transact_items(Some(transacts))
-            .send()
-            .await
-        {
-            Ok(_) => {
-                // For direct messages, persist the fan-out Post pk back
-                // onto the announcement row so the parent's history can
-                // build accurate `/posts/{pk}` links without rebuilding
-                // them from announcement_id. Done BEFORE demote so a
-                // mid-write crash leaves a consistent (newer) link.
-                if announcement.target_child_team_id.is_some() {
-                    if let Err(e) = persist_target_post_pk(
-                        cli,
-                        &announcement.pk,
-                        &announcement.sk,
-                        &new_post.pk,
-                        now,
-                    )
-                    .await
-                    {
-                        crate::error!(
-                            "[fanout] persist_target_post_pk failed: {e}"
-                        );
-                    }
-
-                    // Demote every prior direct-message Post from this
-                    // parent in this child's feed so only the latest
-                    // stays pinned. Broadcasts intentionally keep all
-                    // pinned (see comment above).
-                    if let Err(e) = demote_prior_direct_posts(
-                        cli,
-                        &child_team_pk,
-                        &parent_team_id,
-                        &new_post.pk,
-                        now,
-                    )
-                    .await
-                    {
-                        crate::error!(
-                            "[fanout] demote_prior_direct_posts failed for child={}: {e}",
-                            child_team_id,
-                        );
-                    }
-                }
-                fan_out_count += 1;
-                new_post.created_at = now;
-                new_post.updated_at = now;
-                // Notify every member of the child team.
-                let members = resolve_team_members(cli, &child_team_pk)
-                    .await
-                    .unwrap_or_default();
-                let cta_url = build_post_detail_url(&new_post.pk);
-                let post_id_display = match &new_post.pk {
-                    Partition::Feed(id) => id.clone(),
-                    other => other.to_string(),
-                };
-                for u in members {
-                    let payload = InboxPayload::SubTeamAnnouncementReceived {
-                        parent_team_id: parent_team_id.clone(),
-                        parent_team_name: parent_team.display_name.clone(),
-                        announcement_id: announcement.announcement_id.clone(),
-                        title: announcement.title.clone(),
-                        post_id: post_id_display.clone(),
-                        post_pk: new_post.pk.to_string(),
-                        cta_url: cta_url.clone(),
-                    };
-                    if let Err(e) =
-                        crate::common::utils::inbox::create_inbox_row(u, payload).await
-                    {
-                        crate::error!(
-                            "handle_announcement_published: inbox create failed: {e}"
-                        );
-                    }
-                }
-            }
-            Err(e) => {
+        // Broadcasts: write a marker so the wall query can union the
+        // anchor Post into the child's feed. Direct messages bypass the
+        // marker entirely — their anchor Post is written with
+        // `user_pk = target_child_team_pk` at send-time, so it shows up
+        // in the child's `Post::find_by_user_and_status` query directly
+        // (and stays off the parent's wall).
+        if !is_direct {
+            let marker = SubTeamAnnouncementFanout::new(
+                child_team_pk.clone(),
+                announcement.announcement_id.clone(),
+                parent_team_id.clone(),
+                false,
+                now,
+            );
+            if let Err(e) = marker.create(cli).await {
                 crate::error!(
-                    "handle_announcement_published: transact_write for child={} failed: {:?}",
-                    child_team_id, e
+                    "handle_announcement_published: marker create for child={} failed: {e}",
+                    child_team_id
                 );
-                // Continue — partial fan-out is acceptable per Phase 1 spec;
-                // we still write the count that actually succeeded at the end.
+                // Partial fan-out is acceptable per Phase 1 spec — keep
+                // going so other children still get their inbox.
+                continue;
             }
+            fan_out_count += 1;
+        } else {
+            // Direct messages still count toward fan_out_count so the
+            // idempotency guard at the top of this function holds.
+            fan_out_count += 1;
+        }
+
+        // Notify every member of the child team.
+        let members = resolve_team_members(cli, &child_team_pk)
+            .await
+            .unwrap_or_default();
+        for u in members {
+            let payload = InboxPayload::SubTeamAnnouncementReceived {
+                parent_team_id: parent_team_id.clone(),
+                parent_team_name: parent_team.display_name.clone(),
+                announcement_id: announcement.announcement_id.clone(),
+                title: announcement.title.clone(),
+                post_id: post_id_display.clone(),
+                post_pk: anchor_post_pk.to_string(),
+                cta_url: cta_url.clone(),
+            };
+            if let Err(e) = crate::common::utils::inbox::create_inbox_row(u, payload).await {
+                crate::error!("handle_announcement_published: inbox create failed: {e}");
+            }
+        }
+    }
+
+    // Direct messages have one canonical anchor Post pk
+    // (`Feed(announcement_id)`) created at send-time. Mirror it onto the
+    // announcement row so the parent's history view can deep-link
+    // without rebuilding the pk from the announcement id.
+    if is_direct {
+        if let Err(e) = persist_target_post_pk(
+            cli,
+            &announcement.pk,
+            &announcement.sk,
+            &anchor_post_pk,
+            now,
+        )
+        .await
+        {
+            crate::error!("[fanout] persist_target_post_pk failed: {e}");
         }
     }
 
@@ -373,12 +286,9 @@ fn build_post_detail_url(post_pk: &Partition) -> String {
     }
 }
 
-/// Write the fan-out Post pk back onto the source `SubTeamAnnouncement`
-/// row so the parent's history view can deep-link to the actual Post.
-///
-/// Uses the macro updater. `SubTeamAnnouncement` declares no GSI
-/// composite keys, so neither `with_target_post_pk` nor `with_updated_at`
-/// triggers GSI sort-key regeneration — the macro path is safe here.
+/// Write the anchor Post pk back onto the source `SubTeamAnnouncement`
+/// row so the parent's direct-message history can deep-link to the
+/// actual Post.
 async fn persist_target_post_pk(
     cli: &aws_sdk_dynamodb::Client,
     announcement_pk: &Partition,
@@ -401,73 +311,4 @@ async fn persist_target_post_pk(
             );
             Error::from(SubTeamError::AnnouncementPublishFailed)
         })
-}
-
-/// Unpin every prior direct-message Post from `parent_team_id` in
-/// `child_team_pk`'s feed except the new one.
-///
-/// Uses the macro updater with ONLY `with_pinned_as_announcement(false)`.
-/// `pinned_as_announcement` is not part of any Post GSI composite key,
-/// so its setter touches only that attribute. Crucially we do NOT call
-/// `with_updated_at(..)` here — `updated_at` participates in `gsi5_sk`
-/// (the "Published feed" index), and the macro re-derives that
-/// composite key from a default-initialised inner struct
-/// (`status: Draft`, `visibility: None`), corrupting the live row's
-/// `gsi5_sk` to `"Draft##<now>"` and making it vanish from
-/// `find_by_user_and_status` ("Published" begins-with). Leaving
-/// `updated_at` stale on a demotion write is intentional — the post's
-/// content didn't change, only its pinning flag.
-async fn demote_prior_direct_posts(
-    cli: &aws_sdk_dynamodb::Client,
-    child_team_pk: &Partition,
-    parent_team_id: &str,
-    new_post_pk: &Partition,
-    _now_ms: i64,
-) -> Result<()> {
-    // Walk the child's feed, bounded — direct-message posts are rare so
-    // a few pages is plenty.
-    let mut bookmark: Option<String> = None;
-    let mut to_demote: Vec<Post> = Vec::new();
-    for _ in 0..MAX_PAGES {
-        let mut opt = Post::opt().limit(PAGE_SIZE);
-        if let Some(bm) = bookmark.as_ref() {
-            opt = opt.bookmark(bm.clone());
-        }
-        let (posts, next) = Post::find_by_user_pk(cli, child_team_pk, opt).await?;
-        for p in posts {
-            if !p.pinned_as_announcement {
-                continue;
-            }
-            if p.pk == *new_post_pk {
-                continue;
-            }
-            // Only demote posts that came from THIS parent (covers both
-            // broadcast and direct fan-outs — but in practice this only
-            // fires for direct fan-outs since broadcasts call this with
-            // `target_child_team_id.is_none()` and skip the demotion).
-            if p.announcement_parent_team_id.as_deref() == Some(parent_team_id) {
-                to_demote.push(p);
-            }
-        }
-        match next {
-            Some(b) => bookmark = Some(b),
-            None => break,
-        }
-    }
-
-    for p in to_demote {
-        if let Err(e) = Post::updater(&p.pk, p.sk.clone())
-            .with_pinned_as_announcement(false)
-            .execute(cli)
-            .await
-        {
-            crate::error!(
-                "demote_prior_direct_posts: updater.execute failed pk={:?} sk={:?}: {:?}",
-                p.pk,
-                p.sk,
-                e,
-            );
-        }
-    }
-    Ok(())
 }

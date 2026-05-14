@@ -37,6 +37,14 @@ pub struct PostResponse {
     #[serde(default)]
     pub categories: Vec<String>,
     pub status: PostStatus,
+
+    /// Echoes back the underlying Post's `announcement_id` for client
+    /// UIs that want to badge broadcast cards differently. The single
+    /// anchor Post for a sub-team announcement lives at
+    /// `Feed(announcement_id)`, so `self.pk` already IS the canonical
+    /// URL — no separate routing branch needed.
+    #[serde(default)]
+    pub announcement_id: Option<String>,
 }
 
 impl PostResponse {
@@ -86,6 +94,7 @@ impl From<Post> for PostResponse {
             author_type: post.author_type,
             categories: post.categories,
             status: post.status,
+            announcement_id: post.announcement_id,
         }
     }
 }

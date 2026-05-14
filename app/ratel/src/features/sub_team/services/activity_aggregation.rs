@@ -306,10 +306,14 @@ async fn resolve_team_member_pks(
 
 /// Scan the team's posts (GSI1 find_by_user_pk) and keep only Published +
 /// non-Private rows whose `created_at` falls within [start, end].
-/// `filter_sk_prefix("POST")` drops other entity types sharing the
-/// `USER_PK#…` GSI1 pk (e.g. `TeamOwner`, `SpaceCommon`) before the rows
-/// hit the deserializer — otherwise a user's TeamOwner row would fail to
-/// deserialize as a `Post` and break the whole query.
+///
+/// `filter_sk_eq("POST")` drops other entity types sharing the
+/// `USER_PK#…` GSI1 pk (e.g. `TeamOwner`, `SpaceCommon`, `PostComment`,
+/// `PostRepost`) before the rows hit the deserializer. **Exact match**
+/// not `begins_with` — `begins_with(sk, "POST")` would also match
+/// `"POST_COMMENT#..."` and `"POST_REPOST#..."`, and Post's deserializer
+/// would then fail on rows missing `created_at` (PostComment has only
+/// `updated_at`), aborting the whole query.
 async fn list_team_posts_in_range(
     cli: &aws_sdk_dynamodb::Client,
     team_pk: &Partition,
@@ -320,7 +324,7 @@ async fn list_team_posts_in_range(
     let mut bookmark: Option<String> = None;
     for _ in 0..MAX_SCAN_PAGES {
         let opts = Post::opt_with_bookmark(bookmark.clone())
-            .filter_sk_prefix("POST")
+            .filter_sk_eq("POST")
             .limit(PAGE_SIZE);
         let (items, next) = Post::find_by_user_pk(cli, team_pk, opts).await.map_err(|e| {
             crate::error!("list_team_posts_in_range query failed: {e}");
@@ -348,7 +352,7 @@ async fn list_team_posts_in_range(
 }
 
 /// List a user's posts since `since_ms`, excluding Private and Draft.
-/// See `list_team_posts_in_range` for the filter-sk-prefix rationale.
+/// See `list_team_posts_in_range` for the exact-sk-match rationale.
 async fn list_user_posts_in_range(
     cli: &aws_sdk_dynamodb::Client,
     user_pk: &Partition,
@@ -358,7 +362,7 @@ async fn list_user_posts_in_range(
     let mut bookmark: Option<String> = None;
     for _ in 0..MAX_SCAN_PAGES {
         let opts = Post::opt_with_bookmark(bookmark.clone())
-            .filter_sk_prefix("POST")
+            .filter_sk_eq("POST")
             .limit(PAGE_SIZE);
         let (items, next) = Post::find_by_user_pk(cli, user_pk, opts).await.map_err(|e| {
             crate::error!("list_user_posts_in_range query failed: {e}");
@@ -403,11 +407,12 @@ async fn count_public_spaces_in_range(
     let mut count: i64 = 0;
     let mut bookmark: Option<String> = None;
     for _ in 0..MAX_SCAN_PAGES {
-        // `filter_sk_prefix("SPACE_COMMON")` drops non-SpaceCommon entity
+        // `filter_sk_eq("SPACE_COMMON")` drops non-SpaceCommon entity
         // types that share the `USER_PK#…` GSI1 pk (see
-        // `list_team_posts_in_range` for rationale).
+        // `list_team_posts_in_range` for rationale). Exact match so a
+        // future `SPACE_COMMON_xxx` sk wouldn't be accidentally matched.
         let opts = SpaceCommon::opt_with_bookmark(bookmark.clone())
-            .filter_sk_prefix("SPACE_COMMON")
+            .filter_sk_eq("SPACE_COMMON")
             .limit(PAGE_SIZE);
         let (items, next) = SpaceCommon::find_by_user_pk(cli, user_pk, opts)
             .await

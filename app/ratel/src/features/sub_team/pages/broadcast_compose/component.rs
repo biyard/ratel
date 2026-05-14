@@ -65,6 +65,7 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
     let tr: SubTeamTranslate = use_translate();
     let nav = use_navigator();
 
+    let mut ctx = use_sub_team_broadcast_compose()?;
     let UseSubTeamBroadcastCompose {
         mut announcement_id,
         mut title,
@@ -76,10 +77,8 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
         mut last_saved_at,
         mut handle_save_new,
         mut handle_save_existing,
-        mut handle_publish,
-        mut handle_delete,
         ..
-    } = use_sub_team_broadcast_compose()?;
+    } = ctx;
 
     // Local-only signal for the tag-input field. `tags` is the committed
     // chip list; this holds whatever the user is typing before Enter.
@@ -178,22 +177,34 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
     let username_for_publish = username.clone();
     let username_for_discard = username.clone();
     let _ = username;
+    // Await the publish HTTP request BEFORE navigating. Using `Action::call`
+    // here would detach the future from this component; the nav.push that
+    // follows would then unmount the component and drop the in-flight
+    // request, leaving the draft stuck in `작성중 · DRAFTS`.
     let publish = move |_| {
-        if let Some(id) = announcement_id() {
-            handle_publish.call(id);
+        let username = username_for_publish.clone();
+        async move {
+            if let Some(id) = announcement_id() {
+                if let Err(e) = ctx.publish_announcement(id).await {
+                    tracing::error!("publish announcement failed: {e}");
+                    return;
+                }
+            }
+            nav.push(Route::TeamSubTeamManagementPage { username });
         }
-        nav.push(Route::TeamSubTeamManagementPage {
-            username: username_for_publish.clone(),
-        });
     };
 
     let discard = move |_| {
-        if let Some(id) = announcement_id() {
-            handle_delete.call(id);
+        let username = username_for_discard.clone();
+        async move {
+            if let Some(id) = announcement_id() {
+                if let Err(e) = ctx.delete_announcement(id).await {
+                    tracing::error!("delete announcement failed: {e}");
+                    return;
+                }
+            }
+            nav.push(Route::TeamSubTeamManagementPage { username });
         }
-        nav.push(Route::TeamSubTeamManagementPage {
-            username: username_for_discard.clone(),
-        });
     };
 
     let status_text = match draft_status() {
