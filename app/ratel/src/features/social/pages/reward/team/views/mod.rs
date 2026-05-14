@@ -1,12 +1,13 @@
 mod i18n;
 
 use super::controllers::{
-    get_team_reward_permission_handler, get_team_rewards_handler,
-    list_team_point_transactions_handler,
+    get_team_monthly_summaries_handler, get_team_reward_permission_handler,
+    get_team_rewards_handler, list_team_point_transactions_handler,
+    request_team_claim_signature_handler, TeamClaimSignatureRequest,
 };
 use super::dto::TeamRewardsResponse;
 use super::*;
-use crate::common::services::PointTransactionResponse;
+use crate::common::services::{MonthlySummaryItem, PointTransactionResponse};
 use crate::features::social::pages::team_arena::{use_team_arena, TeamArenaTab};
 use crate::common::*;
 
@@ -93,6 +94,14 @@ fn pretty_month(month: &str) -> String {
     }
 }
 
+/// Mirrors the user-reward variant: launch quarter is 2026-04 … 2026-06.
+/// While the current cycle is inside this window the team hero card
+/// aggregates points / total / supply across all three months instead
+/// of showing a single sparse month.
+fn is_launch_quarter(month: &str) -> bool {
+    matches!(month, "2026-04" | "2026-05" | "2026-06")
+}
+
 fn time_ago(ts: i64) -> String {
     crate::common::utils::time::time_ago(ts)
 }
@@ -142,8 +151,16 @@ pub fn Home(username: ReadSignal<String>) -> Element {
             .ok(),
         )
     })?;
+    let summaries_resource = use_loader(move || async move {
+        Ok::<_, crate::common::Error>(
+            get_team_monthly_summaries_handler(team_pk_signal()).await.ok(),
+        )
+    })?;
     let rewards: TeamRewardsResponse = rewards_resource().unwrap_or_default();
     let initial_transactions = transactions_resource().unwrap_or_default();
+    let past_months = summaries_resource()
+        .map(|s| s.months)
+        .unwrap_or_default();
 
     let mut transactions = use_signal(Vec::<PointTransactionResponse>::new);
     let mut next_bookmark = use_signal(|| Option::<String>::None);
@@ -166,11 +183,47 @@ pub fn Home(username: ReadSignal<String>) -> Element {
         transactions_loaded.set(true);
     });
 
-    let total_points = rewards.total_points.max(1);
-    let share_percent = (rewards.team_points as f64 / total_points as f64) * 100.0;
+    // Mirror the user-reward launch-quarter aggregation: while we're
+    // inside 2026-04 … 2026-06, sum the team's `total_earned`,
+    // `project_total_points`, and `monthly_token_supply` across every
+    // launch-quarter row in `past_months` PLUS the current cycle's
+    // `rewards.*`. From 2026-07 onward the hero passes through
+    // `rewards.*` straight off the current-cycle endpoint.
+    let in_launch_quarter = is_launch_quarter(&rewards.month);
+    let (hero_points, hero_total_raw, hero_supply) = if in_launch_quarter {
+        let mut pts: i64 = rewards.team_points;
+        let mut total: i64 = rewards.total_points;
+        let mut supply: i64 = rewards.monthly_token_supply;
+        for m in past_months.iter() {
+            if is_launch_quarter(&m.month) {
+                pts += m.total_earned;
+                total += m.project_total_points;
+                supply += m.monthly_token_supply;
+            }
+        }
+        (pts, total, supply)
+    } else {
+        (
+            rewards.team_points,
+            rewards.total_points,
+            rewards.monthly_token_supply,
+        )
+    };
+
+    let hero_total = hero_total_raw.max(1);
+    let share_percent = (hero_points as f64 / hero_total as f64) * 100.0;
     let share_fill_pct = share_percent.clamp(0.0, 100.0);
 
-    let estimated_tokens = if rewards.total_points > 0 {
+    let estimated_tokens = if hero_total_raw > 0 {
+        ((hero_points as f64 / hero_total_raw as f64) * hero_supply as f64).round()
+    } else {
+        0.0
+    };
+
+    // Chart current-bar tokens: per-month, independent of the hero
+    // aggregation. Stays true to the chart's "Last 6 cycles · Monthly"
+    // axis even while the hero is showing an APR-JUN bundle.
+    let chart_current_tokens = if rewards.total_points > 0 {
         ((rewards.team_points as f64 / rewards.total_points as f64)
             * rewards.monthly_token_supply as f64)
             .round()
@@ -178,7 +231,11 @@ pub fn Home(username: ReadSignal<String>) -> Element {
         0.0
     };
 
-    let month_pretty = pretty_month(&rewards.month);
+    let month_pretty = if in_launch_quarter {
+        "APR-JUN 2026".to_string()
+    } else {
+        pretty_month(&rewards.month)
+    };
     let share_percent_str = format!("{:.2}", share_percent);
 
     let token_symbol = if rewards.token_symbol.is_empty() {
@@ -217,13 +274,32 @@ pub fn Home(username: ReadSignal<String>) -> Element {
     let tx_list = transactions.read().clone();
     let tx_count = tx_list.len();
 
-    // Build combo chart: only current cycle (past cycles removed for teams).
+    // Build combo chart: every past cycle (up to the last 5) + the
+    // current cycle, each rendered as its own monthly bar. Launch
+    // quarter is intentionally NOT bundled — only the hero card
+    // aggregates 4-6월; the chart history stays per-month.
+    let mut combo_points: Vec<(String, i64, f64)> = past_months
+        .iter()
+        .rev()
+        .take(5)
+        .rev()
+        .map(|m| {
+            let (name, _) = month_parts(&m.month);
+            let toks = if m.project_total_points > 0 {
+                (m.total_earned as f64 / m.project_total_points as f64)
+                    * m.monthly_token_supply as f64
+            } else {
+                0.0
+            };
+            (name.chars().take(3).collect(), m.total_earned, toks)
+        })
+        .collect();
     let (cur_name, _) = month_parts(&rewards.month);
-    let combo_points: Vec<(String, i64, f64)> = vec![(
+    combo_points.push((
         cur_name.chars().take(3).collect(),
         rewards.team_points,
-        estimated_tokens,
-    )];
+        chart_current_tokens,
+    ));
     let combo_svg = render_combo(&combo_points);
 
     // Donut from this cycle's transactions grouped by type
@@ -243,6 +319,8 @@ pub fn Home(username: ReadSignal<String>) -> Element {
     let donut_total: i64 = donut_items.iter().map(|(_, v, _)| *v).sum();
     let donut_svg = render_donut(&donut_items, donut_total);
 
+    let claimable_count = past_months.iter().filter(|m| !m.exchanged).count();
+
     rsx! {
         document::Script { defer: true, src: asset!("./script.js") }
 
@@ -258,12 +336,12 @@ pub fn Home(username: ReadSignal<String>) -> Element {
             div { class: "page",
                 HeroCard {
                     tr: tr.clone(),
-                    points: rewards.team_points,
-                    total_points: rewards.total_points,
+                    points: hero_points,
+                    total_points: hero_total_raw,
                     share_percent_str: share_percent_str.clone(),
                     share_fill_pct,
                     estimated_tokens,
-                    monthly_supply: rewards.monthly_token_supply,
+                    monthly_supply: hero_supply,
                     token_symbol: token_symbol.clone(),
                     month_pretty: month_pretty.clone(),
                 }
@@ -382,6 +460,73 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                     }
                 }
 
+                // Past cycles. The Swap All action is gated off (the
+                // claim signature + on-chain swap pipeline isn't ready)
+                // — the inline `section-note` below explains that, and
+                // each `CycleCard` renders the Swap All button greyed
+                // out with a "Coming soon" hover hint.
+                div {
+                    div { class: "section-head",
+                        span { class: "section-head__title", "{tr.past_cycles}" }
+                        span { class: "section-head__count",
+                            strong { "{claimable_count}" }
+                            " {tr.claimable}"
+                        }
+                    }
+                    div {
+                        class: "section-note",
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            circle { cx: "12", cy: "12", r: "10" }
+                            path { d: "M12 16v-4" }
+                            path { d: "M12 8h.01" }
+                        }
+                        span { "{tr.swap_coming_soon_note}" }
+                    }
+                    div { class: "cycles",
+                        if past_months.is_empty() {
+                            div { class: "empty",
+                                div { class: "empty__icon",
+                                    svg {
+                                        view_box: "0 0 24 24",
+                                        fill: "none",
+                                        stroke: "currentColor",
+                                        stroke_width: "1.6",
+                                        stroke_linecap: "round",
+                                        stroke_linejoin: "round",
+                                        circle { cx: "12", cy: "12", r: "10" }
+                                        path { d: "M12 6v12" }
+                                        path { d: "M16 10H8" }
+                                    }
+                                }
+                                div {
+                                    class: "empty__title",
+                                    "{tr.past_empty_title}"
+                                }
+                                div {
+                                    class: "empty__desc",
+                                    "{tr.past_empty_desc}"
+                                }
+                            }
+                        } else {
+                            for item in past_months.iter() {
+                                CycleCard {
+                                    key: "{item.month}",
+                                    team_pk: team_pk_signal,
+                                    item: item.clone(),
+                                    token_symbol: token_symbol.clone(),
+                                    tr: tr.clone(),
+                                    swap_enabled: false,
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -634,4 +779,133 @@ fn render_donut(items: &[(String, i64, &str)], total: i64) -> String {
         paths = paths,
         total_fmt = format_points(total)
     )
+}
+
+/// Cycle history row for the team rewards page. Mirrors the user-side
+/// `CycleCard` — same layout, same Swap All gating — but routes the
+/// claim signature request through the team-scoped endpoint
+/// (`request_team_claim_signature_handler`) so the on-chain claim
+/// goes against the team's pk space when the swap pipeline opens.
+#[component]
+fn CycleCard(
+    team_pk: ReadSignal<TeamPartition>,
+    item: MonthlySummaryItem,
+    token_symbol: String,
+    tr: TeamRewardsTranslate,
+    /// Gate the Swap All CTA off while the claim/swap pipeline is
+    /// still being built. Defaults to true so future activations
+    /// don't need a prop change at every call site.
+    #[props(default = true)]
+    swap_enabled: bool,
+) -> Element {
+    let mut is_claiming = use_signal(|| false);
+    let mut claimed = use_signal(move || item.exchanged);
+
+    let (month_name, year) = month_parts(&item.month);
+    let share_pct = if item.project_total_points > 0 {
+        (item.total_earned as f64 / item.project_total_points as f64) * 100.0
+    } else {
+        0.0
+    };
+    let tokens = if item.project_total_points > 0 {
+        (item.total_earned as f64 / item.project_total_points as f64)
+            * item.monthly_token_supply as f64
+    } else {
+        0.0
+    };
+
+    let is_claimed = claimed();
+    let card_class = if is_claimed {
+        "cycle-card cycle-card--claimed"
+    } else {
+        "cycle-card cycle-card--available"
+    };
+    let share_pct_str = format!("{:.2}", share_pct);
+    let earned_fmt = format_points(item.total_earned);
+    let tokens_fmt = format_tokens(tokens);
+
+    let item_month = item.month.clone();
+    let on_claim = move |_| {
+        if is_claiming() || claimed() {
+            return;
+        }
+        let month = item_month.clone();
+        let pk = team_pk();
+        is_claiming.set(true);
+        spawn(async move {
+            let res = request_team_claim_signature_handler(
+                pk,
+                TeamClaimSignatureRequest {
+                    month,
+                    wallet_address: String::new(),
+                },
+            )
+            .await;
+            if res.is_ok() {
+                claimed.set(true);
+            }
+            is_claiming.set(false);
+        });
+    };
+
+    rsx! {
+        div { class: "{card_class}",
+            div { class: "cycle-card__month",
+                span { class: "cycle-card__month-label", "{month_name}" }
+                span { class: "cycle-card__month-year", "{year}" }
+            }
+            div { class: "cycle-card__stats",
+                div { class: "cycle-stat",
+                    span { class: "cycle-stat__label", "{tr.stat_points}" }
+                    span { class: "cycle-stat__value", "{earned_fmt}" }
+                }
+                div { class: "cycle-stat",
+                    span { class: "cycle-stat__label", "{tr.stat_share}" }
+                    span { class: "cycle-stat__value", "{share_pct_str}%" }
+                }
+                div { class: "cycle-stat cycle-stat--token",
+                    span { class: "cycle-stat__label", "{tr.stat_tokens}" }
+                    span { class: "cycle-stat__value",
+                        "{tokens_fmt} "
+                        small { "{token_symbol}" }
+                    }
+                }
+            }
+            div { class: "cycle-card__action",
+                if is_claimed {
+                    span { class: "cycle-card__claimed",
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "3",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            polyline { points: "20 6 9 17 4 12" }
+                        }
+                        "{tr.claimed}"
+                    }
+                } else {
+                    button {
+                        class: "cycle-card__claim",
+                        disabled: is_claiming() || !swap_enabled,
+                        "aria-disabled": (!swap_enabled).to_string(),
+                        title: if !swap_enabled { tr.swap_coming_soon.to_string() } else { String::new() },
+                        onclick: on_claim,
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            polyline { points: "3 6 5 6 21 6" }
+                            path { d: "M5 6h14l-1 14H6L5 6z" }
+                        }
+                        "{tr.swap_all}"
+                    }
+                }
+            }
+        }
+    }
 }
