@@ -282,6 +282,12 @@ pub enum EntityType {
     // round/participant/bet/rationale/chat/settlement entries are added in PR3+.
     FactFoldHeadline(String),       // pk=FactFoldHeadlines, inner=headline_id
     FactFoldSettings,               // pk=FactFoldSettings (singleton)
+
+    // PR3 — round + lobby. Per-participant rows (bets, rationales,
+    // chat, settlements) come in PR4+; the Round itself carries the
+    // participant_pks list for the join/leave + capacity check.
+    FactFoldRound(String),          // pk=FactFold(round_id), inner=round_id
+    FactFoldLobby,                  // pk=FactFoldLobbySingleton (singleton)
 }
 
 impl TryInto<Partition> for EntityType {

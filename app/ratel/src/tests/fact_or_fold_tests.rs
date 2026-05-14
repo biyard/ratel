@@ -17,7 +17,8 @@
 use super::*;
 
 use crate::features::fact_or_fold::types::{
-    FactOrFoldSettingsResponse, HeadlineResponse, HeadlineStatus, QueueAlarmResponse,
+    FactOrFoldSettingsResponse, HeadlineResponse, HeadlineStatus, LobbyResponse,
+    QueueAlarmResponse, RoundResponse, RoundStatus,
 };
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -520,4 +521,186 @@ async fn test_update_settings_rejects_out_of_range() {
         body: { "req": { "round_capacity": 1 } }
     };
     assert_ne!(status, 200, "round_capacity=1 must be rejected");
+}
+
+// ── Lobby + matching (PR3) ───────────────────────────────────────
+
+/// Drop the join balance gate for tests so we can exercise the
+/// matching loop without first granting RP to every test user.
+async fn relax_balance_gate(ctx: &TestContext, admin: &axum::http::HeaderMap) {
+    let (status, _, _) = crate::test_put! {
+        app: ctx.app.clone(),
+        path: "/api/fact-or-fold/admin/settings",
+        headers: admin.clone(),
+        body: { "req": { "min_bet_rp": 0 } }
+    };
+    assert_eq!(status, 200, "relax_balance_gate must succeed");
+}
+
+/// Create a Draft headline, then publish-now → Live so it's a
+/// matching candidate for the lobby.
+async fn create_live_headline(ctx: &TestContext, admin: &axum::http::HeaderMap) -> HeadlineResponse {
+    let h = create_headline(ctx, admin).await;
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/fact-or-fold/admin/headlines/{}/publish", h.id.0),
+        headers: admin.clone(),
+        body: { "req": { "scheduled_at": null } },
+        response_type: HeadlineResponse,
+    };
+    assert_eq!(status, 200, "publish-now must succeed: {:?}", body);
+    body
+}
+
+#[tokio::test]
+async fn test_get_lobby_rejects_unauthenticated() {
+    let ctx = TestContext::setup().await;
+    let (status, _, _) = crate::test_get! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/lobby",
+    };
+    assert_ne!(status, 200, "unauth must be rejected from lobby read");
+}
+
+#[tokio::test]
+async fn test_lobby_no_headline_reports_unavailable() {
+    let ctx = TestContext::setup().await;
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/lobby",
+        headers: ctx.test_user.1.clone(),
+        response_type: LobbyResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(!body.headline_available, "no headlines yet");
+    assert!(body.current_round.is_none(), "no waiting round yet");
+    assert!(!body.can_join, "can't join with nothing in the queue");
+}
+
+#[tokio::test]
+async fn test_join_no_headline_returns_unavailable() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    relax_balance_gate(&ctx, &admin).await;
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/lobby/join",
+        headers: ctx.test_user.1.clone(),
+    };
+    // Service-unavailable status shape — we only assert non-200.
+    assert_ne!(status, 200, "join without a headline must fail");
+}
+
+#[tokio::test]
+async fn test_join_creates_round_and_lobby_state_reflects_it() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    relax_balance_gate(&ctx, &admin).await;
+    let _ = create_live_headline(&ctx, &admin).await;
+
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/fact-or-fold/lobby/join",
+        headers: ctx.test_user.1.clone(),
+        response_type: RoundResponse,
+    };
+    assert_eq!(status, 200, "join must succeed once a headline exists");
+    let round = body;
+    assert_eq!(round.participant_pks.len(), 1, "first joiner is alone");
+    assert!(matches!(round.status, RoundStatus::Waiting), "still waiting for more players, got {:?}", round.status);
+
+    // Lobby reads back the same round with already_joined = true.
+    let (_, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/lobby",
+        headers: ctx.test_user.1.clone(),
+        response_type: LobbyResponse,
+    };
+    assert!(body.current_round.is_some());
+    assert!(body.already_joined);
+    assert!(!body.can_join, "already joined → can't join again");
+}
+
+#[tokio::test]
+async fn test_join_again_rejected() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    relax_balance_gate(&ctx, &admin).await;
+    let _ = create_live_headline(&ctx, &admin).await;
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/fact-or-fold/lobby/join",
+        headers: ctx.test_user.1.clone(),
+    };
+    assert_eq!(status, 200);
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/lobby/join",
+        headers: ctx.test_user.1.clone(),
+    };
+    assert_ne!(status, 200, "second join by same user must fail");
+}
+
+#[tokio::test]
+async fn test_get_round_after_join() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    relax_balance_gate(&ctx, &admin).await;
+    let _ = create_live_headline(&ctx, &admin).await;
+
+    let (_, _, body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/fact-or-fold/lobby/join",
+        headers: ctx.test_user.1.clone(),
+        response_type: RoundResponse,
+    };
+    let round_id = body.id.0;
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}", round_id),
+        headers: ctx.test_user.1.clone(),
+        response_type: RoundResponse,
+    };
+    assert_eq!(status, 200);
+    assert_eq!(body.id.0, round_id);
+    assert_eq!(body.participant_pks.len(), 1);
+}
+
+#[tokio::test]
+async fn test_leave_after_join_clears_participant() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    relax_balance_gate(&ctx, &admin).await;
+    let _ = create_live_headline(&ctx, &admin).await;
+
+    let (_, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/fact-or-fold/lobby/join",
+        headers: ctx.test_user.1.clone(),
+        response_type: RoundResponse,
+    };
+
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/lobby/leave",
+        headers: ctx.test_user.1.clone(),
+        response_type: RoundResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(body.participant_pks.is_empty());
+}
+
+#[tokio::test]
+async fn test_get_round_not_found() {
+    let ctx = TestContext::setup().await;
+    let (status, _, _) = crate::test_get! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/rounds/nonexistent-id",
+        headers: ctx.test_user.1.clone(),
+    };
+    assert_ne!(status, 200);
 }

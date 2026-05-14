@@ -118,6 +118,73 @@ pub struct HeadlineResponse {
     pub updated_at: i64,
 }
 
+// ── Round + Lobby (PR3) ───────────────────────────────────────────
+
+/// Round lifecycle. PR3 only orchestrates Waiting → NewsReveal;
+/// downstream stages land in PR4 with bets and PR5 with chat.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub enum RoundStatus {
+    /// Lobby is filling up. Joins still accepted.
+    #[default]
+    Waiting,
+    /// Stage 1 — players read the headline. Joins closed.
+    NewsReveal,
+    /// Stage 2 — first bet. (PR4)
+    Bet,
+    /// Stage 3 — write rationale. (PR4)
+    Rationale,
+    /// Stage 4 — show rationales. (PR4)
+    Reveal,
+    /// Stage 5 — chat + flip window. (PR5)
+    Debate,
+    /// Stage 6 — payout in flight. (PR6)
+    Settlement,
+    /// Final state — payouts done, history only.
+    Settled,
+}
+
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct RoundResponse {
+    pub id: FactFoldRoundEntityType,
+    pub headline_id: FactFoldHeadlineEntityType,
+    pub status: RoundStatus,
+    /// User pks currently in the round. Order = join order.
+    pub participant_pks: Vec<String>,
+    /// Set when the round transitions out of Waiting.
+    pub started_at: Option<i64>,
+    /// Set when the round reaches Settled.
+    pub settled_at: Option<i64>,
+    pub created_at: i64,
+    pub updated_at: i64,
+}
+
+/// Snapshot exposed at `GET /api/fact-or-fold/lobby`. Most fields
+/// are read-mostly UI hints; the join button uses `can_join` +
+/// `pending_user_in_round`.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct LobbyResponse {
+    /// `Some` when a Waiting round exists with a usable headline.
+    pub current_round: Option<RoundResponse>,
+    /// True iff the lobby has a current round AND the caller is not
+    /// already in it AND there is room for one more.
+    pub can_join: bool,
+    /// True iff the caller is already in the current round.
+    pub already_joined: bool,
+    /// Round capacity from settings — UI hint for the "x / capacity"
+    /// label. Mirrors `FactFoldSettings::round_capacity`.
+    pub round_capacity: i32,
+    /// Min RP required to join (FR-23 balance guard) — UI hint for
+    /// the "you need N RP" message.
+    pub min_bet_rp: i64,
+    /// True iff at least one Scheduled headline is due (or already
+    /// Live). When `current_round` is None and this is False, the
+    /// lobby is closed: the admin needs to publish more headlines.
+    pub headline_available: bool,
+}
+
 // ── Queue health ──────────────────────────────────────────────────
 
 /// Queue depth + FR-45 alert flag for the admin dashboard. Computed

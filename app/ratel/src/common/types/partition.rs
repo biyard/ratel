@@ -122,6 +122,11 @@ pub enum Partition {
     /// *Fact or Fold* game (stage durations, bet caps, bonus rates).
     /// One row per deployment.
     FactFoldSettings,
+
+    /// Singleton pointer row tracking the *current waiting Round* for
+    /// the *Fact or Fold* lobby. One row per deployment; the inner
+    /// `current_round_id` is updated transactionally on join + start.
+    FactFoldLobbySingleton,
 }
 
 impl Partition {

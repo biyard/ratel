@@ -39,6 +39,49 @@ pub enum FactOrFoldError {
     )]
     PublishInvariantViolation,
 
+    // ── Lobby + round (PR3) ───────────────────────────────────────
+    #[error("no headline available for a new round")]
+    #[translate(
+        en = "No published headline is available right now — try again later",
+        ko = "현재 발행된 헤드라인이 없습니다 — 잠시 후 다시 시도해주세요.",
+    )]
+    LobbyNoHeadlineAvailable,
+
+    #[error("lobby round is full")]
+    #[translate(
+        en = "The current round is already full",
+        ko = "현재 라운드가 이미 만석입니다.",
+    )]
+    LobbyFull,
+
+    #[error("already joined the current round")]
+    #[translate(
+        en = "You are already in the current round",
+        ko = "이미 라운드에 참여 중입니다.",
+    )]
+    LobbyAlreadyJoined,
+
+    #[error("not in the current round")]
+    #[translate(
+        en = "You are not in the current round",
+        ko = "현재 라운드에 참여 중이 아닙니다.",
+    )]
+    LobbyNotJoined,
+
+    #[error("insufficient balance to join")]
+    #[translate(
+        en = "Insufficient RatelPoint balance to join — need at least {0} RP",
+        ko = "참여에 필요한 최소 RP가 부족합니다 — {0} RP 필요.",
+    )]
+    LobbyInsufficientBalance(i64),
+
+    #[error("round not found")]
+    #[translate(
+        en = "Round not found",
+        ko = "라운드를 찾을 수 없습니다.",
+    )]
+    RoundNotFound,
+
     // ── Settings ──────────────────────────────────────────────────
     #[error("settings field out of range")]
     #[translate(
@@ -66,7 +109,13 @@ impl FactOrFoldError {
             FactOrFoldError::HeadlineLocked
             | FactOrFoldError::HeadlineInvalid
             | FactOrFoldError::PublishInvariantViolation
-            | FactOrFoldError::SettingsOutOfRange => StatusCode::BAD_REQUEST,
+            | FactOrFoldError::SettingsOutOfRange
+            | FactOrFoldError::LobbyAlreadyJoined
+            | FactOrFoldError::LobbyNotJoined
+            | FactOrFoldError::LobbyInsufficientBalance(_) => StatusCode::BAD_REQUEST,
+            FactOrFoldError::LobbyFull => StatusCode::CONFLICT,
+            FactOrFoldError::LobbyNoHeadlineAvailable => StatusCode::SERVICE_UNAVAILABLE,
+            FactOrFoldError::RoundNotFound => StatusCode::NOT_FOUND,
             FactOrFoldError::StorageFailure => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
