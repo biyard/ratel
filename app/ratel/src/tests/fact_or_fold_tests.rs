@@ -17,8 +17,9 @@
 use super::*;
 
 use crate::features::fact_or_fold::types::{
-    FactOrFoldSettingsResponse, HeadlineResponse, HeadlineStatus, LobbyResponse,
-    QueueAlarmResponse, RoundResponse, RoundStatus,
+    BetResponse, BetSide, FactOrFoldSettingsResponse, HeadlineResponse, HeadlineStatus,
+    InsiderStatementResponse, LobbyResponse, ParticipantResponse, QueueAlarmResponse,
+    RationaleResponse, RoundResponse, RoundStatus,
 };
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -703,4 +704,172 @@ async fn test_get_round_not_found() {
         headers: ctx.test_user.1.clone(),
     };
     assert_ne!(status, 200);
+}
+
+// ── Round play (PR4) ─────────────────────────────────────────────
+
+/// Drive the round all the way to "stage 2 (Bet)" by joining the
+/// caller + 3 fresh users, which fills capacity=4 and auto-starts.
+/// Returns (round_id, headers_for_user_in_round).
+#[allow(clippy::type_complexity)]
+async fn fill_round_to_capacity(
+    ctx: &TestContext,
+    admin: &axum::http::HeaderMap,
+) -> (String, axum::http::HeaderMap) {
+    relax_balance_gate(ctx, admin).await;
+    let _ = create_live_headline(ctx, admin).await;
+
+    // First joiner = ctx.test_user
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/fact-or-fold/lobby/join",
+        headers: ctx.test_user.1.clone(),
+        response_type: RoundResponse,
+    };
+    assert_eq!(status, 200, "first join must succeed");
+    let round_id = body.id.0;
+
+    // Three more fresh users to hit capacity=4
+    for _ in 0..3 {
+        let (_, headers) = ctx.create_another_user().await;
+        let (status, _, _) = crate::test_post! {
+            app: ctx.app.clone(),
+            path: "/api/fact-or-fold/lobby/join",
+            headers: headers.clone(),
+            response_type: RoundResponse,
+        };
+        assert_eq!(status, 200, "additional joins must succeed");
+    }
+
+    (round_id, ctx.test_user.1.clone())
+}
+
+#[tokio::test]
+async fn test_round_starts_after_capacity_reached() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}", round_id),
+        headers: headers,
+        response_type: RoundResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(matches!(body.status, RoundStatus::NewsReveal), "status was {:?}", body.status);
+    assert_eq!(body.participant_pks.len(), 4);
+    assert!(body.started_at.is_some());
+}
+
+#[tokio::test]
+async fn test_bet_rejected_outside_bet_stage() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    // Round is in NewsReveal — bet must be rejected.
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/bets", round_id),
+        headers: headers,
+        body: { "req": { "side": "REAL", "amount_rp": 100 } }
+    };
+    assert_ne!(status, 200, "bet outside the Bet stage must be rejected");
+}
+
+#[tokio::test]
+async fn test_heartbeat_updates_last_seen() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/heartbeat", round_id),
+        headers: headers,
+        response_type: ParticipantResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(body.last_seen_at > 0);
+}
+
+#[tokio::test]
+async fn test_insider_statement_returns_some_for_one_returns_none_for_others() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    relax_balance_gate(&ctx, &admin).await;
+    let _ = create_live_headline(&ctx, &admin).await;
+
+    let mut all_user_headers: Vec<axum::http::HeaderMap> =
+        vec![ctx.test_user.1.clone()];
+    let (_, _, body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/fact-or-fold/lobby/join",
+        headers: ctx.test_user.1.clone(),
+        response_type: RoundResponse,
+    };
+    let round_id = body.id.0;
+    for _ in 0..3 {
+        let (_, headers) = ctx.create_another_user().await;
+        let (_, _, _) = crate::test_post! {
+            app: ctx.app.clone(),
+            path: "/api/fact-or-fold/lobby/join",
+            headers: headers.clone(),
+            response_type: RoundResponse,
+        };
+        all_user_headers.push(headers);
+    }
+
+    // Walk all 4 — exactly one must see the insider statement.
+    let mut some_count = 0;
+    for headers in all_user_headers {
+        let (status, _, body) = crate::test_get! {
+            app: ctx.app.clone(),
+            path: &format!("/api/fact-or-fold/rounds/{}/insider-statement", round_id),
+            headers: headers,
+            response_type: InsiderStatementResponse,
+        };
+        assert_eq!(status, 200);
+        if body.statement.is_some() {
+            some_count += 1;
+        }
+    }
+    assert_eq!(some_count, 1, "exactly one player should be the insider");
+}
+
+#[tokio::test]
+async fn test_non_participant_cannot_bet_or_heartbeat() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, _) = fill_round_to_capacity(&ctx, &admin).await;
+
+    // A 5th user who never joined.
+    let (_, outsider) = ctx.create_another_user().await;
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/fact-or-fold/rounds/{}/bets", round_id),
+        headers: outsider.clone(),
+        body: { "req": { "side": "REAL", "amount_rp": 100 } }
+    };
+    assert_ne!(status, 200, "non-participant must be rejected from bet");
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/heartbeat", round_id),
+        headers: outsider,
+    };
+    assert_ne!(status, 200, "non-participant must be rejected from heartbeat");
+}
+
+#[allow(dead_code)]
+fn _force_dto_imports_used() {
+    // Pulls in BetResponse / RationaleResponse / BetSide so they
+    // don't fire unused-import warnings in this tests file even
+    // though they are exercised primarily via JSON shape (no direct
+    // typed parse needed for the negative-path tests above).
+    let _ = std::any::type_name::<BetResponse>();
+    let _ = std::any::type_name::<RationaleResponse>();
+    let _ = std::any::type_name::<BetSide>();
+    let _ = std::any::type_name::<FactOrFoldSettingsResponse>();
 }

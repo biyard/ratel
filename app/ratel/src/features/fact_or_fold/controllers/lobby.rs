@@ -27,7 +27,7 @@ use crate::features::fact_or_fold::types::*;
 use crate::common::models::auth::User;
 #[cfg(feature = "server")]
 use crate::features::fact_or_fold::models::{
-    FactFoldHeadline, FactFoldLobby, FactFoldRound, FactFoldSettings,
+    FactFoldHeadline, FactFoldLobby, FactFoldParticipant, FactFoldRound, FactFoldSettings,
 };
 
 #[cfg(feature = "server")]
@@ -98,6 +98,37 @@ async fn upsert_lobby_pointer(
         crate::error!("upsert_lobby_pointer failed: {e}");
         FactOrFoldError::StorageFailure.into()
     })
+}
+
+/// Pick the insider index uniformly at random over `n` participants.
+/// Pulled out so future deterministic-test overrides have a single
+/// hook to swap.
+#[cfg(feature = "server")]
+fn pick_insider_index(n: usize) -> usize {
+    use rand::RngExt;
+    rand::rng().random_range(0..n)
+}
+
+/// Materialize FactFoldParticipant rows for every player in a
+/// freshly-started round. Exactly one row is marked is_insider.
+#[cfg(feature = "server")]
+async fn create_participants_for_round(
+    cli: &aws_sdk_dynamodb::Client,
+    round_id: &str,
+    participant_pks: &[Partition],
+) -> crate::common::Result<()> {
+    if participant_pks.is_empty() {
+        return Ok(());
+    }
+    let insider_idx = pick_insider_index(participant_pks.len());
+    for (idx, user_pk) in participant_pks.iter().enumerate() {
+        let row = FactFoldParticipant::new(round_id, user_pk.clone(), idx == insider_idx);
+        row.create(cli).await.map_err(|e| {
+            crate::error!("create_participants_for_round failed for {user_pk:?}: {e}");
+            FactOrFoldError::StorageFailure
+        })?;
+    }
+    Ok(())
 }
 
 #[cfg(feature = "server")]
@@ -230,6 +261,8 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
                     FactOrFoldError::StorageFailure
                 })?;
                 if lobby_should_clear {
+                    let round_id = round.id().unwrap_or_default();
+                    create_participants_for_round(cli, &round_id, &round.participant_pks).await?;
                     upsert_lobby_pointer(cli, None).await?;
                 }
                 return Ok(round_to_response(&round));
@@ -282,6 +315,10 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
         crate::error!("join_lobby_handler round create failed: {e}");
         FactOrFoldError::StorageFailure
     })?;
+
+    if lobby_should_clear {
+        create_participants_for_round(cli, &round_id, &round.participant_pks).await?;
+    }
 
     upsert_lobby_pointer(
         cli,
