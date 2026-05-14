@@ -261,9 +261,7 @@ pub enum Error {
 
     #[error("{0}")]
     #[translate(from)]
-    SpaceStatusChange(
-        #[from] crate::features::spaces::space_common::types::SpaceStatusChangeError,
-    ),
+    SpaceStatusChange(#[from] crate::features::spaces::space_common::types::SpaceStatusChangeError),
 
     // Post related errors
     #[error("Invalid username")]
@@ -360,10 +358,7 @@ pub enum Error {
     InvalidFormat,
 
     #[error("Invalid team context")]
-    #[translate(
-        en = "Invalid team context",
-        ko = "유효하지 않은 팀 컨텍스트입니다."
-    )]
+    #[translate(en = "Invalid team context", ko = "유효하지 않은 팀 컨텍스트입니다.")]
     InvalidTeamContext,
 
     #[error("User not found in context")]
@@ -371,10 +366,7 @@ pub enum Error {
     UserNotFoundInContext,
 
     #[error("Space role check failed")]
-    #[translate(
-        en = "Authorization check failed",
-        ko = "권한 확인에 실패했습니다."
-    )]
+    #[translate(en = "Authorization check failed", ko = "권한 확인에 실패했습니다.")]
     SpaceUserRoleFailed,
 
     // Feature-specific error enums
@@ -392,9 +384,7 @@ pub enum Error {
 
     #[error("{0}")]
     #[translate(from)]
-    MembershipPayment(
-        #[from] crate::features::membership::types::MembershipPaymentError,
-    ),
+    MembershipPayment(#[from] crate::features::membership::types::MembershipPaymentError),
 
     #[error("{0}")]
     #[translate(from)]
@@ -418,29 +408,22 @@ pub enum Error {
 
     #[error("{0}")]
     #[translate(from)]
-    SpaceAction(
-        #[from] crate::features::spaces::pages::actions::types::SpaceActionError,
-    ),
+    SpaceAction(#[from] crate::features::spaces::pages::actions::types::SpaceActionError),
 
     #[error("{0}")]
     #[translate(from)]
     SpacePoll(
-        #[from]
-        crate::features::spaces::pages::actions::actions::poll::types::SpacePollError,
+        #[from] crate::features::spaces::pages::actions::actions::poll::types::SpacePollError,
     ),
 
     #[error("{0}")]
     #[translate(from)]
-    MeetAction(
-        #[from]
-        crate::features::spaces::pages::actions::actions::meet::MeetActionError,
-    ),
+    MeetAction(#[from] crate::features::spaces::pages::actions::actions::meet::MeetActionError),
 
     #[error("{0}")]
     #[translate(from)]
     SpaceFollow(
-        #[from]
-        crate::features::spaces::pages::actions::actions::follow::types::SpaceFollowError,
+        #[from] crate::features::spaces::pages::actions::actions::follow::types::SpaceFollowError,
     ),
 
     #[error("{0}")]
@@ -449,9 +432,14 @@ pub enum Error {
 
     #[error("{0}")]
     #[translate(from)]
-    SpaceReport(
-        #[from] crate::features::spaces::pages::report::types::SpaceReportError,
-    ),
+    SpaceReport(#[from] crate::features::spaces::pages::report::types::SpaceReportError),
+
+    #[error("serialize args: {0}")]
+    Serialize(String),
+    #[error("deserialize result: {0}")]
+    Deserialize(String),
+    #[error("command failed: {0}")]
+    CommandFailed(String),
 }
 
 #[cfg(feature = "server")]
@@ -489,9 +477,9 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
         use crate::axum::response::IntoResponse;
 
         let status = match &self {
-            Error::UnauthorizedAccess
-            | Error::NoSessionFound
-            | Error::UserNotFoundInContext => StatusCode::UNAUTHORIZED,
+            Error::UnauthorizedAccess | Error::NoSessionFound | Error::UserNotFoundInContext => {
+                StatusCode::UNAUTHORIZED
+            }
             Error::InvalidPartitionKey(_)
             | Error::InvalidBookmark
             | Error::Duplicate(_)
@@ -559,9 +547,7 @@ impl From<serde_dynamo::Error> for Error {
 impl From<Error> for rmcp::ErrorData {
     fn from(e: Error) -> Self {
         match &e {
-            Error::UnauthorizedAccess
-            | Error::NoSessionFound
-            | Error::UserNotFoundInContext => {
+            Error::UnauthorizedAccess | Error::NoSessionFound | Error::UserNotFoundInContext => {
                 rmcp::ErrorData::invalid_request(e.to_string(), None)
             }
             Error::NotFound(_) | Error::InvitationNotFound | Error::SpaceNotFound => {
@@ -574,9 +560,7 @@ impl From<Error> for rmcp::ErrorData {
             | Error::UnsupportedOperation
             | Error::MissingSpaceId
             | Error::InvalidFormat
-            | Error::InvalidTeamContext => {
-                rmcp::ErrorData::invalid_params(e.to_string(), None)
-            }
+            | Error::InvalidTeamContext => rmcp::ErrorData::invalid_params(e.to_string(), None),
             _ => {
                 tracing::error!("MCP internal error: {e}");
                 rmcp::ErrorData::internal_error(
@@ -600,9 +584,9 @@ impl dioxus::fullstack::AsStatusCode for Error {
     fn as_status_code(&self) -> crate::axum::http::StatusCode {
         use crate::axum::http::StatusCode;
         match self {
-            Error::UnauthorizedAccess
-            | Error::NoSessionFound
-            | Error::UserNotFoundInContext => StatusCode::UNAUTHORIZED,
+            Error::UnauthorizedAccess | Error::NoSessionFound | Error::UserNotFoundInContext => {
+                StatusCode::UNAUTHORIZED
+            }
             Error::InvalidPartitionKey(_)
             | Error::InvalidBookmark
             | Error::Duplicate(_)

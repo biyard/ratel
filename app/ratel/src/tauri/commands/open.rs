@@ -6,6 +6,8 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::define_invoke_tauri;
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ExternalUrlRequest {
     pub url: String,
@@ -16,13 +18,12 @@ pub struct ExternalUrlResponse {
     pub opened: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, thiserror::Error)]
-pub enum ExternalUrlError {
-    #[error("invalid url: {0}")]
-    InvalidUrl(String),
-    #[error("opener failed: {0}")]
-    OpenerFailed(String),
-}
+define_invoke_tauri!(
+    open,
+    "open_external_url",
+    ExternalUrlRequest,
+    ExternalUrlResponse
+);
 
 #[cfg(test)]
 mod tests {
@@ -44,13 +45,5 @@ mod tests {
         let json = serde_json::to_string(&resp).unwrap();
         let back: ExternalUrlResponse = serde_json::from_str(&json).unwrap();
         assert_eq!(resp, back);
-    }
-
-    #[test]
-    fn external_url_error_roundtrip() {
-        let err = ExternalUrlError::InvalidUrl("not a url".to_string());
-        let json = serde_json::to_string(&err).unwrap();
-        let back: ExternalUrlError = serde_json::from_str(&json).unwrap();
-        assert_eq!(err, back);
     }
 }

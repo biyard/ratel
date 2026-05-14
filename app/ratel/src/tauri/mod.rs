@@ -9,11 +9,9 @@
 //! call, plus an embedded JS driver that calls `window.__TAURI__.invoke(...)`.
 //! Only compiled under `feature = "tauri-web"`.
 
-#[cfg(any(feature = "tauri-types", feature = "tauri-web"))]
-pub mod types;
-
 #[cfg(feature = "tauri-web")]
 pub mod invoke;
 
-#[cfg(feature = "tauri-web")]
-pub mod interop;
+mod commands;
+
+pub use commands::*;

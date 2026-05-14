@@ -6,8 +6,9 @@
 //! that dispatches to every `#[tauri::command]` in the native shell.
 //! Binding it once via wasm_bindgen avoids per-command JS driver files.
 
-use serde::Serialize;
+use crate::Error;
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -16,27 +17,17 @@ unsafe extern "C" {
     async fn raw_invoke(cmd: &str, args: JsValue) -> Result<JsValue, JsValue>;
 }
 
-#[derive(thiserror::Error, Debug)]
-pub enum InvokeError {
-    #[error("serialize args: {0}")]
-    Serialize(String),
-    #[error("deserialize result: {0}")]
-    Deserialize(String),
-    #[error("command failed: {0}")]
-    CommandFailed(String),
-}
-
 /// Call a Tauri command with typed args and a typed return.
 ///
 /// `cmd` matches the command registered in `tauri::generate_handler![...]`
 /// or — for plugin-provided commands — the `plugin:<name>|<method>` form.
-pub async fn invoke<A, R>(cmd: &str, args: A) -> Result<R, InvokeError>
+pub async fn invoke<A, R>(cmd: &str, args: A) -> crate::Result<R>
 where
     A: Serialize,
     R: DeserializeOwned,
 {
-    let js_args = serde_wasm_bindgen::to_value(&args)
-        .map_err(|e| InvokeError::Serialize(e.to_string()))?;
+    let js_args =
+        serde_wasm_bindgen::to_value(&args).map_err(|e| Error::Serialize(e.to_string()))?;
     let js_result = raw_invoke(cmd, js_args).await.map_err(|e| {
         let msg = e
             .as_string()
@@ -47,8 +38,7 @@ where
                 js_sys::JSON::stringify(&e).ok().and_then(|s| s.as_string())
             })
             .unwrap_or_else(|| format!("{e:?}"));
-        InvokeError::CommandFailed(msg)
+        Error::CommandFailed(msg)
     })?;
-    serde_wasm_bindgen::from_value(js_result)
-        .map_err(|e| InvokeError::Deserialize(e.to_string()))
+    serde_wasm_bindgen::from_value(js_result).map_err(|e| Error::Deserialize(e.to_string()))
 }

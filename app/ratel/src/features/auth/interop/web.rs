@@ -24,26 +24,4 @@ pub async fn init_firebase(_: &crate::common::FirebaseConfig) -> crate::common::
     Ok(())
 }
 
-#[cfg(feature = "tauri-web")]
-pub async fn sign_in() -> crate::common::Result<super::UserInfo> {
-    use crate::features::auth::types::AuthError;
-    use crate::tauri::interop::google_sign_in;
-
-    let tokens = google_sign_in::sign_in().await.map_err(|e| {
-        crate::error!("google_sign_in failed: {e}");
-        AuthError::SignInUnsupportedOnPlatform
-    })?;
-
-    // The plugin returns Google tokens directly. The backend's OAuth handler
-    // (oauth_provider::get_email) verifies the access_token against Google's
-    // userinfo endpoint and reads email from the response, so we leave the
-    // email / display_name / photo_url fields empty here — the backend fills
-    // them in. id_token is forwarded in case any downstream code needs it.
-    Ok(super::UserInfo {
-        id_token: tokens.id_token.unwrap_or_default(),
-        access_token: tokens.access_token,
-        email: None,
-        display_name: None,
-        photo_url: None,
-    })
-}
+define_invoke_tauri!(sign_in, "google_sign_in", res: crate::tauri::TokenResponse);
