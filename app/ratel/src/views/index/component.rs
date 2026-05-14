@@ -48,7 +48,9 @@ pub fn Index() -> Element {
     let mut teams_open = use_signal(|| false);
     let mut notifications_open = use_signal(|| false);
 
+    debug!("before hot spaces");
     let hot_spaces = use_loader(|| async move { list_hot_spaces_handler().await })?;
+    debug!("after hot spaces");
 
     // Read user_ctx inside the async so the fetch reflects the current
     // login state at invocation time. Login from the home page triggers

@@ -1,5 +1,3 @@
-use dioxus::fullstack::{Loader, Loading};
-
 use crate::{
     features::{
         activity::controllers::{
@@ -15,6 +13,7 @@ use crate::{
         },
     },
     spaces::controllers::panel_requirements::PanelRequirementStatus,
+    *,
 };
 
 #[derive(Clone, Copy, DioxusController)]
@@ -41,8 +40,7 @@ impl SpaceContextProvider {
         let actions = use_loader(move || async move { list_actions(space_id()).await })?;
         let ranking =
             use_loader(move || async move { get_ranking_handler(space_id(), None).await })?;
-        let my_score =
-            use_loader(move || async move { get_my_score_handler(space_id()).await })?;
+        let my_score = use_loader(move || async move { get_my_score_handler(space_id()).await })?;
 
         let mut current_role = use_memo(move || {
             let space = space();

@@ -25,6 +25,9 @@ pub use strum::*;
 pub use types::*;
 pub mod logger;
 
+mod fullstack;
+pub use fullstack::*;
+
 pub use dioxus::logger::tracing::{debug, error, info, warn};
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
@@ -49,6 +52,7 @@ pub use providers::*;
 pub use run::*;
 
 pub use dioxus::prelude::*;
+pub use fullstack::use_loader;
 
 // NOTE: it replaces dioxus::prelude::* and should be used after it.
 pub use components::SuspenseBoundary;

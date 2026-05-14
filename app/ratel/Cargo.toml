@@ -89,6 +89,9 @@ ssi = { version = "0.12.0", features = ["bbs"], optional = true }
 aws-credential-types = { version = "1.2.6", optional = true }
 strum = { version = "0.27.2", features = ["derive"] }
 js-sys = "0.3"
+# Installed in tauri-web main.rs so release-wasm panics print location + message
+# to console instead of bubbling up as opaque "RuntimeError: unreachable".
+console_error_panic_hook = { version = "0.1", optional = true }
 tracing-wasm = "0.2.1"
 dioxus-cli-config = "0.7.3"
 tracing-subscriber = { workspace = true }
@@ -114,12 +117,13 @@ rmcp = { version = "0.7.0", git = "https://github.com/modelcontextprotocol/rust-
     "macros",
 ], optional = true }
 strip-tags = "0.1.0"
+generational-box = "0.7.9"
 
 [features]
 default = ["web", "server", "mobile"]
 bypass = []
 skip-server = []
-web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2", "uuid/js"]
+web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2", "uuid/js", "dep:console_error_panic_hook"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile", "tokio"]
 # Type-only feature: compiles app/ratel/src/tauri/types/ and nothing else.
@@ -128,7 +132,7 @@ mobile = ["dioxus/mobile", "tokio"]
 # Web build for the Tauri Android shell. Additive on `web` so the dioxus-web
 # code path is identical; only adds compilation of app/ratel/src/tauri/interop/
 # (the JS-eval drivers that call window.__TAURI__.invoke).
-tauri-web = ["tauri-common"]
+tauri-web = ["tauri-common", "dep:console_error_panic_hook", "dep:reqwest"]
 server = [
   "aws-config",
   "aws-credential-types",
@@ -153,7 +157,7 @@ server = [
   "names",
   "qdrant-client",
   "random-string",
-  "reqwest",
+  "dep:reqwest",
   "ratel-canister",
   "serde_dynamo",
   "sha2",

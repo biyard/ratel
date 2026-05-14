@@ -1,7 +1,6 @@
-use crate::features::spaces::controllers::user::get_user;
-use crate::common::*;
-use dioxus::fullstack::{Loader, Loading};
 use crate::features::auth::models::user::User;
+use crate::features::spaces::controllers::user::get_user;
+use crate::*;
 
 #[track_caller]
 pub fn use_user() -> dioxus::prelude::Result<Loader<Option<User>>, Loading> {

@@ -88,7 +88,12 @@ else
   CSP_CONNECT := 'self' tauri: ipc: http: https: wss:
 endif
 
-CSP_OVERRIDE := default-src 'self' tauri: http://tauri.localhost https://ratel.foundation https://*.ratel.foundation; script-src 'self' 'wasm-unsafe-eval' tauri: http://tauri.localhost https://www.gstatic.com; connect-src $(CSP_CONNECT); img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com
+# `'unsafe-eval'` is required because dioxus / wasm-bindgen call JS eval() or
+# `new Function(...)` for some dynamic dispatch paths. `'wasm-unsafe-eval'`
+# alone only allows WebAssembly.compile/instantiate, not JS string-eval.
+# Without it the wasm bundle aborts with `EvalError: Refused to evaluate a
+# string as JavaScript`. Acceptable in dev; consider narrowing for prod.
+CSP_OVERRIDE := default-src 'self' tauri: http://tauri.localhost https://ratel.foundation https://*.ratel.foundation; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' tauri: http://tauri.localhost https://www.gstatic.com; connect-src $(CSP_CONNECT); img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com
 
 DIST_DIR := $(CURDIR)/dist
 RATEL_DIR := $(CURDIR)/../ratel
@@ -99,7 +104,7 @@ WORKSPACE_ROOT := $(CURDIR)/../..
 ifneq ($(CARGO_TARGET_DIR),)
 	DX_BUILD_DIR = $(CARGO_TARGET_DIR)/dx/app-shell/release/web/public
 else
-	DX_BUILD_DIR = $(WORKSPACE_ROOT)/app/ratel/target/dx/app-shell/release/web/public
+	DX_BUILD_DIR = $(WORKSPACE_ROOT)/target/dx/app-shell/release/web/public
 endif
 
 .PHONY: help install-tauri-cli dx-build run-android build-android build-android-debug sign-apk run-apk debug-apk clean keystore.sha1 apk.sha1
@@ -148,6 +153,20 @@ apk.sha1:
 dx-build:
 	cd $(RATEL_DIR) && make build-tauri
 	rsync -a --delete "$(DX_BUILD_DIR)/" "$(DIST_DIR)/"
+
+	@# Static-served shims for SSR-only globals + atob defensive default.
+	@# - window.atob: if input is undefined/null, return single byte 0x80 (CBOR
+	@#   for empty array) so HTMLData::from_serialized deserializes cleanly
+	@#   instead of UnexpectedEof.
+	@# - window.hydrate_queue: empty array — SSR server normally seeds this
+	@#   with suspense-boundary work items. Static serve has none, but the wasm
+	@#   iterates `hydrate_queue.length` unconditionally.
+	@# - window.hydration_callback: no-op — partnered with hydrate_queue. Called
+	@#   by the iteration even when queue is empty in some code paths.
+	@if ! grep -q "patched_atob" $(DIST_DIR)/index.html; then \
+		echo "Injecting SSR-global shims into index.html"; \
+		python3 -c "p='$(DIST_DIR)/index.html'; t=open(p).read(); s='<script>(function(){var __o=window.atob;window.atob=function(x){return (x===undefined||x===null)?String.fromCharCode(0x80):__o.call(this,x);};if(!window.hydrate_queue)window.hydrate_queue=[];if(!window.hydration_callback)window.hydration_callback=function(){};window.__patched_atob=true;})();</script>'; open(p,'w').write(t.replace('<body>','<body>'+s,1))"; \
+	fi
 
 run: run-android
 

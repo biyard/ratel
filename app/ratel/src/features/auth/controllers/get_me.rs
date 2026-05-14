@@ -14,6 +14,17 @@ pub struct GetMeResponse {
     pub membership: Option<UserMembershipResponse>,
 }
 
+// The dioxus `#[get]` macro generates BOTH the server route and the
+// dioxus-fullstack client stub. We want the server route, and we want the
+// fullstack client stub for the browser web build — but NOT for tauri-web,
+// because the fullstack client pulls hydrate / DOM-walking infrastructure
+// that breaks on a statically-served Tauri bundle.
+//
+// Gate the macro-generated handler on `not(tauri-web)`. Under `tauri-web`,
+// substitute a hand-rolled reqwest stub that calls the same endpoint.
+// This is the PoC for the eventual `#[get]` proc macro that will do this
+// branching automatically.
+#[cfg(not(feature = "tauri-web"))]
 #[mcp_tool(name = "get_me", description = "Get current user info and membership details.")]
 #[get("/api/auth/me", user: OptionalUser)]
 pub async fn get_me_handler() -> Result<GetMeResponse> {
@@ -78,4 +89,9 @@ pub async fn get_me_handler() -> Result<GetMeResponse> {
         user,
         membership,
     })
+}
+
+#[cfg(feature = "tauri-web")]
+pub async fn get_me_handler() -> Result<GetMeResponse> {
+    crate::common::fullstack::server_fn::get("/api/auth/me").await
 }

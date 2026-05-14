@@ -22,8 +22,6 @@ pub use features::*;
 #[cfg( feature = "tauri-web")]
 pub mod tauri;
 
-pub use dioxus::fullstack::{Loader, Loading};
-
 // `axum` is pulled in transitively through `dioxus-fullstack` and exposed at
 // `dioxus::fullstack::axum`. Re-export it here so all in-crate paths can use
 // `crate::axum::Router`, `crate::axum::routing::post`, etc. without going
