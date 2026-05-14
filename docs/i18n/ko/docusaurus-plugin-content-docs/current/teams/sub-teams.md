@@ -3,6 +3,8 @@ sidebar_position: 3
 title: 하위팀 (Sub-teams)
 ---
 
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
 # 하위팀
 
 하위팀은 상위 Team 이 다른 Team 을 자신의 팀 아래에 공식적으로 인정하는 방식입니다 — 챕터, 워킹 그룹, 파트너 셀처럼 흡수하지 않으면서 관계를 맺는 거예요. 양쪽 모두 자신의 게시글, 멤버, 트레저리, 스페이스를 그대로 유지하지만, 두 Team 사이의 관계는 규정 · 문서 · 공지 · 누가 누구의 하위팀인지에 대한 공개 등록부를 갖춘 _플랫폼 위의 링크_ 가 됩니다.
@@ -31,6 +33,18 @@ title: 하위팀 (Sub-teams)
 상위팀이 있든 / 신청했든 / 신청을 거절당했든 무관하게, Team 은 자신의 스페이스를 호스트하고 정상적인 활동을 이어갈 수 있습니다. 독립(Standalone) 상태는 그 자체로 완전히 유효한 정상 상태예요.
 
 ## 하위팀 신청
+
+> 🎬 **워크스루:** 상위팀의 신청 폼을 작성해 제출하고 승인을 받는 흐름.
+
+<video
+  controls
+  preload="metadata"
+  width="100%"
+  src={useBaseUrl('/media/subteam-register.mov')}
+  style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}
+>
+  브라우저가 동영상 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/subteam-register.mov')}>워크스루 다운로드</a>.
+</video>
 
 신청 화면은 하나의 하위팀 측 URL 에 모여 있고, 대기 중에 진행 상황을 보는 별도의 트래커가 있습니다.
 
@@ -61,6 +75,18 @@ title: 하위팀 (Sub-teams)
 상위팀이 **반려(Reject)** 하면 하위팀은 (보통 반려 사유를 보완한 뒤) 다시 신청할 수 있습니다. **승인(Approve)** 되면 관계가 **인증됨(Recognized)** 으로 전환되고, 새 화면들이 열리며 (아래 _하위팀 상세 페이지_ 참고), **상위팀 이탈** 옵션이 사용 가능해집니다.
 
 ## 상위팀으로서 하위팀 관리하기
+
+> 🎬 **워크스루:** 상위팀 관리자가 신청자가 보게 될 신청 폼 (가입 요건 + 커스텀 필드) 을 직접 구성하는 모습.
+
+<video
+  controls
+  preload="metadata"
+  width="100%"
+  src={useBaseUrl('/media/parent-setting.mov')}
+  style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}
+>
+  브라우저가 동영상 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/parent-setting.mov')}>워크스루 다운로드</a>.
+</video>
 
 상위팀이 관계를 운영하기 위해 하는 모든 작업은 한 URL 에, 상단의 다섯 개 탭으로 구성됩니다.
 
@@ -120,6 +146,18 @@ title: 하위팀 (Sub-teams)
 `/sub-teams/manage` 의 Documents 탭에서는 문서 단위 삭제와 순서 변경도 가능합니다.
 
 ## 하위팀 공지
+
+> 🎬 **워크스루:** 상위팀이 공지를 발행하고, 인정된 하위팀 wall 에 자동으로 전달되며, 자식팀 멤버가 그 공지에 댓글을 다는 흐름.
+
+<video
+  controls
+  preload="metadata"
+  width="100%"
+  src={useBaseUrl('/media/announcement.mov')}
+  style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}
+>
+  브라우저가 동영상 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/announcement.mov')}>워크스루 다운로드</a>.
+</video>
 
 상위팀은 인정된 모든 하위팀에게 한 번에 브로드캐스트할 수 있어요 — 각 하위팀이 별도로 구독하지 않아도 됩니다. 작성기는 작성에 집중할 수 있도록 팀 아레나 레이아웃을 상속하지 않는 풀스크린 에디터예요:
 

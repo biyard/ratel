@@ -3,6 +3,8 @@ sidebar_position: 3
 title: Sub-teams
 ---
 
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
 # Sub-teams
 
 Sub-teams are how a parent Team formally recognizes another Team as part of its umbrella — a chapter, a working group, a partner cell — without absorbing it. Each side keeps its own posts, members, treasury, and Spaces, but the relationship is an on-platform link with rules, documents, announcements, and a public registry of who belongs to whom.
@@ -31,6 +33,18 @@ The actions that touch the link itself are restricted to the Team's **admins or 
 A Team can host its own Spaces and run normal activity regardless of whether it has, has applied for, or has rejected applying to a parent. Standalone is a perfectly valid steady state.
 
 ## Applying to be a sub-team
+
+> 🎬 **Walkthrough:** filling in the parent's application form, submitting, and getting approved.
+
+<video
+  controls
+  preload="metadata"
+  width="100%"
+  src={useBaseUrl('/media/subteam-register.mov')}
+  style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}
+>
+  Your browser doesn't support embedded video. <a href={useBaseUrl('/media/subteam-register.mov')}>Download the walkthrough</a>.
+</video>
 
 The application surface lives at a single child-side URL, plus a status tracker the child uses while waiting:
 
@@ -61,6 +75,18 @@ While an application is **Pending**, the child can **Cancel application** (withd
 If the parent **Rejects**, the child can re-apply later (typically after addressing the rejection reason). If the parent **Approves**, the relationship becomes **Recognized** and the child gets a new set of pages (see _Sub-team detail_, below) plus the option to **Leave parent**.
 
 ## Managing child sub-teams as a parent
+
+> 🎬 **Walkthrough:** the parent admin builds the application form (eligibility thresholds + custom fields) that applicants will see.
+
+<video
+  controls
+  preload="metadata"
+  width="100%"
+  src={useBaseUrl('/media/parent-setting.mov')}
+  style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}
+>
+  Your browser doesn't support embedded video. <a href={useBaseUrl('/media/parent-setting.mov')}>Download the walkthrough</a>.
+</video>
 
 Everything a parent does to operate the relationship lives at one URL, with five tabs along the top:
 
@@ -122,6 +148,18 @@ The same editor pre-filled with the existing document. Edits autosave. Editing a
 The Documents tab on `/sub-teams/manage` also exposes per-document delete and reorder.
 
 ## Sub-team announcements
+
+> 🎬 **Walkthrough:** the parent posts an announcement, every recognized sub-team sees it on their wall, and a member of the child team comments on it.
+
+<video
+  controls
+  preload="metadata"
+  width="100%"
+  src={useBaseUrl('/media/announcement.mov')}
+  style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}
+>
+  Your browser doesn't support embedded video. <a href={useBaseUrl('/media/announcement.mov')}>Download the walkthrough</a>.
+</video>
 
 Parents can broadcast to every recognized sub-team without needing each child to subscribe. The composer is a full-screen focused editor (it does NOT inherit the team-arena layout) so the author can write distraction-free:
 

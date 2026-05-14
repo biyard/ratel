@@ -21,7 +21,10 @@ use crate::features::sub_team::models::{
 };
 
 #[cfg(feature = "server")]
-const ANNOUNCEMENT_SK_PREFIX: &str = "SUB_TEAM_ANNOUNCEMENT";
+// Trailing `#` keeps the begins_with filter from accidentally matching
+// `SUB_TEAM_ANNOUNCEMENT_FANOUT#...` marker rows that live in the same
+// partition. See `announcements.rs` for the full rationale.
+const ANNOUNCEMENT_SK_PREFIX: &str = "SUB_TEAM_ANNOUNCEMENT#";
 #[cfg(feature = "server")]
 const PAGE_LIMIT: i32 = 100;
 

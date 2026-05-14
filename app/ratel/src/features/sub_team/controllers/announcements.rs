@@ -15,7 +15,14 @@ use crate::features::sub_team::services::announcement_fanout::{
 };
 
 #[cfg(feature = "server")]
-const ANNOUNCEMENT_SK_PREFIX: &str = "SUB_TEAM_ANNOUNCEMENT";
+// Trailing `#` is required: without it the begins_with query would also
+// match `SUB_TEAM_ANNOUNCEMENT_FANOUT#...` marker rows in the same
+// partition (when a team is both a parent broadcasting and a recognized
+// child of someone else), and the deserializer would then try to read
+// a `SubTeamAnnouncement` out of a marker row and fail on a missing
+// `title` field — aborting the whole list. The `#` narrows the prefix to
+// the announcement-id segment only.
+const ANNOUNCEMENT_SK_PREFIX: &str = "SUB_TEAM_ANNOUNCEMENT#";
 #[cfg(feature = "server")]
 const PAGE_LIMIT: i32 = 50;
 
