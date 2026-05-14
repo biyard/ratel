@@ -1,3 +1,4 @@
+pub(crate) use tauri_common::*;
 mod commands;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

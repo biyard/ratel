@@ -429,6 +429,7 @@ dependencies = [
  "ssi",
  "strip-tags",
  "strum 0.27.2",
+ "tauri-common",
  "thiserror 2.0.18",
  "time",
  "tokio",
@@ -12502,11 +12503,11 @@ dependencies = [
 name = "ratel-tauri"
 version = "0.1.0"
 dependencies = [
- "app-shell",
  "serde",
  "serde_json",
  "tauri",
  "tauri-build",
+ "tauri-common",
  "tauri-plugin-google-auth",
  "tauri-plugin-opener",
  "thiserror 2.0.18",
@@ -16202,6 +16203,20 @@ dependencies = [
  "url",
  "uuid 1.18.1",
  "walkdir",
+]
+
+[[package]]
+name = "tauri-common"
+version = "0.1.0"
+dependencies = [
+ "dioxus-translate",
+ "js-sys",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "thiserror 2.0.18",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
 ]
 
 [[package]]

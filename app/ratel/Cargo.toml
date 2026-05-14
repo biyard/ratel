@@ -26,6 +26,7 @@ qdrant-client = { workspace = true, optional = true }
 tracing = { workspace = true }
 gloo-timers = { version = "0.3", features = ["futures"], optional = true }
 serde_dynamo = { workspace = true, optional = true }
+tauri-common = {workspace = true, optional = true, features = ["web"] }
 base64 = { workspace = true }
 # `js` feature: source of randomness on `wasm32-unknown-unknown` for `Uuid::now_v7()`.
 uuid = { workspace = true }
@@ -123,11 +124,10 @@ mobile = ["dioxus/mobile", "tokio"]
 # Type-only feature: compiles app/ratel/src/tauri/types/ and nothing else.
 # Pulled by app/ratel-tauri so the native shell shares DTO definitions with the
 # web bundle. MUST NOT bring in dioxus, reqwest, or any web/server-only deps.
-tauri-types = []
 # Web build for the Tauri Android shell. Additive on `web` so the dioxus-web
 # code path is identical; only adds compilation of app/ratel/src/tauri/interop/
 # (the JS-eval drivers that call window.__TAURI__.invoke).
-tauri-web = ["web", "tauri-types"]
+tauri-web = ["tauri-common"]
 server = [
   "aws-config",
   "aws-credential-types",

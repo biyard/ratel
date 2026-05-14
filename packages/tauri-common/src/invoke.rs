@@ -6,10 +6,10 @@
 //! that dispatches to every `#[tauri::command]` in the native shell.
 //! Binding it once via wasm_bindgen avoids per-command JS driver files.
 
-use crate::Error;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use wasm_bindgen::prelude::*;
+use crate::Error;
 
 #[wasm_bindgen]
 unsafe extern "C" {

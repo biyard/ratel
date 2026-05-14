@@ -16,7 +16,9 @@ serde_json = { workspace = true }
 
 [dependencies]
 tauri = { version = "2", features = [] }
+tauri-common = { workspace = true }
 tauri-plugin-opener = "2"
+
 # Native Google Sign In: Android Credential Manager + Google
 # AuthorizationClient. Reads OAuth client_id from the web bundle (the
 # bundle passes it as a sign_in() argument, extracted at compile time
@@ -25,7 +27,3 @@ tauri-plugin-google-auth = "0.5.1"
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
-
-# Share request/response DTOs with the web bundle. tauri-types compiles only
-# the DTO modules — no dioxus, no reqwest, no other runtime deps.
-app-shell = { path = "../../ratel", default-features = false, features = ["tauri-types"] }

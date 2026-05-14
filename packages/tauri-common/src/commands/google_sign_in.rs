@@ -13,3 +13,5 @@ pub struct TokenResponse {
     #[serde(default)]
     pub email: Option<String>,
 }
+
+crate::define_invoke_tauri!(sign_in, "google_sign_in", res: TokenResponse);

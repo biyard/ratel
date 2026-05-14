@@ -25,6 +25,7 @@ dioxus-translate-macro = { path = "packages/dioxus-translate-macro", version = "
 by-macros = { path = "packages/by-macros", version = "0.6.*" }
 
 icons = { path = "packages/icons" }
+tauri-common = { path = "packages/tauri-common" }
 
 bigdecimal = "0.4.7"
 
@@ -79,3 +80,14 @@ web-sys = {version = "0.3", features = ["Clipboard"] }
 wasm-bindgen = { version = "0.2", features = [] }
 wasm-bindgen-futures = "0.4"
 serde-wasm-bindgen = "0.6"
+
+# Strip debug info from the ratel-tauri Android cdylib in dev builds. Without
+# this, libratel_tauri_lib.so balloons to ~700MB on android-debug builds —
+# unusable for emulator install. Strip leaves the symbol table intact enough
+# for panic backtraces to identify the source location but removes the DWARF
+# debug entries that dominate the binary size.
+[profile.dev.package.ratel-tauri]
+strip = "debuginfo"
+
+[profile.release.package.ratel-tauri]
+strip = "debuginfo"

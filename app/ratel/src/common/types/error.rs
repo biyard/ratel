@@ -434,12 +434,11 @@ pub enum Error {
     #[translate(from)]
     SpaceReport(#[from] crate::features::spaces::pages::report::types::SpaceReportError),
 
-    #[error("serialize args: {0}")]
-    Serialize(String),
-    #[error("deserialize result: {0}")]
-    Deserialize(String),
-    #[error("command failed: {0}")]
-    CommandFailed(String),
+
+    #[cfg(feature = "tauri-web")]
+    #[error("{0}")]
+    #[translate(from)]
+    TauriError(#[from] tauri_common::Error),
 }
 
 #[cfg(feature = "server")]

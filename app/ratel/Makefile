@@ -241,7 +241,7 @@ run: ../../node_modules js/node_modules
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES) --no-default-features
 
 run-tauri: ../../node_modules js/node_modules
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port 8000 --no-default-features @client --features $(RUN_FEATURES),tauri-web --web @server --features $(RUN_FEATURES) --platform server
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port 8000 --no-default-features --debug-symbols false @client --features $(RUN_FEATURES),tauri-web --web @server --features $(RUN_FEATURES) --platform server
 
 $(HOME)/.android/debug.keystore:
 	keytool -genkey -v -keystore $@ -storepass android -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Korea,O=Biyard,C=KR"

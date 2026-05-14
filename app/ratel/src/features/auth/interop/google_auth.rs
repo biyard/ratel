@@ -5,13 +5,13 @@ use super::*;
 // reliably inside Tauri's WebView (Google returns disallowed_useragent),
 // so the tauri-web build below replaces both functions with a native
 // bridge through tauri-plugin-google-auth.
-#[cfg(all(feature = "web", not(feature = "tauri-web")))]
+#[cfg(not(feature = "tauri-web"))]
 define_invoke_js!(
     init_firebase,
     "init_firebase",
     crate::common::FirebaseConfig
 );
-#[cfg(all(feature = "web", not(feature = "tauri-web")))]
+#[cfg(not(feature = "tauri-web"))]
 define_invoke_js!(sign_in, "signIn", res: super::UserInfo);
 
 // Tauri-web build: route through native Google Sign In on Android via
@@ -24,4 +24,5 @@ pub async fn init_firebase(_: &crate::common::FirebaseConfig) -> crate::common::
     Ok(())
 }
 
-define_invoke_tauri!(sign_in, "google_sign_in", res: crate::tauri::TokenResponse);
+#[cfg(feature = "tauri-web")]
+pub use crate::tauri::sign_in;

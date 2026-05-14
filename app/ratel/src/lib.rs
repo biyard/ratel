@@ -19,7 +19,7 @@ pub use contexts::*;
 pub mod features;
 pub use features::*;
 
-#[cfg(any(feature = "tauri-types", feature = "tauri-web"))]
+#[cfg( feature = "tauri-web")]
 pub mod tauri;
 
 pub use dioxus::fullstack::{Loader, Loading};
