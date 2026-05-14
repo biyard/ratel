@@ -7,6 +7,7 @@
 //! row via the controller hook actions.
 
 use crate::common::components::editor::Editor as RichEditor;
+use crate::common::components::file_uploader::{FileUploader, UploadedFileMeta};
 use crate::features::social::controllers::find_team::find_team_handler;
 use crate::features::sub_team::hooks::BroadcastDraftStatus;
 use crate::features::sub_team::{
@@ -71,6 +72,7 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
         mut title,
         mut html_contents,
         mut tags,
+        mut attachments,
         mut space_enabled,
         space_type,
         mut draft_status,
@@ -83,6 +85,14 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
     // Local-only signal for the tag-input field. `tags` is the committed
     // chip list; this holds whatever the user is typing before Enter.
     let mut tag_draft: Signal<String> = use_signal(String::new);
+    // Korean IME composition guard. Enter pressed while the IME is still
+    // composing the trailing hangul character would otherwise fire the
+    // tag-commit handler twice: once with the in-progress text, then a
+    // second time after composition resolves and the leftover character
+    // reappears in the input. Track composition state explicitly and
+    // ignore Enter while it is active — matches the
+    // `common/components/search_input` pattern.
+    let mut tag_is_composing: Signal<bool> = use_signal(|| false);
 
     // ── Autosave effect ──────────────────────────────────────────────
     // Subscribe to every editor signal; on change, bump an internal
@@ -101,6 +111,7 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
             let t = title();
             let h = html_contents();
             let tg = tags();
+            let at = attachments();
             let se = space_enabled();
             let st = space_type();
             // First run after the loader seeds the editor: skip the save
@@ -122,7 +133,7 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                     return;
                 }
                 // Skip when there's nothing meaningful to save.
-                if t.is_empty() && h.is_empty() && tg.is_empty() && !se {
+                if t.is_empty() && h.is_empty() && tg.is_empty() && at.is_empty() && !se {
                     return;
                 }
                 draft_status.set(BroadcastDraftStatus::Saving);
@@ -136,6 +147,7 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                                 body: None,
                                 html_contents: Some(h),
                                 tags: Some(tg),
+                                attachments: Some(at),
                                 space_enabled: Some(se),
                                 space_type: st,
                             },
@@ -147,6 +159,7 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                             body: String::new(),
                             html_contents: h,
                             tags: tg,
+                            attachments: at,
                             space_enabled: se,
                             space_type: st,
                         });
@@ -446,7 +459,15 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                                 placeholder: tr.broadcast_tag_placeholder,
                                 value: "{tag_draft()}",
                                 oninput: move |e: Event<FormData>| tag_draft.set(e.value()),
+                                oncompositionstart: move |_| tag_is_composing.set(true),
+                                oncompositionend: move |_| tag_is_composing.set(false),
                                 onkeydown: move |e: Event<KeyboardData>| {
+                                    // Korean IME: skip Enter while composing
+                                    // the trailing character — otherwise it
+                                    // leaks into a duplicate tag.
+                                    if tag_is_composing() {
+                                        return;
+                                    }
                                     if e.key() == Key::Enter {
                                         e.prevent_default();
                                         let v = tag_draft().trim().to_string();
@@ -461,6 +482,138 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                                         }
                                     }
                                 },
+                            }
+                        }
+                    }
+
+                    // Attachments — reuses the FileUploader primitive used
+                    // by sub-team docs. Each upload is appended to the
+                    // `attachments` signal, triggering autosave.
+                    div { class: "side-card",
+                        div { class: "side-card__title",
+                            svg {
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_width: "2",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                path { d: "M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" }
+                            }
+                            "{tr.broadcast_section_attachments}"
+                        }
+
+                        if attachments().is_empty() {
+                            div { class: "space-toggle__hint", "{tr.broadcast_attachments_none}" }
+                        } else {
+                            div { class: "attachment-list",
+                                for (idx, f) in attachments().iter().cloned().enumerate() {
+                                    div {
+                                        class: "file-row",
+                                        key: "{f.id}-{idx}",
+                                        div { class: "file-row__icon",
+                                            svg {
+                                                view_box: "0 0 24 24",
+                                                fill: "none",
+                                                stroke: "currentColor",
+                                                stroke_width: "2",
+                                                stroke_linecap: "round",
+                                                stroke_linejoin: "round",
+                                                path { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }
+                                                polyline { points: "14 2 14 8 20 8" }
+                                            }
+                                        }
+                                        div { class: "file-row__body",
+                                            div { class: "file-row__name", "{f.name}" }
+                                            div { class: "file-row__meta", "{f.size}" }
+                                        }
+                                        button {
+                                            class: "file-row__remove",
+                                            r#type: "button",
+                                            "aria-label": tr.broadcast_remove_tag,
+                                            onclick: move |_| {
+                                                attachments
+                                                    .with_mut(|v| {
+                                                        if idx < v.len() {
+                                                            v.remove(idx);
+                                                        }
+                                                    });
+                                                draft_status.set(BroadcastDraftStatus::Dirty);
+                                            },
+                                            svg {
+                                                view_box: "0 0 24 24",
+                                                fill: "none",
+                                                stroke: "currentColor",
+                                                stroke_width: "2.5",
+                                                stroke_linecap: "round",
+                                                stroke_linejoin: "round",
+                                                line {
+                                                    x1: "18",
+                                                    y1: "6",
+                                                    x2: "6",
+                                                    y2: "18",
+                                                }
+                                                line {
+                                                    x1: "6",
+                                                    y1: "6",
+                                                    x2: "18",
+                                                    y2: "18",
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        FileUploader {
+                            class: "file-dropzone".to_string(),
+                            accept: ".pdf,.docx,.pptx,.xlsx,.png,.jpg,.jpeg".to_string(),
+                            on_upload_success: move |_: String| {},
+                            on_upload_meta: move |uploaded: UploadedFileMeta| {
+                                let UploadedFileMeta { url, name, size } = uploaded;
+                                let uploaded_name = if name.trim().is_empty() {
+                                    url.split('/').next_back().unwrap_or("file").to_string()
+                                } else {
+                                    name
+                                };
+                                let ext = FileExtension::from_name_or_url(&uploaded_name, &url);
+                                attachments
+                                    .with_mut(|v| {
+                                        v.push(File {
+                                            id: url.clone(),
+                                            name: uploaded_name,
+                                            size,
+                                            ext,
+                                            url: Some(url),
+                                            uploader_name: None,
+                                            uploader_profile_url: None,
+                                            uploaded_at: Some(
+                                                crate::common::utils::time::get_now_timestamp_millis(),
+                                            ),
+                                        });
+                                    });
+                                draft_status.set(BroadcastDraftStatus::Dirty);
+                            },
+                            svg {
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_width: "2",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                path { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }
+                                polyline { points: "17 8 12 3 7 8" }
+                                line {
+                                    x1: "12",
+                                    y1: "3",
+                                    x2: "12",
+                                    y2: "15",
+                                }
+                            }
+                            span { class: "file-dropzone__label",
+                                "{tr.broadcast_attachments_upload_title}"
+                                small { "{tr.broadcast_attachments_upload_hint}" }
                             }
                         }
                     }

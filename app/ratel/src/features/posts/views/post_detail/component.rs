@@ -55,6 +55,10 @@ pub fn PostDetail(post_id: ReadSignal<FeedPartition>) -> Element {
         .as_ref()
         .and_then(|p| p.urls.first().cloned())
         .unwrap_or_default();
+    let post_attachments = post
+        .as_ref()
+        .map(|p| p.attachments.clone())
+        .unwrap_or_default();
     let author_name = post
         .as_ref()
         .map(|p| {
@@ -335,6 +339,31 @@ pub fn PostDetail(post_id: ReadSignal<FeedPartition>) -> Element {
                     div {
                         class: "post-hero__body",
                         dangerous_inner_html: "{post_html}",
+                    }
+
+                    // File attachments from the source Post (currently
+                    // populated by the sub-team docs dual-write path —
+                    // any future Post-authoring surface that attaches
+                    // files surfaces here automatically).
+                    if !post_attachments.is_empty() {
+                        div { class: "post-hero__attachments",
+                            for file in post_attachments.iter() {
+                                {
+                                    let href = file.url.clone().unwrap_or_default();
+                                    rsx! {
+                                        a {
+                                            class: "post-hero__attachment",
+                                            href: "{href}",
+                                            target: "_blank",
+                                            rel: "noopener noreferrer",
+                                            lucide_dioxus::Paperclip { class: "w-3 h-3 [&>path]:stroke-current" }
+                                            span { class: "post-hero__attachment-name", "{file.name}" }
+                                            span { class: "post-hero__attachment-size", "{file.size}" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     div { class: "post-hero__actions",

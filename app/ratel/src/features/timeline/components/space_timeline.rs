@@ -146,6 +146,7 @@ fn space_to_post(space: MySpaceResponse) -> PostResponse {
         booster: BoosterType::NoBoost,
         rewards: None,
         urls: vec![],
+        attachments: vec![],
         liked: false,
         categories: vec![],
         status: PostStatus::Published,

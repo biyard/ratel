@@ -27,6 +27,14 @@ pub async fn get_space(
     let post = post.ok_or_else(|| Error::NotFound("Post Not Found".to_string()))?;
     let user: Option<User> = user.into();
 
+    // Sub-team broadcast / direct-message Posts override Space visibility:
+    // even if the attached Space is `Public`, audience is restricted to the
+    // broadcast's audience. The extension method is a no-op for ordinary
+    // posts. Defined in `sub_team::services::broadcast_access`.
+    use crate::features::sub_team::services::broadcast_access::PostBroadcastAccessExt;
+    post.assert_broadcast_access(dynamo, user.as_ref().map(|u| &u.pk))
+        .await?;
+
     let permissions = post.get_permissions(dynamo, user.clone()).await?;
     let liked = if let Some(ref user) = user {
         post.is_liked(dynamo, &user.pk).await?

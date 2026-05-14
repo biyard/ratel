@@ -159,6 +159,7 @@ pub async fn create_announcement_handler(
     );
     ann.html_contents = body.html_contents;
     ann.tags = body.tags;
+    ann.attachments = body.attachments;
     ann.space_enabled = body.space_enabled;
     ann.space_type = body.space_type;
     ann.create(cli).await.map_err(|e| {
@@ -224,6 +225,12 @@ pub async fn update_announcement_handler(
     if let Some(tags) = body.tags {
         updater = updater.with_tags(tags.clone());
         existing.tags = tags;
+        changed = true;
+    }
+
+    if let Some(attachments) = body.attachments {
+        updater = updater.with_attachments(attachments.clone());
+        existing.attachments = attachments;
         changed = true;
     }
 
@@ -328,7 +335,11 @@ pub async fn publish_announcement_handler(
         body: ContentBody::html(anchor_post_body),
         post_type: PostType::Post,
         status: PostStatus::Published,
-        visibility: Some(existing.visibility.clone()),
+        // Sub-team broadcasts are NEVER publicly visible — `Visibility::Broadcast`
+        // hands access control over to
+        // `sub_team::services::broadcast_access::can_view_broadcast_post`
+        // (parent team's members + every recognized child team's members).
+        visibility: Some(crate::features::posts::types::Visibility::Broadcast),
         shares: 0,
         likes: 0,
         comments: 0,
@@ -344,6 +355,7 @@ pub async fn publish_announcement_handler(
         booster: None,
         rewards: None,
         urls: vec![],
+        attachments: existing.attachments.clone(),
         categories: existing.tags.clone(),
         announcement_id: Some(existing.announcement_id.clone()),
         announcement_parent_team_id: Some(parent_team_id_str),

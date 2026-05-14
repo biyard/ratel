@@ -109,8 +109,8 @@ Phase 0 의 풀 Essence 파이프라인 — 모든 스페이스 액션을 본인
 
 > 🎬 **워크스루:** 스페이스를 열고 아레나, 패널, 액션 카루셀을 탐색하는 흐름.
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/overview.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-브라우저가 비디오 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/overview.mov')}>워크스루 다운로드</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/overview.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+브라우저가 비디오 임베드를 지원하지 않습니다. <a href="https://metadata.ratel.foundation/mov/overview.mov">워크스루 다운로드</a>.
 </video>
 
 ## 다음 페이지
