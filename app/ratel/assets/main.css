@@ -15126,7 +15126,14 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 28px;
+  /* Background + border-bottom span the full viewport, but the
+     inner content (back-btn ↔ "새 게시물" button) is constrained to
+     match `.drafts-arena .page` (max-width 880px) so the topbar and
+     the stat strip align on the same x-axis instead of drifting.
+     Vertical padding kept tight (10px) because the page already
+     lives inside `SocialLayout`'s `p-5` (20px) padded container —
+     a thicker topbar makes the header zone read as a wasted band. */
+  padding: 10px max(28px, calc((100% - 880px) / 2 + 28px));
   background: var(--dark, rgba(6, 6, 14, 0.80)) var(--light, rgba(244, 243, 239, 0.86));
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-subtle);
@@ -37390,6 +37397,98 @@ body.comments-panel-resizing {
   justify-content: center;
   padding: 0 4px;
   box-shadow: 0 0 8px rgba(252, 179, 0, 0.4);
+}
+
+/* ── Grouped hud-btn dropdown ────────────────────────
+   Wraps a `.hud-btn` + a hover-revealed `.hud-menu`. The 8 flat
+   buttons collapse into 2 singles (Notifications, Settings) + 3
+   groups (Create, Engage, Account). Theme toggle stays inside the
+   Settings panel (single button) — NOT inside this toolbar. */
+.home-arena .hud-group {
+  position: relative;
+}
+/* Group buttons own the dropdown — the icon-affordance is the menu
+   itself, so the hover-revealed label below the button is redundant
+   and overlaps the menu visually. Hide it for grouped buttons; keep
+   it for singles (Notifications / Settings). */
+.home-arena .hud-group > .hud-btn .hud-btn__label {
+  display: none;
+}
+.home-arena .hud-menu {
+  position: absolute;
+  /* No gap — the menu sits flush under the button and the visual
+     gap is paid in transparent `padding-top` so the mouse can
+     travel button → menu without crossing a hover dead zone. */
+  top: 100%;
+  padding-top: 8px;
+  right: 0;
+  min-width: 220px;
+  z-index: 30;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 0.14s ease, transform 0.14s ease;
+}
+.home-arena .hud-group:hover > .hud-menu,
+.home-arena .hud-group:focus-within > .hud-menu,
+.home-arena .hud-group[data-open="true"] > .hud-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.home-arena .hud-menu__inner {
+  background: var(--ha-bg-glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--ha-border-subtle);
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: 0 18px 60px var(--ha-shadow-card);
+}
+.home-arena .hud-menu__heading {
+  font-family: "Orbitron", sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ha-text-dim);
+  padding: 10px 12px 6px;
+  font-weight: 700;
+}
+.home-arena .hud-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  color: var(--ha-text-muted);
+  text-decoration: none;
+  font-family: "Outfit", sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+.home-arena .hud-menu__item:hover {
+  background: var(--ha-bg-glass-hover);
+  color: var(--ha-text-primary);
+}
+.home-arena .hud-menu__item svg {
+  width: 15px;
+  height: 15px;
+  color: inherit;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+.home-arena .hud-menu__item--active {
+  background: rgba(252, 179, 0, 0.12);
+  color: #fcb300;
+}
+.home-arena .hud-menu__item--active svg {
+  opacity: 1;
 }
 
 /* ── Teams dropdown ──────────────────────────────── */

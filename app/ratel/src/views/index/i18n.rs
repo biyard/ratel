@@ -18,6 +18,31 @@ translate! {
         ko: "생성",
     },
 
+    compose_post: {
+        en: "Compose post",
+        ko: "글 작성",
+    },
+
+    engage: {
+        en: "Engage",
+        ko: "참여",
+    },
+
+    account: {
+        en: "Account",
+        ko: "계정",
+    },
+
+    profile: {
+        en: "Profile",
+        ko: "프로필",
+    },
+
+    ai_assist: {
+        en: "AI assist",
+        ko: "AI 어시스트",
+    },
+
     drafts: {
         en: "Drafts",
         ko: "임시저장",

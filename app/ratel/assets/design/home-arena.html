@@ -45,6 +45,20 @@
     .hud-btn:hover .hud-btn__label{opacity:1}
     .hud-btn__badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:var(--accent-gold);color:#0a0a0a;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;box-shadow:0 0 8px rgba(252,179,0,0.4)}
 
+    /* Grouped dropdown — 2-deep menu opens under a hud-btn on hover.
+       Theme toggle intentionally NOT in this toolbar — that lives in the
+       Settings side panel (Profile dropdown's Settings entry opens it). */
+    .hud-group{position:relative}
+    .hud-menu{position:absolute;top:100%;padding-top:8px;right:0;min-width:220px;opacity:0;pointer-events:none;transform:translateY(-4px);transition:opacity 0.14s ease,transform 0.14s ease;z-index:30}
+    .hud-group:hover>.hud-menu,.hud-group:focus-within>.hud-menu,.hud-group[data-open="true"]>.hud-menu{opacity:1;pointer-events:auto;transform:translateY(0)}
+    .hud-menu__inner{background:var(--bg-glass);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.10);border-radius:14px;padding:6px;box-shadow:0 18px 60px rgba(0,0,0,0.55)}
+    .hud-menu__heading{font-family:var(--font-display);font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim);padding:10px 12px 6px;font-weight:700}
+    .hud-menu__item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;color:var(--text-muted);text-decoration:none;font:500 12.5px/1.2 var(--font-body);cursor:pointer;transition:background 0.14s,color 0.14s;background:none;border:none;width:100%;text-align:left}
+    .hud-menu__item:hover{background:var(--bg-glass-hover);color:var(--text-primary)}
+    .hud-menu__item svg{width:15px;height:15px;color:inherit;flex-shrink:0;opacity:0.85}
+    .hud-menu__item--active{background:rgba(252,179,0,0.12);color:var(--accent-gold)}
+    .hud-menu__item--active svg{opacity:1}
+
     /* Section label */
     .section-label{position:relative;z-index:10;text-align:center;padding:0 28px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:10px}
     .section-label__dash{width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--text-dim),transparent)}
@@ -217,30 +231,85 @@
         <span class="arena-topbar__title">Ratel</span>
       </div>
       <div class="arena-topbar__actions">
-        <button class="hud-btn hud-btn--primary" aria-label="Create post">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-          <span class="hud-btn__label">Create</span>
+        <!-- Notifications — single button (keeps badge visible) -->
+        <button class="hud-btn" aria-label="Notifications">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="hud-btn__badge">6</span>
+          <span class="hud-btn__label">Notifications</span>
         </button>
-        <button class="hud-btn" aria-label="Drafts">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
-          <span class="hud-btn__badge">3</span>
-          <span class="hud-btn__label">Drafts</span>
-        </button>
-        <button class="hud-btn" aria-label="Rewards">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
-          <span class="hud-btn__label">Rewards</span>
-        </button>
-        <button class="hud-btn" aria-label="Credentials">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-          <span class="hud-btn__label">Credentials</span>
-        </button>
-        <!-- Character entry — opens /me/character (account-level XP, level, skill tree).
-             Uses Lucide-style 'award' (rosette/medal) for clear "level / progression"
-             semantics; matches the line-art weight of every other hud-btn icon. -->
-        <button class="hud-btn" aria-label="Character" data-testid="home-btn-character">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
-          <span class="hud-btn__label">Character</span>
-        </button>
+
+        <!-- Create ▾ — Compose / Drafts / AI assist -->
+        <div class="hud-group">
+          <button class="hud-btn hud-btn--primary" aria-haspopup="menu" aria-label="Create">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span class="hud-btn__label">Create</span>
+          </button>
+          <div class="hud-menu" role="menu">
+            <div class="hud-menu__inner">
+              <div class="hud-menu__heading">Create</div>
+              <button class="hud-menu__item hud-menu__item--active" role="menuitem">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                Compose post
+              </button>
+              <button class="hud-menu__item" role="menuitem">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Drafts
+              </button>
+              <button class="hud-menu__item" role="menuitem">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L13.5 8.5 L20 10 L13.5 11.5 L12 18 L10.5 11.5 L4 10 L10.5 8.5 Z"/></svg>
+                AI assist
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Engage ▾ — Rewards / Character / Network -->
+        <div class="hud-group">
+          <button class="hud-btn" aria-haspopup="menu" aria-label="Engage">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+            <span class="hud-btn__label">Engage</span>
+          </button>
+          <div class="hud-menu" role="menu">
+            <div class="hud-menu__inner">
+              <div class="hud-menu__heading">Engage</div>
+              <button class="hud-menu__item" role="menuitem">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+                Rewards
+              </button>
+              <button class="hud-menu__item" role="menuitem" data-testid="home-btn-character">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+                Character
+              </button>
+              <button class="hud-menu__item" role="menuitem">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Network
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Account ▾ — Profile / Credentials -->
+        <div class="hud-group">
+          <button class="hud-btn" aria-haspopup="menu" aria-label="Account">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span class="hud-btn__label">Account</span>
+          </button>
+          <div class="hud-menu" role="menu">
+            <div class="hud-menu__inner">
+              <div class="hud-menu__heading">Account</div>
+              <button class="hud-menu__item" role="menuitem">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Profile
+              </button>
+              <button class="hud-menu__item" role="menuitem">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                Credentials
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings — single button (opens side panel where Dark/Light toggle lives) -->
         <button class="hud-btn" aria-label="Settings">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
           <span class="hud-btn__label">Settings</span>
