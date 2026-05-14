@@ -222,6 +222,11 @@ pub struct ApplyContextDocument {
     /// agree button rendered and no eligibility gate.
     #[serde(default)]
     pub required: bool,
+    /// File attachments attached to this document at compose time.
+    /// Surfaced inside the apply-page agreement modal so applicants
+    /// can download the source files alongside the rich-text body.
+    #[serde(default)]
+    pub attachments: Vec<File>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -321,6 +326,7 @@ impl From<crate::features::sub_team::models::SubTeamDocument> for ApplyContextDo
             body_hash: d.body_hash,
             order: d.order,
             required: d.required,
+            attachments: d.attachments,
         }
     }
 }

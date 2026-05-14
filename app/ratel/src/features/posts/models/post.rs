@@ -68,6 +68,15 @@ pub struct Post {
 
     pub urls: Vec<String>,
 
+    /// File attachments associated with this Post (name, size, url, ext).
+    /// Currently populated by the sub-team docs path
+    /// (`controllers/docs.rs` dual-writes `SubTeamDocument.attachments`
+    /// onto the backing Post so the post-detail page can surface the
+    /// same files), but the field is generic on `Post` so any future
+    /// authoring surface can attach files without another schema change.
+    #[serde(default)]
+    pub attachments: Vec<crate::common::types::File>,
+
     #[serde(
         default,
         deserialize_with = "deserialize_categories",
@@ -205,6 +214,7 @@ impl Post {
             booster: None,
             rewards: None,
             urls: vec![],
+            attachments: vec![],
             space_visibility: None,
             categories: vec![],
             announcement_id: None,

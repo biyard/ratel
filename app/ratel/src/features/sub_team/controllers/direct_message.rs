@@ -126,6 +126,7 @@ pub async fn send_direct_message_handler(
         booster: None,
         rewards: None,
         urls: vec![],
+        attachments: vec![],
         categories: vec![],
         announcement_id: Some(announcement.announcement_id.clone()),
         announcement_parent_team_id: Some(parent_team_id_str),

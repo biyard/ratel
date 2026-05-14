@@ -348,6 +348,7 @@ pub async fn publish_announcement_handler(
         booster: None,
         rewards: None,
         urls: vec![],
+        attachments: vec![],
         categories: existing.tags.clone(),
         announcement_id: Some(existing.announcement_id.clone()),
         announcement_parent_team_id: Some(parent_team_id_str),
