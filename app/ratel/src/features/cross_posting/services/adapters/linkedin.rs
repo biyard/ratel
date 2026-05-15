@@ -6,11 +6,6 @@
 //! - `POST /v2/assets?action=registerUpload` + the returned upload URL —
 //!   two-step image upload before referencing the asset URN inside the
 //!   ugcPost's `media` array.
-//! - `GET  /v2/socialActions/{urn}` — engagement counts (likes / comments).
-//!   LinkedIn does not surface a "reposts" counter on the UGC API; the
-//!   `EngagementCounts.reposts` field is left at 0.
-//! - `GET  /v2/ugcPosts?q=authors&authors=List({memberUrn})&count=50` —
-//!   recent-post scan for the `find_by_backlink` lock-recovery probe.
 //!
 //! OAuth refresh:
 //! - `POST https://www.linkedin.com/oauth/v2/accessToken` with
@@ -21,6 +16,11 @@
 //!
 //! All requests include `LinkedIn-Version: 202404` and
 //! `X-Restli-Protocol-Version: 2.0.0` per LinkedIn's versioned-API contract.
+//!
+//! `fetch_engagement` and `find_by_backlink` are stubbed (return defaults)
+//! in Phase 1B — the engagement UI isn't surfaced and the dispatcher's
+//! `had_existing_lock` fix prevents the false-positive reconcile probe.
+//! Real LinkedIn impls of those endpoints can return when they're needed.
 
 use super::{
     CrossPostAdapter, DecryptedCredentials, EngagementCounts, ImageRef, LinkCard, PlatformError,
@@ -28,7 +28,7 @@ use super::{
 };
 use crate::features::cross_posting::types::SocialPlatform;
 use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 const API_HOST: &str = "https://api.linkedin.com";
 const OAUTH_HOST: &str = "https://www.linkedin.com";
@@ -141,49 +141,26 @@ impl CrossPostAdapter for LinkedInAdapter {
 
     async fn fetch_engagement(
         &self,
-        creds: DecryptedCredentials,
-        external_post_id: &str,
+        _creds: DecryptedCredentials,
+        _external_post_id: &str,
     ) -> Result<EngagementCounts, PlatformError> {
-        let (access_token, _member_urn) = unwrap_linkedin_creds(creds)?;
-
-        let url = format!(
-            "{}/v2/socialActions/{}",
-            self.api_host,
-            urlencoding::encode(external_post_id)
-        );
-        let resp = self
-            .get_authed(&url, &access_token)
-            .await?
-            .json::<SocialActionsResponse>()
-            .await
-            .map_err(|e| PlatformError::Unknown(format!("socialActions parse: {e}")))?;
-
-        Ok(parse_engagement(&resp))
+        // Phase 1B does not surface engagement counts in the syndication
+        // panel UI; returning zeros keeps the trait satisfied without
+        // pulling in the socialActions response shapes.
+        Ok(EngagementCounts::default())
     }
 
     async fn find_by_backlink(
         &self,
-        creds: DecryptedCredentials,
-        backlink_url: &str,
+        _creds: DecryptedCredentials,
+        _backlink_url: &str,
     ) -> Result<Option<PublishedRef>, PlatformError> {
-        let (access_token, member_urn) = unwrap_linkedin_creds(creds)?;
-        let author_urn = person_urn(&member_urn);
-
-        // `q=authors` + `authors=List({urn})` requires Restli protocol v2;
-        // header is set by `get_authed`. count=50 mirrors Bluesky's window.
-        let url = format!(
-            "{}/v2/ugcPosts?q=authors&authors=List({})&count=50",
-            self.api_host,
-            urlencoding::encode(&author_urn)
-        );
-        let resp = self
-            .get_authed(&url, &access_token)
-            .await?
-            .json::<UgcPostsListResponse>()
-            .await
-            .map_err(|e| PlatformError::Unknown(format!("ugcPosts list parse: {e}")))?;
-
-        Ok(scan_for_backlink(&resp, backlink_url))
+        // The dispatcher's `had_existing_lock` fix prevents the false-
+        // positive reconcile probe firing on every fresh job. Real stolen-
+        // lock cases (TTL elapsed mid-publish) are very rare on LinkedIn;
+        // returning None means we'll re-publish in that edge case
+        // (acceptable Phase 1B trade-off — risk of duplicate post).
+        Ok(None)
     }
 
     /// LinkedIn implementation of FR-5 #35: rotate the access token via
@@ -545,46 +522,6 @@ fn build_register_upload_body(author_urn: &str) -> serde_json::Value {
     })
 }
 
-fn parse_engagement(resp: &SocialActionsResponse) -> EngagementCounts {
-    EngagementCounts {
-        likes: resp
-            .likes_summary
-            .as_ref()
-            .map(|s| s.aggregated_total_likes)
-            .unwrap_or(0) as i32,
-        comments: resp
-            .comments_summary
-            .as_ref()
-            .map(|s| s.aggregated_total_comments)
-            .unwrap_or(0) as i32,
-        // LinkedIn UGC API doesn't expose a repost/share counter here.
-        reposts: 0,
-    }
-}
-
-fn scan_for_backlink(
-    resp: &UgcPostsListResponse,
-    backlink_url: &str,
-) -> Option<PublishedRef> {
-    for entry in &resp.elements {
-        let text_has = entry.text(&entry.id).contains(backlink_url);
-        let article_has = entry
-            .specific_content
-            .share_content
-            .media
-            .iter()
-            .any(|m| m.original_url.as_deref() == Some(backlink_url));
-        if text_has || article_has {
-            let urn = entry.id.clone();
-            return Some(PublishedRef {
-                external_post_url: post_url_from_urn(&urn),
-                external_post_id: urn,
-            });
-        }
-    }
-    None
-}
-
 fn person_urn(member_urn: &str) -> String {
     if member_urn.starts_with("urn:li:") {
         member_urn.to_string()
@@ -695,78 +632,6 @@ struct UploadMechanism {
 struct MediaUploadHttpRequest {
     #[serde(rename = "uploadUrl")]
     upload_url: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct SocialActionsResponse {
-    #[serde(rename = "likesSummary")]
-    likes_summary: Option<LikesSummary>,
-    #[serde(rename = "commentsSummary")]
-    comments_summary: Option<CommentsSummary>,
-}
-
-#[derive(Debug, Deserialize)]
-struct LikesSummary {
-    #[serde(rename = "aggregatedTotalLikes")]
-    aggregated_total_likes: u64,
-}
-
-#[derive(Debug, Deserialize)]
-struct CommentsSummary {
-    #[serde(rename = "aggregatedTotalComments")]
-    aggregated_total_comments: u64,
-}
-
-#[derive(Debug, Deserialize)]
-struct UgcPostsListResponse {
-    elements: Vec<UgcPostElement>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct UgcPostElement {
-    id: String,
-    #[serde(rename = "specificContent")]
-    specific_content: SpecificContent,
-}
-
-impl UgcPostElement {
-    /// LinkedIn's UGC list response wraps the body text under
-    /// `specificContent.com.linkedin.ugc.ShareContent.shareCommentary.text`.
-    /// Returns an empty string when missing — callers fall through to the
-    /// article-URL match path.
-    fn text(&self, _id_hint: &str) -> &str {
-        self.specific_content
-            .share_content
-            .share_commentary
-            .as_ref()
-            .map(|c| c.text.as_str())
-            .unwrap_or("")
-    }
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct SpecificContent {
-    #[serde(rename = "com.linkedin.ugc.ShareContent")]
-    share_content: ShareContent,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct ShareContent {
-    #[serde(rename = "shareCommentary", default)]
-    share_commentary: Option<ShareCommentary>,
-    #[serde(default)]
-    media: Vec<ShareMedia>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct ShareCommentary {
-    text: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct ShareMedia {
-    #[serde(rename = "originalUrl")]
-    original_url: Option<String>,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -890,101 +755,6 @@ mod tests {
             body["registerUploadRequest"]["serviceRelationships"][0]["relationshipType"],
             "OWNER"
         );
-    }
-
-    // ── parse_engagement ────────────────────────────────────────────────
-    #[test]
-    fn parse_engagement_extracts_likes_and_comments() {
-        let resp = SocialActionsResponse {
-            likes_summary: Some(LikesSummary {
-                aggregated_total_likes: 42,
-            }),
-            comments_summary: Some(CommentsSummary {
-                aggregated_total_comments: 7,
-            }),
-        };
-        let counts = parse_engagement(&resp);
-        assert_eq!(
-            counts,
-            EngagementCounts {
-                likes: 42,
-                comments: 7,
-                reposts: 0,
-            }
-        );
-    }
-
-    #[test]
-    fn parse_engagement_treats_missing_summaries_as_zero() {
-        let resp = SocialActionsResponse {
-            likes_summary: None,
-            comments_summary: None,
-        };
-        assert_eq!(parse_engagement(&resp), EngagementCounts::default());
-    }
-
-    // ── scan_for_backlink ───────────────────────────────────────────────
-    fn make_element(
-        id: &str,
-        text: Option<&str>,
-        article_url: Option<&str>,
-    ) -> UgcPostElement {
-        UgcPostElement {
-            id: id.into(),
-            specific_content: SpecificContent {
-                share_content: ShareContent {
-                    share_commentary: text.map(|t| ShareCommentary { text: t.into() }),
-                    media: article_url
-                        .map(|u| {
-                            vec![ShareMedia {
-                                original_url: Some(u.into()),
-                            }]
-                        })
-                        .unwrap_or_default(),
-                },
-            },
-        }
-    }
-
-    #[test]
-    fn scan_for_backlink_matches_text_containing_url() {
-        let resp = UgcPostsListResponse {
-            elements: vec![
-                make_element("urn:li:share:1", Some("unrelated"), None),
-                make_element(
-                    "urn:li:share:2",
-                    Some("see https://r/p?utm_source=linkedin yo"),
-                    None,
-                ),
-            ],
-        };
-        let hit = scan_for_backlink(&resp, "https://r/p?utm_source=linkedin").unwrap();
-        assert_eq!(hit.external_post_id, "urn:li:share:2");
-        assert_eq!(
-            hit.external_post_url,
-            "https://www.linkedin.com/feed/update/urn:li:share:2"
-        );
-    }
-
-    #[test]
-    fn scan_for_backlink_matches_article_original_url() {
-        let resp = UgcPostsListResponse {
-            elements: vec![make_element(
-                "urn:li:share:77",
-                Some("body without url"),
-                Some("https://r/p?utm_source=linkedin"),
-            )],
-        };
-        let hit = scan_for_backlink(&resp, "https://r/p?utm_source=linkedin").unwrap();
-        assert_eq!(hit.external_post_id, "urn:li:share:77");
-    }
-
-    #[test]
-    fn scan_for_backlink_returns_none_when_no_match() {
-        let resp = UgcPostsListResponse {
-            elements: vec![make_element("urn:li:share:1", Some("nothing here"), None)],
-        };
-        assert!(scan_for_backlink(&resp, "https://r/p?utm_source=linkedin").is_none());
     }
 
     // ── classify_http_error ─────────────────────────────────────────────
