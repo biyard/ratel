@@ -46109,15 +46109,10 @@ body.comments-panel-resizing {
   --r-lg: 18px;
   --r-xl: 24px;
 
-  position: relative;
-  z-index: 1;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 24px 32px 80px;
+  /* No outer container — .ff-arcade owns max-width / padding / font
+   * for all arcade pages. Variables stay declared so .ff-room renders
+   * correctly standalone (preview, design tooling). */
   color: var(--text-primary);
-  font-family: "Outfit", system-ui, -apple-system, sans-serif;
-  font-size: 15px;
-  line-height: 1.5;
 }
 
 /* ── Top bar ──────────────────────────────────────────────────── */
@@ -47625,4 +47620,179 @@ body.comments-panel-resizing {
   text-align: center;
   color: var(--text-faint);
   font-style: italic;
+}
+
+/* === src/features/arcade/layout === */
+/* Outer arcade wrapper — owns the page-level CSS variables, max-width,
+ * padding, and font. Every arcade page (home, matching, game room)
+ * renders inside this. Internal `.ff-room`, `.ff-home`, `.ff-matching`
+ * containers are passthrough — they no longer redeclare the vars or
+ * apply outer container styling. */
+.ff-arcade {
+  --bg: var(--dark, #07070f) var(--light, #f8f7fb);
+  --surface: var(--dark, rgba(18, 18, 32, 0.72))
+    var(--light, rgba(255, 255, 255, 0.88));
+  --surface-2: var(--dark, rgba(28, 28, 46, 0.6))
+    var(--light, rgba(244, 240, 252, 0.78));
+  --surface-3: var(--dark, rgba(38, 38, 58, 0.5))
+    var(--light, rgba(232, 228, 244, 0.72));
+  --border: var(--dark, rgba(255, 255, 255, 0.08))
+    var(--light, rgba(20, 12, 38, 0.08));
+  --border-strong: var(--dark, rgba(255, 255, 255, 0.16))
+    var(--light, rgba(20, 12, 38, 0.18));
+  --text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
+  --text-muted: var(--dark, #8a8aa6) var(--light, #5d5b73);
+  --text-faint: var(--dark, #5a5a78) var(--light, #8d8aa3);
+
+  --gold: #fcb300;
+  --gold-soft: rgba(252, 179, 0, 0.12);
+  --pink: #db2780;
+  --pink-soft: rgba(219, 39, 128, 0.12);
+  --teal: #6eedd8;
+  --teal-soft: rgba(110, 237, 216, 0.12);
+  --purple: #a78bfa;
+  --purple-soft: rgba(167, 139, 250, 0.14);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+
+  position: relative;
+  z-index: 1;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 32px 80px;
+  color: var(--text-primary);
+  font-family: "Outfit", system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.ff-arcade__top-bar {
+  /* extends .top-bar — selector composition isn't needed since both
+   * are applied to the same element, but we keep this hook so future
+   * arcade-specific top-bar tweaks (e.g., chip-button placement) have
+   * a place to live without disturbing other `.top-bar` consumers. */
+  margin-bottom: 22px;
+}
+
+.ff-arcade__main {
+  /* No styling — pages bring their own. Hook stays for future
+   * scroll-restoration or breadcrumb additions. */
+}
+
+.ff-arcade__admin-cta {
+  border: 1px solid rgba(219, 39, 128, 0.4);
+  color: var(--pink);
+  background: rgba(219, 39, 128, 0.06);
+}
+
+.ff-arcade__chip-btn {
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ff-arcade__chip-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(252, 179, 0, 0.18);
+}
+
+/* === src/features/arcade/components/exchange_modal === */
+.ff-arcade__modal-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 7, 15, 0.7);
+  backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  animation: ff-modal-fade 0.18s ease;
+}
+
+@keyframes ff-modal-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.ff-arcade__modal-card {
+  width: min(520px, 92vw);
+  padding: 28px 28px 22px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-xl);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-lg);
+  color: var(--text-primary);
+  font-family: "Outfit", sans-serif;
+  font-size: 15px;
+  animation: ff-modal-rise 0.22s ease;
+}
+
+@keyframes ff-modal-rise {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.ff-arcade__modal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 13px;
+}
+
+.ff-arcade__modal-row:last-of-type {
+  border-bottom: none;
+}
+
+.ff-arcade__modal-label {
+  color: var(--text-muted);
+}
+
+.ff-arcade__modal-value {
+  font-family: "JetBrains Mono", monospace;
+  color: var(--text-primary);
+}
+
+.ff-arcade__modal-value--accent {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--gold);
+}
+
+.ff-arcade__modal-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.ff-arcade__modal-input:focus {
+  border-color: var(--gold);
+}
+
+.ff-arcade__modal-success {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: rgba(110, 237, 216, 0.08);
+  border: 1px solid rgba(110, 237, 216, 0.25);
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+  color: var(--teal);
 }

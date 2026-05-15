@@ -27,7 +27,6 @@ const HEARTBEAT_INTERVAL_MS: u64 = 30_000;
 #[component]
 pub fn FactFoldGameRoomPage(round_id: ReadSignal<FactFoldRoundEntityType>) -> Element {
     let mut ctx = use_fact_fold_round_provider(round_id)?;
-    let tr: FactFoldRoomTranslate = use_translate();
     let round = ctx.round;
 
     // Polling loop: refresh every loader + pull chat deltas + tick
@@ -68,27 +67,10 @@ pub fn FactFoldGameRoomPage(round_id: ReadSignal<FactFoldRoundEntityType>) -> El
     rsx! {
         SeoMeta { title: "Fact or Fold · Ratel Arcade" }
         div { class: "ff-room",
-            // Top bar — brand + nav + user-stats placeholder. The real
-            // chip-balance widget lands when the arcade layout owns
-            // the header (out of scope for this page).
-            div { class: "top-bar",
-                div { class: "brand",
-                    div { class: "brand-logo", "R" }
-                    div { class: "brand-text",
-                        div { class: "brand-name", "{tr.brand}" }
-                        div { class: "brand-sub", "{brand_sub(&round())}" }
-                    }
-                }
-                nav { class: "top-nav", role: "tablist",
-                    Link {
-                        class: "top-nav-btn",
-                        to: Route::FactFoldLobbyPage {},
-                        span { class: "top-nav-btn-icon", "⌂" }
-                        span { "{tr.nav_arcade}" }
-                    }
-                }
-                div { class: "user-stats" }
-            }
+            // Top bar now lives in ArcadeLayout (wraps every /arcade
+            // page). The round-status sub-line is folded into the
+            // sidebar timer card instead so the brand bar stays
+            // arcade-wide.
 
             div { class: "layout",
                 aside { class: "sidebar",

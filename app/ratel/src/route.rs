@@ -42,12 +42,15 @@ use crate::features::admin::{AdminLayout, AdminMainPage};
 
 // Fact or Fold — admin pages share `FactFoldAdminLayout` (sub-tabs)
 // nested under the global `AdminLayout` (admin-only guard). The
-// player-facing lobby page lives at top level.
+// player-facing pages (home, matching, game room) share
+// `ArcadeLayout` (top-bar + chip wallet) under `/arcade`.
 use crate::features::arcade::games::fact_or_fold::pages::{
     FactFoldAdminHeadlinesPage, FactFoldAdminLayout, FactFoldAdminNewHeadlinePage,
     FactFoldAdminReportsPage, FactFoldAdminSchedulePage, FactFoldAdminSettingsPage,
-    FactFoldAdminStatsPage, FactFoldGameRoomPage, FactFoldLobbyPage,
+    FactFoldAdminStatsPage, FactFoldGameRoomPage, FactFoldLobbyPage, FactFoldMatchingPage,
 };
+use crate::features::arcade::layout::ArcadeLayout;
+use crate::features::arcade::pages::ArcadeHomePage;
 use crate::FactFoldRoundEntityType;
 
 // Sub-team governance pages — placeholders wired up now; content lives
@@ -143,8 +146,16 @@ pub enum Route {
         #[route("/fact-or-fold")]
         FactFoldLobbyPage { },
 
-        #[route("/arcade/games/fact-or-fold/rounds/:round_id")]
-        FactFoldGameRoomPage { round_id: FactFoldRoundEntityType },
+        #[nest("/arcade")]
+            #[layout(ArcadeLayout)]
+                #[route("/home")]
+                ArcadeHomePage { },
+                #[route("/games/fact-or-fold/matching")]
+                FactFoldMatchingPage { },
+                #[route("/games/fact-or-fold/rounds/:round_id")]
+                FactFoldGameRoomPage { round_id: FactFoldRoundEntityType },
+            #[end_layout]
+        #[end_nest]
 
         #[nest("/admin")]
             #[layout(AdminLayout)]
