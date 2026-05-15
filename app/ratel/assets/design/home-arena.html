@@ -45,19 +45,31 @@
     .hud-btn:hover .hud-btn__label{opacity:1}
     .hud-btn__badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:var(--accent-gold);color:#0a0a0a;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;box-shadow:0 0 8px rgba(252,179,0,0.4)}
 
-    /* Grouped dropdown — 2-deep menu opens under a hud-btn on hover.
-       Theme toggle intentionally NOT in this toolbar — that lives in the
-       Settings side panel (Profile dropdown's Settings entry opens it). */
-    .hud-group{position:relative}
-    .hud-menu{position:absolute;top:100%;padding-top:8px;right:0;min-width:220px;opacity:0;pointer-events:none;transform:translateY(-4px);transition:opacity 0.14s ease,transform 0.14s ease;z-index:30}
-    .hud-group:hover>.hud-menu,.hud-group:focus-within>.hud-menu,.hud-group[data-open="true"]>.hud-menu{opacity:1;pointer-events:auto;transform:translateY(0)}
-    .hud-menu__inner{background:var(--bg-glass);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.10);border-radius:14px;padding:6px;box-shadow:0 18px 60px rgba(0,0,0,0.55)}
-    .hud-menu__heading{font-family:var(--font-display);font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim);padding:10px 12px 6px;font-weight:700}
-    .hud-menu__item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;color:var(--text-muted);text-decoration:none;font:500 12.5px/1.2 var(--font-body);cursor:pointer;transition:background 0.14s,color 0.14s;background:none;border:none;width:100%;text-align:left}
-    .hud-menu__item:hover{background:var(--bg-glass-hover);color:var(--text-primary)}
-    .hud-menu__item svg{width:15px;height:15px;color:inherit;flex-shrink:0;opacity:0.85}
-    .hud-menu__item--active{background:rgba(252,179,0,0.12);color:var(--accent-gold)}
-    .hud-menu__item--active svg{opacity:1}
+    /* Hamburger overlay — flat icon grid that replaces the previous
+       2-deep dropdowns. Hamburger button in the topbar opens this
+       fullscreen overlay; X / backdrop click / Escape closes it.
+       Theme toggle intentionally NOT in this overlay — that lives in
+       the Settings side panel (one of the tiles below). */
+    .hud-overlay{position:fixed;inset:0;z-index:1000;background:rgba(4,4,12,0.65);backdrop-filter:blur(18px);display:none;align-items:center;justify-content:center;padding:48px 24px;opacity:0;transition:opacity 0.2s ease}
+    .hud-overlay[data-open="true"]{display:flex;opacity:1}
+    .hud-overlay__panel{position:relative;width:100%;max-width:720px;display:flex;flex-direction:column;gap:20px;padding:32px 28px 28px;border-radius:24px;background:linear-gradient(160deg,rgba(22,22,38,0.92),rgba(10,10,20,0.96));border:1px solid rgba(255,255,255,0.07);box-shadow:0 30px 80px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.04)}
+    .hud-overlay__close{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted);transition:all 0.18s}
+    .hud-overlay__close:hover{color:var(--accent-gold);border-color:rgba(252,179,0,0.28);background:rgba(252,179,0,0.06)}
+    .hud-overlay__close svg{width:16px;height:16px}
+    .hud-overlay__heading{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:var(--text-dim);text-align:center}
+    /* Square tiles — fixed aspect ratio 1:1 so icon + label sit
+       centered like the reference game menu. auto-fit collapses to
+       fewer columns on narrow viewports. */
+    .hud-overlay__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px}
+    .hud-overlay__tile{position:relative;aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:12px;border-radius:14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);color:var(--text-primary);cursor:pointer;transition:all 0.18s ease;text-align:center}
+    .hud-overlay__tile:hover{background:rgba(255,255,255,0.06);border-color:rgba(252,179,0,0.28);transform:translateY(-2px)}
+    .hud-overlay__tile svg{width:32px;height:32px;color:var(--text-muted);transition:color 0.18s}
+    .hud-overlay__tile:hover svg{color:var(--accent-gold)}
+    .hud-overlay__tile--primary{background:linear-gradient(135deg,rgba(252,179,0,0.22),rgba(252,179,0,0.06));border-color:rgba(252,179,0,0.38)}
+    .hud-overlay__tile--primary svg{color:var(--accent-gold)}
+    .hud-overlay__tile--primary:hover{box-shadow:0 0 22px rgba(252,179,0,0.22)}
+    .hud-overlay__tile-label{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-primary)}
+    .hud-overlay__tile-badge{position:absolute;top:8px;right:10px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent-gold);color:#0a0a0a;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 0 8px rgba(252,179,0,0.4)}
 
     /* Section label */
     .section-label{position:relative;z-index:10;text-align:center;padding:0 28px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:10px}
@@ -205,7 +217,7 @@
       .arena-topbar__logo{width:32px;height:32px}
       .arena-topbar__title{font-size:14px;letter-spacing:0.08em}
       .arena-topbar__status{margin-left:6px;padding:2px 8px;font-size:9px}
-      .arena-topbar__actions{gap:8px;width:100%;justify-content:space-between;order:2}
+      .arena-topbar__actions{gap:8px;width:100%;justify-content:flex-end;order:2}
       .hud-btn{width:46px;height:46px;flex:1;max-width:64px}
       .hud-btn__label{display:none}
       .section-label__dash{width:24px}
@@ -231,88 +243,28 @@
         <span class="arena-topbar__title">Ratel</span>
       </div>
       <div class="arena-topbar__actions">
-        <!-- Notifications — single button (keeps badge visible) -->
+        <!-- Row 1: high-priority actions (badge-bearing + frequently
+             used). The rest live behind the hamburger overlay. -->
         <button class="hud-btn" aria-label="Notifications">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           <span class="hud-btn__badge">6</span>
           <span class="hud-btn__label">Notifications</span>
         </button>
 
-        <!-- Create ▾ — Compose / Drafts / AI assist -->
-        <div class="hud-group">
-          <button class="hud-btn hud-btn--primary" aria-haspopup="menu" aria-label="Create">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            <span class="hud-btn__label">Create</span>
-          </button>
-          <div class="hud-menu" role="menu">
-            <div class="hud-menu__inner">
-              <div class="hud-menu__heading">Create</div>
-              <button class="hud-menu__item hud-menu__item--active" role="menuitem">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                Compose post
-              </button>
-              <button class="hud-menu__item" role="menuitem">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                Drafts
-              </button>
-              <button class="hud-menu__item" role="menuitem">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L13.5 8.5 L20 10 L13.5 11.5 L12 18 L10.5 11.5 L4 10 L10.5 8.5 Z"/></svg>
-                AI assist
-              </button>
-            </div>
-          </div>
-        </div>
+        <button class="hud-btn" aria-label="Teams">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="hud-btn__label">Teams</span>
+        </button>
 
-        <!-- Engage ▾ — Rewards / Character / Network -->
-        <div class="hud-group">
-          <button class="hud-btn" aria-haspopup="menu" aria-label="Engage">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
-            <span class="hud-btn__label">Engage</span>
-          </button>
-          <div class="hud-menu" role="menu">
-            <div class="hud-menu__inner">
-              <div class="hud-menu__heading">Engage</div>
-              <button class="hud-menu__item" role="menuitem">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
-                Rewards
-              </button>
-              <button class="hud-menu__item" role="menuitem" data-testid="home-btn-character">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
-                Character
-              </button>
-              <button class="hud-menu__item" role="menuitem">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                Network
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Account ▾ — Profile / Credentials -->
-        <div class="hud-group">
-          <button class="hud-btn" aria-haspopup="menu" aria-label="Account">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <span class="hud-btn__label">Account</span>
-          </button>
-          <div class="hud-menu" role="menu">
-            <div class="hud-menu__inner">
-              <div class="hud-menu__heading">Account</div>
-              <button class="hud-menu__item" role="menuitem">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                Profile
-              </button>
-              <button class="hud-menu__item" role="menuitem">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-                Credentials
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Settings — single button (opens side panel where Dark/Light toggle lives) -->
         <button class="hud-btn" aria-label="Settings">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
           <span class="hud-btn__label">Settings</span>
+        </button>
+
+        <!-- Hamburger opens the overlay with everything else. -->
+        <button class="hud-btn hud-btn--primary" id="menu-btn" aria-label="Open menu" aria-haspopup="dialog">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span class="hud-btn__label">Menu</span>
         </button>
       </div>
     </div>
@@ -640,6 +592,68 @@
       </button>
     </div>
   </div>
+
+  <!-- HAMBURGER OVERLAY — flat icon grid (replaces the old 2-deep
+       Create/Engage/Account dropdowns). Triggered by #menu-btn. -->
+  <div class="hud-overlay" id="hud-overlay" role="dialog" aria-modal="true" aria-labelledby="hud-overlay-heading" data-open="false">
+    <div class="hud-overlay__panel">
+      <button class="hud-overlay__close" id="hud-overlay-close" aria-label="Close menu">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="hud-overlay__heading" id="hud-overlay-heading">Menu</div>
+      <div class="hud-overlay__grid">
+        <!-- Compose post — primary action highlighted in gold -->
+        <button class="hud-overlay__tile hud-overlay__tile--primary" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span class="hud-overlay__tile-label">Compose</span>
+        </button>
+        <button class="hud-overlay__tile" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="hud-overlay__tile-label">Drafts</span>
+        </button>
+        <button class="hud-overlay__tile" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L13.5 8.5 L20 10 L13.5 11.5 L12 18 L10.5 11.5 L4 10 L10.5 8.5 Z"/></svg>
+          <span class="hud-overlay__tile-label">AI Assist</span>
+        </button>
+        <button class="hud-overlay__tile" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+          <span class="hud-overlay__tile-label">Rewards</span>
+        </button>
+        <button class="hud-overlay__tile" type="button" data-testid="home-btn-character">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+          <span class="hud-overlay__tile-label">Character</span>
+        </button>
+        <button class="hud-overlay__tile" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="hud-overlay__tile-label">Network</span>
+        </button>
+        <button class="hud-overlay__tile" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span class="hud-overlay__tile-label">Profile</span>
+        </button>
+        <button class="hud-overlay__tile" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+          <span class="hud-overlay__tile-label">Credentials</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Hamburger overlay — open/close via menu button, X button,
+    // backdrop click, or Escape key.
+    (function () {
+      const overlay = document.getElementById('hud-overlay');
+      const menuBtn = document.getElementById('menu-btn');
+      const closeBtn = document.getElementById('hud-overlay-close');
+      function open() { overlay.dataset.open = 'true'; }
+      function close() { overlay.dataset.open = 'false'; }
+      menuBtn.addEventListener('click', open);
+      closeBtn.addEventListener('click', close);
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.dataset.open === 'true') close(); });
+    })();
+  </script>
 
   <script>
     // Carousel — same active-detection pattern as space-participant

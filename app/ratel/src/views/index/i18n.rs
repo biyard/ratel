@@ -192,4 +192,19 @@ translate! {
         en: "Create Team",
         ko: "팀 생성",
     },
+
+    menu: {
+        en: "Menu",
+        ko: "메뉴",
+    },
+
+    open_menu: {
+        en: "Open menu",
+        ko: "메뉴 열기",
+    },
+
+    close_menu: {
+        en: "Close menu",
+        ko: "메뉴 닫기",
+    },
 }

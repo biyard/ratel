@@ -46,9 +46,9 @@ test.describe.serial("Post tag input (post-edit renewal)", () => {
   test("Create a draft post for tag testing", async ({ page }) => {
     await goto(page, "/");
 
-    // Compose moved into the Create ▾ dropdown after the home topbar
-    // regroup; the bare `home-btn-create` is now a hover trigger only.
-    await openHomeMenuItem(page, "home-btn-create", "home-menu-compose");
+    // Compose lives in the hamburger overlay after the home topbar
+    // renewed-menu refactor — open via `home-btn-menu` → `home-menu-compose`.
+    await openHomeMenuItem(page, "home-menu-compose");
     await page.waitForURL(/\/posts\/.*\/edit/, { waitUntil: "load" });
     await page.waitForFunction(
       () => document.querySelector("[data-dioxus-id]") !== null,

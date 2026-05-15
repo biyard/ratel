@@ -232,29 +232,42 @@ export async function getEditor(page) {
  * skip the click instead of toggling it back closed.
  */
 /**
- * Open a home arena topbar hover-revealed menu (Create / Engage / Account)
- * and click an item inside it.
+ * Open the home arena hamburger overlay and click a tile inside it.
  *
- * The renewed home topbar groups the old flat buttons (Compose, Drafts,
- * AI assist, Rewards, Essence, Credentials, ...) into 3 dropdowns. The
- * parent `.hud-btn` inside `.hud-group` has NO `onclick` — clicking it
- * just gives it focus, which triggers `:focus-within` and reveals the
- * `.hud-menu`. We hover first so the CSS transition completes before
- * clicking the inner item.
+ * The renewed home topbar collapses Compose / Drafts / AI Assist /
+ * Rewards / Essence / Profile / Credentials into a single hamburger
+ * (`home-btn-menu`) that opens a fullscreen tile-grid overlay. Each
+ * tile auto-closes the overlay on click via the component's onclick
+ * handler, so callers don't need to dismiss it separately.
  *
  * Usage:
- *   await openHomeMenuItem(page, "home-btn-create", "home-menu-compose");
- *   await openHomeMenuItem(page, "home-btn-create", "home-menu-drafts");
- *   await openHomeMenuItem(page, "home-btn-engage", "home-menu-rewards");
- *   await openHomeMenuItem(page, "home-btn-account", "home-menu-credentials");
+ *   await openHomeMenuItem(page, "home-menu-compose");
+ *   await openHomeMenuItem(page, "home-menu-drafts");
+ *   await openHomeMenuItem(page, "home-menu-rewards");
+ *   await openHomeMenuItem(page, "home-menu-credentials");
  */
-export async function openHomeMenuItem(page, parentTestId, itemTestId) {
-  const parent = page.getByTestId(parentTestId);
-  await expect(parent).toBeVisible({ timeout: 15000 });
-  await parent.hover();
-  const item = page.getByTestId(itemTestId);
-  await expect(item).toBeVisible({ timeout: 5000 });
-  await item.click();
+export async function openHomeMenuItem(page, itemTestId) {
+  const menuBtn = page.getByTestId("home-btn-menu");
+  await expect(menuBtn).toBeVisible({ timeout: 15000 });
+  // The overlay's data-open attribute is the only ground truth — its
+  // existence as a DOM node doesn't mean it's visible (CSS toggles
+  // `display: flex` only when data-open="true"). Click + verify.
+  await expect(async () => {
+    const open = await page
+      .locator(".hud-overlay")
+      .first()
+      .getAttribute("data-open");
+    if (open !== "true") {
+      await menuBtn.click();
+    }
+    await expect(page.locator('.hud-overlay[data-open="true"]')).toBeVisible({
+      timeout: 1500,
+    });
+  }).toPass({ timeout: 15000, intervals: [300, 600, 1200, 2000] });
+
+  const tile = page.getByTestId(itemTestId);
+  await expect(tile).toBeVisible({ timeout: 5000 });
+  await tile.click();
 }
 
 export async function openHomeTeamsDropdown(page) {

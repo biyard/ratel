@@ -49,6 +49,9 @@ pub fn Index() -> Element {
     let mut settings_open = use_signal(|| false);
     let mut teams_open = use_signal(|| false);
     let mut notifications_open = use_signal(|| false);
+    // Hamburger overlay (replaces the previous Create/Engage/Account
+    // dropdown groups with a single flat tile grid).
+    let mut menu_open = use_signal(|| false);
 
     debug!("before hot spaces");
     let hot_spaces = use_loader(|| async move { list_hot_spaces_handler().await })?;
@@ -136,7 +139,7 @@ pub fn Index() -> Element {
         }
     };
 
-    let go_drafts = move |_: Event<MouseData>| {
+    let mut go_drafts = move |_: Event<MouseData>| {
         if !has_user {
             popup
                 .open(rsx! {
@@ -150,7 +153,7 @@ pub fn Index() -> Element {
         });
     };
 
-    let go_rewards = move |_: Event<MouseData>| {
+    let mut go_rewards = move |_: Event<MouseData>| {
         if !has_user {
             popup
                 .open(rsx! {
@@ -164,7 +167,7 @@ pub fn Index() -> Element {
         });
     };
 
-    let go_credentials = move |_: Event<MouseData>| {
+    let mut go_credentials = move |_: Event<MouseData>| {
         if !has_user {
             popup
                 .open(rsx! {
@@ -176,7 +179,7 @@ pub fn Index() -> Element {
         nav.push(Route::CredentialsHome {});
     };
 
-    let go_essence = move |_: Event<MouseData>| {
+    let mut go_essence = move |_: Event<MouseData>| {
         if !has_user {
             popup
                 .open(rsx! {
@@ -188,7 +191,7 @@ pub fn Index() -> Element {
         nav.push(Route::EssenceSourcesPage {});
     };
 
-    let go_my_ai = move |_: Event<MouseData>| {
+    let mut go_my_ai = move |_: Event<MouseData>| {
         if !has_user {
             popup
                 .open(rsx! {
@@ -243,223 +246,6 @@ pub fn Index() -> Element {
                         crate::features::notifications::components::NotificationBell {
                             class: "hud-btn",
                             onclick: move |_| notifications_open.toggle(),
-                        }
-                    }
-
-                    // ── Create ▾ — Compose post / Drafts / AI assist ─────
-                    // The parent button has no onclick; hover / focus-within
-                    // reveals the menu (CSS), and the menu items handle the
-                    // actual navigation.
-                    div { class: "hud-group",
-                        button {
-                            class: "hud-btn hud-btn--primary",
-                            aria_label: "{t.create}",
-                            aria_haspopup: "menu",
-                            "data-testid": "home-btn-create",
-                            svg {
-                                fill: "none",
-                                stroke: "currentColor",
-                                stroke_linecap: "round",
-                                stroke_linejoin: "round",
-                                stroke_width: "1.6",
-                                view_box: "0 0 24 24",
-                                xmlns: "http://www.w3.org/2000/svg",
-                                path { d: "M12 20h9" }
-                                path { d: "M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" }
-                            }
-                            span { class: "hud-btn__label", "{t.create}" }
-                        }
-                        div { class: "hud-menu", role: "menu",
-                            div { class: "hud-menu__inner",
-                                div { class: "hud-menu__heading", "{t.create}" }
-                                button {
-                                    class: "hud-menu__item hud-menu__item--active",
-                                    role: "menuitem",
-                                    "data-testid": "home-menu-compose",
-                                    onclick: go_create_post,
-                                    svg {
-                                        fill: "none",
-                                        stroke: "currentColor",
-                                        stroke_linecap: "round",
-                                        stroke_linejoin: "round",
-                                        stroke_width: "1.6",
-                                        view_box: "0 0 24 24",
-                                        xmlns: "http://www.w3.org/2000/svg",
-                                        path { d: "M12 20h9" }
-                                        path { d: "M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" }
-                                    }
-                                    "{t.compose_post}"
-                                }
-                                button {
-                                    class: "hud-menu__item",
-                                    role: "menuitem",
-                                    "data-testid": "home-menu-drafts",
-                                    onclick: go_drafts,
-                                    svg {
-                                        fill: "none",
-                                        stroke: "currentColor",
-                                        stroke_linecap: "round",
-                                        stroke_linejoin: "round",
-                                        stroke_width: "1.6",
-                                        view_box: "0 0 24 24",
-                                        xmlns: "http://www.w3.org/2000/svg",
-                                        path { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }
-                                        polyline { points: "14 2 14 8 20 8" }
-                                    }
-                                    "{t.drafts}"
-                                }
-                                button {
-                                    class: "hud-menu__item",
-                                    role: "menuitem",
-                                    "data-testid": "home-menu-my-ai",
-                                    onclick: go_my_ai,
-                                    svg {
-                                        fill: "none",
-                                        stroke: "currentColor",
-                                        stroke_linecap: "round",
-                                        stroke_linejoin: "round",
-                                        stroke_width: "1.6",
-                                        view_box: "0 0 24 24",
-                                        xmlns: "http://www.w3.org/2000/svg",
-                                        path { d: "M12 3 13.6 9.4 20 11l-6.4 1.6L12 19l-1.6-6.4L4 11l6.4-1.6L12 3Z" }
-                                    }
-                                    "{t.ai_assist}"
-                                }
-                            }
-                        }
-                    }
-
-                    // ── Engage ▾ — Rewards / Essence ─────────────────────
-                    div { class: "hud-group",
-                        button {
-                            class: "hud-btn",
-                            aria_label: "{t.engage}",
-                            aria_haspopup: "menu",
-                            "data-testid": "home-btn-engage",
-                            svg {
-                                fill: "none",
-                                stroke: "currentColor",
-                                stroke_linecap: "round",
-                                stroke_linejoin: "round",
-                                stroke_width: "1.6",
-                                view_box: "0 0 24 24",
-                                xmlns: "http://www.w3.org/2000/svg",
-                                polyline { points: "20 12 20 22 4 22 4 12" }
-                                rect {
-                                    x: "2",
-                                    y: "7",
-                                    width: "20",
-                                    height: "5",
-                                }
-                                line {
-                                    x1: "12",
-                                    y1: "22",
-                                    x2: "12",
-                                    y2: "7",
-                                }
-                                path { d: "M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" }
-                                path { d: "M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" }
-                            }
-                            span { class: "hud-btn__label", "{t.engage}" }
-                        }
-                        div { class: "hud-menu", role: "menu",
-                            div { class: "hud-menu__inner",
-                                div { class: "hud-menu__heading", "{t.engage}" }
-                                button {
-                                    class: "hud-menu__item",
-                                    role: "menuitem",
-                                    "data-testid": "home-menu-rewards",
-                                    onclick: go_rewards,
-                                    svg {
-                                        fill: "none",
-                                        stroke: "currentColor",
-                                        stroke_linecap: "round",
-                                        stroke_linejoin: "round",
-                                        stroke_width: "1.6",
-                                        view_box: "0 0 24 24",
-                                        xmlns: "http://www.w3.org/2000/svg",
-                                        polyline { points: "20 12 20 22 4 22 4 12" }
-                                        rect {
-                                            x: "2",
-                                            y: "7",
-                                            width: "20",
-                                            height: "5",
-                                        }
-                                        line {
-                                            x1: "12",
-                                            y1: "22",
-                                            x2: "12",
-                                            y2: "7",
-                                        }
-                                        path { d: "M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" }
-                                        path { d: "M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" }
-                                    }
-                                    "{t.rewards}"
-                                }
-                                button {
-                                    class: "hud-menu__item",
-                                    role: "menuitem",
-                                    "data-testid": "home-menu-essence",
-                                    onclick: go_essence,
-                                    svg {
-                                        fill: "none",
-                                        stroke: "currentColor",
-                                        stroke_linecap: "round",
-                                        stroke_linejoin: "round",
-                                        stroke_width: "1.6",
-                                        view_box: "0 0 24 24",
-                                        xmlns: "http://www.w3.org/2000/svg",
-                                        path { d: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20" }
-                                        path { d: "M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" }
-                                    }
-                                    "{t.essence}"
-                                }
-                            }
-                        }
-                    }
-
-                    // ── Account ▾ — Profile / Credentials ────────────────
-                    div { class: "hud-group",
-                        button {
-                            class: "hud-btn",
-                            aria_label: "{t.account}",
-                            aria_haspopup: "menu",
-                            "data-testid": "home-btn-account",
-                            svg {
-                                fill: "none",
-                                stroke: "currentColor",
-                                stroke_linecap: "round",
-                                stroke_linejoin: "round",
-                                stroke_width: "1.6",
-                                view_box: "0 0 24 24",
-                                xmlns: "http://www.w3.org/2000/svg",
-                                path { d: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" }
-                                circle { cx: "12", cy: "7", r: "4" }
-                            }
-                            span { class: "hud-btn__label", "{t.account}" }
-                        }
-                        div { class: "hud-menu", role: "menu",
-                            div { class: "hud-menu__inner",
-                                div { class: "hud-menu__heading", "{t.account}" }
-                                button {
-                                    class: "hud-menu__item",
-                                    role: "menuitem",
-                                    "data-testid": "home-menu-credentials",
-                                    onclick: go_credentials,
-                                    svg {
-                                        fill: "none",
-                                        stroke: "currentColor",
-                                        stroke_linecap: "round",
-                                        stroke_linejoin: "round",
-                                        stroke_width: "1.6",
-                                        view_box: "0 0 24 24",
-                                        xmlns: "http://www.w3.org/2000/svg",
-                                        path { d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" }
-                                        path { d: "m9 12 2 2 4-4" }
-                                    }
-                                    "{t.credentials}"
-                                }
-                            }
                         }
                     }
                     if has_user {
@@ -642,6 +428,44 @@ pub fn Index() -> Element {
                         }
                         span { class: "hud-btn__label", "{t.settings}" }
                     }
+                    // Hamburger — opens the flat tile-grid overlay where
+                    // the previous Create / Engage / Account dropdowns
+                    // have been flattened.
+                    button {
+                        class: "hud-btn hud-btn--primary",
+                        aria_label: "{t.open_menu}",
+                        aria_haspopup: "dialog",
+                        "data-testid": "home-btn-menu",
+                        onclick: move |_| menu_open.set(true),
+                        svg {
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            stroke_width: "1.8",
+                            view_box: "0 0 24 24",
+                            xmlns: "http://www.w3.org/2000/svg",
+                            line {
+                                x1: "3",
+                                y1: "6",
+                                x2: "21",
+                                y2: "6",
+                            }
+                            line {
+                                x1: "3",
+                                y1: "12",
+                                x2: "21",
+                                y2: "12",
+                            }
+                            line {
+                                x1: "3",
+                                y1: "18",
+                                x2: "21",
+                                y2: "18",
+                            }
+                        }
+                        span { class: "hud-btn__label", "{t.menu}" }
+                    }
                 }
             }
 
@@ -802,6 +626,191 @@ pub fn Index() -> Element {
             SettingsPanel {
                 open: settings_open(),
                 on_close: move |_| settings_open.set(false),
+            }
+
+            // HAMBURGER OVERLAY — flat tile grid that replaces the
+            // previous Create / Engage / Account dropdowns. Always
+            // rendered; `data-open` flips visibility (CSS).
+            div {
+                class: "hud-overlay",
+                role: "dialog",
+                "aria-modal": "true",
+                "aria-label": "{t.menu}",
+                "data-open": menu_open(),
+                onclick: move |_| menu_open.set(false),
+                div {
+                    class: "hud-overlay__panel",
+                    onclick: move |e: Event<MouseData>| e.stop_propagation(),
+                    button {
+                        class: "hud-overlay__close",
+                        aria_label: "{t.close_menu}",
+                        "data-testid": "home-menu-close",
+                        onclick: move |_| menu_open.set(false),
+                        svg {
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            stroke_width: "1.8",
+                            view_box: "0 0 24 24",
+                            xmlns: "http://www.w3.org/2000/svg",
+                            line {
+                                x1: "18",
+                                y1: "6",
+                                x2: "6",
+                                y2: "18",
+                            }
+                            line {
+                                x1: "6",
+                                y1: "6",
+                                x2: "18",
+                                y2: "18",
+                            }
+                        }
+                    }
+                    div { class: "hud-overlay__heading", "{t.menu}" }
+                    div { class: "hud-overlay__grid",
+                        // Compose — primary action (gold tile).
+                        button {
+                            class: "hud-overlay__tile hud-overlay__tile--primary",
+                            r#type: "button",
+                            "data-testid": "home-menu-compose",
+                            onclick: move |e: Event<MouseData>| async move {
+                                menu_open.set(false);
+                                go_create_post(e).await;
+                            },
+                            svg {
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "1.6",
+                                view_box: "0 0 24 24",
+                                xmlns: "http://www.w3.org/2000/svg",
+                                path { d: "M12 20h9" }
+                                path { d: "M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" }
+                            }
+                            span { class: "hud-overlay__tile-label", "{t.compose_post}" }
+                        }
+                        button {
+                            class: "hud-overlay__tile",
+                            r#type: "button",
+                            "data-testid": "home-menu-drafts",
+                            onclick: move |e: Event<MouseData>| {
+                                menu_open.set(false);
+                                go_drafts(e);
+                            },
+                            svg {
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "1.6",
+                                view_box: "0 0 24 24",
+                                xmlns: "http://www.w3.org/2000/svg",
+                                path { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }
+                                polyline { points: "14 2 14 8 20 8" }
+                            }
+                            span { class: "hud-overlay__tile-label", "{t.drafts}" }
+                        }
+                        button {
+                            class: "hud-overlay__tile",
+                            r#type: "button",
+                            "data-testid": "home-menu-my-ai",
+                            onclick: move |e: Event<MouseData>| {
+                                menu_open.set(false);
+                                go_my_ai(e);
+                            },
+                            svg {
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "1.6",
+                                view_box: "0 0 24 24",
+                                xmlns: "http://www.w3.org/2000/svg",
+                                path { d: "M12 3 13.6 9.4 20 11l-6.4 1.6L12 19l-1.6-6.4L4 11l6.4-1.6L12 3Z" }
+                            }
+                            span { class: "hud-overlay__tile-label", "{t.ai_assist}" }
+                        }
+                        button {
+                            class: "hud-overlay__tile",
+                            r#type: "button",
+                            "data-testid": "home-menu-rewards",
+                            onclick: move |e: Event<MouseData>| {
+                                menu_open.set(false);
+                                go_rewards(e);
+                            },
+                            svg {
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "1.6",
+                                view_box: "0 0 24 24",
+                                xmlns: "http://www.w3.org/2000/svg",
+                                polyline { points: "20 12 20 22 4 22 4 12" }
+                                rect {
+                                    x: "2",
+                                    y: "7",
+                                    width: "20",
+                                    height: "5",
+                                }
+                                line {
+                                    x1: "12",
+                                    y1: "22",
+                                    x2: "12",
+                                    y2: "7",
+                                }
+                                path { d: "M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" }
+                                path { d: "M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" }
+                            }
+                            span { class: "hud-overlay__tile-label", "{t.rewards}" }
+                        }
+                        button {
+                            class: "hud-overlay__tile",
+                            r#type: "button",
+                            "data-testid": "home-menu-essence",
+                            onclick: move |e: Event<MouseData>| {
+                                menu_open.set(false);
+                                go_essence(e);
+                            },
+                            svg {
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "1.6",
+                                view_box: "0 0 24 24",
+                                xmlns: "http://www.w3.org/2000/svg",
+                                path { d: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20" }
+                                path { d: "M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" }
+                            }
+                            span { class: "hud-overlay__tile-label", "{t.essence}" }
+                        }
+                        button {
+                            class: "hud-overlay__tile",
+                            r#type: "button",
+                            "data-testid": "home-menu-credentials",
+                            onclick: move |e: Event<MouseData>| {
+                                menu_open.set(false);
+                                go_credentials(e);
+                            },
+                            svg {
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "1.6",
+                                view_box: "0 0 24 24",
+                                xmlns: "http://www.w3.org/2000/svg",
+                                path { d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" }
+                                path { d: "m9 12 2 2 4-4" }
+                            }
+                            span { class: "hud-overlay__tile-label", "{t.credentials}" }
+                        }
+                    }
+                }
             }
         }
 

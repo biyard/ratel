@@ -34,11 +34,10 @@ test.describe.serial("Delete draft from home page", () => {
 
     await goto(page, "/");
 
-    // Open the post editor via the renewed Create ▾ dropdown on the home
-    // arena top bar. The parent `home-btn-create` button is now a hover
-    // trigger only; the actual "Compose post" action lives at
-    // `home-menu-compose` inside the dropdown.
-    await openHomeMenuItem(page, "home-btn-create", "home-menu-compose");
+    // Open the post editor via the hamburger overlay on the home arena
+    // top bar. After the renewed-menu refactor the Compose tile lives
+    // inside the `home-btn-menu` overlay as `home-menu-compose`.
+    await openHomeMenuItem(page, "home-menu-compose");
 
     await page.waitForURL(/\/posts\/.*\/edit/, { waitUntil: "load" });
 
@@ -62,8 +61,8 @@ test.describe.serial("Delete draft from home page", () => {
   }) => {
     await goto(page, "/");
 
-    // Drafts moved into the Create ▾ dropdown after the topbar regroup.
-    await openHomeMenuItem(page, "home-btn-create", "home-menu-drafts");
+    // Drafts moved into the hamburger overlay after the topbar regroup.
+    await openHomeMenuItem(page, "home-menu-drafts");
 
     // Drafts route is /{username}/drafts
     await page.waitForURL(/\/[^/]+\/drafts$/, { waitUntil: "load" });
@@ -78,7 +77,7 @@ test.describe.serial("Delete draft from home page", () => {
     page,
   }) => {
     await goto(page, "/");
-    await openHomeMenuItem(page, "home-btn-create", "home-menu-drafts");
+    await openHomeMenuItem(page, "home-menu-drafts");
     await page.waitForURL(/\/[^/]+\/drafts$/, { waitUntil: "load" });
 
     const draftCard = page.locator(".draft-card", { hasText: draftTitle });
