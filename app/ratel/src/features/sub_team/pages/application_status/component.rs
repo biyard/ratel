@@ -46,9 +46,7 @@ fn StatusBody(username: String, team_display: String) -> Element {
     let tr: SubTeamTranslate = use_translate();
     let nav = use_navigator();
 
-    let UseSubTeamApplicationStatus {
-        application, ..
-    } = use_sub_team_application_status()?;
+    let UseSubTeamApplicationStatus { application, .. } = use_sub_team_application_status()?;
 
     let latest: Option<SubTeamApplicationResponse> = application();
 
@@ -123,27 +121,25 @@ fn StatusBody(username: String, team_display: String) -> Element {
                             .decision_reason
                             .clone()
                             .unwrap_or_default();
-                        let show_feedback = matches!(
-                            app.status,
-                            SubTeamApplicationStatus::Returned
-                            | SubTeamApplicationStatus::Approved
-                            | SubTeamApplicationStatus::Rejected
-                        );
-                        let feedback_heading = feedback_heading(app.status, &tr);
+                        let show_feedback = match app.status {
+                            SubTeamApplicationStatus::Approved => !decision_reason.trim().is_empty(),
+                            SubTeamApplicationStatus::Returned | SubTeamApplicationStatus::Rejected => {
+                                true
+                            }
+                            _ => false,
+                        };
+                        let feedback_heading = feedback_heading(app.status, &tr); // Feedback card author = parent team. Falls back
                         let feedback_is_rejected = matches!(
                             app.status,
                             SubTeamApplicationStatus::Rejected
                         );
-                        // Feedback card author = parent team. Falls back
-                        // to the parent uuid prefix only when the join
-                        // server-side hasn't populated `parent_team_display_name`.
                         let parent_display = if app.parent_team_display_name.is_empty() {
                             app.parent_team_id.chars().take(8).collect::<String>()
                         } else {
                             app.parent_team_display_name.clone()
                         };
                         let parent_initials = parent_display
-                            .split_whitespace()
+                            .split_whitespace() // ── Status hero ─────────────────────────
                             .take(2)
                             .filter_map(|w| w.chars().next())
                             .collect::<String>()
@@ -157,7 +153,6 @@ fn StatusBody(username: String, team_display: String) -> Element {
                         } else {
                             "feedback"
                         };
-
                         rsx! {
                             // ── Status hero ─────────────────────────
                             div { class: "status-hero", "data-v": "{variant}",
@@ -221,10 +216,7 @@ fn StatusBody(username: String, team_display: String) -> Element {
                                 }
                                 div { class: "snapshot",
                                     if snapshot_rows.is_empty() {
-                                        div {
-                                            class: "empty-row",
-                                            "{tr.status_no_applications}"
-                                        }
+                                        div { class: "empty-row", "{tr.status_no_applications}" }
                                     }
                                     for (key , value) in snapshot_rows.iter() {
                                         div { key: "{key}", class: "snapshot__row",
@@ -248,10 +240,7 @@ fn StatusBody(username: String, team_display: String) -> Element {
                         }
                     }
                 } else {
-                    div {
-                        class: "empty-row",
-                        "{tr.status_no_applications}"
-                    }
+                    div { class: "empty-row", "{tr.status_no_applications}" }
                 }
             }
         }
