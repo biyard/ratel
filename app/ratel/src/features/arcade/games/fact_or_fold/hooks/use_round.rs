@@ -13,6 +13,9 @@
 //! deltas. Mutations refresh the loaders that observe the row that
 //! just changed so the UI flips without waiting for the next tick.
 
+use crate::features::arcade::games::fact_or_fold::controllers::essence::{
+    register_essence_handler, RegisterEssenceRequest,
+};
 use crate::features::arcade::games::fact_or_fold::controllers::settlement::SettleRoundResponse;
 use crate::features::arcade::games::fact_or_fold::{
     flip_bet_handler, get_insider_statement_handler, get_round_handler,
@@ -100,6 +103,16 @@ impl UseFactFoldRound {
         text: String,
     ) -> crate::common::Result<()> {
         let _ = submit_rationale_handler(round_id, SubmitRationaleRequest { text }).await?;
+        self.rationales.restart();
+        Ok(())
+    }
+
+    pub async fn register_essence(
+        &mut self,
+        round_id: FactFoldRoundEntityType,
+    ) -> crate::common::Result<()> {
+        let _ = register_essence_handler(round_id, RegisterEssenceRequest { register: true })
+            .await?;
         self.rationales.restart();
         Ok(())
     }

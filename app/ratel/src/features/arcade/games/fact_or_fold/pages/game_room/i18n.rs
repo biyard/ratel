@@ -198,6 +198,44 @@ translate! {
     final_btn_keep: { en: "Keep", ko: "유지" },
     final_btn_flip: { en: "Flip", ko: "변경" },
     final_already_flipped: { en: "Flipped — locked.", ko: "변경 완료 — 잠금" },
+    // ── Settlement stage ──────────────────────────────────────────
+    reveal_banner_label: { en: "Truth reveal", ko: "진실 공개" },
+    reveal_verdict_real: { en: "REAL", ko: "REAL" },
+    reveal_verdict_fake: { en: "FAKE", ko: "FAKE" },
+    reveal_pending: {
+        en: "Settling — final results in a moment.",
+        ko: "정산 중 — 잠시 후 최종 결과가 표시됩니다.",
+    },
+    reveal_source_label: { en: "Verified sources:", ko: "검증 출처:" },
+    result_table_title: { en: "Final standings", ko: "4명 결과" },
+    result_table_sub: {
+        en: "Stake + influence + insider bonus combined",
+        ko: "베팅 + 영향력 + 인사이더 보너스 합산",
+    },
+    result_judgement_won: { en: "Correct + bonuses", ko: "정답 + 보너스" },
+    result_judgement_lost: { en: "Wrong — stake lost", ko: "오답 — 베팅 손실" },
+    result_judgement_insider_won: { en: "Correct + insider bonus", ko: "정답 + 인사이더 보너스" },
+    my_settlement_title: { en: "Your settlement", ko: "내 정산" },
+    my_settle_base: { en: "Base refund", ko: "기본 베팅 회수" },
+    my_settle_correct: { en: "Correct bonus", ko: "정답 보너스" },
+    my_settle_pool: { en: "Pool share", ko: "패자 풀 분배" },
+    my_settle_influence: { en: "Influence bonus", ko: "영향력 보너스" },
+    my_settle_insider: { en: "Insider bonus", ko: "INSIDER 보너스" },
+    my_settle_total: { en: "Total delta", ko: "총 손익" },
+
+    essence_title: { en: "Register Essence", ko: "Essence 등록" },
+    essence_sub: {
+        en: "Add your rationale to your Essence index.",
+        ko: "자신의 근거를 Essence 인덱스에 등록합니다.",
+    },
+    essence_my_rationale_label: { en: "Your rationale", ko: "내 근거" },
+    essence_register: { en: "Register to Essence", ko: "Essence에 등록" },
+    essence_registered: { en: "Registered ✓", ko: "등록 완료 ✓" },
+    essence_ineligible: {
+        en: "Your rationale was shorter than 50 chars — not Essence-eligible.",
+        ko: "근거가 50자 미만이라 Essence 등록 대상이 아닙니다.",
+    },
+
     stage_stub_settlement: {
         en: "Settlement view rendering will be wired in step 10.",
         ko: "정산 화면은 다음 단계에서 채워집니다.",
