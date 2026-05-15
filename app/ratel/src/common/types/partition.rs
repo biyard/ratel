@@ -127,6 +127,17 @@ pub enum Partition {
     /// the *Fact or Fold* lobby. One row per deployment; the inner
     /// `current_round_id` is updated transactionally on join + start.
     FactFoldLobbySingleton,
+
+    /// Ratel Arcade — per-user wallet partition. Groups the balance
+    /// row (`EntityType::ArcadeWalletBalance`) and every transaction
+    /// row (`EntityType::ArcadeWalletTxn(txn_id)`) for one user so a
+    /// single pk query returns the full ledger.
+    ArcadeWallet(String), // user_id
+
+    /// Singleton row carrying admin-tunable parameters that apply to
+    /// the whole arcade platform (chip↔RP ratio, default buy-in, ...).
+    /// One row per deployment.
+    ArcadeSettings,
 }
 
 impl Partition {

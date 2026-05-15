@@ -337,6 +337,10 @@ pub enum Error {
     #[translate(from)]
     FactOrFold(#[from] crate::features::arcade::games::fact_or_fold::types::FactOrFoldError),
 
+    #[error("{0}")]
+    #[translate(from)]
+    Arcade(#[from] crate::features::arcade::ArcadeError),
+
     // Unit variants for common errors
     #[error("Internal error")]
     #[translate(
@@ -525,6 +529,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::SpaceReport(e) => e.status_code(),
             Error::Character(e) => e.status_code(),
             Error::FactOrFold(e) => e.status_code(),
+            Error::Arcade(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -649,6 +654,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::SpaceReport(e) => e.status_code(),
             Error::Character(e) => e.status_code(),
             Error::FactOrFold(e) => e.status_code(),
+            Error::Arcade(e) => e.status_code(),
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

@@ -295,6 +295,19 @@ pub enum EntityType {
     FactFoldParticipant(String),    // pk=FactFold(round_id), inner=user_id
     FactFoldBet(String),            // pk=FactFold(round_id), inner=user_id
     FactFoldRationale(String),      // pk=FactFold(round_id), inner=user_id
+
+    // Ratel Arcade — chip wallet (PR4b).
+    /// Singleton balance row under `Partition::ArcadeWallet(user_id)`.
+    /// One row per user; carries `chip_balance` + `last_updated`.
+    ArcadeWalletBalance,            // pk=ArcadeWallet(user_id) (singleton sk)
+    /// Per-transaction ledger row under `Partition::ArcadeWallet(user_id)`.
+    /// inner=ulid (time-sortable) so a single sk-prefix query lists
+    /// transactions in chronological order.
+    ArcadeWalletTxn(String),        // pk=ArcadeWallet(user_id), inner=txn_id
+
+    /// Singleton arcade-wide settings (chip↔RP ratio, default buy-in,
+    /// ...). Pairs with `Partition::ArcadeSettings`.
+    ArcadeSettings,                 // pk=ArcadeSettings (singleton)
 }
 
 impl TryInto<Partition> for EntityType {
