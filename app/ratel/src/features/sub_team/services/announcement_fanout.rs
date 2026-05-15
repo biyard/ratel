@@ -55,9 +55,9 @@ pub async fn count_recognized_sub_teams(
     cli: &aws_sdk_dynamodb::Client,
     parent_pk: &Partition,
 ) -> Result<usize> {
-    let opt = SubTeamLink::opt().sk("SUB_TEAM_LINK".to_string()).limit(
-        (MAX_RECOGNIZED_SUB_TEAMS as i32) + 1,
-    );
+    let opt = SubTeamLink::opt()
+        .sk("SUB_TEAM_LINK".to_string())
+        .limit((MAX_RECOGNIZED_SUB_TEAMS as i32) + 1);
     let (items, _) = SubTeamLink::query(cli, parent_pk.clone(), opt)
         .await
         .map_err(|e| {
@@ -140,9 +140,7 @@ pub async fn handle_announcement_published(
     let parent_team = match Team::get(cli, &announcement.pk, Some(EntityType::Team)).await {
         Ok(Some(t)) => t,
         Ok(None) => {
-            crate::error!(
-                "handle_announcement_published: parent team not found: {parent_team_id}"
-            );
+            crate::error!("handle_announcement_published: parent team not found: {parent_team_id}");
             return Err(SubTeamError::AnnouncementPublishFailed.into());
         }
         Err(e) => {
@@ -191,6 +189,7 @@ pub async fn handle_announcement_published(
     let anchor_post_pk = Partition::Feed(announcement.announcement_id.clone());
     let cta_url = build_post_detail_url(&anchor_post_pk);
     let post_id_display = announcement.announcement_id.clone();
+    let defer_inbox = !is_direct && announcement.space_enabled && announcement.space_pk.is_some();
 
     for link in &links {
         let child_team_id = link.child_team_id.clone();
@@ -226,6 +225,10 @@ pub async fn handle_announcement_published(
             fan_out_count += 1;
         }
 
+        if defer_inbox {
+            continue;
+        }
+
         // Notify every member of the child team.
         let members = resolve_team_members(cli, &child_team_pk)
             .await
@@ -246,34 +249,14 @@ pub async fn handle_announcement_published(
         }
     }
 
-    // Direct messages have one canonical anchor Post pk
-    // (`Feed(announcement_id)`) created at send-time. Mirror it onto the
-    // announcement row so the parent's history view can deep-link
-    // without rebuilding the pk from the announcement id.
-    if is_direct {
-        if let Err(e) = persist_target_post_pk(
-            cli,
-            &announcement.pk,
-            &announcement.sk,
-            &anchor_post_pk,
-            now,
-        )
-        .await
-        {
-            crate::error!("[fanout] persist_target_post_pk failed: {e}");
-        }
-    }
-
-    // Update source announcement with fan_out_count. Non-fatal if this fails.
-    if let Err(e) = SubTeamAnnouncement::updater(&announcement.pk, &announcement.sk)
+    let mut updater = SubTeamAnnouncement::updater(&announcement.pk, &announcement.sk)
         .with_fan_out_count(fan_out_count)
-        .with_updated_at(now)
-        .execute(cli)
-        .await
-    {
-        crate::error!(
-            "handle_announcement_published: fan_out_count update failed: {e}"
-        );
+        .with_updated_at(now);
+    if is_direct {
+        updater = updater.with_target_post_pk(anchor_post_pk.to_string());
+    }
+    if let Err(e) = updater.execute(cli).await {
+        crate::error!("handle_announcement_published: fan_out_count update failed: {e}");
     }
 
     Ok(())
@@ -286,29 +269,106 @@ fn build_post_detail_url(post_pk: &Partition) -> String {
     }
 }
 
-/// Write the anchor Post pk back onto the source `SubTeamAnnouncement`
-/// row so the parent's direct-message history can deep-link to the
-/// actual Post.
-async fn persist_target_post_pk(
+#[cfg(feature = "server")]
+pub async fn handle_space_published(
     cli: &aws_sdk_dynamodb::Client,
-    announcement_pk: &Partition,
-    announcement_sk: &EntityType,
-    post_pk: &Partition,
-    now_ms: i64,
+    space: crate::common::models::space::SpaceCommon,
 ) -> Result<()> {
-    SubTeamAnnouncement::updater(announcement_pk, announcement_sk.clone())
-        .with_target_post_pk(post_pk.to_string())
-        .with_updated_at(now_ms)
+    use crate::common::types::InboxPayload;
+    use crate::features::posts::models::Post;
+    use crate::features::posts::types::PostType;
+
+    // Broadcast-attached Space has `space.pk = SPACE#<id>` and
+    // `space.post_pk = FEED#<id>` — the anchor Post lives on the Feed
+    // partition, NOT the Space partition. Using `space.pk` here would
+    // always lookup-miss and silently drop every notification.
+    let post_pk = space.post_pk.clone();
+    let post = match Post::get(cli, &post_pk, Some(EntityType::Post)).await {
+        Ok(Some(p)) => p,
+        Ok(None) => return Ok(()),
+        Err(e) => {
+            crate::error!("handle_space_published: anchor post lookup failed: {e}");
+            return Ok(());
+        }
+    };
+    if !matches!(post.post_type, PostType::Post) {
+        return Ok(());
+    }
+    let (Some(announcement_id), Some(parent_team_id)) = (
+        post.announcement_id.clone(),
+        post.announcement_parent_team_id.clone(),
+    ) else {
+        return Ok(());
+    };
+
+    let ann_pk = Partition::Team(parent_team_id.clone());
+    let ann_sk = EntityType::SubTeamAnnouncement(announcement_id.clone());
+    let announcement = match SubTeamAnnouncement::get(cli, &ann_pk, Some(ann_sk.clone())).await {
+        Ok(Some(a)) => a,
+        Ok(None) => return Ok(()),
+        Err(e) => {
+            crate::error!("handle_space_published: announcement lookup failed: {e}");
+            return Ok(());
+        }
+    };
+    if announcement.target_child_team_id.is_some() {
+        return Ok(());
+    }
+    if announcement.broadcast_notified_at.is_some() {
+        return Ok(());
+    }
+
+    let parent_team = match Team::get(cli, &announcement.pk, Some(EntityType::Team)).await {
+        Ok(Some(t)) => t,
+        Ok(None) => {
+            crate::error!("handle_space_published: parent team not found: {parent_team_id}");
+            return Ok(());
+        }
+        Err(e) => {
+            crate::error!("handle_space_published: parent team fetch: {e}");
+            return Ok(());
+        }
+    };
+
+    let links = list_recognized_sub_teams(cli, &announcement.pk).await?;
+    let anchor_post_pk = Partition::Feed(announcement.announcement_id.clone());
+    // Space URL takes the raw id (no `SPACE#`/`FEED#` prefix), which
+    // matches the canonical `/spaces/:space_id` route in `route.rs`.
+    // Derive from `announcement_id` since both `space.pk` and
+    // `space.post_pk` carry the same id.
+    let cta_url = format!("/spaces/{}", announcement.announcement_id);
+
+    for link in &links {
+        let child_team_pk = Partition::Team(link.child_team_id.clone());
+        let members = resolve_team_members(cli, &child_team_pk)
+            .await
+            .unwrap_or_default();
+        for u in members {
+            let payload = InboxPayload::SubTeamAnnouncementReceived {
+                parent_team_id: parent_team_id.clone(),
+                parent_team_name: parent_team.display_name.clone(),
+                announcement_id: announcement.announcement_id.clone(),
+                title: announcement.title.clone(),
+                post_id: announcement.announcement_id.clone(),
+                post_pk: anchor_post_pk.to_string(),
+                cta_url: cta_url.clone(),
+            };
+            if let Err(e) = crate::common::utils::inbox::create_inbox_row(u, payload).await {
+                crate::error!("handle_space_published: inbox create failed: {e}");
+            }
+        }
+    }
+
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    if let Err(e) = SubTeamAnnouncement::updater(&announcement.pk, &ann_sk)
+        .with_broadcast_notified_at(now)
+        .with_updated_at(now)
         .execute(cli)
         .await
-        .map(|_| ())
-        .map_err(|e| {
-            crate::error!(
-                "persist_target_post_pk: updater.execute failed pk={:?} sk={:?}: {:?}",
-                announcement_pk,
-                announcement_sk,
-                e,
-            );
-            Error::from(SubTeamError::AnnouncementPublishFailed)
-        })
+    {
+        crate::error!("handle_space_published: broadcast_notified_at write failed: {e}");
+    }
+
+    Ok(())
 }
+

@@ -1,11 +1,13 @@
+use crate::common::models::space::SpaceCommon;
+use crate::common::types::SpacePublishState;
+use crate::features::auth::OptionalUser;
 use crate::features::posts::controllers::dto::*;
 use crate::features::posts::models::*;
 use crate::features::posts::types::*;
 use crate::features::posts::*;
-use crate::features::auth::OptionalUser;
-use crate::common::models::space::SpaceCommon;
-use crate::common::types::SpacePublishState;
-use crate::features::sub_team::models::SubTeamAnnouncementFanout;
+use crate::features::sub_team::models::{
+    SubTeamAnnouncement, SubTeamAnnouncementFanout, SubTeamAnnouncementStatus,
+};
 use std::collections::HashMap;
 
 #[get("/api/posts/by-user/:username?bookmark", user: OptionalUser)]
@@ -24,7 +26,8 @@ pub async fn list_user_posts_handler(
         bookmark
     );
 
-    let (users, _) = crate::features::auth::User::find_by_username(cli, &username, Default::default()).await?;
+    let (users, _) =
+        crate::features::auth::User::find_by_username(cli, &username, Default::default()).await?;
     let target_user = users.into_iter().next().ok_or(Error::PostInvalidUsername)?;
     let user_pk = target_user.pk;
     let is_owner = match &user {
@@ -110,7 +113,9 @@ pub async fn list_team_posts_handler(
     let team_pk = team.pk;
 
     let fetch_limit = if category.is_some() { 50 } else { 10 };
-    let mut query_options = Post::opt().limit(fetch_limit).sk(PostStatus::Published.to_string());
+    let mut query_options = Post::opt()
+        .limit(fetch_limit)
+        .sk(PostStatus::Published.to_string());
 
     if let Some(bookmark) = bookmark {
         query_options = query_options.bookmark(bookmark);
@@ -127,8 +132,7 @@ pub async fn list_team_posts_handler(
     // are only added to the result when the viewer is a member of this
     // team — non-members and anonymous visitors see the team's own
     // Posts only.
-    let posts =
-        merge_broadcast_anchors(cli, &team_pk, posts, user.as_ref().map(|u| &u.pk)).await;
+    let posts = merge_broadcast_anchors(cli, &team_pk, posts, user.as_ref().map(|u| &u.pk)).await;
 
     // Category filter:
     // - When caller passes `category`, return ONLY posts that carry it
@@ -215,8 +219,23 @@ pub async fn list_team_posts_handler(
 /// `broadcast_access::can_view_broadcast_post` so the canonical
 /// `/posts/{id}` URL also denies non-members.
 ///
-/// Sort order is `created_at` desc to keep the merged feed
-/// time-consistent with `find_by_user_and_status`'s gsi5 ordering.
+/// Union sources of broadcast anchor Posts for this wall:
+///
+/// 1. **Child team wall** — anchors reached via `SubTeamAnnouncementFanout`
+///    markers filed under this child team's pk by the fanout service.
+/// 2. **Parent team wall** — anchors reached via the parent's own
+///    `SubTeamAnnouncement` rows. The parent's gsi5 page query
+///    eventually returns the same Posts, but only when they fall
+///    inside the current page's `created_at` window. Pulling them
+///    directly here guarantees broadcasts pin to page 0 regardless
+///    of how many regular Posts have been written since.
+///
+/// Both sources run unconditionally — each is empty for the wrong
+/// kind of wall (child has no announcements, parent has no markers),
+/// so the union is a no-op in those cases.
+///
+/// Sort order: `pinned_as_announcement` desc first (broadcast anchors
+/// always pin), then `created_at` desc for the rest.
 #[cfg(feature = "server")]
 async fn merge_broadcast_anchors(
     cli: &aws_sdk_dynamodb::Client,
@@ -224,20 +243,62 @@ async fn merge_broadcast_anchors(
     own_posts: Vec<Post>,
     viewer: Option<&Partition>,
 ) -> Vec<Post> {
+    // Collect anchor pks from both sources before any membership /
+    // batch_get work — if neither source returns anything, short-circuit.
+    let mut anchor_pks: Vec<Partition> = Vec::new();
+
+    // Source 1 — fanout markers (child team wall).
     let opt = SubTeamAnnouncementFanout::opt()
         .limit(100)
         .sk("SUB_TEAM_ANNOUNCEMENT_FANOUT".to_string());
-    let markers: Vec<SubTeamAnnouncementFanout> =
-        match SubTeamAnnouncementFanout::query(cli, team_pk.clone(), opt).await {
-            Ok((items, _)) => items,
+    match SubTeamAnnouncementFanout::query(cli, team_pk.clone(), opt).await {
+        Ok((markers, _)) => {
+            for m in markers {
+                anchor_pks.push(Partition::Feed(m.announcement_id));
+            }
+        }
+        Err(e) => {
+            tracing::warn!("merge_broadcast_anchors: marker query failed: {e}");
+        }
+    };
+
+    // Source 2 — parent team's own announcements. Only run when the
+    // wall is on a Team partition (non-Team walls have no announcements).
+    if matches!(team_pk, Partition::Team(_)) {
+        let opt = SubTeamAnnouncement::opt()
+            .limit(100)
+            .sk("SUB_TEAM_ANNOUNCEMENT#".to_string());
+        match SubTeamAnnouncement::query(cli, team_pk.clone(), opt).await {
+            Ok((announcements, _)) => {
+                for a in announcements {
+                    // Only Published announcements have a live anchor
+                    // Post. Direct messages and drafts skip this path —
+                    // direct messages already land in own_posts via
+                    // `user_pk = child_team_pk`, and drafts have no
+                    // anchor Post to surface yet.
+                    if !matches!(a.status, SubTeamAnnouncementStatus::Published) {
+                        continue;
+                    }
+                    if a.target_child_team_id.is_some() {
+                        continue;
+                    }
+                    anchor_pks.push(Partition::Feed(a.announcement_id));
+                }
+            }
             Err(e) => {
-                tracing::warn!("merge_broadcast_anchors: marker query failed: {e}");
-                return own_posts;
+                tracing::warn!("merge_broadcast_anchors: announcement query failed: {e}");
             }
         };
-    if markers.is_empty() {
+    }
+
+    if anchor_pks.is_empty() {
         return own_posts;
     }
+
+    // Dedup anchor pks before the batch_get — both sources can name
+    // the same announcement on edge cases.
+    let mut seen: HashMap<String, ()> = HashMap::new();
+    anchor_pks.retain(|p| seen.insert(p.to_string(), ()).is_none());
 
     // Membership gate — only surface broadcast anchors to members of
     // this wall's team. Anonymous viewers never see them.
@@ -253,9 +314,9 @@ async fn merge_broadcast_anchors(
         return own_posts;
     }
 
-    let keys: Vec<(Partition, EntityType)> = markers
-        .iter()
-        .map(|m| (Partition::Feed(m.announcement_id.clone()), EntityType::Post))
+    let keys: Vec<(Partition, EntityType)> = anchor_pks
+        .into_iter()
+        .map(|pk| (pk, EntityType::Post))
         .collect();
     let anchors: Vec<Post> = Post::batch_get(cli, keys).await.unwrap_or_default();
     let anchors: Vec<Post> = anchors
@@ -272,27 +333,45 @@ async fn merge_broadcast_anchors(
     }
 
     let mut merged: Vec<Post> = by_pk.into_values().collect();
-    merged.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+    // Pinned (broadcast anchors flagged `pinned_as_announcement`) sit at
+    // the top; the rest fall back to `created_at` desc. Stable ordering
+    // means a newly published broadcast pops to the front of the wall
+    // even when older non-broadcast posts have higher created_at.
+    merged.sort_by(|a, b| {
+        b.pinned_as_announcement
+            .cmp(&a.pinned_as_announcement)
+            .then_with(|| b.created_at.cmp(&a.created_at))
+    });
     merged
 }
 
 /// Hide broadcast Posts whose attached Space is still in `Draft`
-/// publish-state. Applies to every Post carrying an `announcement_id` +
-/// `space_pk`, regardless of whether the row is the parent's anchor or
-/// surfaced into a child's wall via a fanout marker — until the parent
-/// admin opens the Space designer and publishes the Space, no team
-/// should see a half-built Space card they can't open.
+/// publish-state from **child team walls only**. Parent admins must
+/// still see their own broadcast on the parent team's wall — they're
+/// the ones who need to open the Space designer and publish it, so
+/// hiding it from the parent would leave them with no entry point
+/// outside the broadcast management tab.
+///
+/// Rule:
+/// - Wall team == announcement's parent team (`announcement_parent_team_id`)
+///   → show the row regardless of Space publish_state.
+/// - Wall team != parent (child team wall, surfaced via fanout marker)
+///   → hide until the parent publishes the Space.
 #[cfg(feature = "server")]
 async fn filter_unpublished_broadcast_spaces(
     cli: &aws_sdk_dynamodb::Client,
     team_pk: &Partition,
     posts: Vec<Post>,
 ) -> Vec<Post> {
-    let _ = team_pk;
+    let wall_team_id: Option<&str> = match team_pk {
+        Partition::Team(id) => Some(id.as_str()),
+        _ => None,
+    };
 
     let mut to_check: Vec<Partition> = posts
         .iter()
         .filter(|p| p.announcement_id.is_some() && p.space_pk.is_some())
+        .filter(|p| p.announcement_parent_team_id.as_deref() != wall_team_id)
         .filter_map(|p| p.space_pk.clone())
         .collect();
     to_check.sort_by(|a, b| a.to_string().cmp(&b.to_string()));
@@ -317,6 +396,9 @@ async fn filter_unpublished_broadcast_spaces(
         .into_iter()
         .filter(|p| {
             if p.announcement_id.is_none() {
+                return true;
+            }
+            if p.announcement_parent_team_id.as_deref() == wall_team_id {
                 return true;
             }
             let Some(space_pk) = p.space_pk.as_ref() else {

@@ -97,7 +97,7 @@ pub fn FormTab() -> Element {
                 }
 
                 div { class: "field-list", id: "field-list",
-                    for (idx, field) in rows.iter().enumerate() {
+                    for (idx , field) in rows.iter().enumerate() {
                         FieldRow {
                             key: "{field.id}",
                             field: field.clone(),
@@ -489,40 +489,43 @@ fn FieldOptionsPanel(
 ) -> Element {
     let tr: SubTeamTranslate = use_translate();
     let _ = field_id;
+    let mut local: Signal<Vec<String>> = use_signal(|| options.clone());
+    let labels = local();
+
     rsx! {
         div { class: "field-options",
             div { class: "field-options__list",
-                for (idx, opt) in options.iter().enumerate() {
+                for (idx , opt) in labels.iter().enumerate() {
                     div { key: "opt-{idx}", class: "field-options__item",
                         input {
                             class: "field-options__input",
                             r#type: "text",
                             value: "{opt}",
                             placeholder: "{tr.form_options_placeholder}",
-                            onchange: {
-                                let options = options.clone();
-                                move |e| {
-                                    let mut next = options.clone();
-                                    if idx < next.len() {
-                                        next[idx] = e.value();
-                                        on_change.call(next);
-                                    }
-                                }
+                            oninput: move |e| {
+                                local
+                                    .with_mut(|v| {
+                                        if idx < v.len() {
+                                            v[idx] = e.value();
+                                        }
+                                    });
+                            },
+                            onchange: move |_| {
+                                on_change.call(local());
                             },
                         }
                         button {
                             class: "field-options__del",
                             "aria-label": "Remove option",
                             r#type: "button",
-                            onclick: {
-                                let options = options.clone();
-                                move |_| {
-                                    let mut next = options.clone();
-                                    if idx < next.len() {
-                                        next.remove(idx);
-                                        on_change.call(next);
-                                    }
-                                }
+                            onclick: move |_| {
+                                local
+                                    .with_mut(|v| {
+                                        if idx < v.len() {
+                                            v.remove(idx);
+                                        }
+                                    });
+                                on_change.call(local());
                             },
                             svg {
                                 view_box: "0 0 24 24",
@@ -551,13 +554,9 @@ fn FieldOptionsPanel(
             button {
                 class: "field-options__add",
                 r#type: "button",
-                onclick: {
-                    let options = options.clone();
-                    move |_| {
-                        let mut next = options.clone();
-                        next.push(String::new());
-                        on_change.call(next);
-                    }
+                onclick: move |_| {
+                    local.with_mut(|v| v.push(String::new()));
+                    on_change.call(local());
                 },
                 "+ {tr.form_options_add}"
             }
