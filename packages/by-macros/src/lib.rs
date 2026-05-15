@@ -9,6 +9,7 @@ mod enum_prop;
 mod mcp_tool;
 pub(crate) mod parse_queryable_fields;
 mod qdrant_entity;
+mod server_fn;
 #[cfg(feature = "server")]
 mod query_builder_functions;
 mod query_display;
@@ -367,6 +368,39 @@ pub fn derive_dioxus_controller(input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn mcp_tool(attr: TokenStream, item: TokenStream) -> TokenStream {
     mcp_tool::mcp_tool_impl(attr.into(), item.into()).into()
+}
+
+// HTTP method attribute macros — shadow `dioxus::fullstack::{get,post,...}`.
+// Under `cfg(not(tauri-web))` they forward unchanged to dioxus's macro so
+// server + browser-client code is generated the same way. Under
+// `cfg(tauri-web)` they emit a reqwest stub that calls
+// `crate::common::fullstack::server_fn::<method>` so the bundle no longer
+// depends on dioxus-fullstack's RPC transport (and therefore not on
+// dioxus-web/hydrate).
+
+#[proc_macro_attribute]
+pub fn get(attr: TokenStream, item: TokenStream) -> TokenStream {
+    server_fn::server_fn_impl("GET", attr, item)
+}
+
+#[proc_macro_attribute]
+pub fn post(attr: TokenStream, item: TokenStream) -> TokenStream {
+    server_fn::server_fn_impl("POST", attr, item)
+}
+
+#[proc_macro_attribute]
+pub fn put(attr: TokenStream, item: TokenStream) -> TokenStream {
+    server_fn::server_fn_impl("PUT", attr, item)
+}
+
+#[proc_macro_attribute]
+pub fn patch(attr: TokenStream, item: TokenStream) -> TokenStream {
+    server_fn::server_fn_impl("PATCH", attr, item)
+}
+
+#[proc_macro_attribute]
+pub fn delete(attr: TokenStream, item: TokenStream) -> TokenStream {
+    server_fn::server_fn_impl("DELETE", attr, item)
 }
 
 pub(crate) fn save_file(st_name: &str, output: &str) {

@@ -33,8 +33,27 @@ impl<T> Clone for Loader<T> {
 impl<T> Copy for Loader<T> {}
 
 impl<T> Loader<T> {
+    /// Restart the loading task. Re-runs the future; won't suspend the
+    /// component (background reload).
     pub fn restart(&mut self) {
         self.resource.restart();
+    }
+
+    /// `true` while the underlying resource is still in-flight. Matches the
+    /// `Loader::loading()` API on dioxus's own loader so call sites that
+    /// drive UI off it (`if loader.loading() { ... }`) keep working.
+    pub fn loading(&self) -> bool {
+        !self.resource.finished()
+    }
+
+    /// Cancel the current loading task. After cancellation, future reads
+    /// will panic; callers should restart if they want a new attempt.
+    pub fn cancel(&mut self) {
+        self.resource.cancel();
+    }
+
+    pub fn value(&self) -> T {
+        (self.real_value)().unwrap()
     }
 }
 

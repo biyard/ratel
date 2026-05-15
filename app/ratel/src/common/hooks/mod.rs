@@ -11,7 +11,12 @@ pub use use_interval::*;
 #[cfg(feature = "mobile")]
 pub use use_loader::*;
 
-#[cfg(not(feature = "mobile"))]
+// Pick `use_loader` matching the active `Loader<T>` type:
+// - under `tauri-web`: our reqwest-backed Loader from `common::fullstack`
+// - otherwise: dioxus's stock `use_loader`
+#[cfg(all(not(feature = "mobile"), feature = "tauri-web"))]
+pub use crate::common::fullstack::use_loader;
+#[cfg(all(not(feature = "mobile"), not(feature = "tauri-web")))]
 pub use dioxus::prelude::use_loader;
 
 pub use use_origin::*;

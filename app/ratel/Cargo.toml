@@ -123,7 +123,7 @@ generational-box = "0.7.9"
 default = ["web", "server", "mobile"]
 bypass = []
 skip-server = []
-web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2", "uuid/js", "dep:console_error_panic_hook"]
+web = ["dioxus/web", "dioxus/fullstack", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2", "uuid/js", "dep:console_error_panic_hook"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile", "tokio"]
 # Type-only feature: compiles app/ratel/src/tauri/types/ and nothing else.
@@ -132,7 +132,7 @@ mobile = ["dioxus/mobile", "tokio"]
 # Web build for the Tauri Android shell. Additive on `web` so the dioxus-web
 # code path is identical; only adds compilation of app/ratel/src/tauri/interop/
 # (the JS-eval drivers that call window.__TAURI__.invoke).
-tauri-web = ["tauri-common", "dep:console_error_panic_hook", "dep:reqwest"]
+tauri-web = ["tauri-common", "dep:console_error_panic_hook", "dep:reqwest", "dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2", "uuid/js"]
 server = [
   "aws-config",
   "aws-credential-types",
@@ -146,6 +146,7 @@ server = [
   "aws-smithy-types",
   "candid",
   "dioxus/server",
+  "dioxus/fullstack",
   "ethers",
   "futures",
   "hex",

@@ -27,10 +27,29 @@ use serde::de::DeserializeOwned;
 
 use crate::common::Error;
 
+
 /// Compile-time backend base URL. Baked from `MOBILE_API_URL` by the Makefile.
 /// Falls back to dev.ratel.foundation when unset (matches `mobile_endpoint`).
 fn base_url() -> &'static str {
     option_env!("MOBILE_API_URL").unwrap_or("https://dev.ratel.foundation")
+}
+
+/// Serialize any `Serialize` value into the textual form we splice into a
+/// URL path or query string. Goes through `serde_json` and then strips the
+/// surrounding quotes when the result is a JSON string, which makes it
+/// round-trip with the server's serde-based deserialization (incl. enums
+/// with `#[serde(rename_all = "...")]`). Anything that isn't a JSON string
+/// (numbers, bools, objects encoded into the URL) keeps its raw form.
+pub fn to_url_value<T: Serialize + ?Sized>(v: &T) -> String {
+    let json = serde_json::to_string(v).unwrap_or_default();
+    if json.len() >= 2 && json.starts_with('"') && json.ends_with('"') {
+        // Unescape the JSON string body — the server splits on `&`/`=`,
+        // so we still need percent-encoding from the caller, but the
+        // *value* itself should be the unquoted string.
+        serde_json::from_str::<String>(&json).unwrap_or_default()
+    } else {
+        json
+    }
 }
 
 pub async fn get<R: DeserializeOwned>(path: &str) -> crate::common::Result<R> {

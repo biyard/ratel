@@ -15,7 +15,9 @@ serde.workspace = true
 schemars.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-dioxus =  { workspace = true, features = [ "server" ] }
+# `fullstack` is needed for `dioxus::fullstack::FullstackContext` used by
+# `use_language` to distinguish SSR vs native at runtime.
+dioxus =  { workspace = true, features = [ "server", "fullstack" ] }
 tokio.workspace = true
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

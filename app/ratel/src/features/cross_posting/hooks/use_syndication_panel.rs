@@ -25,7 +25,7 @@ use crate::features::cross_posting::controllers::{
 use crate::features::cross_posting::types::{
     ConnectionResponse, SocialPlatform, SyndicationPanelResponse,
 };
-use dioxus::fullstack::Loader;
+use crate::common::fullstack::Loader;
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct UseSyndicationPanel {

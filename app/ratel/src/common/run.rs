@@ -7,13 +7,11 @@ pub fn run(app: fn() -> Element) {
 
     debug!("Logger initialized with level {:?}", cfg.log_level);
 
-    #[cfg(feature = "tauri-web")]
-    {
-        use crate::common::CommonConfig;
-        let endpoint = CommonConfig::default().env.mobile_endpoint();
-        debug!("Setting server URL to {endpoint}");
-        dioxus::fullstack::set_server_url(endpoint);
-    }
+    // The tauri-web build does NOT use dioxus-fullstack — our
+    // `by_macros::server_fn` proc-macro emits reqwest-based stubs that
+    // read the backend base URL from `MOBILE_API_URL` at compile time
+    // (see `common::fullstack::tauri_web::server_fn::base_url`). So
+    // there's no global server URL to set here.
 
     #[cfg(not(feature = "server"))]
     launch(app);

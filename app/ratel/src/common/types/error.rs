@@ -577,6 +577,17 @@ impl From<ServerFnError> for Error {
     }
 }
 
+// Reverse direction so handlers that return `Result<_, ServerFnError>`
+// can `?`-bubble our local errors, and so the tauri-web client stubs
+// (which call `server_fn::get` etc. returning `Result<_, Error>`) can
+// be converted via `.map_err(Into::into)` regardless of which error
+// type the handler signature declares.
+impl From<Error> for ServerFnError {
+    fn from(e: Error) -> Self {
+        ServerFnError::new(e.to_string())
+    }
+}
+
 #[cfg(feature = "server")]
 impl dioxus::fullstack::AsStatusCode for Error {
     fn as_status_code(&self) -> crate::axum::http::StatusCode {

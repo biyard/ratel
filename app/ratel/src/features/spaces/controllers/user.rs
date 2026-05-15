@@ -1,7 +1,10 @@
 use crate::common::models::*;
 use crate::features::auth::models::user::{OptionalUser, User, SESSION_KEY_USER_ID};
 use crate::features::spaces::*;
-use dioxus::fullstack::Form;
+// `Form` ships from `dioxus_fullstack` under web/server and from our
+// shim module under tauri-web. The `common::fullstack` re-export hides
+// the difference.
+use crate::common::fullstack::Form;
 use serde::de::DeserializeOwned;
 
 #[cfg(feature = "server")]

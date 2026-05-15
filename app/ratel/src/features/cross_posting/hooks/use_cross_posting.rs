@@ -27,7 +27,7 @@ use crate::features::cross_posting::models::ConnectionStatus;
 use crate::features::cross_posting::types::{
     ConnectBlueskyRequest, ConnectionResponse, SocialPlatform, ToggleAutoPostRequest,
 };
-use dioxus::fullstack::Loader;
+use crate::common::fullstack::Loader;
 use std::collections::HashMap;
 
 #[derive(Clone, Copy, DioxusController)]

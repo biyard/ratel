@@ -224,7 +224,7 @@ run-apk: build-android
 # attach a debugger. Slower compile + larger APK than the release variant.
 build-android-debug: install-tauri-cli dx-build
 	$(WRITE_TAURI_OVERRIDE)
-	cd src-tauri && $(ANDROID_ENV) cargo tauri android build --target $(TAURI_TARGET) --apk --debug
+	cd src-tauri && $(ANDROID_ENV) cargo tauri android build --target $(TAURI_TARGET) --apk --debug --config $(TAURI_OVERRIDE_FILE)
 	@echo
 	@echo "APK output:"
 	@find src-tauri/gen/android -name "*-debug.apk" -newer Makefile 2>/dev/null

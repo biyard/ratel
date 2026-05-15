@@ -10,7 +10,7 @@ use crate::features::spaces::pages::actions::actions::discussion::{
     DiscussionCommentResponse, DiscussionResponse, SpacePostCommentTargetEntityType,
 };
 use crate::features::spaces::space_common::controllers::{list_space_members, SpaceMemberResponse};
-use dioxus::fullstack::Loader;
+use crate::common::fullstack::Loader;
 use std::str::FromStr;
 
 /// Ranking score for a single comment, computed client-side at every
