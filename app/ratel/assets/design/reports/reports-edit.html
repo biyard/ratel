@@ -663,11 +663,13 @@
         height: 13px;
       }
       .block-chart__viz {
-        height: 200px;
+        height: 220px;
         border-radius: 10px;
         background: rgba(0, 0, 0, 0.25);
         border: 1px solid var(--border-subtle);
-        padding: 18px;
+        /* Extra padding-bottom carves out space for the absolute-positioned
+           `.block-chart__bar::after` labels so they stay inside the box. */
+        padding: 18px 18px 34px;
         display: flex;
         align-items: flex-end;
         gap: 12px;
@@ -1859,6 +1861,25 @@
       }
       /* ── Print / PDF — chrome out, doc clean on white ── */
       @media print {
+        /* Force browser to preserve our backgrounds / gradients —
+           Chrome / Edge / Safari strip them by default to save ink. */
+        *,
+        *::before,
+        *::after {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        /* Bar chart bars use linear-gradient which some browsers still
+           drop even with print-color-adjust=exact. Solid fallback. */
+        .block-chart__bar {
+          background: #a855f7 !important;
+        }
+        .block-lda__topic-bar > div {
+          background: #a855f7 !important;
+        }
+        .report-card__bar {
+          background: #a855f7 !important;
+        }
         html,
         body,
         .arena {
@@ -2645,33 +2666,6 @@
                       Q1: 가장 시급한 정책은?
                     </div>
                     <div class="block-chart__actions">
-                      <button
-                        class="block-chart__icon-btn"
-                        aria-label="차트 종류 변경"
-                      >
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                        >
-                          <polygon points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                        </svg>
-                      </button>
-                      <button
-                        class="block-chart__icon-btn"
-                        aria-label="새로고침"
-                      >
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                        >
-                          <polyline points="23 4 23 10 17 10" />
-                          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-                        </svg>
-                      </button>
                       <button class="block-chart__icon-btn" aria-label="삭제">
                         <svg
                           viewBox="0 0 24 24"
@@ -4245,8 +4239,6 @@
                 </span>
                 <div class="block-chart__title">${escapeHtml(p.aggregateTitle)}</div>
                 <div class="block-chart__actions">
-                  <button class="block-chart__icon-btn" aria-label="차트 종류 변경"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></button>
-                  <button class="block-chart__icon-btn" aria-label="새로고침"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
                   <button class="block-chart__icon-btn" aria-label="삭제"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
                 </div>
               </div>
@@ -4271,12 +4263,8 @@
         const anchor =
           target || document.getElementById("live-block").closest(".doc-block");
         anchor.insertAdjacentHTML("beforebegin", html);
-        // Wire delete button on the new block
-        const newBlock = anchor.previousElementSibling;
-        const delBtn = newBlock.querySelector(
-          '.block-chart__actions .block-chart__icon-btn[aria-label="삭제"]'
-        );
-        if (delBtn) delBtn.addEventListener("click", () => newBlock.remove());
+        // Delete handler is delegated globally (see below) — works for
+        // statically-rendered chart blocks too.
       }
 
       function escapeHtml(s) {
@@ -4304,12 +4292,21 @@
         const anchor =
           target || document.getElementById("live-block").closest(".doc-block");
         anchor.insertAdjacentHTML("beforebegin", html);
-        const newBlock = anchor.previousElementSibling;
-        const delBtn = newBlock.querySelector(
+        // Delete handler is delegated globally.
+      }
+
+      // Delegated delete — works for ALL chart blocks (the static one
+      // hard-coded in the HTML + any block inserted later via the data
+      // picker flow). Single global listener so we don't need to wire
+      // each new block individually.
+      document.addEventListener("click", (e) => {
+        const btn = e.target.closest(
           '.block-chart__actions .block-chart__icon-btn[aria-label="삭제"]'
         );
-        if (delBtn) delBtn.addEventListener("click", () => newBlock.remove());
-      }
+        if (!btn) return;
+        const block = btn.closest(".doc-block");
+        if (block) block.remove();
+      });
 
       function chartHeadHtml(p, typeLabel) {
         return `
@@ -4320,7 +4317,6 @@
           </span>
           <div class="block-chart__title">${escapeHtml(p.aggregateTitle)}</div>
           <div class="block-chart__actions">
-            <button class="block-chart__icon-btn" aria-label="새로고침"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
             <button class="block-chart__icon-btn" aria-label="삭제"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
           </div>
         </div>
