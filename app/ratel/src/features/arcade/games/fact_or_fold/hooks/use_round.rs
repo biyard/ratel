@@ -43,6 +43,11 @@ pub struct UseFactFoldRound {
     /// asks the server for messages newer than `last_chat_id`.
     pub chat: Signal<Vec<ChatMessagePayload>>,
     pub last_chat_id: Signal<Option<String>>,
+    /// User pk that the caller marked as "decisive" during the reveal
+    /// stage (mockup's ⌬ icon). Carries the citation across into the
+    /// live-debate flip slot — `flip_bet` uses this as the default
+    /// cite_user_pk. Cleared when the round terminates.
+    pub cited_user_pk: Signal<Option<String>>,
 }
 
 impl UseFactFoldRound {
@@ -191,6 +196,7 @@ pub fn use_fact_fold_round_provider(
 
     let chat = use_signal(Vec::<ChatMessagePayload>::new);
     let last_chat_id = use_signal(|| None::<String>);
+    let cited_user_pk = use_signal(|| None::<String>);
 
     Ok(use_context_provider(|| UseFactFoldRound {
         round,
@@ -202,6 +208,7 @@ pub fn use_fact_fold_round_provider(
         settlement,
         chat,
         last_chat_id,
+        cited_user_pk,
     }))
 }
 

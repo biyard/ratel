@@ -147,6 +147,25 @@ translate! {
         en: "Rationale-write view rendering will be wired in step 7.",
         ko: "근거 작성 화면은 다음 단계에서 채워집니다.",
     },
+    // ── Rationale reveal stage ────────────────────────────────────
+    reveal_camp_real_label: { en: "◎ REAL", ko: "◎ REAL" },
+    reveal_camp_fake_label: { en: "⊘ FAKE", ko: "⊘ FAKE" },
+    reveal_camp_count: { en: "{$count} · {$rp} RP", ko: "{$count}명 · {$rp} RP" },
+    reveal_camp_vs: { en: "VS", ko: "VS" },
+    reveal_hint_prefix: { en: "Read every rationale in 20s.", ko: "20초 안에 모두의 근거를 읽으세요." },
+    reveal_hint_body: {
+        en: "Mark the one that feels decisive — ⌬. It'll auto-attach if you flip your bet in the live debate.",
+        ko: "결정적이라고 느낀 문장에 ⌬ 표시 — 토론 단계에서 마음 변경 시 자동 첨부됩니다.",
+    },
+    reveal_card_bet_pill: { en: "{$side} · {$rp} RP", ko: "{$side} · {$rp} RP" },
+    reveal_quote_btn: { en: "⌬ Decisive cite", ko: "⌬ 결정적 인용" },
+    reveal_cta_hint: {
+        en: "Auto-advances when the stage timer runs out.",
+        ko: "단계 타이머가 만료되면 자동 진행됩니다.",
+    },
+    reveal_cta_no_quote: { en: "(no decisive cite marked yet)", ko: "(인용 표시 없음)" },
+    reveal_cta_one_quote: { en: "Decisive cite: {$name}", ko: "결정적 인용: {$name}" },
+
     stage_stub_reasoning_reveal: {
         en: "Rationale-reveal view rendering will be wired in step 8.",
         ko: "근거 공개 화면은 다음 단계에서 채워집니다.",
