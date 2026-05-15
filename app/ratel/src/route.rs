@@ -46,8 +46,9 @@ use crate::features::admin::{AdminLayout, AdminMainPage};
 use crate::features::arcade::games::fact_or_fold::pages::{
     FactFoldAdminHeadlinesPage, FactFoldAdminLayout, FactFoldAdminNewHeadlinePage,
     FactFoldAdminReportsPage, FactFoldAdminSchedulePage, FactFoldAdminSettingsPage,
-    FactFoldAdminStatsPage, FactFoldLobbyPage,
+    FactFoldAdminStatsPage, FactFoldGameRoomPage, FactFoldLobbyPage,
 };
+use crate::FactFoldRoundEntityType;
 
 // Sub-team governance pages — placeholders wired up now; content lives
 // under `features::sub_team::pages::*` and will be fleshed out by the
@@ -141,6 +142,9 @@ pub enum Route {
 
         #[route("/fact-or-fold")]
         FactFoldLobbyPage { },
+
+        #[route("/arcade/games/fact-or-fold/rounds/:round_id")]
+        FactFoldGameRoomPage { round_id: FactFoldRoundEntityType },
 
         #[nest("/admin")]
             #[layout(AdminLayout)]
