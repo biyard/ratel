@@ -226,6 +226,18 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      # Cold-cache compile of `cargo test --features server,bypass --tests`
+      # peaks above the ubuntu-latest 7 GB RAM budget and OOM-kills the
+      # runner agent (manifests as exit 143 / "runner shutdown signal"
+      # during the link phase). Add 10 GB swap to absorb the spike.
+      - name: Add swap memory
+        run: |
+          sudo fallocate -l 10G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
+
       - name: Restore cache
         id: app-shell-build-cache
         uses: actions/cache/restore@v5
@@ -283,12 +295,13 @@ jobs:
           RUST_LOG: info
           ENV: local
           # ubuntu-latest has 7 GB RAM and 4 vCPUs. The full server+bypass
-          # compile peaks around 6 GB with the default 4 parallel rustc jobs
-          # and OOM-kills the runner when the cache is cold (recently
-          # observed after merges from dev). Cap parallelism at 2 to fit
-          # within the runner's memory budget at the cost of ~1.3x compile
-          # wall time.
-          CARGO_BUILD_JOBS: "2"
+          # compile peaks above the runner budget and OOM-kills the runner
+          # agent during the link phase (exit 143 / "runner shutdown
+          # signal"). Combined with the 10 GB swap added at job start,
+          # cap parallelism at 1 to keep peak RSS well under budget. The
+          # cost is ~1.5-2x compile wall time on cold cache; warm cache
+          # is unaffected.
+          CARGO_BUILD_JOBS: "1"
         run: |
           npm i
           make test
