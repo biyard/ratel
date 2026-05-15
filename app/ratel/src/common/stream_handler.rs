@@ -307,11 +307,33 @@ pub async fn handle_stream_record(
                 try_dispatch_pending_syndication_job(image, "MODIFY").await?;
             } else if sk == "SPACE_COMMON" {
                 // PopularSpaceUpdate
-                let space = deserialize(image)?;
+                let space: crate::common::models::space::SpaceCommon = deserialize(image)?;
+                let space_for_publish = space.clone();
                 if let Err(e) =
                     crate::features::timeline::services::fan_out_popular_space(space).await
                 {
                     tracing::error!(error = %e, "stream: PopularSpaceUpdate failed");
+                }
+                // SpacePublished — deferred sub-team broadcast inbox fan-out.
+                // The handler is a no-op for non-broadcast Spaces and for
+                // already-notified ones, so firing it on every SpaceCommon
+                // MODIFY here matches the CDK pipe's loose filter.
+                // NOTE: `SpacePublishState` derives `DynamoEnum`, which
+                // serializes via `Display` → `UpperSnake` case ("PUBLISHED"),
+                // NOT the Rust variant name "Published".
+                let publish_state = get_string_field(image, "publish_state").unwrap_or_default();
+                if publish_state == "PUBLISHED" {
+                    let cfg = crate::common::CommonConfig::default();
+                    let cli = cfg.dynamodb();
+                    if let Err(e) =
+                        crate::features::sub_team::services::announcement_fanout::handle_space_published(
+                            cli,
+                            space_for_publish,
+                        )
+                        .await
+                    {
+                        tracing::error!(error = %e, "stream: SpacePublished failed");
+                    }
                 }
             } else if sk.starts_with("SUB_TEAM_ANNOUNCEMENT#") {
                 // Fan-out fires only on the Draft→Published transition. We
@@ -373,8 +395,8 @@ async fn try_dispatch_pending_syndication_job(
     image: &std::collections::HashMap<String, serde_dynamo::AttributeValue>,
     event_label: &'static str,
 ) -> crate::common::Result<()> {
-    use crate::common::Error;
     use crate::common::utils::InfraError;
+    use crate::common::Error;
 
     let state = image.get("state").and_then(|v| match v {
         serde_dynamo::AttributeValue::S(s) => Some(s.as_str()),
@@ -388,7 +410,10 @@ async fn try_dispatch_pending_syndication_job(
             tracing::error!("stream deserialize: {e}");
             Error::from(InfraError::StreamDeserializeFailed)
         })?;
-    if let Err(e) = crate::features::cross_posting::services::dispatcher::handle_syndication_job_ready(job).await {
+    if let Err(e) =
+        crate::features::cross_posting::services::dispatcher::handle_syndication_job_ready(job)
+            .await
+    {
         tracing::error!(error = %e, "stream: SyndicationJobReady ({event_label}) failed");
     }
     Ok(())

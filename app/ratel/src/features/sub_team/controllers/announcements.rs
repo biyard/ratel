@@ -359,7 +359,11 @@ pub async fn publish_announcement_handler(
         categories: existing.tags.clone(),
         announcement_id: Some(existing.announcement_id.clone()),
         announcement_parent_team_id: Some(parent_team_id_str),
-        pinned_as_announcement: false,
+        // Broadcasts pin to the top of every receiving team's wall —
+        // parent + recognized children — so the announcement card sits
+        // above the regular feed. `list_team_posts_handler` sorts on
+        // this flag first, then created_at desc.
+        pinned_as_announcement: true,
     };
     if let Err(e) = anchor_post.create(cli).await {
         crate::error!("publish_announcement: anchor post create failed: {e}");
