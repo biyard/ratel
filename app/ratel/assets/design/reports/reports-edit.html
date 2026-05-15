@@ -1,0 +1,5329 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reports — Editor (Notion-style)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --bg-void: #06060e;
+        --bg-glass: rgba(12, 12, 26, 0.65);
+        --bg-glass-hover: rgba(20, 20, 40, 0.8);
+        --border-subtle: rgba(255, 255, 255, 0.06);
+        --border-strong: rgba(255, 255, 255, 0.12);
+        --text-primary: #f0f0f5;
+        --text-muted: #8888a8;
+        --text-dim: #55556a;
+        --accent-gold: #fcb300;
+        --accent-teal: #6eedd8;
+        --report-color: #a855f7;
+        --report-bg: rgba(168, 85, 247, 0.1);
+        --report-border: rgba(168, 85, 247, 0.24);
+        --report-glow: rgba(168, 85, 247, 0.18);
+        --poll-color: #06b6d4;
+        --poll-bg: rgba(6, 182, 212, 0.1);
+        --poll-border: rgba(6, 182, 212, 0.24);
+        --quiz-color: #a855f7;
+        --quiz-bg: rgba(168, 85, 247, 0.1);
+        --quiz-border: rgba(168, 85, 247, 0.24);
+        --discussion-color: #60a5fa;
+        --discussion-bg: rgba(96, 165, 250, 0.1);
+        --discussion-border: rgba(96, 165, 250, 0.24);
+        --follow-color: #f97316;
+        --follow-bg: rgba(249, 115, 22, 0.1);
+        --follow-border: rgba(249, 115, 22, 0.24);
+        --font-display: "Orbitron", sans-serif;
+        --font-body: "Outfit", sans-serif;
+      }
+      html,
+      body {
+        height: 100%;
+        background: var(--bg-void);
+        color: var(--text-primary);
+        font-family: var(--font-body);
+        overflow: hidden;
+      }
+
+      .arena {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .arena::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse 70% 50% at 50% 0%,
+          rgba(168, 85, 247, 0.05) 0%,
+          transparent 60%
+        );
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      /* ── TOPBAR ─────────────────────────────────────────── */
+      .reports-topbar {
+        position: relative;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 24px;
+        flex-shrink: 0;
+        border-bottom: 1px solid var(--border-subtle);
+        gap: 14px;
+      }
+      .reports-topbar__left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        flex: 1;
+      }
+      .reports-topbar__back {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-muted);
+        flex-shrink: 0;
+        text-decoration: none;
+        transition: all 0.18s;
+      }
+      .reports-topbar__back:hover {
+        color: var(--accent-gold);
+        border-color: rgba(252, 179, 0, 0.28);
+      }
+      .reports-topbar__back svg {
+        width: 14px;
+        height: 14px;
+      }
+      .reports-topbar__breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-dim);
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .reports-topbar__breadcrumb svg {
+        width: 11px;
+        height: 11px;
+        flex-shrink: 0;
+      }
+      .reports-topbar__breadcrumb-current {
+        color: var(--text-muted);
+      }
+      .reports-topbar__savestate {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 99px;
+        background: rgba(110, 237, 216, 0.06);
+        border: 1px solid rgba(110, 237, 216, 0.16);
+        color: var(--accent-teal);
+        font-family: var(--font-display);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .reports-topbar__savestate::before {
+        content: "";
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--accent-teal);
+        box-shadow: 0 0 6px var(--accent-teal);
+      }
+      .reports-topbar__right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+      .reports-topbar__btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 34px;
+        padding: 0 13px;
+        border-radius: 9px;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-muted);
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.18s;
+      }
+      .reports-topbar__btn:hover {
+        color: var(--text-primary);
+        border-color: var(--border-strong);
+      }
+      .reports-topbar__btn svg {
+        width: 13px;
+        height: 13px;
+      }
+      .reports-topbar__btn--primary {
+        background: linear-gradient(
+          135deg,
+          rgba(168, 85, 247, 0.22),
+          rgba(168, 85, 247, 0.06)
+        );
+        border-color: rgba(168, 85, 247, 0.38);
+        color: var(--report-color);
+      }
+      .reports-topbar__btn--primary:hover {
+        box-shadow: 0 0 20px var(--report-glow);
+      }
+
+      /* ── FORMAT TOOLBAR — Slack-style floating dock at bottom ── */
+      .format-toolbar {
+        position: fixed;
+        bottom: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 90;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px;
+        border-radius: 14px;
+        background: linear-gradient(
+          160deg,
+          rgba(22, 22, 38, 0.95),
+          rgba(10, 10, 20, 0.97)
+        );
+        backdrop-filter: blur(18px);
+        border: 1px solid var(--border-strong);
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+        max-width: calc(100vw - 32px);
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      .format-toolbar::-webkit-scrollbar {
+        display: none;
+      }
+      .fmt-group {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        flex-shrink: 0;
+      }
+      .fmt-sep {
+        width: 1px;
+        height: 18px;
+        background: var(--border-subtle);
+        flex-shrink: 0;
+        margin: 0 4px;
+      }
+      .fmt-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 30px;
+        padding: 0 9px;
+        border-radius: 9px;
+        background: transparent;
+        border: 1px solid transparent;
+        color: var(--text-muted);
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        cursor: pointer;
+        transition: all 0.14s;
+      }
+      .fmt-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+      }
+      .fmt-btn[aria-pressed="true"] {
+        background: rgba(168, 85, 247, 0.1);
+        border-color: var(--report-border);
+        color: var(--report-color);
+      }
+      .fmt-btn svg {
+        width: 13px;
+        height: 13px;
+      }
+      .fmt-btn--icon {
+        padding: 0;
+        width: 30px;
+        justify-content: center;
+      }
+      .fmt-btn--data {
+        background: linear-gradient(
+          135deg,
+          rgba(168, 85, 247, 0.28),
+          rgba(168, 85, 247, 0.08)
+        );
+        border-color: rgba(168, 85, 247, 0.42);
+        color: var(--report-color);
+        text-transform: uppercase;
+      }
+      .fmt-btn--data:hover {
+        box-shadow: 0 0 16px var(--report-glow);
+        color: var(--report-color);
+      }
+      .fmt-dropdown {
+        position: relative;
+      }
+      .fmt-dropdown__trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 30px;
+        padding: 0 10px;
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-primary);
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        cursor: pointer;
+        text-transform: uppercase;
+        min-width: 88px;
+      }
+      .fmt-dropdown__trigger:hover {
+        border-color: var(--border-strong);
+      }
+      .fmt-dropdown__trigger svg {
+        width: 12px;
+        height: 12px;
+        color: var(--text-dim);
+        margin-left: auto;
+      }
+      /* Drop UP (since toolbar sits at bottom) */
+      .fmt-dropdown__menu {
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 0;
+        z-index: 50;
+        min-width: 220px;
+        background: linear-gradient(
+          160deg,
+          rgba(22, 22, 38, 0.97),
+          rgba(10, 10, 20, 0.99)
+        );
+        border: 1px solid var(--border-strong);
+        border-radius: 12px;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.55);
+        padding: 6px;
+        display: none;
+        flex-direction: column;
+        gap: 1px;
+        max-height: 340px;
+        overflow-y: auto;
+      }
+      .fmt-dropdown[data-open="true"] .fmt-dropdown__menu {
+        display: flex;
+      }
+      .fmt-dropdown__item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        color: var(--text-muted);
+        background: transparent;
+        border: none;
+        text-align: left;
+        font-family: var(--font-body);
+        font-size: 13px;
+      }
+      .fmt-dropdown__item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+      }
+      .fmt-dropdown__item[aria-selected="true"] {
+        background: rgba(168, 85, 247, 0.1);
+        color: var(--report-color);
+      }
+      .fmt-dropdown__item-icon {
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: inherit;
+      }
+      .fmt-dropdown__item-icon svg {
+        width: 13px;
+        height: 13px;
+      }
+      .fmt-dropdown__item-title {
+        flex: 1;
+        font-weight: 600;
+      }
+      .fmt-dropdown__item-shortcut {
+        font-family: var(--font-display);
+        font-size: 9px;
+        color: var(--text-dim);
+        letter-spacing: 0.06em;
+      }
+
+      /* ── CONTENT ───────────────────────────────────────── */
+      .reports-edit {
+        position: relative;
+        z-index: 10;
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1fr 240px;
+        gap: 0;
+        overflow: hidden;
+      }
+
+      .reports-doc {
+        overflow-y: auto;
+        padding: 36px 0 140px;
+      }
+      .reports-doc__inner {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 0 56px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .reports-doc__cover {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--font-display);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--report-color);
+        margin-bottom: 10px;
+      }
+      .reports-doc__cover svg {
+        width: 14px;
+        height: 14px;
+      }
+      .reports-doc__title {
+        font-family: var(--font-display);
+        font-size: 38px;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        color: var(--text-primary);
+        outline: none;
+        padding: 6px 0;
+        line-height: 1.2;
+        border: none;
+        background: transparent;
+        width: 100%;
+      }
+      .reports-doc__title::placeholder {
+        color: var(--text-dim);
+      }
+      .reports-doc__subtitle {
+        font-size: 14px;
+        color: var(--text-muted);
+        padding: 4px 0 18px;
+        outline: none;
+        border: none;
+        background: transparent;
+        width: 100%;
+        font-family: var(--font-body);
+      }
+
+      /* BLOCK base */
+      .doc-block {
+        position: relative;
+        display: flex;
+        gap: 6px;
+        padding: 4px 0;
+        border-radius: 6px;
+        transition: background 0.12s;
+      }
+      .doc-block:hover .doc-block__handle,
+      .doc-block:hover .doc-block__add {
+        opacity: 1;
+      }
+      .doc-block__handle,
+      .doc-block__add {
+        position: absolute;
+        top: 8px;
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-dim);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+        opacity: 0;
+        transition:
+          opacity 0.15s,
+          color 0.15s,
+          background 0.15s;
+        padding: 0;
+      }
+      .doc-block__handle {
+        left: -28px;
+      }
+      .doc-block__add {
+        left: -52px;
+        border: 1px solid var(--border-subtle);
+      }
+      .doc-block__handle:hover {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-muted);
+      }
+      .doc-block__add:hover {
+        color: var(--report-color);
+        border-color: var(--report-border);
+      }
+      .doc-block__handle svg {
+        width: 14px;
+        height: 14px;
+      }
+      .doc-block__add svg {
+        width: 11px;
+        height: 11px;
+      }
+      .doc-block__body {
+        flex: 1;
+        min-width: 0;
+      }
+
+      /* Block types */
+      .block-h1 {
+        font-family: var(--font-display);
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        color: var(--text-primary);
+        padding: 18px 0 6px;
+        outline: none;
+        line-height: 1.25;
+      }
+      .block-h2 {
+        font-family: var(--font-display);
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: var(--text-primary);
+        padding: 18px 0 6px;
+        outline: none;
+      }
+      .block-h3 {
+        font-family: var(--font-display);
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        color: var(--text-primary);
+        padding: 12px 0 4px;
+        outline: none;
+      }
+      .block-text {
+        font-size: 15.5px;
+        line-height: 1.65;
+        color: var(--text-primary);
+        padding: 4px 0;
+        outline: none;
+        cursor: text;
+        min-height: 26px;
+      }
+      .block-text:empty::before {
+        content: attr(data-placeholder);
+        color: var(--text-dim);
+        pointer-events: none;
+      }
+      .block-text .slash {
+        color: var(--report-color);
+        font-family: var(--font-display);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+
+      /* Chart embed block (already inserted) */
+      .block-chart {
+        border: 1px solid var(--border-subtle);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 18px 18px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin: 8px 0;
+      }
+      .block-chart__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .block-chart__source {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-display);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 3px 9px;
+        border-radius: 99px;
+        background: var(--poll-bg);
+        color: var(--poll-color);
+        border: 1px solid var(--poll-border);
+      }
+      .block-chart__source svg {
+        width: 11px;
+        height: 11px;
+      }
+      .block-chart__breadcrumb {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: var(--text-dim);
+        font-family: var(--font-display);
+        letter-spacing: 0.04em;
+        flex-wrap: wrap;
+      }
+      .block-chart__breadcrumb svg {
+        width: 10px;
+        height: 10px;
+      }
+      .block-chart__breadcrumb strong {
+        color: var(--text-muted);
+        font-weight: 600;
+      }
+      .block-chart__title {
+        flex: 1;
+        font-family: var(--font-display);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--text-primary);
+      }
+      .block-chart__actions {
+        display: flex;
+        gap: 4px;
+      }
+      .block-chart__icon-btn {
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        background: transparent;
+        border: none;
+        color: var(--text-dim);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+      .block-chart__icon-btn:hover {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-muted);
+      }
+      .block-chart__icon-btn svg {
+        width: 13px;
+        height: 13px;
+      }
+      .block-chart__viz {
+        height: 200px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid var(--border-subtle);
+        padding: 18px;
+        display: flex;
+        align-items: flex-end;
+        gap: 12px;
+      }
+      .block-chart__bar {
+        flex: 1;
+        border-radius: 6px 6px 0 0;
+        background: linear-gradient(
+          180deg,
+          var(--report-color),
+          rgba(168, 85, 247, 0.25)
+        );
+        position: relative;
+      }
+      .block-chart__bar::after {
+        content: attr(data-label);
+        position: absolute;
+        bottom: -22px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 10px;
+        color: var(--text-dim);
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+      }
+      .block-chart__caption {
+        font-size: 12.5px;
+        color: var(--text-muted);
+        text-align: center;
+        padding: 18px 8px 0;
+        line-height: 1.5;
+        outline: none;
+        cursor: text;
+      }
+      /* Pie chart variant */
+      .block-chart__pie-wrap {
+        height: 240px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid var(--border-subtle);
+        padding: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+      }
+      .block-chart__pie {
+        width: 200px;
+        height: 200px;
+        flex-shrink: 0;
+      }
+      .block-chart__legend {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+      .block-chart__legend-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .block-chart__legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+        flex-shrink: 0;
+      }
+      .block-chart__legend-label {
+        flex: 1;
+      }
+      .block-chart__legend-pct {
+        font-family: var(--font-display);
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: 0.04em;
+      }
+      /* Table chart variant */
+      .block-chart__table {
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid var(--border-subtle);
+        overflow: hidden;
+      }
+      .block-chart__table table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12.5px;
+      }
+      .block-chart__table thead {
+        background: rgba(168, 85, 247, 0.06);
+      }
+      .block-chart__table th {
+        padding: 9px 14px;
+        text-align: left;
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .block-chart__table td {
+        padding: 9px 14px;
+        border-bottom: 1px solid var(--border-subtle);
+        color: var(--text-primary);
+      }
+      .block-chart__table td.num {
+        font-family: var(--font-display);
+        text-align: right;
+        color: var(--report-color);
+        font-weight: 700;
+      }
+      .block-chart__table tr:last-child td {
+        border-bottom: none;
+      }
+      /* Plain table block — editable cells, no chart pill (user-built table) */
+      .block-table {
+        border: 1px solid var(--border-subtle);
+        background: rgba(255, 255, 255, 0.02);
+        margin: 8px 0;
+      }
+      .block-table table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13.5px;
+      }
+      .block-table th,
+      .block-table td {
+        border: 1px solid var(--border-subtle);
+        padding: 9px 12px;
+        color: var(--text-primary);
+        outline: none;
+        vertical-align: top;
+        min-width: 80px;
+      }
+      .block-table th {
+        font-family: var(--font-display);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        text-align: left;
+      }
+      .block-table th:focus,
+      .block-table td:focus {
+        background: rgba(168, 85, 247, 0.06);
+        box-shadow: inset 0 0 0 1px var(--report-border);
+      }
+      /* Drag-selection — cells highlighted while user drags across */
+      .block-table.is-dragging,
+      .block-table.is-dragging * {
+        user-select: none;
+        -webkit-user-select: none;
+        cursor: cell;
+      }
+      .block-table td.is-selected,
+      .block-table th.is-selected {
+        background: rgba(168, 85, 247, 0.2) !important;
+        box-shadow: inset 0 0 0 2px var(--report-color);
+      }
+      /* Floating cell-action toolbar — JS positions above drag selection */
+      .cell-toolbar {
+        position: fixed;
+        z-index: 170;
+        display: none;
+        align-items: center;
+        gap: 2px;
+        padding: 5px;
+        border-radius: 11px;
+        background: linear-gradient(
+          160deg,
+          rgba(22, 22, 38, 0.98),
+          rgba(10, 10, 20, 0.99)
+        );
+        border: 1px solid var(--border-strong);
+        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+        flex-wrap: nowrap;
+        max-width: calc(100vw - 32px);
+      }
+      .cell-toolbar[data-open="true"] {
+        display: flex;
+      }
+      .cell-toolbar::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: rgba(22, 22, 38, 0.98);
+      }
+      .cell-toolbar__btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        height: 28px;
+        padding: 0 9px;
+        border-radius: 7px;
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.14s;
+      }
+      .cell-toolbar__btn:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-primary);
+      }
+      .cell-toolbar__btn svg {
+        width: 12px;
+        height: 12px;
+      }
+      .cell-toolbar__btn--primary {
+        background: linear-gradient(
+          135deg,
+          rgba(168, 85, 247, 0.24),
+          rgba(168, 85, 247, 0.06)
+        );
+        color: var(--report-color);
+        border: 1px solid rgba(168, 85, 247, 0.36);
+      }
+      .cell-toolbar__btn--primary:hover {
+        box-shadow: 0 0 14px var(--report-glow);
+        color: var(--report-color);
+      }
+      .cell-toolbar__btn--danger {
+        color: #f87171;
+      }
+      .cell-toolbar__btn--danger:hover {
+        background: rgba(248, 113, 113, 0.08);
+        color: #fca5a5;
+      }
+      .cell-toolbar__sep {
+        width: 1px;
+        height: 18px;
+        background: var(--border-subtle);
+        margin: 0 3px;
+        flex-shrink: 0;
+      }
+      /* Always-visible row/col add affordances on the edges */
+      .block-table {
+        position: relative;
+      }
+      .block-table__add-row,
+      .block-table__add-col {
+        position: absolute;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(168, 85, 247, 0.1);
+        border: 1px dashed rgba(168, 85, 247, 0.32);
+        color: var(--report-color);
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.18s;
+        font-family: var(--font-display);
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .block-table:hover .block-table__add-row,
+      .block-table:hover .block-table__add-col {
+        opacity: 1;
+      }
+      .block-table__add-row {
+        left: 0;
+        right: 0;
+        bottom: -14px;
+        height: 18px;
+        border-radius: 0 0 12px 12px;
+      }
+      .block-table__add-col {
+        top: 0;
+        bottom: 0;
+        right: -14px;
+        width: 18px;
+        border-radius: 0 12px 12px 0;
+      }
+
+      /* Right-click context menu over a cell */
+      .table-ctx {
+        position: fixed;
+        z-index: 300;
+        display: none;
+        flex-direction: column;
+        gap: 1px;
+        padding: 6px;
+        min-width: 200px;
+        background: linear-gradient(
+          160deg,
+          rgba(22, 22, 38, 0.98),
+          rgba(10, 10, 20, 0.99)
+        );
+        border: 1px solid var(--border-strong);
+        border-radius: 10px;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+      }
+      .table-ctx[data-open="true"] {
+        display: flex;
+      }
+      .table-ctx__item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 10px;
+        border-radius: 7px;
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-family: var(--font-body);
+        font-size: 13px;
+        cursor: pointer;
+        text-align: left;
+      }
+      .table-ctx__item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+      }
+      .table-ctx__item svg {
+        width: 13px;
+        height: 13px;
+        color: inherit;
+      }
+      .table-ctx__item--danger {
+        color: #f87171;
+      }
+      .table-ctx__item--danger:hover {
+        background: rgba(248, 113, 113, 0.08);
+        color: #fca5a5;
+      }
+      .table-ctx__sep {
+        height: 1px;
+        background: var(--border-subtle);
+        margin: 4px 0;
+      }
+      .table-ctx__heading {
+        padding: 6px 10px 2px;
+        font-family: var(--font-display);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+      }
+      /* LDA topic block — topic row with weight bar + top keywords */
+      .block-lda {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 18px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid var(--border-subtle);
+      }
+      .block-lda__topic {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .block-lda__topic-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .block-lda__topic-id {
+        font-family: var(--font-display);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+      .block-lda__topic-weight {
+        font-family: var(--font-display);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--report-color);
+        letter-spacing: 0.04em;
+      }
+      .block-lda__topic-bar {
+        height: 5px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.06);
+        overflow: hidden;
+      }
+      .block-lda__topic-bar > div {
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          var(--report-color),
+          rgba(168, 85, 247, 0.5)
+        );
+        border-radius: 3px;
+      }
+      .block-lda__keywords {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 4px;
+      }
+      .block-lda__kw {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 4px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        background: rgba(168, 85, 247, 0.08);
+        border: 1px solid rgba(168, 85, 247, 0.18);
+        font-size: 12.5px;
+        color: var(--text-primary);
+      }
+      .block-lda__kw em {
+        font-style: normal;
+        font-family: var(--font-display);
+        font-size: 10px;
+        color: var(--report-color);
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+      /* Text network block — SVG graph + stats */
+      .block-network {
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid var(--border-subtle);
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .block-network__svg {
+        width: 100%;
+        height: 300px;
+        display: block;
+      }
+      .block-network__svg circle.node {
+        transition:
+          r 0.18s,
+          fill 0.18s;
+      }
+      .block-network__svg line.edge {
+        stroke: rgba(168, 85, 247, 0.22);
+        stroke-width: 1;
+      }
+      .block-network__svg text.label {
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 600;
+        fill: var(--text-primary);
+        text-anchor: middle;
+        pointer-events: none;
+      }
+      .block-network__stats {
+        display: flex;
+        gap: 18px;
+        font-family: var(--font-display);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        justify-content: center;
+      }
+      .block-network__stats strong {
+        color: var(--text-primary);
+        font-weight: 700;
+        margin-right: 4px;
+      }
+
+      /* ── FLOATING SELECTION TOOLBAR ── */
+      .sel-toolbar {
+        position: absolute;
+        z-index: 160;
+        display: none;
+        align-items: center;
+        gap: 2px;
+        padding: 5px;
+        border-radius: 10px;
+        background: linear-gradient(
+          160deg,
+          rgba(22, 22, 38, 0.98),
+          rgba(10, 10, 20, 0.99)
+        );
+        border: 1px solid var(--border-strong);
+        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+      }
+      .sel-toolbar[data-open="true"] {
+        display: flex;
+      }
+      .sel-toolbar::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: rgba(22, 22, 38, 0.98);
+      }
+      .sel-btn {
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 8px;
+        border-radius: 6px;
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-family: var(--font-display);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        min-width: 28px;
+      }
+      .sel-btn:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-primary);
+      }
+      .sel-btn[aria-pressed="true"] {
+        background: rgba(168, 85, 247, 0.12);
+        color: var(--report-color);
+      }
+      .sel-btn svg {
+        width: 13px;
+        height: 13px;
+      }
+      .sel-btn--data {
+        background: linear-gradient(
+          135deg,
+          rgba(168, 85, 247, 0.22),
+          rgba(168, 85, 247, 0.06)
+        );
+        color: var(--report-color);
+        padding: 0 10px;
+        border: 1px solid rgba(168, 85, 247, 0.32);
+      }
+      .sel-btn--data:hover {
+        box-shadow: 0 0 14px var(--report-glow);
+      }
+
+      /* OUTLINE sidebar */
+      .reports-outline {
+        position: relative;
+        border-left: 1px solid var(--border-subtle);
+        padding: 32px 24px;
+        overflow-y: auto;
+        background: rgba(0, 0, 0, 0.18);
+      }
+      .reports-outline__heading {
+        font-family: var(--font-display);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        margin-bottom: 12px;
+      }
+      .reports-outline__list {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .reports-outline__item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 10px;
+        border-radius: 7px;
+        cursor: pointer;
+        color: var(--text-muted);
+        font-size: 12px;
+        line-height: 1.4;
+        transition: all 0.14s;
+      }
+      .reports-outline__item svg {
+        width: 11px;
+        height: 11px;
+        color: var(--text-dim);
+        flex-shrink: 0;
+      }
+      .reports-outline__item:hover {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-primary);
+      }
+      .reports-outline__item--active {
+        background: rgba(168, 85, 247, 0.1);
+        color: var(--report-color);
+      }
+      .reports-outline__item--active svg {
+        color: var(--report-color);
+      }
+      /* Heading depth — H1 is the root, H2 indents once, H3 twice.
+       Each level also shrinks slightly so the tree reads as hierarchy. */
+      .reports-outline__item[data-kind="h1"] {
+        padding-left: 10px;
+        font-size: 12.5px;
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+      .reports-outline__item[data-kind="h2"] {
+        padding-left: 24px;
+        font-size: 12px;
+      }
+      .reports-outline__item[data-kind="h3"] {
+        padding-left: 38px;
+        font-size: 11.5px;
+        color: var(--text-dim);
+      }
+      .reports-outline__item[data-kind="chart"] {
+        padding-left: 24px;
+      }
+      /* Label text — one-line ellipsis so long paragraphs (when user
+       turns a wall of text into a heading) don't blow up the rail. */
+      .reports-outline__item > span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1;
+        min-width: 0;
+      }
+      .reports-outline__divider {
+        height: 1px;
+        background: var(--border-subtle);
+        margin: 14px 0;
+      }
+      .reports-outline__meta {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .reports-outline__meta-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+      }
+      .reports-outline__meta-row span:first-child {
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-family: var(--font-display);
+        font-size: 9px;
+      }
+      .reports-outline__meta-row span:last-child {
+        color: var(--text-muted);
+      }
+
+      /* ── PICKER OVERLAYS (same as before) ── */
+      .picker-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        background: rgba(4, 4, 12, 0.55);
+        backdrop-filter: blur(14px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 24px;
+      }
+      .picker-overlay[data-open="true"] {
+        display: flex;
+      }
+      .picker-panel {
+        position: relative;
+        width: 100%;
+        max-width: 880px;
+        max-height: calc(100dvh - 96px);
+        overflow: hidden;
+        border-radius: 18px;
+        background: linear-gradient(
+          160deg,
+          rgba(22, 22, 38, 0.95),
+          rgba(10, 10, 20, 0.97)
+        );
+        border: 1px solid var(--border-strong);
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+        display: flex;
+        flex-direction: column;
+      }
+      .picker-panel__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 18px 22px 12px;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .picker-panel__title-col {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .picker-panel__eyebrow {
+        font-family: var(--font-display);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--report-color);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .picker-panel__eyebrow svg {
+        width: 11px;
+        height: 11px;
+      }
+      .picker-panel__title {
+        font-family: var(--font-display);
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: var(--text-primary);
+      }
+      .picker-panel__close {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-muted);
+      }
+      .picker-panel__close:hover {
+        color: var(--accent-gold);
+        border-color: rgba(252, 179, 0, 0.28);
+      }
+      .picker-panel__close svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .picker-body {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        min-height: 0;
+        overflow: hidden;
+      }
+      .picker-master {
+        border-right: 1px solid var(--border-subtle);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+      .picker-master__search {
+        padding: 12px;
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(0, 0, 0, 0.15);
+      }
+      .picker-master__search-icon {
+        color: var(--text-dim);
+      }
+      .picker-master__search-icon svg {
+        width: 13px;
+        height: 13px;
+      }
+      .picker-master__search-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--text-primary);
+        font-family: var(--font-body);
+        font-size: 13px;
+      }
+      .picker-master__search-input::placeholder {
+        color: var(--text-dim);
+      }
+      .picker-master__label {
+        padding: 12px 14px 8px;
+        font-family: var(--font-display);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .picker-master__label-count {
+        color: var(--text-muted);
+      }
+      .picker-master__list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 8px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .analyze-row {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 10px 12px;
+        border-radius: 9px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition: all 0.14s;
+      }
+      .analyze-row:hover {
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .analyze-row[aria-selected="true"] {
+        background: rgba(168, 85, 247, 0.1);
+        border-color: var(--report-border);
+      }
+      .analyze-row__top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+      }
+      .analyze-row__name {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1;
+        line-height: 1.3;
+      }
+      .analyze-row[aria-selected="true"] .analyze-row__name {
+        color: var(--report-color);
+      }
+      .analyze-row__status {
+        font-family: var(--font-display);
+        font-size: 8px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 2px 7px;
+        border-radius: 99px;
+        flex-shrink: 0;
+      }
+      .analyze-row__status--done {
+        background: rgba(110, 237, 216, 0.08);
+        color: var(--accent-teal);
+        border: 1px solid rgba(110, 237, 216, 0.2);
+      }
+      .analyze-row__status--running {
+        background: rgba(252, 179, 0, 0.08);
+        color: var(--accent-gold);
+        border: 1px solid rgba(252, 179, 0, 0.2);
+      }
+      .analyze-row__meta {
+        display: flex;
+        gap: 10px;
+        font-size: 10.5px;
+        color: var(--text-dim);
+      }
+      .analyze-row__meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .analyze-row__meta svg {
+        width: 9px;
+        height: 9px;
+      }
+      .analyze-row__filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 3px;
+      }
+      .filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 1px 6px;
+        border-radius: 99px;
+        font-family: var(--font-display);
+        font-size: 8px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .filter-chip[data-source="poll"] {
+        background: var(--poll-bg);
+        color: var(--poll-color);
+        border: 1px solid var(--poll-border);
+      }
+      .filter-chip[data-source="quiz"] {
+        background: var(--quiz-bg);
+        color: var(--quiz-color);
+        border: 1px solid var(--quiz-border);
+      }
+      .filter-chip[data-source="discussion"] {
+        background: var(--discussion-bg);
+        color: var(--discussion-color);
+        border: 1px solid var(--discussion-border);
+      }
+      .filter-chip[data-source="follow"] {
+        background: var(--follow-bg);
+        color: var(--follow-color);
+        border: 1px solid var(--follow-border);
+      }
+
+      .picker-detail {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.1);
+      }
+      .picker-detail__head {
+        padding: 16px 20px 12px;
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .picker-detail__breadcrumb {
+        font-family: var(--font-display);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .picker-detail__breadcrumb svg {
+        width: 10px;
+        height: 10px;
+      }
+      .picker-detail__name {
+        font-family: var(--font-display);
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: 0.02em;
+      }
+      .picker-detail__filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 2px;
+      }
+      .picker-detail__stats {
+        display: flex;
+        gap: 16px;
+        padding-top: 4px;
+        font-size: 11px;
+        color: var(--text-muted);
+        font-family: var(--font-display);
+        letter-spacing: 0.06em;
+      }
+      .picker-detail__stats strong {
+        color: var(--text-primary);
+        margin-right: 4px;
+        font-size: 14px;
+      }
+      .picker-detail__list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px 18px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .picker-detail__group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .picker-detail__group-label {
+        font-family: var(--font-display);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        padding: 4px 4px;
+      }
+
+      .agg-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 11px 13px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.025);
+        border: 1px solid var(--border-subtle);
+        cursor: pointer;
+        transition: all 0.14s;
+      }
+      .agg-row:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--report-border);
+        transform: translateX(2px);
+      }
+      .agg-row__icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .agg-row__icon[data-source="kpi"] {
+        background: rgba(168, 85, 247, 0.14);
+        border: 1px solid var(--report-border);
+        color: var(--report-color);
+      }
+      .agg-row__icon[data-source="poll"] {
+        background: var(--poll-bg);
+        border: 1px solid var(--poll-border);
+        color: var(--poll-color);
+      }
+      .agg-row__icon[data-source="quiz"] {
+        background: var(--quiz-bg);
+        border: 1px solid var(--quiz-border);
+        color: var(--quiz-color);
+      }
+      .agg-row__icon[data-source="follow"] {
+        background: var(--follow-bg);
+        border: 1px solid var(--follow-border);
+        color: var(--follow-color);
+      }
+      .agg-row__icon[data-source="discussion"] {
+        background: var(--discussion-bg);
+        border: 1px solid var(--discussion-border);
+        color: var(--discussion-color);
+      }
+      .agg-row__icon svg {
+        width: 14px;
+        height: 14px;
+      }
+      .agg-row__body {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .agg-row__title {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--text-primary);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .agg-row__meta {
+        font-size: 11px;
+        color: var(--text-dim);
+        display: flex;
+        gap: 8px;
+      }
+      .agg-row__keys {
+        font-family: var(--font-display);
+        font-size: 9px;
+        color: var(--text-dim);
+        letter-spacing: 0.06em;
+        flex-shrink: 0;
+        display: flex;
+        gap: 4px;
+      }
+      .agg-row__keys kbd {
+        padding: 2px 6px;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-subtle);
+        font-size: 9px;
+        color: var(--text-muted);
+      }
+
+      .picker-panel__footer {
+        padding: 10px 22px;
+        border-top: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--text-dim);
+      }
+      .picker-panel__footer-hint {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-display);
+        letter-spacing: 0.06em;
+      }
+      .picker-panel__footer-hint kbd {
+        padding: 2px 6px;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-subtle);
+        font-size: 9px;
+        color: var(--text-muted);
+      }
+
+      .chart-picker-grid {
+        padding: 18px 22px 22px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+      }
+      .chart-type {
+        aspect-ratio: 1.05/1;
+        border-radius: 12px;
+        border: 1px solid var(--border-subtle);
+        background: rgba(255, 255, 255, 0.02);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        cursor: pointer;
+        transition: all 0.18s;
+        padding: 14px;
+        text-align: center;
+      }
+      .chart-type:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: var(--report-border);
+        transform: translateY(-2px);
+      }
+      .chart-type[aria-selected="true"] {
+        background: rgba(168, 85, 247, 0.1);
+        border-color: var(--report-color);
+        box-shadow: 0 0 18px var(--report-glow);
+      }
+      .chart-type__viz {
+        flex: 1;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--report-color);
+        padding: 8px 0;
+      }
+      .chart-type__viz svg {
+        width: 54px;
+        height: 42px;
+      }
+      .chart-type__label {
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-primary);
+      }
+      .chart-type__hint {
+        font-size: 10px;
+        color: var(--text-dim);
+        line-height: 1.3;
+      }
+
+      @media (max-width: 900px) {
+        .reports-edit {
+          grid-template-columns: 1fr;
+        }
+        .reports-outline {
+          display: none;
+        }
+        .reports-doc__inner {
+          padding: 0 24px;
+          max-width: none;
+        }
+        .picker-body {
+          grid-template-columns: 1fr;
+        }
+        .picker-master {
+          border-right: none;
+          border-bottom: 1px solid var(--border-subtle);
+          max-height: 200px;
+        }
+      }
+      /* ── Print / PDF — chrome out, doc clean on white ── */
+      @media print {
+        html,
+        body,
+        .arena {
+          background: #ffffff !important;
+          color: #111 !important;
+          height: auto !important;
+          overflow: visible !important;
+        }
+        .arena::before {
+          display: none;
+        }
+        .reports-topbar,
+        .format-toolbar,
+        .sel-toolbar,
+        .reports-outline,
+        .picker-overlay,
+        .doc-block__handle,
+        .doc-block__add,
+        .block-chart__actions {
+          display: none !important;
+        }
+        .reports-edit {
+          display: block !important;
+          grid-template-columns: none !important;
+          overflow: visible !important;
+        }
+        .reports-doc {
+          overflow: visible !important;
+          padding: 0 !important;
+          height: auto !important;
+        }
+        .reports-doc__inner {
+          max-width: none !important;
+          padding: 0 !important;
+        }
+        .reports-doc__cover {
+          color: #7c3aed !important;
+        }
+        .reports-doc__title,
+        .block-h1,
+        .block-h2,
+        .block-h3,
+        .block-text,
+        .block-text * {
+          color: #111 !important;
+          background: transparent !important;
+        }
+        .reports-doc__subtitle {
+          color: #555 !important;
+        }
+        .block-chart {
+          break-inside: avoid;
+          background: #f7f5fb !important;
+          border-color: #cabbe6 !important;
+          color: #111;
+        }
+        .block-chart__title,
+        .block-chart__caption {
+          color: #111 !important;
+        }
+        .block-chart__breadcrumb {
+          color: #666 !important;
+        }
+        .block-chart__breadcrumb strong {
+          color: #111 !important;
+        }
+        .block-chart__viz,
+        .block-chart__pie-wrap,
+        .block-chart__table,
+        .block-lda,
+        .block-network {
+          background: #ffffff !important;
+          border-color: #cabbe6 !important;
+        }
+        .block-chart__table thead {
+          background: #f0e8fa !important;
+        }
+        .block-chart__table th {
+          color: #5b3a8a !important;
+          border-bottom-color: #cabbe6 !important;
+        }
+        .block-chart__table td {
+          color: #111 !important;
+          border-bottom-color: #e8dff4 !important;
+        }
+        .block-chart__table td.num {
+          color: #7c3aed !important;
+        }
+        .block-lda__kw {
+          background: #f0e8fa !important;
+          border-color: #cabbe6 !important;
+          color: #111 !important;
+        }
+        .block-lda__kw em {
+          color: #7c3aed !important;
+        }
+        .block-lda__topic-id,
+        .block-network__stats {
+          color: #444 !important;
+        }
+        .block-lda__topic-weight,
+        .block-network__stats strong {
+          color: #7c3aed !important;
+        }
+        .block-lda__topic-bar {
+          background: #e8dff4 !important;
+        }
+        .block-network__svg text.label {
+          fill: #111 !important;
+        }
+        .block-table {
+          background: #fff !important;
+          border-color: #cabbe6 !important;
+        }
+        .block-table th,
+        .block-table td {
+          border-color: #e8dff4 !important;
+          color: #111 !important;
+        }
+        .block-table th {
+          background: #f0e8fa !important;
+          color: #5b3a8a !important;
+        }
+        .doc-block {
+          break-inside: avoid;
+        }
+        @page {
+          margin: 18mm 14mm;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .reports-topbar {
+          padding: 12px 14px;
+          gap: 8px;
+        }
+        .reports-topbar__btn span {
+          display: none;
+        }
+        .reports-topbar__breadcrumb {
+          display: none;
+        }
+        .format-toolbar {
+          padding: 6px 12px;
+        }
+        .fmt-btn span {
+          display: none;
+        }
+        .fmt-btn--data span {
+          display: inline;
+        }
+        .reports-doc {
+          padding: 24px 0 160px;
+        }
+        .reports-doc__inner {
+          padding: 0 16px;
+        }
+        .reports-doc__title {
+          font-size: 26px;
+        }
+        .picker-overlay {
+          padding: 24px 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="arena">
+      <!-- TOPBAR -->
+      <div class="reports-topbar">
+        <div class="reports-topbar__left">
+          <a
+            class="reports-topbar__back"
+            aria-label="뒤로"
+            href="reports-list.html"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </a>
+          <span class="reports-topbar__breadcrumb">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            </svg>
+            Climate Action DAO
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+            Reports
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+            <span class="reports-topbar__breadcrumb-current"
+              >2026 Q1 정책 우선순위 토론 분석</span
+            >
+          </span>
+          <span class="reports-topbar__savestate">Auto-saved · 방금</span>
+        </div>
+        <div class="reports-topbar__right">
+          <button class="reports-topbar__btn">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" /></svg
+            ><span>PDF</span>
+          </button>
+          <button class="reports-topbar__btn">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg
+            ><span>Share</span>
+          </button>
+          <button class="reports-topbar__btn reports-topbar__btn--primary">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" /></svg
+            ><span>Publish</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── FORMAT TOOLBAR (always visible, sticky) ── -->
+      <div class="format-toolbar">
+        <!-- Block type dropdown — current block's type, click to convert -->
+        <div class="fmt-dropdown" id="block-type-dd" data-open="false">
+          <button class="fmt-dropdown__trigger" id="block-type-trigger">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="6" y1="4" x2="18" y2="4" />
+              <line x1="6" y1="12" x2="18" y2="12" />
+              <line x1="6" y1="20" x2="14" y2="20" />
+            </svg>
+            <span id="block-type-label">Text</span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          <div class="fmt-dropdown__menu" role="listbox">
+            <button
+              class="fmt-dropdown__item"
+              data-kind="text"
+              aria-selected="true"
+            >
+              <span class="fmt-dropdown__item-icon"
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="6" y1="4" x2="18" y2="4" />
+                  <line x1="6" y1="12" x2="18" y2="12" />
+                  <line x1="6" y1="20" x2="14" y2="20" /></svg
+              ></span>
+              <span class="fmt-dropdown__item-title">Text</span>
+              <span class="fmt-dropdown__item-shortcut">/text</span>
+            </button>
+            <button class="fmt-dropdown__item" data-kind="h1">
+              <span class="fmt-dropdown__item-icon"
+                ><svg viewBox="0 0 24 24" fill="none">
+                  <text
+                    x="3"
+                    y="18"
+                    font-family="Orbitron"
+                    font-size="14"
+                    font-weight="800"
+                    fill="currentColor"
+                  >
+                    H1
+                  </text>
+                </svg></span
+              >
+              <span class="fmt-dropdown__item-title">Heading 1</span>
+              <span class="fmt-dropdown__item-shortcut">/h1</span>
+            </button>
+            <button class="fmt-dropdown__item" data-kind="h2">
+              <span class="fmt-dropdown__item-icon"
+                ><svg viewBox="0 0 24 24" fill="none">
+                  <text
+                    x="3"
+                    y="18"
+                    font-family="Orbitron"
+                    font-size="14"
+                    font-weight="800"
+                    fill="currentColor"
+                  >
+                    H2
+                  </text>
+                </svg></span
+              >
+              <span class="fmt-dropdown__item-title">Heading 2</span>
+              <span class="fmt-dropdown__item-shortcut">/h2</span>
+            </button>
+            <button class="fmt-dropdown__item" data-kind="h3">
+              <span class="fmt-dropdown__item-icon"
+                ><svg viewBox="0 0 24 24" fill="none">
+                  <text
+                    x="3"
+                    y="18"
+                    font-family="Orbitron"
+                    font-size="13"
+                    font-weight="800"
+                    fill="currentColor"
+                  >
+                    H3
+                  </text>
+                </svg></span
+              >
+              <span class="fmt-dropdown__item-title">Heading 3</span>
+              <span class="fmt-dropdown__item-shortcut">/h3</span>
+            </button>
+            <button class="fmt-dropdown__item" data-kind="bullet">
+              <span class="fmt-dropdown__item-icon"
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="5" cy="6" r="1.5" fill="currentColor" />
+                  <line x1="10" y1="6" x2="20" y2="6" />
+                  <circle cx="5" cy="12" r="1.5" fill="currentColor" />
+                  <line x1="10" y1="12" x2="20" y2="12" />
+                  <circle cx="5" cy="18" r="1.5" fill="currentColor" />
+                  <line x1="10" y1="18" x2="20" y2="18" /></svg
+              ></span>
+              <span class="fmt-dropdown__item-title">Bullet list</span>
+              <span class="fmt-dropdown__item-shortcut">/bullet</span>
+            </button>
+            <button class="fmt-dropdown__item" data-kind="numbered">
+              <span class="fmt-dropdown__item-icon"
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <text
+                    x="2"
+                    y="9"
+                    font-family="Orbitron"
+                    font-size="6"
+                    fill="currentColor"
+                  >
+                    1.
+                  </text>
+                  <line x1="10" y1="6" x2="20" y2="6" />
+                  <text
+                    x="2"
+                    y="15"
+                    font-family="Orbitron"
+                    font-size="6"
+                    fill="currentColor"
+                  >
+                    2.
+                  </text>
+                  <line x1="10" y1="12" x2="20" y2="12" /></svg
+              ></span>
+              <span class="fmt-dropdown__item-title">Numbered list</span>
+              <span class="fmt-dropdown__item-shortcut">/num</span>
+            </button>
+            <button class="fmt-dropdown__item" data-kind="quote">
+              <span class="fmt-dropdown__item-icon"
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"
+                  /></svg
+              ></span>
+              <span class="fmt-dropdown__item-title">Quote</span>
+              <span class="fmt-dropdown__item-shortcut">/quote</span>
+            </button>
+            <button class="fmt-dropdown__item" data-kind="divider">
+              <span class="fmt-dropdown__item-icon"
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="3" y1="12" x2="21" y2="12" /></svg
+              ></span>
+              <span class="fmt-dropdown__item-title">Divider</span>
+              <span class="fmt-dropdown__item-shortcut">/---</span>
+            </button>
+          </div>
+        </div>
+
+        <span class="fmt-sep"></span>
+        <div class="fmt-group">
+          <button
+            class="fmt-btn fmt-btn--icon"
+            aria-label="Bold"
+            title="Bold (⌘B)"
+            data-cmd="bold"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" />
+              <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" />
+            </svg>
+          </button>
+          <button
+            class="fmt-btn fmt-btn--icon"
+            aria-label="Italic"
+            title="Italic (⌘I)"
+            data-cmd="italic"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <line x1="19" y1="4" x2="10" y2="4" />
+              <line x1="14" y1="20" x2="5" y2="20" />
+              <line x1="15" y1="4" x2="9" y2="20" />
+            </svg>
+          </button>
+          <button
+            class="fmt-btn fmt-btn--icon"
+            aria-label="Underline"
+            title="Underline (⌘U)"
+            data-cmd="underline"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3" />
+              <line x1="4" y1="21" x2="20" y2="21" />
+            </svg>
+          </button>
+          <button
+            class="fmt-btn fmt-btn--icon"
+            aria-label="Strike"
+            title="Strikethrough"
+            data-cmd="strikeThrough"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <line x1="4" y1="12" x2="20" y2="12" />
+              <path d="M17.3 5A4 4 0 0 0 14 4h-4a4 4 0 0 0-2.6 7" />
+              <path d="M6.7 19A4 4 0 0 0 10 20h4a4 4 0 0 0 2.6-7" />
+            </svg>
+          </button>
+          <button
+            class="fmt-btn fmt-btn--icon"
+            aria-label="Code"
+            title="Inline code"
+            data-cmd="code"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="16 18 22 12 16 6" />
+              <polyline points="8 6 2 12 8 18" />
+            </svg>
+          </button>
+        </div>
+
+        <span class="fmt-sep"></span>
+        <button
+          class="fmt-btn fmt-btn--icon"
+          aria-label="Link"
+          title="Add link"
+          data-cmd="link"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+            />
+            <path
+              d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+            />
+          </svg>
+        </button>
+
+        <span class="fmt-sep"></span>
+        <!-- PRIMARY: insert chart from analyze data -->
+        <button
+          class="fmt-btn fmt-btn--data"
+          id="toolbar-insert-data"
+          title="analyze 데이터 → 차트 삽입"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg>
+          <span>Insert data</span>
+        </button>
+
+        <span class="fmt-sep"></span>
+        <!-- Direct inserts — empty table, image, divider -->
+        <button
+          class="fmt-btn fmt-btn--icon"
+          id="toolbar-insert-table"
+          aria-label="표 삽입"
+          title="빈 표 삽입 (3×3)"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <rect x="3" y="4" width="18" height="16" rx="2" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+            <line x1="3" y1="16" x2="21" y2="16" />
+            <line x1="9" y1="4" x2="9" y2="20" />
+            <line x1="15" y1="4" x2="15" y2="20" />
+          </svg>
+        </button>
+        <button
+          class="fmt-btn fmt-btn--icon"
+          aria-label="이미지"
+          title="이미지 삽입"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <polyline points="21 15 16 10 5 21" />
+          </svg>
+        </button>
+        <button
+          class="fmt-btn fmt-btn--icon"
+          aria-label="구분선"
+          title="구분선 삽입"
+          data-kind="divider"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <line x1="3" y1="12" x2="21" y2="12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- CONTENT -->
+      <div class="reports-edit">
+        <!-- DOC -->
+        <div class="reports-doc" id="reports-doc">
+          <div class="reports-doc__inner">
+            <div class="reports-doc__cover">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+              Action · Report
+            </div>
+
+            <input
+              class="reports-doc__title"
+              value="2026 Q1 정책 우선순위 토론 분석"
+            />
+            <input
+              class="reports-doc__subtitle"
+              placeholder="부제 (선택)"
+              value="응답자 1,248명 기반 — Quantum / Climate / Open Source 정책 핫이슈 정리"
+            />
+
+            <div class="doc-block" data-type="h1">
+              <button class="doc-block__handle" aria-label="블록 옵션">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="9" cy="6" r="1" />
+                  <circle cx="9" cy="12" r="1" />
+                  <circle cx="9" cy="18" r="1" />
+                  <circle cx="15" cy="6" r="1" />
+                  <circle cx="15" cy="12" r="1" />
+                  <circle cx="15" cy="18" r="1" />
+                </svg>
+              </button>
+              <button class="doc-block__add" aria-label="블록 추가">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </button>
+              <div class="doc-block__body">
+                <h1 class="block-h1" contenteditable="true">핵심 인사이트</h1>
+              </div>
+            </div>
+
+            <div class="doc-block" data-type="text">
+              <button class="doc-block__handle" aria-label="블록 옵션">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="9" cy="6" r="1" />
+                  <circle cx="9" cy="12" r="1" />
+                  <circle cx="9" cy="18" r="1" />
+                  <circle cx="15" cy="6" r="1" />
+                  <circle cx="15" cy="12" r="1" />
+                  <circle cx="15" cy="18" r="1" />
+                </svg>
+              </button>
+              <button class="doc-block__add" aria-label="블록 추가">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </button>
+              <div class="doc-block__body">
+                <div class="block-text" contenteditable="true">
+                  본 분기 정책 토론에서 응답자의 <strong>64%</strong>가 "탄소
+                  상쇄 정책"을 1순위로 꼽았다. 아래 차트는
+                  <em>"정책 우선순위 응답자 분석"</em>의 Poll Q1 응답 분포를
+                  시각화한 결과다. <strong>이 문장을 드래그</strong>해보면 옆에
+                  인라인 포맷 툴바가 뜬다.
+                </div>
+              </div>
+            </div>
+
+            <div class="doc-block" data-type="chart">
+              <button class="doc-block__handle" aria-label="블록 옵션">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="9" cy="6" r="1" />
+                  <circle cx="9" cy="12" r="1" />
+                  <circle cx="9" cy="18" r="1" />
+                  <circle cx="15" cy="6" r="1" />
+                  <circle cx="15" cy="12" r="1" />
+                  <circle cx="15" cy="18" r="1" />
+                </svg>
+              </button>
+              <button class="doc-block__add" aria-label="블록 추가">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </button>
+              <div class="doc-block__body">
+                <div class="block-chart">
+                  <div class="block-chart__head">
+                    <span class="block-chart__source"
+                      ><svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path d="M18 20V10" />
+                        <path d="M12 20V4" />
+                        <path d="M6 20v-6" /></svg
+                      >Poll · Bar</span
+                    >
+                    <div class="block-chart__title">
+                      Q1: 가장 시급한 정책은?
+                    </div>
+                    <div class="block-chart__actions">
+                      <button
+                        class="block-chart__icon-btn"
+                        aria-label="차트 종류 변경"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <polygon points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                        </svg>
+                      </button>
+                      <button
+                        class="block-chart__icon-btn"
+                        aria-label="새로고침"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <polyline points="23 4 23 10 17 10" />
+                          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                        </svg>
+                      </button>
+                      <button class="block-chart__icon-btn" aria-label="삭제">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <polyline points="3 6 5 6 21 6" />
+                          <path
+                            d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="block-chart__breadcrumb">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    분석: <strong>정책 우선순위 응답자 분석</strong>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                    집계: <strong>Poll Q1 응답 분포</strong>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                    1,248명 매칭
+                  </div>
+                  <div class="block-chart__viz">
+                    <div
+                      class="block-chart__bar"
+                      data-label="탄소 상쇄"
+                      style="height: 80%"
+                    ></div>
+                    <div
+                      class="block-chart__bar"
+                      data-label="재생에너지"
+                      style="height: 42%"
+                    ></div>
+                    <div
+                      class="block-chart__bar"
+                      data-label="규제 강화"
+                      style="height: 34%"
+                    ></div>
+                    <div
+                      class="block-chart__bar"
+                      data-label="해외 협약"
+                      style="height: 26%"
+                    ></div>
+                    <div
+                      class="block-chart__bar"
+                      data-label="시민 교육"
+                      style="height: 22%"
+                    ></div>
+                  </div>
+                  <div class="block-chart__caption" contenteditable="true">
+                    정책 우선순위 응답 분포 — 탄소 상쇄가 압도적 1위,
+                    재생에너지가 2위로 이어짐.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="doc-block" data-type="h2">
+              <button class="doc-block__handle" aria-label="블록 옵션">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="9" cy="6" r="1" />
+                  <circle cx="9" cy="12" r="1" />
+                  <circle cx="9" cy="18" r="1" />
+                  <circle cx="15" cy="6" r="1" />
+                  <circle cx="15" cy="12" r="1" />
+                  <circle cx="15" cy="18" r="1" />
+                </svg>
+              </button>
+              <button class="doc-block__add" aria-label="블록 추가">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </button>
+              <div class="doc-block__body">
+                <h2 class="block-h2" contenteditable="true">참여 흐름</h2>
+              </div>
+            </div>
+
+            <div class="doc-block" data-type="text">
+              <button class="doc-block__handle" aria-label="블록 옵션">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="9" cy="6" r="1" />
+                  <circle cx="9" cy="12" r="1" />
+                  <circle cx="9" cy="18" r="1" />
+                  <circle cx="15" cy="6" r="1" />
+                  <circle cx="15" cy="12" r="1" />
+                  <circle cx="15" cy="18" r="1" />
+                </svg>
+              </button>
+              <button class="doc-block__add" aria-label="블록 추가">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </button>
+              <div class="doc-block__body">
+                <div class="block-text" contenteditable="true">
+                  참여 시점 분포를 보면 Quest 시작 24시간 내 60% 이상의 응답이
+                  몰렸으며, 이후 시간 지날수록 응답률이 빠르게 줄어들었다.
+                </div>
+              </div>
+            </div>
+
+            <!-- LIVE block — /data: + Enter, /h1 + Enter, etc. -->
+            <div class="doc-block" data-type="text">
+              <button class="doc-block__handle" aria-label="블록 옵션">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="9" cy="6" r="1" />
+                  <circle cx="9" cy="12" r="1" />
+                  <circle cx="9" cy="18" r="1" />
+                  <circle cx="15" cy="6" r="1" />
+                  <circle cx="15" cy="12" r="1" />
+                  <circle cx="15" cy="18" r="1" />
+                </svg>
+              </button>
+              <button class="doc-block__add" aria-label="블록 추가">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </button>
+              <div class="doc-block__body">
+                <div
+                  class="block-text"
+                  id="live-block"
+                  contenteditable="true"
+                  data-placeholder="입력해보세요 — /data + Enter 로 데이터 피커 · 하단 툴바 Insert data 로도 가능"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OUTLINE — auto-generated from H1/H2/H3 + chart blocks in the doc.
+           Click a row → scrolls the matching block into view. Updates
+           live via MutationObserver as the user types / inserts blocks. -->
+        <aside class="reports-outline">
+          <div class="reports-outline__heading">Outline</div>
+          <div class="reports-outline__list" id="outline-list">
+            <!-- populated by JS -->
+          </div>
+          <div class="reports-outline__divider"></div>
+          <div class="reports-outline__heading">Meta</div>
+          <div class="reports-outline__meta">
+            <div class="reports-outline__meta-row">
+              <span>Author</span><span>@lee</span>
+            </div>
+            <div class="reports-outline__meta-row">
+              <span>Created</span><span>3d ago</span>
+            </div>
+            <div class="reports-outline__meta-row">
+              <span>Edited</span><span>방금</span>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- FLOATING SELECTION TOOLBAR (positioned by JS on text selection) -->
+    <div class="sel-toolbar" id="sel-toolbar" role="toolbar" data-open="false">
+      <!-- Turn-into: convert the block containing the selection to H1/H2/H3 -->
+      <button class="sel-btn" data-kind="h1" title="Heading 1로 변환">
+        <svg viewBox="0 0 24 24" fill="none">
+          <text
+            x="3"
+            y="18"
+            font-family="Orbitron"
+            font-size="13"
+            font-weight="800"
+            fill="currentColor"
+          >
+            H1
+          </text>
+        </svg>
+      </button>
+      <button class="sel-btn" data-kind="h2" title="Heading 2로 변환">
+        <svg viewBox="0 0 24 24" fill="none">
+          <text
+            x="3"
+            y="18"
+            font-family="Orbitron"
+            font-size="12"
+            font-weight="800"
+            fill="currentColor"
+          >
+            H2
+          </text>
+        </svg>
+      </button>
+      <button class="sel-btn" data-kind="h3" title="Heading 3로 변환">
+        <svg viewBox="0 0 24 24" fill="none">
+          <text
+            x="3"
+            y="18"
+            font-family="Orbitron"
+            font-size="11"
+            font-weight="800"
+            fill="currentColor"
+          >
+            H3
+          </text>
+        </svg>
+      </button>
+      <button class="sel-btn" data-kind="text" title="일반 본문으로 변환">
+        <svg viewBox="0 0 24 24" fill="none">
+          <text
+            x="5"
+            y="18"
+            font-family="Orbitron"
+            font-size="14"
+            font-weight="800"
+            fill="currentColor"
+          >
+            T
+          </text>
+        </svg>
+      </button>
+      <span class="fmt-sep"></span>
+      <button class="sel-btn" data-cmd="bold" title="Bold">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.4"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" />
+          <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" />
+        </svg>
+      </button>
+      <button class="sel-btn" data-cmd="italic" title="Italic">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <line x1="19" y1="4" x2="10" y2="4" />
+          <line x1="14" y1="20" x2="5" y2="20" />
+          <line x1="15" y1="4" x2="9" y2="20" />
+        </svg>
+      </button>
+      <button class="sel-btn" data-cmd="underline" title="Underline">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3" />
+          <line x1="4" y1="21" x2="20" y2="21" />
+        </svg>
+      </button>
+      <button class="sel-btn" data-cmd="strikeThrough" title="Strike">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <path d="M17.3 5A4 4 0 0 0 14 4h-4a4 4 0 0 0-2.6 7" />
+          <path d="M6.7 19A4 4 0 0 0 10 20h4a4 4 0 0 0 2.6-7" />
+        </svg>
+      </button>
+      <button class="sel-btn" data-cmd="code" title="Code">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="16 18 22 12 16 6" />
+          <polyline points="8 6 2 12 8 18" />
+        </svg>
+      </button>
+      <button class="sel-btn" data-cmd="link" title="Link">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path
+            d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+          />
+          <path
+            d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+          />
+        </svg>
+      </button>
+      <span class="fmt-sep"></span>
+      <button
+        class="sel-btn sel-btn--data"
+        id="sel-insert-data"
+        title="이 자리에 분석 데이터 차트 삽입"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
+        Insert data
+      </button>
+    </div>
+
+    <!-- ── DATA PICKER (master/detail) ── -->
+    <div
+      class="picker-overlay"
+      id="data-picker"
+      role="dialog"
+      aria-modal="true"
+      data-open="false"
+    >
+      <div class="picker-panel">
+        <div class="picker-panel__head">
+          <div class="picker-panel__title-col">
+            <span class="picker-panel__eyebrow"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg
+              >/data: 데이터 선택</span
+            >
+            <span class="picker-panel__title"
+              >analyze에서 만든 분석 → 그 안의 집계를 고르세요</span
+            >
+          </div>
+          <button
+            class="picker-panel__close"
+            id="data-picker-close"
+            aria-label="닫기"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="picker-body">
+          <div class="picker-master">
+            <div class="picker-master__search">
+              <span class="picker-master__search-icon"
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="11" cy="11" r="7" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" /></svg
+              ></span>
+              <input
+                class="picker-master__search-input"
+                placeholder="분석 이름으로 검색…"
+              />
+            </div>
+            <div class="picker-master__label">
+              <span>Analyses</span
+              ><span class="picker-master__label-count"
+                >4 done · 1 running</span
+              >
+            </div>
+            <div class="picker-master__list" id="analyze-list">
+              <div class="analyze-row" data-analyze="a1" aria-selected="true">
+                <div class="analyze-row__top">
+                  <span class="analyze-row__name"
+                    >정책 우선순위 응답자 분석</span
+                  ><span class="analyze-row__status analyze-row__status--done"
+                    >Done</span
+                  >
+                </div>
+                <div class="analyze-row__meta">
+                  <span
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" /></svg
+                    >1,248명</span
+                  ><span>· 3d ago</span>
+                </div>
+                <div class="analyze-row__filters">
+                  <span class="filter-chip" data-source="poll">Poll · 탄소</span
+                  ><span class="filter-chip" data-source="quiz"
+                    >Quiz · 정책</span
+                  ><span class="filter-chip" data-source="discussion"
+                    >Discuss</span
+                  ><span class="filter-chip" data-source="follow">Follow</span>
+                </div>
+              </div>
+              <div class="analyze-row" data-analyze="a2">
+                <div class="analyze-row__top">
+                  <span class="analyze-row__name">참여자 페르소나 분류</span
+                  ><span class="analyze-row__status analyze-row__status--done"
+                    >Done</span
+                  >
+                </div>
+                <div class="analyze-row__meta">
+                  <span
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" /></svg
+                    >2,104명</span
+                  ><span>· 1w ago</span>
+                </div>
+                <div class="analyze-row__filters">
+                  <span class="filter-chip" data-source="follow"
+                    >Follow · 4</span
+                  ><span class="filter-chip" data-source="poll">Poll</span>
+                </div>
+              </div>
+              <div class="analyze-row" data-analyze="a3">
+                <div class="analyze-row__top">
+                  <span class="analyze-row__name"
+                    >정책 이해도 퀴즈 통과율 분석</span
+                  ><span class="analyze-row__status analyze-row__status--done"
+                    >Done</span
+                  >
+                </div>
+                <div class="analyze-row__meta">
+                  <span
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" /></svg
+                    >684명</span
+                  ><span>· 5d ago</span>
+                </div>
+                <div class="analyze-row__filters">
+                  <span class="filter-chip" data-source="quiz">Quiz · 10Q</span>
+                </div>
+              </div>
+              <div class="analyze-row" data-analyze="a4">
+                <div class="analyze-row__top">
+                  <span class="analyze-row__name">탄소 상쇄 투표 응답자</span
+                  ><span class="analyze-row__status analyze-row__status--done"
+                    >Done</span
+                  >
+                </div>
+                <div class="analyze-row__meta">
+                  <span
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" /></svg
+                    >892명</span
+                  ><span>· 2w ago</span>
+                </div>
+                <div class="analyze-row__filters">
+                  <span class="filter-chip" data-source="poll"
+                    >Poll · 탄소</span
+                  >
+                </div>
+              </div>
+              <div class="analyze-row" data-analyze="a5">
+                <div class="analyze-row__top">
+                  <span class="analyze-row__name">신규 가입자 행동 패턴</span
+                  ><span
+                    class="analyze-row__status analyze-row__status--running"
+                    >Running</span
+                  >
+                </div>
+                <div class="analyze-row__meta">
+                  <span>대기 중</span><span>· 5h ago</span>
+                </div>
+                <div class="analyze-row__filters">
+                  <span class="filter-chip" data-source="follow">Follow</span
+                  ><span class="filter-chip" data-source="discussion"
+                    >Discuss</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="picker-detail" id="picker-detail">
+            <div class="picker-detail__head">
+              <span class="picker-detail__breadcrumb"
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="3" /></svg
+                >Aggregates · 분석에서 차트로 뽑을 수 있는 데이터</span
+              >
+              <div class="picker-detail__name">정책 우선순위 응답자 분석</div>
+              <div class="picker-detail__filters">
+                <span class="filter-chip" data-source="poll"
+                  >Poll · 탄소 상쇄에 동의</span
+                >
+                <span class="filter-chip" data-source="quiz"
+                  >Quiz · 정책 이해 80%+</span
+                >
+                <span class="filter-chip" data-source="discussion"
+                  >Discuss · 1+ 댓글</span
+                >
+                <span class="filter-chip" data-source="follow"
+                  >Follow · @climate</span
+                >
+              </div>
+              <div class="picker-detail__stats">
+                <span><strong>1,248</strong>매칭 응답자</span
+                ><span><strong>4</strong>filters</span
+                ><span><strong>3d ago</strong>완료</span>
+              </div>
+            </div>
+
+            <div class="picker-detail__list">
+              <div class="picker-detail__group">
+                <div class="picker-detail__group-label">Overall</div>
+                <div class="agg-row" data-kind="kpi">
+                  <span class="agg-row__icon" data-source="kpi"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <polyline points="20 12 20 22 4 22 4 12" />
+                      <rect x="2" y="7" width="20" height="5" />
+                      <line x1="12" y1="22" x2="12" y2="7" /></svg
+                  ></span>
+                  <div class="agg-row__body">
+                    <span class="agg-row__title">매칭 응답자 수 (KPI)</span
+                    ><span class="agg-row__meta"
+                      >분석 전체 매칭 인원 · 1,248명</span
+                    >
+                  </div>
+                  <span class="agg-row__keys"><kbd>↵</kbd></span>
+                </div>
+              </div>
+              <div class="picker-detail__group">
+                <div class="picker-detail__group-label">
+                  Poll Aggregates · 2
+                </div>
+                <div class="agg-row" data-kind="poll-q">
+                  <span class="agg-row__icon" data-source="poll"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M18 20V10" />
+                      <path d="M12 20V4" />
+                      <path d="M6 20v-6" /></svg
+                  ></span>
+                  <div class="agg-row__body">
+                    <span class="agg-row__title">Q1: 가장 시급한 정책은?</span
+                    ><span class="agg-row__meta">5 옵션 · 매칭 응답 1,248</span>
+                  </div>
+                </div>
+                <div class="agg-row" data-kind="poll-q">
+                  <span class="agg-row__icon" data-source="poll"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M18 20V10" />
+                      <path d="M12 20V4" />
+                      <path d="M6 20v-6" /></svg
+                  ></span>
+                  <div class="agg-row__body">
+                    <span class="agg-row__title">Q2: 정책 시행 시점은?</span
+                    ><span class="agg-row__meta">4 옵션 · 매칭 응답 1,201</span>
+                  </div>
+                </div>
+              </div>
+              <div class="picker-detail__group">
+                <div class="picker-detail__group-label">
+                  Quiz Aggregates · 3
+                </div>
+                <div class="agg-row" data-kind="quiz-q">
+                  <span class="agg-row__icon" data-source="quiz"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" /></svg
+                  ></span>
+                  <div class="agg-row__body">
+                    <span class="agg-row__title">Q1: 탄소 상쇄의 정의는?</span
+                    ><span class="agg-row__meta">통과율 · 정답률 · 분포</span>
+                  </div>
+                </div>
+                <div class="agg-row" data-kind="quiz-q">
+                  <span class="agg-row__icon" data-source="quiz"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <circle cx="12" cy="12" r="10" /></svg
+                  ></span>
+                  <div class="agg-row__body">
+                    <span class="agg-row__title">Q2: 재생에너지 비율 산식</span
+                    ><span class="agg-row__meta"
+                      >통과율 67% · 매칭 응답 684</span
+                    >
+                  </div>
+                </div>
+                <div class="agg-row" data-kind="quiz-q">
+                  <span class="agg-row__icon" data-source="quiz"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <circle cx="12" cy="12" r="10" /></svg
+                  ></span>
+                  <div class="agg-row__body">
+                    <span class="agg-row__title">Q3: 국제 협약 체결국</span
+                    ><span class="agg-row__meta"
+                      >통과율 41% · 매칭 응답 684</span
+                    >
+                  </div>
+                </div>
+              </div>
+              <div class="picker-detail__group">
+                <div class="picker-detail__group-label">
+                  Discussions · 토론 선택 → LDA / TF-IDF / Network 중 선택
+                </div>
+                <div
+                  class="agg-row"
+                  data-kind="discussion"
+                  data-discussion="탄소 상쇄 정책안"
+                  data-comments="198"
+                >
+                  <span class="agg-row__icon" data-source="discussion"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                      /></svg
+                  ></span>
+                  <div class="agg-row__body">
+                    <span class="agg-row__title">탄소 상쇄 정책안</span
+                    ><span class="agg-row__meta"
+                      >198 매칭 댓글 · LDA · TF-IDF · Network 사용 가능</span
+                    >
+                  </div>
+                  <span class="agg-row__keys"><kbd>→</kbd></span>
+                </div>
+                <div
+                  class="agg-row"
+                  data-kind="discussion"
+                  data-discussion="재생에너지 보조금"
+                  data-comments="112"
+                >
+                  <span class="agg-row__icon" data-source="discussion"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                      /></svg
+                  ></span>
+                  <div class="agg-row__body">
+                    <span class="agg-row__title">재생에너지 보조금</span
+                    ><span class="agg-row__meta"
+                      >112 매칭 댓글 · LDA · TF-IDF · Network 사용 가능</span
+                    >
+                  </div>
+                  <span class="agg-row__keys"><kbd>→</kbd></span>
+                </div>
+                <div
+                  class="agg-row"
+                  data-kind="discussion"
+                  data-discussion="시민 교육 캠페인"
+                  data-comments="58"
+                >
+                  <span class="agg-row__icon" data-source="discussion"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                      /></svg
+                  ></span>
+                  <div class="agg-row__body">
+                    <span class="agg-row__title">시민 교육 캠페인</span
+                    ><span class="agg-row__meta"
+                      >58 매칭 댓글 · LDA · TF-IDF · Network 사용 가능</span
+                    >
+                  </div>
+                  <span class="agg-row__keys"><kbd>→</kbd></span>
+                </div>
+              </div>
+              <div class="picker-detail__group">
+                <div class="picker-detail__group-label">
+                  Follow Aggregates · 1
+                </div>
+                <div class="agg-row" data-kind="follow">
+                  <span class="agg-row__icon" data-source="follow"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" /></svg
+                  ></span>
+                  <div class="agg-row__body">
+                    <span class="agg-row__title">@climate · 팔로워 수 추이</span
+                    ><span class="agg-row__meta">매칭 팔로워 · 312명</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="picker-panel__footer">
+          <span class="picker-panel__footer-hint"
+            ><kbd>↑</kbd><kbd>↓</kbd> 이동 · <kbd>↵</kbd> 선택 ·
+            <kbd>esc</kbd> 닫기</span
+          >
+          <span>집계 클릭 → 차트 종류 선택</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DISCUSSION OUTPUT PICKER (after a discussion is chosen) -->
+    <div
+      class="picker-overlay"
+      id="discussion-picker"
+      role="dialog"
+      aria-modal="true"
+      data-open="false"
+    >
+      <div class="picker-panel" style="max-width: 640px">
+        <div class="picker-panel__head">
+          <div class="picker-panel__title-col">
+            <span class="picker-panel__eyebrow"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                /></svg
+              >Discussion 분석 결과 선택</span
+            >
+            <span class="picker-panel__title" id="discussion-picker-title"
+              >탄소 상쇄 정책안 — 어떤 결과를 넣을까요?</span
+            >
+          </div>
+          <button
+            class="picker-panel__close"
+            id="discussion-picker-close"
+            aria-label="닫기"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="chart-picker-grid">
+          <button class="chart-type" data-output="lda" aria-selected="true">
+            <div class="chart-type__viz">
+              <svg
+                viewBox="0 0 64 48"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle
+                  cx="14"
+                  cy="14"
+                  r="5"
+                  fill="currentColor"
+                  opacity="0.85"
+                />
+                <circle
+                  cx="44"
+                  cy="14"
+                  r="4"
+                  fill="currentColor"
+                  opacity="0.6"
+                />
+                <circle
+                  cx="22"
+                  cy="34"
+                  r="4"
+                  fill="currentColor"
+                  opacity="0.7"
+                />
+                <circle
+                  cx="50"
+                  cy="36"
+                  r="3"
+                  fill="currentColor"
+                  opacity="0.5"
+                />
+                <circle
+                  cx="34"
+                  cy="22"
+                  r="3"
+                  fill="currentColor"
+                  opacity="0.4"
+                />
+              </svg>
+            </div>
+            <span class="chart-type__label">LDA</span>
+            <span class="chart-type__hint">토픽 + 키워드 분포</span>
+          </button>
+          <button class="chart-type" data-output="tfidf">
+            <div class="chart-type__viz">
+              <svg
+                viewBox="0 0 64 48"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <text
+                  x="3"
+                  y="14"
+                  font-family="Orbitron"
+                  font-size="8"
+                  font-weight="800"
+                  fill="currentColor"
+                >
+                  Aa
+                </text>
+                <line x1="22" y1="11" x2="58" y2="11" />
+                <text
+                  x="3"
+                  y="28"
+                  font-family="Orbitron"
+                  font-size="8"
+                  font-weight="800"
+                  fill="currentColor"
+                >
+                  Aa
+                </text>
+                <line x1="22" y1="25" x2="48" y2="25" opacity="0.7" />
+                <text
+                  x="3"
+                  y="42"
+                  font-family="Orbitron"
+                  font-size="8"
+                  font-weight="800"
+                  fill="currentColor"
+                >
+                  Aa
+                </text>
+                <line x1="22" y1="39" x2="38" y2="39" opacity="0.5" />
+              </svg>
+            </div>
+            <span class="chart-type__label">TF-IDF</span>
+            <span class="chart-type__hint">상위 단어 + 점수</span>
+          </button>
+          <button class="chart-type" data-output="network">
+            <div class="chart-type__viz">
+              <svg
+                viewBox="0 0 64 48"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <line x1="14" y1="14" x2="32" y2="24" />
+                <line x1="50" y1="12" x2="32" y2="24" />
+                <line x1="32" y1="24" x2="20" y2="38" />
+                <line x1="32" y1="24" x2="48" y2="36" />
+                <line x1="14" y1="14" x2="50" y2="12" />
+                <circle cx="14" cy="14" r="4" fill="currentColor" />
+                <circle
+                  cx="50"
+                  cy="12"
+                  r="3.5"
+                  fill="currentColor"
+                  opacity="0.8"
+                />
+                <circle cx="32" cy="24" r="5" fill="currentColor" />
+                <circle
+                  cx="20"
+                  cy="38"
+                  r="3"
+                  fill="currentColor"
+                  opacity="0.6"
+                />
+                <circle
+                  cx="48"
+                  cy="36"
+                  r="3.5"
+                  fill="currentColor"
+                  opacity="0.7"
+                />
+              </svg>
+            </div>
+            <span class="chart-type__label">Network</span>
+            <span class="chart-type__hint">노드 + 엣지 그래프</span>
+          </button>
+        </div>
+        <div class="picker-panel__footer">
+          <span class="picker-panel__footer-hint"
+            ><kbd>esc</kbd> 닫기 · 클릭해 보고서에 삽입</span
+          >
+          <span>3 outputs</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHART TYPE PICKER -->
+    <div
+      class="picker-overlay"
+      id="chart-picker"
+      role="dialog"
+      aria-modal="true"
+      data-open="false"
+    >
+      <div class="picker-panel" style="max-width: 640px">
+        <div class="picker-panel__head">
+          <div class="picker-panel__title-col">
+            <span class="picker-panel__eyebrow"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polygon points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg
+              >차트 종류 선택</span
+            >
+            <span class="picker-panel__title"
+              >정책 우선순위 응답자 분석 → Q1: 가장 시급한 정책은?</span
+            >
+          </div>
+          <button
+            class="picker-panel__close"
+            id="chart-picker-close"
+            aria-label="닫기"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="chart-picker-grid">
+          <button class="chart-type" data-type="bar" aria-selected="true">
+            <div class="chart-type__viz">
+              <svg viewBox="0 0 64 48" fill="none">
+                <rect
+                  x="6"
+                  y="22"
+                  width="9"
+                  height="22"
+                  fill="currentColor"
+                  opacity="0.85"
+                />
+                <rect
+                  x="20"
+                  y="12"
+                  width="9"
+                  height="32"
+                  fill="currentColor"
+                  opacity="0.85"
+                />
+                <rect
+                  x="34"
+                  y="4"
+                  width="9"
+                  height="40"
+                  fill="currentColor"
+                  opacity="0.85"
+                />
+                <rect
+                  x="48"
+                  y="28"
+                  width="9"
+                  height="16"
+                  fill="currentColor"
+                  opacity="0.85"
+                />
+              </svg>
+            </div>
+            <span class="chart-type__label">Bar</span
+            ><span class="chart-type__hint">옵션별 응답 수</span>
+          </button>
+          <button class="chart-type" data-type="pie">
+            <div class="chart-type__viz">
+              <svg viewBox="0 0 64 48" fill="none">
+                <circle
+                  cx="32"
+                  cy="24"
+                  r="18"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  fill="none"
+                  opacity="0.25"
+                />
+                <path
+                  d="M32 6 A18 18 0 0 1 49.6 28.5 L32 24 Z"
+                  fill="currentColor"
+                  opacity="0.95"
+                />
+                <path
+                  d="M49.6 28.5 A18 18 0 0 1 22 39.7 L32 24 Z"
+                  fill="currentColor"
+                  opacity="0.6"
+                />
+              </svg>
+            </div>
+            <span class="chart-type__label">Pie</span
+            ><span class="chart-type__hint">전체 대비 비율</span>
+          </button>
+          <button class="chart-type" data-type="table">
+            <div class="chart-type__viz">
+              <svg
+                viewBox="0 0 64 48"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="4" y="6" width="56" height="36" rx="3" opacity="0.4" />
+                <line x1="4" y1="18" x2="60" y2="18" />
+                <line x1="4" y1="30" x2="60" y2="30" opacity="0.6" />
+                <line x1="24" y1="6" x2="24" y2="42" opacity="0.6" />
+              </svg>
+            </div>
+            <span class="chart-type__label">Table</span
+            ><span class="chart-type__hint">원본 행/열</span>
+          </button>
+        </div>
+        <div class="picker-panel__footer">
+          <span class="picker-panel__footer-hint"
+            ><kbd>esc</kbd> 닫기 · 클릭해 보고서에 삽입</span
+          >
+          <span>3 chart types</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating cell-action toolbar — appears above drag-selected cells.
+       Same pattern as the text selection toolbar. -->
+  <div class="cell-toolbar" id="cell-toolbar" role="toolbar" data-open="false">
+    <button class="cell-toolbar__btn" data-op="row-above" title="위에 행 추가">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="11"/><line x1="9" y1="8" x2="15" y2="8"/><rect x="3" y="13" width="18" height="3"/><rect x="3" y="18" width="18" height="3"/></svg>
+      <span>위 행</span>
+    </button>
+    <button class="cell-toolbar__btn" data-op="row-below" title="아래에 행 추가">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="3"/><rect x="3" y="8" width="18" height="3"/><line x1="12" y1="13" x2="12" y2="19"/><line x1="9" y1="16" x2="15" y2="16"/></svg>
+      <span>아래 행</span>
+    </button>
+    <span class="cell-toolbar__sep"></span>
+    <button class="cell-toolbar__btn" data-op="col-left" title="왼쪽에 열 추가">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="11" y2="12"/><line x1="8" y1="9" x2="8" y2="15"/><rect x="13" y="3" width="3" height="18"/><rect x="18" y="3" width="3" height="18"/></svg>
+      <span>왼쪽 열</span>
+    </button>
+    <button class="cell-toolbar__btn" data-op="col-right" title="오른쪽에 열 추가">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="3" height="18"/><rect x="8" y="3" width="3" height="18"/><line x1="13" y1="12" x2="19" y2="12"/><line x1="16" y1="9" x2="16" y2="15"/></svg>
+      <span>오른쪽 열</span>
+    </button>
+    <span class="cell-toolbar__sep"></span>
+    <button class="cell-toolbar__btn cell-toolbar__btn--primary" data-op="merge-selected" id="cell-toolbar-merge" title="선택 셀 병합">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/></svg>
+      <span>병합</span>
+    </button>
+    <button class="cell-toolbar__btn" data-op="split" title="병합 해제">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+      <span>분할</span>
+    </button>
+    <span class="cell-toolbar__sep"></span>
+    <button class="cell-toolbar__btn cell-toolbar__btn--danger" data-op="row-delete" title="행 삭제">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      <span>행 삭제</span>
+    </button>
+    <button class="cell-toolbar__btn cell-toolbar__btn--danger" data-op="col-delete" title="열 삭제">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      <span>열 삭제</span>
+    </button>
+    <button class="cell-toolbar__btn cell-toolbar__btn--danger" data-op="clear" title="셀 내용 비우기">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <span>비우기</span>
+    </button>
+  </div>
+
+  <!-- Table cell context menu (right-click on any table cell) -->
+    <div class="table-ctx" id="table-ctx" role="menu">
+      <div class="table-ctx__heading">행 / Row</div>
+      <button class="table-ctx__item" data-op="row-above">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <line x1="12" y1="5" x2="12" y2="11" />
+          <line x1="9" y1="8" x2="15" y2="8" />
+          <rect x="3" y="13" width="18" height="3" />
+          <rect x="3" y="18" width="18" height="3" /></svg
+        >위에 행 추가
+      </button>
+      <button class="table-ctx__item" data-op="row-below">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <rect x="3" y="3" width="18" height="3" />
+          <rect x="3" y="8" width="18" height="3" />
+          <line x1="12" y1="13" x2="12" y2="19" />
+          <line x1="9" y1="16" x2="15" y2="16" /></svg
+        >아래에 행 추가
+      </button>
+      <button
+        class="table-ctx__item table-ctx__item--danger"
+        data-op="row-delete"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <polyline points="3 6 5 6 21 6" />
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg
+        >이 행 삭제
+      </button>
+      <div class="table-ctx__sep"></div>
+      <div class="table-ctx__heading">열 / Column</div>
+      <button class="table-ctx__item" data-op="col-left">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <line x1="5" y1="12" x2="11" y2="12" />
+          <line x1="8" y1="9" x2="8" y2="15" />
+          <rect x="13" y="3" width="3" height="18" />
+          <rect x="18" y="3" width="3" height="18" /></svg
+        >왼쪽에 열 추가
+      </button>
+      <button class="table-ctx__item" data-op="col-right">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <rect x="3" y="3" width="3" height="18" />
+          <rect x="8" y="3" width="3" height="18" />
+          <line x1="13" y1="12" x2="19" y2="12" />
+          <line x1="16" y1="9" x2="16" y2="15" /></svg
+        >오른쪽에 열 추가
+      </button>
+      <button
+        class="table-ctx__item table-ctx__item--danger"
+        data-op="col-delete"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <polyline points="3 6 5 6 21 6" />
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg
+        >이 열 삭제
+      </button>
+      <div class="table-ctx__sep"></div>
+      <div class="table-ctx__heading">
+        셀 / Cell — 드래그로 범위 선택 후 사용
+      </div>
+      <button
+        class="table-ctx__item"
+        data-op="merge-selected"
+        id="ctx-merge-selected"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <rect x="3" y="3" width="8" height="8" />
+          <rect x="13" y="3" width="8" height="8" />
+          <rect x="3" y="13" width="8" height="8" />
+          <rect x="13" y="13" width="8" height="8" />
+          <path d="M11 12h2M12 11v2" stroke-width="2.5" /></svg
+        >선택 셀 병합
+      </button>
+      <button class="table-ctx__item" data-op="split">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <rect x="3" y="3" width="18" height="18" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="12" y1="3" x2="12" y2="21" /></svg
+        >병합 해제 (이 셀)
+      </button>
+      <button class="table-ctx__item table-ctx__item--danger" data-op="clear">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" /></svg
+        >셀 내용 비우기
+      </button>
+    </div>
+
+    <script>
+      "use strict";
+      const dataPicker = document.getElementById("data-picker");
+      const dataClose = document.getElementById("data-picker-close");
+      const chartPicker = document.getElementById("chart-picker");
+      const chartClose = document.getElementById("chart-picker-close");
+      const discussionPicker = document.getElementById("discussion-picker");
+      const discussionPickerClose = document.getElementById(
+        "discussion-picker-close"
+      );
+      const discussionPickerTitle = document.getElementById(
+        "discussion-picker-title"
+      );
+      const liveBlock = document.getElementById("live-block");
+      const selToolbar = document.getElementById("sel-toolbar");
+      const reportsDoc = document.getElementById("reports-doc");
+      const blockTypeDd = document.getElementById("block-type-dd");
+      const blockTypeTrigger = document.getElementById("block-type-trigger");
+      const blockTypeLabel = document.getElementById("block-type-label");
+      const toolbarInsertData = document.getElementById("toolbar-insert-data");
+      const selInsertData = document.getElementById("sel-insert-data");
+
+      const open = (el) => {
+        el.dataset.open = "true";
+      };
+      const close = (el) => {
+        el.dataset.open = "false";
+      };
+
+      // ─── Picker open/close ─────────────────────────────
+      dataClose.addEventListener("click", () => close(dataPicker));
+      chartClose.addEventListener("click", () => close(chartPicker));
+      dataPicker.addEventListener("click", (e) => {
+        if (e.target === dataPicker) close(dataPicker);
+      });
+      chartPicker.addEventListener("click", (e) => {
+        if (e.target === chartPicker) close(chartPicker);
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          close(dataPicker);
+          close(chartPicker);
+          close(discussionPicker);
+          close(selToolbar);
+          blockTypeDd.dataset.open = "false";
+        }
+      });
+
+      // Discussion output picker open/close + routing
+      function openDiscussionOutputPicker(p) {
+        discussionPickerTitle.textContent =
+          (p.discussion || p.aggregateTitle) + " — 어떤 결과를 넣을까요?";
+        open(discussionPicker);
+      }
+      discussionPickerClose.addEventListener("click", () =>
+        close(discussionPicker)
+      );
+      discussionPicker.addEventListener("click", (e) => {
+        if (e.target === discussionPicker) close(discussionPicker);
+      });
+      discussionPicker.querySelectorAll(".chart-type").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const output = btn.dataset.output;
+          const p = pendingPick || {};
+          // Refine pendingPick with the discussion subject (so the
+          // inserted block's title/meta reflects which discussion).
+          const dp = {
+            analyzeName: p.analyzeName,
+            aggregateTitle: p.discussion
+              ? `${p.discussion} · ${output === "lda" ? "LDA 5 토픽" : output === "tfidf" ? "TF-IDF Top 10" : "텍스트 네트워크"}`
+              : p.aggregateTitle,
+            aggregateMeta: p.comments
+              ? `${p.comments} 매칭 댓글`
+              : p.aggregateMeta,
+            source: "discussion",
+          };
+          close(discussionPicker);
+          if (output === "lda") insertLdaBlock(dp);
+          else if (output === "tfidf") insertTfidfBlock(dp);
+          else if (output === "network") insertNetworkBlock(dp);
+          pendingPick = null;
+        });
+      });
+
+      // ─── Pending pick state (analyze name + aggregate) ──
+      let pendingPick = null;
+
+      // Master/detail: row click → select (mockup keeps static detail)
+      document.querySelectorAll("#analyze-list .analyze-row").forEach((row) => {
+        row.addEventListener("click", () => {
+          document
+            .querySelectorAll("#analyze-list .analyze-row")
+            .forEach((r) => r.setAttribute("aria-selected", "false"));
+          row.setAttribute("aria-selected", "true");
+        });
+      });
+      // Aggregate click → save pick → route by kind:
+      //   poll-q / quiz-q / follow / kpi → chart picker (Bar/Pie/Table)
+      //   discussion → discussion-output picker (LDA / TF-IDF / Network)
+      //   discussion-count → chart picker (count comparison across discussions)
+      document.querySelectorAll(".agg-row").forEach((row) => {
+        row.addEventListener("click", () => {
+          const selectedAnalyze = document.querySelector(
+            '#analyze-list .analyze-row[aria-selected="true"]'
+          );
+          const kind = row.dataset.kind;
+          pendingPick = {
+            analyzeName: selectedAnalyze
+              ? selectedAnalyze
+                  .querySelector(".analyze-row__name")
+                  .textContent.trim()
+              : "정책 우선순위 응답자 분석",
+            aggregateTitle: row
+              .querySelector(".agg-row__title")
+              .textContent.trim(),
+            aggregateMeta: row
+              .querySelector(".agg-row__meta")
+              .textContent.trim(),
+            source: row.querySelector(".agg-row__icon").dataset.source,
+            kind,
+            discussion: row.dataset.discussion || null,
+            comments: row.dataset.comments || null,
+          };
+          close(dataPicker);
+          if (kind === "discussion") {
+            openDiscussionOutputPicker(pendingPick);
+            return;
+          }
+          // Poll / Quiz / Follow / KPI → chart-type picker (Bar/Pie/Table)
+          open(chartPicker);
+        });
+      });
+      // Chart type click → close picker + insert mock chart block into the doc
+      document.querySelectorAll(".chart-type").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const type = btn.dataset.type || "bar";
+          close(chartPicker);
+          insertChartBlock(pendingPick, type);
+          pendingPick = null;
+        });
+      });
+
+      // ─── Insert a mock chart block into the doc ────────
+      // Real impl: pull aggregate data from the analyze, build a Chart
+      // component. Mockup uses static numbers so the inserted block
+      // looks indistinguishable from the pre-baked one above.
+      function insertChartBlock(pick, type) {
+        const p = pick || {
+          analyzeName: "정책 우선순위 응답자 분석",
+          aggregateTitle: "Q1: 가장 시급한 정책은?",
+          aggregateMeta: "5 옵션 · 매칭 응답 1,248",
+          source: "poll",
+        };
+        const sourceLabelMap = {
+          poll: "Poll",
+          quiz: "Quiz",
+          discussion: "Discussion",
+          follow: "Follow",
+          kpi: "KPI",
+        };
+        const sourceIconMap = {
+          poll: '<path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>',
+          quiz: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+          discussion:
+            '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+          follow:
+            '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>',
+          kpi: '<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/>',
+        };
+        const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+
+        // Mock row data for this aggregate
+        const rows = [
+          { label: "탄소 상쇄", count: 798, pct: 64.0, color: "#a855f7" },
+          { label: "재생에너지", count: 274, pct: 22.0, color: "#c084fc" },
+          { label: "규제 강화", count: 87, pct: 7.0, color: "#d8b4fe" },
+          { label: "해외 협약", count: 50, pct: 4.0, color: "#e9d5ff" },
+          { label: "시민 교육", count: 39, pct: 3.0, color: "#f3e8ff" },
+        ];
+
+        // ── viz markup per type ──
+        let viz = "";
+        if (type === "bar") {
+          const max = Math.max(...rows.map((r) => r.pct));
+          viz = `<div class="block-chart__viz">${rows.map((r) => `<div class="block-chart__bar" data-label="${r.label}" style="height:${((r.pct / max) * 92).toFixed(1)}%"></div>`).join("")}</div>`;
+        } else if (type === "pie") {
+          // Build SVG pie slices from cumulative percentages
+          const cx = 100,
+            cy = 100,
+            r = 80;
+          let cum = 0;
+          const slices = rows
+            .map((row) => {
+              const start = (cum / 100) * Math.PI * 2 - Math.PI / 2;
+              cum += row.pct;
+              const end = (cum / 100) * Math.PI * 2 - Math.PI / 2;
+              const large = row.pct > 50 ? 1 : 0;
+              const x1 = cx + r * Math.cos(start),
+                y1 = cy + r * Math.sin(start);
+              const x2 = cx + r * Math.cos(end),
+                y2 = cy + r * Math.sin(end);
+              return `<path d="M${cx} ${cy} L${x1.toFixed(2)} ${y1.toFixed(2)} A${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z" fill="${row.color}"/>`;
+            })
+            .join("");
+          const legend = rows
+            .map(
+              (row) =>
+                `<div class="block-chart__legend-row"><span class="block-chart__legend-dot" style="background:${row.color}"></span><span class="block-chart__legend-label">${row.label}</span><span class="block-chart__legend-pct">${row.pct.toFixed(1)}%</span></div>`
+            )
+            .join("");
+          viz = `<div class="block-chart__pie-wrap"><svg class="block-chart__pie" viewBox="0 0 200 200">${slices}</svg><div class="block-chart__legend">${legend}</div></div>`;
+        } else if (type === "table") {
+          const trs = rows
+            .map(
+              (row) =>
+                `<tr><td>${row.label}</td><td class="num">${row.count.toLocaleString()}</td><td class="num">${row.pct.toFixed(1)}%</td></tr>`
+            )
+            .join("");
+          viz = `<div class="block-chart__table"><table><thead><tr><th>옵션</th><th style="text-align:right">응답 수</th><th style="text-align:right">비율</th></tr></thead><tbody>${trs}</tbody></table></div>`;
+        }
+
+        // Source pill colors
+        const sourcePillCss = `background:var(--${p.source}-bg);color:var(--${p.source}-color);border:1px solid var(--${p.source}-border)`;
+
+        const html = `
+        <div class="doc-block" data-type="chart">
+          <button class="doc-block__handle" aria-label="블록 옵션"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg></button>
+          <button class="doc-block__add" aria-label="블록 추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          <div class="doc-block__body">
+            <div class="block-chart">
+              <div class="block-chart__head">
+                <span class="block-chart__source" style="${sourcePillCss}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${sourceIconMap[p.source] || sourceIconMap.poll}</svg>
+                  ${sourceLabelMap[p.source] || "Poll"} · ${typeLabel}
+                </span>
+                <div class="block-chart__title">${escapeHtml(p.aggregateTitle)}</div>
+                <div class="block-chart__actions">
+                  <button class="block-chart__icon-btn" aria-label="차트 종류 변경"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></button>
+                  <button class="block-chart__icon-btn" aria-label="새로고침"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+                  <button class="block-chart__icon-btn" aria-label="삭제"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+                </div>
+              </div>
+              <div class="block-chart__breadcrumb">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>
+                분석: <strong>${escapeHtml(p.analyzeName)}</strong>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                집계: <strong>${escapeHtml(p.aggregateTitle)}</strong>
+              </div>
+              ${viz}
+              <div class="block-chart__caption" contenteditable="true">${escapeHtml(p.aggregateMeta)}</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+        // Insert before the active live block so the new chart sits in
+        // the natural author flow (where they just typed /data:).
+        const target =
+          document.activeElement &&
+          document.activeElement.closest(".doc-block");
+        const anchor =
+          target || document.getElementById("live-block").closest(".doc-block");
+        anchor.insertAdjacentHTML("beforebegin", html);
+        // Wire delete button on the new block
+        const newBlock = anchor.previousElementSibling;
+        const delBtn = newBlock.querySelector(
+          '.block-chart__actions .block-chart__icon-btn[aria-label="삭제"]'
+        );
+        if (delBtn) delBtn.addEventListener("click", () => newBlock.remove());
+      }
+
+      function escapeHtml(s) {
+        return String(s).replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c]
+        );
+      }
+
+      // ─── Discussion-specific viz blocks ───────────────
+      // Each one wires its own delete handler and inserts before the
+      // active doc-block (same anchor logic as insertChartBlock).
+      function insertSpecializedBlock(html) {
+        const target =
+          document.activeElement &&
+          document.activeElement.closest &&
+          document.activeElement.closest(".doc-block");
+        const anchor =
+          target || document.getElementById("live-block").closest(".doc-block");
+        anchor.insertAdjacentHTML("beforebegin", html);
+        const newBlock = anchor.previousElementSibling;
+        const delBtn = newBlock.querySelector(
+          '.block-chart__actions .block-chart__icon-btn[aria-label="삭제"]'
+        );
+        if (delBtn) delBtn.addEventListener("click", () => newBlock.remove());
+      }
+
+      function chartHeadHtml(p, typeLabel) {
+        return `
+        <div class="block-chart__head">
+          <span class="block-chart__source" style="background:var(--discussion-bg);color:var(--discussion-color);border:1px solid var(--discussion-border)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Discussion · ${typeLabel}
+          </span>
+          <div class="block-chart__title">${escapeHtml(p.aggregateTitle)}</div>
+          <div class="block-chart__actions">
+            <button class="block-chart__icon-btn" aria-label="새로고침"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+            <button class="block-chart__icon-btn" aria-label="삭제"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+          </div>
+        </div>
+        <div class="block-chart__breadcrumb">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>
+          분석: <strong>${escapeHtml(p.analyzeName)}</strong>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          집계: <strong>${escapeHtml(p.aggregateTitle)}</strong>
+        </div>`;
+      }
+
+      function blockShell(headHtml, vizHtml, captionText) {
+        return `
+        <div class="doc-block" data-type="chart">
+          <button class="doc-block__handle" aria-label="블록 옵션"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg></button>
+          <button class="doc-block__add" aria-label="블록 추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          <div class="doc-block__body">
+            <div class="block-chart">
+              ${headHtml}
+              ${vizHtml}
+              <div class="block-chart__caption" contenteditable="true">${escapeHtml(captionText)}</div>
+            </div>
+          </div>
+        </div>`;
+      }
+
+      // LDA — k topics, each with weight + top keywords (term, prob)
+      function insertLdaBlock(p) {
+        const topics = [
+          {
+            weight: 32,
+            kws: [
+              ["탄소", 0.18],
+              ["상쇄", 0.14],
+              ["정책", 0.11],
+              ["시장", 0.09],
+              ["거래", 0.07],
+            ],
+          },
+          {
+            weight: 24,
+            kws: [
+              ["재생", 0.16],
+              ["에너지", 0.13],
+              ["보조금", 0.1],
+              ["전력", 0.08],
+              ["태양광", 0.06],
+            ],
+          },
+          {
+            weight: 18,
+            kws: [
+              ["규제", 0.15],
+              ["법안", 0.12],
+              ["기준", 0.09],
+              ["감축", 0.08],
+              ["의무", 0.06],
+            ],
+          },
+          {
+            weight: 15,
+            kws: [
+              ["협약", 0.13],
+              ["국제", 0.1],
+              ["파리", 0.09],
+              ["목표", 0.07],
+              ["공조", 0.06],
+            ],
+          },
+          {
+            weight: 11,
+            kws: [
+              ["시민", 0.12],
+              ["교육", 0.1],
+              ["참여", 0.08],
+              ["홍보", 0.07],
+              ["캠페인", 0.05],
+            ],
+          },
+        ];
+        const max = Math.max(...topics.map((t) => t.weight));
+        const rows = topics
+          .map(
+            (t, i) => `
+        <div class="block-lda__topic">
+          <div class="block-lda__topic-head">
+            <span class="block-lda__topic-id">토픽 ${i + 1}</span>
+            <span class="block-lda__topic-weight">${t.weight}%</span>
+          </div>
+          <div class="block-lda__topic-bar"><div style="width:${((t.weight / max) * 100).toFixed(0)}%"></div></div>
+          <div class="block-lda__keywords">${t.kws.map(([w, pr]) => `<span class="block-lda__kw">${escapeHtml(w)}<em>${pr.toFixed(2)}</em></span>`).join("")}</div>
+        </div>`
+          )
+          .join("");
+        const viz = `<div class="block-lda">${rows}</div>`;
+        insertSpecializedBlock(
+          blockShell(
+            chartHeadHtml(p, "LDA Topics"),
+            viz,
+            p.aggregateMeta + " · k=5 토픽, 각 토픽 상위 5 키워드"
+          )
+        );
+      }
+
+      // TF-IDF — ranked table of (term, score)
+      function insertTfidfBlock(p) {
+        const terms = [
+          ["탄소", 0.842],
+          ["상쇄", 0.731],
+          ["정책", 0.668],
+          ["크레딧", 0.592],
+          ["거래", 0.547],
+          ["배출", 0.518],
+          ["시장", 0.476],
+          ["감축", 0.441],
+          ["인증", 0.402],
+          ["표준", 0.385],
+        ];
+        const trs = terms
+          .map(
+            ([t, s], i) =>
+              `<tr><td class="num">${i + 1}</td><td>${escapeHtml(t)}</td><td class="num">${s.toFixed(3)}</td></tr>`
+          )
+          .join("");
+        const viz = `<div class="block-chart__table"><table><thead><tr><th style="width:60px">Rank</th><th>Term</th><th style="text-align:right;width:90px">TF-IDF</th></tr></thead><tbody>${trs}</tbody></table></div>`;
+        insertSpecializedBlock(
+          blockShell(
+            chartHeadHtml(p, "TF-IDF"),
+            viz,
+            p.aggregateMeta + " · 매칭 댓글 코퍼스에서 추출한 Top 10 단어"
+          )
+        );
+      }
+
+      // Text Network — force-directed-ish SVG mock with nodes + edges
+      function insertNetworkBlock(p) {
+        const nodes = [
+          { x: 110, y: 80, r: 22, label: "탄소" },
+          { x: 230, y: 110, r: 18, label: "정책" },
+          { x: 320, y: 70, r: 14, label: "상쇄" },
+          { x: 160, y: 180, r: 16, label: "거래" },
+          { x: 280, y: 200, r: 12, label: "시장" },
+          { x: 380, y: 150, r: 10, label: "규제" },
+          { x: 70, y: 220, r: 9, label: "감축" },
+          { x: 420, y: 240, r: 8, label: "배출" },
+        ];
+        const edges = [
+          [0, 1],
+          [0, 2],
+          [1, 2],
+          [1, 3],
+          [1, 4],
+          [3, 4],
+          [2, 5],
+          [4, 5],
+          [3, 6],
+          [4, 7],
+          [5, 7],
+        ];
+        const edgeSvg = edges
+          .map(
+            ([a, b]) =>
+              `<line class="edge" x1="${nodes[a].x}" y1="${nodes[a].y}" x2="${nodes[b].x}" y2="${nodes[b].y}"/>`
+          )
+          .join("");
+        const nodeSvg = nodes
+          .map(
+            (n) =>
+              `<circle class="node" cx="${n.x}" cy="${n.y}" r="${n.r}" fill="rgba(168,85,247,${(0.35 + n.r / 40).toFixed(2)})" stroke="rgba(168,85,247,0.7)" stroke-width="1.5"/><text class="label" x="${n.x}" y="${n.y + 4}">${escapeHtml(n.label)}</text>`
+          )
+          .join("");
+        const viz = `
+        <div class="block-network">
+          <svg class="block-network__svg" viewBox="0 0 500 280">${edgeSvg}${nodeSvg}</svg>
+          <div class="block-network__stats"><span><strong>18</strong>노드</span><span><strong>42</strong>엣지</span><span><strong>0.62</strong>모듈러리티</span><span><strong>0.31</strong>밀도</span></div>
+        </div>`;
+        insertSpecializedBlock(
+          blockShell(
+            chartHeadHtml(p, "Text Network"),
+            viz,
+            p.aggregateMeta + " · 노드 = 단어, 엣지 두께 = 동시 출현 빈도"
+          )
+        );
+      }
+
+      // ─── Empty table block — Notion-style, fully editable + ops ──
+      function buildTableBlockHtml(rows, cols) {
+        const headerCells = Array.from(
+          { length: cols },
+          (_, i) => `<th contenteditable="true">열 ${i + 1}</th>`
+        ).join("");
+        const bodyRows = Array.from(
+          { length: rows },
+          () =>
+            `<tr>${Array.from({ length: cols }, () => `<td contenteditable="true"></td>`).join("")}</tr>`
+        ).join("");
+        return `
+        <div class="doc-block" data-type="table">
+          <button class="doc-block__handle" aria-label="블록 옵션"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg></button>
+          <button class="doc-block__add" aria-label="블록 추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          <div class="doc-block__body">
+            <div class="block-table">
+              <table><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table>
+              <button class="block-table__add-row" type="button" title="아래에 행 추가">+ Row</button>
+              <button class="block-table__add-col" type="button" title="오른쪽에 열 추가">+</button>
+            </div>
+          </div>
+        </div>`;
+      }
+
+      const insertTableBtn = document.getElementById("toolbar-insert-table");
+      if (insertTableBtn) {
+        insertTableBtn.addEventListener("mousedown", (e) => e.preventDefault());
+        insertTableBtn.addEventListener("click", () => {
+          const target =
+            document.activeElement &&
+            document.activeElement.closest &&
+            document.activeElement.closest(".doc-block");
+          const anchor =
+            target ||
+            document.getElementById("live-block").closest(".doc-block");
+          anchor.insertAdjacentHTML("beforebegin", buildTableBlockHtml(3, 3));
+        });
+      }
+
+      // ─── Table ops: row/col add+delete, merge, split ──
+      // Logical column index (accounting for colspans BEFORE the cell).
+      // Used so insert-column / delete-column / merge-down line up
+      // visually even when earlier cells have colspan > 1.
+      function visualColIndex(cell) {
+        let idx = 0;
+        let n = cell.previousElementSibling;
+        while (n) {
+          idx += parseInt(n.colSpan || 1);
+          n = n.previousElementSibling;
+        }
+        return idx;
+      }
+
+      function insertRow(refRow, where) {
+        const table = refRow.closest("table");
+        // Total visual columns
+        const headRow =
+          table.querySelector("thead tr") || table.querySelector("tr");
+        let total = 0;
+        Array.from(headRow.children).forEach((c) => {
+          total += parseInt(c.colSpan || 1);
+        });
+        const tr = document.createElement("tr");
+        for (let i = 0; i < total; i++) {
+          const td = document.createElement("td");
+          td.contentEditable = "true";
+          tr.appendChild(td);
+        }
+        refRow.parentElement.insertBefore(
+          tr,
+          where === "before" ? refRow : refRow.nextSibling
+        );
+      }
+
+      function insertCol(table, atVisualIdx, where) {
+        const allRows = table.querySelectorAll("tr");
+        allRows.forEach((row) => {
+          const isHead = row.parentElement.tagName === "THEAD";
+          // Walk visual columns to find insertion point in THIS row
+          let acc = 0;
+          let inserted = false;
+          for (const c of Array.from(row.children)) {
+            const span = parseInt(c.colSpan || 1);
+            if (acc === atVisualIdx) {
+              const newCell = document.createElement(isHead ? "th" : "td");
+              newCell.contentEditable = "true";
+              if (isHead) newCell.textContent = "새 열";
+              row.insertBefore(newCell, where === "before" ? c : c.nextSibling);
+              inserted = true;
+              break;
+            }
+            // If insertion target falls inside a colspan, just widen that cell
+            if (acc < atVisualIdx && acc + span > atVisualIdx) {
+              c.colSpan = span + 1;
+              inserted = true;
+              break;
+            }
+            acc += span;
+          }
+          if (!inserted) {
+            // Append at end
+            const newCell = document.createElement(isHead ? "th" : "td");
+            newCell.contentEditable = "true";
+            if (isHead) newCell.textContent = "새 열";
+            row.appendChild(newCell);
+          }
+        });
+      }
+
+      function deleteCol(table, atVisualIdx) {
+        table.querySelectorAll("tr").forEach((row) => {
+          let acc = 0;
+          for (const c of Array.from(row.children)) {
+            const span = parseInt(c.colSpan || 1);
+            if (acc === atVisualIdx && span === 1) {
+              c.remove();
+              break;
+            }
+            if (acc <= atVisualIdx && acc + span > atVisualIdx) {
+              if (span === 1) c.remove();
+              else c.colSpan = span - 1;
+              break;
+            }
+            acc += span;
+          }
+        });
+      }
+
+      function splitCell(cell) {
+        // Mockup: drop spans back to 1 (doesn't restore the removed cells).
+        // Real impl would track original structure to restore properly.
+        cell.colSpan = 1;
+        cell.rowSpan = 1;
+      }
+
+      // ─── Drag-selection across cells ─────────────────────
+      // Notion / Sheets style: mousedown in a cell + drag to another
+      // highlights the rectangle. Threshold: clicking a single cell
+      // (no drag to a different cell) is treated as a normal focus
+      // and does NOT activate selection — the contenteditable cursor
+      // lands as usual.
+      let dragStart = null;
+      let dragActive = false;
+      let selectionRange = null; // { table, r1, c1, r2, c2 }
+
+      function gridPos(cell) {
+        const row = cell.parentElement;
+        const allRows = Array.from(
+          cell.closest("table").querySelectorAll("tr")
+        );
+        return { r: allRows.indexOf(row), c: visualColIndex(cell) };
+      }
+
+      function clearTableSelection(scope) {
+        const root = scope || document;
+        root
+          .querySelectorAll(".block-table .is-selected")
+          .forEach((c) => c.classList.remove("is-selected"));
+        root
+          .querySelectorAll(".block-table.has-selection")
+          .forEach((t) => t.classList.remove("has-selection"));
+        selectionRange = null;
+      }
+
+      function highlightRange(a, b) {
+        const table = a.closest("table");
+        const wrap = a.closest(".block-table");
+        clearTableSelection(wrap);
+        const pa = gridPos(a),
+          pb = gridPos(b);
+        const r1 = Math.min(pa.r, pb.r),
+          r2 = Math.max(pa.r, pb.r);
+        const c1 = Math.min(pa.c, pb.c),
+          c2 = Math.max(pa.c, pb.c);
+        selectionRange = { table, wrap, r1, c1, r2, c2 };
+        const allRows = Array.from(table.querySelectorAll("tr"));
+        let count = 0;
+        for (let r = r1; r <= r2; r++) {
+          const row = allRows[r];
+          if (!row) continue;
+          let acc = 0;
+          for (const c of Array.from(row.children)) {
+            const span = parseInt(c.colSpan || 1);
+            if (acc + span > c1 && acc < c2 + 1) {
+              c.classList.add("is-selected");
+              count++;
+            }
+            acc += span;
+          }
+        }
+        if (count >= 2) wrap.classList.add("has-selection");
+      }
+
+      document.addEventListener("mousedown", (e) => {
+        const cell = e.target.closest(".block-table td, .block-table th");
+        // Ignore clicks on table edge controls or the floating toolbar
+        if (
+          e.target.closest(
+            ".block-table__add-row, .block-table__add-col, #cell-toolbar"
+          )
+        )
+          return;
+        if (!cell) {
+          // Click outside any table cell clears selection
+          clearTableSelection(document);
+          return;
+        }
+        dragStart = cell;
+        dragActive = false;
+      });
+
+      document.addEventListener("mousemove", (e) => {
+        if (!dragStart) return;
+        if (!(e.buttons & 1)) {
+          dragStart = null;
+          dragActive = false;
+          return;
+        }
+        const cell = e.target.closest(".block-table td, .block-table th");
+        if (!cell || cell.closest("table") !== dragStart.closest("table"))
+          return;
+        // Transition into drag mode only when we leave the start cell —
+        // a stationary click should stay a plain cursor focus.
+        if (cell !== dragStart && !dragActive) {
+          dragActive = true;
+          if (document.activeElement && document.activeElement.blur)
+            document.activeElement.blur();
+          window.getSelection().removeAllRanges();
+          dragStart.closest(".block-table").classList.add("is-dragging");
+        }
+        if (dragActive) highlightRange(dragStart, cell);
+      });
+
+      document.addEventListener("mouseup", () => {
+        if (dragStart && dragActive) {
+          dragStart.closest(".block-table").classList.remove("is-dragging");
+          // Float the action toolbar above the just-finished selection.
+          if (selectionRange) showCellToolbar();
+        }
+        dragStart = null;
+        dragActive = false;
+      });
+
+      // ─── Floating cell-action toolbar — positioned above selection ──
+      const cellToolbar = document.getElementById("cell-toolbar");
+      function showCellToolbar() {
+        if (!selectionRange) {
+          cellToolbar.dataset.open = "false";
+          return;
+        }
+        const cells = selectionRange.wrap.querySelectorAll(".is-selected");
+        if (!cells.length) {
+          cellToolbar.dataset.open = "false";
+          return;
+        }
+        let l = Infinity,
+          t = Infinity,
+          r = -Infinity,
+          b = -Infinity;
+        cells.forEach((c) => {
+          const rc = c.getBoundingClientRect();
+          l = Math.min(l, rc.left);
+          t = Math.min(t, rc.top);
+          r = Math.max(r, rc.right);
+          b = Math.max(b, rc.bottom);
+        });
+        cellToolbar.dataset.open = "true";
+        const tbRect = cellToolbar.getBoundingClientRect();
+        const top = t - tbRect.height - 10;
+        const left = l + (r - l) / 2 - tbRect.width / 2;
+        cellToolbar.style.top = Math.max(8, top) + "px";
+        cellToolbar.style.left =
+          Math.max(
+            8,
+            Math.min(window.innerWidth - tbRect.width - 8, left)
+          ) + "px";
+      }
+      function hideCellToolbar() {
+        cellToolbar.dataset.open = "false";
+      }
+      // Prevent the toolbar mousedown from killing the selection
+      cellToolbar.addEventListener("mousedown", (e) => e.preventDefault());
+
+      // Toolbar buttons → run the matching table op on the current selection
+      cellToolbar
+        .querySelectorAll(".cell-toolbar__btn")
+        .forEach((btn) => {
+          btn.addEventListener("click", () => {
+            if (!selectionRange) return;
+            const op = btn.dataset.op;
+            const allRows = Array.from(
+              selectionRange.table.querySelectorAll("tr")
+            );
+            const r1Row = allRows[selectionRange.r1];
+            const r2Row = allRows[selectionRange.r2];
+            switch (op) {
+              case "row-above":
+                if (r1Row) insertRow(r1Row, "before");
+                break;
+              case "row-below":
+                if (r2Row) insertRow(r2Row, "after");
+                break;
+              case "col-left":
+                insertCol(selectionRange.table, selectionRange.c1, "before");
+                break;
+              case "col-right":
+                insertCol(selectionRange.table, selectionRange.c2, "after");
+                break;
+              case "row-delete": {
+                const rowsLeft = allRows.length;
+                const span = selectionRange.r2 - selectionRange.r1 + 1;
+                if (rowsLeft - span >= 1) {
+                  for (let r = selectionRange.r2; r >= selectionRange.r1; r--) {
+                    if (allRows[r]) allRows[r].remove();
+                  }
+                }
+                break;
+              }
+              case "col-delete": {
+                const headRow =
+                  selectionRange.table.querySelector("thead tr") ||
+                  selectionRange.table.querySelector("tr");
+                let total = 0;
+                Array.from(headRow.children).forEach(
+                  (c) => (total += parseInt(c.colSpan || 1))
+                );
+                const span = selectionRange.c2 - selectionRange.c1 + 1;
+                if (total - span >= 1) {
+                  for (let c = selectionRange.c2; c >= selectionRange.c1; c--) {
+                    deleteCol(selectionRange.table, c);
+                  }
+                }
+                break;
+              }
+              case "merge-selected":
+                mergeSelected();
+                break;
+              case "split": {
+                // Split applies to the top-left cell of the selection
+                const allRowsX = Array.from(
+                  selectionRange.table.querySelectorAll("tr")
+                );
+                const row = allRowsX[selectionRange.r1];
+                if (row) {
+                  let acc = 0;
+                  for (const c of Array.from(row.children)) {
+                    if (acc === selectionRange.c1) {
+                      splitCell(c);
+                      break;
+                    }
+                    acc += parseInt(c.colSpan || 1);
+                  }
+                }
+                break;
+              }
+              case "clear":
+                selectionRange.wrap
+                  .querySelectorAll(".is-selected")
+                  .forEach((c) => (c.innerHTML = ""));
+                break;
+            }
+            clearTableSelection(document);
+            hideCellToolbar();
+          });
+        });
+
+      // Merge whatever's currently selected into one cell (rectangle).
+      function mergeSelected() {
+        if (!selectionRange) return;
+        const { table, wrap, r1, c1, r2, c2 } = selectionRange;
+        if (r1 === r2 && c1 === c2) return;
+        const allRows = Array.from(table.querySelectorAll("tr"));
+        const inside = [];
+        for (let r = r1; r <= r2; r++) {
+          const row = allRows[r];
+          if (!row) continue;
+          let acc = 0;
+          for (const c of Array.from(row.children)) {
+            const span = parseInt(c.colSpan || 1);
+            if (acc + span > c1 && acc < c2 + 1)
+              inside.push({ cell: c, vr: r, vc: acc });
+            acc += span;
+          }
+        }
+        if (inside.length < 2) return;
+        // Top-left cell becomes the merged cell. Concatenate any non-empty
+        // text from the others into it so we don't silently lose content.
+        inside.sort((a, b) => a.vr - b.vr || a.vc - b.vc);
+        const tl = inside[0].cell;
+        const others = inside.slice(1);
+        const extraText = others
+          .map((o) => o.cell.innerText.trim())
+          .filter(Boolean)
+          .join(" ");
+        if (extraText) {
+          const sep = tl.innerText.trim() ? " " : "";
+          tl.innerHTML = (tl.innerHTML || "") + sep + escapeHtml(extraText);
+        }
+        tl.rowSpan = r2 - r1 + 1;
+        tl.colSpan = c2 - c1 + 1;
+        others.forEach((o) => o.cell.remove());
+        clearTableSelection(wrap);
+      }
+
+      // Hide floating cell toolbar when the user clicks anywhere outside
+      // of it or the table — mousedown on a fresh cell already clears
+      // selectionRange via clearTableSelection above, so we just sync
+      // the toolbar's visibility to that.
+      document.addEventListener("mousedown", (e) => {
+        if (e.target.closest("#cell-toolbar")) return;
+        if (e.target.closest(".block-table td, .block-table th")) return;
+        hideCellToolbar();
+      });
+      window.addEventListener("scroll", hideCellToolbar, true);
+
+      // Right-click on a cell → show context menu near cursor.
+      const tableCtx = document.getElementById("table-ctx");
+      let ctxCell = null;
+      document.addEventListener("contextmenu", (e) => {
+        const cell =
+          e.target.closest &&
+          e.target.closest(".block-table td, .block-table th");
+        if (!cell) return;
+        e.preventDefault();
+        ctxCell = cell;
+        // Position with viewport clamping
+        const w = 220,
+          h = 380;
+        tableCtx.style.left =
+          Math.min(e.clientX, window.innerWidth - w - 8) + "px";
+        tableCtx.style.top =
+          Math.min(e.clientY, window.innerHeight - h - 8) + "px";
+        tableCtx.dataset.open = "true";
+      });
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest("#table-ctx")) tableCtx.dataset.open = "false";
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") tableCtx.dataset.open = "false";
+      });
+      tableCtx.querySelectorAll(".table-ctx__item").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          if (!ctxCell) {
+            tableCtx.dataset.open = "false";
+            return;
+          }
+          const op = btn.dataset.op;
+          const row = ctxCell.parentElement;
+          const table = ctxCell.closest("table");
+          const colIdx = visualColIndex(ctxCell);
+          switch (op) {
+            case "row-above":
+              insertRow(row, "before");
+              break;
+            case "row-below":
+              insertRow(row, "after");
+              break;
+            case "row-delete":
+              if (table.querySelectorAll("tr").length > 1) row.remove();
+              break;
+            case "col-left":
+              insertCol(table, colIdx, "before");
+              break;
+            case "col-right":
+              insertCol(table, colIdx, "after");
+              break;
+            case "col-delete": {
+              const headRow =
+                table.querySelector("thead tr") || table.querySelector("tr");
+              let total = 0;
+              Array.from(headRow.children).forEach(
+                (c) => (total += parseInt(c.colSpan || 1))
+              );
+              if (total > 1) deleteCol(table, colIdx);
+              break;
+            }
+            case "merge-selected":
+              mergeSelected();
+              break;
+            case "split":
+              splitCell(ctxCell);
+              break;
+            case "clear":
+              ctxCell.innerHTML = "";
+              break;
+          }
+          tableCtx.dataset.open = "false";
+          ctxCell = null;
+        });
+      });
+
+      // Edge "+ Row" / "+ Col" buttons (delegated since tables are inserted later)
+      document.addEventListener("click", (e) => {
+        const addRow = e.target.closest(".block-table__add-row");
+        const addCol = e.target.closest(".block-table__add-col");
+        if (addRow) {
+          const table = addRow.parentElement.querySelector("table");
+          const lastRow =
+            table.querySelector("tbody").lastElementChild ||
+            table.querySelector("thead tr");
+          insertRow(lastRow, "after");
+          return;
+        }
+        if (addCol) {
+          const table = addCol.parentElement.querySelector("table");
+          const headRow =
+            table.querySelector("thead tr") || table.querySelector("tr");
+          let total = 0;
+          Array.from(headRow.children).forEach(
+            (c) => (total += parseInt(c.colSpan || 1))
+          );
+          insertCol(table, total - 1, "after");
+        }
+      });
+
+      // ─── PDF download (mockup uses window.print + print CSS) ──
+      // Real impl would call a server-side renderer (Puppeteer / wkhtmltopdf)
+      // for pixel-perfect PDF output. For the mockup, the browser's print
+      // preview already lets users "Save as PDF" which is enough for review.
+      document.querySelectorAll(".reports-topbar__btn").forEach((btn) => {
+        if ((btn.textContent || "").trim().toLowerCase().includes("pdf")) {
+          btn.addEventListener("click", () => window.print());
+        }
+      });
+
+      // ─── Top toolbar — Insert data button ──────────────
+      toolbarInsertData.addEventListener("click", () => open(dataPicker));
+      selInsertData.addEventListener("click", (e) => {
+        e.preventDefault();
+        close(selToolbar);
+        open(dataPicker);
+      });
+
+      // Inline format buttons (top toolbar + selection toolbar) use execCommand
+      // for the mockup — real impl would use a proper inline-style applier.
+      document
+        .querySelectorAll(".fmt-btn[data-cmd], .sel-btn[data-cmd]")
+        .forEach((btn) => {
+          btn.addEventListener("mousedown", (e) => e.preventDefault()); // keep selection
+          btn.addEventListener("click", () => {
+            const cmd = btn.dataset.cmd;
+            if (cmd === "link") {
+              const url = prompt("URL?");
+              if (url) document.execCommand("createLink", false, url);
+            } else if (cmd === "code") {
+              // execCommand has no native 'code' — wrap in <code>
+              const sel = window.getSelection();
+              if (sel && sel.rangeCount && !sel.isCollapsed) {
+                const range = sel.getRangeAt(0);
+                const code = document.createElement("code");
+                code.style.cssText =
+                  "background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:4px;font-family:Orbitron,monospace;font-size:0.9em";
+                try {
+                  range.surroundContents(code);
+                } catch (_) {}
+              }
+            } else {
+              document.execCommand(cmd, false, null);
+            }
+          });
+        });
+
+      // Selection-toolbar turn-into buttons (H1/H2/H3/Text) — convert the
+      // block containing the selection. `mousedown` preventDefault keeps
+      // the contenteditable selection alive so applyBlockKindToFocused
+      // can still locate the source block via window.getSelection().
+      document.querySelectorAll(".sel-btn[data-kind]").forEach((btn) => {
+        btn.addEventListener("mousedown", (e) => e.preventDefault());
+        btn.addEventListener("click", () => {
+          applyBlockKindToFocused(btn.dataset.kind);
+          close(selToolbar);
+        });
+      });
+
+      // ─── Block type dropdown ──────────────────────────
+      blockTypeTrigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        blockTypeDd.dataset.open =
+          blockTypeDd.dataset.open === "true" ? "false" : "true";
+      });
+      document.addEventListener("click", (e) => {
+        if (!blockTypeDd.contains(e.target)) blockTypeDd.dataset.open = "false";
+      });
+      document
+        .querySelectorAll("#block-type-dd .fmt-dropdown__item")
+        .forEach((item) => {
+          item.addEventListener("click", () => {
+            document
+              .querySelectorAll("#block-type-dd .fmt-dropdown__item")
+              .forEach((i) => i.setAttribute("aria-selected", "false"));
+            item.setAttribute("aria-selected", "true");
+            const kind = item.dataset.kind;
+            const labels = {
+              text: "Text",
+              h1: "Heading 1",
+              h2: "Heading 2",
+              h3: "Heading 3",
+              bullet: "Bullet list",
+              numbered: "Numbered",
+              quote: "Quote",
+              divider: "Divider",
+            };
+            blockTypeLabel.textContent = labels[kind] || "Text";
+            blockTypeDd.dataset.open = "false";
+            applyBlockKindToFocused(kind);
+          });
+        });
+
+      function applyBlockKindToFocused(kind) {
+        // Convert the currently-focused contenteditable block to the given kind.
+        const sel = window.getSelection();
+        if (!sel || !sel.anchorNode) return;
+        const block = (
+          sel.anchorNode.nodeType === 1
+            ? sel.anchorNode
+            : sel.anchorNode.parentElement
+        ).closest(".doc-block");
+        if (!block) return;
+        const body = block.querySelector(".doc-block__body");
+        if (!body) return;
+        const text = body.innerText.trim();
+        const map = {
+          text: `<div class="block-text" contenteditable="true">${text || ""}</div>`,
+          h1: `<h1 class="block-h1" contenteditable="true">${text || "Heading 1"}</h1>`,
+          h2: `<h2 class="block-h2" contenteditable="true">${text || "Heading 2"}</h2>`,
+          h3: `<h3 class="block-h3" contenteditable="true">${text || "Heading 3"}</h3>`,
+          bullet: `<div class="block-text" contenteditable="true">• ${text || ""}</div>`,
+          numbered: `<div class="block-text" contenteditable="true">1. ${text || ""}</div>`,
+          quote: `<blockquote class="block-text" contenteditable="true" style="border-left:3px solid var(--report-color);padding-left:14px;color:var(--text-muted)">${text || ""}</blockquote>`,
+          divider: `<hr style="border:none;border-top:1px solid var(--border-strong);margin:14px 0">`,
+        };
+        body.innerHTML = map[kind] || map.text;
+        block.dataset.type = kind;
+        const newEl = body.firstElementChild;
+        if (newEl && newEl.isContentEditable) {
+          const r = document.createRange();
+          r.selectNodeContents(newEl);
+          r.collapse(false);
+          const s = window.getSelection();
+          s.removeAllRanges();
+          s.addRange(r);
+        }
+      }
+
+      // ─── /data → data picker (only slash command supported) ──
+      // Block-type conversions live on the bottom toolbar dropdown,
+      // not as slash commands. `/data` is the single shortcut so
+      // power users can insert charts without leaving the keyboard.
+      function getActiveCE() {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return null;
+        let n = sel.anchorNode;
+        if (n && n.nodeType !== 1) n = n.parentElement;
+        while (n) {
+          if (n.isContentEditable && n.closest && n.closest(".doc-block"))
+            return n;
+          n = n.parentElement;
+        }
+        const ae = document.activeElement;
+        return ae &&
+          ae.isContentEditable &&
+          ae.closest &&
+          ae.closest(".doc-block")
+          ? ae
+          : null;
+      }
+
+      function readToken(el) {
+        // Strip ALL whitespace (incl. nbsp, zero-width, newlines from
+        // contenteditable's Enter insertion). innerText preferred —
+        // textContent falls back if browser hides it.
+        const txt = el.innerText || el.textContent || "";
+        return txt.replace(/[\s ​]+/g, "");
+      }
+
+      function tryDataPickerTrigger(el) {
+        const tok = readToken(el).toLowerCase();
+        if (tok === "/data:" || tok === "/data") {
+          el.innerHTML = "";
+          el.style.color = "";
+          open(dataPicker);
+          return true;
+        }
+        return false;
+      }
+
+      // Delegated INPUT — tint the text purple while typing a slash
+      // command so users see the editor is in "command mode".
+      document.addEventListener(
+        "input",
+        () => {
+          const el = getActiveCE();
+          if (!el) return;
+          const raw = readToken(el);
+          el.style.color = raw.startsWith("/") ? "var(--report-color)" : "";
+        },
+        true
+      );
+
+      // Delegated KEYDOWN — `/data` + Enter opens the data picker.
+      // No other slash commands; block-type conversions go through
+      // the toolbar dropdown.
+      document.addEventListener(
+        "keydown",
+        (e) => {
+          if (e.key !== "Enter") return;
+          const el = getActiveCE();
+          if (!el) return;
+          const raw = readToken(el).toLowerCase();
+          if (raw === "/data") {
+            e.preventDefault();
+            el.innerHTML = "";
+            el.style.color = "";
+            open(dataPicker);
+          }
+        },
+        true
+      );
+
+      // ─── Outline auto-generator ─────────────────────────
+      // Walks every `.doc-block` and collects:
+      //   • H1/H2/H3 blocks → heading entry (with badge)
+      //   • chart blocks    → chart entry (title from block-chart__title)
+      // Each entry is clickable — scrolls the source block into view.
+      // Active row tracks scroll position via IntersectionObserver.
+      const outlineList = document.getElementById("outline-list");
+      const blockIcons = {
+        h1: '<svg viewBox="0 0 24 24" fill="none"><text x="3" y="18" font-family="Orbitron" font-size="12" font-weight="800" fill="currentColor">H1</text></svg>',
+        h2: '<svg viewBox="0 0 24 24" fill="none"><text x="3" y="18" font-family="Orbitron" font-size="11" font-weight="800" fill="currentColor">H2</text></svg>',
+        h3: '<svg viewBox="0 0 24 24" fill="none"><text x="3" y="18" font-family="Orbitron" font-size="10" font-weight="800" fill="currentColor">H3</text></svg>',
+        chart:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+      };
+
+      function rebuildOutline() {
+        if (!outlineList) return;
+        const blocks = Array.from(document.querySelectorAll(".doc-block"));
+        const html = blocks
+          .map((b, i) => {
+            // Ensure each block has a stable id for scroll anchoring
+            if (!b.id) b.id = "block-" + i;
+            const type = b.dataset.type;
+            if (type === "h1" || type === "h2" || type === "h3") {
+              const headEl = b.querySelector(".block-h1, .block-h2, .block-h3");
+              const txt = (headEl && headEl.textContent.trim()) || "";
+              if (!txt) return "";
+              return `<div class="reports-outline__item" data-target="${b.id}" data-kind="${type}">${blockIcons[type]}<span>${escapeHtml(txt)}</span></div>`;
+            }
+            if (type === "chart") {
+              const titleEl = b.querySelector(".block-chart__title");
+              const sourceEl = b.querySelector(".block-chart__source");
+              const title = (titleEl && titleEl.textContent.trim()) || "Chart";
+              const src = (sourceEl && sourceEl.textContent.trim()) || "";
+              return `<div class="reports-outline__item" data-target="${b.id}" data-kind="chart">${blockIcons.chart}<span>${escapeHtml(title)}${src ? ` <span style="color:var(--text-dim);font-size:10px"> · ${escapeHtml(src)}</span>` : ""}</span></div>`;
+            }
+            return "";
+          })
+          .join("");
+        outlineList.innerHTML =
+          html ||
+          '<div class="reports-outline__item" style="opacity:0.6;cursor:default">헤딩/차트 없음 — 추가하면 여기 나타납니다</div>';
+        // Wire click-to-scroll
+        outlineList
+          .querySelectorAll(".reports-outline__item[data-target]")
+          .forEach((item) => {
+            item.addEventListener("click", () => {
+              const t = document.getElementById(item.dataset.target);
+              if (t) t.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+          });
+      }
+      rebuildOutline();
+      // Rebuild whenever blocks change. Observer is scoped to .reports-doc
+      // (already declared above for caption auto-binding) — add a second
+      // one focused on tracking outline-relevant changes.
+      new MutationObserver(() => rebuildOutline()).observe(
+        document.getElementById("reports-doc"),
+        { childList: true, subtree: true, characterData: true }
+      );
+
+      // ─── Floating selection toolbar ─────────────────────
+      function updateSelToolbar() {
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed || sel.rangeCount === 0) {
+          close(selToolbar);
+          return;
+        }
+        const range = sel.getRangeAt(0);
+        // Only show inside contenteditable inside the doc
+        const node = range.commonAncestorContainer;
+        const el = node.nodeType === 1 ? node : node.parentElement;
+        if (!el || !el.closest('[contenteditable="true"]')) {
+          close(selToolbar);
+          return;
+        }
+        const rect = range.getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) {
+          close(selToolbar);
+          return;
+        }
+        // Show then measure so width is correct
+        open(selToolbar);
+        const tbRect = selToolbar.getBoundingClientRect();
+        const top = rect.top - tbRect.height - 10;
+        const left = rect.left + rect.width / 2 - tbRect.width / 2;
+        selToolbar.style.top = Math.max(8, top) + "px";
+        selToolbar.style.left =
+          Math.max(8, Math.min(window.innerWidth - tbRect.width - 8, left)) +
+          "px";
+      }
+      document.addEventListener("selectionchange", updateSelToolbar);
+      // Hide on scroll inside the doc (selection rect changes)
+      reportsDoc.addEventListener("scroll", () => close(selToolbar), {
+        passive: true,
+      });
+      // Prevent toolbar mousedown from collapsing the selection
+      selToolbar.addEventListener("mousedown", (e) => e.preventDefault());
+    </script>
+  </body>
+</html>
