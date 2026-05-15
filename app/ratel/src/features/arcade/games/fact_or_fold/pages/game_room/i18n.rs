@@ -170,10 +170,34 @@ translate! {
         en: "Rationale-reveal view rendering will be wired in step 8.",
         ko: "근거 공개 화면은 다음 단계에서 채워집니다.",
     },
-    stage_stub_live_debate: {
-        en: "Live-debate view rendering will be wired in step 9.",
-        ko: "실시간 토론 화면은 다음 단계에서 채워집니다.",
+    // ── Live debate stage ─────────────────────────────────────────
+    chat_title: { en: "Free debate · chat", ko: "자유 토론 · 채팅" },
+    chat_sub: { en: "Short bursts · 80-char cap · 70s", ko: "짧게 던지기 · 80자 제한 · 70초" },
+    chat_placeholder: {
+        en: "Short message (Enter to send, 80-char cap)",
+        ko: "짧게 (Enter로 전송, 80자 제한)",
     },
+    chat_send: { en: "⏎ Send", ko: "⏎ 전송" },
+    chat_empty: {
+        en: "No messages yet — break the ice.",
+        ko: "아직 메시지가 없습니다. 먼저 운을 떼주세요.",
+    },
+    final_tag: { en: "⚐ FINAL", ko: "⚐ FINAL" },
+    final_text_locked: {
+        en: "Final-bet flip unlocks in the last 10s of debate.",
+        ko: "마지막 10초에 최종 베팅 변경 가능 (지금은 잠금)",
+    },
+    final_text_open_no_cite: {
+        en: "Flip slot OPEN — but mark a decisive cite in stage 4 to unlock the flip.",
+        ko: "변경 슬롯 열림 — 단, 4단계에서 ⌬ 인용을 표시해야 변경할 수 있어요.",
+    },
+    final_text_open_ready: {
+        en: "Flip slot OPEN — keep or flip your bet now.",
+        ko: "변경 슬롯 열림 — 베팅을 유지하거나 변경하세요.",
+    },
+    final_btn_keep: { en: "Keep", ko: "유지" },
+    final_btn_flip: { en: "Flip", ko: "변경" },
+    final_already_flipped: { en: "Flipped — locked.", ko: "변경 완료 — 잠금" },
     stage_stub_settlement: {
         en: "Settlement view rendering will be wired in step 10.",
         ko: "정산 화면은 다음 단계에서 채워집니다.",
