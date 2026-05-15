@@ -19,10 +19,12 @@ use super::*;
 use crate::common::types::Partition;
 use crate::features::arcade::games::fact_or_fold::models::FactFoldRound;
 use crate::features::arcade::models::ArcadeWalletBalance;
+use crate::features::arcade::games::fact_or_fold::controllers::settlement::SettleRoundResponse;
 use crate::features::arcade::games::fact_or_fold::types::{
     BetResponse, BetSide, FactOrFoldSettingsResponse, HeadlineResponse, HeadlineStatus,
-    InsiderStatementResponse, LobbyResponse, ParticipantResponse, QueueAlarmResponse,
-    RationaleResponse, RoundResponse, RoundStatus,
+    InsiderStatementResponse, ListBetsResponse, ListParticipantsResponse, ListRationalesResponse,
+    LobbyResponse, ParticipantResponse, QueueAlarmResponse, RationaleResponse,
+    RoundHeadlineResponse, RoundResponse, RoundStatus, Verdict,
 };
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -1658,6 +1660,256 @@ async fn test_tick_rejects_non_participant() {
         headers: outsider,
     };
     assert_ne!(status, 200, "non-participant must not be able to tick");
+}
+
+// ── Round-read endpoints (PR8 — game-room data feed) ────────────────
+
+#[tokio::test]
+async fn test_round_headline_redacts_verdict_until_settled() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    // Before settlement: verdict is None and reveal sources are empty.
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!("/api/fact-or-fold/rounds/{}/headline", round_id),
+        headers: headers.clone(),
+        response_type: RoundHeadlineResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(body.verdict.is_none(), "verdict must be hidden pre-settle");
+    assert!(body.reveal_summary.is_empty(), "reveal_summary must be hidden pre-settle");
+    assert!(!body.headline_text.is_empty(), "public headline text must be visible");
+
+    // Settle the round.
+    seed_bets_for_all(&ctx, &round_id, "REAL").await;
+    force_round_to_debate(&ctx, &round_id, 5_000).await;
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/fact-or-fold/admin/rounds/{}/settle", round_id),
+        headers: admin,
+    };
+    assert_eq!(status, 200);
+
+    // After settlement: verdict + summary surface.
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/headline", round_id),
+        headers: headers,
+        response_type: RoundHeadlineResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(
+        matches!(body.verdict, Some(Verdict::Real)),
+        "verdict must surface after settle, got {:?}",
+        body.verdict,
+    );
+    assert_eq!(body.reveal_summary, "Confirmed by source.");
+}
+
+#[tokio::test]
+async fn test_round_headline_rejects_non_participant() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, _) = fill_round_to_capacity(&ctx, &admin).await;
+
+    let (_, outsider) = ctx.create_another_user().await;
+    let (status, _, _) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/headline", round_id),
+        headers: outsider,
+    };
+    assert_ne!(status, 200, "non-participant must not see the round headline");
+}
+
+#[tokio::test]
+async fn test_round_bets_only_returns_own_during_bet_stage() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+    seed_bets_for_all(&ctx, &round_id, "REAL").await;
+
+    // Round is still NewsReveal — caller is a participant and their
+    // bet row exists (seeded), but other players' rows are hidden.
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/bets", round_id),
+        headers: headers,
+        response_type: ListBetsResponse,
+    };
+    assert_eq!(status, 200);
+    assert_eq!(body.items.len(), 1, "pre-reveal must only contain caller's bet");
+    assert_eq!(body.items[0].user_pk, ctx.test_user.0.pk.to_string());
+}
+
+#[tokio::test]
+async fn test_round_bets_returns_all_at_reveal_or_later() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+    seed_bets_for_all(&ctx, &round_id, "REAL").await;
+    force_round_to_debate(&ctx, &round_id, 30_000).await;
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/bets", round_id),
+        headers: headers,
+        response_type: ListBetsResponse,
+    };
+    assert_eq!(status, 200);
+    assert_eq!(body.items.len(), 4, "Debate stage must expose all 4 bets");
+}
+
+#[tokio::test]
+async fn test_round_bets_rejects_non_participant() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, _) = fill_round_to_capacity(&ctx, &admin).await;
+    let (_, outsider) = ctx.create_another_user().await;
+
+    let (status, _, _) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/bets", round_id),
+        headers: outsider,
+    };
+    assert_ne!(status, 200, "non-participant must not see bets");
+}
+
+#[tokio::test]
+async fn test_round_rationales_redacts_text_until_reveal() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    // Seed rationales for every player directly. Round is still in
+    // NewsReveal — other players' text must be redacted, caller's
+    // own text stays.
+    let (round_pk, round_sk) = FactFoldRound::keys(&round_id);
+    let round = FactFoldRound::get(&ctx.ddb, &round_pk, Some(round_sk))
+        .await
+        .expect("ddb read")
+        .expect("round must exist");
+    for p in round.participant_pks.iter() {
+        seed_rationale(&ctx, &round_id, p).await;
+    }
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app.clone(),
+        path: &format!("/api/fact-or-fold/rounds/{}/rationale", round_id),
+        headers: headers.clone(),
+        response_type: ListRationalesResponse,
+    };
+    assert_eq!(status, 200);
+    assert_eq!(body.items.len(), 4, "all 4 rationale rows present");
+    let own = body
+        .items
+        .iter()
+        .find(|r| r.user_pk == ctx.test_user.0.pk.to_string())
+        .expect("caller's row must be present");
+    assert!(!own.text.is_empty(), "caller sees own rationale text");
+    let others_with_text = body
+        .items
+        .iter()
+        .filter(|r| r.user_pk != ctx.test_user.0.pk.to_string() && !r.text.is_empty())
+        .count();
+    assert_eq!(
+        others_with_text, 0,
+        "other players' rationale text must be redacted before Reveal",
+    );
+
+    // After advancing to Debate, all texts become visible.
+    force_round_to_debate(&ctx, &round_id, 30_000).await;
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/rationale", round_id),
+        headers: headers,
+        response_type: ListRationalesResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(
+        body.items.iter().all(|r| !r.text.is_empty()),
+        "all 4 rationales must have text at Reveal+",
+    );
+}
+
+#[tokio::test]
+async fn test_round_participants_lists_with_display_metadata() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/participants", round_id),
+        headers: headers,
+        response_type: ListParticipantsResponse,
+    };
+    assert_eq!(status, 200);
+    assert_eq!(body.items.len(), 4);
+    // Exactly one row may carry is_insider=true (the caller's own row,
+    // and only if the matcher rolled them as insider). Other rows must
+    // always report false even if that player is the insider.
+    let visible_insiders = body.items.iter().filter(|p| p.is_insider).count();
+    assert!(
+        visible_insiders <= 1,
+        "is_insider must be redacted to at-most-one row (caller's own)",
+    );
+}
+
+#[tokio::test]
+async fn test_round_participants_rejects_non_participant() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, _) = fill_round_to_capacity(&ctx, &admin).await;
+    let (_, outsider) = ctx.create_another_user().await;
+
+    let (status, _, _) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/participants", round_id),
+        headers: outsider,
+    };
+    assert_ne!(status, 200, "non-participant must not see roster");
+}
+
+#[tokio::test]
+async fn test_round_settlement_rejects_when_not_settled() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    // Round is fresh — not yet settled.
+    let (status, _, _) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/settlement", round_id),
+        headers: headers,
+    };
+    assert_ne!(status, 200, "settlement read must fail before round is Settled");
+}
+
+#[tokio::test]
+async fn test_round_settlement_returns_breakdown_after_settle() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+    seed_bets_for_all(&ctx, &round_id, "REAL").await;
+    force_round_to_debate(&ctx, &round_id, 5_000).await;
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/fact-or-fold/admin/rounds/{}/settle", round_id),
+        headers: admin,
+    };
+    assert_eq!(status, 200);
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/settlement", round_id),
+        headers: headers,
+        response_type: SettleRoundResponse,
+    };
+    assert_eq!(status, 200);
+    assert_eq!(body.round_id, round_id);
+    assert_eq!(body.outcomes.len(), 4, "one breakdown per participant");
 }
 
 #[allow(dead_code)]

@@ -368,6 +368,79 @@ pub struct ListChatResponse {
     pub last_id: Option<String>,
 }
 
+// ── Round-read DTOs (player-side) ─────────────────────────────────
+//
+// These five GET endpoints feed the game-room views. They mirror the
+// admin-side reads where they exist but redact fields that would leak
+// the verdict / other-player decisions before the appropriate stage.
+
+/// Public headline shape served to round participants. The verdict
+/// + reveal sources are gated by `round.status` — they only fill in
+/// once the round reaches `Settled`. The insider statement is **not**
+/// in this payload; it has its own per-caller endpoint
+/// (`/insider-statement`) so the response can be tailored per user.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct RoundHeadlineResponse {
+    pub id: FactFoldHeadlineEntityType,
+    pub headline_text: String,
+    pub body_excerpt: String,
+    pub source_label: String,
+    pub category_tags: Vec<String>,
+    pub difficulty: i32,
+    /// `Some` only once the round is `Settled`. Until then the
+    /// verdict is the operator's secret.
+    pub verdict: Option<Verdict>,
+    /// Empty until `Settled`.
+    pub reveal_summary: String,
+    /// Empty until `Settled`.
+    pub reveal_sources: Vec<RevealSource>,
+}
+
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct ListBetsResponse {
+    /// While the round is at `Bet` or `Rationale`, this list only
+    /// contains the caller's own bet (so the UI can confirm what
+    /// they staked without leaking opponents' decisions). At
+    /// `Reveal` and later it contains every participant's bet.
+    pub items: Vec<BetResponse>,
+}
+
+/// One rationale row in the round-scoped list endpoint. `text` is
+/// redacted to an empty string for non-caller rows until the round
+/// reaches `Reveal`; the row still exists so the UI can render the
+/// "submitted" pulse during the `Rationale` stage without leaking
+/// the actual text.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct ListRationalesResponse {
+    pub items: Vec<RationaleResponse>,
+}
+
+/// Per-participant row enriched with display metadata so the UI can
+/// render avatars + names without a separate user lookup.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct RoundParticipantSummary {
+    pub user_pk: String,
+    pub username: String,
+    pub display_name: String,
+    pub profile_url: String,
+    pub joined_at: i64,
+    pub last_seen_at: i64,
+    pub forfeited: bool,
+    /// True only on the caller's own row (insider protection — other
+    /// players' is_insider flag is never surfaced).
+    pub is_insider: bool,
+}
+
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct ListParticipantsResponse {
+    pub items: Vec<RoundParticipantSummary>,
+}
+
 // ── Bet + Rationale constants ─────────────────────────────────────
 
 /// Minimum chars for a rationale to count as "Essence-eligible"

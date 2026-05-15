@@ -168,6 +168,13 @@ pub enum FactOrFoldError {
     )]
     RoundNotFound,
 
+    #[error("round has not been settled yet")]
+    #[translate(
+        en = "Round results are not available yet — settlement has not run.",
+        ko = "아직 라운드가 정산되지 않았습니다.",
+    )]
+    RoundNotSettled,
+
     // ── Settings ──────────────────────────────────────────────────
     #[error("settings field out of range")]
     #[translate(
@@ -214,6 +221,7 @@ impl FactOrFoldError {
             FactOrFoldError::LobbyFull => StatusCode::CONFLICT,
             FactOrFoldError::LobbyNoHeadlineAvailable => StatusCode::SERVICE_UNAVAILABLE,
             FactOrFoldError::RoundNotFound => StatusCode::NOT_FOUND,
+            FactOrFoldError::RoundNotSettled => StatusCode::CONFLICT,
             FactOrFoldError::StorageFailure => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
