@@ -31560,6 +31560,32 @@ body.comments-panel-resizing {
     padding: 20px 16px 110px;
     gap: 16px;
   }
+  /* The generic `.side-panel` class is hijacked by a bottom-sheet
+     drawer pattern in another feature's mobile breakpoint
+     (`position: fixed; bottom: 0; transform: translateY(100%)`).
+     Without an override the broadcast composer's side panel ends up
+     completely off-screen below the viewport — `position: fixed`
+     anchors the top edge at viewport bottom, then `translateY(100%)`
+     pushes it down by its own height. Same reset as `.sub-team-doc-compose`. */
+  .sub-team-broadcast-compose .side-panel {
+    position: static;
+    top: auto;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    transform: none;
+    transition: none;
+    max-height: none;
+    overflow-y: visible;
+    overscroll-behavior: auto;
+    box-shadow: none;
+    border-top: 0;
+    border-radius: 0;
+    background: transparent;
+    backdrop-filter: none;
+    z-index: auto;
+    padding: 0;
+  }
 }
 @media (max-width: 500px) {
   .sub-team-broadcast-compose .arena-topbar {
@@ -33838,11 +33864,6 @@ body.comments-panel-resizing {
   margin: 0 auto;
   width: 100%;
 }
-@media (max-width: 980px) {
-  .sub-team-doc-compose .composer-page {
-    grid-template-columns: 1fr;
-  }
-}
 
 .sub-team-doc-compose .composer {
   display: flex;
@@ -34112,6 +34133,16 @@ body.comments-panel-resizing {
   flex-wrap: nowrap;
   gap: 10px;
   margin-top: 8px;
+}
+/* Cap the editor body so the page doesn't keep growing as the user
+   types — past this height the editor scrolls internally, which keeps
+   the attachments section in view instead of being pushed off-screen.
+   Base `.ratel-editor .re-content` already sets `overflow-y: auto`;
+   tighten `max-height` from 75vh → 48vh for the doc composer
+   specifically (leaves room for title + side panel + attachments). */
+.sub-team-doc-compose .ratel-editor .re-content {
+  max-height: 48vh;
+  min-height: 280px;
 }
 .sub-team-doc-compose .attachment-list { width: 100%; }
 .sub-team-doc-compose .attachments__title {
@@ -34432,7 +34463,33 @@ body.comments-panel-resizing {
     padding: 20px 16px 110px;
     gap: 18px;
   }
-  .sub-team-doc-compose .side-panel { position: static; top: auto; }
+  /* The generic `.side-panel` class is hijacked by a bottom-sheet
+     drawer pattern in another feature's mobile breakpoint (search
+     `.side-panel { position: fixed; transform: translateY(100%); }`
+     in this file). That bleeds onto the doc-compose page because the
+     selector isn't scoped, so the panel is laid out in flow but then
+     translated down by 100% of its own height — leaving a yawning
+     visual gap below the attachments dropzone. Override every drawer
+     property back to its in-flow default here. */
+  .sub-team-doc-compose .side-panel {
+    position: static;
+    top: auto;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    transform: none;
+    transition: none;
+    max-height: none;
+    overflow-y: visible;
+    overscroll-behavior: auto;
+    box-shadow: none;
+    border-top: 0;
+    border-radius: 0;
+    background: transparent;
+    backdrop-filter: none;
+    z-index: auto;
+    padding: 0;
+  }
   .sub-team-doc-compose .autosave { display: none; }
   .sub-team-doc-compose .edit-banner { padding: 12px 16px 0; }
 }
