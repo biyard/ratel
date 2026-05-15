@@ -32850,6 +32850,13 @@ body.comments-panel-resizing {
   outline: none;
   resize: vertical;
 }
+/* Without an explicit `::placeholder` rule the browser falls back to
+   `color × ~0.5 opacity`, which against `--sub-team-text` ends up
+   nearly as bright as real text on dark mode. Pin to a dimmer tone
+   so the hint reads as a hint. */
+.sub-team-deregister .field__textarea::placeholder {
+  color: var(--dark, rgba(240, 240, 245, 0.28)) var(--light, rgba(18, 18, 26, 0.42));
+}
 .sub-team-deregister .req { color: var(--sub-team-coral); }
 
 /* The global `.checkbox` primitive (`src/common/components/checkbox/`)
@@ -34144,6 +34151,19 @@ body.comments-panel-resizing {
   max-height: 48vh;
   min-height: 280px;
 }
+/* Placeholders across doc/broadcast composers — title, body (Ratel
+   editor pseudo-placeholder), and tag input. The shared `--text-dim`
+   reads as still too close to the real text color on dark mode, so
+   pin to a more aggressive translucent tone scoped to these pages. */
+.sub-team-doc-compose .title-input::placeholder,
+.sub-team-broadcast-compose .title-input::placeholder,
+.sub-team-broadcast-compose .tag-input__field::placeholder {
+  color: var(--dark, rgba(240, 240, 245, 0.28)) var(--light, rgba(18, 18, 26, 0.42));
+}
+.sub-team-doc-compose .ratel-editor .re-content[data-empty="true"]:not(:focus)::before,
+.sub-team-broadcast-compose .ratel-editor .re-content[data-empty="true"]:not(:focus)::before {
+  color: var(--dark, rgba(240, 240, 245, 0.28)) var(--light, rgba(18, 18, 26, 0.42));
+}
 .sub-team-doc-compose .attachment-list { width: 100%; }
 .sub-team-doc-compose .attachments__title {
   display: flex;
@@ -35025,6 +35045,9 @@ body.comments-panel-resizing {
   font-size: 13px;
   outline: none;
   resize: vertical;
+}
+.sub-team-leave-parent .field__textarea::placeholder {
+  color: var(--dark, rgba(240, 240, 245, 0.28)) var(--light, rgba(18, 18, 26, 0.42));
 }
 .sub-team-leave-parent .field__hint {
   font-size: 11px;
