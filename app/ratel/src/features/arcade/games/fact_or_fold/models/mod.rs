@@ -1,4 +1,5 @@
 pub mod fact_fold_bet;
+pub mod fact_fold_chat;
 pub mod fact_fold_headline;
 pub mod fact_fold_lobby;
 pub mod fact_fold_participant;
@@ -7,6 +8,7 @@ pub mod fact_fold_round;
 pub mod fact_fold_settings;
 
 pub use fact_fold_bet::*;
+pub use fact_fold_chat::*;
 pub use fact_fold_headline::*;
 pub use fact_fold_lobby::*;
 pub use fact_fold_participant::*;

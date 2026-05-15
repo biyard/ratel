@@ -37,6 +37,11 @@ impl TestContext {
         let app = dioxus_router.layer(session_layer);
         crate::common::mcp::set_app_router(app.clone());
 
+        // Match the production startup sequence: register arcade
+        // realtime channels with the per-process global hub so the
+        // SSE endpoint can resolve handlers in tests too.
+        crate::features::arcade::games::fact_or_fold::realtime::register_channels().await;
+
         let ddb = cli.clone();
         let test_user = create_user_session(app.clone(), &ddb).await;
 

@@ -235,18 +235,36 @@ async fn test_arcade_settings_rejects_invalid_values() {
 #[tokio::test]
 async fn test_events_rejects_unknown_channel() {
     let ctx = TestContext::setup().await;
-    // No channel handlers are registered yet (PR4f registers
-    // FactFoldChatChannel). Any channel kind should map to
-    // ChannelUnknown → 404.
+    // `unknown_kind` is not registered with the hub. PR4f registered
+    // `fof.chat` so we use a deliberately bogus kind here.
     let (status, _, _) = crate::test_get! {
         app: ctx.app,
-        path: "/api/arcade/events?channel=fof.chat:abc",
+        path: "/api/arcade/events?channel=unknown_kind:abc",
         headers: ctx.test_user.1.clone(),
     };
     assert_eq!(
         status,
         axum::http::StatusCode::NOT_FOUND,
-        "unknown channel must 404"
+        "unknown channel kind must 404"
+    );
+}
+
+#[tokio::test]
+async fn test_events_chat_rejects_non_participant() {
+    // fof.chat is registered. authorize() loads the round and
+    // checks the participant list — a round id that doesn't exist
+    // (or that the caller hasn't joined) must come back as
+    // ChannelForbidden / 403.
+    let ctx = TestContext::setup().await;
+    let (status, _, _) = crate::test_get! {
+        app: ctx.app,
+        path: "/api/arcade/events?channel=fof.chat:nonexistent-round",
+        headers: ctx.test_user.1.clone(),
+    };
+    assert_eq!(
+        status,
+        axum::http::StatusCode::FORBIDDEN,
+        "non-participant must be denied chat subscribe"
     );
 }
 

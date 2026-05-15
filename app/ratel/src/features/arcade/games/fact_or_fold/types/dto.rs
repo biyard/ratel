@@ -286,6 +286,27 @@ pub struct InsiderStatementResponse {
     pub statement: Option<String>,
 }
 
+// ── Chat (PR4f) ───────────────────────────────────────────────────
+
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct PostChatRequest {
+    /// 80-char cap enforced server-side (roadmap §FR-25).
+    pub text: String,
+}
+
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct PostChatResponse {
+    pub msg_id: String,
+    pub author_pk: String,
+    pub text: String,
+    pub sent_at: i64,
+}
+
+/// Chat-message char cap (roadmap §FR-25).
+pub const CHAT_TEXT_MAX_CHARS: usize = 80;
+
 // ── Bet + Rationale constants ─────────────────────────────────────
 
 /// Minimum chars for a rationale to count as "Essence-eligible"

@@ -5,6 +5,8 @@ pub mod i18n;
 pub mod models;
 pub mod pages;
 #[cfg(feature = "server")]
+pub mod realtime;
+#[cfg(feature = "server")]
 pub mod services;
 pub mod types;
 
@@ -14,4 +16,6 @@ pub use i18n::*;
 #[cfg(feature = "server")]
 pub use models::*;
 pub use pages::*;
+#[cfg(feature = "server")]
+pub use realtime::*;
 pub use types::*;

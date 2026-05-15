@@ -140,6 +140,25 @@ fn serve(app: fn() -> Element) {
 
     crate::common::mcp::set_app_router(app.clone());
 
+    // Register arcade realtime channel handlers with the per-process
+    // global hub. Each game registers its own channels here so the
+    // SSE endpoint can resolve them by kind. Idempotent — re-registers
+    // overwrite, which is what tests rely on for mock channels.
+    // `serve` is synchronous (called before tokio main spawns the
+    // server), so we block on the registration through whichever
+    // runtime is available.
+    if let Ok(handle) = tokio::runtime::Handle::try_current() {
+        handle.block_on(
+            crate::features::arcade::games::fact_or_fold::realtime::register_channels(),
+        );
+    } else {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("tokio runtime build for channel registration");
+        rt.block_on(crate::features::arcade::games::fact_or_fold::realtime::register_channels());
+    }
+
     #[cfg(not(feature = "lambda"))]
     {
         #[cfg(feature = "local-dev")]

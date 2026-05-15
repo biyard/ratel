@@ -1049,6 +1049,65 @@ async fn test_rationale_succeeds_after_lazy_advance_into_rationale_stage() {
     assert!(body.essence_eligible, ">= 50-char rationale should be eligible");
 }
 
+// ── Chat (PR4f) ─────────────────────────────────────────────────────
+
+#[tokio::test]
+async fn test_post_chat_rejects_non_participant() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, _) = fill_round_to_capacity(&ctx, &admin).await;
+
+    let (_, outsider) = ctx.create_another_user().await;
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/arcade/games/fact-or-fold/rounds/{}/chat", round_id),
+        headers: outsider,
+        body: { "req": { "text": "hello" } }
+    };
+    assert_ne!(status, 200, "outsider must not be able to post chat");
+}
+
+#[tokio::test]
+async fn test_post_chat_rejects_outside_debate_stage() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    // Round is freshly started → NewsReveal, not Debate. Chat must
+    // be rejected.
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/arcade/games/fact-or-fold/rounds/{}/chat", round_id),
+        headers: headers,
+        body: { "req": { "text": "hi" } }
+    };
+    assert_ne!(status, 200, "chat outside Debate stage must be rejected");
+}
+
+#[tokio::test]
+async fn test_post_chat_rejects_empty_or_overlong() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/arcade/games/fact-or-fold/rounds/{}/chat", round_id),
+        headers: headers.clone(),
+        body: { "req": { "text": "" } }
+    };
+    assert_ne!(status, 200, "empty chat must be rejected");
+
+    let too_long = "x".repeat(81);
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/arcade/games/fact-or-fold/rounds/{}/chat", round_id),
+        headers: headers,
+        body: { "req": { "text": too_long } }
+    };
+    assert_ne!(status, 200, "81-char chat must be rejected (>80 cap)");
+}
+
 // ── Client tick (PR4d) ──────────────────────────────────────────────
 
 #[tokio::test]

@@ -296,6 +296,12 @@ pub enum EntityType {
     FactFoldBet(String),            // pk=FactFold(round_id), inner=user_id
     FactFoldRationale(String),      // pk=FactFold(round_id), inner=user_id
 
+    /// One row per chat message in a round. inner = uuid_v7 (time-
+    /// sortable) so an sk-prefix query returns the chat log in
+    /// chronological order. A DDB Stream filter on this sk prefix
+    /// drives the SSE fan-out (PR4f).
+    FactFoldChat(String),           // pk=FactFold(round_id), inner=msg_id
+
     // Ratel Arcade — chip wallet (PR4b).
     /// Singleton balance row under `Partition::ArcadeWallet(user_id)`.
     /// One row per user; carries `chip_balance` + `last_updated`.
