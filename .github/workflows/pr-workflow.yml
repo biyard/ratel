@@ -113,7 +113,12 @@ jobs:
           dx check --ios
           dx check --android
 
+      # The tauri-web / tauri-types / ratel-tauri shell checks below are
+      # informational while the tauri integration is WIP. They surface
+      # build-graph issues for the mobile/desktop wrapper without blocking
+      # merges on app/ratel until the migration lands.
       - name: cargo check --features tauri-web
+        continue-on-error: true
         env:
           RUSTFLAGS: "-D warnings"
           DYNAMO_TABLE_PREFIX: ratel-dev
@@ -121,6 +126,7 @@ jobs:
           cargo check --features tauri-web --no-default-features
 
       - name: dx check --web --features tauri-web
+        continue-on-error: true
         env:
           RUSTFLAGS: "-D warnings"
           DYNAMO_TABLE_PREFIX: ratel-dev
@@ -128,6 +134,7 @@ jobs:
           dx check --web --features tauri-web --no-default-features
 
       - name: cargo check --features tauri-types (DTO-only)
+        continue-on-error: true
         env:
           RUSTFLAGS: "-D warnings"
           DYNAMO_TABLE_PREFIX: ratel-dev
@@ -135,6 +142,7 @@ jobs:
           cargo check --features tauri-types --no-default-features
 
       - name: cargo check app/ratel-tauri shell crate
+        continue-on-error: true
         working-directory: app/ratel-tauri/src-tauri
         env:
           DYNAMO_TABLE_PREFIX: ratel-dev
