@@ -12,6 +12,8 @@ pub mod server;
 
 pub mod hooks;
 
+pub mod interop;
+
 pub mod components;
 
 pub mod views;

@@ -102,31 +102,18 @@ impl UseCrossPosting {
     }
 
     /// Kick off the LinkedIn OAuth flow. Calls the init endpoint to mint
-    /// a signed state token + LinkedIn authorize URL, then navigates the
-    /// browser there via `window.location.href` — `nav.push(Route)` is
-    /// SPA-internal and would lose the redirect to LinkedIn's domain.
+    /// a signed state token + LinkedIn authorize URL, then bounces the
+    /// browser there. `nav.push(Route)` is SPA-internal and would lose
+    /// the redirect, so we use the interop helper which goes through
+    /// `dioxus::document::eval` (see `conventions/dioxus-app.md` §
+    /// JS Interop).
     ///
     /// Server-side seal/upsert happens in the `/callback` handler after
     /// LinkedIn bounces the user back; this method does NOT refresh
     /// `connections` because the page is about to leave anyway.
     pub async fn connect_linkedin(&mut self) -> crate::common::Result<()> {
         let resp = connect_linkedin_init_handler().await?;
-        // Hard navigation — leaves the SPA and lands on LinkedIn's
-        // consent page. The callback controller bounces the user back to
-        // `/settings/connections?linkedin=ok|denied|error` once the
-        // OAuth round-trip completes. Gated to wasm32 so `cargo check
-        // --features server` (or mobile / desktop) builds without
-        // pulling web-sys into the non-web target's call path.
-        #[cfg(target_arch = "wasm32")]
-        {
-            if let Some(window) = web_sys::window() {
-                let _ = window.location().set_href(&resp.authorize_url);
-            }
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            let _ = resp; // suppress unused-binding warning on non-web targets
-        }
+        crate::features::cross_posting::interop::redirect_to_external(&resp.authorize_url);
         Ok(())
     }
 }
