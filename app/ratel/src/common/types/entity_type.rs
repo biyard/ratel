@@ -302,6 +302,17 @@ pub enum EntityType {
     /// drives the SSE fan-out (PR4f).
     FactFoldChat(String),           // pk=FactFold(round_id), inner=msg_id
 
+    // PR6 — settlement.
+    /// One row per (round, user). Written by the settlement
+    /// handler with the §FR-28~30 breakdown. `idempotency_key =
+    /// round_id#user_id` ensures retries are no-ops.
+    FactFoldSettlement(String),     // pk=FactFold(round_id), inner=user_id
+
+    /// Per-user lifetime statistics. Lives under
+    /// `Partition::User(user_pk)` so a single user query reads it
+    /// alongside other user-scoped rows.
+    FactFoldUserStats,              // pk=User(user_pk) (singleton sk)
+
     // Ratel Arcade — chip wallet (PR4b).
     /// Singleton balance row under `Partition::ArcadeWallet(user_id)`.
     /// One row per user; carries `chip_balance` + `last_updated`.
