@@ -16,8 +16,8 @@
 
 use super::*;
 
-use crate::features::fact_or_fold::models::FactFoldRound;
-use crate::features::fact_or_fold::types::{
+use crate::features::arcade::games::fact_or_fold::models::FactFoldRound;
+use crate::features::arcade::games::fact_or_fold::types::{
     BetResponse, BetSide, FactOrFoldSettingsResponse, HeadlineResponse, HeadlineStatus,
     InsiderStatementResponse, LobbyResponse, ParticipantResponse, QueueAlarmResponse,
     RationaleResponse, RoundResponse, RoundStatus,

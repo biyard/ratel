@@ -30,4 +30,4 @@ pub mod sub_team;
 
 pub mod cross_posting;
 
-pub mod fact_or_fold;
+pub mod arcade;

@@ -335,7 +335,7 @@ pub enum Error {
 
     #[error("{0}")]
     #[translate(from)]
-    FactOrFold(#[from] crate::features::fact_or_fold::types::FactOrFoldError),
+    FactOrFold(#[from] crate::features::arcade::games::fact_or_fold::types::FactOrFoldError),
 
     // Unit variants for common errors
     #[error("Internal error")]

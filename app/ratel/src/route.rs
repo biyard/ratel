@@ -43,7 +43,7 @@ use crate::features::admin::{AdminLayout, AdminMainPage};
 // Fact or Fold — admin pages share `FactFoldAdminLayout` (sub-tabs)
 // nested under the global `AdminLayout` (admin-only guard). The
 // player-facing lobby page lives at top level.
-use crate::features::fact_or_fold::pages::{
+use crate::features::arcade::games::fact_or_fold::pages::{
     FactFoldAdminHeadlinesPage, FactFoldAdminLayout, FactFoldAdminNewHeadlinePage,
     FactFoldAdminReportsPage, FactFoldAdminSchedulePage, FactFoldAdminSettingsPage,
     FactFoldAdminStatsPage, FactFoldLobbyPage,
