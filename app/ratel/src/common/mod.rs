@@ -25,12 +25,15 @@ pub use strum::*;
 pub use types::*;
 pub mod logger;
 
-#[cfg(feature = "tauri-web")]
-pub mod fullstack;
-pub use dioxus::prelude::*;
-pub use dioxus::prelude::{delete, get, patch, post, put};
-#[cfg(feature = "tauri-web")]
-pub use fullstack::*;
+// #[cfg(feature = "tauri-web")]
+// pub mod fullstack;
+#[cfg(any(feature = "server", feature = "web"))]
+pub use dioxus::prelude::{delete, get, patch, post, put, *};
+
+#[cfg(any(feature = "server", feature = "web"))]
+pub use dioxus::fullstack::{Form, Loader, Loading};
+// #[cfg(feature = "tauri-web")]
+// pub use fullstack::*;
 
 pub use dioxus::logger::tracing::{debug, error, info, warn};
 

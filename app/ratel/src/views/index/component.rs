@@ -2,7 +2,7 @@ use super::space_card::*;
 use super::*;
 use crate::common::components::{Robots, SeoMeta};
 use crate::common::contexts::TeamItem;
-use crate::common::hooks::{use_infinite_query, use_loader};
+use crate::common::hooks::use_infinite_query;
 use crate::common::types::ListResponse;
 use crate::features::auth::LoginModal;
 use crate::features::posts::controllers::create_post::create_post_handler;

@@ -19,7 +19,7 @@ pub use contexts::*;
 pub mod features;
 pub use features::*;
 
-#[cfg( feature = "tauri-web")]
+#[cfg(feature = "tauri-web")]
 pub mod tauri;
 
 // `axum` is pulled in transitively through `dioxus-fullstack` and exposed at

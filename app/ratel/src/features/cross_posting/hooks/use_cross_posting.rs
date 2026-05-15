@@ -27,7 +27,6 @@ use crate::features::cross_posting::models::ConnectionStatus;
 use crate::features::cross_posting::types::{
     ConnectBlueskyRequest, ConnectionResponse, SocialPlatform, ToggleAutoPostRequest,
 };
-use crate::common::fullstack::Loader;
 use std::collections::HashMap;
 
 #[derive(Clone, Copy, DioxusController)]
@@ -71,7 +70,11 @@ impl UseCrossPosting {
         handle: String,
         app_password: String,
     ) -> crate::common::Result<()> {
-        connect_bluesky_handler(ConnectBlueskyRequest { handle, app_password }).await?;
+        connect_bluesky_handler(ConnectBlueskyRequest {
+            handle,
+            app_password,
+        })
+        .await?;
         self.connections.restart();
         Ok(())
     }
