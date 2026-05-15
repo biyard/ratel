@@ -94,6 +94,15 @@ pub struct SubTeamAnnouncement {
     /// `announcement_id`, hence the explicit field).
     #[serde(default)]
     pub target_post_pk: Option<String>,
+
+    /// Timestamp the deferred Space-publish inbox fan-out completed.
+    /// `None` for broadcasts that don't carry an attached Space, and
+    /// also for space-attached broadcasts whose Space hasn't been
+    /// published yet. Drives idempotency in
+    /// `services::announcement_fanout::handle_space_published` so
+    /// stream replays don't duplicate the inbox notification.
+    #[serde(default)]
+    pub broadcast_notified_at: Option<i64>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -146,6 +155,7 @@ impl SubTeamAnnouncement {
             fan_out_count: 0,
             target_child_team_id: None,
             target_post_pk: None,
+            broadcast_notified_at: None,
         }
     }
 
@@ -185,6 +195,7 @@ impl SubTeamAnnouncement {
             fan_out_count: 0,
             target_child_team_id: Some(target_child_team_id),
             target_post_pk: None,
+            broadcast_notified_at: None,
         }
     }
 }
