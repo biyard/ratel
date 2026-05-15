@@ -4,6 +4,7 @@ pub mod lobby;
 pub mod queue;
 pub mod round_play;
 pub mod settings;
+pub mod settlement;
 
 pub use chat::*;
 pub use headlines::*;
@@ -11,3 +12,4 @@ pub use lobby::*;
 pub use queue::*;
 pub use round_play::*;
 pub use settings::*;
+pub use settlement::*;

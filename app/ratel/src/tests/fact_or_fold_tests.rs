@@ -1337,6 +1337,104 @@ async fn test_flip_rejected_when_already_used() {
     assert_ne!(status, 200, "second flip in the same round must be rejected");
 }
 
+// ── Settlement (PR6) ────────────────────────────────────────────────
+
+/// Seed bets for every participant (4 in a full-capacity round)
+/// using a single side. Useful for setting up a clean
+/// winners/losers split before calling settle.
+async fn seed_bets_for_all(ctx: &TestContext, round_id: &str, side: &str) {
+    let (pk, sk) = FactFoldRound::keys(round_id);
+    let round = FactFoldRound::get(&ctx.ddb, &pk, Some(sk))
+        .await
+        .expect("ddb read")
+        .expect("round must exist");
+    for p in round.participant_pks.iter() {
+        seed_bet(ctx, round_id, p, side).await;
+    }
+}
+
+#[tokio::test]
+async fn test_settle_round_admin_only() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+    force_round_to_debate(&ctx, &round_id, 5_000).await;
+
+    // Non-admin must be rejected.
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/fact-or-fold/admin/rounds/{}/settle", round_id),
+        headers: headers,
+    };
+    assert_ne!(status, 200, "non-admin must not be able to settle");
+
+    // Admin succeeds.
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/admin/rounds/{}/settle", round_id),
+        headers: admin,
+    };
+    assert_eq!(status, 200);
+}
+
+#[tokio::test]
+async fn test_settle_round_marks_round_settled() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+    // Note: default headline verdict from `create_headline` is REAL.
+    // All 4 bet REAL → everyone wins, no loser pool.
+    seed_bets_for_all(&ctx, &round_id, "REAL").await;
+    force_round_to_debate(&ctx, &round_id, 5_000).await;
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/fact-or-fold/admin/rounds/{}/settle", round_id),
+        headers: admin,
+    };
+    assert_eq!(status, 200);
+
+    // Round is now Settled.
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}", round_id),
+        headers: headers,
+        response_type: RoundResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(
+        matches!(body.status, RoundStatus::Settled),
+        "round must be Settled after settle handler, got {:?}",
+        body.status,
+    );
+    assert!(body.settled_at.is_some());
+}
+
+#[tokio::test]
+async fn test_settle_round_idempotent() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, _) = fill_round_to_capacity(&ctx, &admin).await;
+    seed_bets_for_all(&ctx, &round_id, "REAL").await;
+    force_round_to_debate(&ctx, &round_id, 5_000).await;
+
+    // First settle.
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/fact-or-fold/admin/rounds/{}/settle", round_id),
+        headers: admin.clone(),
+    };
+    assert_eq!(status, 200);
+
+    // Second settle — must also 200, must not double-credit.
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/admin/rounds/{}/settle", round_id),
+        headers: admin,
+    };
+    assert_eq!(status, 200, "second settle on a Settled round must be a no-op");
+}
+
 #[tokio::test]
 async fn test_chat_post_succeeds_during_debate() {
     let ctx = TestContext::setup().await;
