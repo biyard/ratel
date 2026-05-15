@@ -64,6 +64,30 @@ translate! {
     players_pill_forfeited: { en: "OUT", ko: "기권" },
     players_you_badge: { en: "YOU", ko: "YOU" },
 
+    // ── First bet stage ───────────────────────────────────────────
+    insider_title: { en: "INSIDER · TRUTH", ko: "INSIDER · 진실 정보" },
+    insider_tip: {
+        en: "Tip: if another player cites your rationale and flips their bet, you take 30% of their stake.",
+        ko: "팁: 다른 참가자가 당신 근거를 인용해 베팅을 바꾸면 그 사람 베팅의 30%를 가져옵니다.",
+    },
+    bet_card_title: { en: "REAL or FAKE?", ko: "진짜인가, 가짜인가?" },
+    bet_card_sub: {
+        en: "Decide in 10s. Your rationale goes in the next stage (30s).",
+        ko: "10초 안에 결정. 근거는 다음 단계에서 30초간 따로 적습니다.",
+    },
+    bet_option_real_label: { en: "REAL", ko: "REAL" },
+    bet_option_real_sub: { en: "This headline is real.", ko: "이 뉴스는 진짜다" },
+    bet_option_fake_label: { en: "FAKE", ko: "FAKE" },
+    bet_option_fake_sub: { en: "This headline is fake.", ko: "이 뉴스는 가짜다" },
+    bet_slider_label: { en: "Stake (RatelPoints)", ko: "베팅 RatelPoint" },
+    bet_submit: { en: "Confirm bet → Rationale", ko: "베팅 확정 → 근거 작성으로" },
+    bet_submit_hint: { en: "Final — can't change.", ko: "확정 후 변경 불가" },
+    bet_already_placed_title: { en: "Bet locked", ko: "베팅 확정됨" },
+    bet_already_placed_body: {
+        en: "Your bet is in. Waiting for the next stage.",
+        ko: "베팅이 등록됐어요. 다음 단계까지 대기 중.",
+    },
+
     // Coming-soon banner shown inside each sub-component until its
     // detailed RSX lands. Sub-components replace this string with their
     // own translations as they're implemented step-by-step.
