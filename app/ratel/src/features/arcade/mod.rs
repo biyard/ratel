@@ -20,6 +20,8 @@ pub mod games;
 #[cfg(feature = "server")]
 pub mod models;
 pub mod realtime;
+#[cfg(feature = "server")]
+pub mod server;
 pub mod services;
 pub mod types;
 #[cfg(feature = "server")]

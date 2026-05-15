@@ -230,6 +230,36 @@ async fn test_arcade_settings_rejects_invalid_values() {
     assert_ne!(status, 200);
 }
 
+// ── SSE realtime ──────────────────────────────────────────────────
+
+#[tokio::test]
+async fn test_events_rejects_unknown_channel() {
+    let ctx = TestContext::setup().await;
+    // No channel handlers are registered yet (PR4f registers
+    // FactFoldChatChannel). Any channel kind should map to
+    // ChannelUnknown → 404.
+    let (status, _, _) = crate::test_get! {
+        app: ctx.app,
+        path: "/api/arcade/events?channel=fof.chat:abc",
+        headers: ctx.test_user.1.clone(),
+    };
+    assert_eq!(
+        status,
+        axum::http::StatusCode::NOT_FOUND,
+        "unknown channel must 404"
+    );
+}
+
+#[tokio::test]
+async fn test_events_rejects_unauthenticated() {
+    let ctx = TestContext::setup().await;
+    let (status, _, _) = crate::test_get! {
+        app: ctx.app,
+        path: "/api/arcade/events?channel=fof.chat:abc",
+    };
+    assert_ne!(status, 200, "unauthenticated SSE subscription must fail");
+}
+
 #[tokio::test]
 async fn test_redeem_flag_can_be_flipped() {
     // Demonstrates that the v2 path opens up by flipping the
