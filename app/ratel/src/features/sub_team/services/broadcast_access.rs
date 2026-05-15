@@ -21,8 +21,7 @@ use crate::common::*;
 use crate::features::auth::UserTeam;
 use crate::features::posts::models::{Post, Team, TeamOwner};
 use crate::features::posts::types::PostError;
-use crate::features::sub_team::models::{SubTeamAnnouncement, SubTeamLink};
-use crate::features::sub_team::services::announcement_fanout::MAX_RECOGNIZED_SUB_TEAMS;
+use crate::features::sub_team::models::{SubTeamAnnouncement, SubTeamAnnouncementFanout};
 
 const USER_TEAM_PAGE: i32 = 100;
 const USER_TEAM_MAX_PAGES: usize = 10;
@@ -77,18 +76,17 @@ impl PostBroadcastAccessExt for Post {
 
 /// Resolve audience and return whether `viewer_user_pk` is allowed to see
 /// `post`. Looks the source `SubTeamAnnouncement` up to learn direct vs
-/// broadcast and (for broadcast) walks `SubTeamLink` rows under the parent.
+/// broadcast; broadcast access is decided by fanout-marker presence on
+/// any team the viewer belongs to (current or former sub-team).
 ///
 /// Anonymous viewers (`None`) are always rejected.
 ///
 /// Bounds:
 /// - One `SubTeamAnnouncement::get` (point read)
-/// - One `Team` lookup is NOT done here — the parent team pk is known
-///   from `post.announcement_parent_team_id`.
 /// - Direct: at most 1 `TeamOwner` + paginated `UserTeam::find_by_team` per
 ///   member check (≤ 2 team-membership probes total).
-/// - Broadcast: ≤ MAX_RECOGNIZED_SUB_TEAMS membership probes plus the
-///   parent's. Bounded by Phase 1's 50-child cap.
+/// - Broadcast: one `UserTeam::query` (viewer's teams, usually 1–2)
+///   plus one `SubTeamAnnouncementFanout::get` per team.
 pub async fn can_view_broadcast_post(
     cli: &aws_sdk_dynamodb::Client,
     post: &Post,
@@ -98,9 +96,10 @@ pub async fn can_view_broadcast_post(
         return Ok(false);
     };
 
-    let (Some(parent_team_id), Some(announcement_id)) =
-        (post.announcement_parent_team_id.as_ref(), post.announcement_id.as_ref())
-    else {
+    let (Some(parent_team_id), Some(announcement_id)) = (
+        post.announcement_parent_team_id.as_ref(),
+        post.announcement_id.as_ref(),
+    ) else {
         // Visibility says Broadcast but the announcement linkage is
         // missing — fail closed.
         return Ok(false);
@@ -133,19 +132,28 @@ pub async fn can_view_broadcast_post(
         return is_team_member(cli, &child_pk, viewer).await;
     }
 
-    // Broadcast: any recognized child team's member.
-    let link_opts = SubTeamLink::opt()
-        .sk("SUB_TEAM_LINK".to_string())
-        .limit((MAX_RECOGNIZED_SUB_TEAMS as i32) + 1);
-    let (links, _) = SubTeamLink::query(cli, parent_pk.clone(), link_opts)
-        .await
-        .map_err(|e| {
-            crate::error!("can_view_broadcast_post link query failed: {e}");
+    let user_team_prefix = EntityType::UserTeam(String::new()).to_string();
+    let ut_opts = UserTeam::opt_all().sk(user_team_prefix);
+    let (user_teams, _): (Vec<UserTeam>, _) =
+        UserTeam::query(cli, viewer, ut_opts).await.map_err(|e| {
+            crate::error!("can_view_broadcast_post UserTeam query failed: {e}");
             Error::Internal
         })?;
-    for link in links {
-        let child_pk = Partition::Team(link.child_team_id);
-        if is_team_member(cli, &child_pk, viewer).await? {
+    for ut in user_teams {
+        let team_pk_str = match &ut.sk {
+            EntityType::UserTeam(s) => s.clone(),
+            _ => continue,
+        };
+        let team_pk: Partition = match team_pk_str.parse() {
+            Ok(p) => p,
+            Err(_) => continue,
+        };
+        let marker_sk = EntityType::SubTeamAnnouncementFanout(announcement_id.clone());
+        let marker = SubTeamAnnouncementFanout::get(cli, &team_pk, Some(marker_sk))
+            .await
+            .ok()
+            .flatten();
+        if marker.is_some() {
             return Ok(true);
         }
     }
@@ -187,10 +195,12 @@ async fn is_team_member(
         if let Some(bm) = bookmark.as_ref() {
             opt = opt.bookmark(bm.clone());
         }
-        let (rows, next) = UserTeam::find_by_team(cli, &user_team_sk, opt).await.map_err(|e| {
-            crate::error!("is_team_member UserTeam query failed: {e}");
-            Error::Internal
-        })?;
+        let (rows, next) = UserTeam::find_by_team(cli, &user_team_sk, opt)
+            .await
+            .map_err(|e| {
+                crate::error!("is_team_member UserTeam query failed: {e}");
+                Error::Internal
+            })?;
         for row in rows {
             if row.pk.to_string() == viewer_str {
                 return Ok(true);
