@@ -229,13 +229,16 @@ jobs:
       # Cold-cache compile of `cargo test --features server,bypass --tests`
       # peaks above the ubuntu-latest 7 GB RAM budget and OOM-kills the
       # runner agent (manifests as exit 143 / "runner shutdown signal"
-      # during the link phase). Add 10 GB swap to absorb the spike.
+      # during the link phase). Replace the runner's default 4 GB swap
+      # with 12 GB on /mnt (the larger data disk) to absorb the spike.
       - name: Add swap memory
         run: |
-          sudo fallocate -l 10G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
+          sudo swapoff -a
+          sudo rm -f /swapfile /mnt/swapfile
+          sudo fallocate -l 12G /mnt/swapfile
+          sudo chmod 600 /mnt/swapfile
+          sudo mkswap /mnt/swapfile
+          sudo swapon /mnt/swapfile
           free -h
 
       - name: Restore cache
