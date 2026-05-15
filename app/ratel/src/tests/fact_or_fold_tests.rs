@@ -16,7 +16,9 @@
 
 use super::*;
 
+use crate::common::types::Partition;
 use crate::features::arcade::games::fact_or_fold::models::FactFoldRound;
+use crate::features::arcade::models::ArcadeWalletBalance;
 use crate::features::arcade::games::fact_or_fold::types::{
     BetResponse, BetSide, FactOrFoldSettingsResponse, HeadlineResponse, HeadlineStatus,
     InsiderStatementResponse, LobbyResponse, ParticipantResponse, QueueAlarmResponse,
@@ -527,8 +529,34 @@ async fn test_update_settings_rejects_out_of_range() {
 
 // ── Lobby + matching (PR3) ───────────────────────────────────────
 
+/// Top up a user's chip balance directly via DDB so the lobby's
+/// chip gate + buy_in pass without needing an RP→chip convert
+/// round-trip. Use this for any test that exercises `join_lobby`.
+async fn grant_chips_for_test(ctx: &TestContext, user_pk: &Partition, chips: i64) {
+    let user_id = user_pk
+        .to_string()
+        .strip_prefix("USER#")
+        .unwrap_or(&user_pk.to_string())
+        .to_string();
+    let (pk, sk) = ArcadeWalletBalance::keys(&user_id);
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    let row = ArcadeWalletBalance {
+        pk,
+        sk,
+        created_at: now,
+        updated_at: now,
+        chip_balance: chips,
+    };
+    row.upsert(&ctx.ddb).await.expect("grant chips upsert");
+}
+
 /// Drop the join balance gate for tests so we can exercise the
-/// matching loop without first granting RP to every test user.
+/// matching loop without first granting RP / chips to every test
+/// user. PR4c moved the gate from RP to chips, so we now zero the
+/// arcade-wide `default_buy_in_chips` (the wallet still rejects
+/// `chips <= 0` so we use the minimum allowed of 1). The legacy
+/// `min_bet_rp` knob is still zeroed because the FOF bet endpoint
+/// continues to validate against it.
 async fn relax_balance_gate(ctx: &TestContext, admin: &axum::http::HeaderMap) {
     let (status, _, _) = crate::test_put! {
         app: ctx.app.clone(),
@@ -536,7 +564,18 @@ async fn relax_balance_gate(ctx: &TestContext, admin: &axum::http::HeaderMap) {
         headers: admin.clone(),
         body: { "req": { "min_bet_rp": 0 } }
     };
-    assert_eq!(status, 200, "relax_balance_gate must succeed");
+    assert_eq!(status, 200, "relax_balance_gate (FOF settings) must succeed");
+
+    let (status, _, _) = crate::test_put! {
+        app: ctx.app.clone(),
+        path: "/api/arcade/admin/settings",
+        headers: admin.clone(),
+        body: { "req": { "default_buy_in_chips": 1 } }
+    };
+    assert_eq!(
+        status, 200,
+        "relax_balance_gate (arcade settings) must succeed"
+    );
 }
 
 /// Create a Draft headline, then publish-now → Live so it's a
@@ -600,6 +639,7 @@ async fn test_join_creates_round_and_lobby_state_reflects_it() {
     let (_, admin) = ctx.create_admin_user().await;
     relax_balance_gate(&ctx, &admin).await;
     let _ = create_live_headline(&ctx, &admin).await;
+    grant_chips_for_test(&ctx, &ctx.test_user.0.pk, 1_000).await;
 
     let (status, _, body) = crate::test_post! {
         app: ctx.app.clone(),
@@ -630,6 +670,7 @@ async fn test_join_again_rejected() {
     let (_, admin) = ctx.create_admin_user().await;
     relax_balance_gate(&ctx, &admin).await;
     let _ = create_live_headline(&ctx, &admin).await;
+    grant_chips_for_test(&ctx, &ctx.test_user.0.pk, 1_000).await;
 
     let (status, _, _) = crate::test_post! {
         app: ctx.app.clone(),
@@ -652,6 +693,7 @@ async fn test_get_round_after_join() {
     let (_, admin) = ctx.create_admin_user().await;
     relax_balance_gate(&ctx, &admin).await;
     let _ = create_live_headline(&ctx, &admin).await;
+    grant_chips_for_test(&ctx, &ctx.test_user.0.pk, 1_000).await;
 
     let (_, _, body) = crate::test_post! {
         app: ctx.app.clone(),
@@ -678,6 +720,7 @@ async fn test_leave_after_join_clears_participant() {
     let (_, admin) = ctx.create_admin_user().await;
     relax_balance_gate(&ctx, &admin).await;
     let _ = create_live_headline(&ctx, &admin).await;
+    grant_chips_for_test(&ctx, &ctx.test_user.0.pk, 1_000).await;
 
     let (_, _, _) = crate::test_post! {
         app: ctx.app.clone(),
@@ -721,6 +764,7 @@ async fn fill_round_to_capacity(
     let _ = create_live_headline(ctx, admin).await;
 
     // First joiner = ctx.test_user
+    grant_chips_for_test(ctx, &ctx.test_user.0.pk, 1_000).await;
     let (status, _, body) = crate::test_post! {
         app: ctx.app.clone(),
         path: "/api/fact-or-fold/lobby/join",
@@ -732,7 +776,8 @@ async fn fill_round_to_capacity(
 
     // Three more fresh users to hit capacity=4
     for _ in 0..3 {
-        let (_, headers) = ctx.create_another_user().await;
+        let (user, headers) = ctx.create_another_user().await;
+        grant_chips_for_test(ctx, &user.pk, 1_000).await;
         let (status, _, _) = crate::test_post! {
             app: ctx.app.clone(),
             path: "/api/fact-or-fold/lobby/join",
@@ -801,6 +846,7 @@ async fn test_insider_statement_returns_some_for_one_returns_none_for_others() {
     let (_, admin) = ctx.create_admin_user().await;
     relax_balance_gate(&ctx, &admin).await;
     let _ = create_live_headline(&ctx, &admin).await;
+    grant_chips_for_test(&ctx, &ctx.test_user.0.pk, 1_000).await;
 
     let mut all_user_headers: Vec<axum::http::HeaderMap> =
         vec![ctx.test_user.1.clone()];
@@ -812,7 +858,8 @@ async fn test_insider_statement_returns_some_for_one_returns_none_for_others() {
     };
     let round_id = body.id.0;
     for _ in 0..3 {
-        let (_, headers) = ctx.create_another_user().await;
+        let (user, headers) = ctx.create_another_user().await;
+        grant_chips_for_test(&ctx, &user.pk, 1_000).await;
         let (_, _, _) = crate::test_post! {
             app: ctx.app.clone(),
             path: "/api/fact-or-fold/lobby/join",

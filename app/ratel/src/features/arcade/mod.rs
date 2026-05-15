@@ -14,20 +14,24 @@
 //! pages / hooks / components / layout / route etc. land in
 //! follow-up PRs (PR4c+).
 
+pub mod controllers;
 pub mod error;
 pub mod games;
 #[cfg(feature = "server")]
 pub mod models;
 pub mod realtime;
 pub mod services;
+pub mod types;
 #[cfg(feature = "server")]
 pub mod wallet;
 
+pub use controllers::*;
 pub use error::*;
 pub use games::*;
 #[cfg(feature = "server")]
 pub use models::*;
 pub use realtime::*;
 pub use services::*;
+pub use types::*;
 #[cfg(feature = "server")]
 pub use wallet::*;

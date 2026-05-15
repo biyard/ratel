@@ -31,9 +31,22 @@ use crate::features::arcade::games::fact_or_fold::models::{
 };
 #[cfg(feature = "server")]
 use crate::features::arcade::games::fact_or_fold::services::stage_machine;
+#[cfg(feature = "server")]
+use crate::features::arcade::models::ArcadeSettings;
+#[cfg(feature = "server")]
+use crate::features::arcade::wallet::{ArcadeWallet, DdbArcadeWallet};
 
 #[cfg(feature = "server")]
 const HEADLINE_SK_PREFIX: &str = "FACT_FOLD_HEADLINE";
+
+#[cfg(feature = "server")]
+fn user_inner_id(user: &User) -> String {
+    user.pk
+        .to_string()
+        .strip_prefix("USER#")
+        .unwrap_or(&user.pk.to_string())
+        .to_string()
+}
 
 // ── Internal helpers ──────────────────────────────────────────────
 
@@ -215,8 +228,19 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
     let cli = cfg.dynamodb();
 
     let settings = load_settings_or_default(cli).await;
-    if user.points < settings.min_bet_rp {
-        return Err(FactOrFoldError::LobbyInsufficientBalance(settings.min_bet_rp).into());
+
+    // Chip balance gate (replaces the legacy RP gate). v1 buy-in is
+    // a fixed amount from arcade settings; user must have converted
+    // RP → chip via the arcade wallet endpoint first.
+    let arcade_settings = ArcadeSettings::get_or_default(cli)
+        .await
+        .unwrap_or_default();
+    let buy_in_chips = arcade_settings.default_buy_in_chips;
+    let wallet = DdbArcadeWallet::new(cli.clone());
+    let user_id = user_inner_id(&user);
+    let chip_balance = wallet.balance(&user_id).await?;
+    if chip_balance < buy_in_chips {
+        return Err(crate::features::arcade::ArcadeError::WalletInsufficientChip.into());
     }
 
     let mut lobby = FactFoldLobby::get_or_default(cli).await.map_err(|e| {
@@ -265,11 +289,18 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
                     crate::error!("join_lobby_handler round upsert failed: {e}");
                     FactOrFoldError::StorageFailure
                 })?;
+                let attached_round_id = round.id().unwrap_or_default();
                 if lobby_should_clear {
-                    let round_id = round.id().unwrap_or_default();
-                    create_participants_for_round(cli, &round_id, &round.participant_pks).await?;
+                    create_participants_for_round(cli, &attached_round_id, &round.participant_pks)
+                        .await?;
                     upsert_lobby_pointer(cli, None).await?;
                 }
+                // Lock chips on the table for this round. Anything
+                // that happens inside the round is off-wallet until
+                // settlement (design doc § A5).
+                wallet
+                    .buy_in(&user_id, &attached_round_id, buy_in_chips)
+                    .await?;
                 return Ok(round_to_response(&round));
             }
         } else {
@@ -336,6 +367,9 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
     )
     .await?;
 
+    // Lock chips on the table for this round.
+    wallet.buy_in(&user_id, &round_id, buy_in_chips).await?;
+
     Ok(round_to_response(&round))
 }
 
@@ -379,6 +413,17 @@ pub async fn leave_lobby_handler() -> Result<RoundResponse> {
         crate::error!("leave_lobby_handler round upsert failed: {e}");
         FactOrFoldError::StorageFailure
     })?;
+
+    // Refund the buy-in. Leave is only valid while the round is
+    // still Waiting, so the player gets every chip back.
+    let arcade_settings = ArcadeSettings::get_or_default(cli)
+        .await
+        .unwrap_or_default();
+    let wallet = DdbArcadeWallet::new(cli.clone());
+    let user_id = user_inner_id(&user);
+    wallet
+        .settle(&user_id, &round_id, arcade_settings.default_buy_in_chips)
+        .await?;
 
     Ok(round_to_response(&round))
 }

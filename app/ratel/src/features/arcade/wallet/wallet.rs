@@ -190,9 +190,38 @@ impl ArcadeWallet for DdbArcadeWallet {
         if rp_amount < settings.min_convert_rp {
             return Err(ArcadeError::WalletAmountOutOfRange.into());
         }
-        // RP debit on the user's points field is wired in PR4c; PR4b
-        // only credits chips so the trait + ledger surface is testable
-        // in isolation.
+
+        // RP balance gate. Load the User row to check `points` before
+        // touching either side of the ledger. Not atomic with the
+        // chip write below — design doc § A5 says we're fine eating
+        // that risk in v1.
+        use crate::common::models::auth::User;
+        let user_pk = Partition::User(user_id.to_string());
+        let user_sk = EntityType::User;
+        let user_row = User::get(&self.cli, &user_pk, Some(user_sk.clone()))
+            .await
+            .map_err(|e| {
+                crate::error!("convert_rp_to_chip user load failed: {e}");
+                ArcadeError::StorageFailure
+            })?
+            .ok_or(ArcadeError::WalletInsufficientRp)?;
+        if user_row.points < rp_amount {
+            return Err(ArcadeError::WalletInsufficientRp.into());
+        }
+
+        // Debit RP first; if the chip credit fails afterwards we'd
+        // need a reverse-credit job — v1 accepts the asymmetry
+        // (operator can manually reconcile via Adjustment txns).
+        User::updater(&user_pk, &user_sk)
+            .decrease_points(rp_amount)
+            .with_updated_at(crate::common::utils::time::get_now_timestamp_millis())
+            .execute(&self.cli)
+            .await
+            .map_err(|e| {
+                crate::error!("convert_rp_to_chip RP debit failed: {e}");
+                ArcadeError::StorageFailure
+            })?;
+
         let chips = rp_amount * (settings.rp_to_chip_ratio_bps as i64) / 10_000;
         let (txn_id, balance_after) = self
             .write_txn(user_id, ArcadeTxnKind::Convert, chips, None)
