@@ -10,11 +10,12 @@
 //!
 //! The chain is one-way and monotonic:
 //!
-//!   `NewsReveal` → `Bet` → `Rationale` → `Reveal` → (Debate, PR5)
+//!   `NewsReveal` → `Bet` → `Rationale` → `Reveal` → `Debate` → (Settlement, PR6)
 //!
-//! PR4 wires NewsReveal → Bet → Rationale → Reveal only. The
-//! `Reveal → Debate` hand-off lands in PR5; the round sits in
-//! `Reveal` once its deadline passes here.
+//! PR5 extends the chain to `Debate` (live-debate stage with the
+//! last-10s flip slot). The round sits in `Debate` once its
+//! deadline passes here — the `Debate → Settlement` hand-off
+//! lands in PR6 along with the EventBridge settlement trigger.
 //!
 //! ### Advancement strategy
 //!
@@ -51,8 +52,9 @@ impl StageScheduler for FactFoldStageScheduler {
             RoundStatus::NewsReveal => Some(RoundStatus::Bet),
             RoundStatus::Bet => Some(RoundStatus::Rationale),
             RoundStatus::Rationale => Some(RoundStatus::Reveal),
-            // Reveal → Debate is PR5; Debate → Settlement is PR5/PR6;
-            // Settlement → Settled is PR6.
+            RoundStatus::Reveal => Some(RoundStatus::Debate),
+            // Debate → Settlement is PR6 (EventBridge trigger); the
+            // round sits in `Debate` here once its deadline elapses.
             _ => None,
         }
     }
@@ -154,15 +156,17 @@ mod tests {
     }
 
     #[test]
-    fn next_stage_chain_covers_pr4_stages() {
+    fn next_stage_chain_covers_pr5_stages() {
         assert_eq!(next_stage(RoundStatus::NewsReveal), Some(RoundStatus::Bet));
         assert_eq!(next_stage(RoundStatus::Bet), Some(RoundStatus::Rationale));
         assert_eq!(
             next_stage(RoundStatus::Rationale),
             Some(RoundStatus::Reveal),
         );
-        // PR4 stops at Reveal — PR5 extends the chain past it.
-        assert_eq!(next_stage(RoundStatus::Reveal), None);
+        assert_eq!(next_stage(RoundStatus::Reveal), Some(RoundStatus::Debate));
+        // PR5 stops at Debate — PR6 wires Debate → Settlement via
+        // the EventBridge settlement trigger.
+        assert_eq!(next_stage(RoundStatus::Debate), None);
         assert_eq!(next_stage(RoundStatus::Waiting), None);
         assert_eq!(next_stage(RoundStatus::Settled), None);
     }

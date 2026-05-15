@@ -241,6 +241,39 @@ pub struct BetResponse {
     pub updated_at: i64,
 }
 
+/// §FR-16/17 — last-10s bet-change slot. Requires `cite_user_pk`
+/// pointing at *another* round participant who has submitted a
+/// rationale. Flip is one-shot per player; a player who already
+/// flipped this round is rejected.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct FlipBetRequest {
+    /// Side the player is flipping to. Must differ from the
+    /// player's *current* side (the original bet side, or the
+    /// already-flipped side if somehow they call this again).
+    pub side: BetSide,
+    /// Round participant whose rationale drove the flip. §FR-17:
+    /// a flip without citation is invalid. §FR-18: settlement
+    /// re-verifies the cited user actually submitted a rationale.
+    pub cite_user_pk: String,
+}
+
+/// `FlipBetResponse` mirrors `BetResponse` shape — the flip has
+/// already been applied so `flipped_to + flip_cite_user_pk` are set.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct FlipBetResponse {
+    pub user_pk: String,
+    pub original_side: BetSide,
+    pub flipped_to: BetSide,
+    pub cite_user_pk: String,
+    pub amount_rp: i64,
+}
+
+/// §FR-16 — the flip slot is open only during the final
+/// `FLIP_SLOT_LAST_MS` of the Debate stage.
+pub const FLIP_SLOT_LAST_MS: i64 = 10_000;
+
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct SubmitRationaleRequest {

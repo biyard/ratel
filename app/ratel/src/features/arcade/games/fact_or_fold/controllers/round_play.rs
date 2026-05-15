@@ -88,6 +88,120 @@ async fn load_participant(
         .ok_or_else(|| FactOrFoldError::NotRoundParticipant.into())
 }
 
+// ── POST /api/fact-or-fold/rounds/{round_id}/bets/flip ───────────
+//
+// §FR-16/17/18 — last-10s bet-change slot.
+//
+// Gates:
+//   - Stage must be `Debate`.
+//   - Time-remaining (`stage_deadline_at - now`) must be ≤ 10_000 ms.
+//   - Caller must be a round participant.
+//   - Caller must already have a 1st bet (otherwise nothing to flip).
+//   - Caller must NOT have flipped yet this round.
+//   - Flip side must differ from the current side.
+//   - `cite_user_pk` must be another round participant who has
+//     submitted a `FactFoldRationale` row.
+
+#[post("/api/fact-or-fold/rounds/{round_id}/bets/flip", user: User)]
+pub async fn flip_bet_handler(
+    round_id: FactFoldRoundEntityType,
+    req: FlipBetRequest,
+) -> Result<FlipBetResponse> {
+    let cfg = crate::common::CommonConfig::default();
+    let cli = cfg.dynamodb();
+    let inner_round_id = round_id.0.clone();
+
+    let round = load_round_advanced_or_404(cli, &inner_round_id).await?;
+    if !matches!(round.status, RoundStatus::Debate) {
+        return Err(FactOrFoldError::FlipSlotClosed.into());
+    }
+    ensure_participant(&round, &user.pk.to_string())?;
+
+    // Time-window gate. `stage_deadline_at` is set on every advance;
+    // missing means the round is in a stage without a clock (lobby
+    // / settlement / settled) — flip is closed.
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    let deadline = round
+        .stage_deadline_at
+        .ok_or(FactOrFoldError::FlipSlotClosed)?;
+    let remaining = deadline - now;
+    if !(0..=FLIP_SLOT_LAST_MS).contains(&remaining) {
+        return Err(FactOrFoldError::FlipSlotClosed.into());
+    }
+
+    // Citation must point at another round participant. We resolve
+    // by string-compare on the partition; the cited value is the
+    // raw `USER#{id}` pk.
+    let cite_pk_str = req.cite_user_pk.trim();
+    if cite_pk_str.is_empty() || cite_pk_str == user.pk.to_string() {
+        return Err(FactOrFoldError::FlipInvalidCite.into());
+    }
+    let cite_in_round = round
+        .participant_pks
+        .iter()
+        .any(|p| p.to_string() == cite_pk_str);
+    if !cite_in_round {
+        return Err(FactOrFoldError::FlipInvalidCite.into());
+    }
+
+    // Cited participant must have submitted a rationale (§FR-17).
+    let cite_user_id = cite_pk_str
+        .strip_prefix("USER#")
+        .unwrap_or(cite_pk_str)
+        .to_string();
+    let (rationale_pk, rationale_sk) =
+        FactFoldRationale::keys(&inner_round_id, &cite_user_id);
+    let cite_rationale =
+        FactFoldRationale::get(cli, &rationale_pk, Some(rationale_sk))
+            .await
+            .map_err(|e| {
+                crate::error!("flip_bet_handler rationale read failed: {e}");
+                FactOrFoldError::StorageFailure
+            })?;
+    if cite_rationale.is_none() {
+        return Err(FactOrFoldError::FlipCiteNoRationale.into());
+    }
+
+    // Caller's existing bet row.
+    let user_id = user
+        .pk
+        .to_string()
+        .strip_prefix("USER#")
+        .unwrap_or(&user.pk.to_string())
+        .to_string();
+    let (bet_pk, bet_sk) = FactFoldBet::keys(&inner_round_id, &user_id);
+    let mut bet = FactFoldBet::get(cli, &bet_pk, Some(bet_sk.clone()))
+        .await
+        .map_err(|e| {
+            crate::error!("flip_bet_handler bet read failed: {e}");
+            FactOrFoldError::StorageFailure
+        })?
+        .ok_or(FactOrFoldError::FlipNoOriginalBet)?;
+    if bet.flipped_to.is_some() {
+        return Err(FactOrFoldError::FlipAlreadyUsed.into());
+    }
+    if bet.side == req.side {
+        return Err(FactOrFoldError::FlipSameSide.into());
+    }
+
+    let original_side = bet.side;
+    bet.flipped_to = Some(req.side);
+    bet.flip_cite_user_pk = Some(Partition::User(cite_user_id.clone()));
+    bet.updated_at = now;
+    bet.upsert(cli).await.map_err(|e| {
+        crate::error!("flip_bet_handler upsert failed: {e}");
+        FactOrFoldError::StorageFailure
+    })?;
+
+    Ok(FlipBetResponse {
+        user_pk: user.pk.to_string(),
+        original_side,
+        flipped_to: req.side,
+        cite_user_pk: cite_pk_str.to_string(),
+        amount_rp: bet.amount_rp,
+    })
+}
+
 // ── POST /api/fact-or-fold/rounds/{round_id}/bets ────────────────
 
 #[post("/api/fact-or-fold/rounds/{round_id}/bets", user: User)]

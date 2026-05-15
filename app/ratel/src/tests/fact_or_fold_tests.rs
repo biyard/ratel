@@ -984,9 +984,9 @@ async fn test_get_round_rolls_through_multiple_stages_at_once() {
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
-    // Backdate so far that NewsReveal + Bet + Rationale all elapsed
-    // in one go. Defaults sum to ~70s — backdate 5 minutes to land
-    // squarely inside Reveal (PR4's terminal stage).
+    // Backdate so far that NewsReveal + Bet + Rationale + Reveal all
+    // elapsed in one go. Defaults sum to ~90s — backdate 5 minutes
+    // to land squarely inside Debate (PR5's terminal stage).
     backdate_stage_deadline(&ctx, &round_id, 5 * 60 * 1000).await;
 
     let (status, _, body) = crate::test_get! {
@@ -997,8 +997,8 @@ async fn test_get_round_rolls_through_multiple_stages_at_once() {
     };
     assert_eq!(status, 200);
     assert!(
-        matches!(body.status, RoundStatus::Reveal),
-        "PR4 stops auto-advance at Reveal, got {:?}",
+        matches!(body.status, RoundStatus::Debate),
+        "PR5 stops auto-advance at Debate, got {:?}",
         body.status,
     );
 }
@@ -1140,6 +1140,219 @@ async fn test_post_chat_rejects_empty_or_overlong() {
     assert_ne!(status, 200, "81-char chat must be rejected (>80 cap)");
 }
 
+// ── Flip slot (PR5) ─────────────────────────────────────────────────
+
+/// Force the round into `Debate` stage with `remaining_ms` left on
+/// the clock. Used to exercise both flip-slot-open and
+/// flip-slot-closed branches without depending on real elapsed time.
+async fn force_round_to_debate(ctx: &TestContext, round_id: &str, remaining_ms: i64) {
+    let (pk, sk) = FactFoldRound::keys(round_id);
+    let mut row = FactFoldRound::get(&ctx.ddb, &pk, Some(sk))
+        .await
+        .expect("ddb read")
+        .expect("round must exist");
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    row.status = crate::features::arcade::games::fact_or_fold::types::RoundStatus::Debate;
+    row.stage_started_at = Some(now - 1_000);
+    row.stage_deadline_at = Some(now + remaining_ms);
+    row.upsert(&ctx.ddb).await.expect("debate stage upsert");
+}
+
+/// Drop a `FactFoldBet` row directly into DDB so flip tests don't
+/// have to walk the round through NewsReveal → Bet → place a bet.
+async fn seed_bet(ctx: &TestContext, round_id: &str, user_pk: &Partition, side: &str) {
+    use crate::features::arcade::games::fact_or_fold::models::FactFoldBet;
+    use crate::features::arcade::games::fact_or_fold::types::BetSide;
+    let bet_side = match side {
+        "REAL" => BetSide::Real,
+        "FAKE" => BetSide::Fake,
+        _ => BetSide::Real,
+    };
+    let row = FactFoldBet::new(round_id, user_pk.clone(), bet_side, 100);
+    row.upsert(&ctx.ddb).await.expect("seed bet");
+}
+
+/// Drop a rationale row so flip tests can cite it without going
+/// through the rationale stage.
+async fn seed_rationale(ctx: &TestContext, round_id: &str, user_pk: &Partition) {
+    use crate::features::arcade::games::fact_or_fold::models::FactFoldRationale;
+    let row = FactFoldRationale::new(round_id, user_pk.clone(), "valid rationale text".into(), true);
+    row.upsert(&ctx.ddb).await.expect("seed rationale");
+}
+
+#[tokio::test]
+async fn test_flip_rejected_outside_debate_stage() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+    // Round is in NewsReveal.
+    let cite = format!("USER#{}", uuid::Uuid::new_v4());
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/bets/flip", round_id),
+        headers: headers,
+        body: { "req": { "side": "FAKE", "cite_user_pk": cite } }
+    };
+    assert_ne!(status, 200, "flip outside Debate must be rejected");
+}
+
+#[tokio::test]
+async fn test_flip_rejected_when_slot_closed_too_early() {
+    // Debate stage but >10s remaining → slot still closed.
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+    seed_bet(&ctx, &round_id, &ctx.test_user.0.pk, "REAL").await;
+    force_round_to_debate(&ctx, &round_id, 30_000).await; // 30s remaining
+
+    let cite = format!("USER#{}", uuid::Uuid::new_v4());
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/bets/flip", round_id),
+        headers: headers,
+        body: { "req": { "side": "FAKE", "cite_user_pk": cite } }
+    };
+    assert_ne!(
+        status, 200,
+        "flip outside the last-10s window must be rejected"
+    );
+}
+
+#[tokio::test]
+async fn test_flip_rejected_self_cite() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+    seed_bet(&ctx, &round_id, &ctx.test_user.0.pk, "REAL").await;
+    force_round_to_debate(&ctx, &round_id, 5_000).await;
+
+    let self_pk = ctx.test_user.0.pk.to_string();
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/bets/flip", round_id),
+        headers: headers,
+        body: { "req": { "side": "FAKE", "cite_user_pk": self_pk } }
+    };
+    assert_ne!(status, 200, "self-citation must be rejected");
+}
+
+#[tokio::test]
+async fn test_flip_rejected_when_cite_has_no_rationale() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+    seed_bet(&ctx, &round_id, &ctx.test_user.0.pk, "REAL").await;
+    force_round_to_debate(&ctx, &round_id, 5_000).await;
+
+    // Pick a real participant (the 2nd joiner) but don't seed their
+    // rationale — flip must be rejected.
+    let (pk, _) = FactFoldRound::keys(&round_id);
+    let round = FactFoldRound::get(&ctx.ddb, &pk, Some(crate::common::types::EntityType::FactFoldRound(round_id.clone())))
+        .await
+        .expect("ddb read")
+        .expect("round must exist");
+    let other_pk = round.participant_pks
+        .iter()
+        .find(|p| p.to_string() != ctx.test_user.0.pk.to_string())
+        .expect("must have another participant")
+        .to_string();
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/bets/flip", round_id),
+        headers: headers,
+        body: { "req": { "side": "FAKE", "cite_user_pk": other_pk } }
+    };
+    assert_ne!(status, 200, "cite without rationale must be rejected");
+}
+
+#[tokio::test]
+async fn test_flip_succeeds_in_last_10s_with_valid_cite() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+    seed_bet(&ctx, &round_id, &ctx.test_user.0.pk, "REAL").await;
+    force_round_to_debate(&ctx, &round_id, 5_000).await;
+
+    let (pk, _) = FactFoldRound::keys(&round_id);
+    let round = FactFoldRound::get(&ctx.ddb, &pk, Some(crate::common::types::EntityType::FactFoldRound(round_id.clone())))
+        .await
+        .expect("ddb read")
+        .expect("round must exist");
+    let other_pk = round.participant_pks
+        .iter()
+        .find(|p| p.to_string() != ctx.test_user.0.pk.to_string())
+        .expect("must have another participant")
+        .clone();
+    seed_rationale(&ctx, &round_id, &other_pk).await;
+
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/bets/flip", round_id),
+        headers: headers,
+        body: { "req": { "side": "FAKE", "cite_user_pk": other_pk.to_string() } },
+        response_type: crate::features::arcade::games::fact_or_fold::types::FlipBetResponse,
+    };
+    assert_eq!(status, 200, "valid flip must succeed: {:?}", body);
+    assert!(matches!(body.original_side, BetSide::Real));
+    assert!(matches!(body.flipped_to, BetSide::Fake));
+}
+
+#[tokio::test]
+async fn test_flip_rejected_when_already_used() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+    seed_bet(&ctx, &round_id, &ctx.test_user.0.pk, "REAL").await;
+    force_round_to_debate(&ctx, &round_id, 5_000).await;
+
+    let (pk, _) = FactFoldRound::keys(&round_id);
+    let round = FactFoldRound::get(&ctx.ddb, &pk, Some(crate::common::types::EntityType::FactFoldRound(round_id.clone())))
+        .await
+        .expect("ddb read")
+        .expect("round must exist");
+    let other_pk = round.participant_pks
+        .iter()
+        .find(|p| p.to_string() != ctx.test_user.0.pk.to_string())
+        .expect("must have another participant")
+        .clone();
+    seed_rationale(&ctx, &round_id, &other_pk).await;
+
+    // First flip — succeeds.
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/fact-or-fold/rounds/{}/bets/flip", round_id),
+        headers: headers.clone(),
+        body: { "req": { "side": "FAKE", "cite_user_pk": other_pk.to_string() } }
+    };
+    assert_eq!(status, 200);
+
+    // Second flip — rejected.
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/bets/flip", round_id),
+        headers: headers,
+        body: { "req": { "side": "REAL", "cite_user_pk": other_pk.to_string() } }
+    };
+    assert_ne!(status, 200, "second flip in the same round must be rejected");
+}
+
+#[tokio::test]
+async fn test_chat_post_succeeds_during_debate() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+    force_round_to_debate(&ctx, &round_id, 30_000).await;
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/arcade/games/fact-or-fold/rounds/{}/chat", round_id),
+        headers: headers,
+        body: { "req": { "text": "hello debate" } }
+    };
+    assert_eq!(status, 200, "chat post during Debate must succeed");
+}
+
 // ── Client tick (PR4d) ──────────────────────────────────────────────
 
 #[tokio::test]
@@ -1192,7 +1405,7 @@ async fn test_tick_rolls_through_multiple_stages() {
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
-    // Walk all the way to Reveal in one tick (PR4 terminal stage).
+    // Walk all the way to Debate in one tick (PR5 terminal stage).
     backdate_stage_deadline(&ctx, &round_id, 5 * 60 * 1000).await;
 
     let (status, _, body) = crate::test_post! {
@@ -1203,8 +1416,8 @@ async fn test_tick_rolls_through_multiple_stages() {
     };
     assert_eq!(status, 200);
     assert!(
-        matches!(body.status, RoundStatus::Reveal),
-        "tick walks to PR4 terminal Reveal, got {:?}",
+        matches!(body.status, RoundStatus::Debate),
+        "tick walks to PR5 terminal Debate, got {:?}",
         body.status,
     );
 }

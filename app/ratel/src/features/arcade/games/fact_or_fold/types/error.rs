@@ -47,6 +47,49 @@ pub enum FactOrFoldError {
     )]
     BetStageMismatch,
 
+    // ── Flip slot (PR5) ───────────────────────────────────────────
+    #[error("flip slot is only open in the last 10s of debate")]
+    #[translate(
+        en = "Bet flip is only allowed in the last 10 seconds of the debate stage",
+        ko = "베팅 변경은 토론 마지막 10초에만 가능합니다.",
+    )]
+    FlipSlotClosed,
+
+    #[error("flip side must differ from current side")]
+    #[translate(
+        en = "Flip side must be different from your current bet side",
+        ko = "변경할 베팅 사이드는 현재 사이드와 달라야 합니다.",
+    )]
+    FlipSameSide,
+
+    #[error("flip cite must be another round participant")]
+    #[translate(
+        en = "Citation must point at another round participant",
+        ko = "인용할 참가자는 다른 라운드 참가자여야 합니다.",
+    )]
+    FlipInvalidCite,
+
+    #[error("flip cite has no rationale to cite")]
+    #[translate(
+        en = "Cited participant has not submitted a rationale",
+        ko = "인용한 참가자가 근거를 제출하지 않았습니다.",
+    )]
+    FlipCiteNoRationale,
+
+    #[error("flip already used this round")]
+    #[translate(
+        en = "You have already flipped your bet this round",
+        ko = "이번 라운드에서는 이미 베팅을 변경했습니다.",
+    )]
+    FlipAlreadyUsed,
+
+    #[error("bet must exist before flipping")]
+    #[translate(
+        en = "You must place a 1st bet before flipping",
+        ko = "베팅 변경 전에 1차 베팅을 먼저 해야 합니다.",
+    )]
+    FlipNoOriginalBet,
+
     #[error("round is not in the rationale stage")]
     #[translate(
         en = "Rationales can only be submitted during stage 3",
@@ -160,7 +203,13 @@ impl FactOrFoldError {
             | FactOrFoldError::RationaleStageMismatch
             | FactOrFoldError::BetAmountOutOfRange
             | FactOrFoldError::RationaleInvalid
-            | FactOrFoldError::NotRoundParticipant => StatusCode::BAD_REQUEST,
+            | FactOrFoldError::NotRoundParticipant
+            | FactOrFoldError::FlipSlotClosed
+            | FactOrFoldError::FlipSameSide
+            | FactOrFoldError::FlipInvalidCite
+            | FactOrFoldError::FlipCiteNoRationale
+            | FactOrFoldError::FlipAlreadyUsed
+            | FactOrFoldError::FlipNoOriginalBet => StatusCode::BAD_REQUEST,
             FactOrFoldError::NotRoundInsider => StatusCode::FORBIDDEN,
             FactOrFoldError::LobbyFull => StatusCode::CONFLICT,
             FactOrFoldError::LobbyNoHeadlineAvailable => StatusCode::SERVICE_UNAVAILABLE,
