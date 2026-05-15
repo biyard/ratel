@@ -1049,6 +1049,90 @@ async fn test_rationale_succeeds_after_lazy_advance_into_rationale_stage() {
     assert!(body.essence_eligible, ">= 50-char rationale should be eligible");
 }
 
+// ── Client tick (PR4d) ──────────────────────────────────────────────
+
+#[tokio::test]
+async fn test_tick_before_deadline_is_noop() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    // Round freshly started → NewsReveal deadline ~30s in the future.
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/tick", round_id),
+        headers: headers,
+        response_type: RoundResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(
+        matches!(body.status, RoundStatus::NewsReveal),
+        "tick before deadline must keep stage = NewsReveal, got {:?}",
+        body.status,
+    );
+}
+
+#[tokio::test]
+async fn test_tick_after_deadline_advances_stage() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    // NewsReveal expired 5s ago → tick should advance to Bet.
+    backdate_stage_deadline(&ctx, &round_id, 5_000).await;
+
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/tick", round_id),
+        headers: headers,
+        response_type: RoundResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(
+        matches!(body.status, RoundStatus::Bet),
+        "tick after NewsReveal deadline must advance to Bet, got {:?}",
+        body.status,
+    );
+}
+
+#[tokio::test]
+async fn test_tick_rolls_through_multiple_stages() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    // Walk all the way to Reveal in one tick (PR4 terminal stage).
+    backdate_stage_deadline(&ctx, &round_id, 5 * 60 * 1000).await;
+
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/tick", round_id),
+        headers: headers,
+        response_type: RoundResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(
+        matches!(body.status, RoundStatus::Reveal),
+        "tick walks to PR4 terminal Reveal, got {:?}",
+        body.status,
+    );
+}
+
+#[tokio::test]
+async fn test_tick_rejects_non_participant() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, _) = fill_round_to_capacity(&ctx, &admin).await;
+
+    let (_, outsider) = ctx.create_another_user().await;
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/rounds/{}/tick", round_id),
+        headers: outsider,
+    };
+    assert_ne!(status, 200, "non-participant must not be able to tick");
+}
+
 #[allow(dead_code)]
 fn _force_dto_imports_used() {
     // Pulls in BetResponse / RationaleResponse / BetSide so they

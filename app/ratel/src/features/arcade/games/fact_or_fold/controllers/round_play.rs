@@ -1,16 +1,22 @@
-//! Round-play endpoints (PR4 step 2).
+//! Round-play endpoints.
 //!
 //! Surface:
 //!   POST  /api/fact-or-fold/rounds/{round_id}/bets
 //!   POST  /api/fact-or-fold/rounds/{round_id}/rationale
 //!   GET   /api/fact-or-fold/rounds/{round_id}/insider-statement
 //!   POST  /api/fact-or-fold/rounds/{round_id}/heartbeat
+//!   POST  /api/fact-or-fold/rounds/{round_id}/tick    ← PR4d (client trigger)
 //!
 //! All endpoints validate (a) the caller is a round participant and
 //! (b) the round is in the right stage. Insider statement is gated
 //! by `FactFoldParticipant.is_insider` per design doc § Insider
 //! protection — the response always wraps `Option<String>` so the
 //! "not insider" branch is a normal Some/None, not a 403.
+//!
+//! `/tick` is the explicit client-driven stage advance signal
+//! (design doc § A6). All other endpoints also lazily advance via
+//! [`load_round_advanced_or_404`] so a stale client still sees the
+//! correct stage.
 
 use crate::common::*;
 use crate::features::arcade::games::fact_or_fold::types::*;
@@ -241,4 +247,30 @@ pub async fn heartbeat_handler(
         last_seen_at: participant.last_seen_at,
         forfeited: participant.forfeited,
     })
+}
+
+// ── POST /api/fact-or-fold/rounds/{round_id}/tick ────────────────
+//
+// Client-driven stage advance signal (design doc § A6). The client
+// posts this when its countdown for the current stage hits zero;
+// the server (a) re-checks the wall-clock against
+// `stage_deadline_at`, (b) ratchets through any elapsed stages, and
+// (c) returns the resulting `RoundResponse`. PR4f wires the SSE
+// broadcast that fires on a successful advance.
+//
+// Idempotent: a tick that arrives before the deadline is a no-op.
+// A tick that arrives while another tick is in flight will see the
+// already-advanced state (lazy advance in
+// `load_round_advanced_or_404` covers it).
+
+#[post("/api/fact-or-fold/rounds/{round_id}/tick", user: User)]
+pub async fn tick_handler(round_id: FactFoldRoundEntityType) -> Result<RoundResponse> {
+    let cfg = crate::common::CommonConfig::default();
+    let cli = cfg.dynamodb();
+    let inner_round_id = round_id.0.clone();
+
+    let round = load_round_advanced_or_404(cli, &inner_round_id).await?;
+    ensure_participant(&round, &user.pk.to_string())?;
+
+    Ok(super::lobby::round_to_response(&round))
 }
