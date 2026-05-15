@@ -46066,3 +46066,1563 @@ body.comments-panel-resizing {
   gap: 6px;
   line-height: 1.5;
 }
+
+/* === src/features/arcade/games/fact_or_fold/pages/game_room === */
+
+/* Root container. Local CSS variables (named to mirror the
+ * round-stage.html mockup) so that the imported rules below port over
+ * verbatim with just an `.ff-room ` scope prefix. Light/dark colors
+ * use the space-toggle pattern so the room follows the global theme. */
+.ff-room {
+  --bg: var(--dark, #07070f) var(--light, #f8f7fb);
+  --bg-grad-1: var(--dark, #11102a) var(--light, #ece9f5);
+  --bg-grad-2: var(--dark, #1a0a22) var(--light, #efe5ec);
+  --surface: var(--dark, rgba(18, 18, 32, 0.72))
+    var(--light, rgba(255, 255, 255, 0.88));
+  --surface-2: var(--dark, rgba(28, 28, 46, 0.6))
+    var(--light, rgba(244, 240, 252, 0.78));
+  --surface-3: var(--dark, rgba(38, 38, 58, 0.5))
+    var(--light, rgba(232, 228, 244, 0.72));
+  --border: var(--dark, rgba(255, 255, 255, 0.08))
+    var(--light, rgba(20, 12, 38, 0.08));
+  --border-strong: var(--dark, rgba(255, 255, 255, 0.16))
+    var(--light, rgba(20, 12, 38, 0.18));
+  --text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
+  --text-muted: var(--dark, #8a8aa6) var(--light, #5d5b73);
+  --text-faint: var(--dark, #5a5a78) var(--light, #8d8aa3);
+
+  --gold: #fcb300;
+  --gold-soft: rgba(252, 179, 0, 0.12);
+  --pink: #db2780;
+  --pink-soft: rgba(219, 39, 128, 0.12);
+  --teal: #6eedd8;
+  --teal-soft: rgba(110, 237, 216, 0.12);
+  --purple: #a78bfa;
+  --purple-soft: rgba(167, 139, 250, 0.14);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+
+  position: relative;
+  z-index: 1;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 32px 80px;
+  color: var(--text-primary);
+  font-family: "Outfit", system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ── Top bar ──────────────────────────────────────────────────── */
+.ff-room .top-bar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 22px;
+  padding: 16px 20px;
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+.ff-room .top-nav {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+.ff-room .top-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-family: "Outfit", sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ff-room .top-nav-btn:hover {
+  color: var(--text-primary);
+  background: var(--surface-2);
+}
+.ff-room .top-nav-btn[aria-selected="true"] {
+  background: var(--gold-soft);
+  color: var(--gold);
+  border-color: rgba(252, 179, 0, 0.3);
+}
+.ff-room .top-nav-btn-icon {
+  font-size: 14px;
+}
+.ff-room .brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.ff-room .brand-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--gold), var(--pink));
+  display: grid;
+  place-items: center;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: #1a0a00;
+  box-shadow: 0 4px 16px rgba(252, 179, 0, 0.35);
+}
+.ff-room .brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ff-room .brand-name {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+}
+.ff-room .brand-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+}
+.ff-room .user-stats {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.ff-room .stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+}
+.ff-room .stat-chip.gold {
+  border-color: rgba(252, 179, 0, 0.3);
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+.ff-room .stat-chip-icon {
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+}
+.ff-room .avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5b3aaf, #db2780);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: white;
+  border: 2px solid var(--border-strong);
+}
+
+/* ── Layout: sidebar + view stack ─────────────────────────────── */
+.ff-room .layout {
+  display: grid;
+  grid-template-columns: 176px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+.ff-room .view-stack {
+  min-width: 0;
+}
+.ff-room .sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 24px;
+}
+.ff-room .sidebar .timer-card {
+  padding: 14px 14px 16px;
+}
+.ff-room .sidebar .timer-card .section-label {
+  font-size: 10px;
+}
+.ff-room .sidebar .timer-card .timer-stage {
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+.ff-room .sidebar .timer-card .timer-deadline {
+  font-size: 10px;
+  margin-bottom: 10px;
+}
+.ff-room .sidebar .timer-card .timer-ring {
+  width: 120px;
+  height: 120px;
+  margin: 4px auto 0;
+}
+.ff-room .sidebar .timer-card .timer-ring svg {
+  width: 120px;
+  height: 120px;
+}
+.ff-room .sidebar .timer-card .timer-display-time {
+  font-size: 22px;
+}
+.ff-room .sidebar .timer-card .timer-display-sub {
+  font-size: 10px;
+}
+@media (max-width: 900px) {
+  .ff-room .layout {
+    grid-template-columns: 1fr;
+  }
+  .ff-room .sidebar {
+    position: static;
+  }
+}
+
+/* ── Stage timeline (sidebar) ─────────────────────────────────── */
+.ff-room .stage-timeline.stage-timeline-global {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 20px;
+  padding: 20px 14px;
+  margin-bottom: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+.ff-room .stage-timeline.stage-timeline-global[data-hidden="true"] {
+  display: none;
+}
+.ff-room .stage-timeline-global .stage-step {
+  flex: none;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  position: relative;
+  gap: 12px;
+}
+.ff-room .stage-timeline-global .stage-step:hover {
+  opacity: 0.85;
+}
+.ff-room .stage-timeline-global .stage-step:hover .stage-dot {
+  border-color: var(--border-strong);
+}
+.ff-room .stage-timeline-global .stage-step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 32px;
+  bottom: -20px;
+  width: 2px;
+  background: var(--border);
+}
+.ff-room
+  .stage-timeline-global
+  .stage-step[data-state="done"]:not(:last-child)::after {
+  background: linear-gradient(180deg, var(--teal), var(--gold));
+}
+.ff-room
+  .stage-timeline-global
+  .stage-step[data-state="active"]:not(:last-child)::after {
+  background: linear-gradient(180deg, var(--gold), var(--border));
+}
+.ff-room .stage-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  border: 2px solid var(--border);
+  display: grid;
+  place-items: center;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+.ff-room .stage-step[data-state="done"] .stage-dot {
+  background: var(--teal-soft);
+  border-color: var(--teal);
+  color: var(--teal);
+}
+.ff-room .stage-step[data-state="active"] .stage-dot {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #1a0a00;
+  box-shadow: 0 0 0 6px rgba(252, 179, 0, 0.18);
+}
+.ff-room .stage-label {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.ff-room .stage-label-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.ff-room .stage-step[data-state="upcoming"] .stage-label-name {
+  color: var(--text-muted);
+}
+.ff-room .stage-label-time {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10.5px;
+  color: var(--text-faint);
+}
+
+/* ── Timer card ───────────────────────────────────────────────── */
+.ff-room .timer-card {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+  text-align: center;
+}
+.ff-room .timer-ring {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 8px auto 16px;
+}
+.ff-room .timer-ring svg {
+  transform: rotate(-90deg);
+}
+.ff-room .timer-ring-bg {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 8;
+}
+.ff-room .timer-ring-fg {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+.ff-room .timer-display {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: "Orbitron", sans-serif;
+}
+.ff-room .timer-display-time {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--gold);
+}
+.ff-room .timer-display-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+  margin-top: 2px;
+}
+.ff-room .timer-stage {
+  font-family: "Orbitron", sans-serif;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.ff-room .timer-deadline {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+/* ── View host (each stage is one .view) ─────────────────────── */
+.ff-room .view {
+  display: none;
+  animation: ff-room-fadeup 0.32s ease;
+}
+.ff-room .view[data-active="true"] {
+  display: block;
+}
+@keyframes ff-room-fadeup {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Common primitives (card / pill / btn / section-label) ────── */
+.ff-room .card-title {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  margin: 0 0 6px;
+}
+.ff-room .card-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 18px;
+}
+.ff-room .section-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+.ff-room .section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.ff-room .section-head h2 {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin: 0;
+}
+.ff-room .section-head .sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+}
+.ff-room .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-radius: 999px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.ff-room .pill.gold {
+  color: var(--gold);
+  border-color: rgba(252, 179, 0, 0.3);
+  background: var(--gold-soft);
+}
+.ff-room .pill.pink {
+  color: var(--pink);
+  border-color: rgba(219, 39, 128, 0.3);
+  background: var(--pink-soft);
+}
+.ff-room .pill.teal {
+  color: var(--teal);
+  border-color: rgba(110, 237, 216, 0.3);
+  background: var(--teal-soft);
+}
+.ff-room .pill.purple {
+  color: var(--purple);
+  border-color: rgba(167, 139, 250, 0.3);
+  background: var(--purple-soft);
+}
+.ff-room .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-family: "Outfit", sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.ff-room .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ff-room .btn-primary {
+  background: var(--gold);
+  color: #1a0a00;
+  border-color: var(--gold);
+  box-shadow: 0 4px 16px rgba(252, 179, 0, 0.25);
+}
+.ff-room .btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(252, 179, 0, 0.35);
+}
+.ff-room .btn-ghost {
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+.ff-room .btn-ghost:hover:not(:disabled) {
+  background: var(--surface-3);
+  border-color: var(--border-strong);
+}
+
+/* ── News reveal view ─────────────────────────────────────────── */
+.ff-room .round-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 22px;
+}
+.ff-room .news-card {
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+  margin-bottom: 18px;
+}
+.ff-room .news-source {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+}
+.ff-room .news-source-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+.ff-room .news-headline {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.35;
+  margin: 0 0 16px;
+}
+.ff-room .news-excerpt {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin: 0 0 20px;
+  padding-left: 14px;
+  border-left: 2px solid var(--border-strong);
+}
+.ff-room .news-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.ff-room .news-cta {
+  margin-left: auto;
+  padding: 9px 16px;
+  font-size: 12.5px;
+}
+
+/* Players card (roster) */
+.ff-room .players-card {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+.ff-room .players-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+}
+.ff-room .players-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ff-room .player-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+.ff-room .player-row.me {
+  border-color: rgba(252, 179, 0, 0.3);
+  background: var(--gold-soft);
+}
+.ff-room .p-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4f3aaf, #7d3aaf);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 13px;
+  border: 2px solid var(--border-strong);
+}
+.ff-room .p-avatar.a2 {
+  background: linear-gradient(135deg, #3aaf7d, #6eedd8);
+  color: #042a1f;
+}
+.ff-room .p-avatar.a3 {
+  background: linear-gradient(135deg, #af3a7d, #db2780);
+}
+.ff-room .p-avatar.a4 {
+  background: linear-gradient(135deg, #af7d3a, #fcb300);
+  color: #1a0a00;
+}
+.ff-room .p-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ff-room .p-name {
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ff-room .p-status {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.ff-room .p-state-pill {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--text-muted);
+}
+.ff-room .p-state-pill.done {
+  background: var(--teal-soft);
+  color: var(--teal);
+}
+.ff-room .p-state-pill.waiting {
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+.ff-room .lb-you-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  background: var(--gold);
+  color: #1a0a00;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* ── First-bet view ───────────────────────────────────────────── */
+.ff-room .live-bet-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 22px;
+}
+.ff-room .insider-card {
+  position: relative;
+  padding: 22px 24px;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(167, 139, 250, 0.04),
+      rgba(167, 139, 250, 0.04) 8px,
+      transparent 8px,
+      transparent 16px
+    ),
+    rgba(20, 12, 36, 0.85);
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+  margin-bottom: 18px;
+  overflow: hidden;
+}
+.ff-room .insider-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 4px;
+  background: var(--purple);
+}
+.ff-room .insider-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.ff-room .insider-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: var(--purple-soft);
+  color: var(--purple);
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+}
+.ff-room .insider-title {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--purple);
+}
+.ff-room .insider-body {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.ff-room .insider-body strong {
+  color: var(--purple);
+}
+.ff-room .insider-foot {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(167, 139, 250, 0.25);
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.ff-room .bet-card {
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+.ff-room .bet-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.ff-room .bet-option {
+  position: relative;
+  padding: 22px;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: center;
+}
+.ff-room .bet-option:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+.ff-room .bet-option[data-selected="true"][data-side="real"] {
+  background: var(--gold-soft);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px rgba(252, 179, 0, 0.15);
+}
+.ff-room .bet-option[data-selected="true"][data-side="fake"] {
+  background: var(--pink-soft);
+  border-color: var(--pink);
+  box-shadow: 0 0 0 4px rgba(219, 39, 128, 0.15);
+}
+.ff-room .bet-option-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+.ff-room .bet-option[data-side="real"] .bet-option-icon {
+  color: var(--gold);
+}
+.ff-room .bet-option[data-side="fake"] .bet-option-icon {
+  color: var(--pink);
+}
+.ff-room .bet-option-label {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+.ff-room .bet-option-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.ff-room .rp-slider-wrap {
+  margin-bottom: 24px;
+}
+.ff-room .rp-slider-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.ff-room .rp-slider-label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.ff-room .rp-slider-value {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--gold);
+}
+.ff-room .rp-slider {
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  background: var(--surface-3);
+  border-radius: 999px;
+  outline: none;
+}
+.ff-room .rp-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  background: var(--gold);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 0 4px rgba(252, 179, 0, 0.18);
+}
+.ff-room .rp-slider-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--text-faint);
+}
+.ff-room .submit-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 20px;
+}
+
+/* ── Reasoning-write view ─────────────────────────────────────── */
+.ff-room .bet-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 22px;
+}
+.ff-room .reason-live-card {
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+.ff-room .reason-prompt {
+  margin-bottom: 16px;
+}
+.ff-room .reason-prompt-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.ff-room .reason-prompt-text {
+  font-family: "Orbitron", sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+}
+.ff-room .reason-prompt-text .gold-mark {
+  color: var(--gold);
+}
+.ff-room .reason-prompt-text .pink-mark {
+  color: var(--pink);
+}
+.ff-room .reason-wrap {
+  margin-bottom: 18px;
+}
+.ff-room .reason-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.ff-room .reason-label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.ff-room .char-counter {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+.ff-room .char-counter.ok {
+  color: var(--teal);
+}
+.ff-room .char-counter.warn {
+  color: var(--pink);
+}
+.ff-room .reason-textarea {
+  width: 100%;
+  min-height: 130px;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  font-family: "Outfit", sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.ff-room .reason-textarea:focus {
+  border-color: var(--gold);
+}
+.ff-room .reason-warn {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: rgba(219, 39, 128, 0.08);
+  border: 1px solid rgba(219, 39, 128, 0.25);
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+  color: var(--pink);
+  line-height: 1.5;
+}
+.ff-room .bet-summary {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+.ff-room .player-pulses {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.ff-room .pulse-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 8px 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12px;
+}
+.ff-room .pulse-chip.done {
+  background: var(--teal-soft);
+  border-color: var(--teal);
+  color: var(--teal);
+}
+.ff-room .pulse-chip-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+}
+.ff-room .pulse-chip-state {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+.ff-room .pulse-chip.done .pulse-chip-state {
+  color: var(--teal);
+}
+.ff-room .pulse-chip.thinking .pulse-chip-state {
+  color: var(--gold);
+}
+.ff-room .pulse-chip.thinking::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  background: var(--gold);
+  border-radius: 50%;
+  animation: ff-room-pulse 0.8s ease-in-out infinite;
+  margin-left: 4px;
+}
+@keyframes ff-room-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.7);
+  }
+}
+
+/* ── Reasoning-reveal view (camp bar + reveal cards) ──────────── */
+.ff-room .camp-bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 14px;
+  align-items: stretch;
+  margin-bottom: 18px;
+}
+.ff-room .camp-side {
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ff-room .camp-side.real {
+  border-color: rgba(252, 179, 0, 0.35);
+  background: linear-gradient(180deg, var(--gold-soft), var(--surface));
+}
+.ff-room .camp-side.fake {
+  border-color: rgba(219, 39, 128, 0.35);
+  background: linear-gradient(180deg, var(--pink-soft), var(--surface));
+}
+.ff-room .camp-side-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.ff-room .camp-label {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+}
+.ff-room .camp-side.real .camp-label {
+  color: var(--gold);
+}
+.ff-room .camp-side.fake .camp-label {
+  color: var(--pink);
+}
+.ff-room .camp-count {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.ff-room .camp-avatars {
+  display: flex;
+  gap: 6px;
+}
+.ff-room .camp-vs {
+  display: grid;
+  place-items: center;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--text-faint);
+  letter-spacing: 0.1em;
+  padding: 0 8px;
+}
+.ff-room .reveal-hint {
+  padding: 12px 16px;
+  background: var(--teal-soft);
+  border: 1px solid rgba(110, 237, 216, 0.3);
+  border-radius: var(--r-md);
+  color: var(--teal);
+  font-size: 13px;
+  line-height: 1.55;
+  margin-bottom: 18px;
+}
+.ff-room .reveal-hint strong {
+  color: var(--teal);
+}
+.ff-room .reveal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+.ff-room .reveal-card {
+  padding: 22px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.ff-room .reveal-card[data-side="real"] {
+  border-left: 4px solid var(--gold);
+}
+.ff-room .reveal-card[data-side="fake"] {
+  border-left: 4px solid var(--pink);
+}
+.ff-room .reveal-card.me {
+  background: linear-gradient(180deg, rgba(252, 179, 0, 0.05), var(--surface));
+}
+.ff-room .reveal-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.ff-room .debate-card-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ff-room .reveal-card-bet {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.ff-room .reveal-card-bet.real {
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+.ff-room .reveal-card-bet.fake {
+  background: var(--pink-soft);
+  color: var(--pink);
+}
+.ff-room .reveal-card-text {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--text-primary);
+}
+.ff-room .reveal-card-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+.ff-room .quote-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: "Outfit", sans-serif;
+  font-size: 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ff-room .quote-btn:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+.ff-room .quote-btn[data-marked="true"] {
+  background: var(--teal-soft);
+  border-color: var(--teal);
+  color: var(--teal);
+}
+.ff-room .reveal-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 22px;
+  padding: 18px 22px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+.ff-room .reveal-cta-hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* ── Live debate view (chat + flip slot) ─────────────────────── */
+.ff-room .live-chat-card {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+.ff-room .live-chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-bottom: 14px;
+}
+.ff-room .chat-msg {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.ff-room .chat-msg-author {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-weight: 600;
+}
+.ff-room .chat-msg-author.me {
+  color: var(--gold);
+}
+.ff-room .chat-msg-time {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+.ff-room .chat-msg-body {
+  color: var(--text-primary);
+}
+.ff-room .chat-input-row {
+  display: flex;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.ff-room .chat-input {
+  flex: 1;
+  padding: 9px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  font-family: "Outfit", sans-serif;
+  font-size: 13px;
+  outline: none;
+}
+.ff-room .chat-input:focus {
+  border-color: var(--teal);
+}
+.ff-room .final-bet-bar {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 18px;
+  background: var(--purple-soft);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  border-radius: var(--r-lg);
+  margin-top: 18px;
+}
+.ff-room .final-bet-bar.hidden {
+  opacity: 0.4;
+}
+.ff-room .final-bet-tag {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--purple);
+  padding: 4px 8px;
+  background: var(--surface);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  border-radius: 4px;
+}
+.ff-room .final-bet-text {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+.ff-room .final-bet-text strong {
+  font-family: "Orbitron", sans-serif;
+}
+.ff-room .final-bet-countdown {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--purple);
+  font-variant-numeric: tabular-nums;
+}
+.ff-room .mini-btn {
+  padding: 8px 14px;
+  font-family: "Outfit", sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+}
+.ff-room .mini-btn.gold {
+  background: var(--gold);
+  color: #1a0a00;
+  border-color: var(--gold);
+}
+.ff-room .mini-btn.pink {
+  background: var(--pink);
+  color: white;
+  border-color: var(--pink);
+}
+
+/* ── Settlement view (banner + result table + essence) ───────── */
+.ff-room .reveal-banner {
+  position: relative;
+  padding: 32px;
+  background:
+    radial-gradient(
+      circle at 20% 20%,
+      rgba(219, 39, 128, 0.18),
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(167, 139, 250, 0.14),
+      transparent 50%
+    ),
+    linear-gradient(180deg, rgba(219, 39, 128, 0.06), var(--surface));
+  border: 1px solid rgba(219, 39, 128, 0.3);
+  border-radius: var(--r-xl);
+  backdrop-filter: blur(18px);
+  text-align: center;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+.ff-room .reveal-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.03) 0,
+    rgba(255, 255, 255, 0.03) 1px,
+    transparent 1px,
+    transparent 14px
+  );
+  pointer-events: none;
+}
+.ff-room .reveal-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.ff-room .reveal-verdict {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 800;
+  font-size: 56px;
+  letter-spacing: 0.06em;
+  margin: 0 0 12px;
+  text-shadow: 0 0 40px rgba(219, 39, 128, 0.4);
+}
+.ff-room .reveal-verdict.fake {
+  color: var(--pink);
+}
+.ff-room .reveal-verdict.real {
+  color: var(--gold);
+  text-shadow: 0 0 40px rgba(252, 179, 0, 0.4);
+}
+.ff-room .reveal-headline {
+  font-size: 16px;
+  color: var(--text-primary);
+  margin: 0 0 18px;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.ff-room .reveal-source {
+  display: inline-block;
+  padding: 8px 14px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+}
+.ff-room .reveal-source a {
+  color: var(--teal);
+  text-decoration: none;
+}
+.ff-room .result-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 22px;
+}
+.ff-room .result-table {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+.ff-room .result-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.ff-room .result-row:last-child {
+  border-bottom: none;
+}
+.ff-room .result-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ff-room .result-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.ff-room .result-judgement {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.ff-room .result-bet-side {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.ff-room .result-bet-side.real {
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+.ff-room .result-bet-side.fake {
+  background: var(--pink-soft);
+  color: var(--pink);
+}
+.ff-room .result-delta {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: right;
+}
+.ff-room .result-delta.up {
+  color: var(--gold);
+}
+.ff-room .result-delta.down {
+  color: var(--pink);
+}
+.ff-room .insider-truth-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--teal-soft);
+  color: var(--teal);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+.ff-room .essence-card {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+.ff-room .formula-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 13px;
+}
+.ff-room .formula-row:last-child {
+  border-bottom: none;
+  padding-top: 12px;
+  font-weight: 700;
+}
+.ff-room .formula-row .lbl {
+  color: var(--text-muted);
+}
+.ff-room .formula-row .val {
+  font-family: "JetBrains Mono", monospace;
+  color: var(--text-primary);
+}
+.ff-room .formula-row.total .val {
+  color: var(--gold);
+  font-size: 16px;
+}
+.ff-room .essence-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.ff-room .essence-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  align-items: flex-start;
+}
+.ff-room .essence-checkbox {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-strong);
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  margin-top: 2px;
+}
+.ff-room .essence-checkbox[data-checked="true"] {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #1a0a00;
+}
+.ff-room .essence-meta {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+.ff-room .essence-text {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-primary);
+}
+.ff-room .essence-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.ff-room .essence-foot-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* Placeholder shown when a stage's data hasn't loaded yet. */
+.ff-room .ff-room__placeholder {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-faint);
+  font-style: italic;
+}
