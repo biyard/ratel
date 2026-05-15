@@ -23,6 +23,7 @@
 use crate::common::*;
 use crate::features::arcade::ArcadeError;
 use crate::features::arcade::games::fact_or_fold::models::{FactFoldChatMessage, FactFoldRound};
+use crate::features::arcade::games::fact_or_fold::types::ChatMessagePayload;
 use crate::features::arcade::realtime::channel::{ChannelContext, ChannelId, RoomChannel};
 use async_trait::async_trait;
 
@@ -30,23 +31,15 @@ use async_trait::async_trait;
 /// snapshot. Caps reconnect catch-up cost.
 const CHAT_HISTORY_LIMIT: usize = 50;
 
-/// Wire-format chat row sent over SSE (and in the initial snapshot).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct ChatMessagePayload {
-    pub msg_id: String,
-    pub author_pk: String,
-    pub text: String,
-    pub sent_at: i64,
-}
-
-impl From<FactFoldChatMessage> for ChatMessagePayload {
-    fn from(row: FactFoldChatMessage) -> Self {
-        Self {
-            msg_id: row.id().unwrap_or_default(),
-            author_pk: row.author_pk.to_string(),
-            text: row.text,
-            sent_at: row.sent_at,
-        }
+/// Server-only conversion from the DDB row to the wire-format
+/// payload. Lives in the realtime module (not the DTO module)
+/// because the DTO module is feature-gate-free.
+pub fn chat_payload_from(row: FactFoldChatMessage) -> ChatMessagePayload {
+    ChatMessagePayload {
+        msg_id: row.id().unwrap_or_default(),
+        author_pk: row.author_pk.to_string(),
+        text: row.text,
+        sent_at: row.sent_at,
     }
 }
 
@@ -113,7 +106,7 @@ impl RoomChannel for FactFoldChatChannel {
                 ArcadeError::StorageFailure
             })?;
 
-        let payloads: Vec<ChatMessagePayload> = rows.into_iter().map(Into::into).collect();
+        let payloads: Vec<ChatMessagePayload> = rows.into_iter().map(chat_payload_from).collect();
         Ok(serde_json::json!({ "history": payloads }))
     }
 }

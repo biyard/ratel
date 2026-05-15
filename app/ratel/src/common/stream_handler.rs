@@ -413,7 +413,8 @@ pub async fn handle_stream_record(
 async fn handle_fact_fold_chat_inserted(
     row: crate::features::arcade::games::fact_or_fold::models::FactFoldChatMessage,
 ) -> crate::common::Result<()> {
-    use crate::features::arcade::games::fact_or_fold::realtime::ChatMessagePayload;
+    use crate::features::arcade::games::fact_or_fold::realtime::chat_payload_from;
+    use crate::features::arcade::games::fact_or_fold::types::ChatMessagePayload;
     use crate::features::arcade::realtime::channel::ChannelId;
     use crate::features::arcade::realtime::hub::global_hub;
 
@@ -425,7 +426,7 @@ async fn handle_fact_fold_chat_inserted(
         .to_string();
     let channel = ChannelId(format!("fof.chat:{round_id}"));
 
-    let payload: ChatMessagePayload = row.into();
+    let payload: ChatMessagePayload = chat_payload_from(row);
     let payload = serde_json::to_value(payload).map_err(|e| {
         crate::error!("FactFoldChat fan-out serialize failed: {e}");
         crate::features::arcade::ArcadeError::ChannelPayloadInvalid

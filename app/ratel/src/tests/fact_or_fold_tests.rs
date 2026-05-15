@@ -1085,6 +1085,38 @@ async fn test_post_chat_rejects_outside_debate_stage() {
 }
 
 #[tokio::test]
+async fn test_chat_polling_returns_empty_for_fresh_round() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/arcade/games/fact-or-fold/rounds/{}/chat", round_id),
+        headers: headers,
+        response_type: crate::features::arcade::games::fact_or_fold::types::ListChatResponse,
+    };
+    assert_eq!(status, 200);
+    assert!(body.items.is_empty());
+    assert!(body.last_id.is_none());
+}
+
+#[tokio::test]
+async fn test_chat_polling_rejects_non_participant() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, _) = fill_round_to_capacity(&ctx, &admin).await;
+
+    let (_, outsider) = ctx.create_another_user().await;
+    let (status, _, _) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/arcade/games/fact-or-fold/rounds/{}/chat", round_id),
+        headers: outsider,
+    };
+    assert_ne!(status, 200, "outsider must not be able to read chat");
+}
+
+#[tokio::test]
 async fn test_post_chat_rejects_empty_or_overlong() {
     let ctx = TestContext::setup().await;
     let (_, admin) = ctx.create_admin_user().await;

@@ -1,14 +1,22 @@
-//! Chat endpoint (PR4f).
+//! Chat endpoints (PR4f).
 //!
 //! Surface:
 //!   POST  /api/arcade/games/fact-or-fold/rounds/{round_id}/chat
+//!   GET   /api/arcade/games/fact-or-fold/rounds/{round_id}/chat?since=...
 //!
-//! v1 only allows posting during the live debate stage (`Debate`).
-//! v1 fan-out: the write-only controller persists a
-//! `FactFoldChatMessage`. The DDB Stream listener detects the
-//! INSERT and triggers `arcade::realtime::global_hub().publish(...)`
-//! so every SSE invocation broadcasts the message to its own
-//! subscribers (design doc § A2'/A12).
+//! v1 only allows *posting* during the live debate stage (`Debate`).
+//! Reads (the polling endpoint) are open to participants in any
+//! stage so a freshly-joined client can render any backlog.
+//!
+//! ### v1 realtime — polling
+//!
+//! Per design doc § A2' (re-decision): chat in v1 uses HTTP short
+//! polling, not SSE. The PR4e SSE infra + PR4f stream-listener
+//! fan-out are kept in place but only fully come alive once the
+//! Lambda binary supports streaming responses (v2 alongside the
+//! WebSocket switch). Until then the client polls
+//! `GET .../chat?since=<last_msg_id>` every 2~3s alongside the
+//! round-state poll.
 
 use crate::common::*;
 use crate::features::arcade::games::fact_or_fold::types::*;
@@ -17,6 +25,8 @@ use crate::features::arcade::games::fact_or_fold::types::*;
 use crate::common::models::auth::User;
 #[cfg(feature = "server")]
 use crate::features::arcade::games::fact_or_fold::models::{FactFoldChatMessage, FactFoldRound};
+#[cfg(feature = "server")]
+use crate::features::arcade::games::fact_or_fold::realtime::chat_payload_from;
 #[cfg(feature = "server")]
 use crate::features::arcade::games::fact_or_fold::services::stage_machine;
 
@@ -84,4 +94,71 @@ pub async fn post_chat_handler(
         text: row.text,
         sent_at: row.sent_at,
     })
+}
+
+// ── GET /api/arcade/games/fact-or-fold/rounds/{round_id}/chat ────
+//
+// v1 short-polling endpoint. Returns the chat transcript for a
+// round, optionally filtered to messages newer than `since`
+// (an opaque message id from the last response — same shape as
+// `PostChatResponse.msg_id`).
+//
+// Only round participants can read. No stage gate on reads — a
+// participant should be able to render backlog regardless of which
+// stage the round is in.
+
+#[get(
+    "/api/arcade/games/fact-or-fold/rounds/{round_id}/chat?since",
+    user: User
+)]
+pub async fn list_chat_handler(
+    round_id: FactFoldRoundEntityType,
+    since: Option<String>,
+) -> Result<ListChatResponse> {
+    let cfg = crate::common::CommonConfig::default();
+    let cli = cfg.dynamodb();
+    let inner_round_id = round_id.0.clone();
+
+    let (pk, sk) = FactFoldRound::keys(&inner_round_id);
+    let round = FactFoldRound::get(cli, &pk, Some(sk))
+        .await
+        .map_err(|e| {
+            crate::error!("list_chat_handler round read failed: {e}");
+            FactOrFoldError::StorageFailure
+        })?
+        .ok_or(FactOrFoldError::RoundNotFound)?;
+
+    let user_pk_str = user.pk.to_string();
+    let in_round = round
+        .participant_pks
+        .iter()
+        .any(|p| p.to_string() == user_pk_str);
+    if !in_round {
+        return Err(FactOrFoldError::NotRoundParticipant.into());
+    }
+
+    // sk-prefix query orders chronologically (uuid_v7 inner). v1
+    // uses a single-page fetch — round transcripts are bounded
+    // (~4 players × 70s × 80 chars).
+    let opts = FactFoldChatMessage::opt()
+        .sk("FACT_FOLD_CHAT".to_string())
+        .limit(CHAT_PAGE_LIMIT as i32);
+    let (rows, _) = FactFoldChatMessage::query(cli, pk, opts)
+        .await
+        .map_err(|e| {
+            crate::error!("list_chat_handler query failed: {e}");
+            FactOrFoldError::StorageFailure
+        })?;
+
+    let items: Vec<ChatMessagePayload> = match since {
+        Some(after) if !after.is_empty() => rows
+            .into_iter()
+            .skip_while(|r| r.id().map(|id| id <= after).unwrap_or(true))
+            .map(chat_payload_from)
+            .collect(),
+        _ => rows.into_iter().map(chat_payload_from).collect(),
+    };
+
+    let last_id = items.last().map(|m| m.msg_id.clone());
+    Ok(ListChatResponse { items, last_id })
 }

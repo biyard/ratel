@@ -307,6 +307,34 @@ pub struct PostChatResponse {
 /// Chat-message char cap (roadmap §FR-25).
 pub const CHAT_TEXT_MAX_CHARS: usize = 80;
 
+/// Per-page chat message fetch limit for the polling endpoint.
+/// 4-player × 70s × 80 chars sessions don't approach this, so a
+/// single-page response is the v1 contract.
+pub const CHAT_PAGE_LIMIT: usize = 200;
+
+/// Wire-format chat row. Used both by the polling endpoint and by
+/// the SSE `chat_message` event payload — they share the same
+/// shape on purpose so a v2 transport swap doesn't change the
+/// client-side parser.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct ChatMessagePayload {
+    pub msg_id: String,
+    pub author_pk: String,
+    pub text: String,
+    pub sent_at: i64,
+}
+
+/// Polling response for `GET .../rounds/{id}/chat`.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct ListChatResponse {
+    pub items: Vec<ChatMessagePayload>,
+    /// Id of the last message in `items`, or `None` for an empty
+    /// page. Clients echo this back via `?since=` on the next poll.
+    pub last_id: Option<String>,
+}
+
 // ── Bet + Rationale constants ─────────────────────────────────────
 
 /// Minimum chars for a rationale to count as "Essence-eligible"
