@@ -47,7 +47,7 @@ use crate::features::admin::{AdminLayout, AdminMainPage};
 use crate::features::arcade::games::fact_or_fold::pages::{
     FactFoldAdminHeadlinesPage, FactFoldAdminLayout, FactFoldAdminNewHeadlinePage,
     FactFoldAdminReportsPage, FactFoldAdminSchedulePage, FactFoldAdminSettingsPage,
-    FactFoldAdminStatsPage, FactFoldGameRoomPage, FactFoldLobbyPage, FactFoldMatchingPage,
+    FactFoldAdminStatsPage, FactFoldGameRoomPage, FactFoldMatchingPage,
 };
 use crate::features::arcade::layout::ArcadeLayout;
 use crate::features::arcade::pages::ArcadeHomePage;
@@ -142,9 +142,6 @@ pub enum Route {
 
         #[route("/me/character")]
         CharacterPage { },
-
-        #[route("/fact-or-fold")]
-        FactFoldLobbyPage { },
 
         #[nest("/arcade")]
             #[layout(ArcadeLayout)]

@@ -82,16 +82,32 @@ pub async fn get_leaderboard_handler(
                 FactOrFoldError::StorageFailure
             })?;
 
-    let items: Vec<LeaderboardEntryResponse> = rows
-        .into_iter()
-        .map(|e| LeaderboardEntryResponse {
+    // Enrich each entry with the user's display metadata so the
+    // leaderboard table renders without a per-row /me lookup. v1 caps
+    // the page at LEADERBOARD_PAGE_LIMIT (50) so per-row User::get is
+    // cheap; a batch lookup is a follow-up when the table grows.
+    let mut items: Vec<LeaderboardEntryResponse> = Vec::with_capacity(rows.len());
+    for e in rows.into_iter() {
+        let user_row = User::get(cli, &e.user_pk, Some(EntityType::User))
+            .await
+            .map_err(|err| {
+                crate::error!("get_leaderboard_handler user load failed: {err}");
+                FactOrFoldError::StorageFailure
+            })?;
+        let (username, display_name, profile_url) = user_row
+            .map(|u| (u.username, u.display_name, u.profile_url))
+            .unwrap_or_default();
+        items.push(LeaderboardEntryResponse {
             user_pk: e.user_pk.to_string(),
+            username,
+            display_name,
+            profile_url,
             accuracy_bps: e.accuracy_bps,
             total_rounds: e.total_rounds,
             correct_count: e.correct_count,
             lifetime_delta_chips: e.lifetime_delta_chips,
             last_played_at: e.last_played_at,
-        })
-        .collect();
+        });
+    }
     Ok((items, next_bookmark).into())
 }

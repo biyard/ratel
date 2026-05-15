@@ -47796,3 +47796,466 @@ body.comments-panel-resizing {
   font-size: 12.5px;
   color: var(--teal);
 }
+
+/* === src/features/arcade/pages/home === */
+.ff-home .lobby-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 22px;
+}
+
+.ff-home .featured {
+  position: relative;
+  padding: 36px 32px;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(252, 179, 0, 0.18), transparent 55%),
+    radial-gradient(circle at 0% 100%, rgba(167, 139, 250, 0.18), transparent 55%),
+    var(--surface);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+.ff-home .featured::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.02) 0,
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 12px
+  );
+  pointer-events: none;
+}
+
+.ff-home .featured > * {
+  position: relative;
+}
+
+.ff-home .featured-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--gold);
+  color: #1a0a00;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  margin-bottom: 18px;
+}
+
+.ff-home .featured-tag-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1a0a00;
+  animation: ff-home-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes ff-home-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+.ff-home .featured-title {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 800;
+  font-size: 38px;
+  letter-spacing: 0.02em;
+  margin: 0 0 8px;
+  background: linear-gradient(120deg, #fff 0%, #fcb300 60%, #db2780 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ff-home .featured-tagline {
+  font-size: 16px;
+  color: var(--text-muted);
+  margin: 0 0 24px;
+  max-width: 480px;
+}
+
+.ff-home .featured-meta {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.ff-home .meta-cell {
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+.ff-home .meta-cell-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-faint);
+  margin-bottom: 4px;
+}
+
+.ff-home .meta-cell-value {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.ff-home .meta-cell-value .accent { color: var(--gold); }
+.ff-home .meta-cell-value .teal { color: var(--teal); }
+
+.ff-home .featured-cta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ff-home .featured-status {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+}
+
+.ff-home .featured-status .green {
+  color: var(--teal);
+}
+
+.ff-home .lobby-side {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.ff-home .my-stats-card,
+.ff-home .history-card {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+
+.ff-home .my-stats-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.ff-home .my-stats-row:last-child {
+  border-bottom: none;
+}
+
+.ff-home .my-stats-row span:first-child {
+  color: var(--text-muted);
+}
+
+.ff-home .my-stats-row .num {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 600;
+}
+
+.ff-home .num.gold { color: var(--gold); }
+.ff-home .num.teal { color: var(--teal); }
+.ff-home .num.purple { color: var(--purple); }
+.ff-home .num.pink { color: var(--pink); }
+
+.ff-home .history-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.ff-home .history-row:last-child {
+  border-bottom: none;
+}
+
+.ff-home .history-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+}
+
+.ff-home .history-icon.win {
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+
+.ff-home .history-icon.lose {
+  background: var(--pink-soft);
+  color: var(--pink);
+}
+
+.ff-home .history-row-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ff-home .history-row-title {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.ff-home .history-row-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+}
+
+.ff-home .history-row-delta {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.ff-home .history-row-delta.up { color: var(--gold); }
+.ff-home .history-row-delta.down { color: var(--pink); }
+
+.ff-home .catalog-section {
+  margin-top: 28px;
+}
+
+.ff-home .catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.ff-home .game-tile {
+  position: relative;
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.ff-home .game-tile:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.ff-home .game-tile.locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ff-home .game-tile.locked:hover {
+  transform: none;
+}
+
+.ff-home .game-tile-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-md);
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  margin-bottom: 14px;
+}
+
+.ff-home .game-tile-icon.gold {
+  background: var(--gold-soft);
+  color: var(--gold);
+  box-shadow: 0 0 24px rgba(252, 179, 0, 0.15) inset;
+}
+.ff-home .game-tile-icon.teal { background: var(--teal-soft); color: var(--teal); }
+.ff-home .game-tile-icon.purple { background: var(--purple-soft); color: var(--purple); }
+.ff-home .game-tile-icon.pink { background: var(--pink-soft); color: var(--pink); }
+
+.ff-home .game-tile-name {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.ff-home .game-tile-desc {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin-bottom: 14px;
+}
+
+.ff-home .game-tile-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: auto;
+}
+
+/* Tab toggle (lobby / leaderboard) — purely visual switch in RSX */
+.ff-home .ff-home__tab-section {
+  display: none;
+  animation: ff-home-fade 0.2s ease;
+}
+
+.ff-home .ff-home__tab-section[data-active="true"] {
+  display: block;
+}
+
+@keyframes ff-home-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Leaderboard table — reused from the round-stage mockup */
+.ff-home .lb-table {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+
+.ff-home .lb-row {
+  display: grid;
+  grid-template-columns: 40px 38px minmax(140px, 1fr) minmax(170px, 1.2fr) 70px 90px;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.ff-home .lb-row:last-child {
+  border-bottom: none;
+}
+
+.ff-home .lb-row.me {
+  background: var(--gold-soft);
+  margin: 0 -16px;
+  padding: 12px 16px;
+  border-radius: var(--r-md);
+  border: 1px solid rgba(252, 179, 0, 0.3);
+}
+
+.ff-home .lb-row.head {
+  padding: 6px 0 14px;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.ff-home .lb-row.head > * {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-faint);
+  font-weight: 600;
+}
+
+.ff-home .lb-rank {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--text-faint);
+  text-align: center;
+}
+
+.ff-home .lb-rank.top1 { color: var(--gold); }
+.ff-home .lb-rank.top2 { color: #c0c0d8; }
+.ff-home .lb-rank.top3 { color: #cd7f32; }
+
+.ff-home .lb-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ff-home .lb-name {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ff-home .lb-you-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  background: var(--gold);
+  color: #1a0a00;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  border-radius: 999px;
+  box-shadow: 0 0 0 3px rgba(252, 179, 0, 0.18);
+  flex-shrink: 0;
+}
+
+.ff-home .lb-stat {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1;
+  text-align: left;
+}
+
+.ff-home .lb-accuracy {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  color: var(--text-primary);
+  text-align: right;
+  line-height: 1;
+}
+
+.ff-home .lb-primary {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--gold);
+  text-align: right;
+  line-height: 1;
+}
+
+.ff-home .ff-home__placeholder {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-faint);
+  font-style: italic;
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .ff-home .lobby-grid {
+    grid-template-columns: 1fr;
+  }
+  .ff-home .featured-meta {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

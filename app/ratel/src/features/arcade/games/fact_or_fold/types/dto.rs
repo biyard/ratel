@@ -466,6 +466,15 @@ pub struct UserStatsResponse {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct LeaderboardEntryResponse {
     pub user_pk: String,
+    /// Resolved from the player's User row at read time so the table
+    /// can render without an extra round-trip per entry. Empty string
+    /// when the user row is missing (defensive — should never happen).
+    #[serde(default)]
+    pub username: String,
+    #[serde(default)]
+    pub display_name: String,
+    #[serde(default)]
+    pub profile_url: String,
     pub accuracy_bps: i32,
     pub total_rounds: i64,
     pub correct_count: i64,
