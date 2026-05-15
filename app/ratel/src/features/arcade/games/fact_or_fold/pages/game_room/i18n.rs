@@ -99,6 +99,50 @@ translate! {
         en: "First-bet view rendering will be wired in step 6.",
         ko: "1차 베팅 화면은 다음 단계에서 채워집니다.",
     },
+    // ── Rationale write stage ─────────────────────────────────────
+    reason_prompt_label: { en: "Your 1st bet", ko: "내 1차 베팅" },
+    reason_prompt_text_real: { en: "REAL · {$amount} RP — why?", ko: "REAL · {$amount} RP — 왜?" },
+    reason_prompt_text_fake: { en: "FAKE · {$amount} RP — why?", ko: "FAKE · {$amount} RP — 왜?" },
+    reason_textarea_label: {
+        en: "One-line rationale (50–200 chars, single submission)",
+        ko: "한 줄 근거 (50~200자, 한 번만 제출)",
+    },
+    reason_textarea_placeholder: {
+        en: "Why did you judge it that way? A sentence or two…",
+        ko: "왜 그렇게 판단했는지 한두 문장으로...",
+    },
+    reason_warn: {
+        en: "⚠ Your first answer is your final answer — no rewrite. The debate stage lets you add chat + flip.",
+        ko: "⚠ 첫 답이 최종 답입니다. 다시 쓰기 불가능. 토론 단계에서 발화 큐 + 채팅으로 추가 의견 가능.",
+    },
+    reason_submit: { en: "Submit rationale", ko: "근거 제출" },
+    reason_submit_hint: {
+        en: "After submit, wait until everyone is done.",
+        ko: "제출 후 다른 사람이 끝낼 때까지 대기",
+    },
+    reason_submitted_title: { en: "Rationale submitted", ko: "근거 제출 완료" },
+    reason_submitted_body: {
+        en: "Waiting for the rest of the table — auto-advances on the stage timer.",
+        ko: "다른 참가자 대기 중 — 타이머 만료 시 자동 진행됩니다.",
+    },
+    reason_no_bet_warning: {
+        en: "You didn't lock a bet last stage — rationale write is closed.",
+        ko: "이전 단계에서 베팅이 등록되지 않았습니다. 근거 작성이 닫혀 있습니다.",
+    },
+
+    reason_tips_title: { en: "Writing tips", ko: "근거 작성 팁" },
+    reason_tips_body: {
+        en: "All 4 rationales surface together next stage. The persuasive line is what wins RP — phrase analysis and source quirks pull harder than vibes.",
+        ko: "다음 단계에서 4명 근거가 동시에 공개됩니다. 누가 누구의 어느 문장 때문에 마음을 바꿨는지가 정산에 영향. 설득력 있는 한 줄이 RP를 만듭니다.",
+    },
+    reason_others_label: { en: "Other players (LIVE)", ko: "다른 참가자 (LIVE)" },
+    reason_pulse_submitted: { en: "Submitted", ko: "제출" },
+    reason_pulse_writing: { en: "Writing…", ko: "작성 중" },
+    reason_insider_hint: {
+        en: "INSIDER: knowing the truth, your strongest weapons are formal cues (phrasing, structure) that move people who lean the other way.",
+        ko: "INSIDER: 진실을 알고 있다면, 반대편 직관을 흔들 만한 *표현 분석*이나 *형식 단서*가 강한 무기입니다.",
+    },
+
     stage_stub_reasoning_write: {
         en: "Rationale-write view rendering will be wired in step 7.",
         ko: "근거 작성 화면은 다음 단계에서 채워집니다.",
