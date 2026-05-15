@@ -36,6 +36,11 @@ export interface RegionalLambdaStackProps extends StackProps {
 
   apiDomain: string;
   baseDomain: string;
+  /// Front-end origin used by the arcade SSE Function URL CORS
+  /// allow-list. Cookie auth requires `allowCredentials: true`,
+  /// which forbids wildcard origins, so this must be set to the
+  /// specific web domain (e.g. `https://dev.ratel.foundation`).
+  webOrigin?: string;
   runtimeEnvironment?: { [key: string]: string };
 
   // Optional — when provided, the Lambda is placed in this VPC (required to
@@ -129,6 +134,43 @@ export class RegionalLambdaStack extends Stack {
         resources: ["*"],
       }),
     );
+
+    // ── Arcade SSE Function URL ──────────────────────────────────────
+    //
+    // Lambda Function URL with `RESPONSE_STREAM` so the arcade chat
+    // SSE endpoint (`GET /api/arcade/events`) can stream events to
+    // the browser as they arrive — API Gateway HTTP API buffers
+    // responses and doesn't support streaming. The same `bootstrap`
+    // binary backs both surfaces; the Lambda routes the request to
+    // the matching axum handler.
+    //
+    // CORS is required because the front-end calls this Function URL
+    // from a *different* origin (the AWS-generated `*.lambda-url.*`
+    // host) and the SSE handler relies on the session cookie, which
+    // forces `allowCredentials: true` and a specific allow-listed
+    // origin.
+    const sseUrl = apiLambda.addFunctionUrl({
+      authType: lambda.FunctionUrlAuthType.NONE,
+      invokeMode: lambda.InvokeMode.RESPONSE_STREAM,
+      cors: {
+        allowedOrigins: [
+          props.webOrigin ?? `https://${baseDomain}`,
+          // Permit the apex `<base>` and the api host for local
+          // bridging / curl smoke tests.
+          `https://${apiDomain}`,
+        ],
+        allowedMethods: [lambda.HttpMethod.GET, lambda.HttpMethod.POST],
+        allowedHeaders: ["content-type", "authorization"],
+        allowCredentials: true,
+        maxAge: cdk.Duration.minutes(5),
+      },
+    });
+
+    new cdk.CfnOutput(this, "ArcadeSseUrl", {
+      value: sseUrl.url,
+      description:
+        "Lambda Function URL for arcade SSE (RESPONSE_STREAM mode). Front-end consumes via the `ARCADE_SSE_URL` env var; the Rust binary must be built with streaming response support before this URL behaves as a true SSE stream rather than a buffered response.",
+    });
 
     // ── Analyze Lambda ─────────────────────────────────────────────
     // Dedicated function for the EventBridge-driven analyze pipeline
