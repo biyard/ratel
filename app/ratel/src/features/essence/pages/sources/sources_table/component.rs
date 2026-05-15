@@ -120,6 +120,7 @@ fn SourceRow(source: EssenceResponse) -> Element {
             "essence-src-icon--comment"
         }
         EssenceSourceKind::Poll | EssenceSourceKind::Quiz => "essence-src-icon--action",
+        EssenceSourceKind::FactFoldRationale => "essence-src-icon--post",
     };
 
     let target = navigation_target(&source);
@@ -163,6 +164,11 @@ fn SourceRow(source: EssenceResponse) -> Element {
                             EssenceSourceKind::DiscussionComment => {
                                 (tr.tag_discussion_comment, "essence-src-meta__badge--discussion")
                             }
+                            // PR6 step 4 — FOF rationale shares the
+                            // "post" label v1; a dedicated tag chip
+                            // arrives when the Essence House design
+                            // surfaces FOF.
+                            EssenceSourceKind::FactFoldRationale => (tr.tag_post, ""),
                         };
                         rsx! {
                             span { class: "essence-src-meta__badge {modifier}", "{label}" }
@@ -245,6 +251,9 @@ fn navigation_target(source: &EssenceResponse) -> Option<Route> {
             })
         }
         EssenceSourceKind::Notion => None,
+        // No navigation target yet — FOF round-history page lands
+        // with the leaderboard work (PR7).
+        EssenceSourceKind::FactFoldRationale => None,
     }
 }
 
@@ -301,6 +310,21 @@ fn kind_icon(kind: EssenceSourceKind) -> Element {
                     x2: "12.01",
                     y2: "17",
                 }
+            }
+        },
+        // PR6 step 4 — reuse the post icon for now. A dedicated
+        // FOF glyph lands when the Essence House design surfaces
+        // the FactFoldRationale source kind.
+        EssenceSourceKind::FactFoldRationale => rsx! {
+            svg {
+                view_box: "0 0 24 24",
+                fill: "none",
+                stroke: "currentColor",
+                stroke_width: "2",
+                stroke_linecap: "round",
+                stroke_linejoin: "round",
+                path { d: "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" }
+                path { d: "M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z" }
             }
         },
     }

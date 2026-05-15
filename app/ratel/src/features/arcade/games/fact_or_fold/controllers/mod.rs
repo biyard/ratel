@@ -1,4 +1,5 @@
 pub mod chat;
+pub mod essence;
 pub mod headlines;
 pub mod lobby;
 pub mod queue;
@@ -7,6 +8,7 @@ pub mod settings;
 pub mod settlement;
 
 pub use chat::*;
+pub use essence::*;
 pub use headlines::*;
 pub use lobby::*;
 pub use queue::*;

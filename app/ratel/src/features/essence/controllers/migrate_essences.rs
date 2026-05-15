@@ -98,6 +98,7 @@ async fn rebuild_user_essence_stats(
             }
             EssenceSourceKind::Poll => entry.total_poll += 1,
             EssenceSourceKind::Quiz => entry.total_quiz += 1,
+            EssenceSourceKind::FactFoldRationale => entry.total_fact_fold_rationale += 1,
         }
     }
 

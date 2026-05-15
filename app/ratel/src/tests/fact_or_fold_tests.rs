@@ -1337,6 +1337,71 @@ async fn test_flip_rejected_when_already_used() {
     assert_ne!(status, 200, "second flip in the same round must be rejected");
 }
 
+// ── Essence opt-in (PR6 step 4) ─────────────────────────────────────
+
+#[tokio::test]
+async fn test_essence_register_rejects_unregister_request() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: &format!(
+            "/api/arcade/games/fact-or-fold/rounds/{}/essence",
+            round_id
+        ),
+        headers: headers,
+        body: { "req": { "register": false } }
+    };
+    assert_ne!(status, 200, "register=false is not supported in v1");
+}
+
+#[tokio::test]
+async fn test_essence_register_rejects_no_rationale() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+    // Caller has no rationale row → reject.
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: &format!(
+            "/api/arcade/games/fact-or-fold/rounds/{}/essence",
+            round_id
+        ),
+        headers: headers,
+        body: { "req": { "register": true } }
+    };
+    assert_ne!(status, 200, "no rationale to register must be rejected");
+}
+
+#[tokio::test]
+async fn test_essence_register_rejects_short_rationale() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    // Seed a too-short rationale (essence_eligible = false).
+    use crate::features::arcade::games::fact_or_fold::models::FactFoldRationale;
+    let row = FactFoldRationale::new(
+        &round_id,
+        ctx.test_user.0.pk.clone(),
+        "too short".into(),
+        false, // essence_eligible: false (< 50 chars)
+    );
+    row.upsert(&ctx.ddb).await.expect("seed short rationale");
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: &format!(
+            "/api/arcade/games/fact-or-fold/rounds/{}/essence",
+            round_id
+        ),
+        headers: headers,
+        body: { "req": { "register": true } }
+    };
+    assert_ne!(status, 200, "essence-ineligible rationale must be rejected");
+}
+
 // ── Settlement (PR6) ────────────────────────────────────────────────
 
 /// Seed bets for every participant (4 in a full-capacity round)
