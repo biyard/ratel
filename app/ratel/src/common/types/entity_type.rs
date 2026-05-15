@@ -313,6 +313,13 @@ pub enum EntityType {
     /// alongside other user-scoped rows.
     FactFoldUserStats,              // pk=User(user_pk) (singleton sk)
 
+    /// Leaderboard entry row (PR7). inner = `{accuracy_bps:010}#{user_id}`
+    /// — zero-padded basis-points accuracy followed by user id, so
+    /// an sk-descending query at `Partition::FactFoldLeaderboard`
+    /// returns top users first. Updated as a side effect of
+    /// settlement.
+    FactFoldLeaderboardEntry(String),
+
     // Ratel Arcade — chip wallet (PR4b).
     /// Singleton balance row under `Partition::ArcadeWallet(user_id)`.
     /// One row per user; carries `chip_balance` + `last_updated`.

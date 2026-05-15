@@ -138,6 +138,12 @@ pub enum Partition {
     /// the whole arcade platform (chip↔RP ratio, default buy-in, ...).
     /// One row per deployment.
     ArcadeSettings,
+
+    /// Anchor pk for the *Fact or Fold* leaderboard. Each row at this
+    /// pk is a single user's leaderboard entry; sk encodes the
+    /// accuracy + user id so an sk-descending query returns
+    /// top-accuracy users first (PR7).
+    FactFoldLeaderboard,
 }
 
 impl Partition {

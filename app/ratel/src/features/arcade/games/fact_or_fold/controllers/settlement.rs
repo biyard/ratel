@@ -43,8 +43,8 @@ use rmcp::schemars;
 use crate::common::models::auth::AdminUser;
 #[cfg(feature = "server")]
 use crate::features::arcade::games::fact_or_fold::models::{
-    FactFoldBet, FactFoldHeadline, FactFoldParticipant, FactFoldRationale, FactFoldRound,
-    FactFoldSettings, FactFoldSettlement, FactFoldUserStats,
+    FactFoldBet, FactFoldHeadline, FactFoldLeaderboardEntry, FactFoldParticipant,
+    FactFoldRationale, FactFoldRound, FactFoldSettings, FactFoldSettlement, FactFoldUserStats,
 };
 #[cfg(feature = "server")]
 use crate::features::arcade::games::fact_or_fold::services::{
@@ -232,6 +232,7 @@ pub async fn settle_round_internal(
 
         // Update lifetime stats.
         let mut stats = FactFoldUserStats::get_or_default(cli, &o.user_id).await?;
+        let prev_accuracy_bps = compute_accuracy_bps(stats.correct_count, stats.total_rounds);
         stats.total_rounds += 1;
         if o.won {
             stats.correct_count += 1;
@@ -242,6 +243,36 @@ pub async fn settle_round_internal(
         if let Err(e) = stats.upsert(cli).await {
             crate::error!(
                 "settle_round_internal user_stats upsert failed for {}: {e}",
+                o.user_id
+            );
+        }
+
+        // Mirror to the leaderboard anchor: delete the previous
+        // accuracy-keyed row (if any), then write the new one.
+        // The leaderboard is sk-DESC at `Partition::FactFoldLeaderboard`
+        // so a query returns top-accuracy users first.
+        let new_accuracy_bps = compute_accuracy_bps(stats.correct_count, stats.total_rounds);
+        if stats.total_rounds > 1 {
+            let (prev_pk, prev_sk) =
+                FactFoldLeaderboardEntry::keys(prev_accuracy_bps, &o.user_id);
+            let _ = FactFoldLeaderboardEntry::delete(cli, &prev_pk, Some(prev_sk)).await;
+        }
+        let (lb_pk, lb_sk) = FactFoldLeaderboardEntry::keys(new_accuracy_bps, &o.user_id);
+        let entry = FactFoldLeaderboardEntry {
+            pk: lb_pk,
+            sk: lb_sk,
+            created_at: stats.created_at,
+            updated_at: now,
+            user_pk: Partition::User(o.user_id.clone()),
+            accuracy_bps: new_accuracy_bps,
+            total_rounds: stats.total_rounds,
+            correct_count: stats.correct_count,
+            lifetime_delta_chips: stats.lifetime_delta_chips,
+            last_played_at: now,
+        };
+        if let Err(e) = entry.upsert(cli).await {
+            crate::error!(
+                "settle_round_internal leaderboard upsert failed for {}: {e}",
                 o.user_id
             );
         }
@@ -262,6 +293,17 @@ pub async fn settle_round_internal(
         round_id: round_id.to_string(),
         outcomes: breakdowns,
     })
+}
+
+/// `correct_count / total_rounds`, in basis points. A 0-round
+/// player is treated as 0% accuracy for ranking purposes.
+#[cfg(feature = "server")]
+pub fn compute_accuracy_bps(correct: i64, total: i64) -> i32 {
+    if total <= 0 {
+        return 0;
+    }
+    let bps = (correct * 10_000) / total;
+    bps.clamp(0, 10_000) as i32
 }
 
 #[cfg(feature = "server")]

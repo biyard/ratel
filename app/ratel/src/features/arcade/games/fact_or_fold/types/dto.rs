@@ -376,6 +376,30 @@ pub const RATIONALE_ESSENCE_MIN_CHARS: usize = 50;
 /// Hard upper bound to keep rows small and submissions skim-able.
 pub const RATIONALE_TEXT_MAX_CHARS: usize = 200;
 
+// ── Stats + leaderboard (PR7) ─────────────────────────────────────
+
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct UserStatsResponse {
+    pub user_pk: String,
+    pub total_rounds: i64,
+    pub correct_count: i64,
+    pub accuracy_bps: i32,
+    pub lifetime_delta_chips: i64,
+    pub last_played_at: i64,
+}
+
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct LeaderboardEntryResponse {
+    pub user_pk: String,
+    pub accuracy_bps: i32,
+    pub total_rounds: i64,
+    pub correct_count: i64,
+    pub lifetime_delta_chips: i64,
+    pub last_played_at: i64,
+}
+
 // ── Queue health ──────────────────────────────────────────────────
 
 /// Queue depth + FR-45 alert flag for the admin dashboard. Computed

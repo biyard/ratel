@@ -1402,6 +1402,66 @@ async fn test_essence_register_rejects_short_rationale() {
     assert_ne!(status, 200, "essence-ineligible rationale must be rejected");
 }
 
+// ── Stats + leaderboard (PR7) ───────────────────────────────────────
+
+#[tokio::test]
+async fn test_me_stats_returns_zero_for_new_user() {
+    let ctx = TestContext::setup().await;
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/me/stats",
+        headers: ctx.test_user.1.clone(),
+        response_type: crate::features::arcade::games::fact_or_fold::types::UserStatsResponse,
+    };
+    assert_eq!(status, 200);
+    assert_eq!(body.total_rounds, 0);
+    assert_eq!(body.correct_count, 0);
+    assert_eq!(body.accuracy_bps, 0);
+}
+
+#[tokio::test]
+async fn test_leaderboard_returns_empty_when_no_settlements() {
+    let ctx = TestContext::setup().await;
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/leaderboard",
+        headers: ctx.test_user.1.clone(),
+        response_type: crate::common::types::ListResponse<
+            crate::features::arcade::games::fact_or_fold::types::LeaderboardEntryResponse,
+        >,
+    };
+    assert_eq!(status, 200);
+    assert!(body.items.is_empty());
+}
+
+#[tokio::test]
+async fn test_me_stats_after_settlement_reflects_round() {
+    let ctx = TestContext::setup().await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+    // Everyone bets REAL — caller wins (headline default verdict
+    // is REAL).
+    seed_bets_for_all(&ctx, &round_id, "REAL").await;
+    force_round_to_debate(&ctx, &round_id, 5_000).await;
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/fact-or-fold/admin/rounds/{}/settle", round_id),
+        headers: admin,
+    };
+    assert_eq!(status, 200);
+
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/me/stats",
+        headers: headers,
+        response_type: crate::features::arcade::games::fact_or_fold::types::UserStatsResponse,
+    };
+    assert_eq!(status, 200);
+    assert_eq!(body.total_rounds, 1);
+    assert_eq!(body.correct_count, 1);
+    assert_eq!(body.accuracy_bps, 10_000, "100% after 1/1 correct");
+}
+
 // ── Settlement (PR6) ────────────────────────────────────────────────
 
 /// Seed bets for every participant (4 in a full-capacity round)
