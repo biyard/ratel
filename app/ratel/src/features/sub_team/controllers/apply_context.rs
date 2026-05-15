@@ -18,10 +18,6 @@ const DOC_SK_PREFIX: &str = "SUB_TEAM_DOCUMENT";
 const LINK_SK_PREFIX: &str = "SUB_TEAM_LINK";
 #[cfg(feature = "server")]
 const APPLICATION_SK_PREFIX: &str = "SUB_TEAM_APPLICATION";
-#[cfg(feature = "server")]
-const PAGE_LIMIT: i32 = 100;
-#[cfg(feature = "server")]
-const MAX_PAGES: usize = 5;
 
 #[get("/api/teams/:team_pk/sub-teams/apply-context")]
 pub async fn get_sub_team_apply_context_handler(
@@ -40,10 +36,11 @@ pub async fn get_sub_team_apply_context_handler(
         })?
         .ok_or(SubTeamError::ParentNotEligible)?;
 
-    // 2. Form fields (ordered by order ASC then created_at ASC).
-    let field_opts = SubTeamFormField::opt()
-        .sk(FIELD_SK_PREFIX.to_string())
-        .limit(PAGE_LIMIT);
+    // 2. Form fields (ordered by order ASC then created_at ASC). The
+    //    apply page must render EVERY field — partial pages would let
+    //    a parent's later fields silently disappear from the form, so
+    //    walk all pages via `opt_all`.
+    let field_opts = SubTeamFormField::opt_all().sk(FIELD_SK_PREFIX.to_string());
     let (mut fields, _) = SubTeamFormField::query(cli, parent_pk.clone(), field_opts)
         .await
         .map_err(|e| {
@@ -61,11 +58,12 @@ pub async fn get_sub_team_apply_context_handler(
     });
     let form_fields: Vec<SubTeamFormFieldResponse> = fields.into_iter().map(Into::into).collect();
 
-    // 3. Required docs only. Trailing `#` keeps `SUB_TEAM_DOCUMENT_VERSION#…`
-    // snapshot rows out of the result set.
-    let doc_opts = SubTeamDocument::opt()
-        .sk(format!("{DOC_SK_PREFIX}#"))
-        .limit(PAGE_LIMIT);
+    // 3. All parent docs — required ones must be agreed before
+    //    submit, reference-only ones render as read-only links.
+    //    Trailing `#` keeps `SUB_TEAM_DOCUMENT_VERSION#…` snapshot
+    //    rows out of the result set. `opt_all` so doc lists past
+    //    the first page don't silently drop from the apply UI.
+    let doc_opts = SubTeamDocument::opt_all().sk(format!("{DOC_SK_PREFIX}#"));
     let (mut docs, _) = SubTeamDocument::query(cli, parent_pk.clone(), doc_opts)
         .await
         .map_err(|e| {
@@ -108,20 +106,9 @@ pub async fn get_sub_team_apply_context_handler(
 
 #[cfg(feature = "server")]
 async fn count_links(cli: &aws_sdk_dynamodb::Client, parent_pk: &Partition) -> Result<i64> {
-    let mut count: i64 = 0;
-    let mut bookmark: Option<String> = None;
-    for _ in 0..MAX_PAGES {
-        let opts = SubTeamLink::opt_with_bookmark(bookmark.clone())
-            .sk(LINK_SK_PREFIX.to_string())
-            .limit(PAGE_LIMIT);
-        let (items, next) = SubTeamLink::query(cli, parent_pk.clone(), opts).await?;
-        count += items.len() as i64;
-        match next {
-            Some(b) => bookmark = Some(b),
-            None => break,
-        }
-    }
-    Ok(count)
+    let opts = SubTeamLink::opt_all().sk(LINK_SK_PREFIX.to_string());
+    let (items, _) = SubTeamLink::query(cli, parent_pk.clone(), opts).await?;
+    Ok(items.len() as i64)
 }
 
 #[cfg(feature = "server")]
@@ -129,22 +116,11 @@ async fn count_pending_applications(
     cli: &aws_sdk_dynamodb::Client,
     parent_pk: &Partition,
 ) -> Result<i64> {
-    let mut count: i64 = 0;
-    let mut bookmark: Option<String> = None;
-    for _ in 0..MAX_PAGES {
-        let opts = SubTeamApplication::opt_with_bookmark(bookmark.clone())
-            .sk(APPLICATION_SK_PREFIX.to_string())
-            .limit(PAGE_LIMIT);
-        let (items, next) = SubTeamApplication::query(cli, parent_pk.clone(), opts).await?;
-        for a in &items {
-            if a.status == SubTeamApplicationStatus::Pending {
-                count += 1;
-            }
-        }
-        match next {
-            Some(b) => bookmark = Some(b),
-            None => break,
-        }
-    }
+    let opts = SubTeamApplication::opt_all().sk(APPLICATION_SK_PREFIX.to_string());
+    let (items, _) = SubTeamApplication::query(cli, parent_pk.clone(), opts).await?;
+    let count = items
+        .iter()
+        .filter(|a| a.status == SubTeamApplicationStatus::Pending)
+        .count() as i64;
     Ok(count)
 }

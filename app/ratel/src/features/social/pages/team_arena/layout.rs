@@ -38,6 +38,10 @@ pub struct TeamArenaContext {
     /// used by the topbar to route the sub-team HUD icon to the
     /// status page instead of the apply page.
     pub viewer_pending_applicant_username: Signal<Option<String>>,
+    /// True iff the viewer admins at least one team that is still
+    /// independent (no parent / no pending application). Drives the
+    /// apply-icon visibility on unrelated parent-eligible teams.
+    pub viewer_has_eligible_applicant_team: Signal<bool>,
 }
 
 impl From<UseWallContext> for TeamArenaContext {
@@ -56,6 +60,7 @@ impl From<UseWallContext> for TeamArenaContext {
                 min_sub_team_members,
                 min_sub_team_age_days,
                 viewer_pending_applicant_username,
+                viewer_has_eligible_applicant_team,
                 ..
             } => {
                 let (can_edit, is_admin, is_member) = if let Some(role) = role {
@@ -83,6 +88,9 @@ impl From<UseWallContext> for TeamArenaContext {
                     min_sub_team_age_days: Signal::new(min_sub_team_age_days),
                     viewer_pending_applicant_username: Signal::new(
                         viewer_pending_applicant_username,
+                    ),
+                    viewer_has_eligible_applicant_team: Signal::new(
+                        viewer_has_eligible_applicant_team,
                     ),
                 }
             }
@@ -179,6 +187,7 @@ pub fn TeamArenaLayout(username: ReadSignal<String>) -> Element {
                 is_member,
                 is_parent_eligible,
                 pending_applicant_username: (ctx.viewer_pending_applicant_username)(),
+                viewer_has_eligible_applicant_team: (ctx.viewer_has_eligible_applicant_team)(),
                 show_follow: logged_in && !is_member,
                 is_following: ctx.following(),
                 on_follow: on_follow_click,

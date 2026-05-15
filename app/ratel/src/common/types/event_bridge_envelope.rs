@@ -91,6 +91,14 @@ pub enum DetailType {
     /// the author and surface a manual Retry CTA — there is no automatic
     /// retry sweeper.
     SyndicationJobReady,
+    /// Fires on SpaceCommon MODIFY whose `NewImage.publish_state == "Published"`.
+    /// Drives the deferred inbox fan-out for sub-team broadcasts whose
+    /// attached Space just published — we hold off on notifying children
+    /// at announcement-publish time (Space is still Draft) and instead
+    /// send them here so the inbox `cta_url` lands on the actual Space
+    /// arena rather than a half-built Post detail. No-op when the Space
+    /// is not tied to a sub-team announcement.
+    SpacePublished,
     #[serde(other)]
     Unknown,
 }
@@ -355,6 +363,13 @@ impl EventBridgeEnvelope {
                 let cfg = crate::common::CommonConfig::default();
                 let cli = cfg.dynamodb();
                 crate::features::sub_team::services::announcement_fanout::handle_announcement_published(cli, announcement).await
+            }
+            DetailType::SpacePublished => {
+                let space: crate::common::models::space::SpaceCommon =
+                    DetailType::parse_detail(&self.detail)?;
+                let cfg = crate::common::CommonConfig::default();
+                let cli = cfg.dynamodb();
+                crate::features::sub_team::services::announcement_fanout::handle_space_published(cli, space).await
             }
             DetailType::AnalyzeReportInProgress => {
                 let report: crate::features::spaces::pages::apps::apps::analyzes::SpaceAnalyzeReport =

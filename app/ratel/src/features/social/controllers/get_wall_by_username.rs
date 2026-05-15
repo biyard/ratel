@@ -12,6 +12,42 @@ use crate::{auth::User, posts::models::Team, *};
 /// queries `SubTeamApplication`'s gsi1 (`find_by_applicant`) for each.
 /// In practice the list is short — most users belong to 1–2 teams.
 #[cfg(feature = "server")]
+async fn viewer_has_independent_team(
+    cli: &aws_sdk_dynamodb::Client,
+    viewer_pk: &Partition,
+) -> bool {
+    let sk_prefix = EntityType::UserTeam(String::new()).to_string();
+    let opt = UserTeam::opt_all().sk(sk_prefix);
+    let Ok((user_teams, _)): std::result::Result<(Vec<UserTeam>, _), _> =
+        UserTeam::query(cli, viewer_pk, opt).await
+    else {
+        return false;
+    };
+
+    for ut in user_teams {
+        if !ut.role.is_admin_or_owner() {
+            continue;
+        }
+        let team_pk_str = match &ut.sk {
+            EntityType::UserTeam(s) => s.clone(),
+            _ => continue,
+        };
+        let team_pk: Partition = match team_pk_str.parse() {
+            Ok(p) => p,
+            Err(_) => continue,
+        };
+        let team = match Team::get(cli, &team_pk, Some(EntityType::Team)).await {
+            Ok(Some(t)) => t,
+            _ => continue,
+        };
+        if team.parent_team_id.is_none() && team.pending_parent_team_id.is_none() {
+            return true;
+        }
+    }
+    false
+}
+
+#[cfg(feature = "server")]
 async fn find_viewer_pending_application_for(
     cli: &aws_sdk_dynamodb::Client,
     viewer_pk: &Partition,
@@ -20,7 +56,7 @@ async fn find_viewer_pending_application_for(
     let wall_team_uuid = wall_team_id.0.clone();
 
     let sk_prefix = EntityType::UserTeam(String::new()).to_string();
-    let opt = UserTeam::opt().sk(sk_prefix).limit(20);
+    let opt = UserTeam::opt_all().sk(sk_prefix);
     let (user_teams, _): (Vec<UserTeam>, _) = UserTeam::query(cli, viewer_pk, opt).await.ok()?;
 
     for ut in user_teams {
@@ -36,7 +72,7 @@ async fn find_viewer_pending_application_for(
             Err(_) => continue,
         };
 
-        let opt = SubTeamApplication::opt().limit(20).scan_index_forward(false);
+        let opt = SubTeamApplication::opt_all().scan_index_forward(false);
         let Ok((apps, _)) =
             SubTeamApplication::find_by_applicant(cli, applicant_pk.clone(), opt).await
         else {
@@ -114,6 +150,7 @@ pub async fn get_wall_by_username(username: String) -> Result<Wall> {
             role,
             following,
             viewer_pending_applicant_username,
+            viewer_has_eligible_applicant_team,
             ..
         } => {
             *following = is_following;
@@ -138,6 +175,10 @@ pub async fn get_wall_by_username(username: String) -> Result<Wall> {
                 if role.is_none() {
                     *viewer_pending_applicant_username =
                         find_viewer_pending_application_for(cli, &u.pk, id).await;
+                    if viewer_pending_applicant_username.is_none() {
+                        *viewer_has_eligible_applicant_team =
+                            viewer_has_independent_team(cli, &u.pk).await;
+                    }
                 }
             }
         }
@@ -168,24 +209,16 @@ pub enum Wall {
         role: Option<TeamRole>,
         following: bool,
         created_at: i64,
-        /// Whether the team has opted into the sub-team program. Drives
-        /// the visibility of the sub-team HUD icon on the team home.
         #[serde(default)]
         is_parent_eligible: bool,
-        /// Minimum applicant team headcount (`0` = no constraint).
         #[serde(default)]
         min_sub_team_members: i32,
-        /// Minimum applicant team age in days (`0` = no constraint).
         #[serde(default)]
         min_sub_team_age_days: i32,
-        /// If the viewer is admin/owner of some team and that team has
-        /// an in-flight (Pending / Returned) application to this wall
-        /// team, this is the applicant team's username. The HUD icon
-        /// uses it to route to the application status page instead of
-        /// the apply page so the applicant can resume from where they
-        /// left off.
         #[serde(default)]
         viewer_pending_applicant_username: Option<String>,
+        #[serde(default)]
+        viewer_has_eligible_applicant_team: bool,
     },
 }
 
@@ -223,6 +256,7 @@ impl Into<Wall> for WallUser {
                 min_sub_team_members: t.min_sub_team_members,
                 min_sub_team_age_days: t.min_sub_team_age_days,
                 viewer_pending_applicant_username: None,
+                viewer_has_eligible_applicant_team: false,
             },
         }
     }

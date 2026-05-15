@@ -48,6 +48,14 @@ pub fn ArenaTopbar(
     /// apply page so they can resume tracking.
     #[props(default = None)]
     pending_applicant_username: Option<String>,
+    /// True iff the viewer admins at least one team that is still
+    /// independent (no parent + no pending). When false, the apply
+    /// icon is suppressed on unrelated parent-eligible teams —
+    /// since the single-parent policy blocks the submit anyway, the
+    /// icon would just confuse the viewer ("내 부모팀에 대해서만
+    /// 보여야할거 같아. 아니면 내가 독립팀이거나").
+    #[props(default = false)]
+    viewer_has_eligible_applicant_team: bool,
     /// Whether the Follow action should show "Unfollow" instead.
     #[props(default = false)]
     is_following: bool,
@@ -427,11 +435,19 @@ pub fn ArenaTopbar(
                 //   • Team admin/owner   → management dashboard
                 //   • Viewer's other team has an in-flight application
                 //                        → that application's status page
-                //   • Parent-eligible team, viewer logged in
-                //                        → apply page (no role check;
-                //                          visitors from other teams MUST
-                //                          be able to start an application)
+                //   • Parent-eligible team, viewer logged in, AND the
+                //     viewer admins at least one independent team
+                //                        → apply page
                 //   • Otherwise          → icon hidden
+                //
+                // The independence gate (`viewer_has_eligible_applicant_team`)
+                // enforces the single-parent policy in the UI: when
+                // every team the viewer admins is already locked into
+                // a parent / pending application, the apply icon is
+                // suppressed on unrelated parent-eligible teams. The
+                // viewer's parent / status-page route is still
+                // reachable via `pending_applicant_username`, so
+                // dropping the apply icon doesn't strand them.
                 {
                     let sub_team_route: Option<Route> = if can_edit {
                         Some(Route::TeamSubTeamManagementPage {
@@ -441,7 +457,10 @@ pub fn ArenaTopbar(
                         Some(Route::TeamSubTeamApplicationStatusPage {
                             username: username.clone(),
                         })
-                    } else if is_parent_eligible && has_user {
+                    } else if is_parent_eligible
+                        && has_user
+                        && viewer_has_eligible_applicant_team
+                    {
                         Some(Route::TeamSubTeamApplyPage {
                             username: username.clone(),
                         })
