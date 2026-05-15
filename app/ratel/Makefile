@@ -312,7 +312,7 @@ build:
 
 build-tauri: ../../node_modules js/node_modules
 	rm -rf $(CARGO_TARGET_DIR)/dx
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx build --release --debug-symbols false --no-default-features @client --features tauri-web --platform web @server --platform server --features skip-server --release
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx build --release --debug-symbols false --no-default-features --features tauri-web --platform web --fullstack false
 
 build-testing:
 	$(BUILD_ENV) dx build --release --no-default-features --debug-symbols false @client --features web,bypass,beta --platform web @server --features server,bypass,local-dev --platform server

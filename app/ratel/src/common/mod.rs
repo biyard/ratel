@@ -25,7 +25,11 @@ pub use strum::*;
 pub use types::*;
 pub mod logger;
 
+#[cfg(feature = "tauri-web")]
 pub mod fullstack;
+pub use dioxus::prelude::*;
+pub use dioxus::prelude::{delete, get, patch, post, put};
+#[cfg(feature = "tauri-web")]
 pub use fullstack::*;
 
 pub use dioxus::logger::tracing::{debug, error, info, warn};
@@ -50,14 +54,6 @@ pub use dev_tools::*;
 pub use dioxus;
 pub use providers::*;
 pub use run::*;
-
-// Shadow `dioxus::fullstack::{get, post, put, patch, delete}` with our
-// own variants. Same syntax as the dioxus macros for `!tauri-web`, and
-// emit a reqwest stub for `tauri-web` so the bundle bypasses dioxus's
-// hydration-coupled RPC transport.
-//
-// Must come AFTER `dioxus::prelude::*` so the specific names win.
-pub use by_macros::{delete, get, patch, post, put};
 
 // NOTE: it replaces dioxus::prelude::* and should be used after it.
 pub use components::SuspenseBoundary;
