@@ -39,6 +39,31 @@ translate! {
         ko: "라운드 정산 중 — 잠시 후 결과가 표시됩니다.",
     },
 
+    // ── News reveal stage ─────────────────────────────────────────
+    news_source_lock: {
+        en: "Source hidden (revealed at settlement)",
+        ko: "출처 비공개 (정산 시 공개)",
+    },
+    news_difficulty: { en: "Difficulty", ko: "난이도" },
+    news_pill_category_default: { en: "Headline", ko: "헤드라인" },
+    news_cta_label: { en: "Auto-advances to 1st bet", ko: "1차 베팅으로 자동 진행" },
+    players_card_title: { en: "Round participants", ko: "라운드 참가자" },
+    players_card_count: { en: "{$count} / {$capacity} present", ko: "{$count} / {$capacity} 도착" },
+    players_status_reading: {
+        en: "Reading the headline · waiting for 1st bet",
+        ko: "뉴스 읽는 중 · 1차 베팅 대기",
+    },
+    players_status_bet_pending: { en: "Placing 1st bet…", ko: "1차 베팅 진행 중…" },
+    players_status_writing: { en: "Writing rationale…", ko: "근거 작성 중…" },
+    players_status_revealed: { en: "Rationale revealed", ko: "근거 공개됨" },
+    players_status_debating: { en: "Debate stage", ko: "토론 단계" },
+    players_status_done: { en: "Round settled", ko: "라운드 종료" },
+    players_status_forfeited: { en: "Forfeited", ko: "기권" },
+    players_pill_waiting: { en: "Waiting", ko: "대기" },
+    players_pill_done: { en: "Done", ko: "완료" },
+    players_pill_forfeited: { en: "OUT", ko: "기권" },
+    players_you_badge: { en: "YOU", ko: "YOU" },
+
     // Coming-soon banner shown inside each sub-component until its
     // detailed RSX lands. Sub-components replace this string with their
     // own translations as they're implemented step-by-step.
