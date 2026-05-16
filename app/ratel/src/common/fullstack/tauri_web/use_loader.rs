@@ -51,10 +51,6 @@ impl<T> Loader<T> {
     pub fn cancel(&mut self) {
         self.resource.cancel();
     }
-
-    pub fn value(&self) -> T {
-        (self.real_value)().unwrap()
-    }
 }
 
 pub fn use_loader<F, T, E>(mut future: impl FnMut() -> F + 'static) -> Result<Loader<T>, Loading>

@@ -1,7 +1,7 @@
 use crate::common::models::auth::AdminUser;
 use crate::features::admin::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct RewardResponse {
     pub reward_behavior: RewardUserBehavior,
     pub point: i64,

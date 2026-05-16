@@ -25,12 +25,18 @@ pub use strum::*;
 pub use types::*;
 pub mod logger;
 
+pub use dioxus::prelude::*;
+
 #[cfg(not(feature = "fullstack"))]
 pub mod fullstack;
 #[cfg(not(feature = "fullstack"))]
 pub use fullstack::*;
 
-pub use dioxus::prelude::*;
+#[cfg(not(feature = "fullstack"))]
+pub use fullstack::{
+    delete, get, patch, post, put, use_loader, use_server_cached, Form, Loader, Loading,
+    ServerFnError,
+};
 
 #[cfg(feature = "fullstack")]
 pub use dioxus::prelude::{delete, get, patch, post, put, *};

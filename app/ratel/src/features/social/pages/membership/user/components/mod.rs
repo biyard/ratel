@@ -1,3 +1,3 @@
-mod render_history;
+mod purchase_history;
 
-pub use render_history::*;
+pub use purchase_history::*;

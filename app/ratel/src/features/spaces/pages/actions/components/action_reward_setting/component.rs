@@ -1,7 +1,7 @@
-use crate::features::spaces::pages::actions::*;
 use crate::features::spaces::pages::actions::controllers::{
-    UpdateSpaceActionRequest, update_space_action,
+    update_space_action, UpdateSpaceActionRequest,
 };
+use crate::features::spaces::pages::actions::*;
 
 /// Self-contained Reward + Boost setting card styled to match the arena
 /// config layout. Handles membership fetching, credit accounting, and
@@ -26,53 +26,42 @@ pub fn ActionRewardSetting(
         action_status.as_ref(),
     );
     let user_ctx = crate::features::auth::hooks::use_user_context();
-    let personal_username = user_ctx
-        .read()
-        .user
-        .as_ref()
-        .map(|u| u.username.clone())
-        .unwrap_or_default();
-    let owner_username = current_space.author_username.clone();
-    let team_detail =
-        use_server_future(use_reactive((&owner_username,), |(username,)| async move {
-            crate::features::social::controllers::find_team_handler(username.to_string()).await
-        }))?;
-    let team_detail_read = team_detail.read();
-    let team_detail = team_detail_read
-        .as_ref()
-        .and_then(|r| r.as_ref().ok())
-        .cloned();
-    let is_team_author = current_space.author_type == crate::common::UserType::Team;
-    let team_username = team_detail
-        .as_ref()
-        .map(|team| team.username.clone())
-        .unwrap_or_else(|| current_space.author_username.clone());
-    let is_team_space = is_team_author || team_detail.is_some();
-    let upgrade_route = if is_team_space {
-        format!("/{}/team-memberships", team_username)
-    } else {
-        format!("/{personal_username}/memberships")
-    };
+    let team = use_loader(move || async move {
+        let username = space().author_username;
+        crate::features::social::controllers::find_team_handler(username.to_string()).await
+    })?;
+    let is_team_space = current_space.author_type == crate::common::UserType::Team;
+    let membership_username = use_memo(move || {
+        if is_team_space {
+            team().username
+        } else {
+            user_ctx
+                .read()
+                .user
+                .as_ref()
+                .map(|u| u.username.clone())
+                .unwrap_or_default()
+        }
+    });
     let user_membership = crate::features::auth::hooks::use_user_membership();
-    let team_membership = use_server_future(use_reactive(
-        (&team_username, &is_team_space),
-        |(team_username, is_team_space)| async move {
-            if is_team_space && !team_username.is_empty() {
-                crate::features::membership::controllers::get_team_membership_handler(
-                    team_username.to_string(),
-                )
-                .await
-                .map(Some)
-            } else {
-                Ok(None)
-            }
-        },
-    ))?;
-    let team_membership_read = team_membership.read();
-    let team_membership = team_membership_read
-        .as_ref()
-        .and_then(|r| r.as_ref().ok())
-        .and_then(|membership| membership.clone());
+    let team_membership = use_loader(move || async move {
+        let team = team();
+        let space = space();
+
+        let is_team_space = space.author_type == crate::common::UserType::Team;
+        let team_username = team.username;
+
+        if is_team_space && !team_username.is_empty() {
+            crate::features::membership::controllers::get_team_membership_handler(
+                team_username.to_string(),
+            )
+            .await
+            .map(Some)
+        } else {
+            Ok(None)
+        }
+    })?;
+    let team_membership = team_membership();
     let base_is_paid = if is_team_space {
         team_membership
             .as_ref()
@@ -207,11 +196,10 @@ pub fn ActionRewardSetting(
                     button {
                         class: "arena-reward__unlock",
                         r#type: "button",
-                        onclick: {
-                            let upgrade_route = upgrade_route.clone();
-                            move |_| {
-                                nav.push(upgrade_route.clone());
-                            }
+                        onclick: move |_| {
+                            nav.push(Route::SocialMembership {
+                                username: membership_username(),
+                            });
                         },
                         svg {
                             view_box: "0 0 24 24",

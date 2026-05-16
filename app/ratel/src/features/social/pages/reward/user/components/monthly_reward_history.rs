@@ -1,4 +1,3 @@
-use chrono::Datelike;
 use super::super::{
     controllers::*,
     dto::RewardsResponse,
@@ -6,6 +5,7 @@ use super::super::{
     *,
 };
 use crate::common::services::PointTransactionResponse;
+use chrono::Datelike;
 
 translate! {
     MonthlyHistoryTranslate;
@@ -68,71 +68,34 @@ translate! {
 
 #[component]
 pub fn MonthlyRewardHistory(
-    username: String,
-    month: String,
+    username: ReadSignal<String>,
+    month: ReadSignal<String>,
     on_back: EventHandler<()>,
 ) -> Element {
     let tr: MonthlyHistoryTranslate = use_translate();
-    let month_clone = month.clone();
-    let username_clone = username.clone();
-    let username_clone2 = username.clone();
-    let month_clone2 = month.clone();
 
-    let rewards_resource = use_server_future(move || {
-        let username = username_clone.clone();
-        let month = month_clone.clone();
-        async move { get_user_rewards_handler(username, Some(month)).await }
+    let rewards_resource =
+        use_loader(
+            move || async move { get_user_rewards_handler(username(), Some(month())).await },
+        )?;
+
+    let transactions_resource = use_loader(move || async move {
+        list_user_transactions_handler(username(), Some(month()), None).await
     })?;
 
-    let transactions_resource = use_server_future(move || {
-        let username = username_clone2.clone();
-        let month = month_clone2.clone();
-        async move { list_user_transactions_handler(username, Some(month), None).await }
-    })?;
+    let rewards_state = rewards_resource();
+    let transactions_state = transactions_resource();
 
-    let rewards_state = rewards_resource.value();
-    let transactions_state = transactions_resource.value();
-
-    let mut transactions = use_signal(Vec::<PointTransactionResponse>::new);
-    let mut next_bookmark = use_signal(|| Option::<String>::None);
+    let mut transactions = use_signal(move || transactions_resource().items);
+    let mut next_bookmark = use_signal(move || transactions_resource().bookmark);
     let mut transactions_loaded = use_signal(|| false);
     let mut is_fetching_next = use_signal(|| false);
 
-    {
-        let transactions_state = transactions_state.clone();
-        let mut transactions = transactions.clone();
-        let mut next_bookmark = next_bookmark.clone();
-        let mut transactions_loaded = transactions_loaded.clone();
+    let m = month();
 
-        use_effect(move || {
-            if *transactions_loaded.read() {
-                return;
-            }
+    let date_range = format_month_date_range(&m);
 
-            let transaction_state = transactions_state.read();
-            let Some(state) = transaction_state.as_ref() else {
-                return;
-            };
-
-            if let Ok(data) = state {
-                transactions.set(data.items.clone());
-                next_bookmark.set(data.bookmark.clone());
-            }
-            transactions_loaded.set(true);
-        });
-    }
-
-    let date_range = format_month_date_range(&month);
-
-    let rewards = match rewards_state.read().as_ref() {
-        Some(Ok(data)) => data.clone(),
-        Some(Err(_)) => {
-            return rsx! {
-                div { class: "text-center text-destructive py-8", "{tr.error}" }
-            };
-        }
-        None => RewardsResponse::default(),
-    };
+    let rewards = rewards_resource();
 
     let estimated_tokens = if rewards.total_points > 0 {
         ((rewards.points as f64 / rewards.total_points as f64)
@@ -142,7 +105,7 @@ pub fn MonthlyRewardHistory(
         0.0
     };
 
-    let has_next = next_bookmark.read().is_some();
+    let has_next = next_bookmark().is_some();
     let is_fetching = *is_fetching_next.read();
 
     rsx! {
@@ -254,22 +217,18 @@ pub fn MonthlyRewardHistory(
                             style: ButtonStyle::Outline,
                             disabled: is_fetching,
                             onclick: {
-                                let username = username.clone();
-                                let month = month.clone();
                                 move |_| {
-                                    let username = username.clone();
-                                    let month = month.clone();
                                     if *is_fetching_next.read() {
                                         return;
                                     }
-                                    let Some(bookmark) = next_bookmark.read().clone() else {
+                                    let Some(bookmark) = next_bookmark() else {
                                         return;
                                     };
                                     is_fetching_next.set(true);
                                     spawn(async move {
                                         let result = list_user_transactions_handler(
-                                                username,
-                                                Some(month),
+                                                username(),
+                                                Some(month()),
                                                 Some(bookmark),
                                             )
                                             .await;
@@ -354,9 +313,7 @@ fn format_month_date_range(month: &str) -> String {
         let month_names = [
             "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
         ];
-        let name = month_names
-            .get((mon - 1) as usize)
-            .unwrap_or(&"");
+        let name = month_names.get((mon - 1) as usize).unwrap_or(&"");
         let last_day = if mon == 12 {
             chrono::NaiveDate::from_ymd_opt(year + 1, 1, 1)
         } else {

@@ -261,5 +261,4 @@ Hydration is the process of making a server-rendered HTML page interactive on th
 ### Errors
 The initial UI rendered by the component on the client must be identical to the UI rendered on the server.
 
-* Use the `use_server_future` hook instead of `use_resource`. It runs the future on the server, serializes the result, and sends it to the client, ensuring the client has the data immediately for its first render.
 * Any code that relies on browser-specific APIs (like accessing `localStorage`) must be run *after* hydration. Place this code inside a `use_effect` hook.

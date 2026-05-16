@@ -249,7 +249,7 @@ Reasons components must go through context methods or actions, not `spawn(async 
 
 ### Exception: a component that does not mutate
 
-If a component only reads data and has no buttons or state changes, and its data is not shared with siblings, using `use_loader` / `use_server_future` directly in the component is fine — no controller needed.
+If a component only reads data and has no buttons or state changes, and its data is not shared with siblings, using `use_loader`  directly in the component is fine — no controller needed.
 
 ## Rule 5: Destructuring requires `mut` on actions
 

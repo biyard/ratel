@@ -240,7 +240,10 @@ js/node_modules:
 	cd ../.. && npm i
 
 run: ../../node_modules js/node_modules
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES),fullstack --no-default-features
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES),fullstack --no-default-features --fullstack true
+
+run-android: $(HOME)/.android/debug.keystore dx-res-debug
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --features $(RUN_FEATURES),tauri-web --no-default-features --platform android --target $(ANDROID_TARGET) --fullstack false
 
 run-tauri: ../../node_modules js/node_modules
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port 8000 --no-default-features --debug-symbols false --features $(RUN_FEATURES),tauri-web --web --fullstack false
@@ -294,9 +297,6 @@ dx-res-release:
 	mkdir -p $(CARGO_TARGET_DIR)/dx/app-shell/release/android/app/app/src/main
 	cp -rf android/res $(CARGO_TARGET_DIR)/dx/app-shell/release/android/app/app/src/main/
 
-android: $(HOME)/.android/debug.keystore dx-res-debug
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --features $(RUN_FEATURES) --no-default-features --platform android --target $(ANDROID_TARGET)
-
 build-android: $(HOME)/.android/debug.keystore dx-res-release
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx bundle --release --features $(RUN_FEATURES) --no-default-features --platform android --target $(ANDROID_TARGET)
 
@@ -308,7 +308,7 @@ ios:
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --ios --features $(RUN_FEATURES)
 
 build:
-	$(BUILD_ENV) dx build --release --no-default-features --debug-symbols false @client --features web,fullstack --platform web @server --features server --platform server
+	$(BUILD_ENV) dx build --release --no-default-features --debug-symbols false --fullstack true @client --features web,fullstack --platform web @server --features server --platform server
 
 build-tauri: ../../node_modules js/node_modules
 	rm -rf $(CARGO_TARGET_DIR)/dx

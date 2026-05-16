@@ -3,7 +3,7 @@ use super::super::{models::UserPurchaseLocal, *};
 #[allow(unused_imports)]
 use rmcp::schemars;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct PurchaseHistoryItem {
     pub tx_type: String,
@@ -25,17 +25,10 @@ impl From<UserPurchaseLocal> for PurchaseHistoryItem {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
-pub struct PurchaseHistoryResponse {
-    pub items: Vec<PurchaseHistoryItem>,
-    pub bookmark: Option<String>,
-}
-
 #[get("/api/me/membership/history?bookmark", user: crate::features::auth::User)]
 pub async fn get_purchase_history_handler(
     bookmark: Option<String>,
-) -> Result<PurchaseHistoryResponse> {
+) -> Result<ListResponse<PurchaseHistoryItem>> {
     use super::super::models::UserPurchaseLocalQueryOption;
 
     let conf = crate::common::config::ServerConfig::default();
@@ -58,7 +51,7 @@ pub async fn get_purchase_history_handler(
 
     let items: Vec<PurchaseHistoryItem> = purchases.into_iter().map(Into::into).collect();
 
-    Ok(PurchaseHistoryResponse {
+    Ok(ListResponse {
         items,
         bookmark: last_key,
     })
