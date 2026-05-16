@@ -63,6 +63,7 @@ where
     let mut value = use_signal(|| None as Option<T>);
     let mut loader_state = use_signal(|| LoaderState::Pending);
 
+    debug!("use_loader - initializing loader with pending state");
     let resource = use_resource(move || {
         debug!("before calling future in use_resource");
         let user_fut = future();
@@ -70,10 +71,7 @@ where
         #[allow(clippy::let_and_return)]
         async move {
             let out = user_fut.await;
-            debug!(
-                "after awaiting future in use_resource, got output: {:?}",
-                out
-            );
+            debug!("after awaiting future in use_resource, got output:",);
 
             let out = out.map_err(|e| {
                 let anyhow_err: CapturedError = e.into();
@@ -93,26 +91,17 @@ where
         }
     });
 
-    // On the first run, force this task to be polled right away in case its
-    // value is ready synchronously (e.g. cached / no actual await).
-    use_hook(|| {
-        let _ = resource.task().poll_now();
-    });
+    debug!(
+        "use_loader - after initializing resource and polling task, loader state is: {:?}",
+        *loader_state
+    );
 
-    match &*loader_state.read_unchecked() {
-        LoaderState::Pending => Err(RenderError::Suspended(SuspendedFuture::new(
-            resource.task(),
-        ))),
-        LoaderState::Failed => Err(RenderError::Error(
-            error.read_unchecked().clone().unwrap_or_else(|| {
-                CapturedError::from_display("Loader failed without setting an error")
-            }),
-        )),
-        LoaderState::Ready => Ok(Loader {
-            real_value: value,
-            resource,
-        }),
-    }
+    resource.suspend()?;
+
+    Ok(Loader {
+        real_value: value,
+        resource,
+    })
 }
 
 impl<T> Readable for Loader<T> {
