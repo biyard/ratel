@@ -12,7 +12,7 @@ use serde::de::DeserializeOwned;
 
 pub type Loading = RenderError;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum LoaderState {
     Pending,
     Ready,
@@ -51,8 +51,27 @@ impl<T> Loader<T> {
     pub fn cancel(&mut self) {
         self.resource.cancel();
     }
+
+    pub fn value(&self) -> T
+    where
+        T: Clone,
+    {
+        (self.real_value)().unwrap()
+    }
 }
 
+/// Mirrors `dioxus_fullstack_core::use_loader` for the `tauri-web` target
+/// where the `dioxus-fullstack` crate is not compiled.
+///
+/// Implementation notes:
+/// - Subscribes the calling scope to our own `loader_state` signal (not
+///   `resource.state()`) — the future writes both `value` and `loader_state`
+///   together, so suspending on `loader_state` guarantees the value signal
+///   is populated before the component re-renders as `Ready`.
+/// - Force-polls the task on the first hook run via `poll_now()`. This
+///   matches upstream and is how a synchronously-ready future (cached, no
+///   real await) skips suspension entirely — without it the component
+///   would always suspend at least once.
 pub fn use_loader<F, T, E>(mut future: impl FnMut() -> F + 'static) -> Result<Loader<T>, Loading>
 where
     F: Future<Output = std::result::Result<T, E>> + 'static,
@@ -63,15 +82,12 @@ where
     let mut value = use_signal(|| None as Option<T>);
     let mut loader_state = use_signal(|| LoaderState::Pending);
 
-    debug!("use_loader - initializing loader with pending state");
     let resource = use_resource(move || {
-        debug!("before calling future in use_resource");
         let user_fut = future();
 
         #[allow(clippy::let_and_return)]
         async move {
             let out = user_fut.await;
-            debug!("after awaiting future in use_resource, got output:",);
 
             let out = out.map_err(|e| {
                 let anyhow_err: CapturedError = e.into();
@@ -91,17 +107,32 @@ where
         }
     });
 
-    debug!(
-        "use_loader - after initializing resource and polling task, loader state is: {:?}",
-        *loader_state
-    );
+    // Force the wrapper task to be polled right away on first render in
+    // case the user's future resolves synchronously (cached data / no
+    // real await). Without this the component always suspends at least
+    // once, which on Tauri/Android can manifest as a perpetual blank
+    // screen if the runtime never gets back to the task.
+    use_hook(|| {
+        let _ = resource.task().poll_now();
+    });
 
-    resource.suspend()?;
-
-    Ok(Loader {
-        real_value: value,
-        resource,
-    })
+    // Reading `loader_state` here subscribes the scope to it, so the
+    // future's `loader_state.set(...)` triggers a re-render that flips
+    // this match arm and lets us return the populated Loader.
+    match &*loader_state.read_unchecked() {
+        LoaderState::Pending => Err(RenderError::Suspended(SuspendedFuture::new(
+            resource.task(),
+        ))),
+        LoaderState::Failed => Err(RenderError::Error(
+            error.read_unchecked().clone().unwrap_or_else(|| {
+                CapturedError::from_display("Loader failed without setting an error")
+            }),
+        )),
+        LoaderState::Ready => Ok(Loader {
+            real_value: value,
+            resource,
+        }),
+    }
 }
 
 impl<T> Readable for Loader<T> {
