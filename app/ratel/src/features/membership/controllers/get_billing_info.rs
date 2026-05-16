@@ -3,12 +3,12 @@ use crate::features::auth::User;
 use crate::features::membership::controllers::normalize_error;
 use crate::features::membership::models::UserPayment;
 use crate::features::membership::*;
-use serde::{Deserialize, Serialize};
 #[cfg(feature = "server")]
 #[allow(unused_imports)]
 use rmcp::schemars;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct BillingInfoResponse {
@@ -24,8 +24,7 @@ pub async fn get_billing_info_handler() -> Result<BillingInfoResponse> {
         let cli = conf.common.dynamodb();
 
         let pk = CompositePartition::user_payment_pk(user.pk.into());
-        let payment: Option<UserPayment> =
-            UserPayment::get(cli, &pk, None::<String>).await?;
+        let payment: Option<UserPayment> = UserPayment::get(cli, &pk, None::<String>).await?;
 
         match payment {
             Some(p) => Ok(BillingInfoResponse {

@@ -1,26 +1,15 @@
-use crate::common::chrono::TimeZone;
+use crate::{
+    common::chrono::TimeZone, social::pages::membership::user::controllers::PurchaseHistoryItem,
+};
 
-use super::super::{controllers::PurchaseHistoryResponse, views::MembershipPageTranslate, *};
+use super::super::{views::MembershipPageTranslate, *};
 
-pub fn render_history(
-    state: Option<&Result<PurchaseHistoryResponse>>,
-    tr: &MembershipPageTranslate,
+#[component]
+pub fn PurchaseHistory(
+    history: ListResponse<PurchaseHistoryItem>,
+    tr: MembershipPageTranslate,
 ) -> Element {
     let tr: MembershipPageTranslate = use_translate();
-
-    let Some(state) = state else {
-        return rsx! {
-            div { class: "flex justify-center py-8",
-                div { class: "w-8 h-8 rounded-full border-b-2 animate-spin border-primary" }
-            }
-        };
-    };
-
-    let default_history = PurchaseHistoryResponse::default();
-    let history = match state {
-        Ok(data) => data,
-        Err(_) => &default_history,
-    };
 
     if history.items.is_empty() {
         return rsx! {

@@ -3,7 +3,7 @@ use super::super::*;
 #[allow(unused_imports)]
 use rmcp::schemars;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UserProfileResponse {
     pub username: String,
@@ -12,7 +12,7 @@ pub struct UserProfileResponse {
     pub description: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct UserDetailResponse {
     pub user: UserProfileResponse,

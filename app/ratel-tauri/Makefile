@@ -101,11 +101,8 @@ RATEL_DIR := $(CURDIR)/../ratel
 # because the cargo workspace shares one target directory.
 WORKSPACE_ROOT := $(CURDIR)/../..
 
-ifneq ($(CARGO_TARGET_DIR),)
-	DX_BUILD_DIR = $(CARGO_TARGET_DIR)/dx/app-shell/release/web/public
-else
-	DX_BUILD_DIR = $(WORKSPACE_ROOT)/target/dx/app-shell/release/web/public
-endif
+DX_CARGO_TARGET_DIR ?= $(PWD)/dx-tauri-target
+DX_BUILD_DIR = $(DX_CARGO_TARGET_DIR)/dx/app-shell/release/web/public
 
 .PHONY: help install-tauri-cli dx-build run-android build-android build-android-debug sign-apk run-apk debug-apk clean keystore.sha1 apk.sha1
 
@@ -151,22 +148,8 @@ apk.sha1:
 
 # Run `dx build` and copy the produced web bundle into ./dist for Tauri.
 dx-build:
-	cd $(RATEL_DIR) && make build-tauri
+	cd $(RATEL_DIR) && CARGO_TARGET_DIR=$(DX_CARGO_TARGET_DIR) make build-tauri
 	rsync -a --delete "$(DX_BUILD_DIR)/" "$(DIST_DIR)/"
-
-	@# Static-served shims for SSR-only globals + atob defensive default.
-	@# - window.atob: if input is undefined/null, return single byte 0x80 (CBOR
-	@#   for empty array) so HTMLData::from_serialized deserializes cleanly
-	@#   instead of UnexpectedEof.
-	@# - window.hydrate_queue: empty array — SSR server normally seeds this
-	@#   with suspense-boundary work items. Static serve has none, but the wasm
-	@#   iterates `hydrate_queue.length` unconditionally.
-	@# - window.hydration_callback: no-op — partnered with hydrate_queue. Called
-	@#   by the iteration even when queue is empty in some code paths.
-	@if ! grep -q "patched_atob" $(DIST_DIR)/index.html; then \
-		echo "Injecting SSR-global shims into index.html"; \
-		python3 -c "p='$(DIST_DIR)/index.html'; t=open(p).read(); s='<script>(function(){var __o=window.atob;window.atob=function(x){return (x===undefined||x===null)?String.fromCharCode(0x80):__o.call(this,x);};if(!window.hydrate_queue)window.hydrate_queue=[];if(!window.hydration_callback)window.hydration_callback=function(){};window.__patched_atob=true;})();</script>'; open(p,'w').write(t.replace('<body>','<body>'+s,1))"; \
-	fi
 
 run: run-android
 
@@ -176,18 +159,16 @@ run: run-android
 # Always regenerated so DEV_URL / ENV changes are picked up.
 TAURI_OVERRIDE_FILE := $(PWD)/tauri-override.json
 
-$(TAURI_OVERIDE_FILE):
+$(TAURI_OVERRIDE_FILE):
 	@printf '{"build":{"devUrl":"%s"},"app":{"security":{"csp":"%s"}}}' \
 			"$(DEV_URL)" "$(CSP_OVERRIDE)" > $(TAURI_OVERRIDE_FILE)
 
 
-run-android: install-tauri-cli $(TAURI_OVERIDE_FILE)
+run-android: install-tauri-cli $(TAURI_OVERRIDE_FILE)
 	@echo "Run 'cd ../ratel && PORT=8000 make run-tauri' in another terminal first."
-	$(WRITE_TAURI_OVERRIDE)
 	cd src-tauri && $(ANDROID_ENV) cargo tauri android dev --config $(TAURI_OVERRIDE_FILE)
 
 build-android: install-tauri-cli dx-build
-	$(WRITE_TAURI_OVERRIDE)
 	cd src-tauri && $(ANDROID_ENV) cargo tauri android build --target $(TAURI_TARGET) --apk
 	@$(MAKE) sign-apk
 	@echo
@@ -222,8 +203,7 @@ run-apk: build-android
 # enables: WebView chrome://inspect, lldb attach, BuildConfig.DEBUG=true,
 # no R8 minify. Useful when you need Chrome DevTools on the WebView or to
 # attach a debugger. Slower compile + larger APK than the release variant.
-build-android-debug: install-tauri-cli dx-build
-	$(WRITE_TAURI_OVERRIDE)
+build-android-debug: install-tauri-cli dx-build $(TAURI_OVERRIDE_FILE)
 	cd src-tauri && $(ANDROID_ENV) cargo tauri android build --target $(TAURI_TARGET) --apk --debug --config $(TAURI_OVERRIDE_FILE)
 	@echo
 	@echo "APK output:"

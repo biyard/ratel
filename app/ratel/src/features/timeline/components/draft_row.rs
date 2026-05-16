@@ -245,7 +245,7 @@ pub fn DraftScrollRow(
 /// of the personal timeline. Thin wrapper around [`DraftScrollRow`].
 #[component]
 pub fn DraftTimeline() -> Element {
-    let drafts = use_server_future(move || async move {
+    let drafts = use_loader(move || async move {
         let result = list_user_drafts_handler(None).await;
         if let Err(ref e) = result {
             tracing::error!("Failed to load drafts: {:?}", e);
@@ -253,13 +253,7 @@ pub fn DraftTimeline() -> Element {
         result
     })?;
 
-    let val = drafts.read();
-    let res = val.as_ref().unwrap();
-
-    let items = match res {
-        Ok(resp) => resp.items.clone(),
-        Err(_) => vec![],
-    };
+    let items = drafts().items;
 
     if items.is_empty() {
         return rsx! {};

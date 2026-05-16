@@ -67,7 +67,7 @@ wasm-bindgen = { workspace = true }
 wasm-bindgen-futures = { workspace = true }
 serde-wasm-bindgen = { workspace = true }
 random-string = { version = "1.1.0", optional = true }
-reqwest = { workspace = true, optional = true }
+reqwest = { workspace = true, optional = true, default-features = false, features = ["rustls-tls", "blocking", "json", "multipart"] }
 async-trait = { workspace = true }
 sha3 = { version = "0.10.8", optional = true }
 sha2 = { version = "0.10", optional = true }
@@ -120,13 +120,12 @@ strip-tags = "0.1.0"
 generational-box = "0.7.9"
 
 [features]
-default = ["web", "server", "fullstack"]
+default = ["mobile"]
 bypass = []
-skip-server = []
 web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2", "uuid/js", "dep:console_error_panic_hook", "fullstack"]
 fullstack = ["dioxus/fullstack"]
 desktop = ["dioxus/desktop"]
-mobile = ["dioxus/mobile", "tokio"]
+mobile = ["dioxus/mobile", "tokio", "dep:console_error_panic_hook", "dep:reqwest", "dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2", "uuid/js"]
 # Type-only feature: compiles app/ratel/src/tauri/types/ and nothing else.
 # Pulled by app/ratel-tauri so the native shell shares DTO definitions with the
 # web bundle. MUST NOT bring in dioxus, reqwest, or any web/server-only deps.

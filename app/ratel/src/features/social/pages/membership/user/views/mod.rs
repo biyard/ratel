@@ -1,8 +1,6 @@
-use super::components::{format_date, format_membership_tier_label, render_history};
-use super::controllers::get_membership::{MembershipResponse, get_membership_handler};
-use super::controllers::get_membership_transfer::{
-    PurchaseHistoryResponse, get_purchase_history_handler,
-};
+use super::components::{format_date, format_membership_tier_label, PurchaseHistory};
+use super::controllers::get_membership::{get_membership_handler, MembershipResponse};
+use super::controllers::get_membership_transfer::get_purchase_history_handler;
 use super::*;
 use crate::common::chrono::TimeZone;
 use crate::common::lucide_dioxus::Sparkles;
@@ -10,26 +8,11 @@ use crate::common::lucide_dioxus::Sparkles;
 #[component]
 pub fn Home(username: String) -> Element {
     let tr: MembershipPageTranslate = use_translate();
-    let membership_resource =
-        use_server_future(move || async move { get_membership_handler().await })?;
+    let membership_resource = use_loader(move || async move { get_membership_handler().await })?;
     let history_resource =
-        use_server_future(move || async move { get_purchase_history_handler(None).await })?;
+        use_loader(move || async move { get_purchase_history_handler(None).await })?;
 
-    let membership_state = membership_resource.value();
-    let history_state = history_resource.value();
-
-    if membership_state.read().is_none() {
-        return rsx! {
-            div { class: "flex justify-center items-center min-h-screen",
-                div { class: "w-12 h-12 rounded-full border-b-2 animate-spin border-primary" }
-            }
-        };
-    }
-
-    let membership = match membership_state.read().as_ref() {
-        Some(Ok(data)) => data.clone(),
-        _ => MembershipResponse::default(),
-    };
+    let membership = membership_resource();
 
     let tier_name = format_membership_tier_label(&membership.tier, tr.enterprise);
     let tier_color = match tier_name.as_str() {
@@ -95,7 +78,7 @@ pub fn Home(username: String) -> Element {
             div { class: "p-6 rounded-lg border bg-card-bg border-card-border",
                 h2 { class: "mb-4 text-xl font-semibold text-text-primary", "{tr.purchase_history}" }
 
-                {render_history(history_state.read().as_ref(), &tr)}
+                PurchaseHistory { history: history_resource(), tr }
             }
         }
     }

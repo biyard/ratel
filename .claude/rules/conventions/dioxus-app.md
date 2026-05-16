@@ -94,7 +94,7 @@ Reference implementations:
 
 ## Data Loading with `use_loader`
 
-Prefer `use_loader` over `use_server_future` for loading server data. `use_loader` returns a `Loader<T>` which requires `T: PartialEq`.
+Use `use_loader` for loading server data. `use_loader` returns a `Loader<T>` which requires `T: PartialEq`.
 
 ```rust
 // Single async call — use_loader with closure
@@ -117,7 +117,7 @@ fn MyComponent(space_id: ReadSignal<SpacePartition>) -> Element {
 
 ## Pagination with `use_infinite_query`
 
-- Prefer over `use_server_future` for any list that may exceed one page
+- Prefer over `use_loader` for any list that may exceed one page
 - Always render `{v.more_element()}` at end of list container
 - Make `v` mutable: `let mut v = use_infinite_query(...)`
 - Filter server-side when possible — client-side filtering after paginated fetch causes edge cases
