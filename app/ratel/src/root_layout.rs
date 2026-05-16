@@ -2,7 +2,9 @@ use crate::*;
 
 #[component]
 pub fn RootLayout() -> Element {
+    debug!("Initializing RootLayout contexts...");
     crate::features::auth::Context::init()?;
+    debug!("Auth context initialized.");
     crate::common::contexts::TeamContext::init()?;
 
     rsx! {

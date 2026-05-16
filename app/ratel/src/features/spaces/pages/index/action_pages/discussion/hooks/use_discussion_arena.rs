@@ -10,7 +10,6 @@ use crate::features::spaces::pages::actions::actions::discussion::{
     DiscussionCommentResponse, DiscussionResponse, SpacePostCommentTargetEntityType,
 };
 use crate::features::spaces::space_common::controllers::{list_space_members, SpaceMemberResponse};
-use dioxus::fullstack::Loader;
 use std::str::FromStr;
 
 /// Ranking score for a single comment, computed client-side at every
@@ -190,9 +189,10 @@ pub fn use_discussion_arena(
     let sheet_expanded: Signal<bool> = use_signal(|| false);
     let pending_mention: Signal<Option<(String, String)>> = use_signal(|| None);
 
-    let disc_loader = use_loader(move || async move {
-        get_discussion_detail(space_id(), discussion_id()).await
-    })?;
+    let disc_loader =
+        use_loader(
+            move || async move { get_discussion_detail(space_id(), discussion_id()).await },
+        )?;
 
     let mut comments_query = use_infinite_query(move |bookmark: Option<String>| async move {
         list_comments(space_id(), discussion_id(), bookmark, None).await
@@ -207,12 +207,7 @@ pub fn use_discussion_arena(
                 DiscussionCommentResponse::default(),
             );
         };
-        get_comment(
-            space_id(),
-            discussion_id(),
-            SpacePostCommentEntityType(id),
-        )
-        .await
+        get_comment(space_id(), discussion_id(), SpacePostCommentEntityType(id)).await
     })?;
 
     let mut replies_loader = use_loader(move || async move {
@@ -371,8 +366,7 @@ pub fn use_discussion_arena(
         // ordering below if the parent isn't in the loaded base/polled
         // set (very old thread scrolled past).
         if let Some(parent_id) = active_reply_thread() {
-            let parent_sk_str =
-                EntityType::SpacePostComment(parent_id).to_string();
+            let parent_sk_str = EntityType::SpacePostComment(parent_id).to_string();
             let parent = base
                 .iter()
                 .chain(polled.iter())
@@ -380,8 +374,7 @@ pub fn use_discussion_arena(
 
             if let Some(parent) = parent {
                 let replies = thread_replies();
-                let parent_tuple =
-                    (parent.author_pk.to_string(), parent.content.clone());
+                let parent_tuple = (parent.author_pk.to_string(), parent.content.clone());
                 let reply_tuples: Vec<(String, String)> = replies
                     .iter()
                     .map(|r| (r.author_pk.to_string(), r.content.clone()))
@@ -553,15 +546,14 @@ pub fn use_discussion_arena(
         move |parent_sk: String, content: String, images: Vec<String>| async move {
             // Strip the `SPACE_POST_COMMENT#` prefix via Target's FromStr,
             // then rewrap as the narrower type the reply endpoint wants.
-            let comment_sk_entity =
-                match SpacePostCommentTargetEntityType::from_str(&parent_sk) {
-                    Ok(v) => SpacePostCommentEntityType(v.0),
-                    Err(e) => {
-                        tracing::error!("reply: invalid parent sk: {:?}", e);
-                        toast.error(e);
-                        return Ok::<(), crate::common::Error>(());
-                    }
-                };
+            let comment_sk_entity = match SpacePostCommentTargetEntityType::from_str(&parent_sk) {
+                Ok(v) => SpacePostCommentEntityType(v.0),
+                Err(e) => {
+                    tracing::error!("reply: invalid parent sk: {:?}", e);
+                    toast.error(e);
+                    return Ok::<(), crate::common::Error>(());
+                }
+            };
             let req = ReplyCommentRequest { content, images };
             match reply_comment(space_id(), discussion_id(), comment_sk_entity, req).await {
                 Ok(_) => {
@@ -754,13 +746,13 @@ mod tests {
         // Mirrors the simulation table from the design discussion.
         let now = 1_000_000;
         let scenarios = vec![
-            ("just_now",          fixture(now,           0, 0)),
-            ("30min_silent",      fixture(now - 1800,    0, 0)),
-            ("1h_silent",         fixture(now - 3600,    0, 0)),
-            ("1h_5_likes",        fixture(now - 3600,    5, 0)),
-            ("6h_popular",        fixture(now - 21600,   50, 5)),
-            ("1d_modest",         fixture(now - 86400,   10, 1)),
-            ("7d_classic",        fixture(now - 604800,  100, 20)),
+            ("just_now", fixture(now, 0, 0)),
+            ("30min_silent", fixture(now - 1800, 0, 0)),
+            ("1h_silent", fixture(now - 3600, 0, 0)),
+            ("1h_5_likes", fixture(now - 3600, 5, 0)),
+            ("6h_popular", fixture(now - 21600, 50, 5)),
+            ("1d_modest", fixture(now - 86400, 10, 1)),
+            ("7d_classic", fixture(now - 604800, 100, 20)),
         ];
         let mut scored: Vec<(&str, f64)> = scenarios
             .iter()

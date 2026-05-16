@@ -1,3 +1,5 @@
+use dioxus::document::eval;
+
 use crate::*;
 
 pub async fn copy_text(text: &str) -> Result<()> {
@@ -11,4 +13,41 @@ pub async fn copy_text(text: &str) -> Result<()> {
         .map_err(|_| Error::OnlyWebFunction)?;
 
     Ok(())
+}
+
+pub async fn invoke_with_args<ARG: serde::Serialize, T: serde::de::DeserializeOwned>(
+    method: &str,
+    args: ARG,
+) -> Result<T> {
+    let mut runner = eval(include_str!("web/invoke_with_args.js"));
+    runner
+        .send(serde_json::json!({
+            "method": method,
+            "args": args,
+        }))
+        .map_err(|e| {
+            error!("Failed to send method {}: {}", method, e);
+            Error::OnlyWebFunction
+        })?;
+
+    runner.recv::<T>().await.map_err(|e| {
+        error!("Failed to invoke method {}: {}", method, e);
+        Error::OnlyWebFunction
+    })
+}
+
+pub async fn invoke_with_empty<T: serde::de::DeserializeOwned>(method: &str) -> Result<T> {
+    let mut runner = eval(include_str!("web/invoke_with_args.js"));
+    runner
+        .send(serde_json::json!({
+            "method": method,
+        }))
+        .map_err(|e| {
+            error!("Failed to send method {}: {}", method, e);
+            Error::OnlyWebFunction
+        })?;
+    runner.recv::<T>().await.map_err(|e| {
+        error!("Failed to invoke method {}: {}", method, e);
+        Error::OnlyWebFunction
+    })
 }
