@@ -33,24 +33,6 @@ impl std::fmt::Display for ServerFnError {
 
 impl std::error::Error for ServerFnError {}
 
-/// Stand-in for `dioxus_fullstack::Form<T>`. Server-side it would wrap a
-/// form-extracted body; on the tauri-web client we strip it from stubs
-/// via the `unwrap_form_type` helper in `by_macros::server_fn`. The
-/// `Deref` impls keep the dropped server-side handler bodies parseable.
-pub struct Form<T>(pub T);
-
-impl<T> Deref for Form<T> {
-    type Target = T;
-    fn deref(&self) -> &T {
-        &self.0
-    }
-}
-impl<T> DerefMut for Form<T> {
-    fn deref_mut(&mut self) -> &mut T {
-        &mut self.0
-    }
-}
-
 /// `use_server_cached` shim — identical surface to `use_server_future`
 /// in the bits the codebase exercises (cache semantics only matter
 /// server-side; on the client we just re-run on dependency change).
@@ -60,19 +42,4 @@ where
     M: 'static,
 {
     dioxus::prelude::use_hook(|| future())
-}
-
-/// `Lazy<T>` is a server-only helper for global config init; on
-/// tauri-web it should never be touched, so the impl is a stub that
-/// panics if anyone actually calls into it.
-pub struct Lazy<T> {
-    _phantom: PhantomData<fn() -> T>,
-}
-
-impl<T> Lazy<T> {
-    pub const fn new<F>(_init: F) -> Self {
-        Self {
-            _phantom: PhantomData,
-        }
-    }
 }

@@ -72,14 +72,7 @@ percent-encoding = "2.3.2"
 base64 = "0.22.1"
 hyper = "1.6.0"
 
-# `fullstack` deliberately omitted from the workspace base — it pulls
-# `dioxus-fullstack` and turns on `dioxus-web/hydrate`, which breaks the
-# Tauri Android shell (no SSR HTML to hydrate against). app/ratel adds
-# `dioxus/fullstack` back through its own `web` and `server` features, so
-# the browser and server builds are unaffected. The `tauri-web` build
-# stays free of fullstack and bypasses RPC via our reqwest-based
-# server-function stubs.
-dioxus = { version = "0.7.9", default-features = false, features = ["launch", "devtools", "logger", "lib", "router"] }
+dioxus = { version = "0.7.9", features = ["router"] }
 manganis = "0.7"
 lucide-dioxus = { version = "2.569.0", features = ["all-icons"] }
 

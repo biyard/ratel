@@ -243,7 +243,7 @@ run: ../../node_modules js/node_modules
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES),fullstack --no-default-features --fullstack true
 
 run-android: $(HOME)/.android/debug.keystore dx-res-debug
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --features $(RUN_FEATURES),tauri-web --no-default-features --platform android --target $(ANDROID_TARGET) --fullstack false
+	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --features $(RUN_FEATURES) --no-default-features --platform android --target $(ANDROID_TARGET) --fullstack false
 
 run-tauri: ../../node_modules js/node_modules
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port 8000 --no-default-features --debug-symbols false --features $(RUN_FEATURES),tauri-web --web --fullstack false

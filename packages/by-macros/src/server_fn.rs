@@ -33,9 +33,7 @@ use proc_macro2::TokenStream as TokenStream2;
 use quote::{format_ident, quote};
 use std::collections::HashSet;
 use syn::parse::{Parse, ParseStream};
-use syn::{
-    parse_macro_input, FnArg, Ident, ItemFn, LitStr, Pat, PatType, Token, Type,
-};
+use syn::{parse_macro_input, FnArg, Ident, ItemFn, LitStr, Pat, PatType, Token, Type};
 
 /// `#[get("/path", extractor: T, ...)]` — parsed attribute args.
 struct RouteAttr {
@@ -138,11 +136,8 @@ fn parse_path(path: &str) -> (String, Vec<String>, Vec<String>) {
 }
 
 pub fn server_fn_impl(method: &str, attr: TokenStream, item: TokenStream) -> TokenStream {
-    let attr_tokens: TokenStream2 = attr.clone().into();
     let route = parse_macro_input!(attr as RouteAttr);
     let func = parse_macro_input!(item as ItemFn);
-
-    let dioxus_method = format_ident!("{}", method.to_lowercase());
 
     let fn_vis = &func.vis;
     let fn_sig = &func.sig;
@@ -320,31 +315,7 @@ pub fn server_fn_impl(method: &str, attr: TokenStream, item: TokenStream) -> Tok
         _ => unreachable!("unsupported method {method}"),
     };
 
-    // --- Output -------------------------------------------------------------
-
-    // Non-tauri-web: hand the original attr to dioxus's macro and pass the
-    // function through unchanged. dioxus generates server + browser-client
-    // code as it normally does.
-    //
-    // We reach the macro through `::dioxus::prelude::<method>` — the path
-    // through `::dioxus::fullstack` is only re-exported under `feature =
-    // "fullstack"` and the prelude one is the canonical user-facing form
-    // (already in use across the rest of the codebase before this macro
-    // shadowed it).
-    let non_tauri = quote! {
-        #[cfg(not(feature = "tauri-web"))]
-        #[::dioxus::prelude::#dioxus_method(#attr_tokens)]
-        #func
-    };
-
-    // tauri-web: replace the body with a reqwest call. Keep the original
-    // attributes (e.g. `#[mcp_tool]` higher up) so the stack works the
-    // same — mcp_tool already gates its server-only output by feature.
-    // Suppress unused-variable warnings since the original body is dropped
-    // and some args (e.g. body args that we send but never read by name)
-    // can be reported as unused under `-D warnings`.
     let tauri = quote! {
-        #[cfg(feature = "tauri-web")]
         #(#fn_attrs)*
         #[allow(unused_variables, unused_mut)]
         #fn_vis async fn #fn_name #fn_generics ( #( #stub_inputs ),* ) #fn_output {
@@ -355,7 +326,6 @@ pub fn server_fn_impl(method: &str, attr: TokenStream, item: TokenStream) -> Tok
     };
 
     quote! {
-        #non_tauri
         #tauri
     }
     .into()

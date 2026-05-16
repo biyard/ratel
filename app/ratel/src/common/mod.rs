@@ -34,8 +34,7 @@ pub use fullstack::*;
 
 #[cfg(not(feature = "fullstack"))]
 pub use fullstack::{
-    delete, get, patch, post, put, use_loader, use_server_cached, Form, Loader, Loading,
-    ServerFnError,
+    delete, get, patch, post, put, use_loader, use_server_cached, Loader, Loading, ServerFnError,
 };
 
 #[cfg(feature = "fullstack")]
