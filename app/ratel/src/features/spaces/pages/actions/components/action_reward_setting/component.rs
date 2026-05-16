@@ -27,13 +27,22 @@ pub fn ActionRewardSetting(
     );
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let team = use_loader(move || async move {
-        let username = space().author_username;
-        crate::features::social::controllers::find_team_handler(username.to_string()).await
+        let space = space();
+        let result = crate::features::social::controllers::find_team_handler(
+            space.author_username.to_string(),
+        )
+        .await;
+        // Spaces owned by a regular user have no matching team — swallow the
+        // NotFound so the loader returns Option<TeamResponse> instead of
+        // propagating an error that crashes the whole action editor page.
+        Ok::<_, crate::common::Error>(result.ok())
     })?;
     let is_team_space = current_space.author_type == crate::common::UserType::Team;
     let membership_username = use_memo(move || {
         if is_team_space {
-            team().username
+            team()
+                .map(|t| t.username)
+                .unwrap_or_else(|| current_space.author_username.clone())
         } else {
             user_ctx
                 .read()
@@ -49,14 +58,16 @@ pub fn ActionRewardSetting(
         let space = space();
 
         let is_team_space = space.author_type == crate::common::UserType::Team;
-        let team_username = team.username;
+        let team_username = team.as_ref().map(|t| t.username.clone()).unwrap_or_default();
 
         if is_team_space && !team_username.is_empty() {
-            crate::features::membership::controllers::get_team_membership_handler(
-                team_username.to_string(),
-            )
-            .await
-            .map(Some)
+            crate::features::membership::controllers::get_team_membership_handler(team_username)
+                .await
+                .map(Some)
+                // Tolerate transient or permission errors here too — falling
+                // back to None keeps the reward UI usable instead of crashing
+                // the page when the team membership lookup fails.
+                .or_else(|_| Ok::<_, crate::common::Error>(None))
         } else {
             Ok(None)
         }
