@@ -29,8 +29,13 @@ impl Context {
             debug!("Context::init - fetched user context: {:?}", res);
             res
         });
+        debug!("Auth Context::init - finished initializing loader for user context, now awaiting result");
 
         let user_ctx = user_ctx?();
+        debug!(
+            "Auth Context::init - successfully loaded user context: {:?}",
+            user_ctx
+        );
 
         let ctx = Self {
             user_context: use_store(move || user_ctx),
