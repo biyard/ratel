@@ -64,11 +64,16 @@ where
     let mut loader_state = use_signal(|| LoaderState::Pending);
 
     let resource = use_resource(move || {
+        debug!("before calling future in use_resource");
         let user_fut = future();
 
         #[allow(clippy::let_and_return)]
         async move {
             let out = user_fut.await;
+            debug!(
+                "after awaiting future in use_resource, got output: {:?}",
+                out
+            );
 
             let out = out.map_err(|e| {
                 let anyhow_err: CapturedError = e.into();
