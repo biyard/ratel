@@ -252,6 +252,23 @@ test.beforeAll(async () => {
   await client.Page.enable();
   await client.Network.enable();
 
+  // Capture Set-Cookie headers + blocked-cookie reasons. The previous
+  // run showed `document.cookie` and `Network.getCookies` empty after
+  // signup, but didn't tell us *why* the cookie was rejected.
+  // responseReceivedExtraInfo carries the response headers plus
+  // `blockedCookies` (each with a `blockedReasons` enum from
+  // SetCookieBlockedReason — SecureOnly, SameSiteNoneInsecure,
+  // SamePartyConflictsWithOtherAttributes, etc.).
+  client.on("Network.responseReceivedExtraInfo", (params) => {
+    const url = params.headers?.[":path"] || params.headers?.["location"] || "";
+    const sc = params.headers?.["set-cookie"];
+    if (sc) console.log(`[smoke] Set-Cookie ${url}: ${sc}`);
+    const blocked = params.blockedCookies;
+    if (blocked && blocked.length) {
+      console.log(`[smoke] blockedCookies: ${JSON.stringify(blocked)}`);
+    }
+  });
+
   // The APK boots into the home screen and renders the unauthenticated
   // HUD. Waiting for `home-btn-signin` proves both that the wasm bundle
   // initialized and that `Context::init` resolved past the suspense.

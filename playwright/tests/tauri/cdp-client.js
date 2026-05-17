@@ -122,6 +122,7 @@ export async function connectCdp({ host, port, target = null, headers = {} } = {
 
   let nextId = 1;
   const pending = new Map();
+  const eventListeners = new Map(); // method -> Array<(params) => void>
 
   ws.on("message", (data) => {
     let msg;
@@ -130,14 +131,21 @@ export async function connectCdp({ host, port, target = null, headers = {} } = {
     } catch {
       return;
     }
-    if (typeof msg.id !== "number") return; // event, ignore
-    const cb = pending.get(msg.id);
-    if (!cb) return;
-    pending.delete(msg.id);
-    if (msg.error) {
-      cb.reject(new Error(`CDP error: ${JSON.stringify(msg.error)}`));
-    } else {
-      cb.resolve(msg.result);
+    if (typeof msg.id === "number") {
+      const cb = pending.get(msg.id);
+      if (!cb) return;
+      pending.delete(msg.id);
+      if (msg.error) {
+        cb.reject(new Error(`CDP error: ${JSON.stringify(msg.error)}`));
+      } else {
+        cb.resolve(msg.result);
+      }
+      return;
+    }
+    // Event (no id, has method + params).
+    if (typeof msg.method === "string") {
+      const ls = eventListeners.get(msg.method);
+      if (ls) for (const l of ls) try { l(msg.params); } catch {}
     }
   });
 
@@ -161,9 +169,15 @@ export async function connectCdp({ host, port, target = null, headers = {} } = {
       });
     });
 
+  function on(method, listener) {
+    if (!eventListeners.has(method)) eventListeners.set(method, []);
+    eventListeners.get(method).push(listener);
+  }
+
   return {
     ws,
     send,
+    on,
     close: () => ws.close(),
     Runtime: {
       enable: () => send("Runtime.enable"),
@@ -175,6 +189,7 @@ export async function connectCdp({ host, port, target = null, headers = {} } = {
     Network: {
       enable: () => send("Network.enable"),
       getCookies: (params = {}) => send("Network.getCookies", params),
+      setCookie: (params) => send("Network.setCookie", params),
     },
   };
 }
