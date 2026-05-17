@@ -17,29 +17,27 @@ pub fn get_session_layer(
 ) -> SessionManagerLayer<DynamoSessionStore> {
     let session_store = DynamoSessionStore::new(cli);
 
-    // Always issue cross-site-capable cookies (`SameSite=None; Secure`).
+    // Cookie config has to satisfy two very different contexts:
     //
-    // Why this is safe in local/test as well: the Tauri Android smoke
-    // test runs the WebView at `http://tauri.localhost` and the
-    // backend at `http://localhost:8080`. Those are different "sites"
-    // for cookie purposes (no public-suffix entry for `.localhost`), so
-    // a `SameSite=Lax` cookie would never reach the backend on the
-    // subsequent XHRs after signup. Chromium treats every `*.localhost`
-    // host (and bare `localhost`) as a secure context, so the `Secure`
-    // attribute does not block the cookie over HTTP loopback either.
+    //   * web Playwright job: same-origin browser ↔ backend at
+    //     `http://localhost:8080`. Anything works.
+    //   * Tauri Android smoke: WebView at `http://tauri.localhost`
+    //     ↔ backend at `http://localhost:8080`. Different "sites"
+    //     (no public-suffix entry for `.localhost`), so a Lax cookie
+    //     is never sent on the post-signup XHRs.
+    //   * Production: HTTPS cross-origin from `*.ratel.foundation`
+    //     to the API. Needs `SameSite=None; Secure`.
     //
-    // `HttpOnly=false` (was `!is_local` before) — leaving JS access on
-    // because (a) the Android System WebView 113 in the smoke-test
-    // emulator has known quirks with cross-site HttpOnly cookies, and
-    // (b) the existing client doesn't read the cookie via JS anyway, so
-    // dropping HttpOnly is purely additive surface for debugging
-    // without a real exposure.
-    //
-    // For the same-origin web Playwright job (browser + backend both at
-    // `http://localhost:8080`), `SameSite=None; Secure` is strictly
-    // looser than `Lax`, so it remains compatible.
+    // Empirically the API 34 emulator's Android System WebView 113
+    // refuses to *store* `SameSite=None; Secure` cookies set over HTTP
+    // (cookie jar is empty in CDP/document.cookie after signup),
+    // despite Chromium's docs claiming `*.localhost` qualifies as a
+    // secure context. So in local/test mode we drop the `Secure`
+    // attribute. Modern Chrome rejects `SameSite=None` without Secure
+    // by default, but on a loopback origin the WebView accepts it.
+    let is_local = env == "local" || env == "test";
     let layer = SessionManagerLayer::new(session_store)
-        .with_secure(true)
+        .with_secure(!is_local)
         .with_http_only(false)
         .with_same_site(tower_sessions::cookie::SameSite::None)
         .with_name(format!("{}_sid", env))
