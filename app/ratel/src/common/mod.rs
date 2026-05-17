@@ -27,26 +27,20 @@ pub mod logger;
 
 pub use dioxus::prelude::*;
 
-// `tauri-web` takes precedence: even when the `web` feature is auto-added
-// by `dx build --platform web` (which transitively enables `fullstack`),
-// the Tauri Android shell still needs the reqwest-based server_fn shims and
-// the custom `use_loader` — `dioxus_fullstack::use_loader` relies on SSR
-// hydration data that the Tauri WebView never serves, so it stays
-// permanently suspended (white screen).
-#[cfg(any(not(feature = "fullstack"), feature = "tauri-web"))]
+#[cfg(not(feature = "fullstack"))]
 pub mod fullstack;
-#[cfg(any(not(feature = "fullstack"), feature = "tauri-web"))]
+#[cfg(not(feature = "fullstack"))]
 pub use fullstack::*;
 
-#[cfg(any(not(feature = "fullstack"), feature = "tauri-web"))]
+#[cfg(not(feature = "fullstack"))]
 pub use fullstack::{
     delete, get, patch, post, put, use_loader, use_server_cached, Loader, Loading, ServerFnError,
 };
 
-#[cfg(all(feature = "fullstack", not(feature = "tauri-web")))]
+#[cfg(feature = "fullstack")]
 pub use dioxus::prelude::{delete, get, patch, post, put, *};
 
-#[cfg(all(feature = "fullstack", not(feature = "tauri-web")))]
+#[cfg(feature = "fullstack")]
 pub use dioxus::fullstack::{Form, Loader, Loading};
 
 pub use dioxus::logger::tracing::{debug, error, info, warn};
