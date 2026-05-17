@@ -754,6 +754,13 @@ jobs:
           # in the dev APK; the build still succeeds with an empty value
           # (Google-auth flow just fails at runtime).
           GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID_DEV }}
+
+          # See PR build job: app/ratel/Makefile's BUILD_ENV defaults
+          # AWS_ACCOUNT_ID via `aws sts ...` which needs creds.
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: ap-northeast-2
+          AWS_ACCOUNT_ID: test
         run: |
           # setup-android exports ANDROID_HOME; the NDK we installed lives
           # under ndk/29.0.14206865 of that. The Makefile defaults

@@ -502,6 +502,15 @@ jobs:
           RUSTFLAGS: "-D warnings"
           # GOOGLE_OAUTH_CLIENT_ID intentionally empty: smoke test uses
           # email/password signup, not Google sign-in.
+
+          # `app/ratel/Makefile`'s BUILD_ENV interpolates these and the
+          # default for AWS_ACCOUNT_ID is `$(shell aws sts ...)` which
+          # fails without credentials. We don't actually need AWS for the
+          # web/tauri-web bundle, so any non-empty value satisfies it.
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: ap-northeast-2
+          AWS_ACCOUNT_ID: test
         run: |
           # The setup-android action exports ANDROID_HOME at job scope.
           # Re-point the Makefile's NDK_HOME at the version we just
