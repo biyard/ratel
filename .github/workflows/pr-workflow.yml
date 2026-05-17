@@ -113,6 +113,14 @@ jobs:
           dx check --ios
           dx check --android
 
+      # The `asset!("/assets/tailwind.css")` macro in app.rs checks the
+      # file exists at compile time. `dx check --web` above runs through
+      # the manganis asset resolver which auto-creates placeholders, but
+      # plain `cargo check` doesn't. Touch a placeholder so the macro
+      # passes — contents don't matter for compile-time checks.
+      - name: Ensure tailwind.css placeholder
+        run: touch assets/tailwind.css
+
       - name: cargo check --features tauri-web
         env:
           RUSTFLAGS: "-D warnings"
