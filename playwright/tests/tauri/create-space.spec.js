@@ -148,16 +148,21 @@ test.beforeAll(async () => {
   // Connect to the first page target the WebView exposes. CI sets up
   // `adb forward tcp:9223 localabstract:webview_devtools_remote_<pid>`
   // before this spec runs, so the WebView's CDP is reachable via
-  // `localhost:9223`. `target` filter is needed because the action lists
-  // both the page and any service workers — we want the page.
+  // `localhost:9223`. Resolve the target ID via HTTP first, then connect
+  // via that explicit ID — passing a filter callback has been flaky on
+  // Android WebView (occasional "socket hang up" mid-handshake).
+  const targets = await CDP.List({ host: CDP_HOST, port: CDP_PORT });
+  const pageTarget = targets.find((t) => t.type === "page");
+  if (!pageTarget) {
+    throw new Error(
+      `no page target in WebView devtools; targets: ${JSON.stringify(targets)}`,
+    );
+  }
+  console.log(`Connecting to WebView page target: ${pageTarget.id}`);
   client = await CDP({
     host: CDP_HOST,
     port: CDP_PORT,
-    target: (targets) => {
-      const page = targets.find((t) => t.type === "page");
-      if (!page) throw new Error("no page target in WebView devtools");
-      return page;
-    },
+    target: pageTarget.id,
   });
   await client.Runtime.enable();
   await client.Page.enable();

@@ -15,6 +15,12 @@ set -eu
 
 APK_PATH="${1:?APK_PATH must be passed as first arg}"
 
+# Always capture logcat on exit, even when the spec fails — debugging
+# without it is borderline impossible.
+trap 'PID="${PID:-$(adb shell pidof co.biyard.ratel 2>/dev/null | tr -d "\r" || true)}"
+      adb logcat -d ${PID:+--pid=$PID} > /tmp/tauri-logcat.txt 2>&1 || true
+      curl -sf http://localhost:9223/json/list > /tmp/tauri-devtools-list.json 2>&1 || true' EXIT
+
 adb wait-for-device
 
 # Wait for the emulator to finish booting before we install.
@@ -56,15 +62,15 @@ if ! curl -sf http://localhost:9223/json/list > /dev/null; then
   exit 1
 fi
 
+# Print the devtools page listing so the artifact log shows what
+# Playwright was looking at.
+echo "=== /json/list (before spec) ==="
+curl -sf http://localhost:9223/json/list || echo "(unable to fetch)"
+echo "================================"
+
 # Run the smoke spec.
 cd playwright
 TAURI_CDP_PORT=9223 \
   TAURI_API_BASE="${TAURI_API_BASE:-https://dev.ratel.foundation}" \
   CI=true \
   npx playwright test --project=Tauri
-EXIT=$?
-
-# Capture logcat for debugging regardless of pass/fail.
-adb logcat -d --pid="$PID" > /tmp/tauri-logcat.txt || true
-
-exit "$EXIT"
