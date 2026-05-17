@@ -362,11 +362,17 @@ test("tauri smoke: signup → team → post → space", async () => {
     console.log(`[smoke] Network.getCookies failed: ${e.message}`);
   }
 
-  // Wait for the signed-in HUD (sign-in button gone, teams button visible).
-  await waitFor(
-    `!document.querySelector('[data-testid="home-btn-signin"]')`,
-    { timeout: 30_000, label: "signin button removed after signup" },
-  );
+  // After successful signup the modal closes and the navigator replaces
+  // the route with `OnboardingConnectionsPage` (the cross-posting
+  // onboarding interstitial shown once per new account). Dismiss it to
+  // land on the home page; the smoke test doesn't exercise the
+  // onboarding flow itself.
+  await waitForVisible('[data-testid="onboarding-skip-link"]', {
+    timeout: 30_000,
+  });
+  await clickSelector('[data-testid="onboarding-skip-link"]');
+
+  // Now wait for the signed-in HUD on the home page.
   await waitForSelector('[data-testid="home-btn-teams"]', { timeout: 30_000 });
 
   // ── 2. Create team via UI ─────────────────────────────────────────────
