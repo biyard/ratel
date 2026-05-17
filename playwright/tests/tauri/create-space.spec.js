@@ -34,14 +34,18 @@ const API_BASE =
   process.env.TAURI_API_BASE || "https://dev.ratel.foundation";
 
 const RUN_ID = Date.now();
+// Backend validator restricts usernames to `[a-z0-9_-]{3,20}`. A full
+// 13-digit Date.now() blows the 20-char cap, so we keep only the last
+// 9 digits (still unique-enough within a test run) and prefix short.
+const SHORT_ID = String(RUN_ID).slice(-9);
 const user = {
   email: `tauri-smoke-${RUN_ID}@biyard.co`,
-  username: `tauri_smoke_${RUN_ID}`,
+  username: `t_${SHORT_ID}`,
   nickname: `Tauri Smoke ${RUN_ID}`,
   password: "admin!234",
 };
 const team = {
-  username: `tauri_team_${RUN_ID}`,
+  username: `tt_${SHORT_ID}`,
   nickname: `Tauri Team ${RUN_ID}`,
 };
 
