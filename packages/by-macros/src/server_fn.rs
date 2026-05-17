@@ -297,12 +297,23 @@ pub fn server_fn_impl(method: &str, attr: TokenStream, item: TokenStream) -> Tok
         }
         "POST" | "PUT" | "PATCH" => {
             let fn_name = format_ident!("{}", method.to_lowercase());
-            // Body is the first remaining body arg. If none, send `&()`.
+            // dioxus-fullstack's server-side request decoder expects the
+            // body JSON to be an object keyed by the handler's argument
+            // names, e.g. for `fn handler(req: T)` it parses
+            // `{"req": <T>}`. The auto-generated args struct fails to
+            // deserialize a bare `T`. Wrap accordingly.
+            //
+            // If none, send `&()` — an empty JSON object isn't required
+            // (dioxus accepts an empty body for zero-arg POSTs).
             if let Some(body) = body_idents.first() {
+                let body_name = LitStr::new(&body.to_string(), body.span());
                 quote! {
-                    crate::common::fullstack::server_fn::#fn_name(&__url, &#body)
-                .await
-                .map_err(::std::convert::Into::into)
+                    crate::common::fullstack::server_fn::#fn_name(
+                        &__url,
+                        &::serde_json::json!({ #body_name: &#body }),
+                    )
+                    .await
+                    .map_err(::std::convert::Into::into)
                 }
             } else {
                 quote! {
