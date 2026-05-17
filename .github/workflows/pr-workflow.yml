@@ -499,9 +499,19 @@ jobs:
       - name: Build x86_64 debug APK
         working-directory: app/ratel-tauri
         env:
-          # Smoke test runs against the live dev backend — no local docker
-          # bring-up needed in the smoke-test job below.
-          MOBILE_API_URL: https://dev.ratel.foundation
+          # The smoke-test job below brings up the same `app-shell-testing`
+          # docker stack the regular playwright job uses (built with the
+          # `bypass` feature so `000000` is accepted as a verification
+          # code) and exposes it via `adb reverse tcp:8080 tcp:8080`.
+          # Emulator-side `http://localhost:8080` therefore reaches the
+          # host docker container.
+          #
+          # Hosting at `localhost` is critical: the WebView origin is
+          # `http://tauri.localhost`, eTLD+1 = `localhost`, same-site
+          # with `http://localhost:8080`. That lets the SameSite=Lax
+          # session cookie issued by the local backend (ENV=local) ride
+          # across the cross-origin fetch.
+          MOBILE_API_URL: http://localhost:8080
           ENV: dev
           ANDROID_TARGET: x86_64-linux-android
           # Match dev profile of the workspace; release wasm so the bundle
@@ -564,23 +574,32 @@ jobs:
             app/ratel-tauri/dx-tauri-target
 
   # ────────────────────────────────────────────────────────────────────────
-  # Tauri Android smoke test: boots an x86_64 Android emulator, installs
-  # the APK from the build job, exposes the WebView's CDP socket via
-  # `adb forward`, and runs the Playwright spec at
-  # `playwright/tests/tauri/create-space.spec.js` against the live dev
-  # backend.
+  # Tauri Android smoke test: boots an x86_64 Android emulator, brings up
+  # the same `app-shell-testing` docker stack the regular playwright job
+  # uses (so we get the `bypass` feature for `000000` verification codes
+  # against a backend built from this PR's commit), installs the APK from
+  # `tauri-android-build`, exposes the WebView's CDP socket via
+  # `adb forward`, exposes the host backend inside the emulator via
+  # `adb reverse`, and runs the Playwright spec at
+  # `playwright/tests/tauri/create-space.spec.js`.
   #
-  # No `ratel-app` dependency — the smoke test points the APK at
-  # https://dev.ratel.foundation, so we don't need the local docker stack
-  # that the web Playwright job uses.
+  # Needs `ratel-app` because the APK is built with
+  # `MOBILE_API_URL=http://localhost:8080` and we have to stand up that
+  # backend somewhere reachable. Pointing at the live dev backend was a
+  # dead end — dev has no `bypass`, and any wire-format drift between the
+  # PR's tauri-web client and dev's deployed app-shell shows up as opaque
+  # 500s.
   # ────────────────────────────────────────────────────────────────────────
   tauri-android-smoke-test:
     runs-on: ubuntu-latest
-    needs: [tauri-android-build]
-    timeout-minutes: 45
+    needs: [tauri-android-build, ratel-app]
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
       - uses: actions/setup-node@v4
         with:
@@ -621,15 +640,62 @@ jobs:
           echo "path=$APK" >> $GITHUB_OUTPUT
           ls -la "$APK"
 
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: app-shell-image-${{ github.sha }}
+          path: /tmp
+
+      - name: Load Docker image
+        run: |
+          docker load < /tmp/app-shell-image.tar.gz
+          docker images
+
+      - name: Bring up testing infra
+        env:
+          COMMIT: pr-${{ github.sha }}
+          RESET_DB: "true"
+        run: |
+          docker compose --profile testing up -d localstack qdrant
+          echo "Waiting for LocalStack to be healthy..."
+          timeout 120 bash -c 'until curl -sf http://localhost:4566/_localstack/health > /dev/null 2>&1; do sleep 5; done'
+          echo "LocalStack is healthy, starting remaining services..."
+          docker compose --profile testing up -d
+
+      - name: Wait for app-shell
+        run: |
+          echo "🔄 Checking app-shell..."
+          timeout=180
+          interval=10
+          elapsed=0
+          while [ $elapsed -lt $timeout ]; do
+            if curl -f -s http://localhost:8080/ > /dev/null 2>&1; then
+              echo "✅ app-shell is responding (took ${elapsed}s)"
+              break
+            fi
+            echo "⏳ app-shell not ready yet... (${elapsed}/${timeout}s)"
+            sleep $interval
+            elapsed=$((elapsed + interval))
+          done
+          if [ $elapsed -ge $timeout ]; then
+            echo "❌ app-shell failed to respond within ${timeout}s"
+            docker compose ps
+            docker compose logs app-shell-testing
+            exit 1
+          fi
+
       - name: Install Playwright dependencies
         working-directory: playwright
         run: npm i
 
-      # Boot emulator, install APK, set up adb forward, run the smoke
-      # spec. The whole flow lives inside the action's `script:` block so
-      # the emulator stays alive for the entire test run.
+      # Boot emulator, install APK, set up adb forward (WebView CDP) +
+      # adb reverse (emulator→host backend), run the smoke spec. The
+      # whole flow lives inside the action's `script:` block so the
+      # emulator stays alive for the entire test run.
       - name: Run Tauri smoke test
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          TAURI_API_BASE: http://localhost:8080
         with:
           api-level: 34
           target: default
@@ -643,6 +709,12 @@ jobs:
           # smoke test runs in a single bash process.
           script: bash .github/scripts/run-tauri-smoke-test.sh '${{ steps.apk.outputs.path }}'
 
+      - name: Capture app-shell logs
+        if: always()
+        run: |
+          docker compose --profile testing logs app-shell-testing > /tmp/app-shell-testing.log 2>&1 || true
+          docker compose --profile testing ps > /tmp/docker-compose-ps.txt 2>&1 || true
+
       - name: Upload smoke test artifacts
         if: always()
         uses: actions/upload-artifact@v7
@@ -654,4 +726,6 @@ jobs:
             /tmp/tauri-logcat.txt
             /tmp/tauri-devtools-list.json
             /tmp/tauri-devtools-version.json
+            /tmp/app-shell-testing.log
+            /tmp/docker-compose-ps.txt
           retention-days: 7

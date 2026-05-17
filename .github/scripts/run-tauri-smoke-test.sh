@@ -45,6 +45,14 @@ if [ -z "$PID" ]; then
 fi
 echo "App PID: $PID"
 
+# Bridge the host backend into the emulator. The APK is built with
+# `MOBILE_API_URL=http://localhost:8080` and Chromium treats `localhost`
+# as same-site with `tauri.localhost` (the WebView origin) so the
+# SameSite=Lax session cookie set by the local backend rides across the
+# cross-origin fetch. The emulator's own loopback doesn't reach the
+# runner's docker stack; `adb reverse` punches the hole.
+adb reverse tcp:8080 tcp:8080
+
 # Tauri WebView opens its devtools socket as
 # `@webview_devtools_remote_<pid>`. adb forward bridges it to a local
 # TCP port for Playwright's CDP connection.
