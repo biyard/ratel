@@ -1,7 +1,7 @@
 [profile.release]
-opt-level = "z"
+opt-level = "s"
 debug = false
-lto = true
-codegen-units = 1
+lto = "thin"
+codegen-units = 16
 panic = "abort"
-incremental = true
+incremental = false

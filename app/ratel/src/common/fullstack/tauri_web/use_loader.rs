@@ -61,17 +61,18 @@ impl<T> Loader<T> {
 }
 
 /// Mirrors `dioxus_fullstack_core::use_loader` for the `tauri-web` target
-/// where the `dioxus-fullstack` crate is not compiled.
+/// where the `dioxus-fullstack` crate's loader cannot run (no SSR/hydration
+/// data is ever delivered by the Tauri WebView, so the upstream loader
+/// stays permanently suspended → white screen).
 ///
 /// Implementation notes:
 /// - Subscribes the calling scope to our own `loader_state` signal (not
 ///   `resource.state()`) — the future writes both `value` and `loader_state`
 ///   together, so suspending on `loader_state` guarantees the value signal
 ///   is populated before the component re-renders as `Ready`.
-/// - Force-polls the task on the first hook run via `poll_now()`. This
-///   matches upstream and is how a synchronously-ready future (cached, no
-///   real await) skips suspension entirely — without it the component
-///   would always suspend at least once.
+/// - Force-polls the wrapper task on the first hook run via `poll_now()`.
+///   This matches upstream and is how a synchronously-ready future (cached,
+///   no real await) skips suspension entirely.
 pub fn use_loader<F, T, E>(mut future: impl FnMut() -> F + 'static) -> Result<Loader<T>, Loading>
 where
     F: Future<Output = std::result::Result<T, E>> + 'static,
@@ -107,11 +108,9 @@ where
         }
     });
 
-    // Force the wrapper task to be polled right away on first render in
-    // case the user's future resolves synchronously (cached data / no
-    // real await). Without this the component always suspends at least
-    // once, which on Tauri/Android can manifest as a perpetual blank
-    // screen if the runtime never gets back to the task.
+    // Force the wrapper task to be polled on first render so a future that
+    // resolves synchronously (cached, no real await) fast-paths through
+    // without ever suspending the component.
     use_hook(|| {
         let _ = resource.task().poll_now();
     });
