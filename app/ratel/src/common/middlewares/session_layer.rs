@@ -17,27 +17,31 @@ pub fn get_session_layer(
 ) -> SessionManagerLayer<DynamoSessionStore> {
     let session_store = DynamoSessionStore::new(cli);
 
-    // Cookie config has to satisfy two very different contexts:
+    // Cookie config has to satisfy three contexts:
     //
     //   * web Playwright job: same-origin browser ↔ backend at
-    //     `http://localhost:8080`. Anything works.
+    //     `http://localhost:8080`.
     //   * Tauri Android smoke: WebView at `http://tauri.localhost`
     //     ↔ backend at `http://localhost:8080`. Different "sites"
-    //     (no public-suffix entry for `.localhost`), so a Lax cookie
-    //     is never sent on the post-signup XHRs.
+    //     (no public-suffix entry for `.localhost`), so the cookie
+    //     must be `SameSite=None` to survive the cross-site XHR.
     //   * Production: HTTPS cross-origin from `*.ratel.foundation`
     //     to the API. Needs `SameSite=None; Secure`.
     //
-    // Empirically the API 34 emulator's Android System WebView 113
-    // refuses to *store* `SameSite=None; Secure` cookies set over HTTP
-    // (cookie jar is empty in CDP/document.cookie after signup),
-    // despite Chromium's docs claiming `*.localhost` qualifies as a
-    // secure context. So in local/test mode we drop the `Secure`
-    // attribute. Modern Chrome rejects `SameSite=None` without Secure
-    // by default, but on a loopback origin the WebView accepts it.
-    let is_local = env == "local" || env == "test";
+    // `SameSite=None; Secure` works in all three. Chromium treats
+    // every `*.localhost` host as a secure context, so the `Secure`
+    // attribute does not block the cookie over HTTP loopback. The
+    // smoke run confirmed this with CDP `responseReceivedExtraInfo`:
+    // once `setAcceptThirdPartyCookies(webview, true)` was wired up
+    // in MainActivity, the only remaining blocked reason was
+    // `SameSiteNoneInsecure` — which `Secure=true` resolves.
+    //
+    // `HttpOnly=false` is kept (was `!is_local` before) — no client
+    // code reads the session cookie via JS, but leaving the door
+    // open is harmless on every target we care about and useful for
+    // CDP-based diagnostics on the smoke job.
     let layer = SessionManagerLayer::new(session_store)
-        .with_secure(!is_local)
+        .with_secure(true)
         .with_http_only(false)
         .with_same_site(tower_sessions::cookie::SameSite::None)
         .with_name(format!("{}_sid", env))
