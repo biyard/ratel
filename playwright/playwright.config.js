@@ -93,6 +93,21 @@ export default defineConfig({
       },
     },
 
+    // Tauri Android — connects to a running APK's WebView via CDP.
+    // No `dependencies` and no `storageState`: the spec drives a fresh
+    // signup flow inside the WebView. CI is responsible for installing
+    // the APK, launching the activity, and running
+    //   adb forward tcp:9223 localabstract:webview_devtools_remote_<pid>
+    // before invoking playwright. The browserName is "chromium" only as a
+    // formality — the actual browser is the running Tauri WebView.
+    {
+      name: "Tauri",
+      testMatch: ["tests/tauri/*.spec.js"],
+      use: {
+        browserName: "chromium",
+      },
+    },
+
     // Docs — recordings used as visual aids in the docs site.
     // Specs under tests/docs/ produce .webm videos consumed by
     // tests/docs/make-media.sh and embedded into docs/static/media/.

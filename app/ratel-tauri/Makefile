@@ -46,19 +46,18 @@ RUSTFLAGS ?= -D warnings
 # legacy dioxus-native build (matched here so a single env profile works for
 # both). Override in CI or non-standard installs.
 HOST_OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
-# Force-override these even if the shell exports stale values pointing at
-# empty directories (which is common — e.g. ANDROID_HOME=/opt/android-sdk
-# left over from an Android Studio install that's not actually there).
-# Use `make ANDROID_HOME=... ANDROID_NDK_HOME=... JAVA_HOME=...` on the
-# command line to override per-invocation.
+# Defaults match standard local installs. Override by exporting env vars
+# (e.g. CI) or via `make VAR=... <target>`. CI workflows set ANDROID_HOME
+# / ANDROID_NDK_HOME / JAVA_HOME explicitly via env so the runner's
+# toolcache paths win over these defaults.
 ifeq ($(HOST_OS),darwin)
-  ANDROID_HOME := $(if $(filter override,$(origin ANDROID_HOME)),$(ANDROID_HOME),/opt/homebrew/share/android-commandlinetools)
-  ANDROID_NDK_HOME := $(if $(filter override,$(origin ANDROID_NDK_HOME)),$(ANDROID_NDK_HOME),/opt/homebrew/share/android-ndk)
-  JAVA_HOME := $(if $(filter override,$(origin JAVA_HOME)),$(JAVA_HOME),/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home)
+  ANDROID_HOME ?= /opt/homebrew/share/android-commandlinetools
+  ANDROID_NDK_HOME ?= /opt/homebrew/share/android-ndk
+  JAVA_HOME ?= /Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
 else
-  ANDROID_HOME := $(if $(filter override,$(origin ANDROID_HOME)),$(ANDROID_HOME),/opt/android-sdk)
-  ANDROID_NDK_HOME := $(if $(filter override,$(origin ANDROID_NDK_HOME)),$(ANDROID_NDK_HOME),/opt/android-ndk)
-  JAVA_HOME := $(if $(filter override,$(origin JAVA_HOME)),$(JAVA_HOME),/usr/lib/jvm/java-21-openjdk)
+  ANDROID_HOME ?= /opt/android-sdk
+  ANDROID_NDK_HOME ?= /opt/android-ndk
+  JAVA_HOME ?= /usr/lib/jvm/java-21-openjdk
 endif
 NDK_HOME ?= $(ANDROID_NDK_HOME)
 GOOGLE_OAUTH_CLIENT_ID ?=
