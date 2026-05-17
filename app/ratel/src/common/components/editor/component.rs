@@ -783,6 +783,216 @@ pub fn Editor(props: EditorProps) -> Element {
                 dangerous_inner_html: "{content}",
             }
             if is_editable {
+                // Selection-triggered floating toolbar. Hidden by default;
+                // the JS controller positions it below (or above, on auto-flip)
+                // the active selection and toggles `data-visible`. Buttons
+                // reuse the existing `.re-tb-btn` / `.re-block` classes so the
+                // top-toolbar's click handlers and aria-pressed sync apply
+                // automatically. Touch / coarse-pointer devices skip wiring
+                // entirely — see script.js.
+                div {
+                    aria_label: "Selection toolbar",
+                    class: "re-bubble",
+                    "data-visible": "false",
+                    role: "toolbar",
+                    div { class: "re-bubble__inner",
+                        div {
+                            class: "re-block re-block--bubble",
+                            "data-open": "false",
+                            button {
+                                aria_expanded: "false",
+                                aria_haspopup: "listbox",
+                                class: "re-block__btn",
+                                r#type: "button",
+                                span { class: "re-block__label", "Paragraph" }
+                                svg {
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    stroke_width: "2.5",
+                                    view_box: "0 0 24 24",
+                                    polyline { points: "6 9 12 15 18 9" }
+                                }
+                            }
+                            div { class: "re-block__menu", role: "listbox",
+                                button {
+                                    class: "re-block__item",
+                                    "data-block": "P",
+                                    r#type: "button",
+                                    span { "Paragraph" }
+                                    span { class: "re-block__item-hint", "P" }
+                                }
+                                button {
+                                    class: "re-block__item re-block__item--h1",
+                                    "data-block": "H1",
+                                    r#type: "button",
+                                    span { "Heading 1" }
+                                    span { class: "re-block__item-hint", "H1" }
+                                }
+                                button {
+                                    class: "re-block__item re-block__item--h2",
+                                    "data-block": "H2",
+                                    r#type: "button",
+                                    span { "Heading 2" }
+                                    span { class: "re-block__item-hint", "H2" }
+                                }
+                                button {
+                                    class: "re-block__item re-block__item--h3",
+                                    "data-block": "H3",
+                                    r#type: "button",
+                                    span { "Heading 3" }
+                                    span { class: "re-block__item-hint", "H3" }
+                                }
+                                button {
+                                    class: "re-block__item re-block__item--quote",
+                                    "data-block": "BLOCKQUOTE",
+                                    r#type: "button",
+                                    span { "Quote" }
+                                    span { class: "re-block__item-hint", "\"" }
+                                }
+                                button {
+                                    class: "re-block__item re-block__item--code",
+                                    "data-block": "PRE",
+                                    r#type: "button",
+                                    span { "Code block" }
+                                    span { class: "re-block__item-hint", "{{ }}" }
+                                }
+                            }
+                        }
+                        div { class: "re-toolbar__group",
+                            button {
+                                aria_label: "Bold",
+                                class: "re-tb-btn",
+                                "data-cmd": "bold",
+                                "data-tip": "Bold",
+                                r#type: "button",
+                                svg {
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    stroke_width: "2.4",
+                                    view_box: "0 0 24 24",
+                                    path { d: "M6 4h8a4 4 0 0 1 0 8H6z" }
+                                    path { d: "M6 12h9a4 4 0 0 1 0 8H6z" }
+                                }
+                            }
+                            button {
+                                aria_label: "Italic",
+                                class: "re-tb-btn",
+                                "data-cmd": "italic",
+                                "data-tip": "Italic",
+                                r#type: "button",
+                                svg {
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    stroke_width: "2",
+                                    view_box: "0 0 24 24",
+                                    line {
+                                        x1: "19",
+                                        x2: "10",
+                                        y1: "4",
+                                        y2: "4",
+                                    }
+                                    line {
+                                        x1: "14",
+                                        x2: "5",
+                                        y1: "20",
+                                        y2: "20",
+                                    }
+                                    line {
+                                        x1: "15",
+                                        x2: "9",
+                                        y1: "4",
+                                        y2: "20",
+                                    }
+                                }
+                            }
+                            button {
+                                aria_label: "Underline",
+                                class: "re-tb-btn",
+                                "data-cmd": "underline",
+                                "data-tip": "Underline",
+                                r#type: "button",
+                                svg {
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    stroke_width: "2",
+                                    view_box: "0 0 24 24",
+                                    path { d: "M6 4v6a6 6 0 0 0 12 0V4" }
+                                    line {
+                                        x1: "4",
+                                        x2: "20",
+                                        y1: "20",
+                                        y2: "20",
+                                    }
+                                }
+                            }
+                            button {
+                                aria_label: "Strikethrough",
+                                class: "re-tb-btn",
+                                "data-cmd": "strikeThrough",
+                                "data-tip": "Strikethrough",
+                                r#type: "button",
+                                svg {
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    stroke_width: "2",
+                                    view_box: "0 0 24 24",
+                                    line {
+                                        x1: "4",
+                                        x2: "20",
+                                        y1: "12",
+                                        y2: "12",
+                                    }
+                                    path { d: "M16 6c-1.5-1.3-3.5-2-6-2-3 0-5 1.5-5 4 0 2 1.5 3 5 4" }
+                                    path { d: "M8 18c1.5 1.3 3.5 2 6 2 3 0 5-1.5 5-4 0-1-.4-1.8-1-2.4" }
+                                }
+                            }
+                            button {
+                                aria_label: "Inline code",
+                                class: "re-tb-btn",
+                                "data-cmd": "code-inline",
+                                "data-tip": "Inline code",
+                                r#type: "button",
+                                svg {
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    stroke_width: "2",
+                                    view_box: "0 0 24 24",
+                                    polyline { points: "16 18 22 12 16 6" }
+                                    polyline { points: "8 6 2 12 8 18" }
+                                }
+                            }
+                            button {
+                                aria_label: "Insert link",
+                                class: "re-tb-btn",
+                                "data-cmd": "link",
+                                "data-tip": "Insert link",
+                                r#type: "button",
+                                svg {
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    stroke_width: "2",
+                                    view_box: "0 0 24 24",
+                                    path { d: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" }
+                                    path { d: "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" }
+                                }
+                            }
+                        }
+                    }
+                }
                 div { class: "re-statusbar",
                     div { class: "re-statusbar__chips",
                         span { class: "re-statusbar__chip",
@@ -946,7 +1156,7 @@ pub fn Editor(props: EditorProps) -> Element {
                         aria_label: "Insert table",
                         class: "re-modal",
                         role: "dialog",
-                        div { class: "re-modal__title", "Insert table" }
+                        div { class: "table re-modal__title", "Insert" }
                         div { class: "re-modal__row",
                             div { class: "re-modal__field",
                                 label { "Rows" }
