@@ -196,6 +196,45 @@ function waitForVisible(selector, opts = {}) {
   );
 }
 
+/**
+ * Toggle a checkbox by the visible text of its containing `<label>`.
+ * Why a dedicated helper: programmatic `.click()` on a `<label>` does
+ * not activate the associated control (browsers gate that on
+ * user-initiated clicks for security). Calling `.click()` directly on
+ * the inner `<input type="checkbox">` does flip `.checked` and fires
+ * the synthetic `change` event that Dioxus's `onchange` listens for.
+ */
+async function clickCheckboxByLabel(text, opts = {}) {
+  const timeout = opts.timeout ?? 15_000;
+  const target = JSON.stringify(text);
+  const finder = `
+    (() => {
+      const t0 = ${target};
+      const labels = [...document.querySelectorAll('label')];
+      const lbl = labels.find((l) => (l.textContent || '').includes(t0));
+      if (!lbl) return false;
+      const cb = lbl.querySelector('input[type="checkbox"]');
+      if (!cb || cb.disabled) return false;
+      if (cb.offsetParent === null && lbl.offsetParent === null) return false;
+      cb.click();
+      return true;
+    })()
+  `;
+  const deadline = Date.now() + timeout;
+  let lastErr;
+  while (Date.now() < deadline) {
+    try {
+      if (await evalJs(finder)) return;
+    } catch (e) {
+      lastErr = e;
+    }
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  throw new Error(
+    `clickCheckboxByLabel timed out for "${text}"${lastErr ? `: ${lastErr.message}` : ""}`,
+  );
+}
+
 // ── Test ─────────────────────────────────────────────────────────────────
 
 test.beforeAll(async () => {
@@ -269,8 +308,12 @@ test("tauri smoke: signup → team → post → space", async () => {
     'input[placeholder="Enter your user name"]',
     user.username,
   );
-  // ToS checkbox — its label text matches the web tests.
-  await clickByText("I have read and accept the Terms of Service");
+  // ToS checkbox — its label text matches the web tests. The label
+  // wraps the actual `<input type="checkbox">` so programmatic
+  // `.click()` on the label is a no-op (browsers gate label-activation
+  // on user-initiated clicks). Use the dedicated helper that drills
+  // into the inner input.
+  await clickCheckboxByLabel("I have read and accept the Terms of Service");
   await clickByText("Finished Sign-up");
 
   // Wait for the signed-in HUD (sign-in button gone, teams button visible).
