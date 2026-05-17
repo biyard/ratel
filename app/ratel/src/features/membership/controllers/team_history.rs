@@ -1,10 +1,10 @@
 use super::*;
 use crate::features::auth::User;
-use crate::features::membership::controllers::history::PurchaseHistoryItem;
 use crate::features::membership::models::TeamPurchase;
 use crate::features::membership::*;
 use crate::features::posts::models::Team;
 use crate::features::social::pages::member::dto::TeamRole;
+use crate::social::pages::membership::user::controllers::PurchaseHistoryItem;
 
 #[get("/v3/teams/:username/memberships/history?bookmark", user: User, team: Team, role: TeamRole)]
 pub async fn get_team_purchase_history_handler(

@@ -1,22 +1,23 @@
-use super::Result as AppResult;
 use super::controllers::{
-    ChangePasswordRequest, UpdateProfileRequest, change_password_handler, get_mcp_secret_handler,
-    get_user_detail_handler, regenerate_mcp_secret_handler, update_profile_handler,
+    change_password_handler, get_mcp_secret_handler, get_user_detail_handler,
+    regenerate_mcp_secret_handler, update_profile_handler, ChangePasswordRequest,
+    UpdateProfileRequest,
 };
+use super::Result as AppResult;
 use super::*;
 use crate::common::hooks::use_origin;
+use crate::common::*;
 #[cfg(not(feature = "server"))]
 use crate::common::{wasm_bindgen, wasm_bindgen_futures, web_sys};
 use crate::features::auth::hooks::use_user_context;
 use crate::features::membership::controllers::{
-    UpdateBillingCardRequest, get_billing_info_handler, get_membership_handler,
-    update_billing_card_handler,
+    get_billing_info_handler, get_membership_handler, update_billing_card_handler,
+    UpdateBillingCardRequest,
 };
 use crate::features::membership::models::CardInfo;
 use crate::features::social::pages::membership::user::components::format_membership_tier_label;
-use crate::common::*;
 #[cfg(not(feature = "server"))]
-use web_sys::js_sys::{JSON, Reflect};
+use web_sys::js_sys::{Reflect, JSON};
 
 translate! {
     UserSettingsTranslate;
@@ -97,33 +98,16 @@ pub fn Home(username: String) -> Element {
         };
     };
 
-    let detail_resource =
-        use_server_future(move || async move { get_user_detail_handler().await })?;
-    let detail_state = detail_resource.value();
+    let detail_resource = use_loader(move || async move { get_user_detail_handler().await })?;
+    let detail_state = detail_resource();
 
     let mut profile_url = use_signal(|| user.profile_url.clone());
     let mut nickname = use_signal(|| user.display_name.clone());
     let mut description = use_signal(|| user.description.clone());
-    let mut user_email = use_signal(String::new);
-    let mut evm_address = use_signal(String::new);
+    let mut user_email = use_signal(move || detail_resource().email);
+    let mut evm_address = use_signal(move || detail_resource().evm_address.unwrap_or_default());
     let mut saving = use_signal(|| false);
     let mut message = use_signal(|| Option::<(String, bool)>::None);
-    let mut detail_loaded = use_signal(|| false);
-
-    {
-        let detail_state = detail_state.clone();
-        use_effect(move || {
-            let detail_state = detail_state.read();
-            let Some(state) = detail_state.as_ref() else {
-                return;
-            };
-            if let Ok(detail) = state {
-                evm_address.set(detail.evm_address.clone().unwrap_or_default());
-                user_email.set(detail.email.clone());
-                detail_loaded.set(true);
-            }
-        });
-    }
 
     let on_save_profile = {
         let mut user_ctx = user_ctx.clone();
@@ -380,33 +364,27 @@ fn PasswordCard() -> Element {
 #[component]
 fn SubscriptionCard() -> Element {
     let tr: UserSettingsTranslate = use_translate();
-    let membership = use_server_future(move || async move { get_membership_handler().await })?;
-    let mut billing_info =
-        use_server_future(move || async move { get_billing_info_handler().await })?;
+    let membership = use_loader(move || async move { get_membership_handler().await })?;
+    let mut billing_info = use_loader(move || async move { get_billing_info_handler().await })?;
 
-    let membership_data = membership.read();
-    let billing_data = billing_info.read();
+    let membership_data = membership();
+    let billing_data = billing_info();
 
-    let (tier_label, remaining, total, expired_at, is_free) =
-        if let Some(Ok(m)) = membership_data.as_ref() {
-            let tier = format_membership_tier_label(&m.tier.0, tr.enterprise);
-            let free = tier.eq_ignore_ascii_case("free");
-            (
-                tier,
-                m.remaining_credits,
-                m.total_credits,
-                m.expired_at,
-                free,
-            )
-        } else {
-            ("Free".to_string(), 0, 0, 0, true)
-        };
+    let (tier_label, remaining, total, expired_at, is_free) = {
+        let m = membership();
+        let tier = format_membership_tier_label(&m.tier.0, tr.enterprise);
+        let free = tier.eq_ignore_ascii_case("free");
 
-    let billing = billing_data
-        .as_ref()
-        .and_then(|r| r.as_ref().ok())
-        .cloned()
-        .unwrap_or_default();
+        (
+            tier,
+            m.remaining_credits,
+            m.total_credits,
+            m.expired_at,
+            free,
+        )
+    };
+
+    let billing = billing_info();
 
     let expiry_text = if expired_at == 0 {
         "Unlimited".to_string()

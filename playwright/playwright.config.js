@@ -93,6 +93,29 @@ export default defineConfig({
       },
     },
 
+    // Tauri Android — connects to a running APK's WebView via CDP.
+    // No `dependencies` and no `storageState`: the spec drives a fresh
+    // signup flow inside the WebView. CI is responsible for installing
+    // the APK, launching the activity, and running
+    //   adb forward tcp:9223 localabstract:webview_devtools_remote_<pid>
+    // before invoking playwright. The browserName is "chromium" only as a
+    // formality — the actual browser is the running Tauri WebView.
+    //
+    // The smoke job opts in via `TAURI_CDP_PORT=9223 npx playwright test --project=Tauri`.
+    // When that env is unset (regular `playwright-tests` job), we point
+    // testMatch at a path that doesn't exist so no tests are picked up
+    // even when the default `playwright test` discovery includes this
+    // project. That avoids the spec running without an emulator.
+    {
+      name: "Tauri",
+      testMatch: process.env.TAURI_CDP_PORT
+        ? ["tests/tauri/*.spec.js"]
+        : ["tests/tauri/__never_match__.spec.js"],
+      use: {
+        browserName: "chromium",
+      },
+    },
+
     // Docs — recordings used as visual aids in the docs site.
     // Specs under tests/docs/ produce .webm videos consumed by
     // tests/docs/make-media.sh and embedded into docs/static/media/.
