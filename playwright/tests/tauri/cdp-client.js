@@ -172,5 +172,9 @@ export async function connectCdp({ host, port, target = null, headers = {} } = {
     Page: {
       enable: () => send("Page.enable"),
     },
+    Network: {
+      enable: () => send("Network.enable"),
+      getCookies: (params = {}) => send("Network.getCookies", params),
+    },
   };
 }

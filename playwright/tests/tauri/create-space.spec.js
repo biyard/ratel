@@ -250,6 +250,7 @@ test.beforeAll(async () => {
   client = await connectCdp({ host: CDP_HOST, port: CDP_PORT });
   await client.Runtime.enable();
   await client.Page.enable();
+  await client.Network.enable();
 
   // The APK boots into the home screen and renders the unauthenticated
   // HUD. Waiting for `home-btn-signin` proves both that the wasm bundle
@@ -264,6 +265,11 @@ test.afterAll(async () => {
 });
 
 test("tauri smoke: signup → team → post → space", async () => {
+  // The Android emulator + slow software-rendered WebView add latency
+  // at every step. Override the default 30s test timeout so the
+  // multi-page signup → team → post → space flow can complete without
+  // chasing transient slowness as if it were a real failure.
+  test.setTimeout(120_000);
   // ── 1. Sign up new user ───────────────────────────────────────────────
   await clickSelector('[data-testid="home-btn-signin"]');
   await waitFor(
@@ -319,6 +325,25 @@ test("tauri smoke: signup → team → post → space", async () => {
   // into the inner input.
   await clickCheckboxByLabel("I have read and accept the Terms of Service");
   await clickByText("Finished Sign-up");
+
+  // Diagnostic: dump cookie state after the signup POST has fired. If
+  // the session cookie isn't getting stored in the WebView (the
+  // suspected cause of the post-signup 401 chain on /api/inbox + team
+  // listing), this will tell us before we time out waiting for the
+  // signed-in HUD.
+  await new Promise((r) => setTimeout(r, 3_000));
+  const jsCookies = await evalJs(`document.cookie`);
+  console.log(`[smoke] document.cookie after signup: ${JSON.stringify(jsCookies)}`);
+  try {
+    const cdpCookies = await client.Network.getCookies({ urls: [API_BASE] });
+    console.log(
+      `[smoke] CDP cookies for ${API_BASE}: ${JSON.stringify(cdpCookies)}`,
+    );
+    const allCookies = await client.Network.getCookies({});
+    console.log(`[smoke] all cookies: ${JSON.stringify(allCookies)}`);
+  } catch (e) {
+    console.log(`[smoke] Network.getCookies failed: ${e.message}`);
+  }
 
   // Wait for the signed-in HUD (sign-in button gone, teams button visible).
   await waitFor(

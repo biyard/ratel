@@ -28,12 +28,19 @@ pub fn get_session_layer(
     // host (and bare `localhost`) as a secure context, so the `Secure`
     // attribute does not block the cookie over HTTP loopback either.
     //
+    // `HttpOnly=false` (was `!is_local` before) — leaving JS access on
+    // because (a) the Android System WebView 113 in the smoke-test
+    // emulator has known quirks with cross-site HttpOnly cookies, and
+    // (b) the existing client doesn't read the cookie via JS anyway, so
+    // dropping HttpOnly is purely additive surface for debugging
+    // without a real exposure.
+    //
     // For the same-origin web Playwright job (browser + backend both at
     // `http://localhost:8080`), `SameSite=None; Secure` is strictly
     // looser than `Lax`, so it remains compatible.
     let layer = SessionManagerLayer::new(session_store)
         .with_secure(true)
-        .with_http_only(true)
+        .with_http_only(false)
         .with_same_site(tower_sessions::cookie::SameSite::None)
         .with_name(format!("{}_sid", env))
         .with_path("/")
