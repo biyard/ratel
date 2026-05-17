@@ -139,6 +139,13 @@ jobs:
         working-directory: app/ratel-tauri/src-tauri
         env:
           DYNAMO_TABLE_PREFIX: ratel-dev
+          # commands/google_sign_in.rs uses
+          #   option_env!("GOOGLE_OAUTH_CLIENT_ID").expect(...)
+          # which panics at compile time if the env var is unset. Any
+          # non-empty value lets the compile pass; runtime Google sign-in
+          # is exercised by the dev workflow's APK build with the real
+          # GOOGLE_OAUTH_CLIENT_ID_DEV secret.
+          GOOGLE_OAUTH_CLIENT_ID: placeholder-for-compile-only
         run: |
           cargo check
 
@@ -501,8 +508,12 @@ jobs:
           # under dist/ is shaped the way real users see it.
           DYNAMO_TABLE_PREFIX: ratel-dev
           RUSTFLAGS: "-D warnings"
-          # GOOGLE_OAUTH_CLIENT_ID intentionally empty: smoke test uses
-          # email/password signup, not Google sign-in.
+
+          # `commands/google_sign_in.rs` panics at compile time if this
+          # is unset. Smoke uses email/password signup so the runtime
+          # value doesn't matter — any non-empty string satisfies the
+          # compile-time `option_env!().expect()` chain.
+          GOOGLE_OAUTH_CLIENT_ID: placeholder-for-compile-only
 
           # `app/ratel/Makefile`'s BUILD_ENV interpolates these and the
           # default for AWS_ACCOUNT_ID is `$(shell aws sts ...)` which
