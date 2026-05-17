@@ -637,60 +637,11 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          # The action runs the script under /usr/bin/sh (dash on Ubuntu),
-          # which doesn't support `set -o pipefail`. Use `set -eu` only.
-          script: |
-            set -eu
-
-            adb wait-for-device
-            # Wait for the emulator to finish booting before we install.
-            timeout 180 bash -c 'until adb shell getprop sys.boot_completed | grep -q 1; do sleep 2; done'
-
-            adb install -r '${{ steps.apk.outputs.path }}'
-            adb shell am start -n co.biyard.ratel/.MainActivity
-
-            # Poll for the app process — the WebView devtools socket only
-            # exists once the app is running.
-            PID=""
-            for _ in $(seq 1 30); do
-              PID=$(adb shell pidof co.biyard.ratel | tr -d '\r' || true)
-              [ -n "$PID" ] && break
-              sleep 1
-            done
-            if [ -z "$PID" ]; then
-              echo "::error::co.biyard.ratel process did not start"
-              adb logcat -d | tail -100
-              exit 1
-            fi
-            echo "App PID: $PID"
-
-            # Tauri WebView opens its devtools socket as
-            # @webview_devtools_remote_<pid>. adb forward bridges it to a
-            # local TCP port for Playwright's CDP connection.
-            adb forward tcp:9223 localabstract:webview_devtools_remote_$PID
-
-            # Sanity check: the devtools endpoint should list the
-            # WebView's page.
-            for _ in $(seq 1 30); do
-              if curl -sf http://localhost:9223/json/version > /dev/null; then
-                break
-              fi
-              sleep 1
-            done
-            curl -sf http://localhost:9223/json/list || {
-              echo "::error::devtools endpoint not reachable"
-              adb logcat -d --pid=$PID | tail -50
-              exit 1
-            }
-
-            cd playwright
-            TAURI_CDP_URL=http://localhost:9223 \
-              TAURI_API_BASE=https://dev.ratel.foundation \
-              CI=true \
-              npx playwright test --project=Tauri
-
-            # Capture logcat for debugging regardless of pass/fail.
-            adb logcat -d --pid=$PID > /tmp/tauri-logcat.txt || true
+          # The action's inline script: feeds each line to a separate
+          # `sh -c` invocation, so multi-line for/if/while blocks break.
+          # We use a one-line invocation of a script file so the entire
+          # smoke test runs in a single bash process.
+          script: bash .github/scripts/run-tauri-smoke-test.sh '${{ steps.apk.outputs.path }}'
 
       - name: Upload smoke test artifacts
         if: always()
