@@ -7,6 +7,7 @@ use crate::features::arcade::games::fact_or_fold::pages::matching::{
     use_fact_fold_matching_provider, FactFoldMatchingTranslate,
 };
 use crate::features::arcade::games::fact_or_fold::{LobbyResponse, RoundStatus};
+use crate::FactFoldRoundEntityType;
 use crate::features::auth::hooks::use_user_context;
 use crate::*;
 
@@ -28,18 +29,34 @@ pub fn FactFoldMatchingPage() -> Element {
         }
     });
 
+    // Remember the round we joined. `join_lobby_handler` clears the
+    // lobby pointer the moment capacity is reached, so subsequent
+    // polls return `current_round = None` even though the round
+    // we're sitting in just transitioned out of Waiting. Without
+    // this latch the first 3 players get bounced to `/arcade/home`
+    // while only the 4th (who navigates from the join response)
+    // makes it to the game room.
+    let mut last_round_id = use_signal(|| Option::<FactFoldRoundEntityType>::None);
+    if let Some(round) = lobby.current_round.as_ref() {
+        if lobby.already_joined && last_round_id().as_ref() != Some(&round.id) {
+            last_round_id.set(Some(round.id.clone()));
+        }
+    }
+
     // Auto-redirect:
-    //   - round moved past Waiting → game room
-    //   - caller not in any round (e.g., they cancelled) → home
+    //   - round moved past Waiting (visible via current lobby) → game room
+    //   - lobby pointer gone but we previously joined → assume capacity
+    //     filled, jump to the remembered game room
+    //   - never joined and nothing pending → home
     if let Some(round) = lobby.current_round.as_ref() {
         if lobby.already_joined && !matches!(round.status, RoundStatus::Waiting) {
             nav.push(Route::FactFoldGameRoomPage {
                 round_id: round.id.clone(),
             });
         }
+    } else if let Some(round_id) = last_round_id() {
+        nav.push(Route::FactFoldGameRoomPage { round_id });
     } else if !lobby.already_joined {
-        // No round, not joined — nothing to wait for. Send the user
-        // back to the home page where they can join or read state.
         nav.push(Route::ArcadeHomePage {});
     }
 

@@ -24,12 +24,9 @@ pub fn ArcadeLayout() -> Element {
 
     let mut modal_open = use_signal(|| false);
     let r_home = Route::ArcadeHomePage {};
+    let r_leaderboard = Route::ArcadeLeaderboardPage {};
     let r_admin_new = Route::FactFoldAdminNewHeadlinePage {};
 
-    // Leaderboard is rendered as a hash-tab inside the home page; the
-    // top-nav still calls back to /arcade/home (hash routing handled
-    // there). The link target stays /arcade/home so the tab state
-    // tracks the route, not the hash.
     let on_chip = move |_| modal_open.set(!modal_open());
     let on_close = move |_| modal_open.set(false);
 
@@ -51,9 +48,10 @@ pub fn ArcadeLayout() -> Element {
                         span { class: "top-nav-btn-icon", "⌂" }
                         span { "{tr.tab_home}" }
                     }
-                    a {
+                    Link {
                         class: "top-nav-btn",
-                        href: "/arcade/home#leaderboard",
+                        "aria-selected": route == r_leaderboard,
+                        to: r_leaderboard.clone(),
                         span { class: "top-nav-btn-icon", "♛" }
                         span { "{tr.tab_leaderboard}" }
                     }

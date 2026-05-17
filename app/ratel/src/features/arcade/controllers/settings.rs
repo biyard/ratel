@@ -5,7 +5,6 @@
 //!   PUT   /api/arcade/admin/settings
 
 use crate::common::*;
-use crate::features::arcade::models::ArcadeSettingsResponse;
 use crate::features::arcade::types::*;
 
 #[cfg(feature = "server")]

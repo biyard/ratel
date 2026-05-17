@@ -38,6 +38,11 @@ translate! {
         ko: "Essence",
     },
 
+    arcade: {
+        en: "Arcade",
+        ko: "오락실",
+    },
+
     my_ai: {
         en: "My AI",
         ko: "마이 AI",

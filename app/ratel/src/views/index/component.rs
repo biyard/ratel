@@ -186,6 +186,18 @@ pub fn Index() -> Element {
         nav.push(Route::EssenceSourcesPage {});
     };
 
+    let go_arcade = move |_: Event<MouseData>| {
+        if !has_user {
+            popup
+                .open(rsx! {
+                    LoginModal { on_success: on_login_success }
+                })
+                .with_title("Start building your Essence");
+            return;
+        }
+        nav.push(Route::ArcadeHomePage {});
+    };
+
     let open_settings = move |_: Event<MouseData>| {
         settings_open.set(true);
     };
@@ -383,6 +395,34 @@ pub fn Index() -> Element {
                             path { d: "M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" }
                         }
                         span { class: "hud-btn__label", "{t.essence}" }
+                    }
+                    button {
+                        class: "hud-btn",
+                        aria_label: "{t.arcade}",
+                        "data-testid": "home-btn-arcade",
+                        onclick: go_arcade,
+                        svg {
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            stroke_width: "1.6",
+                            view_box: "0 0 24 24",
+                            xmlns: "http://www.w3.org/2000/svg",
+                            rect {
+                                x: "3",
+                                y: "3",
+                                width: "18",
+                                height: "18",
+                                rx: "2",
+                            }
+                            circle { cx: "8", cy: "8", r: "1" }
+                            circle { cx: "16", cy: "8", r: "1" }
+                            circle { cx: "12", cy: "12", r: "1" }
+                            circle { cx: "8", cy: "16", r: "1" }
+                            circle { cx: "16", cy: "16", r: "1" }
+                        }
+                        span { class: "hud-btn__label", "{t.arcade}" }
                     }
                     if has_user {
                         div { class: "hud-teams", "aria-expanded": teams_open(),
@@ -696,28 +736,28 @@ pub fn Index() -> Element {
                         }
                     }
                 }
-                // button {
-                //     class: "browse-btn",
-                //     "data-testid": "home-btn-browse",
-                //     onclick: go_browse_all,
-                //     svg {
-                //         fill: "none",
-                //         stroke: "currentColor",
-                //         stroke_linecap: "round",
-                //         stroke_linejoin: "round",
-                //         stroke_width: "2",
-                //         view_box: "0 0 24 24",
-                //         xmlns: "http://www.w3.org/2000/svg",
-                //         circle { cx: "11", cy: "11", r: "8" }
-                //         line {
-                //             x1: "21",
-                //             y1: "21",
-                //             x2: "16.65",
-                //             y2: "16.65",
-                //         }
-                //     }
-                //     "{t.browse_all}"
-                // }
+                        // button {
+            //     class: "browse-btn",
+            //     "data-testid": "home-btn-browse",
+            //     onclick: go_browse_all,
+            //     svg {
+            //         fill: "none",
+            //         stroke: "currentColor",
+            //         stroke_linecap: "round",
+            //         stroke_linejoin: "round",
+            //         stroke_width: "2",
+            //         view_box: "0 0 24 24",
+            //         xmlns: "http://www.w3.org/2000/svg",
+            //         circle { cx: "11", cy: "11", r: "8" }
+            //         line {
+            //             x1: "21",
+            //             y1: "21",
+            //             x2: "16.65",
+            //             y2: "16.65",
+            //         }
+            //     }
+            //     "{t.browse_all}"
+            // }
             }
 
             // SETTINGS PANEL — same component as Space Arena

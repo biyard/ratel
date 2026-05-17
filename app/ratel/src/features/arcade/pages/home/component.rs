@@ -1,5 +1,7 @@
-//! `ArcadeHomePage` — `/arcade/home`. The lobby + leaderboard hub for
-//! the entire arcade. The page is wrapped by `ArcadeLayout` so the
+//! `ArcadeHomePage` — `/arcade/home`. Lobby view.
+//! `ArcadeLeaderboardPage` — `/arcade/leaderboard`. Leaderboard view.
+//! Both share the same `UseArcadeHome` context so loaders are reused
+//! across navigation. The pages are wrapped by `ArcadeLayout` so the
 //! top-bar / chip widget / exchange modal aren't rendered here.
 
 use crate::features::arcade::games::fact_or_fold::{
@@ -17,17 +19,6 @@ pub fn ArcadeHomePage() -> Element {
 
     let lobby = (ctx.lobby)();
     let my_stats = (ctx.my_stats)();
-    let leaderboard = (ctx.leaderboard)();
-
-    // Hash-routed tab toggle — top-bar leaderboard link drops a
-    // #leaderboard fragment. Default to "lobby" otherwise.
-    let active_tab = use_signal(|| {
-        if read_hash().contains("leaderboard") {
-            "leaderboard".to_string()
-        } else {
-            "lobby".to_string()
-        }
-    });
 
     // If the user is already inside a live round, jump straight to
     // the matching or game-room page. Driven off the loader so the
@@ -52,19 +43,21 @@ pub fn ArcadeHomePage() -> Element {
     rsx! {
         SeoMeta { title: "Ratel Arcade" }
         section { class: "ff-home",
-            div {
-                class: "ff-home__tab-section",
-                "data-active": "{active_tab() == \"lobby\"}",
-                LobbyView { lobby: lobby.clone(), my_stats }
-            }
-            div {
-                class: "ff-home__tab-section",
-                "data-active": "{active_tab() == \"leaderboard\"}",
-                LeaderboardView { leaderboard }
-            }
+            LobbyView { lobby: lobby.clone(), my_stats }
         }
+    }
+}
 
-        TabHashListener { active_tab }
+#[component]
+pub fn ArcadeLeaderboardPage() -> Element {
+    let ctx = use_arcade_home_provider()?;
+    let leaderboard = (ctx.leaderboard)();
+
+    rsx! {
+        SeoMeta { title: "Ratel Arcade · Leaderboard" }
+        section { class: "ff-home",
+            LeaderboardView { leaderboard }
+        }
     }
 }
 
@@ -414,41 +407,6 @@ fn LeaderboardRow(idx: usize, entry: LeaderboardEntryResponse, is_me: bool) -> E
     }
 }
 
-// ── Hash-routed tab listener ────────────────────────────────────────
-
-/// Sets up a window `hashchange` listener so when the user clicks the
-/// top-bar Leaderboard link (which drops `#leaderboard`) the visible
-/// tab toggles without a full route change. Runs only on the web
-/// target; on mobile/server the future never spawns work.
-#[component]
-fn TabHashListener(active_tab: Signal<String>) -> Element {
-    let _ = active_tab;
-    #[cfg(feature = "web")]
-    {
-        let mut active_tab = active_tab;
-        use_future(move || async move {
-            let mut runner = dioxus::document::eval(
-                r#"
-                function publish() {
-                  const hash = (window.location.hash || "").toLowerCase();
-                  const tab = hash.includes("leaderboard") ? "leaderboard" : "lobby";
-                  dioxus.send(tab);
-                }
-                publish();
-                window.addEventListener("hashchange", publish);
-                "#,
-            );
-            loop {
-                match runner.recv::<String>().await {
-                    Ok(tab) => active_tab.set(tab),
-                    Err(_) => break,
-                }
-            }
-        });
-    }
-    rsx! {}
-}
-
 // ── Helpers ─────────────────────────────────────────────────────────
 
 fn featured_tag(lobby: &LobbyResponse, tr: &ArcadeHomeTranslate) -> (&'static str, &'static str) {
@@ -517,21 +475,6 @@ fn format_relative_date(ts_ms: i64) -> String {
     } else {
         format!("{}w ago", diff_days / 7)
     }
-}
-
-#[cfg(feature = "web")]
-fn read_hash() -> String {
-    if let Some(window) = web_sys::window() {
-        if let Ok(hash) = window.location().hash() {
-            return hash;
-        }
-    }
-    String::new()
-}
-
-#[cfg(not(feature = "web"))]
-fn read_hash() -> String {
-    String::new()
 }
 
 // Avoid suppressing unused-import warnings on RoundResponse / BetSide

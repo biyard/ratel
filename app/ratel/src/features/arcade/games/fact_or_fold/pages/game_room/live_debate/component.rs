@@ -66,25 +66,18 @@ fn ChatPanel(
         draft.set(truncated);
     };
 
-    let on_send_btn = move |_| {
+    // Submit via <form onsubmit> so the browser fires the event AFTER
+    // any in-flight IME composition (Korean / Japanese / Chinese input
+    // methods) is committed. The old onkeydown(Enter) path raced with
+    // the IME commit, which is what duplicated the last character.
+    let on_submit = move |evt: FormEvent| {
+        evt.prevent_default();
         let body = draft().trim().to_string();
         if body.is_empty() {
             return;
         }
         draft.set(String::new());
         on_post.call(body);
-    };
-
-    let on_keydown = move |evt: KeyboardEvent| {
-        if evt.key() == Key::Enter && !evt.modifiers().shift() {
-            evt.prevent_default();
-            let body = draft().trim().to_string();
-            if body.is_empty() {
-                return;
-            }
-            draft.set(String::new());
-            on_post.call(body);
-        }
     };
 
     rsx! {
@@ -115,7 +108,7 @@ fn ChatPanel(
                 }
             }
 
-            div { class: "chat-input-row",
+            form { class: "chat-input-row", onsubmit: on_submit,
                 input {
                     r#type: "text",
                     class: "chat-input",
@@ -123,12 +116,11 @@ fn ChatPanel(
                     maxlength: "{CHAT_TEXT_MAX_CHARS}",
                     value: "{draft()}",
                     oninput: on_input,
-                    onkeydown: on_keydown,
                 }
                 button {
+                    r#type: "submit",
                     class: "btn btn-ghost",
                     style: "padding: 9px 14px; font-size: 12.5px",
-                    onclick: on_send_btn,
                     "{tr.chat_send}"
                 }
             }

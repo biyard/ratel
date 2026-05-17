@@ -41449,7 +41449,11 @@ body.comments-panel-resizing {
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  /* body is globally overflow:hidden+100dvh, so admin pages claim
+   * their own scroll container here. ::before stays position:fixed so
+   * the radial wash sits on the viewport, not the scrolled box. */
+  height: 100dvh;
+  overflow-y: auto;
   background: var(--bg-void);
   color: var(--text-primary);
   font-family: var(--font-body, system-ui, -apple-system, sans-serif);
@@ -47662,15 +47666,36 @@ body.comments-panel-resizing {
   --r-lg: 18px;
   --r-xl: 24px;
 
-  position: relative;
-  z-index: 1;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 24px 32px 80px;
+  /* Body is globally `overflow: hidden; height: 100dvh`, so each
+   * layout has to claim its own scroll container. ArcadeLayout fills
+   * the viewport and scrolls internally; horizontal centering done via
+   * padding (auto-margin would need a non-fixed width). */
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  max-width: none;
+  margin: 0;
+  padding: 24px max(32px, calc((100vw - 1280px) / 2)) 80px;
+  overflow-y: auto;
+  background: var(--bg);
   color: var(--text-primary);
   font-family: "Outfit", system-ui, -apple-system, sans-serif;
   font-size: 15px;
   line-height: 1.5;
+}
+
+/* Soft radial accents — mirrors mockup `body::before`. Lives behind
+ * the arcade content so cards still pop on light/dark theme. */
+.ff-arcade::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(900px 700px at 12% 8%, rgba(252, 179, 0, 0.1), transparent 60%),
+    radial-gradient(800px 600px at 88% 12%, rgba(167, 139, 250, 0.1), transparent 60%),
+    radial-gradient(1100px 800px at 50% 110%, rgba(110, 237, 216, 0.08), transparent 60%);
+  pointer-events: none;
+  z-index: -1;
 }
 
 .ff-arcade__top-bar {
@@ -47679,6 +47704,127 @@ body.comments-panel-resizing {
    * arcade-specific top-bar tweaks (e.g., chip-button placement) have
    * a place to live without disturbing other `.top-bar` consumers. */
   margin-bottom: 22px;
+}
+
+/* ArcadeLayout top-bar — mirrors `.ff-room` so the mockup parity
+ * holds inside the `.ff-arcade` container too. */
+.ff-arcade .top-bar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 22px;
+  padding: 16px 20px;
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+.ff-arcade .top-nav {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+.ff-arcade .top-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-family: "Outfit", sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ff-arcade .top-nav-btn:hover {
+  color: var(--text-primary);
+  background: var(--surface-2);
+}
+.ff-arcade .top-nav-btn[aria-selected="true"] {
+  background: var(--gold-soft);
+  color: var(--gold);
+  border-color: rgba(252, 179, 0, 0.3);
+}
+.ff-arcade .top-nav-btn-icon {
+  font-size: 14px;
+}
+.ff-arcade .brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.ff-arcade .brand-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--gold), var(--pink));
+  display: grid;
+  place-items: center;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: #1a0a00;
+  box-shadow: 0 4px 16px rgba(252, 179, 0, 0.35);
+}
+.ff-arcade .brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ff-arcade .brand-name {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+}
+.ff-arcade .brand-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+}
+.ff-arcade .user-stats {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.ff-arcade .stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+}
+.ff-arcade .stat-chip.gold {
+  border-color: rgba(252, 179, 0, 0.3);
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+.ff-arcade .stat-chip-icon {
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+}
+.ff-arcade .avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5b3aaf, #db2780);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: white;
+  border: 2px solid var(--border-strong);
 }
 
 .ff-arcade__main {

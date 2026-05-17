@@ -16,14 +16,13 @@
 //!   GET /api/fact-or-fold/rounds/{round_id}/settlement     — final breakdown (settled-only)
 
 use crate::common::*;
+use crate::features::arcade::games::fact_or_fold::controllers::settlement::SettleRoundResponse;
 use crate::features::arcade::games::fact_or_fold::types::*;
 
 #[cfg(feature = "server")]
 use crate::common::models::auth::User;
 #[cfg(feature = "server")]
-use crate::features::arcade::games::fact_or_fold::controllers::settlement::{
-    settle_round_internal, SettleRoundResponse,
-};
+use crate::features::arcade::games::fact_or_fold::controllers::settlement::settle_round_internal;
 #[cfg(feature = "server")]
 use crate::features::arcade::games::fact_or_fold::models::{
     FactFoldBet, FactFoldHeadline, FactFoldParticipant, FactFoldRationale, FactFoldRound,

@@ -50,7 +50,7 @@ use crate::features::arcade::games::fact_or_fold::pages::{
     FactFoldAdminStatsPage, FactFoldGameRoomPage, FactFoldMatchingPage,
 };
 use crate::features::arcade::layout::ArcadeLayout;
-use crate::features::arcade::pages::ArcadeHomePage;
+use crate::features::arcade::pages::{ArcadeHomePage, ArcadeLeaderboardPage};
 use crate::FactFoldRoundEntityType;
 
 // Sub-team governance pages — placeholders wired up now; content lives
@@ -147,6 +147,8 @@ pub enum Route {
             #[layout(ArcadeLayout)]
                 #[route("/home")]
                 ArcadeHomePage { },
+                #[route("/leaderboard")]
+                ArcadeLeaderboardPage { },
                 #[route("/games/fact-or-fold/matching")]
                 FactFoldMatchingPage { },
                 #[route("/games/fact-or-fold/rounds/:round_id")]

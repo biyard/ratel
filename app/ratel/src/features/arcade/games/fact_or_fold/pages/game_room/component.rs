@@ -162,6 +162,20 @@ fn StageTimeline(round: RoundResponse) -> Element {
 #[component]
 fn TimerCard(round: RoundResponse) -> Element {
     let tr: FactFoldRoomTranslate = use_translate();
+
+    // The round loader only refreshes every POLL_INTERVAL_MS (~2.5s),
+    // so without a local tick the timer jumps in chunks. This signal
+    // re-renders the card every second; compute_timer recomputes from
+    // wall-clock vs `stage_deadline_at` each time.
+    let mut tick = use_signal(|| 0u32);
+    use_future(move || async move {
+        loop {
+            crate::common::utils::time::sleep(std::time::Duration::from_secs(1)).await;
+            tick.with_mut(|t| *t = t.wrapping_add(1));
+        }
+    });
+    let _ = tick();
+
     let TimerState {
         stage_name,
         deadline_label,
