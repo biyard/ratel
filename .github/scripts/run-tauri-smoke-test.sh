@@ -58,7 +58,7 @@ fi
 
 # Run the smoke spec.
 cd playwright
-TAURI_CDP_URL=http://localhost:9223 \
+TAURI_CDP_PORT=9223 \
   TAURI_API_BASE="${TAURI_API_BASE:-https://dev.ratel.foundation}" \
   CI=true \
   npx playwright test --project=Tauri
