@@ -99,12 +99,6 @@ pub enum DetailType {
     /// arena rather than a half-built Post detail. No-op when the Space
     /// is not tied to a sub-team announcement.
     SpacePublished,
-    /// Fires when a FOF round needs to be settled. Triggered either by
-    /// a scheduled event tied to the Debate deadline (future infra
-    /// PR) or by an admin/manual mechanism. Payload shape:
-    /// `{ "round_id": "<uuid>" }` — handler resolves the round +
-    /// runs `settle_round_internal`.
-    FactFoldSettlementTrigger,
     #[serde(other)]
     Unknown,
 }
@@ -407,24 +401,6 @@ impl EventBridgeEnvelope {
                 let job: crate::features::cross_posting::models::SyndicationJob =
                     DetailType::parse_detail(&self.detail)?;
                 crate::features::cross_posting::services::dispatcher::handle_syndication_job_ready(job).await
-            }
-            DetailType::FactFoldSettlementTrigger => {
-                // Payload shape: `{ "round_id": "<uuid>" }`. The
-                // event bus passes the full detail object through,
-                // so we extract the round id directly rather than
-                // going through the `newImage` DDB-stream parser.
-                let round_id = self
-                    .detail
-                    .get("round_id")
-                    .and_then(|v| v.as_str())
-                    .ok_or("FactFoldSettlementTrigger missing round_id")?
-                    .to_string();
-                let cfg = crate::common::CommonConfig::default();
-                let cli = cfg.dynamodb();
-                crate::features::arcade::games::fact_or_fold::controllers::settlement::settle_round_internal(cli, &round_id)
-                    .await
-                    .map(|_| ())
-                    .map_err(|e| lambda_runtime::Error::from(format!("FactFoldSettlementTrigger: {e}")))
             }
             DetailType::Unknown => {
                 tracing::warn!(

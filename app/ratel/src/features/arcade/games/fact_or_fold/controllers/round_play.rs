@@ -387,12 +387,10 @@ pub async fn tick_handler(round_id: FactFoldRoundEntityType) -> Result<RoundResp
     ensure_participant(&round, &user.pk.to_string())?;
 
     // PR6: if this tick lands at or past the Debate deadline, drive
-    // settlement directly. The EventBridge settlement trigger
-    // (DetailType::FactFoldSettlementTrigger) is the primary path
-    // for ops/scheduler-driven settlement; this tick-side fallback
-    // makes the local-dev and "no scheduler yet" paths work
-    // without setting up infra first. `settle_round_internal` is
-    // idempotent, so two clients ticking at once is safe.
+    // settlement directly. A follow-up infra PR will add a scheduler /
+    // EventBridge trigger as the primary path; until then this
+    // tick-side call drives settlement in-process. `settle_round_internal`
+    // is idempotent, so two clients ticking at once is safe.
     let now = crate::common::utils::time::get_now_timestamp_millis();
     let debate_done = matches!(round.status, RoundStatus::Debate)
         && round
