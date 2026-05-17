@@ -100,9 +100,17 @@ export default defineConfig({
     //   adb forward tcp:9223 localabstract:webview_devtools_remote_<pid>
     // before invoking playwright. The browserName is "chromium" only as a
     // formality — the actual browser is the running Tauri WebView.
+    //
+    // The smoke job opts in via `TAURI_CDP_PORT=9223 npx playwright test --project=Tauri`.
+    // When that env is unset (regular `playwright-tests` job), we point
+    // testMatch at a path that doesn't exist so no tests are picked up
+    // even when the default `playwright test` discovery includes this
+    // project. That avoids the spec running without an emulator.
     {
       name: "Tauri",
-      testMatch: ["tests/tauri/*.spec.js"],
+      testMatch: process.env.TAURI_CDP_PORT
+        ? ["tests/tauri/*.spec.js"]
+        : ["tests/tauri/__never_match__.spec.js"],
       use: {
         browserName: "chromium",
       },

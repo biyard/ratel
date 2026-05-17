@@ -81,16 +81,16 @@ export async function connectCdp({ host, port, target = null, headers = {} } = {
   }
   console.log(`[cdp] connecting to ${wsUrl}`);
 
+  // CRITICAL: do NOT set the Origin header. Chromium DevTools (since
+  // CVE-2022-1853 mitigation) rejects any WebSocket whose Origin isn't
+  // in the `--remote-allow-origins` allowlist with 403 Forbidden — and
+  // we can't pass flags to the Tauri WebView. Connections with no
+  // Origin header are treated as "local" and accepted. The `ws` library
+  // omits Origin by default, so we just don't add one.
   const ws = new WebSocket(wsUrl, {
     perMessageDeflate: false,
     handshakeTimeout: 15_000,
-    headers: {
-      // Some Android WebView builds reject the default Origin header. Set
-      // an explicit one matching the host so the handshake mirrors a
-      // local devtools connection.
-      Origin: `http://${host}:${port}`,
-      ...headers,
-    },
+    headers: { ...headers },
   });
 
   // Verbose upgrade-failure logging — this is the whole point of the rewrite.
