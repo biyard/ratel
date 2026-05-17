@@ -17,11 +17,24 @@ pub fn get_session_layer(
 ) -> SessionManagerLayer<DynamoSessionStore> {
     let session_store = DynamoSessionStore::new(cli);
 
-    let is_local = env == "local" || env == "test";
-
+    // Always issue cross-site-capable cookies (`SameSite=None; Secure`).
+    //
+    // Why this is safe in local/test as well: the Tauri Android smoke
+    // test runs the WebView at `http://tauri.localhost` and the
+    // backend at `http://localhost:8080`. Those are different "sites"
+    // for cookie purposes (no public-suffix entry for `.localhost`), so
+    // a `SameSite=Lax` cookie would never reach the backend on the
+    // subsequent XHRs after signup. Chromium treats every `*.localhost`
+    // host (and bare `localhost`) as a secure context, so the `Secure`
+    // attribute does not block the cookie over HTTP loopback either.
+    //
+    // For the same-origin web Playwright job (browser + backend both at
+    // `http://localhost:8080`), `SameSite=None; Secure` is strictly
+    // looser than `Lax`, so it remains compatible.
     let layer = SessionManagerLayer::new(session_store)
-        .with_secure(!is_local)
-        .with_http_only(!is_local)
+        .with_secure(true)
+        .with_http_only(true)
+        .with_same_site(tower_sessions::cookie::SameSite::None)
         .with_name(format!("{}_sid", env))
         .with_path("/")
         .with_expiry(tower_sessions::Expiry::AtDateTime(
@@ -30,11 +43,7 @@ pub fn get_session_layer(
                 .unwrap(),
         ));
 
-    if is_local {
-        layer.with_same_site(tower_sessions::cookie::SameSite::Lax)
-    } else {
-        layer.with_same_site(tower_sessions::cookie::SameSite::None)
-    }
+    layer
 }
 
 #[derive(Debug, Clone)]
