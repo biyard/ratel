@@ -1,5 +1,6 @@
 use crate::features::membership::models::MembershipTier;
 use crate::features::membership::*;
+use crate::social::pages::membership::user::controllers::PurchaseHistoryItem;
 #[cfg(feature = "server")]
 #[allow(unused_imports)]
 use rmcp::schemars;
@@ -48,13 +49,18 @@ impl std::str::FromStr for Currency {
             "KRW" => Ok(Currency::Krw),
             _ => {
                 crate::error!("invalid currency: {s}");
-                Err(crate::features::membership::types::MembershipPaymentError::InvalidCurrency.into())
+                Err(
+                    crate::features::membership::types::MembershipPaymentError::InvalidCurrency
+                        .into(),
+                )
             }
         }
     }
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, DynamoEnum, Eq, PartialEq)]
+#[derive(
+    Debug, Clone, serde::Serialize, serde::Deserialize, Default, DynamoEnum, Eq, PartialEq,
+)]
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum PurchaseStatus {
     #[default]
@@ -203,7 +209,11 @@ impl UserPayment {
                 expiry_month,
                 birth_or_business_registration_number,
                 password_two_digits,
-            } = card_info.ok_or_else(|| Error::from(crate::features::membership::types::MembershipPaymentError::MissingCardInfo))?;
+            } = card_info.ok_or_else(|| {
+                Error::from(
+                    crate::features::membership::types::MembershipPaymentError::MissingCardInfo,
+                )
+            })?;
 
             // Store masked card number before passing to Portone
             let digits: String = card_number.chars().filter(|c| c.is_ascii_digit()).collect();
@@ -298,7 +308,10 @@ impl UserPayment {
         portone: &PortOne,
     ) -> Result<()> {
         if self.billing_key.is_none() {
-            return Err(crate::features::membership::types::MembershipPaymentError::MissingBillingKey.into());
+            return Err(
+                crate::features::membership::types::MembershipPaymentError::MissingBillingKey
+                    .into(),
+            );
         }
 
         let _ = portone
@@ -394,6 +407,18 @@ impl From<TeamPurchase> for PaymentReceipt {
     }
 }
 
+impl Into<PurchaseHistoryItem> for TeamPurchase {
+    fn into(self) -> PurchaseHistoryItem {
+        PurchaseHistoryItem {
+            created_at: self.created_at,
+            tx_type: self.tx_type.to_string(),
+            amount: self.amount,
+            payment_id: self.payment_id,
+            tx_id: self.tx_id,
+        }
+    }
+}
+
 #[cfg(feature = "server")]
 impl PurchaseEntity for TeamPurchase {
     fn pk(&self) -> &CompositePartition {
@@ -453,7 +478,11 @@ impl TeamPayment {
                 expiry_month,
                 birth_or_business_registration_number,
                 password_two_digits,
-            } = card_info.ok_or_else(|| Error::from(crate::features::membership::types::MembershipPaymentError::MissingCardInfo))?;
+            } = card_info.ok_or_else(|| {
+                Error::from(
+                    crate::features::membership::types::MembershipPaymentError::MissingCardInfo,
+                )
+            })?;
 
             let digits: String = card_number.chars().filter(|c| c.is_ascii_digit()).collect();
             let last4 = if digits.len() >= 4 {
@@ -547,7 +576,10 @@ impl TeamPayment {
         portone: &PortOne,
     ) -> Result<()> {
         if self.billing_key.is_none() {
-            return Err(crate::features::membership::types::MembershipPaymentError::MissingBillingKey.into());
+            return Err(
+                crate::features::membership::types::MembershipPaymentError::MissingBillingKey
+                    .into(),
+            );
         }
 
         let _ = portone

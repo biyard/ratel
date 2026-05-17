@@ -1,9 +1,9 @@
 use crate::common::*;
 use crate::features::social::pages::team_arena::{use_team_arena, TeamArenaTab};
 use crate::route::Route;
+use crate::social::pages::setting::team::controllers::TeamResponse;
 
 #[allow(unused_imports)]
-
 mod admin_page;
 mod management_page;
 mod subscription_page;
@@ -22,7 +22,7 @@ use super::controllers::{
 use super::i18n::TeamSettingsTranslate;
 
 #[component]
-pub fn Home(username: String) -> Element {
+pub fn Home(username: ReadSignal<String>) -> Element {
     let tr: TeamSettingsTranslate = use_translate();
     let nav = use_navigator();
     let mut toast = use_toast();
@@ -33,17 +33,10 @@ pub fn Home(username: String) -> Element {
     use_effect(move || arena.active_tab.set(TeamArenaTab::Settings));
     let mut refresh_trigger = arena.refresh_trigger;
 
-    let mut team_resource = use_server_future(use_reactive((&username,), |(name,)| async move {
-        get_team_settings_handler(name).await
-    }))?;
-
-    let team = {
-        let binding = team_resource.read();
-        binding.as_ref().and_then(|r| r.as_ref().ok()).cloned()
-    };
+    let mut team = use_loader(move || async move { get_team_settings_handler(username()).await })?;
 
     // Permission gate — viewers see a placeholder.
-    let can_edit = team.as_ref().map(|t| t.role.is_admin_or_owner()).unwrap_or(false);
+    let can_edit = team().role.is_admin_or_owner();
 
     if !can_edit {
         return rsx! {
@@ -60,26 +53,22 @@ pub fn Home(username: String) -> Element {
     // Form state — initialized from the server snapshot, then re-synced
     // whenever the server data changes (e.g., after Save Changes triggers
     // `team_resource.restart()`).
-    let initial_nickname = team.as_ref().map(|t| t.nickname.clone()).unwrap_or_default();
-    let initial_description = team
-        .as_ref()
-        .map(|t| t.html_contents.clone())
-        .unwrap_or_default();
-    let initial_profile = team
-        .as_ref()
-        .and_then(|t| t.profile_url.clone())
-        .unwrap_or_default();
-    let updated_at = team.as_ref().map(|t| t.updated_at).unwrap_or(0);
-    let display_name_for_delete = team
-        .as_ref()
-        .map(|t| {
-            if t.nickname.is_empty() {
-                t.username.clone()
-            } else {
-                t.nickname.clone()
-            }
-        })
-        .unwrap_or_else(|| username.clone());
+    let TeamResponse {
+        nickname: initial_nickname,
+        html_contents: initial_description,
+        profile_url,
+        updated_at,
+        ..
+    } = team();
+    let display_name_for_delete = {
+        let t = team();
+        if t.nickname.is_empty() {
+            t.username.clone()
+        } else {
+            t.nickname.clone()
+        }
+    };
+    let initial_profile = profile_url.unwrap_or_default();
 
     let mut nickname = use_signal(|| initial_nickname.clone());
     let mut description = use_signal(|| initial_description.clone());
@@ -97,13 +86,14 @@ pub fn Home(username: String) -> Element {
     // `team_resource` inside the effect so Dioxus tracks it as a dependency
     // and re-runs after `team_resource.restart()` or a page refresh.
     use_effect(move || {
-        let data = team_resource.read();
-        let t = data.as_ref().and_then(|r| r.as_ref().ok());
-        let snap = (
-            t.map(|t| t.nickname.clone()).unwrap_or_default(),
-            t.map(|t| t.html_contents.clone()).unwrap_or_default(),
-            t.and_then(|t| t.profile_url.clone()).unwrap_or_default(),
-        );
+        let TeamResponse {
+            nickname: n,
+            html_contents: d,
+            profile_url: p,
+            ..
+        } = team();
+        let snap = (n, d, p.unwrap_or_default());
+
         let baseline = server_baseline.peek().clone();
         if baseline != snap {
             nickname.set(snap.0.clone());
@@ -118,64 +108,58 @@ pub fn Home(username: String) -> Element {
         nickname() != n0 || description() != d0 || profile_url() != p0
     });
 
-    let on_save = {
-        let username_for_save = username.clone();
-        move |_| {
-            if !dirty() || saving() {
-                return;
-            }
-            let username = username_for_save.clone();
-            saving.set(true);
-            spawn(async move {
-                let req = UpdateTeamRequest {
-                    nickname: Some(nickname()),
-                    description: Some(description()),
-                    profile_url: Some(profile_url()),
-                    dao_address: None,
-                    thumbnail_url: None,
-                };
-                match update_team_handler(username, req).await {
-                    Ok(_) => {
-                        toast.info(tr.save_success);
-                        team_resource.restart();
-                        // Refresh team switcher dropdown so the new name/logo
-                        // appear immediately across the topbar/dropdown.
-                        if let Ok(resp) = crate::features::social::controllers::get_user_teams_handler(None).await {
-                            team_ctx.set_teams(resp.items);
-                        }
-                        // Force the arena layout to refetch the team profile
-                        // so the topbar title/logo update without a page reload.
-                        refresh_trigger.with_mut(|n| *n = n.wrapping_add(1));
-                    }
-                    Err(e) => {
-                        toast.error(e);
-                    }
-                }
-                saving.set(false);
-            });
+    let on_save = move |_| {
+        if !dirty() || saving() {
+            return;
         }
+        saving.set(true);
+        spawn(async move {
+            let req = UpdateTeamRequest {
+                nickname: Some(nickname()),
+                description: Some(description()),
+                profile_url: Some(profile_url()),
+                dao_address: None,
+                thumbnail_url: None,
+            };
+            match update_team_handler(username(), req).await {
+                Ok(_) => {
+                    toast.info(tr.save_success);
+                    team.restart();
+                    // Refresh team switcher dropdown so the new name/logo
+                    // appear immediately across the topbar/dropdown.
+                    if let Ok(resp) =
+                        crate::features::social::controllers::get_user_teams_handler(None).await
+                    {
+                        team_ctx.set_teams(resp.items);
+                    }
+                    // Force the arena layout to refetch the team profile
+                    // so the topbar title/logo update without a page reload.
+                    refresh_trigger.with_mut(|n| *n = n.wrapping_add(1));
+                }
+                Err(e) => {
+                    toast.error(e);
+                }
+            }
+            saving.set(false);
+        });
     };
 
     let mut delete_open = use_signal(|| false);
-    let on_delete = {
-        let username_for_delete = username.clone();
-        move |_| {
-            let username = username_for_delete.clone();
-            saving.set(true);
-            spawn(async move {
-                match delete_team_handler(username).await {
-                    Ok(_) => {
-                        toast.info(tr.delete_success);
-                        delete_open.set(false);
-                        nav.push(Route::Index {});
-                    }
-                    Err(e) => {
-                        toast.error(e);
-                    }
+    let on_delete = move |_| {
+        saving.set(true);
+        spawn(async move {
+            match delete_team_handler(username()).await {
+                Ok(_) => {
+                    toast.info(tr.delete_success);
+                    delete_open.set(false);
+                    nav.push(Route::Index {});
                 }
-                saving.set(false);
-            });
-        }
+                Err(e) => {
+                    toast.error(e);
+                }
+            }
+            saving.set(false);
+        });
     };
 
     rsx! {
@@ -306,7 +290,7 @@ pub fn Home(username: String) -> Element {
             }
 
             // ── Subscription & Billing ──────────────────
-            TsSubscriptionCard { username: username.clone() }
+            TsSubscriptionCard { username: username() }
 
             // ── Danger zone ─────────────────────────────
             div { class: "ts-card ts-danger-card",
@@ -427,7 +411,7 @@ fn format_expiry(ms: i64) -> String {
 }
 
 #[component]
-fn TsSubscriptionCard(username: String) -> Element {
+fn TsSubscriptionCard(username: ReadSignal<String>) -> Element {
     use crate::features::membership::controllers::{
         get_team_billing_info_handler, get_team_membership_handler,
         update_team_billing_card_handler, UpdateBillingCardRequest,
@@ -438,38 +422,27 @@ fn TsSubscriptionCard(username: String) -> Element {
     let tr: TeamSettingsTranslate = use_translate();
     let mut toast = use_toast();
 
-    let membership = use_server_future({
-        let username = username.clone();
-        move || {
-            let username = username.clone();
-            async move { get_team_membership_handler(username).await }
-        }
-    })?;
-    let mut billing_resource = use_server_future({
-        let username = username.clone();
-        move || {
-            let username = username.clone();
-            async move { get_team_billing_info_handler(username).await }
-        }
-    })?;
+    let membership =
+        use_loader(move || async move { get_team_membership_handler(username()).await })?;
 
-    let membership_data = membership.read();
-    let billing_data = billing_resource.read();
+    let mut billing_loader =
+        use_loader(move || async move { get_team_billing_info_handler(username()).await })?;
 
-    let (tier_label, remaining, total, expired_at, is_free) = match membership_data.as_ref() {
-        Some(Ok(m)) => {
-            let tier = format_membership_tier_label(&m.tier.0, tr.enterprise);
-            let free = tier.eq_ignore_ascii_case("free");
-            (tier, m.remaining_credits, m.total_credits, m.expired_at, free)
-        }
-        _ => ("Free".to_string(), 0_i64, 10_i64, 0_i64, true),
+    let (tier_label, remaining, total, expired_at, is_free) = {
+        let m = membership();
+        let tier = format_membership_tier_label(&m.tier.0, tr.enterprise);
+        let free = tier.eq_ignore_ascii_case("free");
+
+        (
+            tier,
+            m.remaining_credits,
+            m.total_credits,
+            m.expired_at,
+            free,
+        )
     };
 
-    let billing = billing_data
-        .as_ref()
-        .and_then(|r| r.as_ref().ok())
-        .cloned()
-        .unwrap_or_default();
+    let billing = billing_loader();
 
     let tier_class = match tier_label.as_str() {
         "Pro" => "ts-plan-badge ts-plan-badge--pro",
@@ -494,45 +467,40 @@ fn TsSubscriptionCard(username: String) -> Element {
             && !card_password.read().trim().is_empty()
     });
 
-    let on_save_card = {
-        let username = username.clone();
-        move |_: MouseEvent| {
-            if !is_valid() || card_saving() {
-                return;
-            }
-            let info = CardInfo {
-                card_number: card_number().trim().to_string(),
-                expiry_year: expiry_year().trim().to_string(),
-                expiry_month: expiry_month().trim().to_string(),
-                birth_or_business_registration_number: birth_or_biz().trim().to_string(),
-                password_two_digits: card_password().trim().to_string(),
-            };
-            let username = username.clone();
-            spawn(async move {
-                card_saving.set(true);
-                match update_team_billing_card_handler(
-                    username,
-                    UpdateBillingCardRequest { card_info: info },
-                )
-                .await
-                {
-                    Ok(_) => {
-                        card_number.set(String::new());
-                        expiry_month.set(String::new());
-                        expiry_year.set(String::new());
-                        birth_or_biz.set(String::new());
-                        card_password.set(String::new());
-                        show_card_form.set(false);
-                        toast.info(tr.card_updated);
-                        billing_resource.restart();
-                    }
-                    Err(e) => {
-                        toast.error(e);
-                    }
-                }
-                card_saving.set(false);
-            });
+    let on_save_card = move |_: MouseEvent| async move {
+        if !is_valid() || card_saving() {
+            return;
         }
+        let info = CardInfo {
+            card_number: card_number().trim().to_string(),
+            expiry_year: expiry_year().trim().to_string(),
+            expiry_month: expiry_month().trim().to_string(),
+            birth_or_business_registration_number: birth_or_biz().trim().to_string(),
+            password_two_digits: card_password().trim().to_string(),
+        };
+
+        card_saving.set(true);
+        match update_team_billing_card_handler(
+            username(),
+            UpdateBillingCardRequest { card_info: info },
+        )
+        .await
+        {
+            Ok(_) => {
+                card_number.set(String::new());
+                expiry_month.set(String::new());
+                expiry_year.set(String::new());
+                birth_or_biz.set(String::new());
+                card_password.set(String::new());
+                show_card_form.set(false);
+                toast.info(tr.card_updated);
+                billing_loader.restart();
+            }
+            Err(e) => {
+                toast.error(e);
+            }
+        }
+        card_saving.set(false);
     };
 
     rsx! {
@@ -550,7 +518,7 @@ fn TsSubscriptionCard(username: String) -> Element {
                         class: "ts-plan-change-link",
                         "data-testid": "team-settings-view-membership",
                         to: Route::SocialMembership {
-                            username: username.clone(),
+                            username: username(),
                         },
                         "{tr.view_membership}"
                     }
@@ -558,7 +526,7 @@ fn TsSubscriptionCard(username: String) -> Element {
                         class: "ts-plan-change-link",
                         "data-testid": "team-settings-change-plan",
                         to: Route::TeamSettingSubscription {
-                            username: username.clone(),
+                            username: username(),
                         },
                         "{tr.change_plan}"
                     }

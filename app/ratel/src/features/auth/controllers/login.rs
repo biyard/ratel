@@ -1,11 +1,11 @@
 // Migrated from packages/main-api/src/controllers/v3/auth/login.rs
 use crate::features::auth::models::*;
 #[cfg(feature = "server")]
-#[allow(unused_imports)]
-use rmcp::schemars;
-#[cfg(feature = "server")]
 use crate::features::auth::utils::evm::{build_siwe_message, generate_nonce, recover_address};
 use crate::features::auth::*;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
@@ -56,6 +56,7 @@ pub struct LoginResponse {
 
 #[post("/api/auth/login", session: Extension<tower_sessions::Session>)]
 pub async fn login_handler(req: LoginRequest) -> Result<LoginResponse> {
+    debug!("Login request: {:?}", req);
     let conf = crate::features::auth::config::get();
     let cli = conf.dynamodb();
     let Extension(session) = session;
@@ -241,10 +242,7 @@ pub async fn login_with_email(
         UserQueryOption::builder().sk(hashed_password),
     )
     .await?;
-    let user = u
-        .get(0)
-        .cloned()
-        .ok_or(AuthError::InvalidCredentials)?;
+    let user = u.get(0).cloned().ok_or(AuthError::InvalidCredentials)?;
 
     // FIXME(migrate): fallback to tricky migration from postgres
     // let user = if user.is_none() {
@@ -266,11 +264,13 @@ pub async fn login_with_telegram(
     cli: &aws_sdk_dynamodb::Client,
     telegram_raw: String,
 ) -> Result<User> {
-    let telegram_user =
-        crate::features::auth::utils::telegram::parse_telegram_raw(telegram_raw.clone()).map_err(|e| {
-            crate::error!("Failed to parse telegram raw data: {e}");
-            AuthError::InvalidTelegramData
-        })?;
+    let telegram_user = crate::features::auth::utils::telegram::parse_telegram_raw(
+        telegram_raw.clone(),
+    )
+    .map_err(|e| {
+        crate::error!("Failed to parse telegram raw data: {e}");
+        AuthError::InvalidTelegramData
+    })?;
     tracing::debug!("Parsed telegram user: {:?}", telegram_user);
     let (res, _) = UserTelegram::find_by_telegram_id(
         cli,
@@ -329,16 +329,12 @@ pub async fn wallet_login_handler(
     session: &tower_sessions::Session,
 ) -> Result<User> {
     // Verify nonce from session
-    let stored_nonce: Option<String> = session
-        .get("wallet_nonce")
-        .await
-        .map_err(|e| {
-            crate::error!("session: {e}");
-            AuthError::SessionFailed
-        })?;
+    let stored_nonce: Option<String> = session.get("wallet_nonce").await.map_err(|e| {
+        crate::error!("session: {e}");
+        AuthError::SessionFailed
+    })?;
 
-    let stored_nonce =
-        stored_nonce.ok_or_else(|| AuthError::NonceNotFound)?;
+    let stored_nonce = stored_nonce.ok_or_else(|| AuthError::NonceNotFound)?;
 
     if !message.contains(&stored_nonce) {
         return Err(AuthError::NonceMismatch.into());

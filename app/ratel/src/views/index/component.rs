@@ -2,7 +2,7 @@ use super::space_card::*;
 use super::*;
 use crate::common::components::{Robots, SeoMeta};
 use crate::common::contexts::TeamItem;
-use crate::common::hooks::{use_infinite_query, use_loader};
+use crate::common::hooks::use_infinite_query;
 use crate::common::types::ListResponse;
 use crate::features::auth::LoginModal;
 use crate::features::posts::controllers::create_post::create_post_handler;
@@ -26,9 +26,7 @@ pub fn Index() -> Element {
     let t: HomeArenaTranslate = use_translate();
     let nav = use_navigator();
     let mut popup = use_popup();
-    debug!("before user context");
     let user_ctx = crate::features::auth::hooks::use_user_context();
-    debug!("after user context");
     let username = use_memo(move || {
         user_ctx()
             .user

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "identifier": "default",
+  "description": "Default permissions for the Ratel Tauri shell. App-level #[tauri::command]s registered via invoke_handler! don't need ACL entries; plugin commands do.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "google-auth:default"
+  ]
+}

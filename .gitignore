@@ -73,3 +73,5 @@ google-services.json
 
 # Migration source data (supplied via env vars at runtime; never committed)
 /app/ratel/src/common/migrations/data/
+/app/ratel-tauri/tauri-override.json
+*target/

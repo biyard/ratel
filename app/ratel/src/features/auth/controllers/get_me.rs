@@ -79,3 +79,4 @@ pub async fn get_me_handler() -> Result<GetMeResponse> {
         membership,
     })
 }
+

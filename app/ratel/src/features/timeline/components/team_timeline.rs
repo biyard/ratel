@@ -4,17 +4,12 @@ use crate::features::timeline::*;
 
 #[component]
 pub fn TeamTimeline() -> Element {
-    let feed = use_server_future(move || async move {
-        list_timeline_handler("team_member".to_string(), None).await
-    })?;
+    let row =
+        use_loader(
+            move || async move { list_timeline_handler("team_member".to_string(), None).await },
+        )?;
 
-    let val = feed.read();
-    let res = val.as_ref().unwrap();
-
-    match res {
-        Ok(row) if !row.items.is_empty() => {
-            rsx! { TimelineRow { row: row.clone() } }
-        }
-        _ => rsx! {},
+    rsx! {
+        TimelineRow { row: row() }
     }
 }

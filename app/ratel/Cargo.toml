@@ -26,6 +26,7 @@ qdrant-client = { workspace = true, optional = true }
 tracing = { workspace = true }
 gloo-timers = { version = "0.3", features = ["futures"], optional = true }
 serde_dynamo = { workspace = true, optional = true }
+tauri-common = {workspace = true, optional = true, features = ["web"] }
 base64 = { workspace = true }
 # `js` feature: source of randomness on `wasm32-unknown-unknown` for `Uuid::now_v7()`.
 uuid = { workspace = true }
@@ -41,7 +42,7 @@ futures = { version = "0.3", optional = true }
 urlencoding = { version = "2" }
 tokio = { workspace = true, optional = true }
 tower = { version = "0.5", features = ["util"], optional = true }
-tower-http = { version = "0.6", features = ["catch-panic"], optional = true }
+tower-http = { version = "0.6", features = ["catch-panic", "cors"], optional = true }
 pulldown-cmark = { version = "0.12", default-features = false, features = ["html"], optional = true }
 
 web-sys = { workspace = true, features = [
@@ -88,6 +89,9 @@ ssi = { version = "0.12.0", features = ["bbs"], optional = true }
 aws-credential-types = { version = "1.2.6", optional = true }
 strum = { version = "0.27.2", features = ["derive"] }
 js-sys = "0.3"
+# Installed in tauri-web main.rs so release-wasm panics print location + message
+# to console instead of bubbling up as opaque "RuntimeError: unreachable".
+console_error_panic_hook = { version = "0.1", optional = true }
 tracing-wasm = "0.2.1"
 dioxus-cli-config = "0.7.3"
 tracing-subscriber = { workspace = true }
@@ -113,15 +117,32 @@ rmcp = { version = "0.7.0", git = "https://github.com/modelcontextprotocol/rust-
     "macros",
 ], optional = true }
 strip-tags = "0.1.0"
-
+generational-box = "0.7.9"
 
 [features]
-default = ["web", "server", "mobile"]
+default = ["mobile"]
 bypass = []
-web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2", "uuid/js"]
+# Note: `fullstack` is NOT included here so `--platform web` builds for the
+# Tauri Android shell (which auto-adds `web` and supplies its own server-fn
+# shims) don't transitively enable `dioxus-web/hydrate`. That hydration code
+# tries to consume an SSR-serialized initial-state buffer that the Tauri
+# WebView never produces, leaving the WebsysDom in a state where the wasm
+# emits DOM ops referencing un-mounted nodes and JS throws
+# `Cannot read properties of undefined (reading 'listening')`. The regular
+# web build adds `fullstack` explicitly via `dx build ... --features web,fullstack`.
+web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2", "uuid/js", "dep:console_error_panic_hook"]
+fullstack = ["dioxus/fullstack"]
 desktop = ["dioxus/desktop"]
-mobile = ["dioxus/mobile", "tokio"]
+mobile = ["dioxus/mobile", "tokio", "dep:console_error_panic_hook", "dep:reqwest", "dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2", "uuid/js"]
+# Type-only feature: compiles app/ratel/src/tauri/types/ and nothing else.
+# Pulled by app/ratel-tauri so the native shell shares DTO definitions with the
+# web bundle. MUST NOT bring in dioxus, reqwest, or any web/server-only deps.
+# Web build for the Tauri Android shell. Additive on `web` so the dioxus-web
+# code path is identical; only adds compilation of app/ratel/src/tauri/interop/
+# (the JS-eval drivers that call window.__TAURI__.invoke).
+tauri-web = ["tauri-common", "dep:console_error_panic_hook", "dep:reqwest", "dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2", "uuid/js"]
 server = [
+  "fullstack",
   "aws-config",
   "aws-credential-types",
   "aws-sdk-bedrockagentruntime",
@@ -134,6 +155,7 @@ server = [
   "aws-smithy-types",
   "candid",
   "dioxus/server",
+  "dioxus/fullstack",
   "ethers",
   "futures",
   "hex",
@@ -145,7 +167,7 @@ server = [
   "names",
   "qdrant-client",
   "random-string",
-  "reqwest",
+  "dep:reqwest",
   "ratel-canister",
   "serde_dynamo",
   "sha2",

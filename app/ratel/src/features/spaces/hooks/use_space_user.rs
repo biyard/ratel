@@ -1,7 +1,6 @@
 use crate::spaces::space_common::{use_space, SpaceResponse};
 use crate::*;
 use crate::{auth::use_user_context, features::spaces::controllers::user::get_user};
-use dioxus::fullstack::{Loader, Loading};
 
 pub struct SpaceUser {
     pub pk: String,

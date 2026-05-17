@@ -1,14 +1,14 @@
 use super::super::components::DeleteTeamPopup;
 use super::super::controllers::TeamResponse;
-use super::super::controllers::{UpdateTeamRequest, delete_team_handler, update_team_handler};
+use super::super::controllers::{delete_team_handler, update_team_handler, UpdateTeamRequest};
 use super::super::*;
+use crate::common::*;
 use crate::features::membership::controllers::{
-    UpdateBillingCardRequest, get_team_billing_info_handler, get_team_membership_handler,
-    update_team_billing_card_handler,
+    get_team_billing_info_handler, get_team_membership_handler, update_team_billing_card_handler,
+    UpdateBillingCardRequest,
 };
 use crate::features::membership::models::CardInfo;
 use crate::features::social::pages::membership::user::components::format_membership_tier_label;
-use crate::common::*;
 
 fn format_last_saved(ts_millis: i64) -> String {
     if ts_millis == 0 {
@@ -267,53 +267,27 @@ fn TeamSettingsRow(label: String, children: Element) -> Element {
 }
 
 #[component]
-fn TeamSubscriptionCard(username: String) -> Element {
+fn TeamSubscriptionCard(username: ReadSignal<String>) -> Element {
     let tr: TeamSettingsTranslate = use_translate();
-    let membership = use_server_future({
-        let username = username.clone();
-        move || {
-            let username = username.clone();
-            async move { get_team_membership_handler(username).await }
-        }
-    })?;
-    let mut billing_info = use_server_future({
-        let username = username.clone();
-        move || {
-            let username = username.clone();
-            async move { get_team_billing_info_handler(username).await }
-        }
-    })?;
+    let membership =
+        use_loader(move || async move { get_team_membership_handler(username()).await })?;
+    let mut billing_info =
+        use_loader({ move || async move { get_team_billing_info_handler(username()).await } })?;
 
-    let membership_data = membership.read();
-    let billing_data = billing_info.read();
+    let m = membership();
 
-    let (tier_label, remaining, total, expired_at, is_free) = match membership_data.as_ref() {
-        Some(Ok(m)) => {
-            let tier = format_membership_tier_label(&m.tier.0, tr.enterprise);
-            let free = tier.eq_ignore_ascii_case("free");
-            (
-                tier,
-                m.remaining_credits,
-                m.total_credits,
-                m.expired_at,
-                free,
-            )
-        }
-        Some(Err(_)) => ("Free".to_string(), 0, 0, 0, true),
-        None => {
-            return rsx! {
-                div { class: "flex justify-center items-center py-6 w-full",
-                    crate::common::components::LoadingIndicator {}
-                }
-            };
-        }
+    let (tier_label, remaining, total, expired_at, is_free) = {
+        let tier = format_membership_tier_label(&m.tier.0, tr.enterprise);
+        let free = tier.eq_ignore_ascii_case("free");
+        (
+            tier,
+            m.remaining_credits,
+            m.total_credits,
+            m.expired_at,
+            free,
+        )
     };
-
-    let billing = billing_data
-        .as_ref()
-        .and_then(|r| r.as_ref().ok())
-        .cloned()
-        .unwrap_or_default();
+    let billing = billing_info();
 
     let expiry_text = if expired_at == 0 {
         tr.unlimited.to_string()
@@ -343,7 +317,6 @@ fn TeamSubscriptionCard(username: String) -> Element {
     });
 
     let on_save_card = {
-        let username = username.clone();
         move |_: MouseEvent| {
             let info = CardInfo {
                 card_number: card_number().trim().to_string(),
@@ -352,12 +325,11 @@ fn TeamSubscriptionCard(username: String) -> Element {
                 birth_or_business_registration_number: birth_or_biz().trim().to_string(),
                 password_two_digits: card_password().trim().to_string(),
             };
-            let username = username.clone();
             spawn(async move {
                 saving.set(true);
                 card_message.set(None);
                 match update_team_billing_card_handler(
-                    username,
+                    username(),
                     UpdateBillingCardRequest { card_info: info },
                 )
                 .await
