@@ -12,7 +12,7 @@ use serde::de::DeserializeOwned;
 
 pub type Loading = RenderError;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum LoaderState {
     Pending,
     Ready,
@@ -51,8 +51,28 @@ impl<T> Loader<T> {
     pub fn cancel(&mut self) {
         self.resource.cancel();
     }
+
+    pub fn value(&self) -> T
+    where
+        T: Clone,
+    {
+        (self.real_value)().unwrap()
+    }
 }
 
+/// Mirrors `dioxus_fullstack_core::use_loader` for the `tauri-web` target
+/// where the `dioxus-fullstack` crate's loader cannot run (no SSR/hydration
+/// data is ever delivered by the Tauri WebView, so the upstream loader
+/// stays permanently suspended → white screen).
+///
+/// Implementation notes:
+/// - Subscribes the calling scope to our own `loader_state` signal (not
+///   `resource.state()`) — the future writes both `value` and `loader_state`
+///   together, so suspending on `loader_state` guarantees the value signal
+///   is populated before the component re-renders as `Ready`.
+/// - Force-polls the wrapper task on the first hook run via `poll_now()`.
+///   This matches upstream and is how a synchronously-ready future (cached,
+///   no real await) skips suspension entirely.
 pub fn use_loader<F, T, E>(mut future: impl FnMut() -> F + 'static) -> Result<Loader<T>, Loading>
 where
     F: Future<Output = std::result::Result<T, E>> + 'static,
@@ -88,12 +108,16 @@ where
         }
     });
 
-    // On the first run, force this task to be polled right away in case its
-    // value is ready synchronously (e.g. cached / no actual await).
+    // Force the wrapper task to be polled on first render so a future that
+    // resolves synchronously (cached, no real await) fast-paths through
+    // without ever suspending the component.
     use_hook(|| {
         let _ = resource.task().poll_now();
     });
 
+    // Reading `loader_state` here subscribes the scope to it, so the
+    // future's `loader_state.set(...)` triggers a re-render that flips
+    // this match arm and lets us return the populated Loader.
     match &*loader_state.read_unchecked() {
         LoaderState::Pending => Err(RenderError::Suspended(SuspendedFuture::new(
             resource.task(),

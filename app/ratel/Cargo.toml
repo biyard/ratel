@@ -67,7 +67,7 @@ wasm-bindgen = { workspace = true }
 wasm-bindgen-futures = { workspace = true }
 serde-wasm-bindgen = { workspace = true }
 random-string = { version = "1.1.0", optional = true }
-reqwest = { workspace = true, optional = true, default-features = false, features = ["rustls-tls", "blocking", "json", "multipart"] }
+reqwest = { workspace = true, optional = true }
 async-trait = { workspace = true }
 sha3 = { version = "0.10.8", optional = true }
 sha2 = { version = "0.10", optional = true }
@@ -122,7 +122,15 @@ generational-box = "0.7.9"
 [features]
 default = ["mobile"]
 bypass = []
-web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2", "uuid/js", "dep:console_error_panic_hook", "fullstack"]
+# Note: `fullstack` is NOT included here so `--platform web` builds for the
+# Tauri Android shell (which auto-adds `web` and supplies its own server-fn
+# shims) don't transitively enable `dioxus-web/hydrate`. That hydration code
+# tries to consume an SSR-serialized initial-state buffer that the Tauri
+# WebView never produces, leaving the WebsysDom in a state where the wasm
+# emits DOM ops referencing un-mounted nodes and JS throws
+# `Cannot read properties of undefined (reading 'listening')`. The regular
+# web build adds `fullstack` explicitly via `dx build ... --features web,fullstack`.
+web = ["dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2", "uuid/js", "dep:console_error_panic_hook"]
 fullstack = ["dioxus/fullstack"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile", "tokio", "dep:console_error_panic_hook", "dep:reqwest", "dioxus/web", "getrandom", "gloo-timers", "time/wasm-bindgen", "attr-voting", "hex", "sha2", "uuid/js"]

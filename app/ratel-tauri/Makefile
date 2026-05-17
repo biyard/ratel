@@ -93,7 +93,7 @@ endif
 # alone only allows WebAssembly.compile/instantiate, not JS string-eval.
 # Without it the wasm bundle aborts with `EvalError: Refused to evaluate a
 # string as JavaScript`. Acceptable in dev; consider narrowing for prod.
-CSP_OVERRIDE := default-src 'self' tauri: http://tauri.localhost https://ratel.foundation https://*.ratel.foundation; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' tauri: http://tauri.localhost https://www.gstatic.com; connect-src $(CSP_CONNECT); img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com
+CSP_OVERRIDE := default-src 'self' tauri: http://tauri.localhost https://ratel.foundation https://*.ratel.foundation; script-src 'self'  https://cdn.portone.io 'wasm-unsafe-eval' 'unsafe-eval' tauri: http://tauri.localhost https://www.gstatic.com; connect-src $(CSP_CONNECT); img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com
 
 DIST_DIR := $(CURDIR)/dist
 RATEL_DIR := $(CURDIR)/../ratel
@@ -151,6 +151,11 @@ dx-build:
 	cd $(RATEL_DIR) && CARGO_TARGET_DIR=$(DX_CARGO_TARGET_DIR) make build-tauri
 	rsync -a --delete "$(DX_BUILD_DIR)/" "$(DIST_DIR)/"
 
+	@if ! grep -q "patched_atob" $(DIST_DIR)/index.html; then \
+		echo "Injecting SSR-global shims into index.html"; \
+		python3 -c "p='$(DIST_DIR)/index.html'; t=open(p).read(); s='<script>(function(){var __o=window.atob;window.atob=function(x){return (x===undefined||x===null)?String.fromCharCode(0x80):__o.call(this,x);};if(!window.hydrate_queue)window.hydrate_queue=[];if(!window.hydration_callback)window.hydration_callback=function(){};window.__patched_atob=true;})();</script>'; open(p,'w').write(t.replace('<body>','<body>'+s,1))"; \
+	fi
+
 run: run-android
 
 # Write a one-off JSON override merging per-ENV CSP and the DEV_URL into
@@ -203,8 +208,8 @@ run-apk: build-android
 # enables: WebView chrome://inspect, lldb attach, BuildConfig.DEBUG=true,
 # no R8 minify. Useful when you need Chrome DevTools on the WebView or to
 # attach a debugger. Slower compile + larger APK than the release variant.
-build-android-debug: install-tauri-cli dx-build $(TAURI_OVERRIDE_FILE)
-	cd src-tauri && $(ANDROID_ENV) cargo tauri android build --target $(TAURI_TARGET) --apk --debug --config $(TAURI_OVERRIDE_FILE)
+build-android-debug: install-tauri-cli
+	cd src-tauri && $(ANDROID_ENV) cargo tauri android build --target $(TAURI_TARGET) --apk --debug
 	@echo
 	@echo "APK output:"
 	@find src-tauri/gen/android -name "*-debug.apk" -newer Makefile 2>/dev/null

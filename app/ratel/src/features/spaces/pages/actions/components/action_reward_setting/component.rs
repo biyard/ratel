@@ -28,6 +28,10 @@ pub fn ActionRewardSetting(
     let user_ctx = crate::features::auth::hooks::use_user_context();
     let team = use_loader(move || async move {
         let space = space();
+        if space.author_type != UserType::Team {
+            return Ok(None);
+        }
+
         let result = crate::features::social::controllers::find_team_handler(
             space.author_username.to_string(),
         )
@@ -58,7 +62,10 @@ pub fn ActionRewardSetting(
         let space = space();
 
         let is_team_space = space.author_type == crate::common::UserType::Team;
-        let team_username = team.as_ref().map(|t| t.username.clone()).unwrap_or_default();
+        let team_username = team
+            .as_ref()
+            .map(|t| t.username.clone())
+            .unwrap_or_default();
 
         if is_team_space && !team_username.is_empty() {
             crate::features::membership::controllers::get_team_membership_handler(team_username)

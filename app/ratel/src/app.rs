@@ -61,6 +61,11 @@ pub fn App() -> Element {
         document::Stylesheet { href: asset!("/assets/tailwind.css") }
 
         // crate::common::Provider {}
-        Router::<Route> {}
+        // Top-level SuspenseBoundary catches suspense propagated from
+        // `RootLayout` (which calls `Context::init()?` / `TeamContext::init()?`
+        // before its rsx! body). Without a boundary above the Router, the
+        // suspended scope never gets re-rendered when its resource task
+        // resolves, so the entire UI stays blank.
+        SuspenseBoundary { Router::<Route> {} }
     }
 }

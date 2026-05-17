@@ -315,10 +315,10 @@ build-tauri: ../../node_modules js/node_modules
 	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx build --release --debug-symbols false --no-default-features --features tauri-web --platform web --fullstack false
 
 build-testing:
-	$(BUILD_ENV) dx build --release --no-default-features --debug-symbols false @client --features web,bypass,beta --platform web @server --features server,bypass,local-dev --platform server
+	$(BUILD_ENV) dx build --release --no-default-features --debug-symbols false @client --features web,fullstack,bypass,beta --platform web @server --features server,bypass,local-dev --platform server
 
 build-arm:
-	$(BUILD_ENV) dx build --release --no-default-features --debug-symbols false @client --features web --platform web @server --features server --platform server --target aarch64-unknown-linux-gnu
+	$(BUILD_ENV) dx build --release --no-default-features --debug-symbols false @client --features web,fullstack --platform web @server --features server --platform server --target aarch64-unknown-linux-gnu
 
 build-lambda: env.sh
 	docker run -v $(PWD)/../..:/app -v $(HOME)/.cargo/bin:/root/.cargo/bin -w /app public.ecr.aws/sam/build-provided.al2023 /bin/bash -c "scripts/building-lambda-bootstrap.sh"

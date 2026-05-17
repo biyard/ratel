@@ -10,9 +10,9 @@ pub struct Context {
     pub user_context: Store<UserContext>,
 }
 
-
 impl Context {
     pub fn init() -> Result<Self, Loading> {
+        debug!("Auth Context::init - starting initialization of Context");
         let user_ctx = use_loader(move || async move {
             debug!("Context::init - calling get_me_handler to fetch user context");
             let res = Ok::<_, Error>(match get_me_handler().await {
@@ -29,8 +29,13 @@ impl Context {
             debug!("Context::init - fetched user context: {:?}", res);
             res
         });
+        debug!("Auth Context::init - finished initializing loader for user context, now awaiting result");
 
         let user_ctx = user_ctx?();
+        debug!(
+            "Auth Context::init - successfully loaded user context: {:?}",
+            user_ctx
+        );
 
         let ctx = Self {
             user_context: use_store(move || user_ctx),
