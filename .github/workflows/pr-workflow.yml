@@ -637,8 +637,10 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
+          # The action runs the script under /usr/bin/sh (dash on Ubuntu),
+          # which doesn't support `set -o pipefail`. Use `set -eu` only.
           script: |
-            set -euo pipefail
+            set -eu
 
             adb wait-for-device
             # Wait for the emulator to finish booting before we install.
