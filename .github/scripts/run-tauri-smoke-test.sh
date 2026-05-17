@@ -15,11 +15,12 @@ set -eu
 
 APK_PATH="${1:?APK_PATH must be passed as first arg}"
 
-# Always capture logcat on exit, even when the spec fails — debugging
-# without it is borderline impossible.
+# Always capture logcat + devtools snapshot on exit, even when the spec
+# fails — debugging without these is borderline impossible.
 trap 'PID="${PID:-$(adb shell pidof co.biyard.ratel 2>/dev/null | tr -d "\r" || true)}"
       adb logcat -d ${PID:+--pid=$PID} > /tmp/tauri-logcat.txt 2>&1 || true
-      curl -sf http://localhost:9223/json/list > /tmp/tauri-devtools-list.json 2>&1 || true' EXIT
+      curl -sf http://localhost:9223/json/list > /tmp/tauri-devtools-list.json 2>&1 || true
+      curl -sf http://localhost:9223/json/version > /tmp/tauri-devtools-version.json 2>&1 || true' EXIT
 
 adb wait-for-device
 

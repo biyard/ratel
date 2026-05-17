@@ -652,4 +652,6 @@ jobs:
             playwright/playwright-report/
             playwright/test-results/
             /tmp/tauri-logcat.txt
+            /tmp/tauri-devtools-list.json
+            /tmp/tauri-devtools-version.json
           retention-days: 7

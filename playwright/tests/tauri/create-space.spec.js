@@ -1,13 +1,22 @@
 // Tauri Android smoke test — drives the WebView inside the installed APK
 // directly via Chrome DevTools Protocol (CDP).
 //
-// Why CDP via `chrome-remote-interface` and not Playwright's
-// `chromium.connectOverCDP`: Android System WebView's CDP implementation
-// doesn't expose browser-level methods like `Browser.setDownloadBehavior`,
-// which Playwright calls during connection setup. The connection fails
-// with `Protocol error (Browser.setDownloadBehavior): Browser context
-// management is not supported.` Using a raw CDP client (which only talks
-// the page-level CDP we actually need) sidesteps that.
+// Why a hand-rolled CDP client (`cdp-client.js`) and not Playwright's
+// `chromium.connectOverCDP` or `chrome-remote-interface`:
+//
+//   * Playwright's connectOverCDP calls `Browser.setDownloadBehavior`
+//     during connection setup. Android WebView's CDP doesn't implement
+//     browser-level methods, so the connection fails with
+//     `Browser context management is not supported.`
+//   * `chrome-remote-interface` works against desktop Chrome but on the
+//     `api-level: 34, target: default` emulator WebView (Chromium 113)
+//     the WebSocket handshake silently aborts ("socket hang up") with
+//     no further diagnostics — no way to see why the server dropped us.
+//
+// The raw `ws`-based client in `cdp-client.js` connects directly to the
+// `webSocketDebuggerUrl` from `/json/list`, sets explicit `Origin` /
+// `Host` headers, and logs the upgrade response on failure so we can
+// debug rather than guess.
 //
 // Scope: signup against the live dev backend, create a team, then create
 // a post + space via REST issued from inside the WebView. Verifies the
@@ -17,7 +26,7 @@
 // tauri.localhost.
 
 import { test, expect } from "@playwright/test";
-import CDP from "chrome-remote-interface";
+import { connectCdp } from "./cdp-client.js";
 
 const CDP_HOST = "localhost";
 const CDP_PORT = Number(process.env.TAURI_CDP_PORT || 9223);
@@ -145,25 +154,12 @@ function waitForSelector(selector, opts = {}) {
 // ── Test ─────────────────────────────────────────────────────────────────
 
 test.beforeAll(async () => {
-  // Connect to the first page target the WebView exposes. CI sets up
-  // `adb forward tcp:9223 localabstract:webview_devtools_remote_<pid>`
+  // CI sets up `adb forward tcp:9223 localabstract:webview_devtools_remote_<pid>`
   // before this spec runs, so the WebView's CDP is reachable via
-  // `localhost:9223`. Resolve the target ID via HTTP first, then connect
-  // via that explicit ID — passing a filter callback has been flaky on
-  // Android WebView (occasional "socket hang up" mid-handshake).
-  const targets = await CDP.List({ host: CDP_HOST, port: CDP_PORT });
-  const pageTarget = targets.find((t) => t.type === "page");
-  if (!pageTarget) {
-    throw new Error(
-      `no page target in WebView devtools; targets: ${JSON.stringify(targets)}`,
-    );
-  }
-  console.log(`Connecting to WebView page target: ${pageTarget.id}`);
-  client = await CDP({
-    host: CDP_HOST,
-    port: CDP_PORT,
-    target: pageTarget.id,
-  });
+  // `localhost:9223`. `connectCdp` will fetch `/json/list`, pick the
+  // first page target, and connect to its `webSocketDebuggerUrl`
+  // directly via raw `ws`. Logs the upgrade response on failure.
+  client = await connectCdp({ host: CDP_HOST, port: CDP_PORT });
   await client.Runtime.enable();
   await client.Page.enable();
 
