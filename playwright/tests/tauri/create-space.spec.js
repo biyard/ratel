@@ -122,32 +122,77 @@ async function fillSelector(selector, value) {
   if (!success) throw new Error(`selector not found for fill: ${selector}`);
 }
 
-/** Click an element by its visible text (button/link/etc.). */
+/**
+ * Click an element by its visible text. Filters out hidden + disabled
+ * candidates because the Tauri WebView (Chromium 113) swallows click
+ * events on `disabled` buttons and on `display: none` elements — Dioxus
+ * never sees the onclick. Polls so an in-flight async handler (which
+ * temporarily flips `disabled`) doesn't break the click.
+ */
 async function clickByText(text, opts = {}) {
   const exact = opts.exact ?? false;
-  const escaped = JSON.stringify(text);
-  const success = await evalJs(`
+  const timeout = opts.timeout ?? 15_000;
+  const target = JSON.stringify(text);
+  const finder = `
     (() => {
-      const target = ${escaped};
+      const t0 = ${target};
       const els = [...document.querySelectorAll('button, a, [role="button"]')];
       const match = els.find((el) => {
         const t = (el.textContent || '').trim();
-        return ${exact} ? t === target : t.includes(target);
+        const textOk = ${exact} ? t === t0 : t.includes(t0);
+        if (!textOk) return false;
+        if (el.disabled) return false;
+        if (el.offsetParent === null && getComputedStyle(el).position !== 'fixed') return false;
+        return true;
       });
       if (!match) return false;
       match.click();
       return true;
     })()
-  `);
-  if (!success) throw new Error(`element with text "${text}" not found`);
+  `;
+  const deadline = Date.now() + timeout;
+  let lastErr;
+  while (Date.now() < deadline) {
+    try {
+      if (await evalJs(finder)) return;
+    } catch (e) {
+      lastErr = e;
+    }
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  throw new Error(
+    `clickByText timed out for "${text}"${lastErr ? `: ${lastErr.message}` : ""}`,
+  );
 }
 
-/** Wait for an element matching selector to exist. */
+/** Wait for an element matching selector to exist (not necessarily visible). */
 function waitForSelector(selector, opts = {}) {
   const escaped = selector.replace(/\\/g, "\\\\").replace(/`/g, "\\`");
   return waitFor(
     `!!document.querySelector(\`${escaped}\`)`,
     { ...opts, label: `selector "${selector}"` },
+  );
+}
+
+/**
+ * Wait for an element matching selector to be visible (rendered, not
+ * `display: none` / `visibility: hidden`, not a zero-size box). The
+ * Dioxus signup modal keeps the verification-code row in the DOM at all
+ * times but hides it via `aria-hidden:hidden` (a Tailwind variant that
+ * applies `display: none`). `waitForSelector` returns instantly because
+ * the input is present; this helper waits until it's actually shown.
+ */
+function waitForVisible(selector, opts = {}) {
+  const escaped = selector.replace(/\\/g, "\\\\").replace(/`/g, "\\`");
+  return waitFor(
+    `(() => {
+      const el = document.querySelector(\`${escaped}\`);
+      if (!el) return false;
+      if (el.offsetParent === null) return false;
+      const rect = el.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    })()`,
+    { ...opts, label: `visible "${selector}"` },
   );
 }
 
@@ -190,7 +235,16 @@ test("tauri smoke: signup → team → post → space", async () => {
     user.email,
   );
   await clickByText("Send", { exact: true });
-  await waitForSelector('input[placeholder="Enter the verification code"]');
+  // The verification-code input/Verify-button row is always in the DOM
+  // but hidden via aria-hidden until `sent_code = true` (after the
+  // send-code-handler request resolves). Waiting for visibility avoids
+  // the race where the spec fills + clicks Verify while the row is
+  // still hidden (Verify is also `disabled: loading()` during that
+  // window — disabled buttons swallow click events in Chromium).
+  await waitForVisible(
+    'input[placeholder="Enter the verification code"]',
+    { timeout: 30_000 },
+  );
   await fillSelector(
     'input[placeholder="Enter the verification code"]',
     "000000",
