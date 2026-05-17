@@ -3482,8 +3482,8 @@
                       <circle cx="9" cy="7" r="4" /></svg
                   ></span>
                   <div class="agg-row__body">
-                    <span class="agg-row__title">@climate · 팔로워 수 추이</span
-                    ><span class="agg-row__meta">매칭 팔로워 · 312명</span>
+                    <span class="agg-row__title">@climate · 매칭 응답자 중 팔로워 비율</span
+                    ><span class="agg-row__meta">312 팔로워 / 936 비팔로워 (총 1,248)</span>
                   </div>
                 </div>
               </div>
@@ -4173,14 +4173,45 @@
         };
         const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
 
-        // Mock row data for this aggregate
-        const rows = [
-          { label: "탄소 상쇄", count: 798, pct: 64.0, color: "#a855f7" },
-          { label: "재생에너지", count: 274, pct: 22.0, color: "#c084fc" },
-          { label: "규제 강화", count: 87, pct: 7.0, color: "#d8b4fe" },
-          { label: "해외 협약", count: 50, pct: 4.0, color: "#e9d5ff" },
-          { label: "시민 교육", count: 39, pct: 3.0, color: "#f3e8ff" },
-        ];
+        // Mock row data — shape depends on the source. Poll/Quiz are
+        // categorical answers; Follow is binary (follower vs not);
+        // Discussion is per-discussion comment counts; KPI is a single
+        // bucket (Bar/Pie/Table still renders one row at 100%).
+        const rowsFor = (p) => {
+          if (p.source === "follow") {
+            return [
+              { label: "팔로워",    count: 312, pct: 25.0, color: "#a855f7" },
+              { label: "비팔로워",  count: 936, pct: 75.0, color: "#d8b4fe" },
+            ];
+          }
+          if (p.source === "quiz") {
+            return [
+              { label: "정답",      count: 836, pct: 67.0, color: "#a855f7" },
+              { label: "오답",      count: 412, pct: 33.0, color: "#d8b4fe" },
+            ];
+          }
+          if (p.source === "discussion") {
+            return [
+              { label: "탄소 상쇄 정책안",   count: 198, pct: 53.8, color: "#a855f7" },
+              { label: "재생에너지 보조금",  count: 112, pct: 30.4, color: "#c084fc" },
+              { label: "시민 교육 캠페인",   count: 58,  pct: 15.8, color: "#d8b4fe" },
+            ];
+          }
+          if (p.source === "kpi") {
+            return [
+              { label: "매칭 응답자", count: 1248, pct: 100.0, color: "#a855f7" },
+            ];
+          }
+          // Default — poll-style categorical distribution
+          return [
+            { label: "탄소 상쇄",   count: 798, pct: 64.0, color: "#a855f7" },
+            { label: "재생에너지", count: 274, pct: 22.0, color: "#c084fc" },
+            { label: "규제 강화",   count: 87,  pct: 7.0,  color: "#d8b4fe" },
+            { label: "해외 협약",   count: 50,  pct: 4.0,  color: "#e9d5ff" },
+            { label: "시민 교육",   count: 39,  pct: 3.0,  color: "#f3e8ff" },
+          ];
+        };
+        const rows = rowsFor(p);
 
         // ── viz markup per type ──
         let viz = "";
@@ -4220,7 +4251,18 @@
                 `<tr><td>${row.label}</td><td class="num">${row.count.toLocaleString()}</td><td class="num">${row.pct.toFixed(1)}%</td></tr>`
             )
             .join("");
-          viz = `<div class="block-chart__table"><table><thead><tr><th>옵션</th><th style="text-align:right">응답 수</th><th style="text-align:right">비율</th></tr></thead><tbody>${trs}</tbody></table></div>`;
+          // Column headers — first column varies by source so the
+          // chart caption reads naturally for poll/quiz/follow/etc.
+          const firstColMap = {
+            poll: "옵션",
+            quiz: "결과",
+            follow: "상태",
+            discussion: "토론",
+            kpi: "지표",
+          };
+          const firstCol = firstColMap[p.source] || "옵션";
+          const countCol = p.source === "follow" ? "인원" : "응답 수";
+          viz = `<div class="block-chart__table"><table><thead><tr><th>${firstCol}</th><th style="text-align:right">${countCol}</th><th style="text-align:right">비율</th></tr></thead><tbody>${trs}</tbody></table></div>`;
         }
 
         // Source pill colors
