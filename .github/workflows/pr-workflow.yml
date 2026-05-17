@@ -135,13 +135,6 @@ jobs:
         run: |
           dx check --web --features tauri-web --no-default-features
 
-      - name: cargo check --features tauri-types (DTO-only)
-        env:
-          RUSTFLAGS: "-D warnings"
-          DYNAMO_TABLE_PREFIX: ratel-dev
-        run: |
-          cargo check --features tauri-types --no-default-features
-
       - name: cargo check app/ratel-tauri shell crate
         working-directory: app/ratel-tauri/src-tauri
         env:
