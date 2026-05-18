@@ -404,7 +404,7 @@
         z-index: 10;
         flex: 1;
         display: grid;
-        grid-template-columns: 1fr 240px;
+        grid-template-columns: 1fr 280px;
         gap: 0;
         overflow: hidden;
       }
@@ -1414,8 +1414,8 @@
 
       .picker-body {
         flex: 1;
-        display: grid;
-        grid-template-columns: 280px 1fr;
+        display: flex;
+        flex-direction: column;
         min-height: 0;
         overflow: hidden;
       }
@@ -1640,6 +1640,409 @@
         margin-right: 4px;
         font-size: 14px;
       }
+      /* Slash-command autocomplete popup (multi-level data:source:item) */
+      .slash-pop {
+        position: fixed;
+        z-index: 220;
+        min-width: 320px;
+        max-width: 420px;
+        max-height: 320px;
+        overflow: hidden;
+        background: linear-gradient(160deg, rgba(22, 22, 38, 0.98), rgba(10, 10, 20, 0.99));
+        border: 1px solid var(--border-strong);
+        border-radius: 12px;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55), 0 0 22px rgba(168, 85, 247, 0.08);
+        display: flex;
+        flex-direction: column;
+      }
+      .slash-pop[hidden] { display: none; }
+      .slash-pop__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--border-subtle);
+        background: rgba(0, 0, 0, 0.18);
+      }
+      .slash-pop__heading {
+        font-family: var(--font-display);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--report-color);
+      }
+      .slash-pop__hint {
+        font-size: 10px;
+        color: var(--text-dim);
+        letter-spacing: 0.04em;
+      }
+      .slash-pop__list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 4px;
+      }
+      .slash-item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 8px 10px;
+        border-radius: 7px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        color: var(--text-muted);
+        text-align: left;
+        width: 100%;
+      }
+      .slash-item:hover { background: rgba(255, 255, 255, 0.04); color: var(--text-primary); }
+      .slash-item[aria-selected="true"] {
+        background: rgba(168, 85, 247, 0.10);
+        outline: 1px solid var(--report-border);
+        color: var(--report-color);
+      }
+      .slash-item__title {
+        font-size: 13px;
+        font-weight: 600;
+        color: inherit;
+        font-family: var(--font-display);
+        letter-spacing: 0.02em;
+      }
+      .slash-item[aria-selected="true"] .slash-item__title { color: var(--report-color); }
+      .slash-item__meta {
+        font-size: 11px;
+        color: var(--text-dim);
+        line-height: 1.4;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .slash-pop__empty {
+        padding: 14px 12px;
+        text-align: center;
+        font-size: 12px;
+        color: var(--text-dim);
+      }
+
+      /* Chart-type swap rendered INSIDE the existing Outline sidebar —
+         the default Outline + Meta content is hidden while swap is
+         active. Compact one-row-per-type list so the sidebar width
+         (240px) stays comfortable. */
+      .outline-swap__head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .outline-swap__title-col {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+        flex: 1;
+      }
+      .outline-swap__eyebrow {
+        font-family: var(--font-display);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--report-color);
+      }
+      .outline-swap__title {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--text-primary);
+        line-height: 1.35;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+      .outline-swap__close {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        background: transparent;
+        border: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-muted);
+        flex-shrink: 0;
+        padding: 0;
+      }
+      .outline-swap__close:hover { color: var(--text-primary); border-color: var(--border-strong); }
+      .outline-swap__close svg { width: 12px; height: 12px; }
+      .outline-swap__list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+      .outline-swap__opt {
+        aspect-ratio: 1 / 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px;
+        border-radius: 11px;
+        border: 1px solid var(--border-subtle);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--text-muted);
+        font-family: var(--font-display);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.14s;
+        text-align: center;
+      }
+      .outline-swap__opt:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+        border-color: var(--border-strong);
+        transform: translateY(-1px);
+      }
+      .outline-swap__opt[aria-pressed="true"] {
+        background: linear-gradient(160deg, rgba(168, 85, 247, 0.16), rgba(168, 85, 247, 0.04));
+        border-color: var(--report-color);
+        color: var(--report-color);
+        box-shadow: 0 0 14px var(--report-glow);
+      }
+      .outline-swap__opt svg {
+        width: 28px;
+        height: 28px;
+        flex-shrink: 0;
+        color: var(--text-muted);
+        transition: color 0.14s;
+      }
+      .outline-swap__opt:hover svg {
+        color: var(--text-primary);
+      }
+      .outline-swap__opt[aria-pressed="true"] svg {
+        color: var(--report-color);
+      }
+      .outline-swap__hint {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border-subtle);
+        font-size: 10.5px;
+        color: var(--text-dim);
+        line-height: 1.5;
+      }
+      /* Active chart block gets a subtle highlight while swap mode is on */
+      .doc-block[data-swap-active="true"] .block-chart {
+        outline: 2px solid var(--report-color);
+        outline-offset: 4px;
+      }
+
+      /* Analyze selector — pick which analyze report's aggregates show */
+      .picker-analyze {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 22px 12px;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .picker-analyze__label {
+        font-family: var(--font-display);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        flex-shrink: 0;
+      }
+      .picker-analyze__trigger {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-primary);
+        font-size: 13.5px;
+        font-weight: 600;
+        cursor: pointer;
+        text-align: left;
+        transition: all 0.16s;
+      }
+      .picker-analyze__trigger:hover,
+      .picker-analyze[data-open="true"] .picker-analyze__trigger {
+        background: rgba(168, 85, 247, 0.06);
+        border-color: var(--report-border);
+      }
+      .picker-analyze__trigger svg {
+        width: 13px;
+        height: 13px;
+        color: var(--text-muted);
+        transition: transform 0.18s;
+        flex-shrink: 0;
+      }
+      .picker-analyze[data-open="true"] .picker-analyze__trigger svg {
+        transform: rotate(180deg);
+        color: var(--report-color);
+      }
+      .picker-analyze__menu {
+        position: absolute;
+        top: calc(100% - 8px);
+        left: 22px;
+        right: 22px;
+        z-index: 60;
+        max-height: 280px;
+        overflow-y: auto;
+        padding: 6px;
+        border-radius: 11px;
+        background: linear-gradient(160deg, rgba(22, 22, 38, 0.99), rgba(10, 10, 20, 0.99));
+        border: 1px solid var(--border-strong);
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+        display: none;
+        flex-direction: column;
+        gap: 1px;
+      }
+      .picker-analyze[data-open="true"] .picker-analyze__menu {
+        display: flex;
+      }
+      .picker-analyze__opt {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        padding: 9px 11px;
+        border-radius: 8px;
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        text-align: left;
+        cursor: pointer;
+      }
+      .picker-analyze__opt:hover {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-primary);
+      }
+      .picker-analyze__opt[aria-selected="true"] {
+        background: rgba(168, 85, 247, 0.10);
+        color: var(--report-color);
+      }
+      .picker-analyze__opt-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: inherit;
+      }
+      .picker-analyze__opt-meta {
+        font-size: 10.5px;
+        color: var(--text-dim);
+        letter-spacing: 0.04em;
+      }
+      /* Cross-filter chips: shown under each analyze in dropdown + slash popup.
+         Each chip = small source badge (Poll/Quiz/...) + 선지/키워드 label. */
+      .xf-chips {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px;
+        margin-top: 4px;
+      }
+      .xf-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 1px 6px 1px 1px;
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        font-size: 10px;
+        line-height: 1.4;
+        color: var(--text-muted);
+        max-width: 100%;
+      }
+      .xf-chip__src {
+        font-size: 8.5px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 1px 5px;
+        border-radius: 5px;
+      }
+      .xf-chip[data-source="poll"]       .xf-chip__src { background: var(--poll-bg);       color: var(--poll-color); }
+      .xf-chip[data-source="quiz"]       .xf-chip__src { background: var(--quiz-bg);       color: var(--quiz-color); }
+      .xf-chip[data-source="discussion"] .xf-chip__src { background: rgba(96,165,250,0.12); color: var(--discussion-color); }
+      .xf-chip[data-source="follow"]     .xf-chip__src { background: rgba(249,115,22,0.12); color: var(--follow-color); }
+      .xf-chip__label {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 140px;
+      }
+      .xf-sep {
+        font-size: 10px;
+        color: var(--text-dim);
+        opacity: 0.6;
+        margin: 0 -1px;
+      }
+
+      /* Action-type tabs above the list — Poll / Quiz / Discussion / Follow */
+      .picker-detail__tabs {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--border-subtle);
+        background: rgba(0, 0, 0, 0.18);
+      }
+      .picker-tab {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 18px 12px;
+        border: 1px solid var(--border-subtle);
+        background: rgba(255, 255, 255, 0.025);
+        color: var(--text-muted);
+        font-family: var(--font-display);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.10em;
+        text-transform: uppercase;
+        cursor: pointer;
+        border-radius: 12px;
+        transition: all 0.16s;
+      }
+      .picker-tab svg {
+        width: 22px;
+        height: 22px;
+        color: var(--text-muted);
+        transition: color 0.16s;
+      }
+      .picker-tab:hover {
+        color: var(--text-primary);
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--border-strong);
+      }
+      .picker-tab:hover svg {
+        color: var(--text-primary);
+      }
+      .picker-tab--active {
+        color: var(--report-color);
+        background: linear-gradient(160deg, rgba(168, 85, 247, 0.18), rgba(168, 85, 247, 0.04));
+        border-color: var(--report-color);
+        box-shadow: 0 0 18px var(--report-glow);
+      }
+      .picker-tab--active svg {
+        color: var(--report-color);
+      }
       .picker-detail__list {
         flex: 1;
         overflow-y: auto;
@@ -1652,6 +2055,10 @@
         display: flex;
         flex-direction: column;
         gap: 6px;
+      }
+      /* Tab show/hide — only the group matching active source renders */
+      .picker-detail__group[hidden] {
+        display: none !important;
       }
       .picker-detail__group-label {
         font-family: var(--font-display);
@@ -2620,7 +3027,10 @@
               </div>
             </div>
 
-            <div class="doc-block" data-type="chart">
+            <div class="doc-block" data-type="chart" data-source="poll" data-chart-type="bar"
+                 data-analyze-name="정책 우선순위 응답자 분석"
+                 data-aggregate-title="Q1: 가장 시급한 정책은?"
+                 data-aggregate-meta="5 옵션 · 매칭 응답 1,248">
               <button class="doc-block__handle" aria-label="블록 옵션">
                 <svg
                   viewBox="0 0 24 24"
@@ -2666,18 +3076,11 @@
                       Q1: 가장 시급한 정책은?
                     </div>
                     <div class="block-chart__actions">
+                      <button class="block-chart__icon-btn" aria-label="차트 종류 변경">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                      </button>
                       <button class="block-chart__icon-btn" aria-label="삭제">
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                        >
-                          <polyline points="3 6 5 6 21 6" />
-                          <path
-                            d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"
-                          />
-                        </svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
                       </button>
                     </div>
                   </div>
@@ -2855,23 +3258,42 @@
         <!-- OUTLINE — auto-generated from H1/H2/H3 + chart blocks in the doc.
            Click a row → scrolls the matching block into view. Updates
            live via MutationObserver as the user types / inserts blocks. -->
-        <aside class="reports-outline">
-          <div class="reports-outline__heading">Outline</div>
-          <div class="reports-outline__list" id="outline-list">
-            <!-- populated by JS -->
+        <aside class="reports-outline" id="reports-outline">
+          <!-- Default mode: Outline + Meta -->
+          <div class="reports-outline__default">
+            <div class="reports-outline__heading">Outline</div>
+            <div class="reports-outline__list" id="outline-list">
+              <!-- populated by JS -->
+            </div>
+            <div class="reports-outline__divider"></div>
+            <div class="reports-outline__heading">Meta</div>
+            <div class="reports-outline__meta">
+              <div class="reports-outline__meta-row">
+                <span>Author</span><span>@lee</span>
+              </div>
+              <div class="reports-outline__meta-row">
+                <span>Created</span><span>3d ago</span>
+              </div>
+              <div class="reports-outline__meta-row">
+                <span>Edited</span><span>방금</span>
+              </div>
+            </div>
           </div>
-          <div class="reports-outline__divider"></div>
-          <div class="reports-outline__heading">Meta</div>
-          <div class="reports-outline__meta">
-            <div class="reports-outline__meta-row">
-              <span>Author</span><span>@lee</span>
+
+          <!-- Swap mode: chart-type selector for the active chart block.
+               Replaces Outline+Meta when the user clicks a gear icon. -->
+          <div class="reports-outline__swap" id="outline-swap" hidden>
+            <div class="outline-swap__head">
+              <div class="outline-swap__title-col">
+                <span class="outline-swap__eyebrow">차트 종류 변경</span>
+                <span class="outline-swap__title" id="outline-swap-title">차트</span>
+              </div>
+              <button class="outline-swap__close" id="outline-swap-close" aria-label="닫기">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
             </div>
-            <div class="reports-outline__meta-row">
-              <span>Created</span><span>3d ago</span>
-            </div>
-            <div class="reports-outline__meta-row">
-              <span>Edited</span><span>방금</span>
-            </div>
+            <div class="outline-swap__list" id="outline-swap-list"></div>
+            <div class="outline-swap__hint">선택 즉시 본문 차트가 교체됩니다</div>
           </div>
         </aside>
       </div>
@@ -3081,194 +3503,39 @@
         </div>
 
         <div class="picker-body">
-          <div class="picker-master">
-            <div class="picker-master__search">
-              <span class="picker-master__search-icon"
-                ><svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <circle cx="11" cy="11" r="7" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" /></svg
-              ></span>
-              <input
-                class="picker-master__search-input"
-                placeholder="분석 이름으로 검색…"
-              />
-            </div>
-            <div class="picker-master__label">
-              <span>Analyses</span
-              ><span class="picker-master__label-count"
-                >4 done · 1 running</span
-              >
-            </div>
-            <div class="picker-master__list" id="analyze-list">
-              <div class="analyze-row" data-analyze="a1" aria-selected="true">
-                <div class="analyze-row__top">
-                  <span class="analyze-row__name"
-                    >정책 우선순위 응답자 분석</span
-                  ><span class="analyze-row__status analyze-row__status--done"
-                    >Done</span
-                  >
-                </div>
-                <div class="analyze-row__meta">
-                  <span
-                    ><svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                      <circle cx="9" cy="7" r="4" /></svg
-                    >1,248명</span
-                  ><span>· 3d ago</span>
-                </div>
-                <div class="analyze-row__filters">
-                  <span class="filter-chip" data-source="poll">Poll · 탄소</span
-                  ><span class="filter-chip" data-source="quiz"
-                    >Quiz · 정책</span
-                  ><span class="filter-chip" data-source="discussion"
-                    >Discuss</span
-                  ><span class="filter-chip" data-source="follow">Follow</span>
-                </div>
-              </div>
-              <div class="analyze-row" data-analyze="a2">
-                <div class="analyze-row__top">
-                  <span class="analyze-row__name">참여자 페르소나 분류</span
-                  ><span class="analyze-row__status analyze-row__status--done"
-                    >Done</span
-                  >
-                </div>
-                <div class="analyze-row__meta">
-                  <span
-                    ><svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                      <circle cx="9" cy="7" r="4" /></svg
-                    >2,104명</span
-                  ><span>· 1w ago</span>
-                </div>
-                <div class="analyze-row__filters">
-                  <span class="filter-chip" data-source="follow"
-                    >Follow · 4</span
-                  ><span class="filter-chip" data-source="poll">Poll</span>
-                </div>
-              </div>
-              <div class="analyze-row" data-analyze="a3">
-                <div class="analyze-row__top">
-                  <span class="analyze-row__name"
-                    >정책 이해도 퀴즈 통과율 분석</span
-                  ><span class="analyze-row__status analyze-row__status--done"
-                    >Done</span
-                  >
-                </div>
-                <div class="analyze-row__meta">
-                  <span
-                    ><svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                      <circle cx="9" cy="7" r="4" /></svg
-                    >684명</span
-                  ><span>· 5d ago</span>
-                </div>
-                <div class="analyze-row__filters">
-                  <span class="filter-chip" data-source="quiz">Quiz · 10Q</span>
-                </div>
-              </div>
-              <div class="analyze-row" data-analyze="a4">
-                <div class="analyze-row__top">
-                  <span class="analyze-row__name">탄소 상쇄 투표 응답자</span
-                  ><span class="analyze-row__status analyze-row__status--done"
-                    >Done</span
-                  >
-                </div>
-                <div class="analyze-row__meta">
-                  <span
-                    ><svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                      <circle cx="9" cy="7" r="4" /></svg
-                    >892명</span
-                  ><span>· 2w ago</span>
-                </div>
-                <div class="analyze-row__filters">
-                  <span class="filter-chip" data-source="poll"
-                    >Poll · 탄소</span
-                  >
-                </div>
-              </div>
-              <div class="analyze-row" data-analyze="a5">
-                <div class="analyze-row__top">
-                  <span class="analyze-row__name">신규 가입자 행동 패턴</span
-                  ><span
-                    class="analyze-row__status analyze-row__status--running"
-                    >Running</span
-                  >
-                </div>
-                <div class="analyze-row__meta">
-                  <span>대기 중</span><span>· 5h ago</span>
-                </div>
-                <div class="analyze-row__filters">
-                  <span class="filter-chip" data-source="follow">Follow</span
-                  ><span class="filter-chip" data-source="discussion"
-                    >Discuss</span
-                  >
-                </div>
-              </div>
-            </div>
-          </div>
 
           <div class="picker-detail" id="picker-detail">
-            <div class="picker-detail__head">
-              <span class="picker-detail__breadcrumb"
-                ><svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <circle cx="12" cy="12" r="3" /></svg
-                >Aggregates · 분석에서 차트로 뽑을 수 있는 데이터</span
-              >
-              <div class="picker-detail__name">정책 우선순위 응답자 분석</div>
-              <div class="picker-detail__filters">
-                <span class="filter-chip" data-source="poll"
-                  >Poll · 탄소 상쇄에 동의</span
-                >
-                <span class="filter-chip" data-source="quiz"
-                  >Quiz · 정책 이해 80%+</span
-                >
-                <span class="filter-chip" data-source="discussion"
-                  >Discuss · 1+ 댓글</span
-                >
-                <span class="filter-chip" data-source="follow"
-                  >Follow · @climate</span
-                >
-              </div>
-              <div class="picker-detail__stats">
-                <span><strong>1,248</strong>매칭 응답자</span
-                ><span><strong>4</strong>filters</span
-                ><span><strong>3d ago</strong>완료</span>
-              </div>
+
+            <!-- Analyze selector — pick which analyze report's aggregates show -->
+            <div class="picker-analyze" id="picker-analyze" data-open="false">
+              <span class="picker-analyze__label">분석 선택</span>
+              <button class="picker-analyze__trigger" id="picker-analyze-trigger" type="button" aria-haspopup="listbox">
+                <span class="picker-analyze__current" id="picker-analyze-current">정책 우선순위 응답자 분석</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="picker-analyze__menu" id="picker-analyze-menu" role="listbox"></div>
             </div>
 
-            <div class="picker-detail__list">
-              <div class="picker-detail__group">
+            <div class="picker-detail__tabs" role="tablist">
+              <button class="picker-tab picker-tab--active" data-source="poll" role="tab" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                <span>Poll · 2</span>
+              </button>
+              <button class="picker-tab" data-source="quiz" role="tab" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>Quiz · 3</span>
+              </button>
+              <button class="picker-tab" data-source="discussion" role="tab" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <span>Discussion · 3</span>
+              </button>
+              <button class="picker-tab" data-source="follow" role="tab" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                <span>Follow · 1</span>
+              </button>
+            </div>
+            <div class="picker-detail__list" data-active-source="poll">
+              <div class="picker-detail__group" data-source="kpi" hidden>
                 <div class="picker-detail__group-label">Overall</div>
                 <div class="agg-row" data-kind="kpi">
                   <span class="agg-row__icon" data-source="kpi"
@@ -3291,9 +3558,9 @@
                   <span class="agg-row__keys"><kbd>↵</kbd></span>
                 </div>
               </div>
-              <div class="picker-detail__group">
+              <div class="picker-detail__group" data-source="poll">
                 <div class="picker-detail__group-label">
-                  Poll Aggregates · 2
+                  Poll · 질문 선택 시 표 형태로 삽입 (블록의 톱니바퀴로 차트 종류 변경)
                 </div>
                 <div class="agg-row" data-kind="poll-q">
                   <span class="agg-row__icon" data-source="poll"
@@ -3330,9 +3597,9 @@
                   </div>
                 </div>
               </div>
-              <div class="picker-detail__group">
+              <div class="picker-detail__group" data-source="quiz" hidden>
                 <div class="picker-detail__group-label">
-                  Quiz Aggregates · 3
+                  Quiz · 문항 선택 시 표 형태로 삽입 (블록의 톱니바퀴로 차트 종류 변경)
                 </div>
                 <div class="agg-row" data-kind="quiz-q">
                   <span class="agg-row__icon" data-source="quiz"
@@ -3386,9 +3653,9 @@
                   </div>
                 </div>
               </div>
-              <div class="picker-detail__group">
+              <div class="picker-detail__group" data-source="discussion" hidden>
                 <div class="picker-detail__group-label">
-                  Discussions · 토론 선택 → LDA / TF-IDF / Network 중 선택
+                  Discussion · 토론 선택 시 표 형태로 삽입 (블록의 톱니바퀴로 LDA / TF-IDF / Network 변경)
                 </div>
                 <div
                   class="agg-row"
@@ -3466,9 +3733,9 @@
                   <span class="agg-row__keys"><kbd>→</kbd></span>
                 </div>
               </div>
-              <div class="picker-detail__group">
+              <div class="picker-detail__group" data-source="follow" hidden>
                 <div class="picker-detail__group-label">
-                  Follow Aggregates · 1
+                  Follow · 항목 선택 시 표 형태로 삽입 (블록의 톱니바퀴로 차트 종류 변경)
                 </div>
                 <div class="agg-row" data-kind="follow">
                   <span class="agg-row__icon" data-source="follow"
@@ -3493,8 +3760,7 @@
 
         <div class="picker-panel__footer">
           <span class="picker-panel__footer-hint"
-            ><kbd>↑</kbd><kbd>↓</kbd> 이동 · <kbd>↵</kbd> 선택 ·
-            <kbd>esc</kbd> 닫기</span
+            ><kbd>esc</kbd> 닫기</span
           >
           <span>집계 클릭 → 차트 종류 선택</span>
         </div>
@@ -3688,6 +3954,16 @@
           <span>3 outputs</span>
         </div>
       </div>
+    </div>
+
+    <!-- Slash-command autocomplete popup — appears at the caret while
+         typing `/`. Multi-level: command → source → item. -->
+    <div class="slash-pop" id="slash-pop" role="listbox" hidden>
+      <div class="slash-pop__head">
+        <span class="slash-pop__heading" id="slash-pop-heading">COMMAND</span>
+        <span class="slash-pop__hint">↑↓ 이동 · ↵ 선택 · esc 닫기</span>
+      </div>
+      <div class="slash-pop__list" id="slash-pop-list"></div>
     </div>
 
     <!-- CHART TYPE PICKER -->
@@ -4087,52 +4363,292 @@
       });
 
       // ─── Pending pick state (analyze name + aggregate) ──
+      // Shared mock analyze list — used by both the picker's analyze
+      // dropdown and the slash-command autocomplete. Each analyze has
+      // its own items per source so swapping analyzes refreshes the
+      // tab counts + visible aggregates.
+      const ANALYZES = [
+        {
+          id: "정책_우선순위", name: "정책 우선순위 응답자 분석", respondents: 1248,
+          filters: [
+            { source: "poll",     label: "탄소세 도입" },
+            { source: "poll",     label: "재생에너지 확대" },
+            { source: "quiz",     label: "정답" },
+          ],
+          items: {
+            poll: [
+              { id: "시급한_정책", title: "Q1: 가장 시급한 정책은?", meta: "5 옵션 · 매칭 응답 1,248" },
+              { id: "시행_시점",   title: "Q2: 정책 시행 시점은?",   meta: "4 옵션 · 매칭 응답 1,201" },
+            ],
+            quiz: [
+              { id: "탄소_정의",   title: "Q1: 탄소 상쇄의 정의는?",   meta: "통과율 · 정답률 · 분포" },
+              { id: "재생_산식",   title: "Q2: 재생에너지 비율 산식",  meta: "통과율 67% · 매칭 응답 684" },
+              { id: "협약_체결국", title: "Q3: 국제 협약 체결국",      meta: "통과율 41% · 매칭 응답 684" },
+            ],
+            discussion: [
+              { id: "탄소_상쇄",   title: "탄소 상쇄 정책안",   meta: "198 매칭 댓글" },
+              { id: "재생_보조금", title: "재생에너지 보조금", meta: "112 매칭 댓글" },
+              { id: "시민_교육",   title: "시민 교육 캠페인", meta: "58 매칭 댓글" },
+            ],
+            follow: [
+              { id: "climate", title: "@climate · 매칭 응답자 중 팔로워 비율", meta: "312 팔로워 / 936 비팔로워" },
+            ],
+          },
+        },
+        {
+          id: "참여자_페르소나", name: "참여자 페르소나 분류", respondents: 2104,
+          filters: [
+            { source: "poll",   label: "20대" },
+            { source: "poll",   label: "30대" },
+            { source: "follow", label: "@climate_kr" },
+          ],
+          items: {
+            poll: [
+              { id: "연령대_분포", title: "Q: 연령대 분포",  meta: "4 옵션 · 매칭 응답 2,104" },
+            ],
+            quiz: [],
+            discussion: [],
+            follow: [
+              { id: "climate_kr", title: "@climate_kr", meta: "892 매칭 팔로워" },
+              { id: "energy_kr",  title: "@energy_kr",  meta: "534 매칭 팔로워" },
+              { id: "green_seoul",title: "@green_seoul", meta: "418 매칭 팔로워" },
+              { id: "eco_action", title: "@eco_action", meta: "260 매칭 팔로워" },
+            ],
+          },
+        },
+        {
+          id: "퀴즈_통과율", name: "정책 이해도 퀴즈 통과율 분석", respondents: 684,
+          filters: [
+            { source: "quiz", label: "정답" },
+          ],
+          items: {
+            poll: [],
+            quiz: [
+              { id: "탄소_정의",  title: "Q1: 탄소 상쇄의 정의?",    meta: "통과율 67% · 응시 684" },
+              { id: "재생_산식",  title: "Q2: 재생에너지 비율 산식", meta: "통과율 58% · 응시 684" },
+              { id: "협약_가입",  title: "Q3: 국제 협약 가입국",     meta: "통과율 41% · 응시 684" },
+              { id: "감축_목표",  title: "Q4: 2030 감축 목표",       meta: "통과율 72% · 응시 684" },
+            ],
+            discussion: [],
+            follow: [],
+          },
+        },
+        {
+          id: "탄소_상쇄_투표", name: "탄소 상쇄 투표 응답자", respondents: 892,
+          filters: [
+            { source: "poll",       label: "탄소 상쇄 찬성" },
+            { source: "discussion", label: "탄소세" },
+            { source: "follow",     label: "@climate" },
+          ],
+          items: {
+            poll: [
+              { id: "탄소_옵션", title: "Q: 탄소 상쇄 정책 선호", meta: "3 옵션 · 매칭 응답 892" },
+            ],
+            quiz: [],
+            discussion: [
+              { id: "정책_토의", title: "탄소 상쇄 정책 토의", meta: "342 매칭 댓글" },
+            ],
+            follow: [],
+          },
+        },
+      ];
+
+      // Currently selected analyze id — drives picker tab counts + items
+      // and the level-2/3 slash autocomplete options.
+      let activeAnalyzeId = ANALYZES[0].id;
+      const getActiveAnalyze = () =>
+        ANALYZES.find((a) => a.id === activeAnalyzeId) || ANALYZES[0];
+
+      // Source → badge label mapping (matches analyze-create-arena chip).
+      const XF_SRC_LABEL = {
+        poll: "Poll", quiz: "Quiz", discussion: "Discussion", follow: "Follow",
+      };
+      // Render an analyze's cross-filter chips (intersection of action+선지).
+      // Returns empty string when the analyze has no filters (analyze ran
+      // against the full audience).
+      function renderXfChips(filters) {
+        if (!filters || filters.length === 0) return "";
+        const inner = filters
+          .map(
+            (f) =>
+              `<span class="xf-chip" data-source="${escapeHtml(f.source)}">
+                <span class="xf-chip__src">${escapeHtml(XF_SRC_LABEL[f.source] || f.source)}</span>
+                <span class="xf-chip__label">${escapeHtml(f.label)}</span>
+              </span>`
+          )
+          .join("");
+        return `<span class="xf-chips">${inner}</span>`;
+      }
+
+      const SLASH_L0 = [
+        { id: "data", title: "/data:", hint: "analyze 데이터로 차트 삽입" },
+      ];
+      const SLASH_SOURCES = [
+        { id: "poll", title: "poll", hint: "응답 옵션 분포" },
+        { id: "quiz", title: "quiz", hint: "문항 통과율 / 정답률" },
+        { id: "discussion", title: "discussion", hint: "LDA / TF-IDF / 네트워크" },
+        { id: "follow", title: "follow", hint: "팔로워 / 비팔로워 비율" },
+      ];
+
+      function findAnalyzeByQuery(q) {
+        const ql = (q || "").toLowerCase();
+        if (!ql) return ANALYZES;
+        return ANALYZES.filter(
+          (a) =>
+            a.id.toLowerCase().includes(ql) ||
+            a.name.toLowerCase().includes(ql)
+        );
+      }
+
       let pendingPick = null;
 
-      // Master/detail: row click → select (mockup keeps static detail)
-      document.querySelectorAll("#analyze-list .analyze-row").forEach((row) => {
-        row.addEventListener("click", () => {
+      // ─── Picker analyze dropdown + dynamic re-render ─────────
+      const pickerAnalyze = document.getElementById("picker-analyze");
+      const pickerAnalyzeTrigger = document.getElementById("picker-analyze-trigger");
+      const pickerAnalyzeMenu = document.getElementById("picker-analyze-menu");
+      const pickerAnalyzeCurrent = document.getElementById("picker-analyze-current");
+
+      // Source icon (svg innerHTML) per type, for re-rendering agg rows
+      const SOURCE_ICON_SVG = {
+        poll: '<path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>',
+        quiz: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+        discussion: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+        follow: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>',
+      };
+
+      function renderAnalyzeDropdown() {
+        pickerAnalyzeMenu.innerHTML = ANALYZES.map((a) => {
+          const sel = a.id === activeAnalyzeId ? "true" : "false";
+          const totalItems = SLASH_SOURCES.reduce(
+            (n, s) => n + (a.items[s.id] || []).length,
+            0
+          );
+          return `<button class="picker-analyze__opt" data-analyze-id="${a.id}" aria-selected="${sel}">
+            <span class="picker-analyze__opt-name">${escapeHtml(a.name)}</span>
+            <span class="picker-analyze__opt-meta">응답자 ${a.respondents.toLocaleString()} · 항목 ${totalItems}</span>
+            ${renderXfChips(a.filters)}
+          </button>`;
+        }).join("");
+      }
+
+      function renderPickerForActiveAnalyze() {
+        const a = getActiveAnalyze();
+        pickerAnalyzeCurrent.textContent = a.name;
+        // Update tab counts
+        document.querySelectorAll(".picker-tab").forEach((tab) => {
+          const src = tab.dataset.source;
+          const n = (a.items[src] || []).length;
+          const labelMap = { poll: "Poll", quiz: "Quiz", discussion: "Discussion", follow: "Follow" };
+          const span = tab.querySelector("span");
+          if (span) span.textContent = `${labelMap[src]} · ${n}`;
+          // Disable tabs with 0 items
+          tab.disabled = n === 0;
+          tab.style.opacity = n === 0 ? "0.4" : "";
+        });
+        // Re-render each source group's items
+        SLASH_SOURCES.forEach((s) => {
+          const group = document.querySelector(`.picker-detail__group[data-source="${s.id}"]`);
+          if (!group) return;
+          const items = a.items[s.id] || [];
+          // Wipe existing rows (keep the label)
+          group.querySelectorAll(".agg-row").forEach((r) => r.remove());
+          if (items.length === 0) {
+            group.insertAdjacentHTML(
+              "beforeend",
+              `<div class="agg-row" style="cursor:default;opacity:0.5"><div class="agg-row__body"><span class="agg-row__title">이 분석에 ${s.title} 항목 없음</span></div></div>`
+            );
+          } else {
+            items.forEach((item) => {
+              const dataDiscussion = s.id === "discussion" ? `data-discussion="${escapeHtml(item.title)}"` : "";
+              const html = `<div class="agg-row" data-source="${s.id}" data-id="${escapeHtml(item.id)}" ${dataDiscussion}>
+                <span class="agg-row__icon" data-source="${s.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${SOURCE_ICON_SVG[s.id]}</svg></span>
+                <div class="agg-row__body">
+                  <span class="agg-row__title">${escapeHtml(item.title)}</span>
+                  <span class="agg-row__meta">${escapeHtml(item.meta)}</span>
+                </div>
+              </div>`;
+              group.insertAdjacentHTML("beforeend", html);
+            });
+          }
+        });
+        // Pick a non-empty tab if current tab is empty
+        const activeTab = document.querySelector(".picker-tab--active");
+        if (activeTab && activeTab.disabled) {
+          const firstAvail = Array.from(document.querySelectorAll(".picker-tab")).find((t) => !t.disabled);
+          if (firstAvail) firstAvail.click();
+        }
+      }
+
+      pickerAnalyzeTrigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        pickerAnalyze.dataset.open =
+          pickerAnalyze.dataset.open === "true" ? "false" : "true";
+      });
+      document.addEventListener("click", (e) => {
+        if (!pickerAnalyze.contains(e.target)) {
+          pickerAnalyze.dataset.open = "false";
+        }
+      });
+      pickerAnalyzeMenu.addEventListener("click", (e) => {
+        const opt = e.target.closest(".picker-analyze__opt");
+        if (!opt) return;
+        activeAnalyzeId = opt.dataset.analyzeId;
+        renderAnalyzeDropdown();
+        renderPickerForActiveAnalyze();
+        pickerAnalyze.dataset.open = "false";
+      });
+
+      renderAnalyzeDropdown();
+      renderPickerForActiveAnalyze();
+
+      // Tab switching — show only the group matching active source
+      document.querySelectorAll(".picker-tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          if (tab.disabled) return;
+          const src = tab.dataset.source;
           document
-            .querySelectorAll("#analyze-list .analyze-row")
-            .forEach((r) => r.setAttribute("aria-selected", "false"));
-          row.setAttribute("aria-selected", "true");
+            .querySelectorAll(".picker-tab")
+            .forEach((t) => t.classList.toggle("picker-tab--active", t === tab));
+          document
+            .querySelector(".picker-detail__list")
+            .setAttribute("data-active-source", src);
+          document
+            .querySelectorAll(".picker-detail__group")
+            .forEach((g) => {
+              g.hidden = g.dataset.source !== src;
+            });
         });
       });
-      // Aggregate click → save pick → route by kind:
-      //   poll-q / quiz-q / follow / kpi → chart picker (Bar/Pie/Table)
-      //   discussion → discussion-output picker (LDA / TF-IDF / Network)
-      //   discussion-count → chart picker (count comparison across discussions)
-      document.querySelectorAll(".agg-row").forEach((row) => {
-        row.addEventListener("click", () => {
-          const selectedAnalyze = document.querySelector(
-            '#analyze-list .analyze-row[aria-selected="true"]'
-          );
-          const kind = row.dataset.kind;
-          pendingPick = {
-            analyzeName: selectedAnalyze
-              ? selectedAnalyze
-                  .querySelector(".analyze-row__name")
-                  .textContent.trim()
-              : "정책 우선순위 응답자 분석",
-            aggregateTitle: row
-              .querySelector(".agg-row__title")
-              .textContent.trim(),
-            aggregateMeta: row
-              .querySelector(".agg-row__meta")
-              .textContent.trim(),
-            source: row.querySelector(".agg-row__icon").dataset.source,
-            kind,
-            discussion: row.dataset.discussion || null,
-            comments: row.dataset.comments || null,
-          };
-          close(dataPicker);
-          if (kind === "discussion") {
-            openDiscussionOutputPicker(pendingPick);
-            return;
-          }
-          // Poll / Quiz / Follow / KPI → chart-type picker (Bar/Pie/Table)
-          open(chartPicker);
-        });
+
+      // Aggregate row click — delegated since rows are re-rendered when
+      // analyze changes. Reads the active analyze for the chart's source
+      // attribution so the inserted block reflects the current selection.
+      document.addEventListener("click", (e) => {
+        const row = e.target.closest(".picker-detail__group .agg-row");
+        if (!row) return;
+        if (!row.dataset.source) return; // skip the empty-state placeholder
+        const source = row.dataset.source;
+        const a = getActiveAnalyze();
+        const item = (a.items[source] || []).find(
+          (i) => i.id === row.dataset.id
+        );
+        if (!item) return;
+        const p = {
+          analyzeName: a.name,
+          aggregateTitle: item.title,
+          aggregateMeta: item.meta,
+          source,
+          discussion: source === "discussion" ? item.title : null,
+        };
+        close(dataPicker);
+        if (source === "discussion") {
+          p.aggregateTitle = `${item.title} · LDA 5 토픽`;
+          p.aggregateMeta = (item.meta || "") + " · k=5 토픽, 각 토픽 상위 5 키워드";
+          insertLdaBlock(p);
+        } else {
+          insertChartBlock(p, "table");
+        }
+        pendingPick = null;
       });
       // Chart type click → close picker + insert mock chart block into the doc
       document.querySelectorAll(".chart-type").forEach((btn) => {
@@ -4269,7 +4785,12 @@
         const sourcePillCss = `background:var(--${p.source}-bg);color:var(--${p.source}-color);border:1px solid var(--${p.source}-border)`;
 
         const html = `
-        <div class="doc-block" data-type="chart">
+        <div class="doc-block" data-type="chart"
+             data-source="${p.source}"
+             data-chart-type="${type}"
+             data-analyze-name="${escapeHtml(p.analyzeName)}"
+             data-aggregate-title="${escapeHtml(p.aggregateTitle)}"
+             data-aggregate-meta="${escapeHtml(p.aggregateMeta)}">
           <button class="doc-block__handle" aria-label="블록 옵션"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg></button>
           <button class="doc-block__add" aria-label="블록 추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
           <div class="doc-block__body">
@@ -4281,6 +4802,7 @@
                 </span>
                 <div class="block-chart__title">${escapeHtml(p.aggregateTitle)}</div>
                 <div class="block-chart__actions">
+                  <button class="block-chart__icon-btn" aria-label="차트 종류 변경"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
                   <button class="block-chart__icon-btn" aria-label="삭제"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
                 </div>
               </div>
@@ -4350,6 +4872,165 @@
         if (block) block.remove();
       });
 
+      // ─── Chart-type swap rendered inside the Outline sidebar ─────
+      // Gear icon → outline sidebar switches from Outline+Meta view to
+      // a compact chart-type list. Picking an option rebuilds the
+      // block's viz in place (PowerPoint-style).
+      const reportsOutline = document.getElementById("reports-outline");
+      const outlineDefault = reportsOutline
+        ? reportsOutline.querySelector(".reports-outline__default")
+        : null;
+      const outlineSwap = document.getElementById("outline-swap");
+      const outlineSwapClose = document.getElementById("outline-swap-close");
+      const outlineSwapList = document.getElementById("outline-swap-list");
+      const outlineSwapTitle = document.getElementById("outline-swap-title");
+      let swapTargetBlock = null;
+
+      const chartTypeOptions = {
+        poll:  ["bar", "pie", "table"],
+        quiz:  ["bar", "pie", "table"],
+        follow:["bar", "pie", "table"],
+        kpi:   ["table"],
+        discussion: ["lda", "tfidf", "network"],
+      };
+      const chartTypeMeta = {
+        bar:     { label: "Bar",     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>' },
+        pie:     { label: "Pie",     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2 A10 10 0 0 1 22 12 L12 12 Z" fill="currentColor"/></svg>' },
+        table:   { label: "Table",   icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="3" y1="16" x2="21" y2="16"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/></svg>' },
+        lda:     { label: "LDA Topics",  icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2" fill="currentColor"/><circle cx="18" cy="6" r="2" fill="currentColor"/><circle cx="6" cy="18" r="2" fill="currentColor"/><circle cx="18" cy="18" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>' },
+        tfidf:   { label: "TF-IDF",  icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><text x="3" y="17" font-family="Orbitron" font-size="10" font-weight="800" fill="currentColor">Aa</text><line x1="14" y1="6" x2="21" y2="6"/><line x1="14" y1="12" x2="21" y2="12"/><line x1="14" y1="18" x2="19" y2="18"/></svg>' },
+        network: { label: "Network", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="6" r="2.4" fill="currentColor"/><circle cx="18" cy="6" r="2" fill="currentColor"/><circle cx="6" cy="18" r="2" fill="currentColor"/><circle cx="18" cy="18" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/><line x1="8" y1="8" x2="10" y2="10"/><line x1="14" y1="14" x2="16" y2="16"/><line x1="8" y1="16" x2="10" y2="14"/><line x1="14" y1="10" x2="16" y2="8"/></svg>' },
+      };
+
+      function buildPickFromBlock(block) {
+        return {
+          analyzeName: block.dataset.analyzeName || "",
+          aggregateTitle: block.dataset.aggregateTitle || "",
+          aggregateMeta: block.dataset.aggregateMeta || "",
+          source: block.dataset.source || "poll",
+          discussion: block.dataset.discussion || null,
+        };
+      }
+
+      function openChartSwap(block) {
+        if (!outlineSwap || !outlineDefault) return;
+        if (swapTargetBlock && swapTargetBlock !== block) {
+          swapTargetBlock.removeAttribute("data-swap-active");
+        }
+        swapTargetBlock = block;
+        block.setAttribute("data-swap-active", "true");
+        const source = block.dataset.source || "poll";
+        const current = block.dataset.chartType || "table";
+        const opts = chartTypeOptions[source] || chartTypeOptions.poll;
+        outlineSwapTitle.textContent = block.dataset.aggregateTitle || "차트";
+        outlineSwapList.innerHTML = opts
+          .map((t) => {
+            const meta = chartTypeMeta[t];
+            const pressed = t === current ? "true" : "false";
+            return `<button class="outline-swap__opt" data-type="${t}" aria-pressed="${pressed}">${meta.icon}<span>${meta.label}</span></button>`;
+          })
+          .join("");
+        // Toggle outline sidebar into swap mode
+        outlineDefault.hidden = true;
+        outlineSwap.hidden = false;
+      }
+
+      function closeChartSwap() {
+        if (!outlineSwap || !outlineDefault) return;
+        outlineDefault.hidden = false;
+        outlineSwap.hidden = true;
+        if (swapTargetBlock) {
+          swapTargetBlock.removeAttribute("data-swap-active");
+          swapTargetBlock = null;
+        }
+      }
+
+      // Build new doc-block HTML for (pick, type) then replace the
+      // existing block in-place. We don't reuse insertChartBlock /
+      // insertLdaBlock here because those *insert* — for the swap we
+      // want a pure HTML builder. Reaches into the same `viz` building
+      // logic by calling the inserts against an offscreen anchor and
+      // capturing the result.
+      function swapBlockTo(block, type) {
+        const p = buildPickFromBlock(block);
+        // Strategy: build the new block via the existing insert path
+        // anchored at a throwaway off-DOM doc-block, then read back the
+        // generated HTML and swap it in place of the original block.
+        const sandbox = document.createElement("div");
+        sandbox.style.display = "none";
+        sandbox.innerHTML = `<div class="doc-block" data-sandbox-anchor="1"><div class="doc-block__body"></div></div>`;
+        document.body.appendChild(sandbox);
+        const sandboxAnchor = sandbox.firstElementChild;
+        // Give the sandbox anchor a unique id so the insert builders
+        // (which fall back to `#live-block`) pick it up.
+        const live = document.getElementById("live-block");
+        const prevLiveId = live ? live.id : null;
+        if (live) live.id = "__live-block-tmp";
+        const innerLive = document.createElement("div");
+        innerLive.id = "live-block";
+        innerLive.contentEditable = "true";
+        sandboxAnchor.querySelector(".doc-block__body").appendChild(innerLive);
+
+        // Blur whatever was focused (the gear button likely sits inside
+        // the block being replaced) — insertX() reads activeElement
+        // to find its anchor; we need it to fall back to our sandbox
+        // `#live-block` instead.
+        if (document.activeElement && document.activeElement.blur) {
+          document.activeElement.blur();
+        }
+
+        if (type === "lda") insertLdaBlock(p);
+        else if (type === "tfidf") insertTfidfBlock(p);
+        else if (type === "network") insertNetworkBlock(p);
+        else insertChartBlock(p, type);
+
+        // Restore live-block id
+        if (live) live.id = prevLiveId || "live-block";
+
+        // The new block was inserted as a sibling BEFORE sandboxAnchor
+        // inside `sandbox`. Pull it out and use it to replace the
+        // original block.
+        const newBlock = sandbox.querySelector(
+          '.doc-block[data-type="chart"]'
+        );
+        sandbox.remove();
+        if (!newBlock) return;
+        block.replaceWith(newBlock);
+        // Reopen swap panel anchored to the new block
+        openChartSwap(newBlock);
+      }
+
+      // Delegated click for gear icons — anywhere in the doc
+      document.addEventListener("click", (e) => {
+        const gear = e.target.closest(
+          '.block-chart__actions .block-chart__icon-btn[aria-label="차트 종류 변경"]'
+        );
+        if (!gear) return;
+        const block = gear.closest(".doc-block");
+        if (!block) return;
+        openChartSwap(block);
+      });
+
+      // Swap option click — rebuild viz in place
+      if (outlineSwapList) {
+        outlineSwapList.addEventListener("click", (e) => {
+          const opt = e.target.closest(".outline-swap__opt");
+          if (!opt || !swapTargetBlock) return;
+          const newType = opt.dataset.type;
+          if (newType === swapTargetBlock.dataset.chartType) return;
+          swapBlockTo(swapTargetBlock, newType);
+        });
+      }
+
+      if (outlineSwapClose) {
+        outlineSwapClose.addEventListener("click", closeChartSwap);
+      }
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && outlineSwap && !outlineSwap.hidden) {
+          closeChartSwap();
+        }
+      });
+
       function chartHeadHtml(p, typeLabel) {
         return `
         <div class="block-chart__head">
@@ -4359,6 +5040,7 @@
           </span>
           <div class="block-chart__title">${escapeHtml(p.aggregateTitle)}</div>
           <div class="block-chart__actions">
+            <button class="block-chart__icon-btn" aria-label="차트 종류 변경"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
             <button class="block-chart__icon-btn" aria-label="삭제"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
           </div>
         </div>
@@ -4370,9 +5052,15 @@
         </div>`;
       }
 
-      function blockShell(headHtml, vizHtml, captionText) {
+      function blockShell(headHtml, vizHtml, captionText, p, typeKey) {
         return `
-        <div class="doc-block" data-type="chart">
+        <div class="doc-block" data-type="chart"
+             data-source="discussion"
+             data-chart-type="${typeKey}"
+             data-analyze-name="${escapeHtml(p ? p.analyzeName : '')}"
+             data-aggregate-title="${escapeHtml(p ? p.aggregateTitle : '')}"
+             data-aggregate-meta="${escapeHtml(p ? p.aggregateMeta : '')}"
+             data-discussion="${escapeHtml(p && p.discussion ? p.discussion : '')}">
           <button class="doc-block__handle" aria-label="블록 옵션"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg></button>
           <button class="doc-block__add" aria-label="블록 추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
           <div class="doc-block__body">
@@ -4458,7 +5146,9 @@
           blockShell(
             chartHeadHtml(p, "LDA Topics"),
             viz,
-            p.aggregateMeta + " · k=5 토픽, 각 토픽 상위 5 키워드"
+            p.aggregateMeta + " · k=5 토픽, 각 토픽 상위 5 키워드",
+            p,
+            "lda"
           )
         );
       }
@@ -4488,7 +5178,9 @@
           blockShell(
             chartHeadHtml(p, "TF-IDF"),
             viz,
-            p.aggregateMeta + " · 매칭 댓글 코퍼스에서 추출한 Top 10 단어"
+            p.aggregateMeta + " · 매칭 댓글 코퍼스에서 추출한 Top 10 단어",
+            p,
+            "tfidf"
           )
         );
       }
@@ -4539,7 +5231,9 @@
           blockShell(
             chartHeadHtml(p, "Text Network"),
             viz,
-            p.aggregateMeta + " · 노드 = 단어, 엣지 두께 = 동시 출현 빈도"
+            p.aggregateMeta + " · 노드 = 단어, 엣지 두께 = 동시 출현 빈도",
+            p,
+            "network"
           )
         );
       }
@@ -5244,25 +5938,304 @@
         true
       );
 
-      // Delegated KEYDOWN — `/data` + Enter opens the data picker.
-      // No other slash commands; block-type conversions go through
-      // the toolbar dropdown.
+      // ─── Multi-level slash-command autocomplete ───────────────
+      // `/` opens a popup near the caret. Selecting an option drills
+      // down: data → source → item. Selecting at the deepest level
+      // (a specific question/discussion/follow item) inserts a chart
+      // block. Full path typed + Enter (e.g. `/data:poll:가장`) also
+      // inserts.
+      const slashPop = document.getElementById("slash-pop");
+      const slashPopHeading = document.getElementById("slash-pop-heading");
+      const slashPopList = document.getElementById("slash-pop-list");
+      let slashActiveCE = null;
+
+      function parseSlashToken(text) {
+        if (!text.startsWith("/")) return null;
+        const parts = text.slice(1).split(":");
+        // L0: /, /d, /data → command (matches "data")
+        if (parts.length === 1) return { level: 0, query: parts[0].toLowerCase() };
+        if (parts[0] !== "data") return null;
+        // L1: /data:, /data:정책 → analyze list
+        if (parts.length === 2) return { level: 1, query: parts[1] };
+        // L2: /data:정책_우선순위:, /data:…:p → source list within that analyze
+        if (parts.length === 3)
+          return { level: 2, analyzeId: parts[1], query: parts[2].toLowerCase() };
+        // L3: /data:정책_우선순위:poll:Q1 → item list within (analyze, source)
+        if (parts.length === 4)
+          return {
+            level: 3,
+            analyzeId: parts[1],
+            source: parts[2].toLowerCase(),
+            query: parts[3],
+          };
+        return null;
+      }
+
+      function getSlashOptions(parsed) {
+        if (!parsed) return [];
+        if (parsed.level === 0)
+          return SLASH_L0.filter((o) => o.id.startsWith(parsed.query));
+        if (parsed.level === 1) {
+          return findAnalyzeByQuery(parsed.query).map((a) => ({
+            id: a.id,
+            title: a.name,
+            meta: `응답자 ${a.respondents.toLocaleString()}명`,
+            filters: a.filters,
+          }));
+        }
+        if (parsed.level === 2) {
+          // Show source types that actually have items in this analyze
+          const analyze = ANALYZES.find((a) => a.id === parsed.analyzeId);
+          if (!analyze) return [];
+          return SLASH_SOURCES.filter((s) => {
+            if (!s.id.startsWith(parsed.query)) return false;
+            return (analyze.items[s.id] || []).length > 0;
+          }).map((s) => ({
+            id: s.id,
+            title: s.title,
+            meta: `${(analyze.items[s.id] || []).length}개 · ${s.hint}`,
+          }));
+        }
+        if (parsed.level === 3) {
+          const analyze = ANALYZES.find((a) => a.id === parsed.analyzeId);
+          if (!analyze) return [];
+          const items = analyze.items[parsed.source] || [];
+          const q = (parsed.query || "").toLowerCase();
+          if (!q) return items;
+          return items.filter(
+            (item) =>
+              item.title.toLowerCase().includes(q) ||
+              item.id.toLowerCase().includes(q)
+          );
+        }
+        return [];
+      }
+
+      function positionSlashPop() {
+        const sel = window.getSelection();
+        let rect = null;
+        if (sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0).cloneRange();
+          range.collapse(false);
+          const r = range.getBoundingClientRect();
+          if (r.width || r.height || r.top || r.left) rect = r;
+        }
+        if (!rect && slashActiveCE) rect = slashActiveCE.getBoundingClientRect();
+        if (!rect) return;
+        slashPop.hidden = false;
+        const popRect = slashPop.getBoundingClientRect();
+        let top = rect.bottom + 6;
+        let left = rect.left;
+        if (left + popRect.width > window.innerWidth - 8) {
+          left = window.innerWidth - popRect.width - 8;
+        }
+        if (top + popRect.height > window.innerHeight - 8) {
+          top = rect.top - popRect.height - 6;
+        }
+        slashPop.style.top = Math.max(8, top) + "px";
+        slashPop.style.left = Math.max(8, left) + "px";
+      }
+
+      function renderSlashPop(el) {
+        const txt = (el.innerText || el.textContent || "").trim();
+        const parsed = parseSlashToken(txt);
+        if (!parsed) {
+          hideSlashPop();
+          return;
+        }
+        slashActiveCE = el;
+        const opts = getSlashOptions(parsed);
+        const headingMap = {
+          0: "COMMAND",
+          1: "ANALYZE",
+          2: "DATA SOURCE",
+          3: (parsed.source || "").toUpperCase() + " · ITEMS",
+        };
+        slashPopHeading.textContent = headingMap[parsed.level];
+        if (opts.length === 0) {
+          slashPopList.innerHTML = '<div class="slash-pop__empty">일치하는 항목 없음</div>';
+        } else {
+          slashPopList.innerHTML = opts
+            .map((opt, i) => {
+              const sel = i === 0 ? "true" : "false";
+              const titleHtml = escapeHtml(opt.title || opt.id);
+              const metaHtml = escapeHtml(opt.meta || opt.hint || "");
+              const dataExtra = [];
+              if (parsed.level === 2 || parsed.level === 3) {
+                dataExtra.push(`data-analyze-id="${escapeHtml(parsed.analyzeId)}"`);
+              }
+              if (parsed.level === 3) {
+                dataExtra.push(`data-source="${escapeHtml(parsed.source)}"`);
+              }
+              const chipsHtml = renderXfChips(opt.filters);
+              return `<button class="slash-item" data-level="${parsed.level}" data-id="${escapeHtml(opt.id)}" ${dataExtra.join(" ")} aria-selected="${sel}">
+                <span class="slash-item__title">${titleHtml}</span>
+                <span class="slash-item__meta">${metaHtml}</span>
+                ${chipsHtml}
+              </button>`;
+            })
+            .join("");
+        }
+        slashPop.hidden = false;
+        positionSlashPop();
+      }
+
+      function hideSlashPop() {
+        slashPop.hidden = true;
+        slashActiveCE = null;
+      }
+
+      function placeCaretAtEnd(el) {
+        el.focus();
+        const r = document.createRange();
+        r.selectNodeContents(el);
+        r.collapse(false);
+        const s = window.getSelection();
+        s.removeAllRanges();
+        s.addRange(r);
+      }
+
+      function applySlashOption(el, parsed, opt) {
+        if (parsed.level === 0) {
+          el.innerText = "/data:";
+          placeCaretAtEnd(el);
+          renderSlashPop(el);
+        } else if (parsed.level === 1) {
+          // opt.id is an analyze id
+          el.innerText = `/data:${opt.id}:`;
+          placeCaretAtEnd(el);
+          renderSlashPop(el);
+        } else if (parsed.level === 2) {
+          // opt.id is a source name (poll/quiz/discussion/follow)
+          el.innerText = `/data:${parsed.analyzeId}:${opt.id}:`;
+          placeCaretAtEnd(el);
+          renderSlashPop(el);
+        } else if (parsed.level === 3) {
+          insertChartFromSlash(parsed.analyzeId, parsed.source, opt, el);
+        }
+      }
+
+      function insertChartFromSlash(analyzeId, source, item, fromEl) {
+        const analyze = ANALYZES.find((a) => a.id === analyzeId) || ANALYZES[0];
+        const p = {
+          analyzeName: analyze.name,
+          aggregateTitle: item.title,
+          aggregateMeta: item.meta,
+          source: source,
+          discussion: source === "discussion" ? item.title : null,
+        };
+        if (fromEl) {
+          fromEl.innerHTML = "";
+          fromEl.style.color = "";
+        }
+        hideSlashPop();
+        if (source === "discussion") {
+          p.aggregateTitle = `${item.title} · LDA 5 토픽`;
+          p.aggregateMeta = (item.meta || "") + " · k=5 토픽, 각 토픽 상위 5 키워드";
+          insertLdaBlock(p);
+        } else {
+          insertChartBlock(p, "table");
+        }
+      }
+
+      // Input listener — re-render popup on every keystroke into a CE
+      document.addEventListener(
+        "input",
+        () => {
+          const el = getActiveCE();
+          if (!el) {
+            hideSlashPop();
+            return;
+          }
+          renderSlashPop(el);
+        },
+        true
+      );
+
+      // Click on a slash option
+      slashPop.addEventListener("click", (e) => {
+        const btn = e.target.closest(".slash-item");
+        if (!btn || !slashActiveCE) return;
+        const level = parseInt(btn.dataset.level);
+        const id = btn.dataset.id;
+        const analyzeId = btn.dataset.analyzeId;
+        const source = btn.dataset.source;
+        const parsed = parseSlashToken(
+          (slashActiveCE.innerText || "").trim()
+        );
+        if (!parsed) return;
+        let opt;
+        if (level === 0) {
+          opt = SLASH_L0.find((o) => o.id === id);
+        } else if (level === 1) {
+          const a = ANALYZES.find((a) => a.id === id);
+          opt = a ? { id: a.id, title: a.name } : null;
+        } else if (level === 2) {
+          opt = SLASH_SOURCES.find((s) => s.id === id);
+        } else if (level === 3) {
+          const a = ANALYZES.find((a) => a.id === analyzeId);
+          opt = a ? (a.items[source] || []).find((i) => i.id === id) : null;
+        }
+        if (!opt) return;
+        applySlashOption(slashActiveCE, parsed, opt);
+      });
+
+      // Keyboard: Arrow + Enter + Esc (capture phase to beat block default)
       document.addEventListener(
         "keydown",
         (e) => {
-          if (e.key !== "Enter") return;
-          const el = getActiveCE();
-          if (!el) return;
-          const raw = readToken(el).toLowerCase();
-          if (raw === "/data") {
+          if (slashPop.hidden) return;
+          const items = Array.from(slashPop.querySelectorAll(".slash-item"));
+          if (e.key === "Escape") {
             e.preventDefault();
-            el.innerHTML = "";
-            el.style.color = "";
-            open(dataPicker);
+            hideSlashPop();
+            return;
+          }
+          if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            if (items.length === 0) return;
+            e.preventDefault();
+            const cur = items.findIndex(
+              (it) => it.getAttribute("aria-selected") === "true"
+            );
+            let next = cur + (e.key === "ArrowDown" ? 1 : -1);
+            if (next < 0) next = items.length - 1;
+            if (next >= items.length) next = 0;
+            items.forEach((it, i) =>
+              it.setAttribute("aria-selected", i === next ? "true" : "false")
+            );
+            items[next].scrollIntoView({ block: "nearest" });
+            return;
+          }
+          if (e.key === "Enter") {
+            if (items.length === 0) return;
+            const highlighted =
+              slashPop.querySelector('.slash-item[aria-selected="true"]') ||
+              items[0];
+            if (!highlighted) return;
+            e.preventDefault();
+            highlighted.click();
           }
         },
         true
       );
+
+      // Hide on click outside
+      document.addEventListener("mousedown", (e) => {
+        if (e.target.closest("#slash-pop")) return;
+        if (e.target.closest('[contenteditable="true"]')) return;
+        hideSlashPop();
+      });
+      // Reposition on scroll/resize
+      window.addEventListener(
+        "scroll",
+        () => {
+          if (!slashPop.hidden) positionSlashPop();
+        },
+        true
+      );
+      window.addEventListener("resize", () => {
+        if (!slashPop.hidden) positionSlashPop();
+      });
 
       // ─── Outline auto-generator ─────────────────────────
       // Walks every `.doc-block` and collects:
