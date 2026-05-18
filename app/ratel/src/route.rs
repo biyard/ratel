@@ -149,8 +149,8 @@ pub enum Route {
                 ArcadeHomePage { },
                 #[route("/leaderboard")]
                 ArcadeLeaderboardPage { },
-                #[route("/games/fact-or-fold/matching")]
-                FactFoldMatchingPage { },
+                #[route("/games/fact-or-fold/matching/:round_id")]
+                FactFoldMatchingPage { round_id: FactFoldRoundEntityType },
                 #[route("/games/fact-or-fold/rounds/:round_id")]
                 FactFoldGameRoomPage { round_id: FactFoldRoundEntityType },
             #[end_layout]

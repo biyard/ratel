@@ -210,12 +210,17 @@ pub async fn get_lobby_handler() -> Result<LobbyResponse> {
         None => headline_available,
     };
 
+    let arcade_settings = ArcadeSettings::get_or_default(cli)
+        .await
+        .unwrap_or_default();
+
     Ok(LobbyResponse {
         current_round,
         can_join,
         already_joined,
         round_capacity: settings.round_capacity,
         min_bet_rp: settings.min_bet_rp,
+        buy_in_chips: arcade_settings.default_buy_in_chips,
         headline_available,
     })
 }

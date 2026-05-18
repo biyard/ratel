@@ -1,20 +1,24 @@
-//! `FactFoldMatchingPage` — `/arcade/games/fact-or-fold/matching`.
+//! `FactFoldMatchingPage` — `/arcade/games/fact-or-fold/matching/:round_id`.
 //! Pre-round waiting room. Polls /lobby every 2s, renders 4 seat
 //! slots reflecting current participants, and auto-redirects to the
-//! game room the moment the round transitions out of `Waiting`.
+//! game room the moment the round transitions out of `Waiting`. The
+//! caller's joined round lives in the URL so the page survives a
+//! refresh and doesn't depend on the in-process `lobby.current_round`
+//! pointer (which `join_lobby_handler` clears the moment capacity
+//! fills, see PR comment thread).
 
 use crate::features::arcade::games::fact_or_fold::pages::matching::{
     use_fact_fold_matching_provider, FactFoldMatchingTranslate,
 };
 use crate::features::arcade::games::fact_or_fold::{LobbyResponse, RoundStatus};
-use crate::FactFoldRoundEntityType;
 use crate::features::auth::hooks::use_user_context;
+use crate::FactFoldRoundEntityType;
 use crate::*;
 
 const POLL_INTERVAL_MS: u64 = 2_000;
 
 #[component]
-pub fn FactFoldMatchingPage() -> Element {
+pub fn FactFoldMatchingPage(round_id: ReadSignal<FactFoldRoundEntityType>) -> Element {
     let mut ctx = use_fact_fold_matching_provider()?;
     let nav = use_navigator();
     let lobby = (ctx.lobby)();
@@ -29,35 +33,21 @@ pub fn FactFoldMatchingPage() -> Element {
         }
     });
 
-    // Remember the round we joined. `join_lobby_handler` clears the
-    // lobby pointer the moment capacity is reached, so subsequent
-    // polls return `current_round = None` even though the round
-    // we're sitting in just transitioned out of Waiting. Without
-    // this latch the first 3 players get bounced to `/arcade/home`
-    // while only the 4th (who navigates from the join response)
-    // makes it to the game room.
-    let mut last_round_id = use_signal(|| Option::<FactFoldRoundEntityType>::None);
-    if let Some(round) = lobby.current_round.as_ref() {
-        if lobby.already_joined && last_round_id().as_ref() != Some(&round.id) {
-            last_round_id.set(Some(round.id.clone()));
-        }
-    }
-
     // Auto-redirect:
-    //   - round moved past Waiting (visible via current lobby) → game room
-    //   - lobby pointer gone but we previously joined → assume capacity
-    //     filled, jump to the remembered game room
-    //   - never joined and nothing pending → home
-    if let Some(round) = lobby.current_round.as_ref() {
-        if lobby.already_joined && !matches!(round.status, RoundStatus::Waiting) {
-            nav.push(Route::FactFoldGameRoomPage {
-                round_id: round.id.clone(),
-            });
+    //   - Lobby still tracks my round AND it's no longer Waiting → game room.
+    //   - Lobby tracks a different round (capacity filled, lobby pointer
+    //     advanced) or has been cleared → jump to my game room.
+    //   - Lobby still tracks my round and it's Waiting → stay put.
+    let my_round_id = round_id();
+    match lobby.current_round.as_ref() {
+        Some(round) if round.id == my_round_id => {
+            if !matches!(round.status, RoundStatus::Waiting) {
+                nav.push(Route::FactFoldGameRoomPage { round_id: my_round_id });
+            }
         }
-    } else if let Some(round_id) = last_round_id() {
-        nav.push(Route::FactFoldGameRoomPage { round_id });
-    } else if !lobby.already_joined {
-        nav.push(Route::ArcadeHomePage {});
+        _ => {
+            nav.push(Route::FactFoldGameRoomPage { round_id: my_round_id });
+        }
     }
 
     rsx! {
@@ -114,7 +104,7 @@ fn MatchingShell(lobby: LobbyResponse) -> Element {
         h1 { class: "matching-title", "{tr.title}" }
         p { class: "matching-subtitle", "{tr.subtitle}" }
 
-        BuyinNote {}
+        BuyinNote { buy_in_chips: lobby.buy_in_chips }
 
         MatchingSlots {
             participants: participants.clone(),
@@ -130,21 +120,11 @@ fn MatchingShell(lobby: LobbyResponse) -> Element {
 }
 
 #[component]
-fn BuyinNote() -> Element {
+fn BuyinNote(buy_in_chips: i64) -> Element {
     let tr: FactFoldMatchingTranslate = use_translate();
-    // v1 buy-in chips come from arcade settings (default 20). The
-    // lobby response doesn't expose this directly — surfacing it is
-    // a follow-up. For now the copy hard-codes "20" to match
-    // ArcadeSettings::default().default_buy_in_chips and the design.
-    let body = tr.buyin_note.replace("{$chips}", "20");
+    let body = tr.buyin_note.replace("{$chips}", &buy_in_chips.to_string());
     rsx! {
-        div { class: "matching-buyin-note",
-            // Renders as one line with the inner number highlighted via
-            // `<strong>`. We use dangerous_inner_html through the i18n
-            // template by splitting around {$chips} — for simplicity
-            // here we just render the full string with no inner accent.
-            "{body}"
-        }
+        div { class: "matching-buyin-note", "{body}" }
     }
 }
 

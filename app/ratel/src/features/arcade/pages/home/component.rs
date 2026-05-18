@@ -26,7 +26,9 @@ pub fn ArcadeHomePage() -> Element {
     if let Some(round) = lobby.current_round.as_ref() {
         if lobby.already_joined {
             let route = match round.status {
-                RoundStatus::Waiting => Route::FactFoldMatchingPage {},
+                RoundStatus::Waiting => Route::FactFoldMatchingPage {
+                    round_id: round.id.clone(),
+                },
                 RoundStatus::Settled => return rsx! {
                     section { class: "ff-home",
                         div { class: "ff-home__placeholder", "Round just settled — refresh to see results." }
@@ -94,7 +96,9 @@ fn FeaturedCard(lobby: LobbyResponse) -> Element {
         match ctx.join().await {
             Ok(round) => {
                 let route = match round.status {
-                    RoundStatus::Waiting => Route::FactFoldMatchingPage {},
+                    RoundStatus::Waiting => Route::FactFoldMatchingPage {
+                        round_id: round.id.clone(),
+                    },
                     _ => Route::FactFoldGameRoomPage {
                         round_id: round.id.clone(),
                     },
@@ -169,15 +173,22 @@ fn FeaturedCta(
         .map(|r| r.participant_pks.len())
         .unwrap_or(0);
 
+    let resume_round_id = lobby
+        .current_round
+        .as_ref()
+        .map(|r| r.id.clone());
+
     rsx! {
         div { class: "featured-cta",
             if lobby.already_joined {
                 // Should have already redirected — keep a fallback CTA
                 // in case the page renders before the redirect lands.
-                Link {
-                    class: "btn btn-primary",
-                    to: Route::FactFoldMatchingPage {},
-                    "{tr.cta_resume}"
+                if let Some(rid) = resume_round_id {
+                    Link {
+                        class: "btn btn-primary",
+                        to: Route::FactFoldMatchingPage { round_id: rid },
+                        "{tr.cta_resume}"
+                    }
                 }
                 span { class: "featured-status",
                     span { class: "green", "●" }

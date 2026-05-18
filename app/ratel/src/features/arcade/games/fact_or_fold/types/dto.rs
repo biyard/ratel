@@ -186,6 +186,12 @@ pub struct LobbyResponse {
     /// Min RP required to join (FR-23 balance guard) — UI hint for
     /// the "you need N RP" message.
     pub min_bet_rp: i64,
+    /// Buy-in chips locked from the wallet at lobby join time.
+    /// Mirrors `ArcadeSettings::default_buy_in_chips` so the matching
+    /// screen can show the exact escrow amount instead of a hardcoded
+    /// number.
+    #[serde(default)]
+    pub buy_in_chips: i64,
     /// True iff at least one Scheduled headline is due (or already
     /// Live). When `current_round` is None and this is False, the
     /// lobby is closed: the admin needs to publish more headlines.
