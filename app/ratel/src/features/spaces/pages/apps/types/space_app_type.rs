@@ -18,6 +18,10 @@ pub enum SpaceAppType {
     #[cfg(feature = "beta")]
     #[translate(en = "Incentive Pool", ko = "인센티브 풀")]
     IncentivePool,
+    /// Report app — exposed only when the build's `ENV` is `local`. The
+    /// runtime filter lives in `apps_section/component.rs`.
+    #[translate(en = "Report", ko = "보고서")]
+    Report,
 }
 
 impl SpaceAppType {
@@ -33,6 +37,7 @@ impl SpaceAppType {
             SpaceAppType::Panels => Route::SpacePanelsAppPage { space_id },
             #[cfg(feature = "beta")]
             SpaceAppType::IncentivePool => Route::SpaceIncentivePoolAppPage { space_id },
+            SpaceAppType::Report => Route::SpaceReportPage { space_id },
         }
     }
 
@@ -44,6 +49,7 @@ impl SpaceAppType {
             SpaceAppType::IncentivePool => "bg-amber-500",
             SpaceAppType::File => "bg-violet-500",
             SpaceAppType::Panels => "bg-sky-500",
+            SpaceAppType::Report => "bg-purple-500",
         }
     }
 
@@ -85,6 +91,13 @@ impl SpaceAppType {
                     class: "text-white [&>path]:stroke-current [&>path]:fill-transparent",
                 }
             },
+            SpaceAppType::Report => rsx! {
+                icons::file::File {
+                    width: "24",
+                    height: "24",
+                    class: "text-white [&>path]:stroke-current [&>path]:fill-none",
+                }
+            },
         }
     }
 
@@ -98,6 +111,7 @@ impl SpaceAppType {
             SpaceAppType::Analyzes => tr.app_description_analyzes,
             SpaceAppType::Panels => tr.app_description_panels,
             SpaceAppType::General => tr.app_description_general,
+            SpaceAppType::Report => tr.app_description_report,
         }
         .to_string()
     }
@@ -125,5 +139,9 @@ translate! {
     app_description_analyzes: {
         en: "Check out the poll results.",
         ko: "설문조사 결과를 확인하세요.",
+    },
+    app_description_report: {
+        en: "Compose and publish reports from analyze data.",
+        ko: "분석 데이터를 기반으로 보고서를 작성·발행하세요.",
     },
 }
