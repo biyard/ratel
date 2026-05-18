@@ -42,6 +42,7 @@ pub struct UseSubTeamBroadcastCompose {
     pub title: Signal<String>,
     pub html_contents: Signal<String>,
     pub tags: Signal<Vec<String>>,
+    pub attachments: Signal<Vec<File>>,
     pub space_enabled: Signal<bool>,
     pub space_type: Signal<Option<SpaceType>>,
 
@@ -49,11 +50,34 @@ pub struct UseSubTeamBroadcastCompose {
     pub draft_status: Signal<BroadcastDraftStatus>,
     pub last_saved_at: Signal<Option<i64>>,
 
-    // Mutations.
+    // Autosave mutations — fired from inside a use_effect, so the
+    // calling component stays mounted long enough for the action's
+    // spawned future to resolve. Action lifecycle is exposed via
+    // `.value()` / `.pending()` so the editor can promote the new id
+    // after `handle_save_new` resolves.
     pub handle_save_new: Action<(CreateSubTeamAnnouncementRequest,), String>,
     pub handle_save_existing: Action<(String, UpdateSubTeamAnnouncementRequest), ()>,
-    pub handle_publish: Action<(String,), ()>,
-    pub handle_delete: Action<(String,), ()>,
+}
+
+impl UseSubTeamBroadcastCompose {
+    /// Publish the draft and wait for the server round-trip to finish.
+    /// Components await this before navigating — using `Action::call` here
+    /// would detach the future from the component, and the SPA nav.push
+    /// that follows would drop the future before the request completes,
+    /// leaving the draft stuck in `작성중 · DRAFTS`.
+    pub async fn publish_announcement(&mut self, id: String) -> crate::common::Result<()> {
+        let team_id = self.team_id;
+        publish_announcement_handler(team_id(), id).await?;
+        Ok(())
+    }
+
+    /// Delete the draft and wait for the server to confirm before the
+    /// caller navigates away (same rationale as `publish_announcement`).
+    pub async fn delete_announcement(&mut self, id: String) -> crate::common::Result<()> {
+        let team_id = self.team_id;
+        delete_announcement_handler(team_id(), id).await?;
+        Ok(())
+    }
 }
 
 #[track_caller]
@@ -97,12 +121,17 @@ pub fn use_sub_team_broadcast_compose(
         .as_ref()
         .map(|a| a.tags.clone())
         .unwrap_or_default();
+    let initial_attachments = loaded
+        .as_ref()
+        .map(|a| a.attachments.clone())
+        .unwrap_or_default();
     let initial_space_enabled = loaded.as_ref().map(|a| a.space_enabled).unwrap_or(false);
     let initial_space_type = loaded.as_ref().and_then(|a| a.space_type);
 
     let title: Signal<String> = use_signal(|| initial_title);
     let html_contents: Signal<String> = use_signal(|| initial_html);
     let tags: Signal<Vec<String>> = use_signal(|| initial_tags);
+    let attachments: Signal<Vec<File>> = use_signal(|| initial_attachments);
     let space_enabled: Signal<bool> = use_signal(|| initial_space_enabled);
     let space_type: Signal<Option<SpaceType>> = use_signal(|| initial_space_type);
 
@@ -126,18 +155,6 @@ pub fn use_sub_team_broadcast_compose(
         },
     );
 
-    let team_id_for_publish = team_id_signal;
-    let handle_publish = use_action(move |aid: String| async move {
-        publish_announcement_handler(team_id_for_publish(), aid).await?;
-        Ok::<(), crate::common::Error>(())
-    });
-
-    let team_id_for_delete = team_id_signal;
-    let handle_delete = use_action(move |aid: String| async move {
-        delete_announcement_handler(team_id_for_delete(), aid).await?;
-        Ok::<(), crate::common::Error>(())
-    });
-
     Ok(use_context_provider(|| UseSubTeamBroadcastCompose {
         team_id: team_id_signal,
         announcement_id,
@@ -145,13 +162,12 @@ pub fn use_sub_team_broadcast_compose(
         title,
         html_contents,
         tags,
+        attachments,
         space_enabled,
         space_type,
         draft_status,
         last_saved_at,
         handle_save_new,
         handle_save_existing,
-        handle_publish,
-        handle_delete,
     }))
 }

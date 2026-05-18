@@ -120,7 +120,7 @@ async fn find_recognition_timestamp(
     child_pk: &Partition,
 ) -> Result<Option<i64>> {
     let prefix = format!("{LINK_SK_PREFIX}#");
-    let opts = SubTeamLink::opt().sk(prefix).limit(PAGE_LIMIT);
+    let opts = SubTeamLink::opt_all().sk(prefix);
     let (links, _) = SubTeamLink::query(cli, parent_pk.clone(), opts).await?;
     let child_uuid = match child_pk {
         Partition::Team(id) => id.clone(),
@@ -198,6 +198,9 @@ pub async fn submit_application_handler(
     let cli = cfg.dynamodb();
 
     // 1. Applying team pulled from extractor `team` — already exists and user is admin/owner.
+    if team.parent_team_id.is_some() {
+        return Err(SubTeamError::AlreadyRecognizedSubTeam.into());
+    }
 
     // 2. Parent must exist AND be parent-eligible.
     let parent_pk: Partition = Partition::Team(body.parent_team_id.clone());
@@ -290,10 +293,13 @@ pub async fn submit_application_handler(
     }
 
     // 4. New-submit path — block when any in-flight app exists.
-    if has_in_flight_application(cli, &team.pk).await.map_err(|e| {
-        crate::error!("in-flight lookup failed: {e}");
-        Error::from(SubTeamError::ApplicationInFlight)
-    })? {
+    if has_in_flight_application(cli, &team.pk)
+        .await
+        .map_err(|e| {
+            crate::error!("in-flight lookup failed: {e}");
+            Error::from(SubTeamError::ApplicationInFlight)
+        })?
+    {
         return Err(SubTeamError::ApplicationInFlight.into());
     }
 
@@ -464,7 +470,10 @@ pub async fn update_child_application_handler(
         })?
         .ok_or(SubTeamError::ParentNotEligible)?;
 
-    let form_values = body.form_values.clone().unwrap_or_else(|| app.form_values.clone());
+    let form_values = body
+        .form_values
+        .clone()
+        .unwrap_or_else(|| app.form_values.clone());
     let doc_agreements = body.doc_agreements.clone();
 
     let member_count = count_team_members(cli, &team.pk).await.map_err(|e| {
@@ -499,9 +508,9 @@ pub async fn update_child_application_handler(
             .await
             .unwrap_or_default();
         for old in old_agreements {
-            items.push(
-                SubTeamDocAgreement::delete_transact_write_item(&parent.pk, old.sk),
-            );
+            items.push(SubTeamDocAgreement::delete_transact_write_item(
+                &parent.pk, old.sk,
+            ));
         }
         for (doc, hash) in agreed_docs {
             let doc_id = sub_team_document_id(&doc);
@@ -671,9 +680,7 @@ async fn load_form_fields(
     cli: &aws_sdk_dynamodb::Client,
     parent_pk: &Partition,
 ) -> Result<Vec<SubTeamFormField>> {
-    let opts = SubTeamFormField::opt()
-        .sk(FIELD_SK_PREFIX.to_string())
-        .limit(PAGE_LIMIT);
+    let opts = SubTeamFormField::opt_all().sk(FIELD_SK_PREFIX.to_string());
     let (items, _) = SubTeamFormField::query(cli, parent_pk.clone(), opts).await?;
     Ok(items)
 }
@@ -685,9 +692,7 @@ async fn load_docs(
 ) -> Result<Vec<SubTeamDocument>> {
     // Trailing `#` keeps `SUB_TEAM_DOCUMENT_VERSION#…` snapshot rows
     // out of the result set.
-    let opts = SubTeamDocument::opt()
-        .sk(format!("{DOC_SK_PREFIX}#"))
-        .limit(PAGE_LIMIT);
+    let opts = SubTeamDocument::opt_all().sk(format!("{DOC_SK_PREFIX}#"));
     let (items, _) = SubTeamDocument::query(cli, parent_pk.clone(), opts).await?;
     Ok(items)
 }
@@ -876,7 +881,7 @@ async fn list_agreements(
     application_id: &str,
 ) -> Result<Vec<SubTeamDocAgreement>> {
     let prefix = format!("{DOC_AGREEMENT_SK_PREFIX}#{application_id}#");
-    let opts = SubTeamDocAgreement::opt().sk(prefix).limit(PAGE_LIMIT);
+    let opts = SubTeamDocAgreement::opt_all().sk(prefix);
     let (items, _) = SubTeamDocAgreement::query(cli, parent_pk.clone(), opts).await?;
     Ok(items)
 }
@@ -907,12 +912,10 @@ pub async fn find_my_application_for_parent_handler(
     };
 
     // 1. Enumerate viewer's admin/owner teams (UserTeam rows under
-    //    `user_pk` with sk prefix `USER_TEAM#`). Pagination capped —
-    //    in practice users belong to 1–2 admin teams.
+    //    `user_pk` with sk prefix `USER_TEAM#`). `opt_all` walks all
+    //    pages — power users in many teams need every row checked.
     let sk_prefix = crate::common::types::EntityType::UserTeam(String::new()).to_string();
-    let ut_opts = crate::features::auth::UserTeam::opt()
-        .sk(sk_prefix)
-        .limit(PAGE_LIMIT);
+    let ut_opts = crate::features::auth::UserTeam::opt_all().sk(sk_prefix);
     let (user_teams, _): (Vec<crate::features::auth::UserTeam>, _) =
         crate::features::auth::UserTeam::query(cli, &user_pk, ut_opts)
             .await
@@ -938,9 +941,7 @@ pub async fn find_my_application_for_parent_handler(
             },
             _ => continue,
         };
-        let opts = SubTeamApplication::opt()
-            .limit(PAGE_LIMIT)
-            .scan_index_forward(false);
+        let opts = SubTeamApplication::opt_all().scan_index_forward(false);
         let Ok((apps, _)) =
             SubTeamApplication::find_by_applicant(cli, applicant_pk.clone(), opts).await
         else {
@@ -995,4 +996,3 @@ pub async fn find_my_application_for_parent_handler(
     }
     Ok(Some(dto))
 }
-

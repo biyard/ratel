@@ -117,8 +117,8 @@ The Content card holds:
 
 The Configuration card adds **Moderation** alongside the common sections. Use Moderation to set who can hide off-topic replies once the discussion is live.
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/discussion_editor.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-Your browser doesn't support embedded video. <a href={useBaseUrl('/media/discussion_editor.mov')}>Download the walkthrough</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/discussion_editor.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+Your browser doesn't support embedded video. <a href="https://metadata.ratel.foundation/mov/discussion_editor.mov">Download the walkthrough</a>.
 </video>
 
 ## <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><polyline points="20 6 9 17 4 12"/></svg> Poll editor
@@ -140,8 +140,8 @@ The Configuration card adds **Voting rules** alongside the common sections:
 - **Allow response editing** — when on, participants can update their answers while the poll is open. Off makes responses final on submit. Auto-disabled when Encrypted upload is enabled.
 - **Encrypted upload** — when on, vote results are encrypted and stored on-chain (canister upload); responses cannot be edited after submission. Use this for high-stakes votes where auditability matters.
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/poll_editor.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-Your browser doesn't support embedded video. <a href={useBaseUrl('/media/poll_editor.mov')}>Download the walkthrough</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/poll_editor.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+Your browser doesn't support embedded video. <a href="https://metadata.ratel.foundation/mov/poll_editor.mov">Download the walkthrough</a>.
 </video>
 
 ## <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Quiz editor
@@ -158,8 +158,8 @@ The Content card holds:
 
 Pass and the reward unlocks; fail and (if Retry Count allows) the participant can try again.
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/quiz_editor.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-Your browser doesn't support embedded video. <a href={useBaseUrl('/media/quiz_editor.mov')}>Download the walkthrough</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/quiz_editor.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+Your browser doesn't support embedded video. <a href="https://metadata.ratel.foundation/mov/quiz_editor.mov">Download the walkthrough</a>.
 </video>
 
 ## <img src={useBaseUrl('/img/icons/users.svg')} width="22" height="22" alt="Follow" style={{verticalAlign: 'middle'}} /> Follow editor
@@ -173,8 +173,8 @@ The Targets card holds:
 
 The Configuration card has the common sections only — Schedule, Participation & Rewards, Dependencies, Status, Danger zone.
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/follow_editor.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-Your browser doesn't support embedded video. <a href={useBaseUrl('/media/follow_editor.mov')}>Download the walkthrough</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/follow_editor.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+Your browser doesn't support embedded video. <a href="https://metadata.ratel.foundation/mov/follow_editor.mov">Download the walkthrough</a>.
 </video>
 
 ## <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Meet editor _(Coming soon)_

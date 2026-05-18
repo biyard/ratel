@@ -230,6 +230,13 @@ jobs:
           # unrecoverable. PREVIOUS is set only during a key rotation transition.
           CROSS_POSTING_DATA_KEY: ${{ secrets.DEV_CROSS_POSTING_DATA_KEY }}
           CROSS_POSTING_DATA_KEY_PREVIOUS: ${{ secrets.DEV_CROSS_POSTING_DATA_KEY_PREVIOUS }}
+
+          # LinkedIn OAuth (Phase 1B). Two values from the LinkedIn Developer
+          # Portal → app → "Auth" tab. CLIENT_ID is public-ish (gets sent in
+          # the redirect URL), CLIENT_SECRET is server-only and used during
+          # the token-exchange POST.
+          LINKEDIN_CLIENT_ID: ${{ secrets.DEV_LINKEDIN_CLIENT_ID }}
+          LINKEDIN_CLIENT_SECRET: ${{ secrets.DEV_LINKEDIN_CLIENT_SECRET }}
         run: |
           rm -rf target/dx
 
@@ -686,3 +693,117 @@ jobs:
           path: |
             ~/.cargo/bin
             target
+
+  # ────────────────────────────────────────────────────────────────────────
+  # Tauri Android (dev): builds the arm64 APK pointed at the live dev
+  # backend and uploads it as a workflow artifact for manual download
+  # onto physical devices. Debug-signed (not production-signed) — when
+  # the prod track is added later, that workflow will use a release
+  # keystore instead.
+  # ────────────────────────────────────────────────────────────────────────
+  tauri-android-dev:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - name: Restore cache
+        id: tauri-android-dev-cache
+        uses: actions/cache/restore@v5
+        with:
+          key: tauri-android-dev-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            tauri-android-dev-${{ runner.os }}-rust-
+          path: |
+            ~/.cargo/bin
+            target
+            app/ratel-tauri/dx-tauri-target
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-unknown-unknown,aarch64-linux-android
+          cache: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: "platforms;android-34 build-tools;34.0.0 ndk;29.0.14206865"
+
+      - uses: cargo-bins/cargo-binstall@main
+
+      - name: Install dioxus-cli + tauri-cli
+        run: |
+          cargo binstall -y dioxus-cli
+          cargo binstall -y --version "^2.0.0" tauri-cli
+
+      - name: Build arm64 debug APK (dev)
+        working-directory: app/ratel-tauri
+        env:
+          MOBILE_API_URL: https://dev.ratel.foundation
+          ENV: dev
+          ANDROID_TARGET: aarch64-linux-android
+          DYNAMO_TABLE_PREFIX: ratel-dev
+          RUSTFLAGS: "-D warnings"
+          # Populate this secret in repo settings to enable Google sign-in
+          # in the dev APK; the build still succeeds with an empty value
+          # (Google-auth flow just fails at runtime).
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID_DEV }}
+
+          # See PR build job: app/ratel/Makefile's BUILD_ENV defaults
+          # AWS_ACCOUNT_ID via `aws sts ...` which needs creds.
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: ap-northeast-2
+          AWS_ACCOUNT_ID: test
+        run: |
+          # setup-android exports ANDROID_HOME; the NDK we installed lives
+          # under ndk/29.0.14206865 of that. The Makefile defaults
+          # NDK_HOME=/opt/android-ndk on Linux which doesn't exist on
+          # GH runners, so override here.
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/29.0.14206865"
+          export NDK_HOME="$ANDROID_NDK_HOME"
+          make dx-build
+          make build-android-debug
+
+      - name: Locate APK
+        id: locate
+        working-directory: app/ratel-tauri
+        run: |
+          APK=$(find src-tauri/gen/android -name 'app-*-debug.apk' | head -1)
+          if [ -z "$APK" ]; then
+            echo "::error::no APK produced"
+            find src-tauri/gen/android -name '*.apk' || true
+            exit 1
+          fi
+          echo "apk=$APK" >> $GITHUB_OUTPUT
+          ls -la "$APK"
+
+      - name: Upload dev APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ratel-tauri-dev-${{ github.sha }}.apk
+          path: app/ratel-tauri/${{ steps.locate.outputs.apk }}
+          retention-days: 30
+
+      - name: Save cache
+        if: always()
+        uses: actions/cache/save@v5
+        with:
+          key: tauri-android-dev-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          path: |
+            ~/.cargo/bin
+            target
+            app/ratel-tauri/dx-tauri-target

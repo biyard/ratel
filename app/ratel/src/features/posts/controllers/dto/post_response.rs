@@ -33,10 +33,23 @@ pub struct PostResponse {
     pub rewards: Option<i64>,
 
     pub urls: Vec<String>,
+    /// File attachments mirrored from the source Post. Used by
+    /// post-detail and sub-team doc surfaces to render a downloadable
+    /// list of files attached at compose time.
+    #[serde(default)]
+    pub attachments: Vec<crate::common::types::File>,
     pub liked: bool,
     #[serde(default)]
     pub categories: Vec<String>,
     pub status: PostStatus,
+
+    /// Echoes back the underlying Post's `announcement_id` for client
+    /// UIs that want to badge broadcast cards differently. The single
+    /// anchor Post for a sub-team announcement lives at
+    /// `Feed(announcement_id)`, so `self.pk` already IS the canonical
+    /// URL — no separate routing branch needed.
+    #[serde(default)]
+    pub announcement_id: Option<String>,
 }
 
 impl PostResponse {
@@ -80,12 +93,14 @@ impl From<Post> for PostResponse {
             booster: post.booster.unwrap_or(BoosterType::NoBoost),
             rewards: post.rewards,
             urls: post.urls.clone(),
+            attachments: post.attachments,
             liked: false,
             auth_pk: post.user_pk,
             space_type: post.space_type,
             author_type: post.author_type,
             categories: post.categories,
             status: post.status,
+            announcement_id: post.announcement_id,
         }
     }
 }

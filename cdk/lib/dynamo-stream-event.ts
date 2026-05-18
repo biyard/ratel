@@ -1553,6 +1553,70 @@ export class DynamoStreamEventStack extends Stack {
       targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
     });
 
+    // ── Pipe: SpaceCommon Publish → SpacePublished ──────────────────
+    // Fires on MODIFY when a SpaceCommon's publish_state becomes
+    // "Published". Drives the DEFERRED inbox fan-out for sub-team
+    // broadcasts whose attached Space just published — the
+    // `SubTeamAnnouncementPublished` pipe deliberately skips notifying
+    // children for space-attached broadcasts (Space is still Draft at
+    // announcement-publish time), and this pipe takes over once the
+    // parent admin clicks Publish in the Space designer.
+    //
+    // No OldImage filter — the handler
+    // (`announcement_fanout::handle_space_published`) is fully
+    // idempotent via `SubTeamAnnouncement.broadcast_notified_at`, so
+    // stream replays / spurious MODIFYs on already-Published rows
+    // short-circuit before any inbox write.
+    new pipes.CfnPipe(this, "SpacePublishedPipe", {
+      name: `ratel-${stage}-space-published-pipe`,
+      roleArn: pipeRole.roleArn,
+      source: mainTableStreamArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: "LATEST",
+          batchSize: 10,
+        },
+        filterCriteria: {
+          filters: [
+            {
+              pattern: JSON.stringify({
+                eventName: ["MODIFY"],
+                dynamodb: {
+                  NewImage: {
+                    sk: { S: ["SPACE_COMMON"] },
+                    // `SpacePublishState` is a `DynamoEnum`, which
+                    // serializes via `Display` → `UpperSnake` case, so
+                    // the on-DB value is `"PUBLISHED"`, NOT `"Published"`.
+                    publish_state: { S: ["PUBLISHED"] },
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      },
+      target: eventBus.eventBusArn,
+      targetParameters: {
+        eventBridgeEventBusParameters: {
+          source: "ratel.dynamodb.stream",
+          detailType: "SpacePublished",
+        },
+        inputTemplate: '{"newImage": <$.dynamodb.NewImage>}',
+      },
+    });
+
+    // ── Rule: Route SpacePublished events to app-shell Lambda ───────
+    new events.Rule(this, "SpacePublishedRule", {
+      eventBus,
+      description:
+        "Route SpaceCommon publish events to app-shell for deferred broadcast fan-out",
+      eventPattern: {
+        source: ["ratel.dynamodb.stream"],
+        detailType: ["SpacePublished"],
+      },
+      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+    });
+
     // ── Pipe: AnalyzeReport Insert → AnalyzeReportInProgress ─────────
     // Fires when a new SpaceAnalyzeReport row is inserted with
     // status=in_progress. The Lambda runs the auto poll/quiz/follow

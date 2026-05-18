@@ -185,6 +185,10 @@ translate! {
         en: "words",
         ko: "단어",
     },
+    stat_chars: {
+        en: "chars",
+        ko: "자",
+    },
     stat_read: {
         en: "read",
         ko: "읽기",

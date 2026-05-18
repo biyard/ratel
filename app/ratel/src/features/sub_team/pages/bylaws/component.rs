@@ -164,7 +164,11 @@ pub fn TeamBylawsPage(username: String) -> Element {
                         }
                     }
                     if bylaws_docs.is_empty() && !can_add_bylaw {
-                        div { class: "empty-state", "{tr.bylaws_empty}" }
+                        div { class: "",
+                            {tr.bylaws_empty}
+                            empty-state {}
+                            ","
+                        }
                     }
                 }
             }
@@ -176,7 +180,12 @@ pub fn TeamBylawsPage(username: String) -> Element {
 fn BylawCard(index: usize, doc: SubTeamDocumentResponse, parent: bool) -> Element {
     let tr: SubTeamTranslate = use_translate();
     let nav = use_navigator();
-    let excerpt: String = doc.body.chars().take(240).collect();
+    // Doc body is rich-text HTML; strip tags before truncating so the
+    // card excerpt shows content rather than literal `<b>` / `<div>`.
+    let excerpt: String = crate::features::sub_team::strip_html_to_plain(&doc.body)
+        .chars()
+        .take(240)
+        .collect();
     let variant_class = if parent {
         "bylaw-card bylaw-card--parent"
     } else {

@@ -126,10 +126,11 @@
       scheduleUpdate();
     }
 
-    // ── Block-format dropdown ──────────────────────────────
-    var blockDropdown = root.querySelector(".re-block");
-    var blockBtn = blockDropdown.querySelector(".re-block__btn");
-    var blockBtnLabel = blockDropdown.querySelector(".re-block__label");
+    // ── Block-format dropdown(s) ──────────────────────────────
+    // There may be more than one `.re-block` instance: one in the static
+    // top toolbar, one in the selection-triggered bubble. Each gets its
+    // own open/close state but they share the active-tag highlight via
+    // `syncBlockLabel`.
     var blockLabels = {
       P: "Paragraph",
       H1: "Heading 1",
@@ -139,30 +140,37 @@
       PRE: "Code block"
     };
 
-    blockBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      var open = blockDropdown.dataset.open === "true";
-      blockDropdown.dataset.open = open ? "false" : "true";
-      blockBtn.setAttribute("aria-expanded", open ? "false" : "true");
+    var blockDropdowns = Array.prototype.slice.call(root.querySelectorAll(".re-block"));
+    blockDropdowns.forEach(function (blockDropdown) {
+      var blockBtn = blockDropdown.querySelector(".re-block__btn");
+      if (!blockBtn) return;
+      blockBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var open = blockDropdown.dataset.open === "true";
+        blockDropdown.dataset.open = open ? "false" : "true";
+        blockBtn.setAttribute("aria-expanded", open ? "false" : "true");
+      });
+      blockDropdown.addEventListener("mousedown", function () {
+        savedRange = saveSelection();
+      });
+      blockDropdown.querySelectorAll("[data-block]").forEach(function (item) {
+        item.addEventListener("click", function (e) {
+          e.preventDefault();
+          var tag = item.dataset.block;
+          blockDropdown.dataset.open = "false";
+          blockBtn.setAttribute("aria-expanded", "false");
+          restoreSelection();
+          applyCmd("formatBlock", "<" + tag + ">");
+        });
+      });
     });
     document.addEventListener("click", function (e) {
-      if (!blockDropdown.contains(e.target)) {
+      blockDropdowns.forEach(function (blockDropdown) {
+        if (blockDropdown.contains(e.target)) return;
         blockDropdown.dataset.open = "false";
-        blockBtn.setAttribute("aria-expanded", "false");
-      }
-    });
-    blockDropdown.addEventListener("mousedown", function () {
-      savedRange = saveSelection();
-    });
-    root.querySelectorAll("[data-block]").forEach(function (item) {
-      item.addEventListener("click", function (e) {
-        e.preventDefault();
-        var tag = item.dataset.block;
-        blockDropdown.dataset.open = "false";
-        blockBtn.setAttribute("aria-expanded", "false");
-        restoreSelection();
-        applyCmd("formatBlock", "<" + tag + ">");
+        var btn = blockDropdown.querySelector(".re-block__btn");
+        if (btn) btn.setAttribute("aria-expanded", "false");
       });
     });
 
@@ -172,18 +180,21 @@
       if (!sel || sel.rangeCount === 0) return;
       var node = sel.getRangeAt(0).startContainer;
       if (node.nodeType === 3) node = node.parentNode;
+      var foundTag = null;
       while (node && node !== editor) {
-        var tag = node.nodeName;
-        if (blockLabels[tag]) {
-          blockBtnLabel.textContent = blockLabels[tag];
-          root.querySelectorAll("[data-block]").forEach(function (item) {
-            item.classList.toggle("re-block__item--active", item.dataset.block === tag);
-          });
-          return;
-        }
+        if (blockLabels[node.nodeName]) { foundTag = node.nodeName; break; }
         node = node.parentNode;
       }
-      blockBtnLabel.textContent = "Paragraph";
+      var label = foundTag ? blockLabels[foundTag] : "Paragraph";
+      root.querySelectorAll(".re-block__label").forEach(function (el) {
+        el.textContent = label;
+      });
+      root.querySelectorAll("[data-block]").forEach(function (item) {
+        item.classList.toggle(
+          "re-block__item--active",
+          item.dataset.block === foundTag
+        );
+      });
     }
 
     // ── Toolbar active-state sync ──────────────────────────
@@ -387,6 +398,98 @@
       else if (k === "u") { e.preventDefault(); applyCmd("underline"); }
       else if (k === "k") { e.preventDefault(); openModal("link"); }
     });
+
+    // ── Selection-triggered bubble toolbar (desktop only) ─────
+    // On coarse-pointer (touch) devices the OS provides its own selection
+    // menu (Copy / Paste / Look up). Layering our bubble on top would
+    // conflict and the static top toolbar remains available, so we skip
+    // wiring entirely on touch. The bubble's DOM is rendered regardless;
+    // it just stays invisible.
+    var bubble = root.querySelector(".re-bubble");
+    var coarsePointer = typeof window.matchMedia === "function" &&
+      window.matchMedia("(pointer: coarse)").matches;
+
+    if (bubble && !coarsePointer) {
+      // Preserving the editor's selection across a bubble button click is
+      // the whole point of this toolbar. Without preventDefault here, the
+      // mousedown moves focus from the editor to the <button>, the
+      // selection collapses, and execCommand has nothing left to act on.
+      bubble.addEventListener("mousedown", function (e) {
+        e.preventDefault();
+      });
+
+      function isFocusInsideEditor() {
+        return document.activeElement === editor ||
+          bubble.contains(document.activeElement);
+      }
+
+      function positionBubble(range) {
+        var sr = range.getBoundingClientRect();
+        if (sr.width === 0 && sr.height === 0) return false;
+        var bw = bubble.offsetWidth;
+        var bh = bubble.offsetHeight;
+        // Position uses viewport coordinates (position: fixed) so the
+        // editor's `overflow: hidden` never clips the bubble.
+        var top = sr.bottom + 8;
+        if (top + bh + 8 > window.innerHeight) {
+          top = sr.top - bh - 8; // auto-flip: place above the selection
+        }
+        var left = sr.left + sr.width / 2 - bw / 2;
+        left = Math.max(8, Math.min(left, window.innerWidth - bw - 8));
+        bubble.style.top = top + "px";
+        bubble.style.left = left + "px";
+        return true;
+      }
+
+      function hideBubble() {
+        if (bubble.dataset.visible !== "true") return;
+        bubble.dataset.visible = "false";
+        // Close any open block dropdown owned by the bubble.
+        var inner = bubble.querySelector(".re-block");
+        if (inner && inner.dataset.open === "true") {
+          inner.dataset.open = "false";
+          var btn = inner.querySelector(".re-block__btn");
+          if (btn) btn.setAttribute("aria-expanded", "false");
+        }
+      }
+
+      function updateBubble() {
+        if (composing) return hideBubble();
+        if (!isFocusInsideEditor()) return hideBubble();
+        var sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return hideBubble();
+        var range = sel.getRangeAt(0);
+        if (!editor.contains(range.commonAncestorContainer)) return hideBubble();
+        if (!positionBubble(range)) return hideBubble();
+        bubble.dataset.visible = "true";
+      }
+
+      // selectionchange fires many times during a drag; rAF-throttle to
+      // one update per frame so we don't thrash layout.
+      var bubbleFrame = null;
+      function scheduleBubbleUpdate() {
+        if (bubbleFrame !== null) return;
+        bubbleFrame = requestAnimationFrame(function () {
+          bubbleFrame = null;
+          updateBubble();
+        });
+      }
+
+      editor.addEventListener("mouseup", scheduleBubbleUpdate);
+      editor.addEventListener("keyup", scheduleBubbleUpdate);
+      document.addEventListener("selectionchange", scheduleBubbleUpdate);
+      // Hide on scroll/resize rather than reposition — keeps the bubble
+      // anchored to a stable selection rect. Capture: true so we also
+      // catch scrolls inside arbitrary scroll containers above the editor.
+      window.addEventListener("scroll", hideBubble, { passive: true, capture: true });
+      window.addEventListener("resize", hideBubble);
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && bubble.dataset.visible === "true") {
+          hideBubble();
+          editor.focus();
+        }
+      });
+    }
 
     // Initial paint so word/char counts and toolbar state are correct.
     emitChange();

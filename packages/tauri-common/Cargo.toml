@@ -1,0 +1,21 @@
+[package]
+name = "tauri-common"
+version = "0.1.0"
+authors.workspace = true
+description.workspace = true
+edition.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+dioxus-translate = { workspace = true }
+wasm-bindgen = { workspace = true }
+wasm-bindgen-futures = { workspace = true }
+thiserror = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
+js-sys = "0.3"
+
+[features]
+web = []

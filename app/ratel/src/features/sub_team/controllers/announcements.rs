@@ -15,7 +15,14 @@ use crate::features::sub_team::services::announcement_fanout::{
 };
 
 #[cfg(feature = "server")]
-const ANNOUNCEMENT_SK_PREFIX: &str = "SUB_TEAM_ANNOUNCEMENT";
+// Trailing `#` is required: without it the begins_with query would also
+// match `SUB_TEAM_ANNOUNCEMENT_FANOUT#...` marker rows in the same
+// partition (when a team is both a parent broadcasting and a recognized
+// child of someone else), and the deserializer would then try to read
+// a `SubTeamAnnouncement` out of a marker row and fail on a missing
+// `title` field — aborting the whole list. The `#` narrows the prefix to
+// the announcement-id segment only.
+const ANNOUNCEMENT_SK_PREFIX: &str = "SUB_TEAM_ANNOUNCEMENT#";
 #[cfg(feature = "server")]
 const PAGE_LIMIT: i32 = 50;
 
@@ -152,6 +159,7 @@ pub async fn create_announcement_handler(
     );
     ann.html_contents = body.html_contents;
     ann.tags = body.tags;
+    ann.attachments = body.attachments;
     ann.space_enabled = body.space_enabled;
     ann.space_type = body.space_type;
     ann.create(cli).await.map_err(|e| {
@@ -217,6 +225,12 @@ pub async fn update_announcement_handler(
     if let Some(tags) = body.tags {
         updater = updater.with_tags(tags.clone());
         existing.tags = tags;
+        changed = true;
+    }
+
+    if let Some(attachments) = body.attachments {
+        updater = updater.with_attachments(attachments.clone());
+        existing.attachments = attachments;
         changed = true;
     }
 
@@ -321,7 +335,11 @@ pub async fn publish_announcement_handler(
         body: ContentBody::html(anchor_post_body),
         post_type: PostType::Post,
         status: PostStatus::Published,
-        visibility: Some(existing.visibility.clone()),
+        // Sub-team broadcasts are NEVER publicly visible — `Visibility::Broadcast`
+        // hands access control over to
+        // `sub_team::services::broadcast_access::can_view_broadcast_post`
+        // (parent team's members + every recognized child team's members).
+        visibility: Some(crate::features::posts::types::Visibility::Broadcast),
         shares: 0,
         likes: 0,
         comments: 0,
@@ -337,10 +355,15 @@ pub async fn publish_announcement_handler(
         booster: None,
         rewards: None,
         urls: vec![],
+        attachments: existing.attachments.clone(),
         categories: existing.tags.clone(),
         announcement_id: Some(existing.announcement_id.clone()),
         announcement_parent_team_id: Some(parent_team_id_str),
-        pinned_as_announcement: false,
+        // Broadcasts pin to the top of every receiving team's wall —
+        // parent + recognized children — so the announcement card sits
+        // above the regular feed. `list_team_posts_handler` sorts on
+        // this flag first, then created_at desc.
+        pinned_as_announcement: true,
     };
     if let Err(e) = anchor_post.create(cli).await {
         crate::error!("publish_announcement: anchor post create failed: {e}");

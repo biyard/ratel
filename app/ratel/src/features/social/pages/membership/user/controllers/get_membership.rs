@@ -1,12 +1,12 @@
 use super::super::*;
 #[cfg(feature = "server")]
-#[allow(unused_imports)]
-use rmcp::schemars;
-#[cfg(feature = "server")]
 use crate::features::membership::models::ensure_user_membership_monthly_refill;
 use crate::features::membership::models::UserMembership;
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct MembershipResponse {
     pub tier: String,

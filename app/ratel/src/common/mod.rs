@@ -25,6 +25,24 @@ pub use strum::*;
 pub use types::*;
 pub mod logger;
 
+pub use dioxus::prelude::*;
+
+#[cfg(not(feature = "fullstack"))]
+pub mod fullstack;
+#[cfg(not(feature = "fullstack"))]
+pub use fullstack::*;
+
+#[cfg(not(feature = "fullstack"))]
+pub use fullstack::{
+    delete, get, patch, post, put, use_loader, use_server_cached, Loader, Loading, ServerFnError,
+};
+
+#[cfg(feature = "fullstack")]
+pub use dioxus::prelude::{delete, get, patch, post, put, *};
+
+#[cfg(feature = "fullstack")]
+pub use dioxus::fullstack::{Form, Loader, Loading};
+
 pub use dioxus::logger::tracing::{debug, error, info, warn};
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
@@ -47,8 +65,6 @@ pub use dev_tools::*;
 pub use dioxus;
 pub use providers::*;
 pub use run::*;
-
-pub use dioxus::prelude::*;
 
 // NOTE: it replaces dioxus::prelude::* and should be used after it.
 pub use components::SuspenseBoundary;

@@ -1220,12 +1220,23 @@ fn generate_struct_impl(
                         .expression_attribute_values(":sk", aws_sdk_dynamodb::types::AttributeValue::S(sk.to_string()));
                 }
 
-                if let Some(ref filter_prefix) = opt.filter_sk_prefix {
+                // `filter_sk_eq` (exact match) takes priority over
+                // `filter_sk_prefix` (begins_with) so callers that want an
+                // exact-sk filter aren't accidentally widened.
+                if let Some(ref filter_eq) = opt.filter_sk_eq {
                     req = req
-                        .filter_expression("begins_with(#base_sk, :base_sk_prefix)")
+                        .filter_expression("#base_sk = :base_sk_value")
                         .expression_attribute_names("#base_sk", "sk")
                         .expression_attribute_values(
-                            ":base_sk_prefix",
+                            ":base_sk_value",
+                            aws_sdk_dynamodb::types::AttributeValue::S(filter_eq.clone()),
+                        );
+                } else if let Some(ref filter_prefix) = opt.filter_sk_prefix {
+                    req = req
+                        .filter_expression("begins_with(#base_sk, :base_sk_value)")
+                        .expression_attribute_names("#base_sk", "sk")
+                        .expression_attribute_values(
+                            ":base_sk_value",
                             aws_sdk_dynamodb::types::AttributeValue::S(filter_prefix.clone()),
                         );
                 }
@@ -1841,6 +1852,14 @@ fn generate_query_option(st_name: &str, cfg: &StructCfg) -> proc_macro2::TokenSt
             /// otherwise inevitable. Unlike [`sk`], this never touches the
             /// `KeyConditionExpression` and always filters on the base `sk`.
             pub filter_sk_prefix: Option<String>,
+            /// Server-side `FilterExpression` — `sk = <value>` on the base-table
+            /// sort key. Stricter cousin of [`filter_sk_prefix`]: use when the
+            /// target entity's sk is an exact, non-composite string (e.g.
+            /// `EntityType::Post` → `"POST"`) and a `begins_with` filter would
+            /// also match other entities whose sk happens to start with the
+            /// same letters (e.g. `"POST_COMMENT#..."`). Prefer this for any
+            /// GSI query that targets a single non-composite sk.
+            pub filter_sk_eq: Option<String>,
         }
 
         impl Default for #opt_ident {
@@ -1852,6 +1871,7 @@ fn generate_query_option(st_name: &str, cfg: &StructCfg) -> proc_macro2::TokenSt
                     scan_index_forward: false,
                     all: false,
                     filter_sk_prefix: None,
+                    filter_sk_eq: None,
                 }
             }
         }
@@ -1926,6 +1946,14 @@ fn generate_query_option(st_name: &str, cfg: &StructCfg) -> proc_macro2::TokenSt
             /// the deserializer. See field docs for rationale.
             pub fn filter_sk_prefix(mut self, prefix: impl std::fmt::Display) -> Self {
                 self.filter_sk_prefix = Some(prefix.to_string());
+                self
+            }
+
+            /// Attach a `sk = <value>` FilterExpression. Use when the target
+            /// entity's sk is exact (e.g. `"POST"`) and a prefix filter would
+            /// accidentally match neighbours like `"POST_COMMENT#..."`.
+            pub fn filter_sk_eq(mut self, value: impl std::fmt::Display) -> Self {
+                self.filter_sk_eq = Some(value.to_string());
                 self
             }
         }
@@ -2039,15 +2067,24 @@ fn generate_index_fn(
 
     // FilterExpression on the *base* sk — applied after the KeyCondition
     // matches and before items reach the deserializer. Uses a distinct alias
-    // ("#base_sk"/":base_sk_prefix") so it never collides with the GSI sk
-    // attribute aliases above.
+    // ("#base_sk"/":base_sk_value") so it never collides with the GSI sk
+    // attribute aliases above. `filter_sk_eq` (exact match) takes priority
+    // over `filter_sk_prefix` (begins_with); only one is sent per request.
     let filter_condition = quote! {
-        if let Some(ref filter_prefix) = opt.filter_sk_prefix {
+        if let Some(ref filter_eq) = opt.filter_sk_eq {
             req = req
-                .filter_expression("begins_with(#base_sk, :base_sk_prefix)")
+                .filter_expression("#base_sk = :base_sk_value")
                 .expression_attribute_names("#base_sk", "sk")
                 .expression_attribute_values(
-                    ":base_sk_prefix",
+                    ":base_sk_value",
+                    aws_sdk_dynamodb::types::AttributeValue::S(filter_eq.clone()),
+                );
+        } else if let Some(ref filter_prefix) = opt.filter_sk_prefix {
+            req = req
+                .filter_expression("begins_with(#base_sk, :base_sk_value)")
+                .expression_attribute_names("#base_sk", "sk")
+                .expression_attribute_values(
+                    ":base_sk_value",
                     aws_sdk_dynamodb::types::AttributeValue::S(filter_prefix.clone()),
                 );
         }

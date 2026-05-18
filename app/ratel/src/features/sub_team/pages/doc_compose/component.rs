@@ -171,6 +171,9 @@ fn DocComposeForm(username: String) -> Element {
     let mut body: Signal<String> = use_signal(|| initial_body);
     let mut required: Signal<bool> = use_signal(|| initial_required);
     let mut attachments: Signal<Vec<File>> = use_signal(|| initial_attachments);
+    // Mobile drawer state — same pattern as post_edit. Click "옵션" in the
+    // bottom-bar to slide the side-panel up from below.
+    let mut drawer_open = use_signal(|| false);
 
     let current_id: Signal<Option<String>> = use_signal(move || initial_doc_id.clone());
 
@@ -194,10 +197,10 @@ fn DocComposeForm(username: String) -> Element {
     } else {
         Some(category_ctx.0.clone())
     };
-    let save_action = move |_| {
+    let save_action = use_callback(move |_| {
         let username_for_after = username_for_after.clone();
         let category_value = category_value.clone();
-        async move {
+        spawn(async move {
             let t = title();
             let b = body();
             let r = required();
@@ -241,8 +244,8 @@ fn DocComposeForm(username: String) -> Element {
             nav.push(Route::TeamSubTeamManagementPage {
                 username: username_for_after,
             });
-        }
-    };
+        });
+    });
 
     let discard_action = move |_| {
         nav.push(Route::TeamSubTeamManagementPage {
@@ -257,7 +260,6 @@ fn DocComposeForm(username: String) -> Element {
         .split_whitespace()
         .filter(|w| !w.is_empty())
         .count();
-    let read_minutes = (word_count.max(1) as f64 / 250.0).ceil().max(1.0) as i32;
 
     let updated_at_display = if initial_updated_at > 0 {
         crate::common::utils::time::time_ago(initial_updated_at)
@@ -381,6 +383,8 @@ fn DocComposeForm(username: String) -> Element {
             }
 
             // ── 2. EDIT BANNER ─────────────────────────────────
+            // Full-bleed banner outside the composer so it stretches edge
+            // to edge across the page, matching the user's preference.
             div { class: "edit-banner",
                 div { class: "edit-banner__inner",
                     div { class: "edit-banner__icon",
@@ -426,10 +430,20 @@ fn DocComposeForm(username: String) -> Element {
                         placeholder: tr.doc_compose_body_placeholder.to_string(),
                         on_content_change: move |html: String| body.set(html),
                     }
+                }
 
-                    // Attachments
-                    div { class: "attachments",
-                        div { class: "attachments__title",
+                aside {
+                    class: "side-panel",
+                    "data-open": drawer_open(),
+                    // Mobile drawer head — handle + title + close button.
+                    // Hidden on desktop via base `.side-panel__head { display: none }`.
+                    div { class: "side-panel__head",
+                        span { class: "side-panel__handle" }
+                        span { class: "side-panel__title", "{tr.sub_team_options_drawer_title}" }
+                        button {
+                            class: "side-panel__close",
+                            "aria-label": tr.sub_team_options_close,
+                            onclick: move |_| drawer_open.set(false),
                             svg {
                                 view_box: "0 0 24 24",
                                 fill: "none",
@@ -437,82 +451,22 @@ fn DocComposeForm(username: String) -> Element {
                                 stroke_width: "2",
                                 stroke_linecap: "round",
                                 stroke_linejoin: "round",
-                                path { d: "M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" }
-                            }
-                            "{tr.doc_compose_attachments_title}"
-                            span { class: "attachments__count", "{attachment_count}" }
-                        }
-
-                        div { class: "attachment-list", id: "attach-list",
-                            for (idx, f) in attachments_now.iter().enumerate() {
-                                AttachmentRow {
-                                    key: "{f.id}-{idx}",
-                                    file: f.clone(),
-                                    on_remove: move |_| {
-                                        attachments
-                                            .with_mut(|v| {
-                                                if idx < v.len() {
-                                                    v.remove(idx);
-                                                }
-                                            });
-                                    },
-                                }
-                            }
-                        }
-
-                        FileUploader {
-                            class: "file-dropzone".to_string(),
-                            accept: ".pdf,.docx,.pptx,.xlsx,.png,.jpg,.jpeg".to_string(),
-                            on_upload_success: move |_: String| {},
-                            on_upload_meta: move |uploaded: UploadedFileMeta| {
-                                let UploadedFileMeta { url, name, size } = uploaded;
-                                let uploaded_name = if name.trim().is_empty() {
-                                    url.split('/').next_back().unwrap_or("file").to_string()
-                                } else {
-                                    name
-                                };
-                                let ext = FileExtension::from_name_or_url(&uploaded_name, &url);
-                                attachments
-                                    .with_mut(|v| {
-                                        v.push(File {
-                                            id: url.clone(),
-                                            name: uploaded_name,
-                                            size,
-                                            ext,
-                                            url: Some(url),
-                                            uploader_name: None,
-                                            uploader_profile_url: None,
-                                            uploaded_at: Some(
-                                                crate::common::utils::time::get_now_timestamp_millis(),
-                                            ),
-                                        });
-                                    });
-                            },
-                            svg {
-                                view_box: "0 0 24 24",
-                                fill: "none",
-                                stroke: "currentColor",
-                                stroke_width: "2",
-                                stroke_linecap: "round",
-                                stroke_linejoin: "round",
-                                path { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }
-                                polyline { points: "17 8 12 3 7 8" }
                                 line {
-                                    x1: "12",
-                                    y1: "3",
-                                    x2: "12",
-                                    y2: "15",
+                                    x1: "18",
+                                    y1: "6",
+                                    x2: "6",
+                                    y2: "18",
                                 }
-                            }
-                            span { "data-testid": "sub-team-doc-attach-btn",
-                                "{tr.doc_compose_upload_title}"
-                                small { "{tr.doc_compose_upload_hint}" }
+                                line {
+                                    x1: "6",
+                                    y1: "6",
+                                    x2: "18",
+                                    y2: "18",
+                                }
                             }
                         }
                     }
-                }
 
-                aside { class: "side-panel",
                     // 필독 toggle
                     div { class: "side-card",
                         div { class: "side-card__title",
@@ -602,6 +556,95 @@ fn DocComposeForm(username: String) -> Element {
                         }
                     }
 
+                    // Attachments — moved from inside the composer to the
+                    // sidebar (above the discard button) so the body area
+                    // stays clean and the upload affordance lives next to
+                    // 문서 정보 / Required toggle.
+                    div { class: "side-card",
+                        div { class: "attachments",
+                            div { class: "attachments__title",
+                                svg {
+                                    view_box: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_width: "2",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    path { d: "M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" }
+                                }
+                                "{tr.doc_compose_attachments_title}"
+                                span { class: "attachments__count", "{attachment_count}" }
+                            }
+
+                            div { class: "attachment-list", id: "attach-list",
+                                for (idx, f) in attachments_now.iter().enumerate() {
+                                    AttachmentRow {
+                                        key: "{f.id}-{idx}",
+                                        file: f.clone(),
+                                        on_remove: move |_| {
+                                            attachments
+                                                .with_mut(|v| {
+                                                    if idx < v.len() {
+                                                        v.remove(idx);
+                                                    }
+                                                });
+                                        },
+                                    }
+                                }
+                            }
+
+                            FileUploader {
+                                class: "file-dropzone".to_string(),
+                                accept: ".pdf,.docx,.pptx,.xlsx,.png,.jpg,.jpeg".to_string(),
+                                on_upload_success: move |_: String| {},
+                                on_upload_meta: move |uploaded: UploadedFileMeta| {
+                                    let UploadedFileMeta { url, name, size } = uploaded;
+                                    let uploaded_name = if name.trim().is_empty() {
+                                        url.split('/').next_back().unwrap_or("file").to_string()
+                                    } else {
+                                        name
+                                    };
+                                    let ext = FileExtension::from_name_or_url(&uploaded_name, &url);
+                                    attachments
+                                        .with_mut(|v| {
+                                            v.push(File {
+                                                id: url.clone(),
+                                                name: uploaded_name,
+                                                size,
+                                                ext,
+                                                url: Some(url),
+                                                uploader_name: None,
+                                                uploader_profile_url: None,
+                                                uploaded_at: Some(
+                                                    crate::common::utils::time::get_now_timestamp_millis(),
+                                                ),
+                                            });
+                                        });
+                                },
+                                svg {
+                                    view_box: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_width: "2",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    path { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }
+                                    polyline { points: "17 8 12 3 7 8" }
+                                    line {
+                                        x1: "12",
+                                        y1: "3",
+                                        x2: "12",
+                                        y2: "15",
+                                    }
+                                }
+                                span { "data-testid": "sub-team-doc-attach-btn",
+                                    "{tr.doc_compose_upload_title}"
+                                    small { "{tr.doc_compose_upload_hint}" }
+                                }
+                            }
+                        }
+                    }
+
                     // Discard
                     button {
                         class: "danger-row",
@@ -629,7 +672,14 @@ fn DocComposeForm(username: String) -> Element {
                 }
             }
 
-            // ── 4. BOTTOM BAR ──────────────────────────────────
+            // ── 4. DRAWER BACKDROP (mobile only) ───────────────
+            div {
+                class: "drawer-backdrop",
+                "data-open": drawer_open(),
+                onclick: move |_| drawer_open.set(false),
+            }
+
+            // ── 5. BOTTOM BAR ──────────────────────────────────
             div { class: "bottom-bar",
                 div { class: "bottom-bar__left",
                     span { class: "bottom-bar__stat",
@@ -645,10 +695,14 @@ fn DocComposeForm(username: String) -> Element {
                         }
                         strong { "{word_count}" }
                         " {tr.doc_compose_stats_words} · "
-                        strong { "{read_minutes} min" }
-                        " {tr.doc_compose_stats_read}"
+                        strong { "{char_count}" }
+                        " {tr.doc_compose_stats_chars}"
                     }
-                    span { class: "bottom-bar__stat",
+                }
+                div { class: "bottom-bar__right",
+                    button {
+                        class: "bottom-bar__btn bottom-bar__btn--mobile",
+                        onclick: move |_| drawer_open.set(true),
                         svg {
                             view_box: "0 0 24 24",
                             fill: "none",
@@ -656,11 +710,32 @@ fn DocComposeForm(username: String) -> Element {
                             stroke_width: "2",
                             stroke_linecap: "round",
                             stroke_linejoin: "round",
-                            path { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }
-                            polyline { points: "14 2 14 8 20 8" }
+                            line { x1: "4", y1: "21", x2: "4", y2: "14" }
+                            line { x1: "4", y1: "10", x2: "4", y2: "3" }
+                            line { x1: "12", y1: "21", x2: "12", y2: "12" }
+                            line { x1: "12", y1: "8", x2: "12", y2: "3" }
+                            line { x1: "20", y1: "21", x2: "20", y2: "16" }
+                            line { x1: "20", y1: "12", x2: "20", y2: "3" }
+                            line { x1: "1", y1: "14", x2: "7", y2: "14" }
+                            line { x1: "9", y1: "8", x2: "15", y2: "8" }
+                            line { x1: "17", y1: "16", x2: "23", y2: "16" }
                         }
-                        strong { "{char_count}" }
-                        " {tr.doc_compose_stats_chars}"
+                        "{tr.sub_team_options}"
+                    }
+                    button {
+                        class: "bottom-bar__btn bottom-bar__btn--mobile bottom-bar__btn--primary",
+                        "data-testid": "sub-team-doc-save-btn-mobile",
+                        onclick: save_action,
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2.5",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            polyline { points: "20 6 9 17 4 12" }
+                        }
+                        span { "{tr.save}" }
                     }
                 }
             }

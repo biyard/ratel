@@ -1,5 +1,6 @@
 use crate::common::hooks::use_infinite_query;
 use crate::common::ListResponse;
+use crate::common::*;
 use crate::features::social::pages::member::components::{InviteMemberModal, InviteResult};
 use crate::features::social::pages::member::controllers::{
     get_team_member_permission_handler, list_members_handler,
@@ -7,7 +8,6 @@ use crate::features::social::pages::member::controllers::{
 use crate::features::social::pages::member::dto::{TeamMemberResponse, TeamRole};
 use crate::features::social::pages::setting::team::i18n::TeamSettingsTranslate;
 use crate::features::social::*;
-use crate::common::*;
 use dioxus_primitives::scroll_area::ScrollDirection;
 
 #[derive(Clone)]
@@ -19,41 +19,23 @@ struct ChangeRolePayload {
 const PAGE_SIZE: i32 = 10;
 
 #[component]
-pub fn ManagementPage(username: String) -> Element {
+pub fn ManagementPage(username: ReadSignal<String>) -> Element {
     let tr: TeamSettingsTranslate = use_translate();
     use_context_provider(|| PopupService::new());
     let mut popup = use_popup();
 
-    let perm_res = use_server_future(use_reactive((&username,), |(name,)| async move {
-        get_team_member_permission_handler(name).await
-    }))?;
+    let perm_res =
+        use_loader(move || async move { get_team_member_permission_handler(username()).await })?;
 
-    let (team_pk, can_manage) = match &*perm_res.read() {
-        Some(Ok(ctx)) => (ctx.team_pk.clone(), ctx.role.is_admin_or_owner()),
-        Some(Err(_)) => {
-            return rsx! {
-                div { class: "flex flex-col gap-2 p-4",
-                    span { class: "text-sm font-semibold text-text-primary", {tr.no_permission_title} }
-                    span { class: "text-sm text-foreground-muted", {tr.no_permission_description} }
-                }
-            };
-        }
-        None => {
-            return rsx! {
-                div { class: "flex justify-center items-center py-10 w-full",
-                    crate::common::components::LoadingIndicator {}
-                }
-            };
-        }
-    };
+    let ctx = perm_res();
+    let (team_pk, can_manage) = (ctx.team_pk.clone(), ctx.role.is_admin_or_owner());
 
     let mut error_msg = use_signal(|| Option::<String>::None);
     let failed_remove_member = tr.failed_remove_member.to_string();
     let failed_change_role = tr.failed_change_role.to_string();
 
     let user_ctx = crate::features::auth::hooks::use_user_context();
-    let current_user_pk: Option<String> =
-        user_ctx().user.as_ref().map(|u| u.pk.to_string());
+    let current_user_pk: Option<String> = user_ctx().user.as_ref().map(|u| u.pk.to_string());
 
     // Members infinite scroll query
     let team_pk_signal = use_signal(|| team_pk.clone());
@@ -73,9 +55,7 @@ pub fn ManagementPage(username: String) -> Element {
     let members = members_query.items();
 
     let on_add_members_click = {
-        let mut popup = popup;
         let team_pk = team_pk.clone();
-        let username = username.clone();
         move |_| {
             let on_close = {
                 let mut popup = popup;
@@ -94,7 +74,7 @@ pub fn ManagementPage(username: String) -> Element {
             popup.open(rsx! {
                 InviteMemberModal {
                     team_pk: team_pk.clone(),
-                    username: username.clone(),
+                    username: username(),
                     on_close,
                     on_invited,
                 }

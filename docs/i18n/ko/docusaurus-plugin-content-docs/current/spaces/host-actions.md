@@ -117,8 +117,8 @@ Content 카드는 다음을 담습니다.
 
 Configuration 카드는 공통 섹션에 더해 **조정 (Moderation)** 섹션을 가집니다. 토론이 활성화된 후 오프토픽 답변을 가릴 수 있는 권한을 여기서 지정합니다.
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/discussion_editor.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-브라우저가 비디오 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/discussion_editor.mov')}>워크스루 다운로드</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/discussion_editor.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+브라우저가 비디오 임베드를 지원하지 않습니다. <a href="https://metadata.ratel.foundation/mov/discussion_editor.mov">워크스루 다운로드</a>.
 </video>
 
 ## <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><polyline points="20 6 9 17 4 12"/></svg> Poll 편집기
@@ -140,8 +140,8 @@ Configuration 카드는 공통 섹션에 더해 **투표 규칙 (Voting rules)**
 - **응답 수정 허용 (Allow response editing)** — 켜면 폴 진행 중에 참여자가 응답을 수정할 수 있습니다. 끄면 제출 즉시 응답이 확정됩니다. 암호화 업로드가 켜져 있으면 자동으로 비활성화됩니다.
 - **암호화 업로드 (Encrypted upload)** — 켜면 투표 결과가 암호화되어 온체인 (canister) 에 업로드되며, 제출 후 응답 수정이 불가능합니다. 감사 가능성이 중요한 고비중 투표에 사용하세요.
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/poll_editor.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-브라우저가 비디오 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/poll_editor.mov')}>워크스루 다운로드</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/poll_editor.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+브라우저가 비디오 임베드를 지원하지 않습니다. <a href="https://metadata.ratel.foundation/mov/poll_editor.mov">워크스루 다운로드</a>.
 </video>
 
 ## <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Quiz 편집기
@@ -158,8 +158,8 @@ Content 카드는 다음을 담습니다.
 
 합격하면 보상이 잠금 해제되고, 불합격하면 (Retry Count 가 허용하는 한) 다시 응시할 수 있습니다.
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/quiz_editor.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-브라우저가 비디오 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/quiz_editor.mov')}>워크스루 다운로드</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/quiz_editor.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+브라우저가 비디오 임베드를 지원하지 않습니다. <a href="https://metadata.ratel.foundation/mov/quiz_editor.mov">워크스루 다운로드</a>.
 </video>
 
 ## <img src={useBaseUrl('/img/icons/users.svg')} width="22" height="22" alt="팔로우" style={{verticalAlign: 'middle'}} /> Follow 편집기
@@ -173,8 +173,8 @@ Targets 카드는 다음을 담습니다.
 
 Configuration 카드는 공통 섹션 — 일정, 참여 및 보상, 선행 액션, 상태, 위험 영역 — 만 갖습니다.
 
-<video controls preload="metadata" width="100%" src={useBaseUrl('/media/follow_editor.mov')} style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
-브라우저가 비디오 임베드를 지원하지 않습니다. <a href={useBaseUrl('/media/follow_editor.mov')}>워크스루 다운로드</a>.
+<video controls preload="metadata" width="100%" src="https://metadata.ratel.foundation/mov/follow_editor.mov" style={{borderRadius: '8px', border: '1px solid var(--ratel-line-soft)', maxWidth: '720px', display: 'block', margin: '1rem 0'}}>
+브라우저가 비디오 임베드를 지원하지 않습니다. <a href="https://metadata.ratel.foundation/mov/follow_editor.mov">워크스루 다운로드</a>.
 </video>
 
 ## <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign: 'middle'}}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Meet 편집기 _(예정)_

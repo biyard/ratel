@@ -52,7 +52,40 @@ pub fn DocAgreementModal(
                     }
                 }
                 div { class: "doc-modal__body",
-                    div { class: "doc-modal__content", "{doc.body}" }
+                    // SAFETY: `doc.body` is rich-text produced by the
+                    // parent admin via the docs composer (Tiptap →
+                    // server-side allowlist sanitize in
+                    // `update_sub_team_doc_handler`), so the HTML reaching
+                    // here has been stripped of executable script. Render
+                    // it as rich content rather than escaped text so
+                    // `<b>` / `<div>` formatting actually renders.
+                    div {
+                        class: "doc-modal__content",
+                        dangerous_inner_html: "{doc.body}",
+                    }
+                    // Surface attachments the parent admin attached when
+                    // composing this doc — applicants need to be able to
+                    // download the source files before agreeing.
+                    if !doc.attachments.is_empty() {
+                        div { class: "doc-modal__attachments",
+                            for file in doc.attachments.iter() {
+                                {
+                                    let href = file.url.clone().unwrap_or_default();
+                                    rsx! {
+                                        a {
+                                            class: "doc-modal__attachment",
+                                            href: "{href}",
+                                            target: "_blank",
+                                            rel: "noopener noreferrer",
+                                            lucide_dioxus::Paperclip { class: "w-3 h-3 [&>path]:stroke-current" }
+                                            span { class: "doc-modal__attachment-name", "{file.name}" }
+                                            span { class: "doc-modal__attachment-size", "{file.size}" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                     div { class: "doc-modal__notice",
                         lucide_dioxus::Info { class: "w-4 h-4 [&>path]:stroke-current" }
                         div { class: "doc-modal__notice-text", "{tr.doc_modal_notice}" }
@@ -65,7 +98,11 @@ pub fn DocAgreementModal(
                             r#type: "button",
                             class: "doc-modal__cancel",
                             onclick: move |_| on_cancel.call(()),
-                            if is_required { "{tr.doc_modal_cancel}" } else { "{tr.apply_close}" }
+                            if is_required {
+                                "{tr.doc_modal_cancel}"
+                            } else {
+                                "{tr.apply_close}"
+                            }
                         }
                         if is_required {
                             button {

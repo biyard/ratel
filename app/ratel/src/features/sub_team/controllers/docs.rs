@@ -115,15 +115,17 @@ pub async fn create_sub_team_doc_handler(
                 booster: None,
                 rewards: None,
                 urls: vec![],
+                // Dual-write the doc's attachments onto the backing
+                // Post so the post-detail page can surface the same
+                // file list the apply-page modal shows.
+                attachments: attachments.clone(),
                 categories: vec![trimmed.to_string()],
                 announcement_id: None,
                 announcement_parent_team_id: None,
                 pinned_as_announcement: false,
             };
             if let Err(e) = backing_post.create(cli).await {
-                crate::error!(
-                    "create_sub_team_doc backing post create failed: {e}"
-                );
+                crate::error!("create_sub_team_doc backing post create failed: {e}");
                 return Err(SubTeamError::DocumentNotFound.into());
             }
             doc.backing_post_id = Some(backing_post.pk.to_string());
@@ -206,9 +208,11 @@ pub async fn update_sub_team_doc_handler(
         changed = true;
     }
 
+    let mut attachments_synced_to_post = false;
     if let Some(attachments) = body.attachments {
         updater = updater.with_attachments(attachments.clone());
         existing.attachments = attachments;
+        attachments_synced_to_post = true;
         changed = true;
     }
 
@@ -229,6 +233,61 @@ pub async fn update_sub_team_doc_handler(
             SubTeamError::DocumentNotFound
         })?;
 
+        // Sync the new attachments onto the backing Post (bylaws /
+        // ClubBylaws dual-write path) so the post-detail page stays in
+        // step with the doc's attachment list. Uses raw `update_item`
+        // touching ONLY the `attachments` attribute — the
+        // macro-generated `Post::updater(...)` would re-derive
+        // `gsi5_sk` from a default-initialised inner struct
+        // (`status: Draft`, `visibility: None`), corrupting the live
+        // row's GSI5 sort key and breaking
+        // `find_by_user_and_status` ("Published" begins-with query).
+        // Same constraint as the prior fanout demote bug — see
+        // `announcement_fanout.rs::demote_prior_direct_posts`.
+        if attachments_synced_to_post {
+            if let Some(backing_id) = existing.backing_post_id.as_ref() {
+                if let Ok(post_pk) = backing_id.parse::<Partition>() {
+                    match serde_dynamo::to_attribute_value::<_, aws_sdk_dynamodb::types::AttributeValue>(
+                        &existing.attachments,
+                    ) {
+                        Ok(av) => {
+                            if let Err(e) = cli
+                                .update_item()
+                                .table_name(
+                                    crate::features::posts::models::Post::table_name(),
+                                )
+                                .key(
+                                    "pk",
+                                    aws_sdk_dynamodb::types::AttributeValue::S(
+                                        post_pk.to_string(),
+                                    ),
+                                )
+                                .key(
+                                    "sk",
+                                    aws_sdk_dynamodb::types::AttributeValue::S(
+                                        "POST".to_string(),
+                                    ),
+                                )
+                                .update_expression("SET attachments = :a")
+                                .expression_attribute_values(":a", av)
+                                .send()
+                                .await
+                            {
+                                crate::error!(
+                                    "update_sub_team_doc backing post attachments sync failed: {e}"
+                                );
+                            }
+                        }
+                        Err(e) => {
+                            crate::error!(
+                                "update_sub_team_doc attachments serialize failed: {e}"
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
         // Immutable snapshot at the new version. Best-effort — see
         // the create handler for the same rationale.
         let snapshot = SubTeamDocumentVersion::snapshot_of(team.pk.clone(), &existing);
@@ -242,10 +301,7 @@ pub async fn update_sub_team_doc_handler(
 
 // ── DELETE ──────────────────────────────────────────────────────
 #[delete("/api/teams/:team_pk/sub-teams/docs/:doc_id", user: crate::features::auth::User, team: Team, role: TeamRole)]
-pub async fn delete_sub_team_doc_handler(
-    team_pk: TeamPartition,
-    doc_id: String,
-) -> Result<String> {
+pub async fn delete_sub_team_doc_handler(team_pk: TeamPartition, doc_id: String) -> Result<String> {
     let _ = team_pk;
     let _ = user;
     if !role.is_admin_or_owner() {
@@ -270,12 +326,9 @@ pub async fn delete_sub_team_doc_handler(
     let opts = SubTeamDocumentVersion::opt()
         .sk(prefix)
         .limit(VERSION_PAGE_LIMIT);
-    if let Ok((versions, _)) =
-        SubTeamDocumentVersion::query(cli, team.pk.clone(), opts).await
-    {
+    if let Ok((versions, _)) = SubTeamDocumentVersion::query(cli, team.pk.clone(), opts).await {
         for v in versions {
-            if let Err(e) =
-                SubTeamDocumentVersion::delete(cli, &team.pk, Some(v.sk.clone())).await
+            if let Err(e) = SubTeamDocumentVersion::delete(cli, &team.pk, Some(v.sk.clone())).await
             {
                 crate::error!("delete_sub_team_doc snapshot cleanup failed: {e}");
             }
@@ -310,8 +363,7 @@ pub async fn list_sub_team_doc_versions_handler(
         })?;
     // Highest version first — most recent at the top.
     items.sort_by(|a, b| b.version.cmp(&a.version));
-    let items: Vec<SubTeamDocumentVersionResponse> =
-        items.into_iter().map(Into::into).collect();
+    let items: Vec<SubTeamDocumentVersionResponse> = items.into_iter().map(Into::into).collect();
     Ok((items, next).into())
 }
 
@@ -378,12 +430,10 @@ pub async fn list_team_bylaws_handler(
     let opts = SubTeamDocument::opt()
         .sk(format!("{DOC_SK_PREFIX}#"))
         .limit(LIST_PAGE_LIMIT);
-    let (mut items, next) = SubTeamDocument::query(cli, pk, opts)
-        .await
-        .map_err(|e| {
-            crate::error!("list_team_bylaws query failed: {e}");
-            SubTeamError::DocumentNotFound
-        })?;
+    let (mut items, next) = SubTeamDocument::query(cli, pk, opts).await.map_err(|e| {
+        crate::error!("list_team_bylaws query failed: {e}");
+        SubTeamError::DocumentNotFound
+    })?;
     sort_docs(&mut items);
 
     let category_filter = category.as_deref().map(|c| c.trim().to_string());

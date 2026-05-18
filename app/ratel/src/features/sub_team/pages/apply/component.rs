@@ -799,13 +799,25 @@ fn FieldRow(
                                 ));
                         },
                         option { value: "", "—" }
+                        // No `key:` — option labels are NOT guaranteed
+                        // unique (admin form editor permits duplicate
+                        // labels), and Dioxus panics on duplicate
+                        // keyed siblings. The list is positionally
+                        // stable within a render, so Dioxus's default
+                        // positional reconciliation handles it
+                        // correctly without keys.
                         for opt in options.iter() {
-                            option { key: "{opt}", value: "{opt}", "{opt}" }
+                            option { value: "{opt}", "{opt}" }
                         }
                     }
                 },
                 SubTeamFormFieldType::MultiSelect => rsx! {
                     div { class: "field__multi",
+                        // No `key:` — see the single-select branch
+                        // above. Option labels are not unique-
+                        // constrained server-side and Dioxus's
+                        // positional reconciliation handles a
+                        // positionally-stable list correctly.
                         for opt in options.iter() {
                             {
                                 let opt_val = opt.clone();
@@ -813,7 +825,7 @@ fn FieldRow(
                                 let id_clone = id_for_multi.clone();
                                 let selected_clone = selected_values.clone();
                                 rsx! {
-                                    label { key: "{opt}", class: "field__checkbox",
+                                    label { class: "field__checkbox",
                                         input {
                                             r#type: "checkbox",
                                             checked: selected,

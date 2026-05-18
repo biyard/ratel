@@ -1,7 +1,6 @@
 use crate::*;
 use serde::de::DeserializeOwned;
 
-use super::use_loader;
 use crate::common::{
     traits::{Bookmarker, ItemIter},
     *,

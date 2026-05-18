@@ -171,11 +171,15 @@ fn DocItem(
     let doc_id_for_required = doc_id.clone();
     let doc_id_for_delete = doc_id.clone();
     let title = doc.title.clone();
-    let body_preview = doc.body.chars().take(180).collect::<String>();
+    // Doc body is rich-text HTML (Tiptap output). Strip tags before
+    // truncating so the preview and char count reflect *content*, not
+    // `<div>` / `<b>` markup.
+    let body_plain = crate::features::sub_team::strip_html_to_plain(&doc.body);
+    let body_preview = body_plain.chars().take(180).collect::<String>();
     let required = doc.required;
 
     // Foot stats — `{chars}자 · {N} 파일 · {size}` mirroring mockup.
-    let char_count = doc.body.chars().count();
+    let char_count = body_plain.chars().count();
     let attachment_count = doc.attachments.len();
     let total_bytes: u64 = doc
         .attachments

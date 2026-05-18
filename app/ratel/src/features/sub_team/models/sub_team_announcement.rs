@@ -40,6 +40,12 @@ pub struct SubTeamAnnouncement {
     #[serde(default)]
     pub tags: Vec<String>,
 
+    /// File attachments uploaded in the composer's right-panel uploader.
+    /// Mirrored onto the fan-out anchor Post so apply/detail surfaces can
+    /// render them next to the body — same pattern as `SubTeamDocument`.
+    #[serde(default)]
+    pub attachments: Vec<File>,
+
     /// Parent-team admin user pk who authored.
     pub author_user_id: String,
 
@@ -88,6 +94,15 @@ pub struct SubTeamAnnouncement {
     /// `announcement_id`, hence the explicit field).
     #[serde(default)]
     pub target_post_pk: Option<String>,
+
+    /// Timestamp the deferred Space-publish inbox fan-out completed.
+    /// `None` for broadcasts that don't carry an attached Space, and
+    /// also for space-attached broadcasts whose Space hasn't been
+    /// published yet. Drives idempotency in
+    /// `services::announcement_fanout::handle_space_published` so
+    /// stream replays don't duplicate the inbox notification.
+    #[serde(default)]
+    pub broadcast_notified_at: Option<i64>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -129,6 +144,7 @@ impl SubTeamAnnouncement {
             body,
             html_contents: String::new(),
             tags: Vec::new(),
+            attachments: Vec::new(),
             author_user_id,
             status: SubTeamAnnouncementStatus::Draft,
             target_type: BroadcastTarget::AllRecognizedSubTeams,
@@ -139,6 +155,7 @@ impl SubTeamAnnouncement {
             fan_out_count: 0,
             target_child_team_id: None,
             target_post_pk: None,
+            broadcast_notified_at: None,
         }
     }
 
@@ -167,6 +184,7 @@ impl SubTeamAnnouncement {
             body: String::new(),
             html_contents: body,
             tags: Vec::new(),
+            attachments: Vec::new(),
             author_user_id,
             status: SubTeamAnnouncementStatus::Published,
             target_type: BroadcastTarget::AllRecognizedSubTeams,
@@ -177,6 +195,7 @@ impl SubTeamAnnouncement {
             fan_out_count: 0,
             target_child_team_id: Some(target_child_team_id),
             target_post_pk: None,
+            broadcast_notified_at: None,
         }
     }
 }

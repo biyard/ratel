@@ -4,7 +4,7 @@ pub use use_user_role::*;
 mod use_space;
 pub use use_space::*;
 
-use dioxus::fullstack::Loader;
+use crate::*;
 
 use crate::common::types::ListResponse;
 use crate::features::activity::controllers::{MyScoreResponse, RankingEntryResponse};

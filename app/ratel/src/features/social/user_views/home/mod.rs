@@ -5,9 +5,11 @@ use user_posts_panel::UserPostsPanel;
 
 use crate::common::*;
 use crate::features::character::components::LevelChip;
+use crate::features::my_follower::controllers::{
+    check_follow_status_handler, follow_user, unfollow_user,
+};
 use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::posts::*;
-use crate::features::my_follower::controllers::{check_follow_status_handler, follow_user, unfollow_user};
 use crate::features::social::controllers::{find_user_handler, FindUserQueryType};
 
 #[derive(Clone, Copy, PartialEq, Default)]
@@ -42,14 +44,20 @@ pub fn Home(username: String) -> Element {
 
     // Load user profile
     let user_detail = use_resource(use_reactive((&username,), |(name,)| async move {
-        find_user_handler(FindUserQueryType::Username, name).await.ok()
+        find_user_handler(FindUserQueryType::Username, name)
+            .await
+            .ok()
     }));
 
     let (display_name, profile_url, description) = {
         let detail = user_detail.read();
         match detail.as_ref().and_then(|opt| opt.as_ref()) {
             Some(u) => (
-                if u.nickname.is_empty() { u.username.clone() } else { u.nickname.clone() },
+                if u.nickname.is_empty() {
+                    u.username.clone()
+                } else {
+                    u.nickname.clone()
+                },
                 u.profile_url.clone(),
                 u.description.clone(),
             ),
@@ -59,21 +67,17 @@ pub fn Home(username: String) -> Element {
 
     // Follow status
     let username_for_status = username.clone();
-    let follow_status = use_server_future(move || {
+    let follow_status = use_loader(move || {
         let name = username_for_status.clone();
         async move { check_follow_status_handler(name).await }
     })?;
 
-    let follow_status_val = follow_status.read();
-    let initial_status = follow_status_val.as_ref().unwrap();
+    let initial_status = follow_status();
 
-    let mut is_following = use_signal(move || {
-        initial_status.as_ref().map(|s| s.is_following).unwrap_or(false)
-    });
+    let mut is_following = use_signal(move || initial_status.is_following);
     let mut processing = use_signal(|| false);
 
-    let follow_target_pk = initial_status.as_ref().ok().map(|s| s.target_pk.clone());
-
+    let follow_target_pk = use_memo(move || follow_status().target_pk);
 
     let chip_username = username.clone();
     let level_chip_slot: Element = rsx! {
@@ -93,37 +97,26 @@ pub fn Home(username: String) -> Element {
                 processing: processing(),
                 logged_in,
                 right_slot: level_chip_slot,
-                on_follow: {
-                    let pk = follow_target_pk.clone();
-                    move |_| {
-                        let pk = pk.clone();
-                        processing.set(true);
-                        spawn(async move {
-                            if let Some(pk) = pk {
-                                match follow_user(pk).await {
-                                    Ok(_) => is_following.set(true),
-                                    Err(e) => tracing::error!("Follow failed: {:?}", e),
-                                }
-                            }
-                            processing.set(false);
-                        });
-                    }
+                on_follow: move |_| {
+                    processing.set(true);
+                    spawn(async move {
+                        match follow_user(follow_target_pk()).await {
+                            Ok(_) => is_following.set(true),
+                            Err(e) => tracing::error!("Follow failed: {:?}", e),
+                        }
+                        processing.set(false);
+                    });
+
                 },
-                on_unfollow: {
-                    let pk = follow_target_pk.clone();
-                    move |_| {
-                        let pk = pk.clone();
-                        processing.set(true);
-                        spawn(async move {
-                            if let Some(pk) = pk {
-                                match unfollow_user(pk).await {
-                                    Ok(_) => is_following.set(false),
-                                    Err(e) => tracing::error!("Unfollow failed: {:?}", e),
-                                }
-                            }
-                            processing.set(false);
-                        });
-                    }
+                on_unfollow: move |_| {
+                    processing.set(true);
+                    spawn(async move {
+                        match unfollow_user(follow_target_pk()).await {
+                            Ok(_) => is_following.set(false),
+                            Err(e) => tracing::error!("Unfollow failed: {:?}", e),
+                        }
+                        processing.set(false);
+                    });
                 },
             }
 
