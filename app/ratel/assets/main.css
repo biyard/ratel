@@ -31742,32 +31742,9 @@ body.comments-panel-resizing {
     padding: 20px 16px 110px;
     gap: 16px;
   }
-  /* The generic `.side-panel` class is hijacked by a bottom-sheet
-     drawer pattern in another feature's mobile breakpoint
-     (`position: fixed; bottom: 0; transform: translateY(100%)`).
-     Without an override the broadcast composer's side panel ends up
-     completely off-screen below the viewport — `position: fixed`
-     anchors the top edge at viewport bottom, then `translateY(100%)`
-     pushes it down by its own height. Same reset as `.sub-team-doc-compose`. */
-  .sub-team-broadcast-compose .side-panel {
-    position: static;
-    top: auto;
-    bottom: auto;
-    left: auto;
-    right: auto;
-    transform: none;
-    transition: none;
-    max-height: none;
-    overflow-y: visible;
-    overscroll-behavior: auto;
-    box-shadow: none;
-    border-top: 0;
-    border-radius: 0;
-    background: transparent;
-    backdrop-filter: none;
-    z-index: auto;
-    padding: 0;
-  }
+  /* Side-panel now uses the shared mobile drawer pattern (slides up
+     from the bottom-bar's 옵션 button) — keep the base translateY(100%)
+     off-screen state. No in-flow override here. */
 }
 @media (max-width: 500px) {
   .sub-team-broadcast-compose .arena-topbar {
@@ -34268,10 +34245,13 @@ body.comments-panel-resizing {
 
 /* ── Edit banner (Document editor · Rich text + 첨부) ──────── */
 .sub-team-doc-compose .edit-banner {
-  max-width: 1280px;
-  margin: 0 auto;
+  /* Full-bleed banner — sits between topbar and composer-page, edge to
+     edge. flex-shrink: 0 keeps it from being squeezed when the page is
+     viewport-fit and the editor body flex-fills below. */
   width: 100%;
+  margin: 0;
   padding: 14px 28px 0;
+  flex-shrink: 0;
 }
 .sub-team-doc-compose .edit-banner__inner {
   display: flex;
@@ -34321,7 +34301,6 @@ body.comments-panel-resizing {
   align-items: stretch;
   flex-wrap: nowrap;
   gap: 10px;
-  margin-top: 8px;
 }
 /* Cap the editor body so the page doesn't keep growing as the user
    types — past this height the editor scrolls internally, which keeps
@@ -34665,33 +34644,8 @@ body.comments-panel-resizing {
     padding: 20px 16px 110px;
     gap: 18px;
   }
-  /* The generic `.side-panel` class is hijacked by a bottom-sheet
-     drawer pattern in another feature's mobile breakpoint (search
-     `.side-panel { position: fixed; transform: translateY(100%); }`
-     in this file). That bleeds onto the doc-compose page because the
-     selector isn't scoped, so the panel is laid out in flow but then
-     translated down by 100% of its own height — leaving a yawning
-     visual gap below the attachments dropzone. Override every drawer
-     property back to its in-flow default here. */
-  .sub-team-doc-compose .side-panel {
-    position: static;
-    top: auto;
-    bottom: auto;
-    left: auto;
-    right: auto;
-    transform: none;
-    transition: none;
-    max-height: none;
-    overflow-y: visible;
-    overscroll-behavior: auto;
-    box-shadow: none;
-    border-top: 0;
-    border-radius: 0;
-    background: transparent;
-    backdrop-filter: none;
-    z-index: auto;
-    padding: 0;
-  }
+  /* Side-panel uses the shared mobile drawer pattern (slides up from
+     the bottom-bar's 옵션 button). Keep base translateY(100%) state. */
   .sub-team-doc-compose .autosave { display: none; }
   .sub-team-doc-compose .edit-banner { padding: 12px 16px 0; }
 }
@@ -44923,5 +44877,188 @@ body.comments-panel-resizing {
   .analyze-arena.analyze-arena--detail .topic-table__row {
     grid-template-columns: 70px 1fr 32px;
     gap: 8px;
+  }
+}
+
+
+/* ─── Unified compose-page layout ──────────────────────────────
+   Applies the post-edit composer style (right-pinned side panel,
+   wide editor column, bottom in-flow toolbar, viewport-fit with no
+   page scroll) to the sub-team broadcast / doc compose pages.
+   Placed at end of file so it wins source-order ties against the
+   per-page rules in the sub-team sections above. */
+.sub-team-broadcast-compose,
+.sub-team-doc-compose {
+  /* Match composer-arena viewport-fit behaviour. dvh keeps the
+     layout flush on mobile when the URL bar comes and goes. */
+  min-height: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.sub-team-broadcast-compose .composer-page,
+.sub-team-doc-compose .composer-page {
+  max-width: none;
+  margin: 0;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  grid-template-rows: 1fr;
+  padding-top: 22px;
+  padding-bottom: 8px;
+}
+
+.sub-team-broadcast-compose .composer,
+.sub-team-doc-compose .composer {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+/* doc-compose has an in-flow .bottom-bar — pull it out of fixed
+   positioning so composer-page naturally ends right above it. */
+.sub-team-doc-compose > .bottom-bar {
+  position: static;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  z-index: auto;
+  flex-shrink: 0;
+}
+/* broadcast's bottom-bar only carries mobile-only buttons (옵션 +
+   publish). Hide on desktop where the topbar already exposes publish. */
+.sub-team-broadcast-compose > .bottom-bar {
+  display: none;
+}
+@media (max-width: 980px) {
+  .sub-team-broadcast-compose > .bottom-bar {
+    display: flex;
+  }
+}
+
+/* Editor surface: drop the card chrome so the body sits on the
+   page background like reports-edit. */
+.sub-team-broadcast-compose .ratel-editor,
+.sub-team-doc-compose .ratel-editor {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+  flex: 1;
+  min-height: 0;
+}
+.sub-team-broadcast-compose .ratel-editor:focus-within,
+.sub-team-doc-compose .ratel-editor:focus-within {
+  background: transparent;
+  border: none;
+}
+
+/* Toolbar — sits inside the editor flex column as the LAST child
+   (order: 5) so the writing area is above and the toolbar pill
+   anchors to the bottom of the editor. Same shape as composer-arena. */
+.sub-team-broadcast-compose .ratel-editor .re-toolbar,
+.sub-team-doc-compose .ratel-editor .re-toolbar {
+  position: relative;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  transform: none;
+  order: 5;
+  align-self: center;
+  flex-shrink: 0;
+  width: min(1000px, 100%);
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  row-gap: 4px;
+  margin: 8px auto 0;
+  padding: 8px 10px;
+  gap: 4px;
+  border: 1px solid var(--re-border-strong);
+  border-radius: 14px;
+  background: var(--re-toolbar-bg);
+  backdrop-filter: blur(20px);
+}
+.sub-team-broadcast-compose .ratel-editor .re-toolbar__group + .re-toolbar__group,
+.sub-team-doc-compose .ratel-editor .re-toolbar__group + .re-toolbar__group {
+  border-left: none;
+  margin-left: 0;
+  padding-left: 4px;
+}
+.sub-team-broadcast-compose .ratel-editor .re-content,
+.sub-team-doc-compose .ratel-editor .re-content {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  order: 1;
+  padding: 8px 0 12px;
+}
+.sub-team-broadcast-compose .ratel-editor .re-statusbar,
+.sub-team-doc-compose .ratel-editor .re-statusbar {
+  display: none;
+}
+.sub-team-broadcast-compose .ratel-editor .re-block__menu,
+.sub-team-doc-compose .ratel-editor .re-block__menu {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+
+@media (max-width: 980px) {
+  /* Single-row horizontally-scrollable toolbar on mobile. */
+  .sub-team-broadcast-compose .ratel-editor .re-toolbar,
+  .sub-team-doc-compose .ratel-editor .re-toolbar {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+  }
+  .sub-team-broadcast-compose .ratel-editor .re-toolbar::-webkit-scrollbar,
+  .sub-team-doc-compose .ratel-editor .re-toolbar::-webkit-scrollbar {
+    height: 4px;
+  }
+  .sub-team-broadcast-compose .ratel-editor .re-toolbar::-webkit-scrollbar-thumb,
+  .sub-team-doc-compose .ratel-editor .re-toolbar::-webkit-scrollbar-thumb {
+    background: var(--re-border-strong);
+    border-radius: 2px;
+  }
+  /* On mobile the side-panel is the shared bottom-sheet drawer
+     (position: fixed at bottom, translateY(100%) when closed). The
+     composer + editor stay viewport-fit just like post_edit. The
+     in-flow bottom-bar is pulled out via the rule below so the
+     publish bar is always reachable. */
+  .sub-team-broadcast-compose,
+  .sub-team-doc-compose {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .sub-team-broadcast-compose .composer-page,
+  .sub-team-doc-compose .composer-page {
+    padding-top: 14px;
+    /* Mobile bottom-bar is ~52px (padding: 10px + button row). Reserve
+       enough room so the editor body doesn't render behind it. */
+    padding-bottom: 60px;
+  }
+  /* Pull both bottom-bars out of the flex flow on mobile so they
+     overlay at the bottom edge instead of being shoved off-screen
+     by the side-panel's drawer overlay. */
+  .sub-team-broadcast-compose > .bottom-bar,
+  .sub-team-doc-compose > .bottom-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 25;
+  }
+  /* Hide the topbar publish button on mobile — moved into the
+     bottom-bar as `bottom-bar__btn--mobile--primary`. */
+  .sub-team-broadcast-compose .arena-topbar .topbar-btn--primary,
+  .sub-team-doc-compose .arena-topbar .topbar-btn--primary {
+    display: none;
   }
 }
