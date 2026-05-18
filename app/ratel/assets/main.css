@@ -7881,7 +7881,12 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
 
 .composer-arena {
   position: relative;
-  min-height: 100vh;
+  /* Use dynamic viewport height so the layout doesn't extend below
+     the visible area when the mobile browser's URL bar is showing.
+     Fallback to 100vh for older browsers. */
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   background: var(--bg-void);
@@ -8031,6 +8036,144 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
 
 /* ─── Composer (left/main) ───────────────────────── */
 .composer { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+
+/* Post-edit (.composer-arena) scoped override: drop the page max-width
+   so the right side-panel sits at the viewport edge, and center the
+   editor column inside its 1fr cell. Matches the reports-edit pattern
+   (.reports-doc__inner). Sub-team broadcast/doc compose pages aren't
+   wrapped in .composer-arena, so they keep the boxed 1280px layout. */
+.composer-arena .composer-page {
+  max-width: none;
+  margin: 0;
+  /* composer-page is now a flex item between the topbar and the
+     in-flow bottom-bar (overridden below). It auto-fills the middle
+     and no longer needs padding-bottom to dodge a fixed bottom-bar.
+     `grid-template-rows: 1fr` forces the inner grid track to stretch
+     so the composer (and editor inside it) reach the bottom edge. */
+  min-height: 0;
+  overflow: hidden;
+  grid-template-rows: 1fr;
+  padding-top: 22px;
+  padding-bottom: 8px;
+}
+/* Pull the publish bar out of `position: fixed` and into the
+   composer-arena flex column. Now composer-page naturally ends at
+   the top edge of the publish bar — no estimated clearance, no
+   per-breakpoint padding-bottom hacks. */
+.composer-arena > .bottom-bar {
+  position: static;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  z-index: auto;
+  flex-shrink: 0;
+}
+.composer-arena .composer {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+/* ─── Editor → reports-edit style (post composer only) ───────
+   The shared .ratel-editor component normally has a sticky top
+   toolbar. Inside .composer-arena we re-layer it as a floating
+   pill pinned just above the publish bar, matching the
+   reports-edit.html bottom format toolbar. Selection-triggered
+   .re-bubble continues to work via the editor's own JS. */
+.composer-arena .ratel-editor {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+  flex: 1;
+  min-height: 0;
+}
+.composer-arena .ratel-editor:focus-within {
+  background: transparent;
+  border: none;
+}
+.composer-arena .ratel-editor .re-toolbar {
+  /* Live inside the editor flex column as the LAST item (order: 5)
+     so the toolbar pill sits below the writing area instead of
+     floating over it. Content keeps its own bottom edge. */
+  position: relative;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  transform: none;
+  order: 5;
+  align-self: center;
+  flex-shrink: 0;
+  /* 1000px is wide enough to fit all 8 button groups on a single row at
+     desktop sizes (~960px natural width). Falls back to wrap if the
+     parent column ever gets narrower. */
+  width: min(1000px, 100%);
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  row-gap: 4px;
+  margin: 8px auto 0;
+  padding: 8px 10px;
+  gap: 4px;
+  border: 1px solid var(--re-border-strong);
+  border-radius: 14px;
+  background: var(--re-toolbar-bg);
+  backdrop-filter: blur(20px);
+}
+/* Strip the inter-group divider in this floating context — a leftover
+   border-left on the first group of a wrapped row creates a stray
+   vertical line. The flex gap already separates groups visually. */
+.composer-arena .ratel-editor .re-toolbar__group + .re-toolbar__group {
+  border-left: none;
+  margin-left: 0;
+  padding-left: 4px;
+}
+.composer-arena .ratel-editor .re-content {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  order: 1;
+  padding: 8px 0 12px;
+}
+/* The post composer's own .bottom-bar already shows word/char counts,
+   so hide the editor's built-in statusbar to keep the surface clean. */
+.composer-arena .ratel-editor .re-statusbar {
+  display: none;
+}
+/* Toolbar sits at the bottom of the editor card → Paragraph/H1/.../Code
+   dropdown must open UPWARD so it doesn't clip outside the viewport. */
+.composer-arena .ratel-editor .re-block__menu {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+@media (max-width: 980px) {
+  /* Mobile: a 2-row pill is too tall on small screens — fall back to
+     a single-row horizontally-scrollable strip pinned to the bottom
+     of the editor flex column. */
+  .composer-arena .ratel-editor .re-toolbar {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+  }
+  .composer-arena .ratel-editor .re-toolbar::-webkit-scrollbar {
+    height: 4px;
+  }
+  .composer-arena .ratel-editor .re-toolbar::-webkit-scrollbar-thumb {
+    background: var(--re-border-strong);
+    border-radius: 2px;
+  }
+  /* In-flow bottom-bar handles its own height — composer-page just
+     needs minimal breathing room above it on mobile. */
+  .composer-arena .composer-page {
+    padding-top: 14px;
+    padding-bottom: 6px;
+  }
+}
 
 /* Type segmented selector */
 .type-segmented {
@@ -8721,9 +8864,11 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   .type-seg__soon { display: none; }
 
   .bottom-bar { padding: 10px 14px; gap: 8px; }
-  .bottom-bar__left { flex: 1; font-size: 9px; gap: 10px; overflow: hidden; }
-  .bottom-bar__stat:nth-child(3) { display: none; }
-  .bottom-bar__right { gap: 6px; }
+  /* On mobile the stat row (words / read time / autosave) gets cut off
+     and crowds the publish button. Hide the whole left cluster — the
+     side panel still surfaces autosave state when needed. */
+  .bottom-bar__left { display: none; }
+  .bottom-bar__right { gap: 6px; margin-left: auto; }
   .bottom-bar__btn--mobile:not(.bottom-bar__btn--primary) { padding: 8px 10px; font-size: 9px; }
 
   .side-card { padding: 14px; }
@@ -31604,32 +31749,9 @@ body.comments-panel-resizing {
     padding: 20px 16px 110px;
     gap: 16px;
   }
-  /* The generic `.side-panel` class is hijacked by a bottom-sheet
-     drawer pattern in another feature's mobile breakpoint
-     (`position: fixed; bottom: 0; transform: translateY(100%)`).
-     Without an override the broadcast composer's side panel ends up
-     completely off-screen below the viewport — `position: fixed`
-     anchors the top edge at viewport bottom, then `translateY(100%)`
-     pushes it down by its own height. Same reset as `.sub-team-doc-compose`. */
-  .sub-team-broadcast-compose .side-panel {
-    position: static;
-    top: auto;
-    bottom: auto;
-    left: auto;
-    right: auto;
-    transform: none;
-    transition: none;
-    max-height: none;
-    overflow-y: visible;
-    overscroll-behavior: auto;
-    box-shadow: none;
-    border-top: 0;
-    border-radius: 0;
-    background: transparent;
-    backdrop-filter: none;
-    z-index: auto;
-    padding: 0;
-  }
+  /* Side-panel now uses the shared mobile drawer pattern (slides up
+     from the bottom-bar's 옵션 button) — keep the base translateY(100%)
+     off-screen state. No in-flow override here. */
 }
 @media (max-width: 500px) {
   .sub-team-broadcast-compose .arena-topbar {
@@ -34130,10 +34252,13 @@ body.comments-panel-resizing {
 
 /* ── Edit banner (Document editor · Rich text + 첨부) ──────── */
 .sub-team-doc-compose .edit-banner {
-  max-width: 1280px;
-  margin: 0 auto;
+  /* Full-bleed banner — sits between topbar and composer-page, edge to
+     edge. flex-shrink: 0 keeps it from being squeezed when the page is
+     viewport-fit and the editor body flex-fills below. */
   width: 100%;
+  margin: 0;
   padding: 14px 28px 0;
+  flex-shrink: 0;
 }
 .sub-team-doc-compose .edit-banner__inner {
   display: flex;
@@ -34183,7 +34308,6 @@ body.comments-panel-resizing {
   align-items: stretch;
   flex-wrap: nowrap;
   gap: 10px;
-  margin-top: 8px;
 }
 /* Cap the editor body so the page doesn't keep growing as the user
    types — past this height the editor scrolls internally, which keeps
@@ -34527,33 +34651,8 @@ body.comments-panel-resizing {
     padding: 20px 16px 110px;
     gap: 18px;
   }
-  /* The generic `.side-panel` class is hijacked by a bottom-sheet
-     drawer pattern in another feature's mobile breakpoint (search
-     `.side-panel { position: fixed; transform: translateY(100%); }`
-     in this file). That bleeds onto the doc-compose page because the
-     selector isn't scoped, so the panel is laid out in flow but then
-     translated down by 100% of its own height — leaving a yawning
-     visual gap below the attachments dropzone. Override every drawer
-     property back to its in-flow default here. */
-  .sub-team-doc-compose .side-panel {
-    position: static;
-    top: auto;
-    bottom: auto;
-    left: auto;
-    right: auto;
-    transform: none;
-    transition: none;
-    max-height: none;
-    overflow-y: visible;
-    overscroll-behavior: auto;
-    box-shadow: none;
-    border-top: 0;
-    border-radius: 0;
-    background: transparent;
-    backdrop-filter: none;
-    z-index: auto;
-    padding: 0;
-  }
+  /* Side-panel uses the shared mobile drawer pattern (slides up from
+     the bottom-bar's 옵션 button). Keep base translateY(100%) state. */
   .sub-team-doc-compose .autosave { display: none; }
   .sub-team-doc-compose .edit-banner { padding: 12px 16px 0; }
 }
@@ -44939,4 +45038,769 @@ body.comments-panel-resizing {
     grid-template-columns: 70px 1fr 32px;
     gap: 8px;
   }
+}
+
+
+/* ─── Unified compose-page layout ──────────────────────────────
+   Applies the post-edit composer style (right-pinned side panel,
+   wide editor column, bottom in-flow toolbar, viewport-fit with no
+   page scroll) to the sub-team broadcast / doc compose pages.
+   Placed at end of file so it wins source-order ties against the
+   per-page rules in the sub-team sections above. */
+.sub-team-broadcast-compose,
+.sub-team-doc-compose {
+  /* Match composer-arena viewport-fit behaviour. dvh keeps the
+     layout flush on mobile when the URL bar comes and goes. */
+  min-height: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.sub-team-broadcast-compose .composer-page,
+.sub-team-doc-compose .composer-page {
+  max-width: none;
+  margin: 0;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  grid-template-rows: 1fr;
+  padding-top: 22px;
+  padding-bottom: 8px;
+}
+
+.sub-team-broadcast-compose .composer,
+.sub-team-doc-compose .composer {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+/* doc-compose has an in-flow .bottom-bar — pull it out of fixed
+   positioning so composer-page naturally ends right above it. */
+.sub-team-doc-compose > .bottom-bar {
+  position: static;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  z-index: auto;
+  flex-shrink: 0;
+}
+/* broadcast's bottom-bar only carries mobile-only buttons (옵션 +
+   publish). Hide on desktop where the topbar already exposes publish. */
+.sub-team-broadcast-compose > .bottom-bar {
+  display: none;
+}
+@media (max-width: 980px) {
+  .sub-team-broadcast-compose > .bottom-bar {
+    display: flex;
+  }
+}
+
+/* Editor surface: drop the card chrome so the body sits on the
+   page background like reports-edit. */
+.sub-team-broadcast-compose .ratel-editor,
+.sub-team-doc-compose .ratel-editor {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+  flex: 1;
+  min-height: 0;
+}
+.sub-team-broadcast-compose .ratel-editor:focus-within,
+.sub-team-doc-compose .ratel-editor:focus-within {
+  background: transparent;
+  border: none;
+}
+
+/* Toolbar — sits inside the editor flex column as the LAST child
+   (order: 5) so the writing area is above and the toolbar pill
+   anchors to the bottom of the editor. Same shape as composer-arena. */
+.sub-team-broadcast-compose .ratel-editor .re-toolbar,
+.sub-team-doc-compose .ratel-editor .re-toolbar {
+  position: relative;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  transform: none;
+  order: 5;
+  align-self: center;
+  flex-shrink: 0;
+  width: min(1000px, 100%);
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  row-gap: 4px;
+  margin: 8px auto 0;
+  padding: 8px 10px;
+  gap: 4px;
+  border: 1px solid var(--re-border-strong);
+  border-radius: 14px;
+  background: var(--re-toolbar-bg);
+  backdrop-filter: blur(20px);
+}
+.sub-team-broadcast-compose .ratel-editor .re-toolbar__group + .re-toolbar__group,
+.sub-team-doc-compose .ratel-editor .re-toolbar__group + .re-toolbar__group {
+  border-left: none;
+  margin-left: 0;
+  padding-left: 4px;
+}
+.sub-team-broadcast-compose .ratel-editor .re-content,
+.sub-team-doc-compose .ratel-editor .re-content {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  order: 1;
+  padding: 8px 0 12px;
+}
+.sub-team-broadcast-compose .ratel-editor .re-statusbar,
+.sub-team-doc-compose .ratel-editor .re-statusbar {
+  display: none;
+}
+.sub-team-broadcast-compose .ratel-editor .re-block__menu,
+.sub-team-doc-compose .ratel-editor .re-block__menu {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+
+@media (max-width: 980px) {
+  /* Single-row horizontally-scrollable toolbar on mobile. */
+  .sub-team-broadcast-compose .ratel-editor .re-toolbar,
+  .sub-team-doc-compose .ratel-editor .re-toolbar {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+  }
+  .sub-team-broadcast-compose .ratel-editor .re-toolbar::-webkit-scrollbar,
+  .sub-team-doc-compose .ratel-editor .re-toolbar::-webkit-scrollbar {
+    height: 4px;
+  }
+  .sub-team-broadcast-compose .ratel-editor .re-toolbar::-webkit-scrollbar-thumb,
+  .sub-team-doc-compose .ratel-editor .re-toolbar::-webkit-scrollbar-thumb {
+    background: var(--re-border-strong);
+    border-radius: 2px;
+  }
+  /* On mobile the side-panel is the shared bottom-sheet drawer
+     (position: fixed at bottom, translateY(100%) when closed). The
+     composer + editor stay viewport-fit just like post_edit. The
+     in-flow bottom-bar is pulled out via the rule below so the
+     publish bar is always reachable. */
+  .sub-team-broadcast-compose,
+  .sub-team-doc-compose {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .sub-team-broadcast-compose .composer-page,
+  .sub-team-doc-compose .composer-page {
+    padding-top: 14px;
+    /* Mobile bottom-bar is ~52px (padding: 10px + button row). Reserve
+       enough room so the editor body doesn't render behind it. */
+    padding-bottom: 60px;
+  }
+  /* Pull both bottom-bars out of the flex flow on mobile so they
+     overlay at the bottom edge instead of being shoved off-screen
+     by the side-panel's drawer overlay. */
+  .sub-team-broadcast-compose > .bottom-bar,
+  .sub-team-doc-compose > .bottom-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 25;
+  }
+  /* Hide the topbar publish button on mobile — moved into the
+     bottom-bar as `bottom-bar__btn--mobile--primary`. */
+  .sub-team-broadcast-compose .arena-topbar .topbar-btn--primary,
+  .sub-team-doc-compose .arena-topbar .topbar-btn--primary {
+    display: none;
+  }
+}
+
+
+/* === src/features/spaces/pages/report/views/list_page === */
+/* Direct port of assets/design/reports/reports-list.html — class names
+   preserved verbatim, all rules scoped under `.reports-arena` so the
+   carousel/topbar primitives don't collide with the existing
+   `.team-arena .carousel-track` (same class name, different page).
+   The aurora wave + scroll-snap "active card" scaling from the mock
+   are intentionally dropped for the initial port; cards render at
+   full opacity in a horizontally-scrollable strip. */
+.reports-arena {
+  --bg-void: #06060e;
+  --bg-glass: rgba(12, 12, 26, 0.65);
+  --bg-glass-hover: rgba(20, 20, 40, 0.80);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --text-primary: #f0f0f5;
+  --text-muted: #8888a8;
+  --text-dim: #55556a;
+  --accent-gold: #fcb300;
+  --accent-teal: #6eedd8;
+  --report-color: #a855f7;
+  --report-bg: rgba(168, 85, 247, 0.10);
+  --report-border: rgba(168, 85, 247, 0.24);
+  --report-glow: rgba(168, 85, 247, 0.18);
+  --font-display: 'Orbitron', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+.reports-arena::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(168, 85, 247, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 120% 100% at 50% 120%, rgba(110, 237, 216, 0.025) 0%, transparent 50%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Topbar */
+.reports-arena .reports-topbar {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 28px;
+  flex-shrink: 0;
+}
+.reports-arena .reports-topbar__brand { display: flex; align-items: center; gap: 12px; }
+.reports-arena .reports-topbar__back {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.18s;
+}
+.reports-arena .reports-topbar__back:hover {
+  color: var(--accent-gold);
+  border-color: rgba(252, 179, 0, 0.28);
+}
+.reports-arena .reports-topbar__back svg { width: 14px; height: 14px; }
+.reports-arena .reports-topbar__divider { width: 1px; height: 20px; background: var(--border-subtle); }
+.reports-arena .reports-topbar__logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--report-color), #7c3aed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.reports-arena .reports-topbar__title-col { display: flex; flex-direction: column; gap: 1px; }
+.reports-arena .reports-topbar__title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+.reports-arena .reports-topbar__handle {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+}
+.reports-arena .reports-topbar__actions { display: flex; gap: 8px; }
+.reports-arena .reports-topbar__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.18s;
+  text-decoration: none;
+}
+.reports-arena .reports-topbar__btn:hover {
+  color: var(--text-primary);
+  border-color: var(--report-border);
+}
+.reports-arena .reports-topbar__btn svg { width: 14px; height: 14px; }
+.reports-arena .reports-topbar__btn--primary {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.22), rgba(168, 85, 247, 0.06));
+  border-color: rgba(168, 85, 247, 0.38);
+  color: var(--report-color);
+}
+.reports-arena .reports-topbar__btn--primary:hover { box-shadow: 0 0 22px var(--report-glow); }
+
+/* Section label + stats */
+.reports-arena .section-label {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  padding: 18px 28px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.reports-arena .section-label__dash {
+  width: 40px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--text-dim), transparent);
+}
+.reports-arena .section-label__title {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.reports-arena .section-label__title strong { color: var(--report-color); font-weight: 700; }
+.reports-arena .section-stats {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 8px 28px 0;
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.reports-arena .section-stats span strong {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-right: 4px;
+}
+
+/* Filter chips */
+.reports-arena .reports-filters {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 28px 0;
+}
+.reports-arena .reports-chip {
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.reports-arena .reports-chip:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+.reports-arena .reports-chip[aria-selected="true"] {
+  color: var(--report-color);
+  border-color: rgba(168, 85, 247, 0.45);
+  background: rgba(168, 85, 247, 0.08);
+}
+
+/* Carousel */
+.reports-arena .carousel-wrapper {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+.reports-arena .carousel-wrapper::before,
+.reports-arena .carousel-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 220px;
+  z-index: 15;
+  pointer-events: none;
+}
+.reports-arena .carousel-wrapper::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg-void), transparent);
+}
+.reports-arena .carousel-wrapper::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg-void), transparent);
+}
+.reports-arena .carousel-track {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 60px 0;
+  /* Calc-based edge padding lets the first / last card scroll all
+     the way to viewport center — same trick as space-arena. */
+  padding-left: calc(50vw - 200px);
+  padding-right: calc(50vw - 200px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+}
+.reports-arena .carousel-track::-webkit-scrollbar { display: none; }
+
+/* Report card — defaults to dim/scaled/blurred; carousel JS toggles
+   `.active` on whichever card is closest to viewport center. */
+.reports-arena .report-card {
+  flex-shrink: 0;
+  width: 400px;
+  min-height: 420px;
+  padding: 26px 26px 22px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  cursor: pointer;
+  scroll-snap-align: center;
+  position: relative;
+  overflow: hidden;
+  transform: scale(0.78);
+  opacity: 0.3;
+  filter: blur(5px);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  color: inherit;
+}
+.reports-arena .report-card[hidden] { display: none !important; }
+.reports-arena .report-card.active {
+  transform: scale(1.05);
+  opacity: 1;
+  filter: blur(0);
+  box-shadow: 0 12px 60px rgba(0, 0, 0, 0.5), 0 0 50px var(--report-glow);
+  border-color: var(--report-border);
+}
+/* Aurora wave — only animates on the active card. */
+.reports-arena .report-card__wave {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  z-index: 0;
+}
+.reports-arena .report-card.active .report-card__wave { opacity: 1; }
+.reports-arena .report-card__wave::before,
+.reports-arena .report-card__wave::after {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  background-repeat: no-repeat;
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+}
+.reports-arena .report-card__wave::before {
+  background:
+    radial-gradient(ellipse 55% 40% at 20% 30%, rgba(168, 85, 247, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 35% at 75% 65%, rgba(168, 85, 247, 0.06) 0%, transparent 65%);
+  animation: reports-wave-drift-a 7s ease-in-out infinite;
+}
+.reports-arena .report-card__wave::after {
+  background:
+    radial-gradient(ellipse 50% 40% at 70% 25%, rgba(168, 85, 247, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 45% at 25% 80%, rgba(168, 85, 247, 0.12) 0%, transparent 65%);
+  animation: reports-wave-drift-b 9s ease-in-out infinite;
+}
+@keyframes reports-wave-drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0.9; }
+  33% { transform: translate3d(6%, -4%, 0) rotate(8deg); opacity: 1; }
+  66% { transform: translate3d(-4%, 5%, 0) rotate(-6deg); opacity: 0.85; }
+}
+@keyframes reports-wave-drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); opacity: 0.75; }
+  40% { transform: translate3d(-5%, 4%, 0) rotate(-10deg) scale(1.05); opacity: 0.95; }
+  70% { transform: translate3d(5%, -3%, 0) rotate(7deg) scale(0.98); opacity: 0.8; }
+}
+/* Stationary idle tint behind dimmed cards. */
+.reports-arena .report-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  pointer-events: none;
+  opacity: 0.35;
+  transition: opacity 0.6s ease;
+  background: radial-gradient(ellipse 70% 50% at 30% 30%, rgba(168, 85, 247, 0.06) 0%, transparent 70%);
+}
+.reports-arena .report-card.active::before { opacity: 0; }
+.reports-arena .report-card > *:not(.report-card__wave) {
+  position: relative;
+  z-index: 1;
+}
+.reports-arena .report-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.reports-arena .report-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+.reports-arena .report-card__badge svg { width: 11px; height: 11px; }
+.reports-arena .report-card__badge--published {
+  background: rgba(110, 237, 216, 0.10);
+  border: 1px solid rgba(110, 237, 216, 0.32);
+  color: var(--accent-teal);
+}
+.reports-arena .report-card__badge--draft {
+  background: rgba(252, 179, 0, 0.10);
+  border: 1px solid rgba(252, 179, 0, 0.32);
+  color: var(--accent-gold);
+}
+.reports-arena .report-card__menu-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s;
+}
+.reports-arena .report-card__menu-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+.reports-arena .report-card__menu-btn svg { width: 14px; height: 14px; }
+.reports-arena .report-card__identity {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.reports-arena .report-card__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: var(--report-bg);
+  border: 1px solid var(--report-border);
+  color: var(--report-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.reports-arena .report-card__icon svg { width: 18px; height: 18px; }
+.reports-arena .report-card__id {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.reports-arena .report-card__category {
+  font-family: var(--font-display);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--report-color);
+}
+.reports-arena .report-card__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.35;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.reports-arena .report-card__desc {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.55;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+.reports-arena .report-card__spacer { flex: 1; }
+.reports-arena .report-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+}
+.reports-arena .report-card__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.reports-arena .report-card__meta svg { width: 12px; height: 12px; }
+.reports-arena .report-card__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--report-color);
+}
+.reports-arena .report-card__cta svg { width: 12px; height: 12px; }
+
+/* Create card variant */
+.reports-arena .report-card--create {
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  text-align: center;
+  padding: 48px 32px;
+  background: rgba(168, 85, 247, 0.04);
+  border: 1.5px dashed rgba(168, 85, 247, 0.32);
+}
+.reports-arena .report-card--create::before { display: none; }
+.reports-arena .report-card--create.active {
+  background: rgba(168, 85, 247, 0.08);
+  border-color: var(--report-color);
+  border-style: dashed;
+  box-shadow: 0 12px 60px rgba(0, 0, 0, 0.45), 0 0 40px var(--report-glow);
+}
+.reports-arena .report-card__create-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--report-color), #7c3aed);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.reports-arena .report-card__create-icon svg { width: 28px; height: 28px; }
+.reports-arena .report-card__create-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+}
+.reports-arena .report-card__create-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 280px;
+}
+.reports-arena .report-card__create-sub code {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(168, 85, 247, 0.10);
+  border: 1px solid var(--report-border);
+  color: var(--report-color);
+  font-family: 'Menlo', monospace;
+  font-size: 11px;
+}
+.reports-arena .report-card__create-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--report-color), #7c3aed);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.reports-arena .report-card__create-cta svg { width: 12px; height: 12px; }
+
+/* Carousel dots (populated later by carousel JS) */
+.reports-arena .carousel-dots {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 28px 24px;
+}
+.reports-arena .carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border-strong);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.reports-arena .carousel-dot.active {
+  width: 28px;
+  border-radius: 99px;
+  background: var(--report-color);
+  box-shadow: 0 0 12px var(--report-glow);
+}
+.reports-arena .carousel-dot.active--create {
+  background: linear-gradient(135deg, var(--report-color), #7c3aed);
+}
+
+@media (max-width: 500px) {
+  .reports-arena .reports-topbar { padding: 12px 14px; gap: 8px; }
+  .reports-arena .reports-topbar__logo,
+  .reports-arena .reports-topbar__title-col { display: none; }
+  .reports-arena .reports-topbar__btn span { display: none; }
+  .reports-arena .reports-topbar__btn { padding: 0 10px; }
+  .reports-arena .report-card { width: 84vw; min-height: 360px; }
+  .reports-arena .carousel-track { gap: 16px; padding: 28px 12px; }
 }

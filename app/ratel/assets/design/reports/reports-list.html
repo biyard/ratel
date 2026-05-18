@@ -1,0 +1,1831 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reports — Arena (Slidable)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --bg-void: #06060e;
+        --bg-glass: rgba(12, 12, 26, 0.65);
+        --bg-glass-hover: rgba(20, 20, 40, 0.8);
+        --border-subtle: rgba(255, 255, 255, 0.06);
+        --border-strong: rgba(255, 255, 255, 0.12);
+        --text-primary: #f0f0f5;
+        --text-muted: #8888a8;
+        --text-dim: #55556a;
+        --accent-gold: #fcb300;
+        --accent-teal: #6eedd8;
+        --report-color: #a855f7;
+        --report-bg: rgba(168, 85, 247, 0.1);
+        --report-border: rgba(168, 85, 247, 0.24);
+        --report-glow: rgba(168, 85, 247, 0.18);
+        --font-display: "Orbitron", sans-serif;
+        --font-body: "Outfit", sans-serif;
+      }
+      html,
+      body {
+        height: 100%;
+        background: var(--bg-void);
+        color: var(--text-primary);
+        font-family: var(--font-body);
+        overflow: hidden;
+      }
+
+      .arena {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .arena::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(
+            ellipse 80% 60% at 50% 50%,
+            rgba(168, 85, 247, 0.05) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 120% 100% at 50% 120%,
+            rgba(110, 237, 216, 0.025) 0%,
+            transparent 50%
+          );
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      /* ── TOPBAR ─────────────────────────────────────────── */
+      .reports-topbar {
+        position: relative;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 28px;
+        flex-shrink: 0;
+      }
+      .reports-topbar__brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .reports-topbar__back {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-muted);
+        transition: all 0.18s;
+      }
+      .reports-topbar__back:hover {
+        color: var(--accent-gold);
+        border-color: rgba(252, 179, 0, 0.28);
+      }
+      .reports-topbar__back svg {
+        width: 14px;
+        height: 14px;
+      }
+      .reports-topbar__divider {
+        width: 1px;
+        height: 20px;
+        background: var(--border-subtle);
+      }
+      .reports-topbar__logo {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--report-color), #7c3aed);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-family: var(--font-display);
+        font-weight: 800;
+        font-size: 12px;
+        letter-spacing: 0.04em;
+      }
+      .reports-topbar__title-col {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+      .reports-topbar__title {
+        font-family: var(--font-display);
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-primary);
+      }
+      .reports-topbar__handle {
+        font-size: 10px;
+        color: var(--text-dim);
+        letter-spacing: 0.06em;
+      }
+      .reports-topbar__actions {
+        display: flex;
+        gap: 8px;
+      }
+      .reports-topbar__btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 36px;
+        padding: 0 14px;
+        border-radius: 10px;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-muted);
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.18s;
+        text-decoration: none;
+      }
+      .reports-topbar__btn:hover {
+        color: var(--text-primary);
+        border-color: var(--report-border);
+      }
+      .reports-topbar__btn svg {
+        width: 14px;
+        height: 14px;
+      }
+      .reports-topbar__btn--primary {
+        background: linear-gradient(
+          135deg,
+          rgba(168, 85, 247, 0.22),
+          rgba(168, 85, 247, 0.06)
+        );
+        border-color: rgba(168, 85, 247, 0.38);
+        color: var(--report-color);
+      }
+      .reports-topbar__btn--primary:hover {
+        box-shadow: 0 0 22px var(--report-glow);
+      }
+
+      /* ── Section label (matches space arena) ─────────────── */
+      .section-label {
+        position: relative;
+        z-index: 10;
+        text-align: center;
+        padding: 18px 28px 0;
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+      .section-label__dash {
+        width: 40px;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--text-dim),
+          transparent
+        );
+      }
+      .section-label__title {
+        font-family: var(--font-display);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+      }
+      .section-label__title strong {
+        color: var(--report-color);
+        font-weight: 700;
+      }
+      .section-stats {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        justify-content: center;
+        gap: 24px;
+        padding: 8px 28px 0;
+        font-family: var(--font-display);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+      }
+      .section-stats span strong {
+        color: var(--text-muted);
+        font-size: 12px;
+        margin-right: 4px;
+      }
+
+      /* ── Carousel (same pattern as home-arena & space-participant) ── */
+      .carousel-wrapper {
+        position: relative;
+        z-index: 10;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .carousel-wrapper::before,
+      .carousel-wrapper::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 220px;
+        z-index: 15;
+        pointer-events: none;
+      }
+      .carousel-wrapper::before {
+        left: 0;
+        background: linear-gradient(to right, var(--bg-void), transparent);
+      }
+      .carousel-wrapper::after {
+        right: 0;
+        background: linear-gradient(to left, var(--bg-void), transparent);
+      }
+      .carousel-track {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        padding: 60px 0;
+        scroll-snap-type: x mandatory;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        padding-left: calc(50vw - 200px);
+        padding-right: calc(50vw - 200px);
+      }
+      .carousel-track::-webkit-scrollbar {
+        display: none;
+      }
+
+      /* ── Report card (matches space-card geometry) ───────── */
+      .report-card {
+        flex-shrink: 0;
+        width: 400px;
+        min-height: 420px;
+        padding: 26px 26px 22px;
+        background: var(--bg-glass);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--border-subtle);
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        cursor: pointer;
+        scroll-snap-align: center;
+        position: relative;
+        overflow: hidden;
+        transform: scale(0.78);
+        opacity: 0.3;
+        filter: blur(5px);
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        text-decoration: none;
+        color: inherit;
+      }
+      .report-card[hidden] {
+        display: none !important;
+      }
+      .report-card.active {
+        transform: scale(1.05);
+        opacity: 1;
+        filter: blur(0);
+        box-shadow:
+          0 12px 60px rgba(0, 0, 0, 0.5),
+          0 0 50px var(--report-glow);
+        border-color: var(--report-border);
+      }
+
+      /* Wave aurora — gentle flowing gradient (same as space-card) */
+      .report-card__wave {
+        position: absolute;
+        inset: 0;
+        border-radius: 20px;
+        pointer-events: none;
+        overflow: hidden;
+        opacity: 0;
+        transition: opacity 0.8s ease;
+        z-index: 0;
+      }
+      .report-card.active .report-card__wave {
+        opacity: 1;
+      }
+      .report-card__wave::before,
+      .report-card__wave::after {
+        content: "";
+        position: absolute;
+        inset: -40%;
+        background-repeat: no-repeat;
+        mix-blend-mode: screen;
+        will-change: transform, opacity;
+      }
+      .report-card__wave::before {
+        background:
+          radial-gradient(
+            ellipse 55% 40% at 20% 30%,
+            rgba(168, 85, 247, 0.12) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 45% 35% at 75% 65%,
+            rgba(168, 85, 247, 0.06) 0%,
+            transparent 65%
+          );
+        animation: wave-drift-a 7s ease-in-out infinite;
+      }
+      .report-card__wave::after {
+        background:
+          radial-gradient(
+            ellipse 50% 40% at 70% 25%,
+            rgba(168, 85, 247, 0.06) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 60% 45% at 25% 80%,
+            rgba(168, 85, 247, 0.12) 0%,
+            transparent 65%
+          );
+        animation: wave-drift-b 9s ease-in-out infinite;
+      }
+      @keyframes wave-drift-a {
+        0%,
+        100% {
+          transform: translate3d(0, 0, 0) rotate(0deg);
+          opacity: 0.9;
+        }
+        33% {
+          transform: translate3d(6%, -4%, 0) rotate(8deg);
+          opacity: 1;
+        }
+        66% {
+          transform: translate3d(-4%, 5%, 0) rotate(-6deg);
+          opacity: 0.85;
+        }
+      }
+      @keyframes wave-drift-b {
+        0%,
+        100% {
+          transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+          opacity: 0.75;
+        }
+        40% {
+          transform: translate3d(-5%, 4%, 0) rotate(-10deg) scale(1.05);
+          opacity: 0.95;
+        }
+        70% {
+          transform: translate3d(5%, -3%, 0) rotate(7deg) scale(0.98);
+          opacity: 0.8;
+        }
+      }
+      /* Stationary idle tint */
+      .report-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 20px;
+        pointer-events: none;
+        opacity: 0.35;
+        transition: opacity 0.6s ease;
+        background: radial-gradient(
+          ellipse 70% 50% at 30% 30%,
+          rgba(168, 85, 247, 0.06) 0%,
+          transparent 70%
+        );
+      }
+      .report-card.active::before {
+        opacity: 0;
+      }
+      .report-card > *:not(.report-card__wave) {
+        position: relative;
+        z-index: 1;
+      }
+
+      .report-card__top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .report-card__badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .report-card__badge svg {
+        width: 14px;
+        height: 14px;
+      }
+      .report-card__badge--draft {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-muted);
+        border: 1px solid var(--border-subtle);
+      }
+      .report-card__badge--published {
+        background: rgba(110, 237, 216, 0.08);
+        color: var(--accent-teal);
+        border: 1px solid rgba(110, 237, 216, 0.22);
+      }
+      .report-card__menu-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: transparent;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-dim);
+        cursor: pointer;
+      }
+      .report-card__menu-btn:hover {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-primary);
+      }
+      .report-card__menu-btn svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .report-card__identity {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+      }
+      .report-card__icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        background: linear-gradient(135deg, var(--report-color), #7c3aed);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        flex-shrink: 0;
+      }
+      .report-card__icon svg {
+        width: 24px;
+        height: 24px;
+      }
+      .report-card__id {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .report-card__category {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+      }
+      .report-card__category::before {
+        content: "";
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--text-dim);
+      }
+      .report-card__title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .report-card__desc {
+        font-size: 13px;
+        line-height: 1.55;
+        color: var(--text-muted);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      /* Spacer pushes the footer to the bottom of the card now that
+       the chart preview + stats grid are gone. */
+      .report-card__spacer {
+        flex: 1;
+        min-height: 60px;
+      }
+
+      /* ─── Card overflow menu (...) — arena-tone dropdown ─── */
+      .card-menu {
+        position: fixed;
+        z-index: 300;
+        display: none;
+        flex-direction: column;
+        gap: 1px;
+        padding: 6px;
+        min-width: 170px;
+        background: linear-gradient(
+          160deg,
+          rgba(22, 22, 38, 0.96),
+          rgba(10, 10, 20, 0.98)
+        );
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-strong);
+        border-radius: 12px;
+        box-shadow:
+          0 18px 50px rgba(0, 0, 0, 0.6),
+          0 0 22px rgba(168, 85, 247, 0.06);
+      }
+      .card-menu[data-open="true"] {
+        display: flex;
+      }
+      .card-menu__item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 11px;
+        border-radius: 8px;
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-family: var(--font-body);
+        font-size: 13px;
+        cursor: pointer;
+        text-align: left;
+        transition: all 0.14s;
+      }
+      .card-menu__item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+      }
+      .card-menu__item svg {
+        width: 13px;
+        height: 13px;
+        flex-shrink: 0;
+        opacity: 0.85;
+      }
+      .card-menu__item--danger {
+        color: #e7a8a8;
+      }
+      .card-menu__item--danger:hover {
+        background: linear-gradient(
+          135deg,
+          rgba(239, 68, 68, 0.1),
+          rgba(168, 85, 247, 0.04)
+        );
+        color: #f5b5b5;
+      }
+
+      /* ─── Confirm modal — arena glass panel with purple aurora ─── */
+      .confirm-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        background: rgba(4, 4, 12, 0.65);
+        backdrop-filter: blur(16px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .confirm-modal[data-open="true"] {
+        display: flex;
+      }
+      .confirm-modal__panel {
+        position: relative;
+        width: 100%;
+        max-width: 420px;
+        border-radius: 18px;
+        background: linear-gradient(
+          160deg,
+          rgba(22, 22, 38, 0.97),
+          rgba(10, 10, 20, 0.99)
+        );
+        border: 1px solid var(--border-strong);
+        box-shadow:
+          0 30px 80px rgba(0, 0, 0, 0.6),
+          0 0 60px rgba(168, 85, 247, 0.1);
+        padding: 32px 26px 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        text-align: center;
+        overflow: hidden;
+      }
+      /* Aurora wash — same gentle gradient as space/report cards */
+      .confirm-modal__panel::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(
+            ellipse 70% 50% at 50% 0%,
+            rgba(168, 85, 247, 0.1) 0%,
+            transparent 70%
+          ),
+          radial-gradient(
+            ellipse 60% 40% at 50% 100%,
+            rgba(239, 68, 68, 0.06) 0%,
+            transparent 70%
+          );
+        pointer-events: none;
+      }
+      .confirm-modal__panel > * {
+        position: relative;
+        z-index: 1;
+      }
+      .confirm-modal__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-display);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #e7a8a8;
+        padding: 3px 11px;
+        border-radius: 99px;
+        background: rgba(239, 68, 68, 0.06);
+        border: 1px solid rgba(239, 68, 68, 0.18);
+      }
+      .confirm-modal__eyebrow svg {
+        width: 11px;
+        height: 11px;
+      }
+      .confirm-modal__icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        background: linear-gradient(
+          135deg,
+          rgba(239, 68, 68, 0.14),
+          rgba(168, 85, 247, 0.04)
+        );
+        border: 1px solid rgba(239, 68, 68, 0.28);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #e7a8a8;
+        margin-top: 8px;
+        box-shadow:
+          0 0 24px rgba(239, 68, 68, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+      .confirm-modal__icon svg {
+        width: 26px;
+        height: 26px;
+      }
+      .confirm-modal__title {
+        font-family: var(--font-display);
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        color: var(--text-primary);
+        margin-top: 4px;
+      }
+      .confirm-modal__body {
+        font-size: 13px;
+        color: var(--text-muted);
+        line-height: 1.6;
+        padding: 0 4px;
+      }
+      .confirm-modal__body strong {
+        color: var(--report-color);
+        font-weight: 700;
+        display: block;
+        margin-bottom: 8px;
+        font-size: 13.5px;
+        font-family: var(--font-display);
+        letter-spacing: 0.02em;
+      }
+      .confirm-modal__note {
+        font-size: 11px;
+        color: var(--text-dim);
+        display: block;
+        margin-top: 8px;
+        letter-spacing: 0.02em;
+      }
+      .confirm-modal__actions {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+        margin-top: 18px;
+      }
+      .confirm-modal__btn {
+        flex: 1;
+        height: 42px;
+        border-radius: 11px;
+        font-family: var(--font-display);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.18s;
+        border: 1px solid transparent;
+      }
+      .confirm-modal__btn--ghost {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: var(--border-subtle);
+        color: var(--text-muted);
+      }
+      .confirm-modal__btn--ghost:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: var(--border-strong);
+        color: var(--text-primary);
+      }
+      .confirm-modal__btn--danger {
+        background: linear-gradient(
+          135deg,
+          rgba(239, 68, 68, 0.18),
+          rgba(168, 85, 247, 0.06)
+        );
+        border-color: rgba(239, 68, 68, 0.32);
+        color: #f0c8c8;
+      }
+      .confirm-modal__btn--danger:hover {
+        background: linear-gradient(
+          135deg,
+          rgba(239, 68, 68, 0.28),
+          rgba(168, 85, 247, 0.1)
+        );
+        border-color: rgba(239, 68, 68, 0.5);
+        box-shadow: 0 0 22px rgba(239, 68, 68, 0.18);
+        color: #fff;
+      }
+
+      .report-card__footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-top: 6px;
+      }
+      .report-card__meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: var(--text-dim);
+        font-family: var(--font-display);
+        letter-spacing: 0.06em;
+      }
+      .report-card__meta svg {
+        width: 12px;
+        height: 12px;
+      }
+      .report-card__cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 36px;
+        padding: 0 14px;
+        border-radius: 10px;
+        background: rgba(168, 85, 247, 0.1);
+        border: 1px solid var(--report-border);
+        color: var(--report-color);
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.18s;
+      }
+      .report-card.active .report-card__cta {
+        background: linear-gradient(
+          135deg,
+          rgba(168, 85, 247, 0.22),
+          rgba(168, 85, 247, 0.06)
+        );
+        border-color: rgba(168, 85, 247, 0.4);
+      }
+      .report-card__cta svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      /* ── Create card variant (first card in carousel) ────── */
+      .report-card--create {
+        background: rgba(168, 85, 247, 0.04);
+        border: 1.5px dashed rgba(168, 85, 247, 0.32);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        text-align: center;
+        padding: 48px 32px;
+      }
+      .report-card--create::before {
+        display: none;
+      }
+      .report-card--create.active {
+        background: rgba(168, 85, 247, 0.08);
+        border-color: var(--report-color);
+        border-style: dashed;
+        box-shadow:
+          0 12px 60px rgba(0, 0, 0, 0.45),
+          0 0 40px var(--report-glow);
+      }
+      .report-card--create .report-card__create-icon {
+        width: 84px;
+        height: 84px;
+        border-radius: 22px;
+        background: linear-gradient(135deg, var(--report-color), #7c3aed);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        box-shadow: 0 12px 36px var(--report-glow);
+        transition: transform 0.4s ease;
+      }
+      .report-card--create.active .report-card__create-icon {
+        transform: scale(1.06) rotate(2deg);
+      }
+      .report-card--create .report-card__create-icon svg {
+        width: 34px;
+        height: 34px;
+      }
+      .report-card--create .report-card__create-title {
+        font-family: var(--font-display);
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-primary);
+      }
+      .report-card--create .report-card__create-sub {
+        font-size: 13px;
+        color: var(--text-muted);
+        line-height: 1.55;
+        max-width: 280px;
+      }
+      .report-card--create .report-card__create-sub code {
+        font-family: var(--font-display);
+        font-size: 11px;
+        color: var(--report-color);
+        padding: 2px 8px;
+        border-radius: 6px;
+        background: rgba(168, 85, 247, 0.12);
+        border: 1px solid var(--report-border);
+        letter-spacing: 0.04em;
+      }
+      .report-card--create .report-card__create-cta {
+        margin-top: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        height: 40px;
+        padding: 0 22px;
+        border-radius: 11px;
+        background: linear-gradient(
+          135deg,
+          rgba(168, 85, 247, 0.28),
+          rgba(168, 85, 247, 0.08)
+        );
+        border: 1px solid rgba(168, 85, 247, 0.4);
+        color: var(--report-color);
+        font-family: var(--font-display);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .report-card--create .report-card__create-cta svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      /* ── Carousel dots ───────────────────────────────────── */
+      .carousel-dots {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 0 24px;
+      }
+      .carousel-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.12);
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s;
+        padding: 0;
+      }
+      .carousel-dot.active {
+        width: 28px;
+        border-radius: 99px;
+        background: var(--report-color);
+        box-shadow: 0 0 12px var(--report-glow);
+      }
+      .carousel-dot.active--create {
+        background: linear-gradient(135deg, var(--report-color), #7c3aed);
+      }
+
+      /* ── Filter chips (above carousel) ───────────────────── */
+      .reports-filters {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        padding: 14px 28px 0;
+      }
+      .reports-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 30px;
+        padding: 0 14px;
+        border-radius: 99px;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-muted);
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .reports-chip:hover {
+        color: var(--text-primary);
+      }
+      .reports-chip[aria-selected="true"] {
+        background: rgba(168, 85, 247, 0.1);
+        border-color: var(--report-border);
+        color: var(--report-color);
+      }
+
+      @media (max-width: 720px) {
+        .reports-topbar {
+          padding: 14px 16px;
+        }
+        .reports-topbar__btn span {
+          display: none;
+        }
+        .reports-topbar__handle {
+          display: none;
+        }
+        .carousel-track {
+          padding-left: calc(50vw - 150px);
+          padding-right: calc(50vw - 150px);
+          gap: 18px;
+        }
+        .carousel-wrapper::before,
+        .carousel-wrapper::after {
+          width: 80px;
+        }
+        .report-card {
+          width: 300px;
+          min-height: 380px;
+          padding: 20px 20px 18px;
+        }
+        .report-card__title {
+          font-size: 16px;
+        }
+        .report-card--create {
+          padding: 36px 24px;
+        }
+        .report-card--create .report-card__create-icon {
+          width: 64px;
+          height: 64px;
+          border-radius: 18px;
+        }
+        .report-card--create .report-card__create-icon svg {
+          width: 26px;
+          height: 26px;
+        }
+        .reports-filters {
+          padding: 12px 16px 0;
+          flex-wrap: wrap;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="arena">
+      <!-- TOPBAR -->
+      <div class="reports-topbar">
+        <div class="reports-topbar__brand">
+          <button class="reports-topbar__back" aria-label="뒤로">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+          <span class="reports-topbar__divider"></span>
+          <div class="reports-topbar__logo">CAD</div>
+          <div class="reports-topbar__title-col">
+            <span class="reports-topbar__title">Reports</span>
+            <span class="reports-topbar__handle"
+              >Climate Action DAO · @climate_action</span
+            >
+          </div>
+        </div>
+        <div class="reports-topbar__actions">
+          <button class="reports-topbar__btn" aria-label="검색">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <span>Search</span>
+          </button>
+          <a
+            class="reports-topbar__btn reports-topbar__btn--primary"
+            href="reports-edit.html"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            <span>New Report</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- SECTION LABEL -->
+      <div class="section-label">
+        <span class="section-label__dash"></span>
+        <span class="section-label__title"><strong>보고서</strong></span>
+        <span class="section-label__dash"></span>
+      </div>
+      <div class="section-stats">
+        <span><strong>7</strong>Total</span>
+        <span><strong>3</strong>Drafts</span>
+        <span><strong>4</strong>Published</span>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="reports-filters">
+        <button class="reports-chip" data-filter="all" aria-selected="true">
+          All
+        </button>
+        <button class="reports-chip" data-filter="drafts">Drafts</button>
+        <button class="reports-chip" data-filter="published">Published</button>
+      </div>
+
+      <!-- CAROUSEL -->
+      <div class="carousel-wrapper">
+        <div class="carousel-track" id="carousel-track">
+          <!-- Create card (always first) -->
+          <a
+            class="report-card report-card--create"
+            href="reports-edit.html"
+            data-index="0"
+            data-kind="create"
+          >
+            <div class="report-card__wave"></div>
+            <div class="report-card__create-icon">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            </div>
+            <div class="report-card__create-title">새 보고서</div>
+            <div class="report-card__create-sub">
+              빈 문서에서 시작 — <code>/data:</code> 입력 시 analyze에서 만든
+              데이터로 차트 삽입
+            </div>
+            <span class="report-card__create-cta">
+              Create
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </span>
+          </a>
+
+          <!-- Report 1 -->
+          <a class="report-card" href="reports-edit.html" data-index="1">
+            <div class="report-card__wave"></div>
+            <div class="report-card__top">
+              <span class="report-card__badge report-card__badge--published">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                Published
+              </span>
+              <button class="report-card__menu-btn" aria-label="옵션">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="1" />
+                  <circle cx="12" cy="5" r="1" />
+                  <circle cx="12" cy="19" r="1" />
+                </svg>
+              </button>
+            </div>
+            <div class="report-card__identity">
+              <div class="report-card__icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="9" y1="13" x2="15" y2="13" />
+                </svg>
+              </div>
+              <div class="report-card__id">
+                <span class="report-card__category">Action · Report</span>
+                <span class="report-card__title"
+                  >2026 Q1 정책 우선순위 토론 분석</span
+                >
+              </div>
+            </div>
+            <div class="report-card__desc">
+              응답자 1,248명 기반 — 탄소 상쇄가 압도적 1위, 재생에너지가 2위로
+              이어지는 정책 우선순위 분포 정리.
+            </div>
+            <div class="report-card__spacer"></div>
+            <div class="report-card__footer">
+              <span class="report-card__meta">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                2d ago
+              </span>
+              <span class="report-card__cta">
+                Open
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </span>
+            </div>
+          </a>
+
+          <!-- Report 2 -->
+          <a class="report-card" href="reports-edit.html" data-index="2">
+            <div class="report-card__wave"></div>
+            <div class="report-card__top">
+              <span class="report-card__badge report-card__badge--draft">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                  />
+                  <path
+                    d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                  />
+                </svg>
+                Draft
+              </span>
+              <button class="report-card__menu-btn" aria-label="옵션">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="1" />
+                  <circle cx="12" cy="5" r="1" />
+                  <circle cx="12" cy="19" r="1" />
+                </svg>
+              </button>
+            </div>
+            <div class="report-card__identity">
+              <div class="report-card__icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                </svg>
+              </div>
+              <div class="report-card__id">
+                <span class="report-card__category">Follow · Personas</span>
+                <span class="report-card__title"
+                  >참여자 페르소나 분석 (Follow Quest)</span
+                >
+              </div>
+            </div>
+            <div class="report-card__desc">
+              팔로워 2,104명을 4개 페르소나로 분류한 분석 보고서. 정책 관심
+              영역과 활동 시간대 패턴 포함.
+            </div>
+            <div class="report-card__spacer"></div>
+            <div class="report-card__footer">
+              <span class="report-card__meta">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                5h ago
+              </span>
+              <span class="report-card__cta">
+                Open
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </span>
+            </div>
+          </a>
+
+          <!-- Report 3 -->
+          <a class="report-card" href="reports-edit.html" data-index="3">
+            <div class="report-card__wave"></div>
+            <div class="report-card__top">
+              <span class="report-card__badge report-card__badge--published">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                Published
+              </span>
+              <button class="report-card__menu-btn" aria-label="옵션">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="1" />
+                  <circle cx="12" cy="5" r="1" />
+                  <circle cx="12" cy="19" r="1" />
+                </svg>
+              </button>
+            </div>
+            <div class="report-card__identity">
+              <div class="report-card__icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+              </div>
+              <div class="report-card__id">
+                <span class="report-card__category">Quiz · Pass Rate</span>
+                <span class="report-card__title"
+                  >Q1 퀴즈 통과율 — 정책 이해도 보고</span
+                >
+              </div>
+            </div>
+            <div class="report-card__desc">
+              10개 문항 × 684명 응시. 평균 통과율 67% — 가장 어려웠던 3개 문항과
+              오답 분포 분석.
+            </div>
+            <div class="report-card__spacer"></div>
+            <div class="report-card__footer">
+              <span class="report-card__meta">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                1w ago
+              </span>
+              <span class="report-card__cta">
+                Open
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </span>
+            </div>
+          </a>
+
+          <!-- Report 4 -->
+          <a class="report-card" href="reports-edit.html" data-index="4">
+            <div class="report-card__wave"></div>
+            <div class="report-card__top">
+              <span class="report-card__badge report-card__badge--draft">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                  />
+                  <path
+                    d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                  />
+                </svg>
+                Draft
+              </span>
+              <button class="report-card__menu-btn" aria-label="옵션">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="1" />
+                  <circle cx="12" cy="5" r="1" />
+                  <circle cx="12" cy="19" r="1" />
+                </svg>
+              </button>
+            </div>
+            <div class="report-card__identity">
+              <div class="report-card__icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M18 20V10" />
+                  <path d="M12 20V4" />
+                  <path d="M6 20v-6" />
+                </svg>
+              </div>
+              <div class="report-card__id">
+                <span class="report-card__category">Poll · Climate</span>
+                <span class="report-card__title">탄소 상쇄 투표 결과 정리</span>
+              </div>
+            </div>
+            <div class="report-card__desc">
+              3개 옵션 중 "탄소 크레딧 거래" 응답이 52%로 최다. 부문별 응답 분포
+              정리 중.
+            </div>
+            <div class="report-card__spacer"></div>
+            <div class="report-card__footer">
+              <span class="report-card__meta">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                방금
+              </span>
+              <span class="report-card__cta">
+                Open
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </span>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- DOTS -->
+      <div class="carousel-dots" id="carousel-dots"></div>
+    </div>
+
+    <!-- Card overflow menu — single shared dropdown (positioned by JS) -->
+    <div class="card-menu" id="card-menu" role="menu" data-open="false">
+      <button class="card-menu__item card-menu__item--danger" data-op="delete">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <polyline points="3 6 5 6 21 6" />
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+          <path d="M10 11v6M14 11v6" />
+        </svg>
+        삭제하기
+      </button>
+    </div>
+
+    <!-- Delete confirmation modal -->
+    <div
+      class="confirm-modal"
+      id="delete-confirm"
+      role="dialog"
+      aria-modal="true"
+      data-open="false"
+    >
+      <div class="confirm-modal__panel">
+        <span class="confirm-modal__eyebrow">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M12 9v4" />
+            <path d="M12 17h.01" />
+            <path
+              d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+            />
+          </svg>
+          Destructive · 되돌릴 수 없음
+        </span>
+        <div class="confirm-modal__icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+            <path d="M10 11v6M14 11v6" />
+            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          </svg>
+        </div>
+        <div class="confirm-modal__title">보고서 삭제</div>
+        <div class="confirm-modal__body">
+          <strong id="delete-confirm-target">보고서</strong>
+          이 보고서를 삭제하시겠습니까?
+          <span class="confirm-modal__note"
+            >한 번 삭제하면 본문·차트·집계 매핑 모두 복구할 수 없습니다.</span
+          >
+        </div>
+        <div class="confirm-modal__actions">
+          <button
+            class="confirm-modal__btn confirm-modal__btn--ghost"
+            id="delete-cancel"
+          >
+            취소
+          </button>
+          <button
+            class="confirm-modal__btn confirm-modal__btn--danger"
+            id="delete-confirm-btn"
+          >
+            삭제
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Live queries — re-read DOM every time so deletions update naturally.
+      const track = document.getElementById("carousel-track");
+      const dotsContainer = document.getElementById("carousel-dots");
+      let activeIndex = 0;
+
+      const getCards = () =>
+        Array.from(track.querySelectorAll(".report-card:not([hidden])"));
+      const getDots = () =>
+        Array.from(dotsContainer.querySelectorAll(".carousel-dot"));
+
+      // ─── Filter chips (All / Drafts / Published) ──
+      // Toggles `hidden` on cards whose status badge doesn't match the
+      // selected filter. The "+ 새 보고서" create card is always visible.
+      document
+        .querySelectorAll(".reports-chip[data-filter]")
+        .forEach((chip) => {
+          chip.addEventListener("click", () => {
+            const filter = chip.dataset.filter;
+            document
+              .querySelectorAll(".reports-chip[data-filter]")
+              .forEach((c) => {
+                c.setAttribute("aria-selected", c === chip ? "true" : "false");
+              });
+            track.querySelectorAll(".report-card").forEach((card) => {
+              if (card.classList.contains("report-card--create")) {
+                card.hidden = false;
+                return;
+              }
+              if (filter === "all") {
+                card.hidden = false;
+              } else if (filter === "drafts") {
+                card.hidden = !card.querySelector(".report-card__badge--draft");
+              } else if (filter === "published") {
+                card.hidden = !card.querySelector(
+                  ".report-card__badge--published"
+                );
+              }
+            });
+            // Reset carousel state to the first visible card
+            activeIndex = 0;
+            rebuildDots();
+            // Snap scroll back to the leftmost visible card
+            const firstVisible = getCards()[0];
+            if (firstVisible)
+              firstVisible.scrollIntoView({
+                inline: "center",
+                behavior: "smooth",
+              });
+            updateActive();
+          });
+        });
+
+      function rebuildDots() {
+        dotsContainer.innerHTML = "";
+        getCards().forEach((c, i) => {
+          const dot = document.createElement("button");
+          dot.className = "carousel-dot";
+          if (c.dataset.kind === "create") dot.dataset.kind = "create";
+          dot.addEventListener("click", () => scrollToCard(i));
+          dotsContainer.appendChild(dot);
+        });
+      }
+
+      function updateActive() {
+        const cards = getCards();
+        if (!cards.length) return;
+        const trackRect = track.getBoundingClientRect();
+        const center = trackRect.left + trackRect.width / 2;
+        let closest = 0,
+          closestDist = Infinity;
+        cards.forEach((card, i) => {
+          const rect = card.getBoundingClientRect();
+          const dist = Math.abs(center - (rect.left + rect.width / 2));
+          if (dist < closestDist) {
+            closestDist = dist;
+            closest = i;
+          }
+        });
+        activeIndex = Math.min(closest, cards.length - 1);
+        cards.forEach((c, i) =>
+          c.classList.toggle("active", i === activeIndex)
+        );
+        getDots().forEach((d, i) => {
+          d.classList.remove("active", "active--create");
+          if (i === activeIndex) {
+            d.classList.add("active");
+            if (d.dataset.kind === "create") d.classList.add("active--create");
+          }
+        });
+      }
+
+      function scrollToCard(i) {
+        const cards = getCards();
+        const card = cards[i];
+        if (!card) return;
+        const trackRect = track.getBoundingClientRect();
+        const cardRect = card.getBoundingClientRect();
+        const offset =
+          cardRect.left -
+          trackRect.left -
+          (trackRect.width - cardRect.width) / 2;
+        track.scrollBy({ left: offset, behavior: "smooth" });
+      }
+
+      // Off-center card click → snap-to-center first; active card → navigate.
+      // Delegated so dynamically added/removed cards work without rewiring.
+      track.addEventListener("click", (e) => {
+        const card = e.target.closest(".report-card");
+        if (!card) return;
+        // Menu button clicks are caught below in the capture-phase handler
+        const cards = getCards();
+        const i = cards.indexOf(card);
+        if (i !== -1 && i !== activeIndex) {
+          e.preventDefault();
+          scrollToCard(i);
+        }
+      });
+
+      rebuildDots();
+      track.addEventListener("scroll", updateActive, { passive: true });
+      window.addEventListener("resize", updateActive);
+      requestAnimationFrame(updateActive);
+
+      // ─── Card overflow menu (...) + delete-confirm flow ─────────
+      const cardMenu = document.getElementById("card-menu");
+      const deleteConfirm = document.getElementById("delete-confirm");
+      const deleteCancel = document.getElementById("delete-cancel");
+      const deleteConfirmBtn = document.getElementById("delete-confirm-btn");
+      const deleteTargetEl = document.getElementById("delete-confirm-target");
+      let menuCard = null;
+      let pendingDeleteCard = null;
+
+      function openCardMenu(btn, card) {
+        menuCard = card;
+        cardMenu.dataset.open = "true";
+        // Measure after open so width is real
+        const btnRect = btn.getBoundingClientRect();
+        const menuRect = cardMenu.getBoundingClientRect();
+        const top = btnRect.bottom + 6;
+        const left = Math.min(
+          window.innerWidth - menuRect.width - 8,
+          btnRect.right - menuRect.width
+        );
+        cardMenu.style.top = top + "px";
+        cardMenu.style.left = Math.max(8, left) + "px";
+      }
+      function closeCardMenu() {
+        cardMenu.dataset.open = "false";
+        menuCard = null;
+      }
+
+      // Capture-phase listener so we run BEFORE the anchor's default
+      // navigation and BEFORE the bubble-phase carousel snap handler.
+      document.addEventListener(
+        "click",
+        (e) => {
+          const btn = e.target.closest(".report-card__menu-btn");
+          if (btn) {
+            e.preventDefault();
+            e.stopPropagation();
+            const card = btn.closest(".report-card");
+            if (menuCard === card && cardMenu.dataset.open === "true") {
+              closeCardMenu();
+            } else {
+              openCardMenu(btn, card);
+            }
+            return;
+          }
+          // Click outside the menu closes it
+          if (!e.target.closest("#card-menu")) closeCardMenu();
+        },
+        true
+      );
+
+      // Menu → delete → open confirm modal
+      cardMenu
+        .querySelector('[data-op="delete"]')
+        .addEventListener("click", () => {
+          if (!menuCard) return;
+          pendingDeleteCard = menuCard;
+          const titleEl =
+            menuCard.querySelector(".report-card__title") ||
+            menuCard.querySelector(".report-card__create-title");
+          deleteTargetEl.textContent = titleEl
+            ? `"${titleEl.textContent.trim()}"`
+            : "이 보고서";
+          closeCardMenu();
+          deleteConfirm.dataset.open = "true";
+        });
+
+      function closeDeleteConfirm() {
+        deleteConfirm.dataset.open = "false";
+        pendingDeleteCard = null;
+      }
+      deleteCancel.addEventListener("click", closeDeleteConfirm);
+      deleteConfirm.addEventListener("click", (e) => {
+        if (e.target === deleteConfirm) closeDeleteConfirm();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeCardMenu();
+          closeDeleteConfirm();
+        }
+      });
+
+      deleteConfirmBtn.addEventListener("click", () => {
+        const target = pendingDeleteCard;
+        closeDeleteConfirm();
+        if (!target) return;
+        // Animate out, then remove from DOM + rebuild dots
+        target.style.transition = "opacity 0.28s, transform 0.28s";
+        target.style.opacity = "0";
+        target.style.transform =
+          (target.style.transform || "") + " scale(0.82)";
+        setTimeout(() => {
+          target.remove();
+          rebuildDots();
+          updateActive();
+        }, 280);
+      });
+    </script>
+  </body>
+</html>

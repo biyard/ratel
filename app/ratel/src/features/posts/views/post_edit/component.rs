@@ -189,8 +189,6 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
         let plain = strip_html(&content());
         plain.split_whitespace().count()
     });
-    let read_minutes =
-        use_memo(move || std::cmp::max(1, (content_word_count() as f32 / 200.0).ceil() as usize));
 
     let can_submit = use_memo(move || {
         !title().is_empty()
@@ -922,8 +920,8 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                         }
                         strong { "{content_word_count}" }
                         " {tr.stat_words} · "
-                        strong { "{read_minutes} {tr.stat_min}" }
-                        " {tr.stat_read}"
+                        strong { "{content_text_chars}" }
+                        " {tr.stat_chars}"
                     }
                     span { class: "bottom-bar__stat",
                         svg {
@@ -940,19 +938,6 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                     }
                 }
                 div { class: "bottom-bar__right",
-                    button { class: "bottom-bar__btn bottom-bar__btn--desktop",
-                        svg {
-                            view_box: "0 0 24 24",
-                            fill: "none",
-                            stroke: "currentColor",
-                            stroke_width: "2",
-                            stroke_linecap: "round",
-                            stroke_linejoin: "round",
-                            polyline { points: "9 11 12 14 22 4" }
-                            path { d: "M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" }
-                        }
-                        "{tr.spell_check}"
-                    }
                     button {
                         class: "bottom-bar__btn bottom-bar__btn--mobile",
                         onclick: move |_| drawer_open.set(true),

@@ -84,6 +84,9 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
 
     // Local-only signal for the tag-input field. `tags` is the committed
     // chip list; this holds whatever the user is typing before Enter.
+    // Mobile drawer state — same pattern as post_edit. Click "옵션" in the
+    // bottom-bar to slide the side-panel up from below.
+    let mut drawer_open = use_signal(|| false);
     let mut tag_draft: Signal<String> = use_signal(String::new);
     // Korean IME composition guard. Enter pressed while the IME is still
     // composing the trailing hangul character would otherwise fire the
@@ -194,9 +197,9 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
     // here would detach the future from this component; the nav.push that
     // follows would then unmount the component and drop the in-flight
     // request, leaving the draft stuck in `작성중 · DRAFTS`.
-    let publish = move |_| {
+    let publish = use_callback(move |_| {
         let username = username_for_publish.clone();
-        async move {
+        spawn(async move {
             if let Some(id) = announcement_id() {
                 if let Err(e) = ctx.publish_announcement(id).await {
                     tracing::error!("publish announcement failed: {e}");
@@ -204,8 +207,8 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                 }
             }
             nav.push(Route::TeamSubTeamManagementPage { username });
-        }
-    };
+        });
+    });
 
     let discard = move |_| {
         let username = username_for_discard.clone();
@@ -306,7 +309,31 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                 }
 
                 // ── Right panel ───────────────────────────────────
-                aside { class: "side-panel",
+                aside {
+                    class: "side-panel",
+                    "data-open": drawer_open(),
+                    // Mobile drawer head — handle + title + close button.
+                    // Hidden on desktop via base `.side-panel__head { display: none }`.
+                    div { class: "side-panel__head",
+                        span { class: "side-panel__handle" }
+                        span { class: "side-panel__title", "{tr.sub_team_options_drawer_title}" }
+                        button {
+                            class: "side-panel__close",
+                            "aria-label": tr.sub_team_options_close,
+                            onclick: move |_| drawer_open.set(false),
+                            svg {
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_width: "2",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                line { x1: "18", y1: "6", x2: "6", y2: "18" }
+                                line { x1: "6", y1: "6", x2: "18", y2: "18" }
+                            }
+                        }
+                    }
+
                     // Posting as (locked — parent team).
                     div { class: "side-card",
                         div { class: "side-card__title",
@@ -629,6 +656,52 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                             lucide_dioxus::Trash2 { class: "w-3 h-3 [&>path]:stroke-current" }
                             "{tr.broadcast_discard_draft}"
                         }
+                    }
+                }
+            }
+
+            // Mobile drawer backdrop — dims the page when the side-panel
+            // is slid up. Click anywhere outside to close.
+            div {
+                class: "drawer-backdrop",
+                "data-open": drawer_open(),
+                onclick: move |_| drawer_open.set(false),
+            }
+
+            // Bottom bar (mobile-only). Mirrors the post_edit pattern:
+            // 옵션 button toggles the drawer, primary button publishes.
+            div { class: "bottom-bar",
+                div { class: "bottom-bar__right",
+                    button {
+                        class: "bottom-bar__btn bottom-bar__btn--mobile",
+                        onclick: move |_| drawer_open.set(true),
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            line { x1: "4", y1: "21", x2: "4", y2: "14" }
+                            line { x1: "4", y1: "10", x2: "4", y2: "3" }
+                            line { x1: "12", y1: "21", x2: "12", y2: "12" }
+                            line { x1: "12", y1: "8", x2: "12", y2: "3" }
+                            line { x1: "20", y1: "21", x2: "20", y2: "16" }
+                            line { x1: "20", y1: "12", x2: "20", y2: "3" }
+                            line { x1: "1", y1: "14", x2: "7", y2: "14" }
+                            line { x1: "9", y1: "8", x2: "15", y2: "8" }
+                            line { x1: "17", y1: "16", x2: "23", y2: "16" }
+                        }
+                        "{tr.sub_team_options}"
+                    }
+                    div {
+                        class: "bottom-bar__btn bottom-bar__btn--mobile bottom-bar__btn--primary",
+                        "data-testid": "sub-team-broadcast-publish-btn-mobile",
+                        role: "button",
+                        onclick: publish,
+                        "aria-disabled": announcement_id().is_none() || title().is_empty(),
+                        lucide_dioxus::Send { class: "w-3 h-3 [&>path]:stroke-current" }
+                        "{tr.broadcast_publish}"
                     }
                 }
             }
