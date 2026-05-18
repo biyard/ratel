@@ -82,32 +82,41 @@ pub async fn get_leaderboard_handler(
                 FactOrFoldError::StorageFailure
             })?;
 
-    // Enrich each entry with the user's display metadata so the
-    // leaderboard table renders without a per-row /me lookup. v1 caps
-    // the page at LEADERBOARD_PAGE_LIMIT (50) so per-row User::get is
-    // cheap; a batch lookup is a follow-up when the table grows.
-    let mut items: Vec<LeaderboardEntryResponse> = Vec::with_capacity(rows.len());
-    for e in rows.into_iter() {
-        let user_row = User::get(cli, &e.user_pk, Some(EntityType::User))
-            .await
-            .map_err(|err| {
-                crate::error!("get_leaderboard_handler user load failed: {err}");
-                FactOrFoldError::StorageFailure
-            })?;
-        let (username, display_name, profile_url) = user_row
-            .map(|u| (u.username, u.display_name, u.profile_url))
-            .unwrap_or_default();
-        items.push(LeaderboardEntryResponse {
-            user_pk: e.user_pk.to_string(),
-            username,
-            display_name,
-            profile_url,
-            accuracy_bps: e.accuracy_bps,
-            total_rounds: e.total_rounds,
-            correct_count: e.correct_count,
-            lifetime_delta_chips: e.lifetime_delta_chips,
-            last_played_at: e.last_played_at,
-        });
-    }
+    // Enrich each entry with the user's display metadata in a single
+    // BatchGetItem so the response is one RTT regardless of page size.
+    let user_keys: Vec<(Partition, EntityType)> = rows
+        .iter()
+        .map(|e| (e.user_pk.clone(), EntityType::User))
+        .collect();
+    let user_rows = User::batch_get(cli, user_keys).await.map_err(|err| {
+        crate::error!("get_leaderboard_handler user batch load failed: {err}");
+        FactOrFoldError::StorageFailure
+    })?;
+    let user_by_pk: std::collections::HashMap<String, User> = user_rows
+        .into_iter()
+        .map(|u| (u.pk.to_string(), u))
+        .collect();
+
+    let items: Vec<LeaderboardEntryResponse> = rows
+        .into_iter()
+        .map(|e| {
+            let pk_str = e.user_pk.to_string();
+            let (username, display_name, profile_url) = user_by_pk
+                .get(&pk_str)
+                .map(|u| (u.username.clone(), u.display_name.clone(), u.profile_url.clone()))
+                .unwrap_or_default();
+            LeaderboardEntryResponse {
+                user_pk: pk_str,
+                username,
+                display_name,
+                profile_url,
+                accuracy_bps: e.accuracy_bps,
+                total_rounds: e.total_rounds,
+                correct_count: e.correct_count,
+                lifetime_delta_chips: e.lifetime_delta_chips,
+                last_played_at: e.last_played_at,
+            }
+        })
+        .collect();
     Ok((items, next_bookmark).into())
 }

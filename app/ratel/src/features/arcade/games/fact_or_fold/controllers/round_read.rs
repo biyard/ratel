@@ -229,35 +229,45 @@ pub async fn list_round_participants_handler(
         FactOrFoldError::StorageFailure
     })?;
 
-    // Resolve display metadata per participant. v1 = 4 players max so
-    // a per-row User::get is cheap; batch lookup is a follow-up if
-    // the round size grows.
-    let mut items: Vec<RoundParticipantSummary> = Vec::with_capacity(rows.len());
-    for p in rows.into_iter() {
-        let user_pk_owned = p.user_pk.clone();
-        let user_row = User::get(cli, &user_pk_owned, Some(EntityType::User))
-            .await
-            .map_err(|e| {
-                crate::error!("list_round_participants_handler user load failed: {e}");
-                FactOrFoldError::StorageFailure
-            })?;
-        let (username, display_name, profile_url) = user_row
-            .map(|u| (u.username, u.display_name, u.profile_url))
-            .unwrap_or_default();
-        let is_self = p.user_pk.to_string() == user_pk_str;
-        items.push(RoundParticipantSummary {
-            user_pk: p.user_pk.to_string(),
-            username,
-            display_name,
-            profile_url,
-            joined_at: p.joined_at,
-            last_seen_at: p.last_seen_at,
-            forfeited: p.forfeited,
-            // Only echo the insider flag on the caller's own row —
-            // protects the insider identity per design doc §Insider.
-            is_insider: is_self && p.is_insider,
-        });
-    }
+    // Resolve display metadata per participant via a single
+    // BatchGetItem so the request is one RTT regardless of round
+    // size. Missing rows fall back to empty defaults.
+    let user_keys: Vec<(Partition, EntityType)> = rows
+        .iter()
+        .map(|p| (p.user_pk.clone(), EntityType::User))
+        .collect();
+    let user_rows = User::batch_get(cli, user_keys).await.map_err(|e| {
+        crate::error!("list_round_participants_handler user batch load failed: {e}");
+        FactOrFoldError::StorageFailure
+    })?;
+    let user_by_pk: std::collections::HashMap<String, User> = user_rows
+        .into_iter()
+        .map(|u| (u.pk.to_string(), u))
+        .collect();
+
+    let items: Vec<RoundParticipantSummary> = rows
+        .into_iter()
+        .map(|p| {
+            let pk_str = p.user_pk.to_string();
+            let (username, display_name, profile_url) = user_by_pk
+                .get(&pk_str)
+                .map(|u| (u.username.clone(), u.display_name.clone(), u.profile_url.clone()))
+                .unwrap_or_default();
+            let is_self = pk_str == user_pk_str;
+            RoundParticipantSummary {
+                user_pk: pk_str,
+                username,
+                display_name,
+                profile_url,
+                joined_at: p.joined_at,
+                last_seen_at: p.last_seen_at,
+                forfeited: p.forfeited,
+                // Only echo the insider flag on the caller's own row —
+                // protects the insider identity per design doc §Insider.
+                is_insider: is_self && p.is_insider,
+            }
+        })
+        .collect();
 
     Ok(ListParticipantsResponse { items })
 }
