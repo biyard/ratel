@@ -1,9 +1,26 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  width: 100dvw;
+  height: 100dvh;  /* calc 빼기 */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
 /* App-wide styling */
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   overflow: hidden;
   width: 100dvw;
-  height: 100dvh;
+  height: 100%;
+}
+
+#main {
+  height: 100%;
 }
 
 /* Membership plan grid (used in embedded membership routes) */
@@ -6040,9 +6057,9 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   position: relative;
   /* Body has `overflow: hidden` on desktop (see tailwind.css) so every
      route under RootLayout must own its scroll container. Locking the
-     arena to 100dvh + overflow-y:auto lets the long sources list scroll
+     arena to 100% + overflow-y:auto lets the long sources list scroll
      naturally on desktop while the sticky topbar anchors to the top. */
-  height: 100dvh;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
@@ -6059,7 +6076,7 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
      trapping scroll inside it. */
   .essence-arena {
     height: auto;
-    min-height: 100dvh;
+    min-height: 100%;
     overflow: visible;
   }
 }
@@ -6864,7 +6881,7 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   position: relative;
   /* Body has `overflow: hidden` on desktop (tailwind.css), so this
      arena owns its own scroll container. */
-  height: 100dvh;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
@@ -29079,7 +29096,7 @@ body.comments-panel-resizing {
      (where URL/toolbars shrink the visible area). `100vh` falls back for
      older user agents. */
   height: 100vh;
-  height: 100dvh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -29807,7 +29824,7 @@ body.comments-panel-resizing {
 
   background: var(--sub-team-bg);
   color: var(--sub-team-text);
-  /* `body` is `overflow: hidden; height: 100dvh` globally — every page
+  /* `body` is `overflow: hidden; height: 100%` globally — every page
    * needs its own scroll container or content past the viewport is
    * clipped. Memory rule `feedback_arena_page_scroll.md`. */
   height: 100vh;
@@ -30814,7 +30831,7 @@ body.comments-panel-resizing {
 
   background: var(--sub-team-bg);
   color: var(--sub-team-text);
-  /* `body` is `overflow: hidden; height: 100dvh` globally — every
+  /* `body` is `overflow: hidden; height: 100%` globally — every
    * page needs its own scroll container or content past the viewport
    * is clipped. Memory rule `feedback_arena_page_scroll.md`. */
   height: 100vh;
@@ -33154,7 +33171,7 @@ body.comments-panel-resizing {
   /* Detail page now lives OUTSIDE TeamArenaLayout, so it owns its own
    * background + scroll container. Per `feedback_arena_page_scroll.md`,
    * each page-scoped scroll wrapper must set explicit height + overflow
-   * because `body` is `overflow:hidden; height:100dvh` globally. */
+   * because `body` is `overflow:hidden; height:100%` globally. */
   background: var(--sub-team-bg);
   color: var(--sub-team-text);
   width: 100%;
@@ -34709,7 +34726,7 @@ body.comments-panel-resizing {
   background: var(--sub-team-bg);
   color: var(--sub-team-text);
   /* Page-scoped scroll container — `body` is `overflow:hidden;
-   * height:100dvh` globally, so each page needs its own.
+   * height:100%` globally, so each page needs its own.
    * Memory rule `feedback_arena_page_scroll.md`. */
   height: 100vh;
   overflow-y: auto;
@@ -37602,7 +37619,7 @@ body.comments-panel-resizing {
 
   position: relative;
   width: 100%;
-  height: 100dvh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -37861,7 +37878,7 @@ body.comments-panel-resizing {
   position: relative;
   width: 100%;
   max-width: 720px;
-  max-height: calc(100dvh - 96px);
+  max-height: calc(100% - 96px);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -38447,7 +38464,7 @@ body.comments-panel-resizing {
     padding: 24px 16px;
   }
   .home-arena .hud-overlay__panel {
-    max-height: calc(100dvh - 48px);
+    max-height: calc(100% - 48px);
     padding: 28px 20px 20px;
   }
   .home-arena .section-label__dash {
@@ -39597,7 +39614,7 @@ body.comments-panel-resizing {
   position: relative;
   /* Body has `overflow: hidden` on desktop (tailwind.css), so this
      arena owns its own scroll container. */
-  height: 100dvh;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
@@ -40867,7 +40884,7 @@ body.comments-panel-resizing {
   /* Body has `overflow: hidden` on desktop (tailwind.css), so this
      arena owns its own scroll container — same pattern as
      `.essence-sources-arena` / `.connections-arena`. */
-  height: 100dvh;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
@@ -41662,8 +41679,8 @@ body.comments-panel-resizing {
 
 /* === mobile scroll escape for full-viewport arena wrappers === */
 /* Desktop pattern: `body { overflow: hidden }` + each arena owns its own
-   scroll container at 100dvh. On mobile, body itself becomes scrollable
-   (tailwind.css `max-tablet:overflow-auto`), so a nested 100dvh scroll
+   scroll container at 100%. On mobile, body itself becomes scrollable
+   (tailwind.css `max-tablet:overflow-auto`), so a nested 100% scroll
    container creates two competing scroll roots and touch Y-scroll dies.
    Below releases the lock on tablet+mobile so the document scrolls
    naturally — matches the existing `.essence-arena` mobile override. */
@@ -41678,7 +41695,7 @@ body.comments-panel-resizing {
   .space-files-arena,
   .space-general-arena {
     height: auto;
-    min-height: 100dvh;
+    min-height: 100%;
     overflow-x: hidden;
   }
 }
