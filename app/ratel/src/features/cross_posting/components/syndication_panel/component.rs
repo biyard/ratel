@@ -61,6 +61,13 @@ pub fn SyndicationPanel(post_id: FeedPartition) -> Element {
     let bsky_connected = conn_list.iter().any(|c| {
         c.platform == SocialPlatform::Bluesky && c.status == ConnectionStatus::Connected
     });
+    let linkedin_job = jobs
+        .iter()
+        .find(|j| j.platform == SocialPlatform::LinkedIn)
+        .cloned();
+    let linkedin_connected = conn_list.iter().any(|c| {
+        c.platform == SocialPlatform::LinkedIn && c.status == ConnectionStatus::Connected
+    });
 
     let username = user_ctx
         .read()
@@ -137,9 +144,23 @@ pub fn SyndicationPanel(post_id: FeedPartition) -> Element {
                         username: username.clone(),
                     }
                 }
-                ComingSoonCard {
-                    platform: SocialPlatform::LinkedIn,
-                    hint: t.panel_linkedin_coming_soon_hint,
+                // LinkedIn — same three sub-states as Bluesky.
+                if let Some(job) = linkedin_job {
+                    SyndicationCard {
+                        job,
+                        on_retry: move |p: SocialPlatform| async move {
+                            if let Err(e) = sp.retry(p).await {
+                                toast.error(e);
+                            }
+                        },
+                    }
+                } else if linkedin_connected {
+                    AwaitingDispatchCard { platform: SocialPlatform::LinkedIn }
+                } else {
+                    NotConnectedCard {
+                        platform: SocialPlatform::LinkedIn,
+                        username: username.clone(),
+                    }
                 }
                 ComingSoonCard {
                     platform: SocialPlatform::Threads,
@@ -178,9 +199,11 @@ fn AwaitingDispatchCard(platform: SocialPlatform) -> Element {
     }
 }
 
-/// Bluesky-not-connected card. Surfaces a Connect CTA pointing at
-/// Settings → Connections so the author can hook up the platform without
-/// leaving post-detail context.
+/// Not-connected card for any active platform (Bluesky 1A, LinkedIn 1B).
+/// Surfaces a Connect CTA pointing at Settings → Connections so the
+/// author can hook up the platform without leaving post-detail context.
+/// The label + testid switch on `platform` so each surface remains
+/// disambiguable in screen readers and Playwright.
 #[component]
 fn NotConnectedCard(platform: SocialPlatform, username: String) -> Element {
     let t: SyndicationPanelTranslate = use_translate();
@@ -188,6 +211,11 @@ fn NotConnectedCard(platform: SocialPlatform, username: String) -> Element {
         SocialPlatform::Bluesky => "syn-logo syn-logo--bsky",
         SocialPlatform::LinkedIn => "syn-logo syn-logo--linkedin",
         SocialPlatform::Threads => "syn-logo syn-logo--threads",
+    };
+    let (btn_label, btn_testid) = match platform {
+        SocialPlatform::Bluesky => (t.btn_connect_bluesky, "syn-connect-bluesky"),
+        SocialPlatform::LinkedIn => (t.btn_connect_linkedin, "syn-connect-linkedin"),
+        SocialPlatform::Threads => (t.btn_connect_bluesky, "syn-connect-threads"),
     };
     rsx! {
         article { class: "syn-card", "data-status": "not-connected",
@@ -207,8 +235,8 @@ fn NotConnectedCard(platform: SocialPlatform, username: String) -> Element {
                             username: username.clone(),
                         },
                         class: "mini-btn mini-btn--connect",
-                        "data-testid": "syn-connect-bluesky",
-                        "{t.btn_connect_bluesky}"
+                        "data-testid": btn_testid,
+                        "{btn_label}"
                     }
                 }
             }

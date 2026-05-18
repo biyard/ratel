@@ -33,6 +33,17 @@ pub enum CrossPostingError {
     )]
     OAuthStateMismatch,
 
+    /// LinkedIn rejected our `code` exchange (HTTP 400 / `invalid_grant`),
+    /// or `/v2/userinfo` failed, or the access/refresh tokens couldn't
+    /// be sealed. Surfaced to the user via the redirect query
+    /// (`?linkedin=error`) on the connections page.
+    #[error("linkedin auth failed")]
+    #[translate(
+        en = "LinkedIn rejected the connection. Please try again.",
+        ko = "LinkedIn 연결에 실패했습니다. 다시 시도해주세요."
+    )]
+    LinkedInAuthFailed,
+
     #[error("threads requires instagram professional account")]
     #[translate(
         en = "To connect Threads, please switch to an Instagram Professional account.",
@@ -92,6 +103,7 @@ impl CrossPostingError {
             CrossPostingError::NotAuthorized => StatusCode::FORBIDDEN,
             CrossPostingError::BlueskyAuthFailed
             | CrossPostingError::OAuthStateMismatch
+            | CrossPostingError::LinkedInAuthFailed
             | CrossPostingError::ThreadsRequiresInstagramProfessional
             | CrossPostingError::RetryNotAllowed => StatusCode::BAD_REQUEST,
             CrossPostingError::ConnectFailed

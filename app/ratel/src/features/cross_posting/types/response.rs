@@ -103,3 +103,11 @@ impl SyndicationJobView {
         }
     }
 }
+
+/// Response from `POST /api/cross-posting/connections/linkedin/init`.
+/// Front-end navigates `window.location.href = authorize_url` so the
+/// browser leaves the SPA context and lands on LinkedIn's consent page.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct LinkedInOauthInitResponse {
+    pub authorize_url: String,
+}

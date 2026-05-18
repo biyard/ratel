@@ -6,8 +6,10 @@
 //! is unchanged.
 
 mod bluesky;
+mod linkedin;
 
 pub use bluesky::*;
+pub use linkedin::*;
 
 use crate::features::cross_posting::types::SocialPlatform;
 use async_trait::async_trait;
@@ -38,7 +40,14 @@ pub enum DecryptedCredentials {
     },
     LinkedIn {
         access_token: String,
-        refresh_token: String,
+        /// `Option` because LinkedIn only mints a `refresh_token` for apps
+        /// with the right product tier (e.g. "Share on LinkedIn",
+        /// "Marketing Developer Platform"). Standard "Sign In with
+        /// LinkedIn using OpenID Connect" apps return a 60-day
+        /// `access_token` and no refresh token at all — when expired the
+        /// dispatcher fails with `AuthExpired` and the user reconnects
+        /// via the inbox CTA. See `try_refresh_credentials` below.
+        refresh_token: Option<String>,
         member_urn: String,
     },
     Threads {

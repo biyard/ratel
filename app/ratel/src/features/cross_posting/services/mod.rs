@@ -1,10 +1,12 @@
 //! Server-only services for the cross-posting pipeline.
 
 pub mod adapters;
+pub mod connection;
 pub mod credentials;
 pub mod dispatcher;
 pub mod factory;
 pub mod format;
+pub mod oauth_state;
 pub mod shard;
 pub use adapters::*;
 
