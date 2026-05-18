@@ -274,6 +274,36 @@ pub fn open(blob: &[u8]) -> Result<Vec<u8>, AeadError> {
     open_with_keys(blob, current, previous.as_ref())
 }
 
+/// Derive a 32-byte subkey from the CURRENT envvar key for a non-AEAD
+/// purpose (e.g. HMAC-signing OAuth state tokens). The derivation is
+/// `HMAC-SHA256(CURRENT_KEY, label)` — keying HMAC under the master key
+/// with a distinct label produces an independent subkey, so leaking the
+/// returned bytes does NOT compromise the AEAD blobs sealed under the
+/// same master.
+///
+/// Callers MUST pass a unique, versioned label per purpose (e.g.
+/// `b"cross_posting/oauth_state/v1"`); reusing the same label across
+/// different purposes would let the two consumers forge each other's
+/// tokens.
+///
+/// The returned subkey rotates with `CROSS_POSTING_DATA_KEY` rotation —
+/// any in-flight tokens HMAC'd under the previous key will start failing
+/// verification once the rotation lands. For OAuth state with a 10-minute
+/// TTL this is the desired behaviour.
+pub fn derive_subkey(label: &[u8]) -> Result<[u8; 32], AeadError> {
+    use hmac::{Hmac, Mac};
+    use sha2::Sha256;
+
+    let (current, _) = keys().map_err(clone_err)?;
+    let mut mac = <Hmac<Sha256> as Mac>::new_from_slice(&current.raw)
+        .expect("HMAC accepts any key length");
+    mac.update(label);
+    let result = mac.finalize().into_bytes();
+    let mut out = [0u8; 32];
+    out.copy_from_slice(&result);
+    Ok(out)
+}
+
 fn clone_err(e: &AeadError) -> AeadError {
     // AeadError is small and not Clone (thiserror-derived). Reconstruct
     // an equivalent error for the caller.

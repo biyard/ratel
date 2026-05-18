@@ -7,7 +7,12 @@ pub mod controllers;
 #[cfg(feature = "server")]
 pub mod services;
 
+#[cfg(feature = "server")]
+pub mod server;
+
 pub mod hooks;
+
+pub mod interop;
 
 pub mod components;
 

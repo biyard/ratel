@@ -36,6 +36,14 @@ pub fn ConnectionsPage(username: String) -> Element {
         .as_ref()
         .map(|c| c.status == ConnectionStatus::Connected)
         .unwrap_or(false);
+    let linkedin: Option<ConnectionResponse> = conn_list
+        .iter()
+        .find(|c| c.platform == SocialPlatform::LinkedIn)
+        .cloned();
+    let linkedin_connected = linkedin
+        .as_ref()
+        .map(|c| c.status == ConnectionStatus::Connected)
+        .unwrap_or(false);
 
     rsx! {
         SeoMeta { title: "{t.title}" }
@@ -235,11 +243,11 @@ pub fn ConnectionsPage(username: String) -> Element {
                         }
                     }
 
-                    // LinkedIn — coming in Phase 1B
+                    // LinkedIn — Phase 1B active
                     article {
                         class: "plat",
                         "data-platform": "linkedin",
-                        "data-soon": "true",
+                        "data-connected": "{linkedin_connected}",
                         div { class: "plat__body",
                             span { class: "plat__logo plat__logo--linkedin",
                                 svg {
@@ -251,20 +259,75 @@ pub fn ConnectionsPage(username: String) -> Element {
                             div { class: "plat__main",
                                 div { class: "plat__name-row",
                                     span { class: "plat__name", "{t.linkedin_name}" }
-                                    span { class: "status-pill status-pill--soon",
-                                        "{t.status_coming_soon}"
+                                    if linkedin_connected {
+                                        span { class: "status-pill status-pill--connected",
+                                            "{t.status_connected}"
+                                        }
+                                    } else {
+                                        span { class: "status-pill status-pill--off",
+                                            "{t.status_not_connected}"
+                                        }
                                     }
                                     span { class: "plat__limit", "{t.linkedin_limit}" }
                                 }
                                 div { class: "plat__handle",
-                                    span { "{t.linkedin_subtitle}" }
+                                    if let Some(c) = linkedin.clone() {
+                                        span { "{c.external_handle}" }
+                                    } else {
+                                        span { "{t.linkedin_subtitle_default}" }
+                                    }
                                 }
                             }
                             div { class: "plat__actions",
-                                button {
-                                    class: "connections-btn connections-btn--ghost",
-                                    disabled: true,
-                                    "{t.btn_notify}"
+                                if linkedin_connected {
+                                    button {
+                                        class: "connections-btn connections-btn--ghost",
+                                        onclick: move |_| async move {
+                                            if let Err(e) = cp.disconnect(SocialPlatform::LinkedIn).await {
+                                                toast.error(e);
+                                            }
+                                        },
+                                        "{t.btn_disconnect}"
+                                    }
+                                } else {
+                                    button {
+                                        class: "connections-btn connections-btn--connect-linkedin",
+                                        onclick: move |_| async move {
+                                            if let Err(e) = cp.connect_linkedin().await {
+                                                toast.error(e);
+                                            }
+                                        },
+                                        "{t.btn_connect}"
+                                    }
+                                }
+                            }
+                        }
+                        if let Some(c) = linkedin.clone() {
+                            if c.status == ConnectionStatus::Connected {
+                                {
+                                    let auto_post = c.auto_post_enabled;
+                                    rsx! {
+                                        div { class: "plat__subrow",
+                                            div { class: "plat__subrow-item",
+                                                strong { "{c.posts_syndicated_count}" }
+                                                span { "{t.posts_syndicated_count_label}" }
+                                            }
+                                            span { class: "plat__subrow-sep" }
+                                            div { class: "plat__subrow-item",
+                                                span { "{t.auto_post}" }
+                                                button {
+                                                    class: "switch",
+                                                    "aria-checked": "{auto_post}",
+                                                    "aria-label": "{t.auto_post}",
+                                                    onclick: move |_| async move {
+                                                        if let Err(e) = cp.toggle_auto_post(SocialPlatform::LinkedIn, !auto_post).await {
+                                                            toast.error(e);
+                                                        }
+                                                    },
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }

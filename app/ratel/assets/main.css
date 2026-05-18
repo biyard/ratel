@@ -15361,7 +15361,14 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 28px;
+  /* Background + border-bottom span the full viewport, but the
+     inner content (back-btn ↔ "새 게시물" button) is constrained to
+     match `.drafts-arena .page` (max-width 880px) so the topbar and
+     the stat strip align on the same x-axis instead of drifting.
+     Vertical padding kept tight (10px) because the page already
+     lives inside `SocialLayout`'s `p-5` (20px) padded container —
+     a thicker topbar makes the header zone read as a wasted band. */
+  padding: 10px max(28px, calc((100% - 880px) / 2 + 28px));
   background: var(--dark, rgba(6, 6, 14, 0.80)) var(--light, rgba(244, 243, 239, 0.86));
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-subtle);
@@ -37824,6 +37831,143 @@ body.comments-panel-resizing {
   box-shadow: 0 0 8px rgba(252, 179, 0, 0.4);
 }
 
+/* ── Hamburger overlay (flat tile grid) ─────────────────
+   Replaces the previous .hud-group / .hud-menu dropdowns. The
+   topbar holds only the 4 most-used HUD buttons (Notifications /
+   Teams / Settings / Hamburger); the rest live inside this
+   overlay as square tiles. Toggled via `data-open` on the root.
+
+   Mobile: panel becomes a scrollable modal — `max-height` caps
+   the panel so the tile grid never overflows the viewport, and
+   `overflow-y:auto` lets users scroll the tiles inside. */
+.home-arena .hud-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(4, 4, 12, 0.65);
+  backdrop-filter: blur(18px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.home-arena .hud-overlay[data-open="true"] {
+  display: flex;
+  opacity: 1;
+}
+.home-arena .hud-overlay__panel {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  max-height: calc(100dvh - 96px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 32px 28px 28px;
+  border-radius: 24px;
+  background:
+    var(--dark, linear-gradient(160deg, rgba(22, 22, 38, 0.92), rgba(10, 10, 20, 0.96)))
+    var(--light, linear-gradient(160deg, rgba(255, 255, 255, 0.98), rgba(248, 248, 252, 1)));
+  border: 1px solid var(--ha-border-subtle);
+  box-shadow: 0 30px 80px var(--ha-shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.home-arena .hud-overlay__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--dark, rgba(255, 255, 255, 0.04)) var(--light, rgba(0, 0, 0, 0.04));
+  border: 1px solid var(--ha-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--ha-text-muted);
+  transition: all 0.18s;
+  padding: 0;
+}
+.home-arena .hud-overlay__close:hover {
+  color: #fcb300;
+  border-color: rgba(252, 179, 0, 0.28);
+  background: rgba(252, 179, 0, 0.06);
+}
+.home-arena .hud-overlay__close svg {
+  width: 16px;
+  height: 16px;
+}
+.home-arena .hud-overlay__heading {
+  font-family: "Orbitron", sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ha-text-dim);
+  text-align: center;
+}
+/* Square tiles via aspect-ratio so icon + label sit centered like
+   the reference game menu. auto-fit collapses gracefully on narrow
+   viewports (3 col → 2 col → 1 col). */
+.home-arena .hud-overlay__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+.home-arena .hud-overlay__tile {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--dark, rgba(255, 255, 255, 0.03)) var(--light, rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--ha-border-subtle);
+  color: var(--ha-text-primary);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: center;
+  font: inherit;
+}
+.home-arena .hud-overlay__tile:hover {
+  background: var(--ha-bg-glass-hover);
+  border-color: rgba(252, 179, 0, 0.28);
+  transform: translateY(-2px);
+}
+.home-arena .hud-overlay__tile svg {
+  width: 32px;
+  height: 32px;
+  color: var(--ha-text-muted);
+  transition: color 0.18s;
+}
+.home-arena .hud-overlay__tile:hover svg {
+  color: #fcb300;
+}
+.home-arena .hud-overlay__tile--primary {
+  background: linear-gradient(135deg, rgba(252, 179, 0, 0.22), rgba(252, 179, 0, 0.06));
+  border-color: rgba(252, 179, 0, 0.38);
+}
+.home-arena .hud-overlay__tile--primary svg {
+  color: #fcb300;
+}
+.home-arena .hud-overlay__tile--primary:hover {
+  box-shadow: 0 0 22px rgba(252, 179, 0, 0.22);
+}
+.home-arena .hud-overlay__tile-label {
+  font-family: "Orbitron", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--ha-text-primary);
+}
+
 /* ── Teams dropdown ──────────────────────────────── */
 .home-arena .hud-teams {
   position: relative;
@@ -38289,6 +38433,22 @@ body.comments-panel-resizing {
   }
   .home-arena .hud-btn__label {
     display: none;
+  }
+  /* Mobile: actions row right-aligned with normal gap (not stretched
+     to fill width), so the 4 HUD buttons stay grouped on the right. */
+  .home-arena .arena-topbar__actions {
+    position: relative;
+    width: 100%;
+    justify-content: flex-end;
+  }
+  /* Mobile overlay panel — shorter padding + scrollable inside so
+     the tile grid never overflows the viewport. */
+  .home-arena .hud-overlay {
+    padding: 24px 16px;
+  }
+  .home-arena .hud-overlay__panel {
+    max-height: calc(100dvh - 48px);
+    padding: 28px 20px 20px;
   }
   .home-arena .section-label__dash {
     width: 24px;
