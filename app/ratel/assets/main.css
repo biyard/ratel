@@ -19,6 +19,10 @@ body {
   height: 100%;
 }
 
+main {
+  height: 100%;
+}
+
 /* Membership plan grid (used in embedded membership routes) */
 .membership-plan-grid {
   display: grid;
