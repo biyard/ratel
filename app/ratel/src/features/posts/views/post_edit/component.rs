@@ -238,16 +238,20 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
     //   * Bluesky / Threads → no OAuth dance; send the user to Settings →
     //     Connections where the Bluesky app-password modal lives.
     let cp_username = user_handle.clone();
-    let on_cp_connect = move |platform: SocialPlatform| async move {
-        match platform {
-            SocialPlatform::LinkedIn => {
-                let return_to = format!("/posts/{}/edit", post_id().0);
-                let _ = cp_ctx.connect_linkedin(Some(return_to)).await;
-            }
-            _ => {
-                nav.push(crate::Route::UserSettingsConnectionsPage {
-                    username: cp_username.clone(),
-                });
+    let on_cp_connect = move |platform: SocialPlatform| {
+        // Clone the captured String *before* the async block so the outer
+        // closure stays FnMut — `async move` would otherwise drain
+        // `cp_username` out of the closure env on the first invocation.
+        let username = cp_username.clone();
+        async move {
+            match platform {
+                SocialPlatform::LinkedIn => {
+                    let return_to = format!("/posts/{}/edit", post_id().0);
+                    let _ = cp_ctx.connect_linkedin(Some(return_to)).await;
+                }
+                _ => {
+                    nav.push(crate::Route::UserSettingsConnectionsPage { username });
+                }
             }
         }
     };
