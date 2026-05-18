@@ -30,7 +30,7 @@ VOTER_TAG_SECRET ?= test
 # cargo run -p attr-voting --bin attr-voting-keygen
 ATTR_VOTING_AUTHORITY_JSON ?=
 RUST_LOG ?= debug
-RUSTFLAGS ?= "-D warnings"
+RUSTFLAGS ?= -D warnings
 
 PORT ?= 8080
 RUN_FEATURES ?= local-dev,bypass
@@ -110,7 +110,7 @@ SDK_IMAGE_PATH ?= system-images/android-36/google_apis/$(ARCH)
 SDK_IMAGE ?= system-images;android-36;google_apis;$(ARCH)
 AVD_NAME ?= Pixel6_36_$(ARCH)
 
-BUILD_ENV ?= AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
+BUILD_ENV ?= RUSTFLAGS="$(RUSTFLAGS)" AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 					AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
 					AWS_REGION=$(AWS_REGION) \
 					AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) \
@@ -246,13 +246,13 @@ js/node_modules:
 	cd ../.. && npm i
 
 run: ../../node_modules js/node_modules
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES),fullstack --no-default-features --fullstack true
+	$(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --web --features $(RUN_FEATURES),fullstack --no-default-features --fullstack true
 
 run-android: $(HOME)/.android/debug.keystore dx-res-debug
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx serve --features $(RUN_FEATURES) --no-default-features --platform android --target $(ANDROID_TARGET) --fullstack false
+	$(BUILD_ENV) $(ANDROID_ENV) dx serve --features $(RUN_FEATURES) --no-default-features --platform android --target $(ANDROID_TARGET) --fullstack false
 
 run-tauri: ../../node_modules js/node_modules
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port 8000 --no-default-features --debug-symbols false --features $(RUN_FEATURES),tauri-web --web --fullstack false
+	$(BUILD_ENV) dx serve --addr 0.0.0.0 --port 8000 --no-default-features --debug-symbols false --features $(RUN_FEATURES),tauri-web --web --fullstack false
 
 $(HOME)/.android/debug.keystore:
 	keytool -genkey -v -keystore $@ -storepass android -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Korea,O=Biyard,C=KR"
@@ -304,21 +304,21 @@ dx-res-release:
 	cp -rf android/res $(CARGO_TARGET_DIR)/dx/app-shell/release/android/app/app/src/main/
 
 build-android: $(HOME)/.android/debug.keystore dx-res-release
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) $(ANDROID_ENV) dx bundle --release --features $(RUN_FEATURES) --no-default-features --platform android --target $(ANDROID_TARGET)
+	$(BUILD_ENV) $(ANDROID_ENV) dx bundle --release --features $(RUN_FEATURES) --no-default-features --platform android --target $(ANDROID_TARGET)
 
 install-android:
 	adb $(LOGCAT_FLAG) install -r $(CARGO_TARGET_DIR)/dx/app-shell/release/android/app/app/build/outputs/apk/debug/app-debug.apk
 	adb $(LOGCAT_FLAG) shell am start -n "co.biyard.ratel/.MainActivity"
 
 ios:
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --ios --features $(RUN_FEATURES)
+	$(BUILD_ENV) dx serve --addr 0.0.0.0 --port $(PORT) --ios --features $(RUN_FEATURES)
 
 build:
 	$(BUILD_ENV) dx build --release --no-default-features --debug-symbols false --fullstack true @client --features web,fullstack --platform web @server --features server --platform server
 
 build-tauri: ../../node_modules js/node_modules
 	rm -rf $(CARGO_TARGET_DIR)/dx
-	RUSTFLAGS=$(RUSTFLAGS) $(BUILD_ENV) dx build --release --debug-symbols false --no-default-features --features tauri-web --platform web --fullstack false
+	$(BUILD_ENV) dx build --release --debug-symbols false --no-default-features --features tauri-web --platform web --fullstack false
 
 build-testing:
 	$(BUILD_ENV) dx build --release --no-default-features --debug-symbols false @client --features web,fullstack,bypass,beta --platform web @server --features server,bypass,local-dev --platform server
