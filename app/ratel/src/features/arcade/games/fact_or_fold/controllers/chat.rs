@@ -162,3 +162,73 @@ pub async fn list_chat_handler(
     let last_id = items.last().map(|m| m.msg_id.clone());
     Ok(ListChatResponse { items, last_id })
 }
+
+// ── DELETE /api/arcade/games/fact-or-fold/rounds/{round_id}/chat ──
+//
+// Bulk-delete the full chat transcript for a round. Today this is
+// called by the settlement-screen "정산완료 → 홈으로" button after
+// the player has reviewed the breakdown. Guarded by:
+//   - caller is a participant of the round
+//   - round is Settled (no live messages get nuked)
+//
+// Permanent transcript retention is documented as a roadmap §FR-11
+// goal; we ship this temporary cleanup until the long-term policy
+// (TTL? summarize-then-delete?) lands. Idempotent: a second call by
+// another participant after the rows are gone returns OK with 0.
+
+#[delete("/api/arcade/games/fact-or-fold/rounds/{round_id}/chat", user: User)]
+pub async fn delete_round_chat_handler(
+    round_id: FactFoldRoundEntityType,
+) -> Result<DeleteRoundChatResponse> {
+    let cfg = crate::common::CommonConfig::default();
+    let cli = cfg.dynamodb();
+    let inner_round_id = round_id.0.clone();
+
+    let (pk, sk) = FactFoldRound::keys(&inner_round_id);
+    let round = FactFoldRound::get(cli, &pk, Some(sk))
+        .await
+        .map_err(|e| {
+            crate::error!("delete_round_chat_handler round read failed: {e}");
+            FactOrFoldError::StorageFailure
+        })?
+        .ok_or(FactOrFoldError::RoundNotFound)?;
+
+    let user_pk_str = user.pk.to_string();
+    let in_round = round
+        .participant_pks
+        .iter()
+        .any(|p| p.to_string() == user_pk_str);
+    if !in_round {
+        return Err(FactOrFoldError::NotRoundParticipant.into());
+    }
+
+    if !matches!(round.status, RoundStatus::Settled) {
+        return Err(FactOrFoldError::RoundNotSettled.into());
+    }
+
+    // Single pk scan to enumerate the transcript, then delete each
+    // row individually. DDB's BatchWriteItem (25 per call) would be
+    // faster but v1 transcripts are bounded so the simple per-row
+    // delete keeps the code obvious — revisit when transcript bound
+    // is lifted.
+    let opts = FactFoldChatMessage::opt()
+        .sk("FACT_FOLD_CHAT".to_string())
+        .limit(CHAT_PAGE_LIMIT as i32);
+    let (rows, _) = FactFoldChatMessage::query(cli, pk.clone(), opts)
+        .await
+        .map_err(|e| {
+            crate::error!("delete_round_chat_handler query failed: {e}");
+            FactOrFoldError::StorageFailure
+        })?;
+
+    let mut deleted = 0i64;
+    for row in rows.iter() {
+        if let Err(e) = FactFoldChatMessage::delete(cli, &row.pk, Some(row.sk.clone())).await {
+            crate::error!("delete_round_chat_handler row delete failed: {e}");
+            continue;
+        }
+        deleted += 1;
+    }
+
+    Ok(DeleteRoundChatResponse { deleted })
+}

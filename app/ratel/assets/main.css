@@ -47457,6 +47457,14 @@ body.comments-panel-resizing {
   grid-template-columns: 1.4fr 1fr;
   gap: 22px;
 }
+.ff-room .settlement-exit-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+.ff-room .settlement-exit-row .btn {
+  min-width: 220px;
+}
 .ff-room .result-table {
   padding: 22px;
   background: var(--surface);

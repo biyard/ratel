@@ -206,6 +206,14 @@ translate! {
         en: "Settling — final results in a moment.",
         ko: "정산 중 — 잠시 후 최종 결과가 표시됩니다.",
     },
+    exit_to_home_label: {
+        en: "Settled · Back to Arcade",
+        ko: "정산완료 → 홈으로",
+    },
+    exit_to_home_busy: {
+        en: "Wrapping up…",
+        ko: "마무리 중…",
+    },
     reveal_source_label: { en: "Verified sources:", ko: "검증 출처:" },
     result_table_title: { en: "Final standings", ko: "4명 결과" },
     result_table_sub: {

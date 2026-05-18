@@ -18,7 +18,7 @@ use crate::features::arcade::games::fact_or_fold::controllers::essence::{
 };
 use crate::features::arcade::games::fact_or_fold::controllers::settlement::SettleRoundResponse;
 use crate::features::arcade::games::fact_or_fold::{
-    flip_bet_handler, get_insider_statement_handler, get_round_handler,
+    delete_round_chat_handler, flip_bet_handler, get_insider_statement_handler, get_round_handler,
     get_round_headline_handler, get_round_settlement_handler, heartbeat_handler,
     list_chat_handler, list_round_bets_handler, list_round_participants_handler,
     list_round_rationales_handler, place_bet_handler, post_chat_handler,
@@ -152,6 +152,20 @@ impl UseFactFoldRound {
         // Don't touch last_chat_id — the next poll will still see this
         // row server-side and increment `last_chat_id` itself, keeping
         // the polling cursor consistent across sessions.
+        Ok(())
+    }
+
+    /// Bulk-delete the round's chat transcript. Called from the
+    /// settlement screen's "정산완료 → 홈으로" button. Local chat
+    /// buffer is also cleared so the SettlementView can navigate
+    /// away without flashing leftover messages.
+    pub async fn exit_round(
+        &mut self,
+        round_id: FactFoldRoundEntityType,
+    ) -> crate::common::Result<()> {
+        let _ = delete_round_chat_handler(round_id).await?;
+        self.chat.set(Vec::new());
+        self.last_chat_id.set(None);
         Ok(())
     }
 

@@ -55,8 +55,49 @@ pub fn SettlementView() -> Element {
                         }
                     }
                 }
+                SettlementExitRow { round_id: round.id.clone() }
             } else {
                 div { class: "ff-room__placeholder", "{tr.reveal_pending}" }
+            }
+        }
+    }
+}
+
+#[component]
+fn SettlementExitRow(round_id: FactFoldRoundEntityType) -> Element {
+    let tr: FactFoldRoomTranslate = use_translate();
+    let mut ctx = use_fact_fold_round();
+    let nav = use_navigator();
+    let mut submitting = use_signal(|| false);
+
+    let on_exit = move |_| {
+        let rid = round_id.clone();
+        async move {
+            if submitting() {
+                return;
+            }
+            submitting.set(true);
+            // Best-effort cleanup: even if the DELETE fails (e.g. another
+            // player already wiped the transcript) we still send the user
+            // home so they don't get stuck on the settlement screen.
+            let _ = ctx.exit_round(rid).await;
+            nav.push(Route::ArcadeHomePage {});
+        }
+    };
+
+    let label = if submitting() {
+        tr.exit_to_home_busy
+    } else {
+        tr.exit_to_home_label
+    };
+
+    rsx! {
+        div { class: "settlement-exit-row",
+            button {
+                class: "btn btn-primary",
+                disabled: submitting(),
+                onclick: on_exit,
+                "{label}"
             }
         }
     }

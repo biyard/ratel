@@ -374,6 +374,15 @@ pub struct ListChatResponse {
     pub last_id: Option<String>,
 }
 
+/// Response from `DELETE .../rounds/{id}/chat` — count of transcript
+/// rows actually removed. Idempotent: a re-call after the rows are
+/// already gone returns `deleted: 0`.
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct DeleteRoundChatResponse {
+    pub deleted: i64,
+}
+
 // ── Round-read DTOs (player-side) ─────────────────────────────────
 //
 // These five GET endpoints feed the game-room views. They mirror the
