@@ -44791,8 +44791,10 @@ body.comments-panel-resizing {
    provides the arcade-themed brand row + 5-tab navigation. Vars are
    scoped so colors don't leak into other admin pages. */
 .ff-admin-arena {
-  --ff-bg-glass: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, rgba(255, 255, 255, 0.78));
-  --ff-border: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(10, 10, 30, 0.08));
+  /* Light theme reads at a glance: opaque card, ~2× more opaque
+   * border. Dark theme keeps the original frosted-glass look. */
+  --ff-bg-glass: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, #ffffff);
+  --ff-border: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(10, 10, 30, 0.14));
   --ff-text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
   --ff-text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
   --ff-pink: #db2780;
@@ -45872,8 +45874,9 @@ body.comments-panel-resizing {
 /* === src/features/fact_or_fold/pages/lobby === */
 
 .ff-lobby {
-  --ff-bg-glass: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, rgba(255, 255, 255, 0.78));
-  --ff-border: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(10, 10, 30, 0.08));
+  /* Same light/dark calibration as `.ff-admin-arena`. */
+  --ff-bg-glass: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, #ffffff);
+  --ff-border: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(10, 10, 30, 0.14));
   --ff-text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
   --ff-text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
   --ff-pink: #db2780;
@@ -46078,35 +46081,49 @@ body.comments-panel-resizing {
  * verbatim with just an `.ff-room ` scope prefix. Light/dark colors
  * use the space-toggle pattern so the room follows the global theme. */
 .ff-room {
-  --bg: var(--dark, #07070f) var(--light, #f8f7fb);
-  --bg-grad-1: var(--dark, #11102a) var(--light, #ece9f5);
-  --bg-grad-2: var(--dark, #1a0a22) var(--light, #efe5ec);
+  /* Mirror of `.ff-arcade` palette so standalone previews of the
+   * room render with the same light/dark calibration. Keep both in
+   * sync whenever you tune one. */
+  --bg: var(--dark, #07070f) var(--light, #f6f6fb);
+  --bg-grad-1: var(--dark, #11102a) var(--light, #ffffff);
+  --bg-grad-2: var(--dark, #1a0a22) var(--light, #fafafa);
   --surface: var(--dark, rgba(18, 18, 32, 0.72))
-    var(--light, rgba(255, 255, 255, 0.88));
+    var(--light, rgba(255, 255, 255, 0.82));
   --surface-2: var(--dark, rgba(28, 28, 46, 0.6))
-    var(--light, rgba(244, 240, 252, 0.78));
+    var(--light, rgba(244, 244, 250, 0.72));
   --surface-3: var(--dark, rgba(38, 38, 58, 0.5))
-    var(--light, rgba(232, 228, 244, 0.72));
+    var(--light, rgba(232, 232, 242, 0.68));
   --border: var(--dark, rgba(255, 255, 255, 0.08))
-    var(--light, rgba(20, 12, 38, 0.08));
+    var(--light, rgba(15, 15, 35, 0.08));
   --border-strong: var(--dark, rgba(255, 255, 255, 0.16))
-    var(--light, rgba(20, 12, 38, 0.18));
-  --text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
-  --text-muted: var(--dark, #8a8aa6) var(--light, #5d5b73);
-  --text-faint: var(--dark, #5a5a78) var(--light, #8d8aa3);
+    var(--light, rgba(15, 15, 35, 0.18));
+  --text-primary: var(--dark, #f0f0f5) var(--light, #14141e);
+  --text-muted: var(--dark, #8a8aa6) var(--light, #5a5a72);
+  --text-faint: var(--dark, #5a5a78) var(--light, #9a9ab2);
 
-  --gold: #fcb300;
-  --gold-soft: rgba(252, 179, 0, 0.12);
-  --pink: #db2780;
-  --pink-soft: rgba(219, 39, 128, 0.12);
-  --teal: #6eedd8;
-  --teal-soft: rgba(110, 237, 216, 0.12);
-  --purple: #a78bfa;
-  --purple-soft: rgba(167, 139, 250, 0.14);
+  --gold: var(--dark, #fcb300) var(--light, #c98300);
+  --gold-bright: #fcb300;
+  --gold-soft: var(--dark, rgba(252, 179, 0, 0.12))
+    var(--light, rgba(252, 179, 0, 0.16));
+  --pink: var(--dark, #db2780) var(--light, #c41f6d);
+  --pink-bright: #db2780;
+  --pink-soft: var(--dark, rgba(219, 39, 128, 0.12))
+    var(--light, rgba(219, 39, 128, 0.10));
+  --teal: var(--dark, #6eedd8) var(--light, #0e9b87);
+  --teal-bright: var(--dark, #6eedd8) var(--light, #14c3a8);
+  --teal-soft: var(--dark, rgba(110, 237, 216, 0.12))
+    var(--light, rgba(20, 195, 168, 0.14));
+  --purple: var(--dark, #a78bfa) var(--light, #6747e0);
+  --purple-bright: var(--dark, #a78bfa) var(--light, #8a6df0);
+  --purple-soft: var(--dark, rgba(167, 139, 250, 0.14))
+    var(--light, rgba(138, 109, 240, 0.12));
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
+  --shadow-sm: var(--dark, 0 2px 8px rgba(0, 0, 0, 0.3))
+    var(--light, 0 2px 8px rgba(15, 15, 40, 0.06));
+  --shadow-md: var(--dark, 0 8px 24px rgba(0, 0, 0, 0.4))
+    var(--light, 0 8px 24px rgba(15, 15, 40, 0.08));
+  --shadow-lg: var(--dark, 0 24px 64px rgba(0, 0, 0, 0.55))
+    var(--light, 0 24px 64px rgba(15, 15, 40, 0.12));
 
   --r-sm: 8px;
   --r-md: 12px;
@@ -47641,33 +47658,52 @@ body.comments-panel-resizing {
  * containers are passthrough — they no longer redeclare the vars or
  * apply outer container styling. */
 .ff-arcade {
-  --bg: var(--dark, #07070f) var(--light, #f8f7fb);
+  /* Token table calibrated against the mockups:
+   *   dark = `shared.css`        (deep glassy panels)
+   *   light = `shared-light.css` (clean white + tuned-down accents)
+   * Keep this block in sync with the matching block in `.ff-room`. */
+  --bg: var(--dark, #07070f) var(--light, #f6f6fb);
   --surface: var(--dark, rgba(18, 18, 32, 0.72))
-    var(--light, rgba(255, 255, 255, 0.88));
+    var(--light, rgba(255, 255, 255, 0.82));
   --surface-2: var(--dark, rgba(28, 28, 46, 0.6))
-    var(--light, rgba(244, 240, 252, 0.78));
+    var(--light, rgba(244, 244, 250, 0.72));
   --surface-3: var(--dark, rgba(38, 38, 58, 0.5))
-    var(--light, rgba(232, 228, 244, 0.72));
+    var(--light, rgba(232, 232, 242, 0.68));
   --border: var(--dark, rgba(255, 255, 255, 0.08))
-    var(--light, rgba(20, 12, 38, 0.08));
+    var(--light, rgba(15, 15, 35, 0.08));
   --border-strong: var(--dark, rgba(255, 255, 255, 0.16))
-    var(--light, rgba(20, 12, 38, 0.18));
-  --text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
-  --text-muted: var(--dark, #8a8aa6) var(--light, #5d5b73);
-  --text-faint: var(--dark, #5a5a78) var(--light, #8d8aa3);
+    var(--light, rgba(15, 15, 35, 0.18));
+  --text-primary: var(--dark, #f0f0f5) var(--light, #14141e);
+  --text-muted: var(--dark, #8a8aa6) var(--light, #5a5a72);
+  --text-faint: var(--dark, #5a5a78) var(--light, #9a9ab2);
 
-  --gold: #fcb300;
-  --gold-soft: rgba(252, 179, 0, 0.12);
-  --pink: #db2780;
-  --pink-soft: rgba(219, 39, 128, 0.12);
-  --teal: #6eedd8;
-  --teal-soft: rgba(110, 237, 216, 0.12);
-  --purple: #a78bfa;
-  --purple-soft: rgba(167, 139, 250, 0.14);
+  /* Accent hues swap between dark/light: light theme uses
+   * tuned-down chroma so text reads against white. The `*-bright`
+   * variants stay constant and are used for filled surfaces (buttons,
+   * pills, brand gradients) where the saturated hue is meant to pop. */
+  --gold: var(--dark, #fcb300) var(--light, #c98300);
+  --gold-bright: #fcb300;
+  --gold-soft: var(--dark, rgba(252, 179, 0, 0.12))
+    var(--light, rgba(252, 179, 0, 0.16));
+  --pink: var(--dark, #db2780) var(--light, #c41f6d);
+  --pink-bright: #db2780;
+  --pink-soft: var(--dark, rgba(219, 39, 128, 0.12))
+    var(--light, rgba(219, 39, 128, 0.10));
+  --teal: var(--dark, #6eedd8) var(--light, #0e9b87);
+  --teal-bright: var(--dark, #6eedd8) var(--light, #14c3a8);
+  --teal-soft: var(--dark, rgba(110, 237, 216, 0.12))
+    var(--light, rgba(20, 195, 168, 0.14));
+  --purple: var(--dark, #a78bfa) var(--light, #6747e0);
+  --purple-bright: var(--dark, #a78bfa) var(--light, #8a6df0);
+  --purple-soft: var(--dark, rgba(167, 139, 250, 0.14))
+    var(--light, rgba(138, 109, 240, 0.12));
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
+  --shadow-sm: var(--dark, 0 2px 8px rgba(0, 0, 0, 0.3))
+    var(--light, 0 2px 8px rgba(15, 15, 40, 0.06));
+  --shadow-md: var(--dark, 0 8px 24px rgba(0, 0, 0, 0.4))
+    var(--light, 0 8px 24px rgba(15, 15, 40, 0.08));
+  --shadow-lg: var(--dark, 0 24px 64px rgba(0, 0, 0, 0.55))
+    var(--light, 0 24px 64px rgba(15, 15, 40, 0.12));
 
   --r-sm: 8px;
   --r-md: 12px;
@@ -47693,15 +47729,37 @@ body.comments-panel-resizing {
 }
 
 /* Soft radial accents — mirrors mockup `body::before`. Lives behind
- * the arcade content so cards still pop on light/dark theme. */
+ * the arcade content so cards still pop on light/dark theme. Light
+ * theme uses warmer, more saturated hues per shared-light.css so the
+ * wash registers against the white page; dark keeps the muted glow. */
 .ff-arcade::before {
   content: "";
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(900px 700px at 12% 8%, rgba(252, 179, 0, 0.1), transparent 60%),
-    radial-gradient(800px 600px at 88% 12%, rgba(167, 139, 250, 0.1), transparent 60%),
-    radial-gradient(1100px 800px at 50% 110%, rgba(110, 237, 216, 0.08), transparent 60%);
+    var(--dark,
+      radial-gradient(900px 700px at 12% 8%, rgba(252, 179, 0, 0.1), transparent 60%),
+      radial-gradient(800px 600px at 88% 12%, rgba(167, 139, 250, 0.1), transparent 60%),
+      radial-gradient(1100px 800px at 50% 110%, rgba(110, 237, 216, 0.08), transparent 60%))
+    var(--light,
+      radial-gradient(900px 700px at 12% 8%, rgba(252, 179, 0, 0.18), transparent 60%),
+      radial-gradient(800px 600px at 88% 12%, rgba(138, 109, 240, 0.14), transparent 60%),
+      radial-gradient(1100px 800px at 50% 110%, rgba(20, 195, 168, 0.12), transparent 60%));
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Faint scanline overlay — mockup `body::after`. Adds CRT-style
+ * texture to the arcade backdrop. */
+.ff-arcade::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: var(--dark,
+      linear-gradient(transparent 0px, transparent 2px, rgba(255, 255, 255, 0.012) 3px, transparent 4px))
+    var(--light,
+      linear-gradient(transparent 0px, transparent 2px, rgba(15, 15, 35, 0.018) 3px, transparent 4px));
+  background-size: 100% 4px;
   pointer-events: none;
   z-index: -1;
 }
@@ -47840,10 +47898,24 @@ body.comments-panel-resizing {
    * scroll-restoration or breadcrumb additions. */
 }
 
-.ff-arcade__admin-cta {
-  border: 1px solid rgba(219, 39, 128, 0.4);
+/* Admin "Create round" pill — uses the Button component (Text style)
+ * so the wrapper is the shared <Button>, then this class overrides
+ * the pink admin tint. Doubled selector for specificity over the
+ * Tailwind hover/disabled utilities baked into ButtonStyle::Text. */
+.ff-arcade .ff-arcade__admin-cta,
+.ff-arcade .ff-arcade__admin-cta:hover {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(219, 39, 128, 0.45);
   color: var(--pink);
-  background: rgba(219, 39, 128, 0.06);
+  background: var(--pink-soft);
+  border-radius: var(--r-md);
+  transition: all 0.15s ease;
+}
+.ff-arcade .ff-arcade__admin-cta:hover {
+  background: rgba(219, 39, 128, 0.16);
+  border-color: rgba(219, 39, 128, 0.6);
 }
 
 .ff-arcade__chip-btn {
@@ -47961,9 +48033,16 @@ body.comments-panel-resizing {
 .ff-home .featured {
   position: relative;
   padding: 36px 32px;
+  /* Light theme bumps the radial wash to 0.22/0.18 with the
+   * light-palette purple so the accent reads against white;
+   * dark stays at 0.18/0.18 with the dark-palette purple. */
   background:
-    radial-gradient(circle at 90% 0%, rgba(252, 179, 0, 0.18), transparent 55%),
-    radial-gradient(circle at 0% 100%, rgba(167, 139, 250, 0.18), transparent 55%),
+    var(--dark,
+      radial-gradient(circle at 90% 0%, rgba(252, 179, 0, 0.18), transparent 55%),
+      radial-gradient(circle at 0% 100%, rgba(167, 139, 250, 0.18), transparent 55%))
+    var(--light,
+      radial-gradient(circle at 90% 0%, rgba(252, 179, 0, 0.22), transparent 55%),
+      radial-gradient(circle at 0% 100%, rgba(138, 109, 240, 0.18), transparent 55%)),
     var(--surface);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-strong);
@@ -47976,13 +48055,12 @@ body.comments-panel-resizing {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: repeating-linear-gradient(
-    45deg,
-    rgba(255, 255, 255, 0.02) 0,
-    rgba(255, 255, 255, 0.02) 1px,
-    transparent 1px,
-    transparent 12px
-  );
+  /* Faint diagonal hatching for arcade texture. Dark = white-on-dark,
+   * light = dark-on-white so the pattern stays visible on both. */
+  background-image: var(--dark,
+      repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.02) 0, rgba(255, 255, 255, 0.02) 1px, transparent 1px, transparent 12px))
+    var(--light,
+      repeating-linear-gradient(45deg, rgba(15, 15, 35, 0.025) 0, rgba(15, 15, 35, 0.025) 1px, transparent 1px, transparent 12px));
   pointer-events: none;
 }
 
@@ -48031,6 +48109,17 @@ body.comments-panel-resizing {
   -webkit-text-fill-color: transparent;
 }
 
+/* Light theme rebuilds the gradient with the tuned-down `--gold`
+ * (#c98300) + `--pink` (#c41f6d) hues defined for the light palette
+ * (per shared-light.css). White-on-white would kill the left half
+ * of the headline. */
+html[data-theme="light"] .ff-home .featured-title {
+  background: linear-gradient(120deg, #14141e 0%, #c98300 60%, #c41f6d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .ff-home .featured-tagline {
   font-size: 16px;
   color: var(--text-muted);
@@ -48047,7 +48136,11 @@ body.comments-panel-resizing {
 
 .ff-home .meta-cell {
   padding: 12px 14px;
-  background: rgba(0, 0, 0, 0.3);
+  /* Dark: deep inset against the surface card.
+   * Light: 4% near-black wash per shared-light.css — reads as a
+   * neutral inner panel that matches the page typography color. */
+  background: var(--dark, rgba(0, 0, 0, 0.3))
+    var(--light, rgba(15, 15, 35, 0.04));
   border: 1px solid var(--border);
   border-radius: var(--r-md);
 }

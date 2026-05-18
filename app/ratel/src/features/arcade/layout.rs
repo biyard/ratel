@@ -4,6 +4,7 @@
 //! hook is provided once here so every descendant page reads from
 //! one cached `UseArcadeWallet`.
 
+use crate::common::components::{Button, ButtonShape, ButtonSize, ButtonStyle};
 use crate::features::arcade::components::{ArcadeExchangeModal, ChipBalance};
 use crate::features::arcade::hooks::use_arcade_wallet_provider;
 use crate::features::arcade::i18n::ArcadeLayoutTranslate;
@@ -16,6 +17,7 @@ pub fn ArcadeLayout() -> Element {
     let tr: ArcadeLayoutTranslate = use_translate();
     let _wallet = use_arcade_wallet_provider()?;
     let route: Route = use_route();
+    let nav = use_navigator();
     let user_ctx = use_user_context();
     let is_admin = matches!(
         user_ctx().user.as_ref().map(|u| u.user_type),
@@ -29,6 +31,9 @@ pub fn ArcadeLayout() -> Element {
 
     let on_chip = move |_| modal_open.set(!modal_open());
     let on_close = move |_| modal_open.set(false);
+    let go_admin_new = move |_| {
+        nav.push(r_admin_new.clone());
+    };
 
     rsx! {
         div { class: "ff-arcade",
@@ -58,9 +63,12 @@ pub fn ArcadeLayout() -> Element {
                 }
                 div { class: "user-stats",
                     if is_admin {
-                        Link {
-                            class: "top-nav-btn ff-arcade__admin-cta",
-                            to: r_admin_new,
+                        Button {
+                            class: "ff-arcade__admin-cta",
+                            style: ButtonStyle::Text,
+                            size: ButtonSize::Small,
+                            shape: ButtonShape::Square,
+                            onclick: go_admin_new,
                             span { class: "top-nav-btn-icon", "⚐" }
                             span { "{tr.admin_create_round}" }
                         }
