@@ -38,7 +38,22 @@ npm install --prefix app/ratel/js
 
 cd app/ratel
 
-dx build --release --debug-symbols false @client --features web --platform web @server --features server,lambda --platform server
+# Web wasm: `web,fullstack` is the only correct feature set for the
+# regular SSR + hydrated dev/prod build. See app/ratel/Cargo.toml [features]
+# comment — `fullstack` is intentionally excluded from `web` so that the
+# Tauri Android shell's `--features tauri-web --platform web --fullstack false`
+# build (driven by `app/ratel-tauri/Makefile`'s dx-build target) doesn't
+# transitively enable `dioxus-web/hydrate`. Regular web builds (this script)
+# must add `fullstack` explicitly. Without it, the by-macros `#[get]/#[post]`
+# expansion's `cfg(not(tauri-web))` arm collapses to a non-functional stub,
+# which is what made dev wasm fall back to baking `MOBILE_API_URL` (the CI
+# runner's LAN IP) into reqwest calls and trip mixed-content errors.
+#
+# `--no-default-features` mirrors every other build target in app/ratel/Makefile
+# (build, build-testing, build-arm, build-tauri). Without it, the default
+# `mobile` feature bleeds reqwest + dioxus/mobile code paths into the wasm
+# client bundle.
+dx build --release --no-default-features --debug-symbols false @client --features web,fullstack --platform web @server --features server,lambda --platform server
 
 cd ../..
 
