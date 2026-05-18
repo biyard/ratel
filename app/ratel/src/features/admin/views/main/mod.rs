@@ -1,16 +1,16 @@
 mod i18n;
 
+use crate::common::hooks::use_infinite_query;
+use crate::common::utils::format::format_with_commas;
 use crate::common::ListResponse;
 use crate::common::RewardCondition;
 use crate::common::RewardPeriod;
 use crate::common::RewardUserBehavior;
-use crate::common::hooks::use_infinite_query;
-use crate::common::utils::format::format_with_commas;
 use crate::features::admin::controllers::{
-    AnalyzeQuotaResponse, CreateGlobalRewardRequest, GrantEnterpriseMembershipRequest,
-    MembershipGrantTargetType, RewardResponse, UpdateAnalyzeQuotaRequest, UpdateGlobalRewardRequest,
     create_reward, get_analyze_quota, grant_enterprise_membership, list_enterprise_memberships,
-    list_rewards, update_analyze_quota, update_reward,
+    list_rewards, update_analyze_quota, update_reward, AnalyzeQuotaResponse,
+    CreateGlobalRewardRequest, GrantEnterpriseMembershipRequest, MembershipGrantTargetType,
+    RewardResponse, UpdateAnalyzeQuotaRequest, UpdateGlobalRewardRequest,
 };
 use crate::features::admin::models::reward_types::{
     ConditionType, RewardConditionExt, RewardPeriodExt, RewardUserBehaviorExt,
@@ -22,8 +22,8 @@ use i18n::AdminRewardsTranslate;
 pub fn AdminMainPage() -> Element {
     let tr: AdminRewardsTranslate = use_translate();
 
-    let mut rewards_resource = use_server_future(move || async move { list_rewards().await })?;
-    let rewards_state = rewards_resource.value();
+    let mut rewards_resource = use_loader(move || async move { list_rewards().await })?;
+    let rewards_state = rewards_resource();
     let mut enterprise_memberships_query =
         use_infinite_query::<
             String,
@@ -149,25 +149,7 @@ pub fn AdminMainPage() -> Element {
         });
     };
 
-    if rewards_state.read().is_none() {
-        return rsx! {
-            div { class: "py-8 px-4 mx-auto w-full max-w-desktop",
-                div { class: "text-center text-text-primary", "{tr.loading}" }
-            }
-        };
-    }
-
-    let rewards: Vec<RewardResponse> = match rewards_state.read().as_ref() {
-        Some(Ok(data)) => data.items.clone(),
-        Some(Err(e)) => {
-            return rsx! {
-                div { class: "py-8 px-4 mx-auto w-full max-w-desktop",
-                    div { class: "text-center text-red-500", "{tr.error}: {e}" }
-                }
-            };
-        }
-        None => vec![],
-    };
+    let rewards: Vec<RewardResponse> = rewards_state.items;
     let enterprise_memberships = enterprise_memberships_query.items();
 
     let is_editing = editing.read().is_some();
@@ -215,7 +197,7 @@ pub fn AdminMainPage() -> Element {
                             }
 
                             // Behavior select
-                            div { class: "admin-arena__form admin-arena__form--stretch mb-4",
+                            div { class: "mb-4 admin-arena__form admin-arena__form--stretch",
                                 label { class: "admin-arena__form-label", "{tr.action_label}" }
                                 select {
                                     class: "admin-arena__form-select",
@@ -236,7 +218,7 @@ pub fn AdminMainPage() -> Element {
                             }
 
                             // Points input
-                            div { class: "admin-arena__form admin-arena__form--stretch mb-4",
+                            div { class: "mb-4 admin-arena__form admin-arena__form--stretch",
                                 label { class: "admin-arena__form-label", "{tr.point}" }
                                 input {
                                     r#type: "number",
@@ -251,7 +233,7 @@ pub fn AdminMainPage() -> Element {
                             }
 
                             // Period select
-                            div { class: "admin-arena__form admin-arena__form--stretch mb-4",
+                            div { class: "mb-4 admin-arena__form admin-arena__form--stretch",
                                 label { class: "admin-arena__form-label", "{tr.period}" }
                                 select {
                                     class: "admin-arena__form-select",
@@ -271,7 +253,7 @@ pub fn AdminMainPage() -> Element {
                             }
 
                             // Condition select
-                            div { class: "admin-arena__form admin-arena__form--stretch mb-4",
+                            div { class: "mb-4 admin-arena__form admin-arena__form--stretch",
                                 label { class: "admin-arena__form-label", "{tr.condition}" }
                                 select {
                                     class: "admin-arena__form-select",
@@ -316,7 +298,7 @@ pub fn AdminMainPage() -> Element {
 
                             // Condition value input (conditional)
                             if show_condition_value {
-                                div { class: "admin-arena__form admin-arena__form--stretch mb-4",
+                                div { class: "mb-4 admin-arena__form admin-arena__form--stretch",
                                     label { class: "admin-arena__form-label", "{tr.condition_value}" }
                                     input {
                                         r#type: "number",
@@ -501,21 +483,12 @@ pub fn AdminMainPage() -> Element {
 /// (currently 2) when no row exists yet, and upserts on save.
 #[component]
 fn AnalyzeQuotaSection() -> Element {
-    let mut quota_resource = use_server_future(move || async move { get_analyze_quota().await })?;
-    let value = quota_resource.value();
+    let mut quota_resource = use_loader(move || async move { get_analyze_quota().await })?;
     let mut input_limit = use_signal(|| 2i64);
     let mut saving = use_signal(|| false);
     let mut message = use_signal::<Option<(String, bool)>>(|| None);
 
-    // Sync the input with the loaded value once the resource resolves.
-    // Re-syncs whenever the resource reloads (e.g. after a save).
-    let mut last_loaded = use_signal::<Option<i64>>(|| None);
-    if let Some(Ok(resp)) = value.read().as_ref() {
-        if last_loaded.read().as_ref() != Some(&resp.non_enterprise_limit) {
-            last_loaded.set(Some(resp.non_enterprise_limit));
-            input_limit.set(resp.non_enterprise_limit);
-        }
-    }
+    let resp = quota_resource();
 
     let on_save = move |_| {
         let limit = input_limit();
@@ -543,7 +516,7 @@ fn AnalyzeQuotaSection() -> Element {
         });
     };
 
-    let exists = matches!(value.read().as_ref(), Some(Ok(r)) if r.exists);
+    let exists = resp.exists;
     let saving_val = saving();
     let message_val = message();
 

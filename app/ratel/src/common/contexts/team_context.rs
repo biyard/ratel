@@ -3,10 +3,7 @@ use crate::{
     common::{types::UserType, Error},
     posts::types::TeamGroupPermissions,
     social::controllers::{create_team_handler, get_user_teams_handler, CreateTeamRequest},
-};
-use dioxus::{
-    fullstack::{Loader, Loading},
-    prelude::*,
+    *,
 };
 
 use serde::{Deserialize, Serialize};

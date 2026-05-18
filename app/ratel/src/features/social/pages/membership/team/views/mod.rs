@@ -2,7 +2,7 @@ mod i18n;
 
 use crate::common::*;
 use crate::features::membership::controllers::{
-    PurchaseHistoryItem, get_team_membership_handler, get_team_purchase_history_handler,
+    get_team_membership_handler, get_team_purchase_history_handler,
 };
 use crate::features::membership::models::TeamMembershipResponse;
 use crate::features::social::pages::membership::user::components::format_membership_tier_label;
@@ -95,7 +95,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
             }
         };
     };
-    let history: Vec<PurchaseHistoryItem> = history_resource();
+    let history = history_resource();
 
     let tier_name = format_membership_tier_label(&membership.tier.0, tr.enterprise_label);
     let tier = tier_from_label(&tier_name);

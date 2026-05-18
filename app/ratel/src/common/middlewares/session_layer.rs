@@ -17,36 +17,42 @@ pub fn get_session_layer(
 ) -> SessionManagerLayer<DynamoSessionStore> {
     let session_store = DynamoSessionStore::new(cli);
 
-    let is_local = env == "local" || env == "test";
-
-    SessionManagerLayer::new(session_store)
-        .with_secure(!is_local)
-        .with_http_only(!is_local)
-        // OAuth providers (LinkedIn / Google / Kakao) bounce the browser
-        // back via top-level navigation from their own domain. The
-        // tower-sessions default `Strict` drops the session cookie on
-        // that hop, leaving the callback handler anonymous and
-        // redirecting the user to /login.
-        //
-        // `Lax` is the minimum relaxation: top-level GET navigations
-        // (i.e. OAuth callbacks) carry the cookie, but cross-site POST,
-        // XHR, image, and iframe loads still don't — which is exactly
-        // the CSRF surface we want to keep blocked.
-        //
-        // The original main-api layer used `None` on dev/prod for
-        // future iframe / cross-origin XHR scenarios, but the codebase
-        // has no such consumer today and `None` requires `Secure`
-        // (incompatible with local http dev). Picking `Lax` uniformly
-        // keeps every environment OAuth-functional while staying
-        // stricter than `None` was.
-        .with_same_site(tower_sessions::cookie::SameSite::Lax)
+    // Cookie config has to satisfy three contexts:
+    //
+    //   * web Playwright job: same-origin browser ↔ backend at
+    //     `http://localhost:8080`.
+    //   * Tauri Android smoke: WebView at `http://tauri.localhost`
+    //     ↔ backend at `http://localhost:8080`. Different "sites"
+    //     (no public-suffix entry for `.localhost`), so the cookie
+    //     must be `SameSite=None` to survive the cross-site XHR.
+    //   * Production: HTTPS cross-origin from `*.ratel.foundation`
+    //     to the API. Needs `SameSite=None; Secure`.
+    //
+    // `SameSite=None; Secure` works in all three. Chromium treats
+    // every `*.localhost` host as a secure context, so the `Secure`
+    // attribute does not block the cookie over HTTP loopback. The
+    // smoke run confirmed this with CDP `responseReceivedExtraInfo`:
+    // once `setAcceptThirdPartyCookies(webview, true)` was wired up
+    // in MainActivity, the only remaining blocked reason was
+    // `SameSiteNoneInsecure` — which `Secure=true` resolves.
+    //
+    // `HttpOnly=false` is kept (was `!is_local` before) — no client
+    // code reads the session cookie via JS, but leaving the door
+    // open is harmless on every target we care about and useful for
+    // CDP-based diagnostics on the smoke job.
+    let layer = SessionManagerLayer::new(session_store)
+        .with_secure(true)
+        .with_http_only(false)
+        .with_same_site(tower_sessions::cookie::SameSite::None)
         .with_name(format!("{}_sid", env))
         .with_path("/")
         .with_expiry(tower_sessions::Expiry::AtDateTime(
             OffsetDateTime::now_utc()
                 .checked_add(Duration::days(30))
                 .unwrap(),
-        ))
+        ));
+
+    layer
 }
 
 #[derive(Debug, Clone)]

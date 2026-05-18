@@ -26,22 +26,22 @@ pub fn DaoInfoCard(dao_address: String, explorer_url: Option<String>) -> Element
     };
 
     rsx! {
-        div { class: "bg-card-bg dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700",
-            div { class: "flex items-start justify-between mb-4",
+        div { class: "p-6 rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 bg-card-bg",
+            div { class: "flex justify-between items-start mb-4",
                 div {
-                    h3 { class: "text-xl font-semibold text-text-primary mb-1", {tr.dao_address} }
+                    h3 { class: "mb-1 text-xl font-semibold text-text-primary", {tr.dao_address} }
                     p { class: "text-sm text-text-secondary", {tr.dao_description} }
                 }
-                div { class: "px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-sm font-medium",
+                div { class: "py-1 px-3 text-sm font-medium text-green-800 bg-green-100 rounded-full dark:text-green-200 dark:bg-green-900",
                     {tr.active}
                 }
             }
 
-            div { class: "bg-card-bg-secondary dark:bg-modal-card-bg rounded-md p-4 mb-4",
-                div { class: "flex items-center justify-between gap-3",
-                    code { class: "text-sm font-mono text-text-primary break-all", {dao_address} }
+            div { class: "p-4 mb-4 rounded-md bg-card-bg-secondary dark:bg-modal-card-bg",
+                div { class: "flex gap-3 justify-between items-center",
+                    code { class: "font-mono text-sm break-all text-text-primary", {dao_address} }
                     button {
-                        class: "shrink-0 p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors",
+                        class: "p-2 rounded transition-colors hover:bg-gray-200 shrink-0 dark:hover:bg-gray-700",
                         title: {tr.copy_address},
                         onclick: on_copy,
                         if copied() {
@@ -63,10 +63,29 @@ pub fn DaoInfoCard(dao_address: String, explorer_url: Option<String>) -> Element
 
             if let Some(url) = explorer_url {
                 a {
-                    href: url,
+                    href: "{url}",
                     target: "_blank",
                     rel: "noopener noreferrer",
-                    class: "inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors",
+                    class: "inline-flex gap-2 items-center py-2 px-4 text-white rounded-md transition-colors bg-primary hover:bg-primary-dark",
+                    onclick: move |evt| {
+                        // Under tauri-web: intercept and open via the native bridge so the URL
+                        // opens in the user's default external browser instead of the WebView.
+                        // Under plain web: the anchor's default behaviour is preserved.
+                        #[cfg(feature = "tauri-web")]
+                        {
+                            let url = url.clone();
+                            evt.prevent_default();
+                            spawn(async move {
+                                use crate::tauri::ExternalUrlRequest;
+                                use crate::tauri::open;
+                                if let Err(e) = open(&ExternalUrlRequest { url }).await {
+                                    crate::error!("open_external_url failed: {e}");
+                                }
+                            });
+                        }
+                        #[cfg(not(feature = "tauri-web"))]
+                        let _ = evt;
+                    },
                     {tr.view_on_explorer}
                     icons::ratel::ExternalLinkIcon { width: "16", height: "16", class: "w-4 h-4" }
                 }

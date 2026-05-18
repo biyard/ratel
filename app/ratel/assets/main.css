@@ -2383,6 +2383,50 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   border: 0;
 }
 
+/* ─── Bubble toolbar (selection-triggered) ────────────────── */
+/* Fixed positioning escapes the editor's `overflow: hidden` so the bubble
+   can render outside the editor's rounded box when needed (e.g. auto-flipped
+   above the selection). The JS controller computes top/left in viewport
+   coordinates from `range.getBoundingClientRect()`. */
+.ratel-editor .re-bubble {
+  position: fixed;
+  z-index: 60;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px) scale(0.96);
+  transform-origin: top center;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+.ratel-editor .re-bubble[data-visible="true"] {
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.ratel-editor .re-bubble__inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  background: var(--re-toolbar-bg);
+  border: 1px solid var(--re-border-subtle);
+  border-radius: 10px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  white-space: nowrap;
+}
+.ratel-editor .re-bubble .re-toolbar__group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 2px;
+}
+/* Bubble drops the `display: none` baseline of `.re-block__menu` once
+   open — the existing rule already handles `[data-open="true"]`, but we
+   want the menu to anchor below the bubble's block button, not float
+   away. Reuse existing styles; no override needed. */
+
 
 /* === src/common/components/form/style.css === */
 #tos-check {

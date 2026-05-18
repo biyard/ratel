@@ -19,7 +19,8 @@ pub use contexts::*;
 pub mod features;
 pub use features::*;
 
-pub use dioxus::fullstack::{Loader, Loading};
+#[cfg(feature = "tauri-web")]
+pub mod tauri;
 
 // `axum` is pulled in transitively through `dioxus-fullstack` and exposed at
 // `dioxus::fullstack::axum`. Re-export it here so all in-crate paths can use
