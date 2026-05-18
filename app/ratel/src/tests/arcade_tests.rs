@@ -13,8 +13,8 @@
 use super::*;
 
 use crate::common::types::{EntityType, Partition};
-use crate::features::arcade::models::{ArcadeSettingsResponse, ArcadeWalletBalance};
-use crate::features::arcade::types::{ConvertRpResponse, WalletStateResponse};
+use crate::features::arcade::models::ArcadeWalletBalance;
+use crate::features::arcade::types::{ArcadeSettingsResponse, ConvertRpResponse, WalletStateResponse};
 
 // ── Helpers ───────────────────────────────────────────────────────
 
