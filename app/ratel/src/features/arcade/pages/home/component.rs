@@ -53,12 +53,15 @@ pub fn ArcadeHomePage() -> Element {
 #[component]
 pub fn ArcadeLeaderboardPage() -> Element {
     let ctx = use_arcade_home_provider()?;
-    let leaderboard = (ctx.leaderboard)();
+    let mut leaderboard_query = ctx.leaderboard;
+    let entries = leaderboard_query.items();
+    let more = leaderboard_query.more_element();
 
     rsx! {
         SeoMeta { title: "Ratel Arcade · Leaderboard" }
         section { class: "ff-home",
-            LeaderboardView { leaderboard }
+            LeaderboardView { entries }
+            {more}
         }
     }
 }
@@ -331,7 +334,7 @@ fn CatalogSection(lobby: LobbyResponse) -> Element {
 // ── Leaderboard tab ─────────────────────────────────────────────────
 
 #[component]
-fn LeaderboardView(leaderboard: ListResponse<LeaderboardEntryResponse>) -> Element {
+fn LeaderboardView(entries: Vec<LeaderboardEntryResponse>) -> Element {
     let tr: ArcadeHomeTranslate = use_translate();
     let user_ctx = use_user_context();
     let my_pk = user_ctx().user_pk().unwrap_or_default();
@@ -352,10 +355,10 @@ fn LeaderboardView(leaderboard: ListResponse<LeaderboardEntryResponse>) -> Eleme
                 div { "{tr.lb_head_chips}" }
             }
 
-            if leaderboard.items.is_empty() {
+            if entries.is_empty() {
                 div { class: "ff-home__placeholder", "{tr.lb_empty}" }
             }
-            for (idx , entry) in leaderboard.items.iter().enumerate() {
+            for (idx , entry) in entries.iter().enumerate() {
                 LeaderboardRow {
                     key: "{entry.user_pk}",
                     idx,
