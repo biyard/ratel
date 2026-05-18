@@ -16,3 +16,14 @@ pub struct ConnectBlueskyRequest {
 pub struct ToggleAutoPostRequest {
     pub auto_post_enabled: bool,
 }
+
+/// Body for `POST /api/cross-posting/connections/linkedin/init`. The
+/// optional `return_to` is a same-origin SPA path the OAuth callback
+/// should bounce the user back to after a successful connection —
+/// typically the post-edit page they came from. Omit (or send `null`)
+/// to use the default `/{username}/settings/connections` destination.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct LinkedInOauthInitRequest {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub return_to: Option<String>,
+}

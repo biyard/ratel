@@ -249,7 +249,7 @@ pub fn OnboardingPage() -> Element {
                                         class: "onboarding-btn-connect onboarding-btn-connect--linkedin",
                                         "data-testid": "onboarding-connect-linkedin",
                                         onclick: move |_| async move {
-                                            if let Err(e) = cp.connect_linkedin().await {
+                                            if let Err(e) = cp.connect_linkedin(None).await {
                                                 toast.error(e);
                                             }
                                         },
