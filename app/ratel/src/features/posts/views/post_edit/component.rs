@@ -940,19 +940,6 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                     }
                 }
                 div { class: "bottom-bar__right",
-                    button { class: "bottom-bar__btn bottom-bar__btn--desktop",
-                        svg {
-                            view_box: "0 0 24 24",
-                            fill: "none",
-                            stroke: "currentColor",
-                            stroke_width: "2",
-                            stroke_linecap: "round",
-                            stroke_linejoin: "round",
-                            polyline { points: "9 11 12 14 22 4" }
-                            path { d: "M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" }
-                        }
-                        "{tr.spell_check}"
-                    }
                     button {
                         class: "bottom-bar__btn bottom-bar__btn--mobile",
                         onclick: move |_| drawer_open.set(true),

@@ -7881,7 +7881,12 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
 
 .composer-arena {
   position: relative;
-  min-height: 100vh;
+  /* Use dynamic viewport height so the layout doesn't extend below
+     the visible area when the mobile browser's URL bar is showing.
+     Fallback to 100vh for older browsers. */
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   background: var(--bg-void);
@@ -8031,6 +8036,144 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
 
 /* ─── Composer (left/main) ───────────────────────── */
 .composer { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+
+/* Post-edit (.composer-arena) scoped override: drop the page max-width
+   so the right side-panel sits at the viewport edge, and center the
+   editor column inside its 1fr cell. Matches the reports-edit pattern
+   (.reports-doc__inner). Sub-team broadcast/doc compose pages aren't
+   wrapped in .composer-arena, so they keep the boxed 1280px layout. */
+.composer-arena .composer-page {
+  max-width: none;
+  margin: 0;
+  /* composer-page is now a flex item between the topbar and the
+     in-flow bottom-bar (overridden below). It auto-fills the middle
+     and no longer needs padding-bottom to dodge a fixed bottom-bar.
+     `grid-template-rows: 1fr` forces the inner grid track to stretch
+     so the composer (and editor inside it) reach the bottom edge. */
+  min-height: 0;
+  overflow: hidden;
+  grid-template-rows: 1fr;
+  padding-top: 22px;
+  padding-bottom: 8px;
+}
+/* Pull the publish bar out of `position: fixed` and into the
+   composer-arena flex column. Now composer-page naturally ends at
+   the top edge of the publish bar — no estimated clearance, no
+   per-breakpoint padding-bottom hacks. */
+.composer-arena > .bottom-bar {
+  position: static;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  z-index: auto;
+  flex-shrink: 0;
+}
+.composer-arena .composer {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+/* ─── Editor → reports-edit style (post composer only) ───────
+   The shared .ratel-editor component normally has a sticky top
+   toolbar. Inside .composer-arena we re-layer it as a floating
+   pill pinned just above the publish bar, matching the
+   reports-edit.html bottom format toolbar. Selection-triggered
+   .re-bubble continues to work via the editor's own JS. */
+.composer-arena .ratel-editor {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+  flex: 1;
+  min-height: 0;
+}
+.composer-arena .ratel-editor:focus-within {
+  background: transparent;
+  border: none;
+}
+.composer-arena .ratel-editor .re-toolbar {
+  /* Live inside the editor flex column as the LAST item (order: 5)
+     so the toolbar pill sits below the writing area instead of
+     floating over it. Content keeps its own bottom edge. */
+  position: relative;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  transform: none;
+  order: 5;
+  align-self: center;
+  flex-shrink: 0;
+  /* 1000px is wide enough to fit all 8 button groups on a single row at
+     desktop sizes (~960px natural width). Falls back to wrap if the
+     parent column ever gets narrower. */
+  width: min(1000px, 100%);
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  row-gap: 4px;
+  margin: 8px auto 0;
+  padding: 8px 10px;
+  gap: 4px;
+  border: 1px solid var(--re-border-strong);
+  border-radius: 14px;
+  background: var(--re-toolbar-bg);
+  backdrop-filter: blur(20px);
+}
+/* Strip the inter-group divider in this floating context — a leftover
+   border-left on the first group of a wrapped row creates a stray
+   vertical line. The flex gap already separates groups visually. */
+.composer-arena .ratel-editor .re-toolbar__group + .re-toolbar__group {
+  border-left: none;
+  margin-left: 0;
+  padding-left: 4px;
+}
+.composer-arena .ratel-editor .re-content {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  order: 1;
+  padding: 8px 0 12px;
+}
+/* The post composer's own .bottom-bar already shows word/char counts,
+   so hide the editor's built-in statusbar to keep the surface clean. */
+.composer-arena .ratel-editor .re-statusbar {
+  display: none;
+}
+/* Toolbar sits at the bottom of the editor card → Paragraph/H1/.../Code
+   dropdown must open UPWARD so it doesn't clip outside the viewport. */
+.composer-arena .ratel-editor .re-block__menu {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+@media (max-width: 980px) {
+  /* Mobile: a 2-row pill is too tall on small screens — fall back to
+     a single-row horizontally-scrollable strip pinned to the bottom
+     of the editor flex column. */
+  .composer-arena .ratel-editor .re-toolbar {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+  }
+  .composer-arena .ratel-editor .re-toolbar::-webkit-scrollbar {
+    height: 4px;
+  }
+  .composer-arena .ratel-editor .re-toolbar::-webkit-scrollbar-thumb {
+    background: var(--re-border-strong);
+    border-radius: 2px;
+  }
+  /* In-flow bottom-bar handles its own height — composer-page just
+     needs minimal breathing room above it on mobile. */
+  .composer-arena .composer-page {
+    padding-top: 14px;
+    padding-bottom: 6px;
+  }
+}
 
 /* Type segmented selector */
 .type-segmented {
@@ -8721,9 +8864,11 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   .type-seg__soon { display: none; }
 
   .bottom-bar { padding: 10px 14px; gap: 8px; }
-  .bottom-bar__left { flex: 1; font-size: 9px; gap: 10px; overflow: hidden; }
-  .bottom-bar__stat:nth-child(3) { display: none; }
-  .bottom-bar__right { gap: 6px; }
+  /* On mobile the stat row (words / read time / autosave) gets cut off
+     and crowds the publish button. Hide the whole left cluster — the
+     side panel still surfaces autosave state when needed. */
+  .bottom-bar__left { display: none; }
+  .bottom-bar__right { gap: 6px; margin-left: auto; }
   .bottom-bar__btn--mobile:not(.bottom-bar__btn--primary) { padding: 8px 10px; font-size: 9px; }
 
   .side-card { padding: 14px; }
