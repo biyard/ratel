@@ -136,6 +136,13 @@ fn parse_path(path: &str) -> (String, Vec<String>, Vec<String>) {
 }
 
 pub fn server_fn_impl(method: &str, attr: TokenStream, item: TokenStream) -> TokenStream {
+    // Keep raw passthrough copies before `parse_macro_input!` consumes the
+    // streams — we re-attach `attr` to the `cfg(not(tauri-web))` branch as
+    // `#[::dioxus::fullstack::<method>(<attr>)]` so dioxus generates the
+    // normal SSR + browser-RPC code path for web builds.
+    let attr_passthrough: TokenStream2 = attr.clone().into();
+    let item_passthrough: TokenStream2 = item.clone().into();
+
     let route = parse_macro_input!(attr as RouteAttr);
     let func = parse_macro_input!(item as ItemFn);
 
@@ -336,8 +343,25 @@ pub fn server_fn_impl(method: &str, attr: TokenStream, item: TokenStream) -> Tok
         }
     };
 
+    // Re-attach dioxus-fullstack's own attribute macro on the not-tauri-web
+    // branch. dioxus-fullstack's `#[get]/#[post]/...` accept exactly the same
+    // attribute syntax we already parsed (`"/path", extractor: Type, ...`),
+    // so attr can be passed through verbatim. The macro emits the SSR
+    // handler for `feature = "server"` and the browser-side RPC stub for
+    // `feature = "web"` — so dev/prod web bundles no longer compile the
+    // reqwest-based `tauri_web` path at all.
+    let method_ident = format_ident!("{}", method.to_lowercase());
+    let dioxus_passthrough = quote! {
+        #[::dioxus::fullstack::#method_ident( #attr_passthrough )]
+        #item_passthrough
+    };
+
     quote! {
+        #[cfg(feature = "tauri-web")]
         #tauri
+
+        #[cfg(not(feature = "tauri-web"))]
+        #dioxus_passthrough
     }
     .into()
 }
