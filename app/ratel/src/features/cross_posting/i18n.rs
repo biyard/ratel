@@ -122,6 +122,8 @@ translate! {
     connect_btn_bluesky: { en: "Connect Bluesky", ko: "Bluesky 연결" },
     connect_btn_linkedin: { en: "Connect LinkedIn", ko: "LinkedIn 연결" },
     connect_btn_threads: { en: "Connect Threads", ko: "Threads 연결" },
+
+    coming_soon: { en: "Coming soon", ko: "곧 출시" },
 }
 
 translate! {

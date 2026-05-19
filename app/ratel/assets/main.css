@@ -1,9 +1,26 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  width: 100dvw;
+  height: 100dvh;  /* calc 빼기 */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
 /* App-wide styling */
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   overflow: hidden;
   width: 100dvw;
-  height: 100dvh;
+  height: 100%;
+}
+
+#main {
+  height: 100%;
 }
 
 /* Membership plan grid (used in embedded membership routes) */
@@ -6040,9 +6057,9 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   position: relative;
   /* Body has `overflow: hidden` on desktop (see tailwind.css) so every
      route under RootLayout must own its scroll container. Locking the
-     arena to 100dvh + overflow-y:auto lets the long sources list scroll
+     arena to 100% + overflow-y:auto lets the long sources list scroll
      naturally on desktop while the sticky topbar anchors to the top. */
-  height: 100dvh;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
@@ -6059,7 +6076,7 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
      trapping scroll inside it. */
   .essence-arena {
     height: auto;
-    min-height: 100dvh;
+    min-height: 100%;
     overflow: visible;
   }
 }
@@ -6864,7 +6881,7 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   position: relative;
   /* Body has `overflow: hidden` on desktop (tailwind.css), so this
      arena owns its own scroll container. */
-  height: 100dvh;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
@@ -29079,7 +29096,7 @@ body.comments-panel-resizing {
      (where URL/toolbars shrink the visible area). `100vh` falls back for
      older user agents. */
   height: 100vh;
-  height: 100dvh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -29807,7 +29824,7 @@ body.comments-panel-resizing {
 
   background: var(--sub-team-bg);
   color: var(--sub-team-text);
-  /* `body` is `overflow: hidden; height: 100dvh` globally — every page
+  /* `body` is `overflow: hidden; height: 100%` globally — every page
    * needs its own scroll container or content past the viewport is
    * clipped. Memory rule `feedback_arena_page_scroll.md`. */
   height: 100vh;
@@ -30814,7 +30831,7 @@ body.comments-panel-resizing {
 
   background: var(--sub-team-bg);
   color: var(--sub-team-text);
-  /* `body` is `overflow: hidden; height: 100dvh` globally — every
+  /* `body` is `overflow: hidden; height: 100%` globally — every
    * page needs its own scroll container or content past the viewport
    * is clipped. Memory rule `feedback_arena_page_scroll.md`. */
   height: 100vh;
@@ -33154,7 +33171,7 @@ body.comments-panel-resizing {
   /* Detail page now lives OUTSIDE TeamArenaLayout, so it owns its own
    * background + scroll container. Per `feedback_arena_page_scroll.md`,
    * each page-scoped scroll wrapper must set explicit height + overflow
-   * because `body` is `overflow:hidden; height:100dvh` globally. */
+   * because `body` is `overflow:hidden; height:100%` globally. */
   background: var(--sub-team-bg);
   color: var(--sub-team-text);
   width: 100%;
@@ -34709,7 +34726,7 @@ body.comments-panel-resizing {
   background: var(--sub-team-bg);
   color: var(--sub-team-text);
   /* Page-scoped scroll container — `body` is `overflow:hidden;
-   * height:100dvh` globally, so each page needs its own.
+   * height:100%` globally, so each page needs its own.
    * Memory rule `feedback_arena_page_scroll.md`. */
   height: 100vh;
   overflow-y: auto;
@@ -37602,7 +37619,7 @@ body.comments-panel-resizing {
 
   position: relative;
   width: 100%;
-  height: 100dvh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -37861,7 +37878,7 @@ body.comments-panel-resizing {
   position: relative;
   width: 100%;
   max-width: 720px;
-  max-height: calc(100dvh - 96px);
+  max-height: calc(100% - 96px);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -38447,7 +38464,7 @@ body.comments-panel-resizing {
     padding: 24px 16px;
   }
   .home-arena .hud-overlay__panel {
-    max-height: calc(100dvh - 48px);
+    max-height: calc(100% - 48px);
     padding: 28px 20px 20px;
   }
   .home-arena .section-label__dash {
@@ -39597,7 +39614,7 @@ body.comments-panel-resizing {
   position: relative;
   /* Body has `overflow: hidden` on desktop (tailwind.css), so this
      arena owns its own scroll container. */
-  height: 100dvh;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
@@ -40443,6 +40460,22 @@ body.comments-panel-resizing {
   background: #f0f0f0;
   transform: translateY(-1px);
 }
+.connect-cta__coming-soon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--dark, rgba(255, 255, 255, 0.05)) var(--light, rgba(0, 0, 0, 0.04));
+  border: 1px dashed var(--dark, rgba(255, 255, 255, 0.12)) var(--light, rgba(0, 0, 0, 0.12));
+  cursor: not-allowed;
+}
 
 /* ─── Per-platform footer (char count + warning) ── */
 .pp-foot {
@@ -40867,7 +40900,7 @@ body.comments-panel-resizing {
   /* Body has `overflow: hidden` on desktop (tailwind.css), so this
      arena owns its own scroll container — same pattern as
      `.essence-sources-arena` / `.connections-arena`. */
-  height: 100dvh;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
@@ -41078,6 +41111,14 @@ body.comments-panel-resizing {
 }
 .onboarding-btn-connect--bsky:hover {
   box-shadow: 0 4px 22px rgba(10, 133, 255, 0.38);
+  transform: translateY(-1px);
+}
+.onboarding-btn-connect--linkedin {
+  background: linear-gradient(135deg, #0a66c2, #1f7fd6);
+  box-shadow: 0 2px 14px rgba(10, 102, 194, 0.22);
+}
+.onboarding-btn-connect--linkedin:hover {
+  box-shadow: 0 4px 22px rgba(10, 102, 194, 0.38);
   transform: translateY(-1px);
 }
 .onboarding-btn-connect--soon {
@@ -41662,8 +41703,8 @@ body.comments-panel-resizing {
 
 /* === mobile scroll escape for full-viewport arena wrappers === */
 /* Desktop pattern: `body { overflow: hidden }` + each arena owns its own
-   scroll container at 100dvh. On mobile, body itself becomes scrollable
-   (tailwind.css `max-tablet:overflow-auto`), so a nested 100dvh scroll
+   scroll container at 100%. On mobile, body itself becomes scrollable
+   (tailwind.css `max-tablet:overflow-auto`), so a nested 100% scroll
    container creates two competing scroll roots and touch Y-scroll dies.
    Below releases the lock on tablet+mobile so the document scrolls
    naturally — matches the existing `.essence-arena` mobile override. */
@@ -41678,7 +41719,7 @@ body.comments-panel-resizing {
   .space-files-arena,
   .space-general-arena {
     height: auto;
-    min-height: 100dvh;
+    min-height: 100%;
     overflow-x: hidden;
   }
 }
@@ -45803,4 +45844,169 @@ body.comments-panel-resizing {
   .reports-arena .reports-topbar__btn { padding: 0 10px; }
   .reports-arena .report-card { width: 84vw; min-height: 360px; }
   .reports-arena .carousel-track { gap: 16px; padding: 28px 12px; }
+}
+
+/* === src/features/social/pages/reward/user/components/reward_history_section === */
+.rewards-arena .reward-history {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+.rewards-arena .reward-history__empty {
+  padding: 28px 18px;
+  border: 1px dashed var(--border-subtle);
+  border-radius: 14px;
+  background: var(--bg-glass);
+  color: var(--text-dim);
+  text-align: center;
+  font-size: 13px;
+}
+.rewards-arena .reward-history__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.2fr) minmax(0, 0.9fr) minmax(0, 0.9fr);
+  gap: 12px;
+  padding: 0 18px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.rewards-arena .reward-history__col--point,
+.rewards-arena .reward-history__col--date {
+  text-align: right;
+}
+.rewards-arena .reward-history__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rewards-arena .reward-history__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.2fr) minmax(0, 0.9fr) minmax(0, 0.9fr);
+  gap: 12px;
+  align-items: center;
+  padding: 14px 18px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-glass);
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+.rewards-arena .reward-history__row:hover {
+  border-color: var(--border-strong);
+}
+.rewards-arena .reward-history__cell {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rewards-arena .reward-history__cell-label {
+  display: none;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.rewards-arena .reward-history__cell-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rewards-arena .reward-history__cell--action .reward-history__cell-value {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.rewards-arena .reward-history__cell--point {
+  align-items: flex-end;
+}
+.rewards-arena .reward-history__cell--date {
+  align-items: flex-end;
+}
+.rewards-arena .reward-history__cell-value--date {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+}
+.rewards-arena .reward-history__point {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+.rewards-arena .reward-history__point small {
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: 3px;
+  opacity: 0.7;
+}
+.rewards-arena .reward-history__point--in { color: var(--accent-gold); }
+.rewards-arena .reward-history__point--out { color: var(--accent-coral); }
+
+.rewards-arena .reward-history__loadmore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  margin-top: 4px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-glass);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease, background 120ms ease;
+}
+.rewards-arena .reward-history__loadmore:hover:not(:disabled) {
+  border-color: rgba(252, 179, 0, 0.25);
+  background: var(--bg-glass-hover);
+  color: var(--accent-gold);
+}
+.rewards-arena .reward-history__loadmore:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.rewards-arena .reward-history__loadmore svg { width: 13px; height: 13px; }
+
+@media (max-width: 640px) {
+  .rewards-arena .reward-history__head { display: none; }
+  .rewards-arena .reward-history__row {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 12px;
+    padding: 14px;
+  }
+  .rewards-arena .reward-history__cell-label { display: inline-block; }
+  .rewards-arena .reward-history__cell--space {
+    grid-column: 1 / -1;
+  }
+  .rewards-arena .reward-history__cell--space .reward-history__cell-value {
+    white-space: normal;
+    word-break: break-word;
+  }
+  .rewards-arena .reward-history__cell--action {
+    grid-column: 1 / -1;
+  }
+  .rewards-arena .reward-history__cell--point,
+  .rewards-arena .reward-history__cell--date {
+    align-items: flex-start;
+  }
+  .rewards-arena .reward-history__cell--date {
+    text-align: left;
+  }
 }

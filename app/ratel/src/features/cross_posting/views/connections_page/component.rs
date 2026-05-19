@@ -293,7 +293,7 @@ pub fn ConnectionsPage(username: String) -> Element {
                                     button {
                                         class: "connections-btn connections-btn--connect-linkedin",
                                         onclick: move |_| async move {
-                                            if let Err(e) = cp.connect_linkedin().await {
+                                            if let Err(e) = cp.connect_linkedin(None).await {
                                                 toast.error(e);
                                             }
                                         },

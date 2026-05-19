@@ -1,6 +1,8 @@
 use crate::common::*;
 use crate::features::auth::User;
-use crate::features::cross_posting::types::{CrossPostingError, LinkedInOauthInitResponse};
+use crate::features::cross_posting::types::{
+    CrossPostingError, LinkedInOauthInitRequest, LinkedInOauthInitResponse,
+};
 
 /// LinkedIn OAuth scopes Phase 1B needs:
 /// - `openid` + `profile` — to call `/v2/userinfo` and read the
@@ -20,7 +22,9 @@ const LINKEDIN_AUTHORIZE_HOST: &str = "https://www.linkedin.com";
     "/api/cross-posting/connections/linkedin/init",
     user: User
 )]
-pub async fn connect_linkedin_init_handler() -> Result<LinkedInOauthInitResponse> {
+pub async fn connect_linkedin_init_handler(
+    req: LinkedInOauthInitRequest,
+) -> Result<LinkedInOauthInitResponse> {
     use crate::features::cross_posting::services::oauth_state;
 
     let client_id = option_env!("LINKEDIN_CLIENT_ID")
@@ -30,7 +34,7 @@ pub async fn connect_linkedin_init_handler() -> Result<LinkedInOauthInitResponse
             CrossPostingError::LinkedInAuthFailed
         })?;
 
-    let state = oauth_state::encode(&user.pk).map_err(|e| {
+    let state = oauth_state::encode(&user.pk, req.return_to.as_deref()).map_err(|e| {
         crate::error!("connect_linkedin_init state encode failed: {e}");
         CrossPostingError::LinkedInAuthFailed
     })?;

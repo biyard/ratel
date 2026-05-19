@@ -265,13 +265,31 @@ impl SpaceReward {
                 .transact_write_item(),
         );
 
-        // Create UserRewardHistory
-        let history = UserRewardHistory::from_params(
+        // Create UserRewardHistory.
+        //
+        // `description = "{space_pk}#{space_title}"` is resolved on the
+        // way in so the per-event row carries a human-readable label
+        // without forcing the read path to join back to SpaceCommon/Post.
+        // `resolve_reward_description` does two cheap GetItem calls
+        // (SpaceCommon → Post) and degrades to `"{space_pk}"` alone when
+        // either lookup fails, so the await never blocks the reward
+        // payout on transient space metadata issues.
+        let description =
+            crate::common::models::reward::resolve_reward_description(cli, &space_reward.sk).await;
+        let action_name =
+            crate::common::models::reward::resolve_action_name(&space_reward.sk);
+        let mut history = UserRewardHistory::from_params(
             target_pk.clone(),
             space_reward.sk.clone(),
             &space_reward.period,
             space_reward.get_amount(),
         );
+        if !description.is_empty() {
+            history.description = Some(description);
+        }
+        if !action_name.is_empty() {
+            history.action_name = Some(action_name);
+        }
         txs.push(history.create_transact_write_item());
 
         // Execute DB transaction
@@ -311,6 +329,21 @@ impl SpaceReward {
                     reward_key = %space_reward.sk,
                     "Awarded points via Biyard"
                 );
+
+                if let Err(e) = UserRewardHistory::updater(&history.pk, &history.sk)
+                    .with_transaction_id(user_res.transaction_id.clone())
+                    .with_month(user_res.month.clone())
+                    .execute(cli)
+                    .await
+                {
+                    tracing::error!(
+                        pk = %history.pk,
+                        sk = %history.sk,
+                        transaction_id = %user_res.transaction_id,
+                        error = %e,
+                        "failed to set transaction_id/month on UserRewardHistory after Biyard award succeeded",
+                    );
+                }
 
                 if let Some(ref owner) = owner_pk {
                     if *owner == target_pk {

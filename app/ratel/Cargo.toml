@@ -120,7 +120,7 @@ strip-tags = "0.1.0"
 generational-box = "0.7.9"
 
 [features]
-default = ["mobile"]
+default = ["web","server"]
 bypass = []
 # Note: `fullstack` is NOT included here so `--platform web` builds for the
 # Tauri Android shell (which auto-adds `web` and supplies its own server-fn

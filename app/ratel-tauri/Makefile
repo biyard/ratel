@@ -150,11 +150,6 @@ dx-build:
 	cd $(RATEL_DIR) && CARGO_TARGET_DIR=$(DX_CARGO_TARGET_DIR) make build-tauri
 	rsync -a --delete "$(DX_BUILD_DIR)/" "$(DIST_DIR)/"
 
-	@if ! grep -q "patched_atob" $(DIST_DIR)/index.html; then \
-		echo "Injecting SSR-global shims into index.html"; \
-		python3 -c "p='$(DIST_DIR)/index.html'; t=open(p).read(); s='<script>(function(){var __o=window.atob;window.atob=function(x){return (x===undefined||x===null)?String.fromCharCode(0x80):__o.call(this,x);};if(!window.hydrate_queue)window.hydrate_queue=[];if(!window.hydration_callback)window.hydration_callback=function(){};window.__patched_atob=true;})();</script>'; open(p,'w').write(t.replace('<body>','<body>'+s,1))"; \
-	fi
-
 run: run-android
 
 # Write a one-off JSON override merging per-ENV CSP and the DEV_URL into
