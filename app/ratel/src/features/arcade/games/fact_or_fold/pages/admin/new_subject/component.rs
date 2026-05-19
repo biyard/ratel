@@ -232,16 +232,14 @@ pub fn FactFoldAdminNewSubjectPage() -> Element {
                     if !core_ok {
                         span { class: "ff-new-subject__hint", "{tr.fields_incomplete}" }
                     }
-                    Button {
-                        style: ButtonStyle::Outline,
-                        size: ButtonSize::Medium,
+                    button {
+                        class: "btn btn--ghost",
                         disabled: submitting() || !core_ok,
                         onclick: save_draft,
                         "{tr.save_draft}"
                     }
-                    Button {
-                        style: ButtonStyle::Primary,
-                        size: ButtonSize::Medium,
+                    button {
+                        class: "btn btn--primary",
                         disabled: submitting() || !core_ok || scheduled_at_iso().is_empty(),
                         onclick: schedule_publish,
                         "{tr.schedule_publish}"

@@ -211,9 +211,8 @@ fn SettingsForm(initial: FactOrFoldSettingsResponse) -> Element {
                 if saved_at().is_some() && error_msg().is_none() {
                     span { class: "ff-settings__saved", "{tr.saved}" }
                 }
-                Button {
-                    style: ButtonStyle::Primary,
-                    size: ButtonSize::Medium,
+                button {
+                    class: "btn btn--primary",
                     disabled: submitting(),
                     onclick: on_save,
                     if submitting() {

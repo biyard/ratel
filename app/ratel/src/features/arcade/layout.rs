@@ -4,7 +4,6 @@
 //! hook is provided once here so every descendant page reads from
 //! one cached `UseArcadeWallet`.
 
-use crate::common::components::{Button, ButtonShape, ButtonSize, ButtonStyle};
 use crate::features::arcade::components::{ArcadeExchangeModal, ChipBalance};
 use crate::features::arcade::hooks::use_arcade_wallet_provider;
 use crate::features::arcade::i18n::ArcadeLayoutTranslate;
@@ -63,11 +62,8 @@ pub fn ArcadeLayout() -> Element {
                 }
                 div { class: "user-stats",
                     if is_admin {
-                        Button {
+                        button {
                             class: "ff-arcade__admin-cta",
-                            style: ButtonStyle::Text,
-                            size: ButtonSize::Small,
-                            shape: ButtonShape::Square,
                             onclick: go_admin_new,
                             span { class: "top-nav-btn-icon", "⚐" }
                             span { "{tr.admin_create_round}" }
