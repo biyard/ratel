@@ -12,7 +12,8 @@ const DEFAULT_RP_INPUT: i64 = 500;
 pub fn ArcadeExchangeModal(open: bool, on_close: EventHandler<()>) -> Element {
     let tr: ArcadeExchangeModalTranslate = use_translate();
     let mut wallet = use_arcade_wallet();
-    let state = (wallet.state)();
+    let state_loader = wallet.state()?;
+    let state = state_loader();
     let ratio_bps = state.rp_to_chip_ratio_bps.max(0) as i64;
 
     let mut rp_input = use_signal(|| DEFAULT_RP_INPUT);
@@ -63,7 +64,9 @@ pub fn ArcadeExchangeModal(open: bool, on_close: EventHandler<()>) -> Element {
     }
 
     rsx! {
-        div { class: "ff-arcade__modal-scrim", onclick: move |_| on_close.call(()),
+        div {
+            class: "ff-arcade__modal-scrim",
+            onclick: move |_| on_close.call(()),
             div {
                 class: "ff-arcade__modal-card",
                 onclick: move |e| e.stop_propagation(),
@@ -76,8 +79,7 @@ pub fn ArcadeExchangeModal(open: bool, on_close: EventHandler<()>) -> Element {
                         "{tr.cancel_btn}"
                     }
                 }
-                p {
-                    style: "font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0 0 18px",
+                p { style: "font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0 0 18px",
                     "{tr.subtitle}"
                 }
 
@@ -122,8 +124,7 @@ pub fn ArcadeExchangeModal(open: bool, on_close: EventHandler<()>) -> Element {
                         onclick: on_confirm,
                         "{tr.confirm_btn}"
                     }
-                    span {
-                        style: "font-size: 11px; color: var(--text-faint); font-family: 'JetBrains Mono', monospace",
+                    span { style: "font-size: 11px; color: var(--text-faint); font-family: 'JetBrains Mono', monospace",
                         "{tr.redeem_disabled_note}"
                     }
                 }

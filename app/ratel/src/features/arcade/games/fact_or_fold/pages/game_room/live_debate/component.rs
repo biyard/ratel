@@ -14,9 +14,9 @@ use crate::*;
 #[component]
 pub fn LiveDebateView() -> Element {
     let mut ctx = use_fact_fold_round();
-    let round = (ctx.round)();
-    let bets = (ctx.bets)();
-    let participants = (ctx.participants)();
+    let round = ctx.round()?();
+    let bets = ctx.bets()?();
+    let participants = ctx.participants()?();
     let chat = (ctx.chat)();
 
     let user_ctx = use_user_context();

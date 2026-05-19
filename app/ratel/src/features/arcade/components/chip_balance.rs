@@ -9,7 +9,8 @@ use crate::*;
 pub fn ChipBalance(on_click: EventHandler<()>) -> Element {
     let tr: ArcadeLayoutTranslate = use_translate();
     let wallet = use_arcade_wallet();
-    let chip = (wallet.state)().chip_balance;
+    let state = wallet.state()?;
+    let chip = state().chip_balance;
 
     rsx! {
         button {

@@ -8,10 +8,16 @@
 //! the `_handler` server functions directly.
 //!
 //! Polling: the page-level component runs a `use_future` tick that
-//! calls `refresh_all()` every ~2.5s for stage / participants / bets
-//! / rationale / settlement and `poll_chat()` for incremental chat
-//! deltas. Mutations refresh the loaders that observe the row that
-//! just changed so the UI flips without waiting for the next tick.
+//! bumps every `*_refresh` signal every ~2.5s so each loader re-fires
+//! its fetch; `poll_chat()` handles incremental chat deltas.
+//! Mutations bump only the loader(s) affected by the mutation so the
+//! UI flips without waiting for the next tick.
+//!
+//! Loader-resolution convention (dev memo 2026-05-19): loaders are
+//! exposed as methods returning `Result<Loader<T>, Loading>`. The
+//! provider stores only refresh signals so it doesn't suspend the
+//! whole subtree; each consuming component `?`-suspends at its own
+//! call site, letting siblings render independently.
 
 use crate::features::arcade::games::fact_or_fold::controllers::essence::{
     register_essence_handler, RegisterEssenceRequest,
@@ -32,16 +38,20 @@ use crate::*;
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct UseFactFoldRound {
-    pub round: Loader<RoundResponse>,
-    pub subject: Loader<RoundSubjectResponse>,
-    pub participants: Loader<ListParticipantsResponse>,
-    pub bets: Loader<ListBetsResponse>,
-    pub rationales: Loader<ListRationalesResponse>,
-    pub insider: Loader<InsiderStatementResponse>,
-    /// `None` while the round has not been settled yet (the GET 409s
-    /// before the settlement row exists). Flips to `Some(breakdown)`
-    /// once tick auto-settle or admin settle has run.
-    pub settlement: Loader<Option<SettleRoundResponse>>,
+    /// Active round id — referenced by every loader method.
+    pub round_id: ReadSignal<FactFoldRoundEntityType>,
+
+    // Per-loader refresh triggers. Each loader method reads its
+    // refresh signal inside the future closure; `use_resource`'s
+    // reactive tracking re-fires the fetch when the signal bumps.
+    pub round_refresh: Signal<u64>,
+    pub subject_refresh: Signal<u64>,
+    pub participants_refresh: Signal<u64>,
+    pub bets_refresh: Signal<u64>,
+    pub rationales_refresh: Signal<u64>,
+    pub insider_refresh: Signal<u64>,
+    pub settlement_refresh: Signal<u64>,
+
     /// Chronologically ordered chat log, appended only — `poll_chat`
     /// asks the server for messages newer than `last_chat_id`.
     pub chat: Signal<Vec<ChatMessagePayload>>,
@@ -54,17 +64,93 @@ pub struct UseFactFoldRound {
 }
 
 impl UseFactFoldRound {
+    // ── Loader accessors ─────────────────────────────────────────
+
+    pub fn round(&self) -> std::result::Result<Loader<RoundResponse>, Loading> {
+        let round_id = self.round_id;
+        let refresh = self.round_refresh;
+        use_loader(move || async move {
+            let _ = refresh();
+            get_round_handler(round_id()).await
+        })
+    }
+
+    pub fn subject(&self) -> std::result::Result<Loader<RoundSubjectResponse>, Loading> {
+        let round_id = self.round_id;
+        let refresh = self.subject_refresh;
+        use_loader(move || async move {
+            let _ = refresh();
+            get_round_subject_handler(round_id()).await
+        })
+    }
+
+    pub fn participants(&self) -> std::result::Result<Loader<ListParticipantsResponse>, Loading> {
+        let round_id = self.round_id;
+        let refresh = self.participants_refresh;
+        use_loader(move || async move {
+            let _ = refresh();
+            list_round_participants_handler(round_id()).await
+        })
+    }
+
+    pub fn bets(&self) -> std::result::Result<Loader<ListBetsResponse>, Loading> {
+        let round_id = self.round_id;
+        let refresh = self.bets_refresh;
+        use_loader(move || async move {
+            let _ = refresh();
+            list_round_bets_handler(round_id()).await
+        })
+    }
+
+    pub fn rationales(&self) -> std::result::Result<Loader<ListRationalesResponse>, Loading> {
+        let round_id = self.round_id;
+        let refresh = self.rationales_refresh;
+        use_loader(move || async move {
+            let _ = refresh();
+            list_round_rationales_handler(round_id()).await
+        })
+    }
+
+    pub fn insider(&self) -> std::result::Result<Loader<InsiderStatementResponse>, Loading> {
+        let round_id = self.round_id;
+        let refresh = self.insider_refresh;
+        use_loader(move || async move {
+            let _ = refresh();
+            get_insider_statement_handler(round_id()).await
+        })
+    }
+
+    pub fn settlement(
+        &self,
+    ) -> std::result::Result<Loader<Option<SettleRoundResponse>>, Loading> {
+        let round_id = self.round_id;
+        let refresh = self.settlement_refresh;
+        use_loader(move || async move {
+            let _ = refresh();
+            // Settlement GET returns 409 RoundNotSettled before the
+            // round wraps up. Treat that as "not ready yet" so the
+            // loader keeps returning Ok(None) instead of flipping
+            // into an error state.
+            match get_round_settlement_handler(round_id()).await {
+                Ok(r) => Ok::<_, crate::common::Error>(Some(r)),
+                Err(_) => Ok(None),
+            }
+        })
+    }
+
+    // ── Refresh helpers ──────────────────────────────────────────
+
     /// Refresh every round-scoped loader. Called by the page's polling
     /// future and after any mutation that changes server state. Chat
     /// is intentionally excluded — it is incremental, not replace-all.
     pub fn refresh_all(&mut self) {
-        self.round.restart();
-        self.subject.restart();
-        self.participants.restart();
-        self.bets.restart();
-        self.rationales.restart();
-        self.insider.restart();
-        self.settlement.restart();
+        self.round_refresh.with_mut(|n| *n += 1);
+        self.subject_refresh.with_mut(|n| *n += 1);
+        self.participants_refresh.with_mut(|n| *n += 1);
+        self.bets_refresh.with_mut(|n| *n += 1);
+        self.rationales_refresh.with_mut(|n| *n += 1);
+        self.insider_refresh.with_mut(|n| *n += 1);
+        self.settlement_refresh.with_mut(|n| *n += 1);
     }
 
     // ── Stage advance ─────────────────────────────────────────────
@@ -93,7 +179,7 @@ impl UseFactFoldRound {
         amount_rp: i64,
     ) -> crate::common::Result<BetResponse> {
         let res = place_bet_handler(round_id, PlaceBetRequest { side, amount_rp }).await?;
-        self.bets.restart();
+        self.bets_refresh.with_mut(|n| *n += 1);
         Ok(res)
     }
 
@@ -103,7 +189,7 @@ impl UseFactFoldRound {
         text: String,
     ) -> crate::common::Result<()> {
         let _ = submit_rationale_handler(round_id, SubmitRationaleRequest { text }).await?;
-        self.rationales.restart();
+        self.rationales_refresh.with_mut(|n| *n += 1);
         Ok(())
     }
 
@@ -113,7 +199,7 @@ impl UseFactFoldRound {
     ) -> crate::common::Result<()> {
         let _ = register_essence_handler(round_id, RegisterEssenceRequest { register: true })
             .await?;
-        self.rationales.restart();
+        self.rationales_refresh.with_mut(|n| *n += 1);
         Ok(())
     }
 
@@ -124,7 +210,7 @@ impl UseFactFoldRound {
         cite_user_pk: UserPartition,
     ) -> crate::common::Result<()> {
         let _ = flip_bet_handler(round_id, FlipBetRequest { side, cite_user_pk }).await?;
-        self.bets.restart();
+        self.bets_refresh.with_mut(|n| *n += 1);
         Ok(())
     }
 
@@ -201,38 +287,27 @@ pub fn use_fact_fold_round_provider(
         return Ok(ctx);
     }
 
-    let round = use_loader(move || async move { get_round_handler(round_id()).await })?;
-    let subject =
-        use_loader(move || async move { get_round_subject_handler(round_id()).await })?;
-    let participants =
-        use_loader(move || async move { list_round_participants_handler(round_id()).await })?;
-    let bets = use_loader(move || async move { list_round_bets_handler(round_id()).await })?;
-    let rationales =
-        use_loader(move || async move { list_round_rationales_handler(round_id()).await })?;
-    let insider =
-        use_loader(move || async move { get_insider_statement_handler(round_id()).await })?;
-    let settlement = use_loader(move || async move {
-        // Settlement GET returns 409 RoundNotSettled before the round
-        // wraps up. Treat that as "not ready yet" so the loader keeps
-        // returning Ok(None) instead of flipping into an error state.
-        match get_round_settlement_handler(round_id()).await {
-            Ok(r) => Ok::<_, crate::common::Error>(Some(r)),
-            Err(_) => Ok(None),
-        }
-    })?;
+    let round_refresh = use_signal(|| 0u64);
+    let subject_refresh = use_signal(|| 0u64);
+    let participants_refresh = use_signal(|| 0u64);
+    let bets_refresh = use_signal(|| 0u64);
+    let rationales_refresh = use_signal(|| 0u64);
+    let insider_refresh = use_signal(|| 0u64);
+    let settlement_refresh = use_signal(|| 0u64);
 
     let chat = use_signal(Vec::<ChatMessagePayload>::new);
     let last_chat_id = use_signal(|| None::<String>);
     let cited_user_pk = use_signal(|| None::<UserPartition>);
 
     Ok(use_context_provider(|| UseFactFoldRound {
-        round,
-        subject,
-        participants,
-        bets,
-        rationales,
-        insider,
-        settlement,
+        round_id,
+        round_refresh,
+        subject_refresh,
+        participants_refresh,
+        bets_refresh,
+        rationales_refresh,
+        insider_refresh,
+        settlement_refresh,
         chat,
         last_chat_id,
         cited_user_pk,

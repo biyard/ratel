@@ -17,9 +17,9 @@ const BET_STEP_RP: i64 = 50;
 #[component]
 pub fn FirstBetView() -> Element {
     let mut ctx = use_fact_fold_round();
-    let round = (ctx.round)();
-    let bets = (ctx.bets)();
-    let insider = (ctx.insider)();
+    let round = ctx.round()?();
+    let bets = ctx.bets()?();
+    let insider = ctx.insider()?();
 
     let user_ctx = use_user_context();
     let my_pk: UserPartition = UserPartition(user_ctx().user_id().unwrap_or_default());

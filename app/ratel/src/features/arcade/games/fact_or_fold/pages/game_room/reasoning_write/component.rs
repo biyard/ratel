@@ -14,11 +14,11 @@ use crate::*;
 pub fn ReasoningWriteView() -> Element {
     let mut ctx = use_fact_fold_round();
     let tr: FactFoldRoomTranslate = use_translate();
-    let round = (ctx.round)();
-    let bets = (ctx.bets)();
-    let rationales = (ctx.rationales)();
-    let participants = (ctx.participants)();
-    let insider = (ctx.insider)();
+    let round = ctx.round()?();
+    let bets = ctx.bets()?();
+    let rationales = ctx.rationales()?();
+    let participants = ctx.participants()?();
+    let insider = ctx.insider()?();
 
     let user_ctx = use_user_context();
     let my_pk: UserPartition = UserPartition(user_ctx().user_id().unwrap_or_default());
@@ -139,8 +139,8 @@ fn ReasonWriteCard(bet: BetResponse, on_submit: EventHandler<String>) -> Element
                 button {
                     class: "btn btn-primary",
                     disabled: submitting()
-                                                                || len < RATIONALE_ESSENCE_MIN_CHARS
-                                                                || len > RATIONALE_TEXT_MAX_CHARS,
+                                                                                    || len < RATIONALE_ESSENCE_MIN_CHARS
+                                                                                    || len > RATIONALE_TEXT_MAX_CHARS,
                     onclick: on_confirm,
                     "{tr.reason_submit}"
                 }

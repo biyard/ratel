@@ -12,11 +12,9 @@ use super::i18n::FactFoldAdminSubjectsTranslate;
 /// dedicated count endpoint and free-text search support.
 #[component]
 pub fn FactFoldAdminSubjectsPage() -> Element {
-    let UseFactFoldAdminSubjects {
-        status_filter,
-        subjects,
-        ..
-    } = use_fact_fold_admin_subjects_provider()?;
+    let ctx = use_fact_fold_admin_subjects_provider()?;
+    let status_filter = ctx.status_filter;
+    let subjects = ctx.subjects()?;
     let rows = subjects();
     let tr: FactFoldAdminSubjectsTranslate = use_translate();
 

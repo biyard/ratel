@@ -16,12 +16,12 @@ use crate::*;
 pub fn SettlementView() -> Element {
     let ctx = use_fact_fold_round();
     let tr: FactFoldRoomTranslate = use_translate();
-    let subject = (ctx.subject)();
-    let settlement_opt = (ctx.settlement)();
-    let participants = (ctx.participants)();
-    let bets = (ctx.bets)();
-    let rationales = (ctx.rationales)();
-    let round = (ctx.round)();
+    let subject = ctx.subject()?();
+    let settlement_opt = ctx.settlement()?();
+    let participants = ctx.participants()?();
+    let bets = ctx.bets()?();
+    let rationales = ctx.rationales()?();
+    let round = ctx.round()?();
 
     let user_ctx = use_user_context();
     let my_pk: UserPartition = UserPartition(user_ctx().user_id().unwrap_or_default());

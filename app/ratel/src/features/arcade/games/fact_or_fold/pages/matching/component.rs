@@ -21,7 +21,8 @@ const POLL_INTERVAL_MS: u64 = 2_000;
 pub fn FactFoldMatchingPage(round_id: ReadSignal<FactFoldRoundEntityType>) -> Element {
     let mut ctx = use_fact_fold_matching_provider()?;
     let nav = use_navigator();
-    let lobby = (ctx.lobby)();
+    let lobby_loader = ctx.lobby()?;
+    let lobby = lobby_loader();
 
     // Polling — refresh lobby every 2s so the slot grid + progress
     // bar track other players joining/leaving in near real-time.
@@ -29,7 +30,7 @@ pub fn FactFoldMatchingPage(round_id: ReadSignal<FactFoldRoundEntityType>) -> El
         loop {
             crate::common::utils::time::sleep(std::time::Duration::from_millis(POLL_INTERVAL_MS))
                 .await;
-            ctx.lobby.restart();
+            ctx.lobby_refresh.with_mut(|n| *n += 1);
         }
     });
 

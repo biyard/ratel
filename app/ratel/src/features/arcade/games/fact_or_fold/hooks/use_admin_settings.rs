@@ -10,19 +10,27 @@ use crate::*;
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct UseFactFoldAdminSettings {
-    pub settings: Loader<FactOrFoldSettingsResponse>,
+    pub settings_refresh: Signal<u64>,
 }
 
 impl UseFactFoldAdminSettings {
-    /// Persist a partial patch and refresh the loader. Returns the
-    /// fresh settings on success so the caller can drive UX
+    pub fn settings(&self) -> std::result::Result<Loader<FactOrFoldSettingsResponse>, Loading> {
+        let refresh = self.settings_refresh;
+        use_loader(move || async move {
+            let _ = refresh();
+            get_settings_handler().await
+        })
+    }
+
+    /// Persist a partial patch and bump the refresh signal. Returns
+    /// the fresh settings on success so the caller can drive UX
     /// (toast / form reset) without a second read.
     pub async fn save(
         &mut self,
         patch: UpdateFactOrFoldSettingsRequest,
     ) -> crate::common::Result<FactOrFoldSettingsResponse> {
         let next = update_settings_handler(patch).await?;
-        self.settings.restart();
+        self.settings_refresh.with_mut(|n| *n += 1);
         Ok(next)
     }
 }
@@ -35,9 +43,11 @@ pub fn use_fact_fold_admin_settings_provider()
         return Ok(ctx);
     }
 
-    let settings = use_loader(move || async move { get_settings_handler().await })?;
+    let settings_refresh = use_signal(|| 0u64);
 
-    Ok(use_context_provider(|| UseFactFoldAdminSettings { settings }))
+    Ok(use_context_provider(|| UseFactFoldAdminSettings {
+        settings_refresh,
+    }))
 }
 
 /// Consumer — assumes provider has been installed by an ancestor

@@ -27,7 +27,7 @@ const HEARTBEAT_INTERVAL_MS: u64 = 30_000;
 #[component]
 pub fn FactFoldGameRoomPage(round_id: ReadSignal<FactFoldRoundEntityType>) -> Element {
     let mut ctx = use_fact_fold_round_provider(round_id)?;
-    let round = ctx.round;
+    let round = ctx.round()?;
 
     // Polling loop: refresh every loader + pull chat deltas + tick
     // the stage when the wall-clock passes the deadline.
@@ -36,7 +36,7 @@ pub fn FactFoldGameRoomPage(round_id: ReadSignal<FactFoldRoundEntityType>) -> El
             crate::common::utils::time::sleep(std::time::Duration::from_millis(POLL_INTERVAL_MS))
                 .await;
 
-            let r = (ctx.round)();
+            let r = round();
             let now = crate::common::utils::time::get_now_timestamp_millis();
             let past_deadline = r.stage_deadline_at.map(|d| now >= d).unwrap_or(false);
             let active = !matches!(r.status, RoundStatus::Waiting | RoundStatus::Settled);
@@ -71,16 +71,13 @@ pub fn FactFoldGameRoomPage(round_id: ReadSignal<FactFoldRoundEntityType>) -> El
             // page). The round-status sub-line is folded into the
             // sidebar timer card instead so the brand bar stays
             // arcade-wide.
-
             div { class: "layout",
                 aside { class: "sidebar",
                     StageTimeline { round: round() }
                     TimerCard { round: round() }
                 }
 
-                div { class: "view-stack",
-                    {render_stage(&round())}
-                }
+                div { class: "view-stack", {render_stage(&round())} }
             }
         }
     }
@@ -123,17 +120,13 @@ fn StageTimeline(round: RoundResponse) -> Element {
     let current_idx = stage_index(round.status);
 
     rsx! {
-        div { class: "stage-timeline stage-timeline-global", id: "globalTimeline",
-            for (idx , (_, name , time)) in stages.iter().enumerate() {
+        div {
+            class: "stage-timeline stage-timeline-global",
+            id: "globalTimeline",
+            for (idx, (_, name, time)) in stages.iter().enumerate() {
                 {
                     let state = if let Some(curr) = current_idx {
-                        if idx < curr {
-                            "done"
-                        } else if idx == curr {
-                            "active"
-                        } else {
-                            "upcoming"
-                        }
+                        if idx < curr { "done" } else if idx == curr { "active" } else { "upcoming" }
                     } else {
                         "upcoming"
                     };
@@ -207,7 +200,12 @@ fn TimerCard(round: RoundResponse) -> Element {
                             stop { offset: "100%", stop_color: "#db2780" }
                         }
                     }
-                    circle { cx: 70, cy: 70, r: 60, class: "timer-ring-bg" }
+                    circle {
+                        cx: 70,
+                        cy: 70,
+                        r: 60,
+                        class: "timer-ring-bg",
+                    }
                     circle {
                         cx: 70,
                         cy: 70,
@@ -239,17 +237,29 @@ fn render_stage(round: &RoundResponse) -> Element {
                 div { class: "ff-room__placeholder", "{tr.waiting_for_players}" }
             }
         },
-        RoundStatus::NewsReveal => rsx! { NewsRevealView {} },
-        RoundStatus::Bet => rsx! { FirstBetView {} },
-        RoundStatus::Rationale => rsx! { ReasoningWriteView {} },
-        RoundStatus::Reveal => rsx! { ReasoningRevealView {} },
-        RoundStatus::Debate => rsx! { LiveDebateView {} },
+        RoundStatus::NewsReveal => rsx! {
+            NewsRevealView {}
+        },
+        RoundStatus::Bet => rsx! {
+            FirstBetView {}
+        },
+        RoundStatus::Rationale => rsx! {
+            ReasoningWriteView {}
+        },
+        RoundStatus::Reveal => rsx! {
+            ReasoningRevealView {}
+        },
+        RoundStatus::Debate => rsx! {
+            LiveDebateView {}
+        },
         RoundStatus::Settlement => rsx! {
             section { class: "view", "data-active": true,
                 div { class: "ff-room__placeholder", "{tr.settling}" }
             }
         },
-        RoundStatus::Settled => rsx! { SettlementView {} },
+        RoundStatus::Settled => rsx! {
+            SettlementView {}
+        },
     }
 }
 

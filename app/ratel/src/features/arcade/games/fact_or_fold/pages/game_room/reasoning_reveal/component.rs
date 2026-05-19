@@ -14,9 +14,9 @@ use crate::*;
 pub fn ReasoningRevealView() -> Element {
     let ctx = use_fact_fold_round();
     let tr: FactFoldRoomTranslate = use_translate();
-    let bets = (ctx.bets)();
-    let rationales = (ctx.rationales)();
-    let participants = (ctx.participants)();
+    let bets = ctx.bets()?();
+    let rationales = ctx.rationales()?();
+    let participants = ctx.participants()?();
 
     let user_ctx = use_user_context();
     let my_pk: UserPartition = UserPartition(user_ctx().user_id().unwrap_or_default());

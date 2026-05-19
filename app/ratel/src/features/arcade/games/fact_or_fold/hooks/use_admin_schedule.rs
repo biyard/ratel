@@ -14,8 +14,29 @@ use crate::*;
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct UseFactFoldAdminSchedule {
-    pub scheduled: Loader<Vec<SubjectResponse>>,
-    pub alarm: Loader<QueueAlarmResponse>,
+    pub scheduled_refresh: Signal<u64>,
+    pub alarm_refresh: Signal<u64>,
+}
+
+impl UseFactFoldAdminSchedule {
+    pub fn scheduled(&self) -> std::result::Result<Loader<Vec<SubjectResponse>>, Loading> {
+        let refresh = self.scheduled_refresh;
+        use_loader(move || async move {
+            let _ = refresh();
+            let resp = list_subjects_handler(None, Some(SubjectStatus::Scheduled)).await?;
+            let mut items = resp.items;
+            items.sort_by(|a, b| a.scheduled_at.unwrap_or(0).cmp(&b.scheduled_at.unwrap_or(0)));
+            Ok::<Vec<SubjectResponse>, crate::common::Error>(items)
+        })
+    }
+
+    pub fn alarm(&self) -> std::result::Result<Loader<QueueAlarmResponse>, Loading> {
+        let refresh = self.alarm_refresh;
+        use_loader(move || async move {
+            let _ = refresh();
+            get_queue_alarm_handler().await
+        })
+    }
 }
 
 pub fn use_fact_fold_admin_schedule_provider()
@@ -24,17 +45,11 @@ pub fn use_fact_fold_admin_schedule_provider()
         return Ok(ctx);
     }
 
-    let scheduled = use_loader(move || async move {
-        let resp = list_subjects_handler(None, Some(SubjectStatus::Scheduled)).await?;
-        let mut items = resp.items;
-        items.sort_by(|a, b| a.scheduled_at.unwrap_or(0).cmp(&b.scheduled_at.unwrap_or(0)));
-        Ok::<Vec<SubjectResponse>, crate::common::Error>(items)
-    })?;
-
-    let alarm = use_loader(move || async move { get_queue_alarm_handler().await })?;
+    let scheduled_refresh = use_signal(|| 0u64);
+    let alarm_refresh = use_signal(|| 0u64);
 
     Ok(use_context_provider(|| UseFactFoldAdminSchedule {
-        scheduled,
-        alarm,
+        scheduled_refresh,
+        alarm_refresh,
     }))
 }

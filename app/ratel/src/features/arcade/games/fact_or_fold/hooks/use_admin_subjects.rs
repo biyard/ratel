@@ -5,6 +5,9 @@
 //! through async fn methods on the controller per
 //! `conventions/hooks-and-actions.md` — components await them and
 //! pick their own UX (toast / nav / row removal).
+//!
+//! Loader-resolution convention: `subjects()` returns
+//! `Result<Loader<...>, Loading>` so consumers resolve at use time.
 
 use crate::features::arcade::games::fact_or_fold::{
     CreateSubjectRequest, SubjectResponse, SubjectStatus, PublishSubjectRequest,
@@ -17,25 +20,37 @@ use crate::*;
 pub struct UseFactFoldAdminSubjects {
     /// Active filter — drives the loader's status query param.
     pub status_filter: Signal<Option<SubjectStatus>>,
-    /// Subjects for the current filter (server-paginated; we render
-    /// the first page and let the user re-filter to slice).
-    pub subjects: Loader<Vec<SubjectResponse>>,
+    /// Bump to force the subjects loader to re-fetch.
+    pub subjects_refresh: Signal<u64>,
     /// Queue alarm threshold (admin-tunable). Read once at load time
     /// so filter / page transitions don't re-fetch.
     pub queue_alert_threshold_days: Signal<i32>,
 }
 
 impl UseFactFoldAdminSubjects {
+    pub fn subjects(&self) -> std::result::Result<Loader<Vec<SubjectResponse>>, Loading> {
+        let status_filter = self.status_filter;
+        let refresh = self.subjects_refresh;
+        use_loader(move || {
+            let _ = refresh();
+            let status = status_filter();
+            async move {
+                let resp = list_subjects_handler(None, status).await?;
+                Ok::<Vec<SubjectResponse>, crate::common::Error>(resp.items)
+            }
+        })
+    }
+
     /// Create a draft / scheduled subject. The freshly inserted row
     /// doesn't always show up at the top of the next list page since
-    /// we sort by `created_at desc` server-side, so we restart the
-    /// loader to make sure the new row shows up immediately.
+    /// we sort by `created_at desc` server-side, so we bump the
+    /// refresh signal to make sure the new row shows up immediately.
     pub async fn create(
         &mut self,
         req: CreateSubjectRequest,
     ) -> crate::common::Result<SubjectResponse> {
         let res = create_subject_handler(req).await?;
-        self.subjects.restart();
+        self.subjects_refresh.with_mut(|n| *n += 1);
         Ok(res)
     }
 
@@ -45,7 +60,7 @@ impl UseFactFoldAdminSubjects {
     ) -> crate::common::Result<SubjectResponse> {
         let res = publish_subject_handler(subject_id, PublishSubjectRequest { scheduled_at: None })
             .await?;
-        self.subjects.restart();
+        self.subjects_refresh.with_mut(|n| *n += 1);
         Ok(res)
     }
 
@@ -54,7 +69,7 @@ impl UseFactFoldAdminSubjects {
         subject_id: crate::FactFoldSubjectEntityType,
     ) -> crate::common::Result<SubjectResponse> {
         let res = delete_subject_handler(subject_id).await?;
-        self.subjects.restart();
+        self.subjects_refresh.with_mut(|n| *n += 1);
         Ok(res)
     }
 }
@@ -67,14 +82,7 @@ pub fn use_fact_fold_admin_subjects_provider()
 
     let status_filter: Signal<Option<SubjectStatus>> = use_signal(|| None);
     let queue_alert_threshold_days = use_signal(|| 5);
-
-    let subjects = use_loader(move || {
-        let status = status_filter();
-        async move {
-            let resp = list_subjects_handler(None, status).await?;
-            Ok::<Vec<SubjectResponse>, crate::common::Error>(resp.items)
-        }
-    })?;
+    let subjects_refresh = use_signal(|| 0u64);
 
     // Pull the alert threshold once. Failure is non-fatal — we keep
     // the default in the signal — so we ignore the error to keep the
@@ -88,7 +96,7 @@ pub fn use_fact_fold_admin_subjects_provider()
 
     Ok(use_context_provider(|| UseFactFoldAdminSubjects {
         status_filter,
-        subjects,
+        subjects_refresh,
         queue_alert_threshold_days,
     }))
 }

@@ -1,6 +1,10 @@
 //! `UseArcadeHome` — bundles every loader + mutation the home page
 //! needs: lobby state, my stats, leaderboard page, and the join
 //! mutation (which routes to /matching on success).
+//!
+//! Loader-resolution convention: `lobby()` and `my_stats()` are
+//! methods returning `Result<Loader<T>, Loading>` so the suspension
+//! happens at the consumer site, not in the provider.
 
 use crate::common::hooks::{use_infinite_query, InfiniteQuery};
 use crate::features::arcade::games::fact_or_fold::{
@@ -11,16 +15,32 @@ use crate::*;
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct UseArcadeHome {
-    pub lobby: Loader<LobbyResponse>,
-    pub my_stats: Loader<UserStatsResponse>,
+    pub lobby_refresh: Signal<u64>,
+    pub my_stats_refresh: Signal<u64>,
     pub leaderboard:
         InfiniteQuery<String, LeaderboardEntryResponse, ListResponse<LeaderboardEntryResponse>>,
 }
 
 impl UseArcadeHome {
+    pub fn lobby(&self) -> std::result::Result<Loader<LobbyResponse>, Loading> {
+        let refresh = self.lobby_refresh;
+        use_loader(move || async move {
+            let _ = refresh();
+            get_lobby_handler().await
+        })
+    }
+
+    pub fn my_stats(&self) -> std::result::Result<Loader<UserStatsResponse>, Loading> {
+        let refresh = self.my_stats_refresh;
+        use_loader(move || async move {
+            let _ = refresh();
+            get_my_stats_handler().await
+        })
+    }
+
     pub async fn join(&mut self) -> crate::common::Result<RoundResponse> {
         let res = join_lobby_handler().await?;
-        self.lobby.restart();
+        self.lobby_refresh.with_mut(|n| *n += 1);
         Ok(res)
     }
 }
@@ -31,15 +51,15 @@ pub fn use_arcade_home_provider() -> std::result::Result<UseArcadeHome, RenderEr
         return Ok(ctx);
     }
 
-    let lobby = use_loader(move || async move { get_lobby_handler().await })?;
-    let my_stats = use_loader(move || async move { get_my_stats_handler().await })?;
+    let lobby_refresh = use_signal(|| 0u64);
+    let my_stats_refresh = use_signal(|| 0u64);
     let leaderboard = use_infinite_query(move |bookmark| async move {
         get_leaderboard_handler(bookmark).await
     })?;
 
     Ok(use_context_provider(|| UseArcadeHome {
-        lobby,
-        my_stats,
+        lobby_refresh,
+        my_stats_refresh,
         leaderboard,
     }))
 }

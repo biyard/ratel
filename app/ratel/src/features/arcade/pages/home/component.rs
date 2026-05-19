@@ -17,8 +17,10 @@ pub fn ArcadeHomePage() -> Element {
     let ctx = use_arcade_home_provider()?;
     let nav = use_navigator();
 
-    let lobby = (ctx.lobby)();
-    let my_stats = (ctx.my_stats)();
+    let lobby_loader = ctx.lobby()?;
+    let lobby = lobby_loader();
+    let my_stats_loader = ctx.my_stats()?;
+    let my_stats = my_stats_loader();
 
     // If the user is already inside a live round, jump straight to
     // the matching or game-room page. Driven off the loader so the

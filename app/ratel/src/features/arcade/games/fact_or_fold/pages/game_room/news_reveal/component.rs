@@ -13,9 +13,9 @@ use crate::*;
 #[component]
 pub fn NewsRevealView() -> Element {
     let ctx = use_fact_fold_round();
-    let subject = (ctx.subject)();
-    let participants = (ctx.participants)();
-    let round = (ctx.round)();
+    let subject = ctx.subject()?();
+    let participants = ctx.participants()?();
+    let round = ctx.round()?();
 
     let user_ctx = use_user_context();
     let my_pk: UserPartition = UserPartition(user_ctx().user_id().unwrap_or_default());

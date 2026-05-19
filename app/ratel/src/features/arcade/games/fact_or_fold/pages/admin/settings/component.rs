@@ -17,7 +17,8 @@ use super::i18n::FactFoldAdminSettingsTranslate;
 /// noted inline as deferred so reviewers can map mockup → spec.
 #[component]
 pub fn FactFoldAdminSettingsPage() -> Element {
-    let UseFactFoldAdminSettings { settings, .. } = use_fact_fold_admin_settings_provider()?;
+    let ctx = use_fact_fold_admin_settings_provider()?;
+    let settings = ctx.settings()?;
     let initial = settings();
 
     rsx! {

@@ -11,10 +11,12 @@ use super::i18n::FactFoldAdminScheduleTranslate;
 /// drag-to-reschedule view is deferred — needs a date library.
 #[component]
 pub fn FactFoldAdminSchedulePage() -> Element {
-    let UseFactFoldAdminSchedule { scheduled, alarm } = use_fact_fold_admin_schedule_provider()?;
+    let ctx = use_fact_fold_admin_schedule_provider()?;
     let tr: FactFoldAdminScheduleTranslate = use_translate();
+    let scheduled = ctx.scheduled()?;
     let rows = scheduled();
-    let alarm = alarm();
+    let alarm_loader = ctx.alarm()?;
+    let alarm = alarm_loader();
 
     rsx! {
         SeoMeta { title: "{tr.page_title} · Fact or Fold" }
