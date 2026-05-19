@@ -11,7 +11,7 @@
 //!
 //! 1. Load round; bail if already `Settled` (idempotent — caller
 //!    can retry without doubling pay-outs).
-//! 2. Load headline (verdict), bets, rationales, participants,
+//! 2. Load subject (verdict), bets, rationales, participants,
 //!    arcade settings, FOF settings (for chip multipliers).
 //! 3. Run the pure `settle_round` formula.
 //! 4. For each `SettlementOutcome`:
@@ -43,7 +43,7 @@ use rmcp::schemars;
 use crate::common::models::auth::AdminUser;
 #[cfg(feature = "server")]
 use crate::features::arcade::games::fact_or_fold::models::{
-    FactFoldBet, FactFoldHeadline, FactFoldLeaderboardEntry, FactFoldParticipant,
+    FactFoldBet, FactFoldSubject, FactFoldLeaderboardEntry, FactFoldParticipant,
     FactFoldRationale, FactFoldRound, FactFoldSettings, FactFoldSettlement, FactFoldUserStats,
 };
 #[cfg(feature = "server")]
@@ -69,7 +69,7 @@ pub struct SettleRoundResponse {
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct SettlementBreakdown {
-    pub user_pk: String,
+    pub user_pk: UserPartition,
     pub stake: i64,
     pub won: bool,
     pub base_refund: i64,
@@ -84,7 +84,7 @@ pub struct SettlementBreakdown {
 impl From<&SettlementOutcome> for SettlementBreakdown {
     fn from(o: &SettlementOutcome) -> Self {
         Self {
-            user_pk: format!("USER#{}", o.user_id),
+            user_pk: UserPartition(o.user_id.clone()),
             stake: o.stake,
             won: o.won,
             base_refund: o.base_refund,
@@ -134,13 +134,13 @@ pub async fn settle_round_internal(
     // Load all the round-scoped rows. v1 fits comfortably in a
     // single pk query (4 players, ≤8 rows total — round + 4
     // participants + 4 bets + ≤4 rationales + settlement targets).
-    let headline_pk = FactFoldHeadline::anchor_pk();
-    let headline_sk: EntityType =
-        crate::FactFoldHeadlineEntityType(round.headline_id.clone()).into();
-    let headline = FactFoldHeadline::get(cli, &headline_pk, Some(headline_sk))
+    let subject_pk = FactFoldSubject::anchor_pk();
+    let subject_sk: EntityType =
+        crate::FactFoldSubjectEntityType(round.subject_id.clone()).into();
+    let subject = FactFoldSubject::get(cli, &subject_pk, Some(subject_sk))
         .await
         .map_err(|e| {
-            crate::error!("settle_round_internal headline read failed: {e}");
+            crate::error!("settle_round_internal subject read failed: {e}");
             FactOrFoldError::StorageFailure
         })?
         .ok_or(FactOrFoldError::RoundNotFound)?;
@@ -181,7 +181,7 @@ pub async fn settle_round_internal(
     let buy_in = arcade_settings.default_buy_in_chips;
 
     let outcomes = settle_round(SettleRoundInput {
-        verdict: headline.verdict,
+        verdict: subject.verdict,
         bets: &bets,
         rationales: &rationales,
         participants: &participants,
@@ -327,7 +327,7 @@ async fn load_existing_breakdowns(
             // outcome; we just project it.
             let won = r.base_refund > 0;
             SettlementBreakdown {
-                user_pk: r.user_pk.to_string(),
+                user_pk: UserPartition::from(r.user_pk.clone()),
                 stake: 0, // not persisted on the settlement row
                 won,
                 base_refund: r.base_refund,

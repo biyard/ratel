@@ -3,9 +3,9 @@
 //! Surface:
 //!  - GET /api/fact-or-fold/admin/queue/alarm
 //!
-//! Drives the FR-45 alert: when the latest *Scheduled* headline's
+//! Drives the FR-45 alert: when the latest *Scheduled* subject's
 //! `scheduled_at` falls within `queue_low_alert_days` of "now" (or no
-//! scheduled headline exists at all), the admin UI surfaces a warning
+//! scheduled subject exists at all), the admin UI surfaces a warning
 //! prompting the operator to publish more.
 
 use crate::common::*;
@@ -14,10 +14,10 @@ use crate::features::arcade::games::fact_or_fold::types::*;
 #[cfg(feature = "server")]
 use crate::common::models::auth::AdminUser;
 #[cfg(feature = "server")]
-use crate::features::arcade::games::fact_or_fold::models::{FactFoldHeadline, FactFoldSettings};
+use crate::features::arcade::games::fact_or_fold::models::{FactFoldSubject, FactFoldSettings};
 
 #[cfg(feature = "server")]
-const HEADLINE_SK_PREFIX: &str = "FACT_FOLD_HEADLINE";
+const HEADLINE_SK_PREFIX: &str = "FACT_FOLD_SUBJECT";
 #[cfg(feature = "server")]
 const MS_PER_DAY: f64 = 86_400_000.0;
 
@@ -31,12 +31,12 @@ pub async fn get_queue_alarm_handler() -> Result<QueueAlarmResponse> {
         FactOrFoldError::StorageFailure
     })?;
 
-    // We anticipate ≤ a few hundred headlines lifetime. One sk-prefix
+    // We anticipate ≤ a few hundred subjects lifetime. One sk-prefix
     // query is fine without pagination for an alarm check.
-    let opts = FactFoldHeadline::opt()
+    let opts = FactFoldSubject::opt()
         .sk(HEADLINE_SK_PREFIX.to_string())
         .limit(500);
-    let (rows, _) = FactFoldHeadline::query(cli, FactFoldHeadline::anchor_pk(), opts)
+    let (rows, _) = FactFoldSubject::query(cli, FactFoldSubject::anchor_pk(), opts)
         .await
         .map_err(|e| {
             crate::error!("get_queue_alarm_handler query failed: {e}");
@@ -46,13 +46,13 @@ pub async fn get_queue_alarm_handler() -> Result<QueueAlarmResponse> {
     let now = crate::common::utils::time::get_now_timestamp_millis();
     let max_scheduled_at = rows
         .iter()
-        .filter(|h| matches!(h.status, HeadlineStatus::Scheduled))
+        .filter(|h| matches!(h.status, SubjectStatus::Scheduled))
         .filter_map(|h| h.scheduled_at)
         .filter(|ts| *ts >= now)
         .max();
     let scheduled_future_count = rows
         .iter()
-        .filter(|h| matches!(h.status, HeadlineStatus::Scheduled))
+        .filter(|h| matches!(h.status, SubjectStatus::Scheduled))
         .filter(|h| h.scheduled_at.map(|ts| ts >= now).unwrap_or(false))
         .count();
 

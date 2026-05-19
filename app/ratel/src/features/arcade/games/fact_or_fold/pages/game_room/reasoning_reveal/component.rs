@@ -19,7 +19,7 @@ pub fn ReasoningRevealView() -> Element {
     let participants = (ctx.participants)();
 
     let user_ctx = use_user_context();
-    let my_pk = user_ctx().user_pk().unwrap_or_default();
+    let my_pk: UserPartition = UserPartition(user_ctx().user_id().unwrap_or_default());
 
     let cited_user_pk = ctx.cited_user_pk;
 
@@ -48,11 +48,15 @@ pub fn ReasoningRevealView() -> Element {
             }
 
             div { class: "reveal-grid",
-                for (idx , p) in participants.items.iter().enumerate() {
+                for (idx, p) in participants.items.iter().enumerate() {
                     {
                         let participant = p.clone();
                         let bet = bets.items.iter().find(|b| b.user_pk == participant.user_pk).cloned();
-                        let rationale = rationales.items.iter().find(|r| r.user_pk == participant.user_pk).cloned();
+                        let rationale = rationales
+                            .items
+                            .iter()
+                            .find(|r| r.user_pk == participant.user_pk)
+                            .cloned();
                         rsx! {
                             RevealCard {
                                 key: "{participant.user_pk}",
@@ -68,10 +72,7 @@ pub fn ReasoningRevealView() -> Element {
                 }
             }
 
-            RevealCta {
-                cited_user_pk,
-                participants: participants.items.clone(),
-            }
+            RevealCta { cited_user_pk, participants: participants.items.clone() }
         }
     }
 }
@@ -82,8 +83,8 @@ fn CampBar(
     real_total: i64,
     fake_count: usize,
     fake_total: i64,
-    real_owners: Vec<String>,
-    fake_owners: Vec<String>,
+    real_owners: Vec<UserPartition>,
+    fake_owners: Vec<UserPartition>,
     participants: Vec<RoundParticipantSummary>,
 ) -> Element {
     let tr: FactFoldRoomTranslate = use_translate();
@@ -105,9 +106,7 @@ fn CampBar(
                     span { class: "camp-label", "{tr.reveal_camp_real_label}" }
                     span { class: "camp-count", "{real_label}" }
                 }
-                div { class: "camp-avatars",
-                    {camp_avatars(&real_owners, &participants)}
-                }
+                div { class: "camp-avatars", {camp_avatars(&real_owners, &participants)} }
             }
             div { class: "camp-vs", "{tr.reveal_camp_vs}" }
             div { class: "camp-side fake", style: "flex: {fake_flex}",
@@ -115,9 +114,7 @@ fn CampBar(
                     span { class: "camp-label", "{tr.reveal_camp_fake_label}" }
                     span { class: "camp-count", "{fake_label}" }
                 }
-                div { class: "camp-avatars",
-                    {camp_avatars(&fake_owners, &participants)}
-                }
+                div { class: "camp-avatars", {camp_avatars(&fake_owners, &participants)} }
             }
         }
     }
@@ -129,8 +126,8 @@ fn RevealCard(
     participant: RoundParticipantSummary,
     bet: Option<BetResponse>,
     rationale: Option<RationaleResponse>,
-    my_pk: String,
-    cited_user_pk: Signal<Option<String>>,
+    my_pk: UserPartition,
+    cited_user_pk: Signal<Option<UserPartition>>,
 ) -> Element {
     let tr: FactFoldRoomTranslate = use_translate();
     let is_me = participant.user_pk == my_pk;
@@ -174,10 +171,10 @@ fn RevealCard(
 
     let user_pk_for_cite = participant.user_pk.clone();
     let mut cited_signal = cited_user_pk;
-    let marked = (cited_signal)().as_deref() == Some(user_pk_for_cite.as_str());
+    let marked = (cited_signal)().as_ref() == Some(&user_pk_for_cite);
     let on_quote = move |_| {
         let cur = (cited_signal)();
-        if cur.as_deref() == Some(user_pk_for_cite.as_str()) {
+        if cur.as_ref() == Some(&user_pk_for_cite) {
             cited_signal.set(None);
         } else {
             cited_signal.set(Some(user_pk_for_cite.clone()));
@@ -217,7 +214,7 @@ fn RevealCard(
 
 #[component]
 fn RevealCta(
-    cited_user_pk: Signal<Option<String>>,
+    cited_user_pk: Signal<Option<UserPartition>>,
     participants: Vec<RoundParticipantSummary>,
 ) -> Element {
     let tr: FactFoldRoomTranslate = use_translate();
@@ -233,7 +230,7 @@ fn RevealCta(
                         p.display_name.clone()
                     }
                 })
-                .unwrap_or(pk);
+                .unwrap_or_else(|| pk.0.clone());
             tr.reveal_cta_one_quote.replace("{$name}", &name)
         }
         None => tr.reveal_cta_no_quote.to_string(),
@@ -258,7 +255,7 @@ fn active_side(bet: &BetResponse) -> BetSide {
 }
 
 fn camp_avatars(
-    owners: &[String],
+    owners: &[UserPartition],
     participants: &[RoundParticipantSummary],
 ) -> Element {
     rsx! {

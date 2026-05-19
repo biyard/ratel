@@ -1,13 +1,13 @@
-//! Integration tests for *Fact or Fold* admin headline + settings endpoints
+//! Integration tests for *Fact or Fold* admin subject + settings endpoints
 //! (PR1 surface). Round/lobby flows are covered in PR3+.
 //!
 //! Verifies:
 //!  - All admin endpoints reject non-admin sessions (roadmap §FR-39)
-//!  - Headline CRUD happy path
+//!  - Subject CRUD happy path
 //!  - Validation invariants: body length, difficulty range, past schedule,
 //!    required string fields
-//!  - `Live` headlines lock all field edits and deletes (§FR-43)
-//!  - `publish` with `scheduled_at = None` moves the headline to `Live`
+//!  - `Live` subjects lock all field edits and deletes (§FR-43)
+//!  - `publish` with `scheduled_at = None` moves the subject to `Live`
 //!  - Settings read returns defaults; PUT persists; out-of-range rejected.
 //!
 //! Note: Dioxus server functions wrap each named body parameter as a JSON
@@ -16,15 +16,15 @@
 
 use super::*;
 
-use crate::common::types::Partition;
+use crate::common::types::{Partition, UserPartition};
 use crate::features::arcade::games::fact_or_fold::models::FactFoldRound;
 use crate::features::arcade::models::ArcadeWalletBalance;
 use crate::features::arcade::games::fact_or_fold::controllers::settlement::SettleRoundResponse;
 use crate::features::arcade::games::fact_or_fold::types::{
-    BetResponse, BetSide, FactOrFoldSettingsResponse, HeadlineResponse, HeadlineStatus,
+    BetResponse, BetSide, FactOrFoldSettingsResponse, SubjectResponse, SubjectStatus,
     InsiderStatementResponse, ListBetsResponse, ListParticipantsResponse, ListRationalesResponse,
     LobbyResponse, ParticipantResponse, QueueAlarmResponse, RationaleResponse,
-    RoundHeadlineResponse, RoundResponse, RoundStatus, Verdict,
+    RoundSubjectResponse, RoundResponse, RoundStatus, Verdict,
 };
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -34,14 +34,14 @@ fn valid_body() -> String {
     "x".repeat(200)
 }
 
-async fn create_headline(ctx: &TestContext, admin: &axum::http::HeaderMap) -> HeadlineResponse {
+async fn create_subject(ctx: &TestContext, admin: &axum::http::HeaderMap) -> SubjectResponse {
     let (status, _, body) = crate::test_post! {
         app: ctx.app.clone(),
-        path: "/api/fact-or-fold/admin/headlines",
+        path: "/api/fact-or-fold/admin/subjects",
         headers: admin.clone(),
         body: {
             "req": {
-                "headline_text": "Headline",
+                "headline_text": "Subject",
                 "body_excerpt": valid_body(),
                 "verdict": "REAL",
                 "difficulty": 3,
@@ -53,21 +53,21 @@ async fn create_headline(ctx: &TestContext, admin: &axum::http::HeaderMap) -> He
                 "scheduled_at": null,
             }
         },
-        response_type: HeadlineResponse,
+        response_type: SubjectResponse,
     };
-    assert_eq!(status, 200, "create_headline expected 200, got {}", status);
+    assert_eq!(status, 200, "create_subject expected 200, got {}", status);
     body
 }
 
 // ── Auth gating (FR-39) ──────────────────────────────────────────
 
 #[tokio::test]
-async fn test_create_headline_rejects_non_admin() {
+async fn test_create_subject_rejects_non_admin() {
     let ctx = TestContext::setup().await;
     // ctx.test_user is Individual, not Admin
     let (status, _, _) = crate::test_post! {
         app: ctx.app.clone(),
-        path: "/api/fact-or-fold/admin/headlines",
+        path: "/api/fact-or-fold/admin/subjects",
         headers: ctx.test_user.1.clone(),
         body: {
             "req": {
@@ -85,11 +85,11 @@ async fn test_create_headline_rejects_non_admin() {
 }
 
 #[tokio::test]
-async fn test_create_headline_rejects_unauthenticated() {
+async fn test_create_subject_rejects_unauthenticated() {
     let ctx = TestContext::setup().await;
     let (status, _, _) = crate::test_post! {
         app: ctx.app,
-        path: "/api/fact-or-fold/admin/headlines",
+        path: "/api/fact-or-fold/admin/subjects",
         body: {
             "req": {
                 "headline_text": "x",
@@ -106,11 +106,11 @@ async fn test_create_headline_rejects_unauthenticated() {
 }
 
 #[tokio::test]
-async fn test_list_headlines_rejects_non_admin() {
+async fn test_list_subjects_rejects_non_admin() {
     let ctx = TestContext::setup().await;
     let (status, _, _) = crate::test_get! {
         app: ctx.app.clone(),
-        path: "/api/fact-or-fold/admin/headlines",
+        path: "/api/fact-or-fold/admin/subjects",
         headers: ctx.test_user.1.clone(),
     };
     assert_ne!(status, 200, "non-admin must be rejected from list");
@@ -127,69 +127,69 @@ async fn test_get_settings_rejects_non_admin() {
     assert_ne!(status, 200, "non-admin must be rejected from settings GET");
 }
 
-// ── Headline CRUD ────────────────────────────────────────────────
+// ── Subject CRUD ────────────────────────────────────────────────
 
 #[tokio::test]
-async fn test_create_and_get_headline() {
+async fn test_create_and_get_subject() {
     let ctx = TestContext::setup().await;
     let (_, admin_headers) = ctx.create_admin_user().await;
 
-    let created = create_headline(&ctx, &admin_headers).await;
+    let created = create_subject(&ctx, &admin_headers).await;
     assert!(
-        matches!(created.status, HeadlineStatus::Draft),
-        "newly created headline must be Draft, got {:?}",
+        matches!(created.status, SubjectStatus::Draft),
+        "newly created subject must be Draft, got {:?}",
         created.status
     );
-    let headline_id = created.id.0.clone();
+    let subject_id = created.id.0.clone();
 
     let (status, _, body) = crate::test_get! {
         app: ctx.app.clone(),
-        path: &format!("/api/fact-or-fold/admin/headlines/{}", headline_id),
+        path: &format!("/api/fact-or-fold/admin/subjects/{}", subject_id),
         headers: admin_headers,
-        response_type: HeadlineResponse,
+        response_type: SubjectResponse,
     };
-    assert_eq!(status, 200, "get_headline expected 200");
+    assert_eq!(status, 200, "get_subject expected 200");
     let fetched = body;
-    assert_eq!(fetched.id.0, headline_id);
-    assert_eq!(fetched.headline_text, "Headline");
+    assert_eq!(fetched.id.0, subject_id);
+    assert_eq!(fetched.headline_text, "Subject");
 }
 
 #[tokio::test]
-async fn test_list_headlines_returns_created() {
+async fn test_list_subjects_returns_created() {
     let ctx = TestContext::setup().await;
     let (_, admin_headers) = ctx.create_admin_user().await;
 
-    let created = create_headline(&ctx, &admin_headers).await;
+    let created = create_subject(&ctx, &admin_headers).await;
 
     let (status, _, body) = crate::test_get! {
         app: ctx.app,
-        path: "/api/fact-or-fold/admin/headlines",
+        path: "/api/fact-or-fold/admin/subjects",
         headers: admin_headers,
-        response_type: crate::common::types::ListResponse<HeadlineResponse>,
+        response_type: crate::common::types::ListResponse<SubjectResponse>,
     };
     assert_eq!(status, 200, "list expected 200");
     let list = body;
     assert!(
         list.items.iter().any(|h| h.id.0 == created.id.0),
-        "list should contain the headline we just created"
+        "list should contain the subject we just created"
     );
 }
 
 #[tokio::test]
-async fn test_update_headline_patches_fields() {
+async fn test_update_subject_patches_fields() {
     let ctx = TestContext::setup().await;
     let (_, admin_headers) = ctx.create_admin_user().await;
-    let created = create_headline(&ctx, &admin_headers).await;
-    let headline_id = created.id.0;
+    let created = create_subject(&ctx, &admin_headers).await;
+    let subject_id = created.id.0;
 
     let (status, _, body) = crate::test_patch! {
         app: ctx.app,
-        path: &format!("/api/fact-or-fold/admin/headlines/{}", headline_id),
+        path: &format!("/api/fact-or-fold/admin/subjects/{}", subject_id),
         headers: admin_headers,
         body: {
             "req": { "headline_text": "Patched", "difficulty": 4 }
         },
-        response_type: HeadlineResponse,
+        response_type: SubjectResponse,
     };
     assert_eq!(status, 200, "patch expected 200");
     let updated = body;
@@ -200,23 +200,23 @@ async fn test_update_headline_patches_fields() {
 }
 
 #[tokio::test]
-async fn test_delete_headline_soft_deletes() {
+async fn test_delete_subject_soft_deletes() {
     let ctx = TestContext::setup().await;
     let (_, admin_headers) = ctx.create_admin_user().await;
-    let created = create_headline(&ctx, &admin_headers).await;
-    let headline_id = created.id.0;
+    let created = create_subject(&ctx, &admin_headers).await;
+    let subject_id = created.id.0;
 
     let (status, _, body) = crate::test_delete! {
         app: ctx.app,
-        path: &format!("/api/fact-or-fold/admin/headlines/{}", headline_id),
+        path: &format!("/api/fact-or-fold/admin/subjects/{}", subject_id),
         headers: admin_headers,
-        response_type: HeadlineResponse,
+        response_type: SubjectResponse,
     };
     assert_eq!(status, 200, "delete expected 200");
     let deleted = body;
     assert!(
-        matches!(deleted.status, HeadlineStatus::Deleted),
-        "deleted headline must report Deleted status, got {:?}",
+        matches!(deleted.status, SubjectStatus::Deleted),
+        "deleted subject must report Deleted status, got {:?}",
         deleted.status
     );
 }
@@ -229,11 +229,11 @@ async fn test_create_rejects_body_too_short() {
     let (_, admin_headers) = ctx.create_admin_user().await;
     let (status, _, _) = crate::test_post! {
         app: ctx.app,
-        path: "/api/fact-or-fold/admin/headlines",
+        path: "/api/fact-or-fold/admin/subjects",
         headers: admin_headers,
         body: {
             "req": {
-                "headline_text": "Headline",
+                "headline_text": "Subject",
                 "body_excerpt": "too short",
                 "verdict": "REAL",
                 "difficulty": 3,
@@ -252,11 +252,11 @@ async fn test_create_rejects_invalid_difficulty() {
     let (_, admin_headers) = ctx.create_admin_user().await;
     let (status, _, _) = crate::test_post! {
         app: ctx.app,
-        path: "/api/fact-or-fold/admin/headlines",
+        path: "/api/fact-or-fold/admin/subjects",
         headers: admin_headers,
         body: {
             "req": {
-                "headline_text": "Headline",
+                "headline_text": "Subject",
                 "body_excerpt": valid_body(),
                 "verdict": "REAL",
                 "difficulty": 9,
@@ -275,11 +275,11 @@ async fn test_create_rejects_empty_insider_statement() {
     let (_, admin_headers) = ctx.create_admin_user().await;
     let (status, _, _) = crate::test_post! {
         app: ctx.app,
-        path: "/api/fact-or-fold/admin/headlines",
+        path: "/api/fact-or-fold/admin/subjects",
         headers: admin_headers,
         body: {
             "req": {
-                "headline_text": "Headline",
+                "headline_text": "Subject",
                 "body_excerpt": valid_body(),
                 "verdict": "REAL",
                 "difficulty": 3,
@@ -298,20 +298,20 @@ async fn test_create_rejects_empty_insider_statement() {
 async fn test_publish_now_moves_to_live() {
     let ctx = TestContext::setup().await;
     let (_, admin_headers) = ctx.create_admin_user().await;
-    let created = create_headline(&ctx, &admin_headers).await;
-    let headline_id = created.id.0;
+    let created = create_subject(&ctx, &admin_headers).await;
+    let subject_id = created.id.0;
 
     let (status, _, body) = crate::test_post! {
         app: ctx.app,
-        path: &format!("/api/fact-or-fold/admin/headlines/{}/publish", headline_id),
+        path: &format!("/api/fact-or-fold/admin/subjects/{}/publish", subject_id),
         headers: admin_headers,
         body: { "req": { "scheduled_at": null } },
-        response_type: HeadlineResponse,
+        response_type: SubjectResponse,
     };
     assert_eq!(status, 200, "publish-now expected 200, got {}", status);
     let live = body;
     assert!(
-        matches!(live.status, HeadlineStatus::Live),
+        matches!(live.status, SubjectStatus::Live),
         "publish-now must transition to Live, got {:?}",
         live.status
     );
@@ -322,12 +322,12 @@ async fn test_publish_now_moves_to_live() {
 async fn test_publish_in_the_past_rejected() {
     let ctx = TestContext::setup().await;
     let (_, admin_headers) = ctx.create_admin_user().await;
-    let created = create_headline(&ctx, &admin_headers).await;
-    let headline_id = created.id.0;
+    let created = create_subject(&ctx, &admin_headers).await;
+    let subject_id = created.id.0;
 
     let (status, _, _) = crate::test_post! {
         app: ctx.app,
-        path: &format!("/api/fact-or-fold/admin/headlines/{}/publish", headline_id),
+        path: &format!("/api/fact-or-fold/admin/subjects/{}/publish", subject_id),
         headers: admin_headers,
         body: { "req": { "scheduled_at": 1_000_000_i64 } }
     };
@@ -338,34 +338,34 @@ async fn test_publish_in_the_past_rejected() {
 async fn test_update_locked_when_live() {
     let ctx = TestContext::setup().await;
     let (_, admin_headers) = ctx.create_admin_user().await;
-    let created = create_headline(&ctx, &admin_headers).await;
-    let headline_id = created.id.0;
+    let created = create_subject(&ctx, &admin_headers).await;
+    let subject_id = created.id.0;
 
     // Publish to Live
     let (status, _, _) = crate::test_post! {
         app: ctx.app.clone(),
-        path: &format!("/api/fact-or-fold/admin/headlines/{}/publish", headline_id),
+        path: &format!("/api/fact-or-fold/admin/subjects/{}/publish", subject_id),
         headers: admin_headers.clone(),
         body: { "req": { "scheduled_at": null } }
     };
     assert_eq!(status, 200, "publish step must succeed");
 
-    // Edit attempt on a Live headline must be rejected
+    // Edit attempt on a Live subject must be rejected
     let (status, _, _) = crate::test_patch! {
         app: ctx.app.clone(),
-        path: &format!("/api/fact-or-fold/admin/headlines/{}", headline_id),
+        path: &format!("/api/fact-or-fold/admin/subjects/{}", subject_id),
         headers: admin_headers.clone(),
         body: { "req": { "headline_text": "tampered" } }
     };
-    assert_ne!(status, 200, "Live headline must reject field edits");
+    assert_ne!(status, 200, "Live subject must reject field edits");
 
     // Delete attempt also rejected
     let (status, _, _) = crate::test_delete! {
         app: ctx.app,
-        path: &format!("/api/fact-or-fold/admin/headlines/{}", headline_id),
+        path: &format!("/api/fact-or-fold/admin/subjects/{}", subject_id),
         headers: admin_headers,
     };
-    assert_ne!(status, 200, "Live headline must reject delete");
+    assert_ne!(status, 200, "Live subject must reject delete");
 }
 
 // ── Settings ─────────────────────────────────────────────────────
@@ -448,10 +448,10 @@ async fn test_queue_alarm_alerts_when_empty_or_near_threshold() {
     assert_eq!(body.queue_days_remaining, 0.0);
     assert_eq!(body.scheduled_future_count, 0);
 
-    // Schedule a headline 1 day out (well inside the 5-day default threshold)
+    // Schedule a subject 1 day out (well inside the 5-day default threshold)
     let now = crate::common::utils::time::get_now_timestamp_millis();
     let one_day_out = now + 86_400_000;
-    let _ = create_headline_scheduled(&ctx, &admin_headers, one_day_out).await;
+    let _ = create_subject_scheduled(&ctx, &admin_headers, one_day_out).await;
 
     let (_, _, body) = crate::test_get! {
         app: ctx.app.clone(),
@@ -472,7 +472,7 @@ async fn test_queue_alarm_clears_when_far_future_scheduled() {
     // Schedule far enough out (10 days) to clear the default 5-day alert.
     let now = crate::common::utils::time::get_now_timestamp_millis();
     let ten_days_out = now + 10 * 86_400_000;
-    let _ = create_headline_scheduled(&ctx, &admin_headers, ten_days_out).await;
+    let _ = create_subject_scheduled(&ctx, &admin_headers, ten_days_out).await;
 
     let (_, _, body) = crate::test_get! {
         app: ctx.app,
@@ -484,20 +484,20 @@ async fn test_queue_alarm_clears_when_far_future_scheduled() {
     assert!(body.queue_days_remaining > 5.0);
 }
 
-/// Like `create_headline` but with a non-null `scheduled_at` so the
+/// Like `create_subject` but with a non-null `scheduled_at` so the
 /// resulting row lands in `Scheduled` status.
-async fn create_headline_scheduled(
+async fn create_subject_scheduled(
     ctx: &TestContext,
     admin: &axum::http::HeaderMap,
     scheduled_at: i64,
-) -> HeadlineResponse {
+) -> SubjectResponse {
     let (status, _, body) = crate::test_post! {
         app: ctx.app.clone(),
-        path: "/api/fact-or-fold/admin/headlines",
+        path: "/api/fact-or-fold/admin/subjects",
         headers: admin.clone(),
         body: {
             "req": {
-                "headline_text": "Headline",
+                "headline_text": "Subject",
                 "body_excerpt": valid_body(),
                 "verdict": "REAL",
                 "difficulty": 3,
@@ -509,9 +509,9 @@ async fn create_headline_scheduled(
                 "scheduled_at": scheduled_at,
             }
         },
-        response_type: HeadlineResponse,
+        response_type: SubjectResponse,
     };
-    assert_eq!(status, 200, "create_headline_scheduled expected 200");
+    assert_eq!(status, 200, "create_subject_scheduled expected 200");
     body
 }
 
@@ -580,16 +580,16 @@ async fn relax_balance_gate(ctx: &TestContext, admin: &axum::http::HeaderMap) {
     );
 }
 
-/// Create a Draft headline, then publish-now → Live so it's a
+/// Create a Draft subject, then publish-now → Live so it's a
 /// matching candidate for the lobby.
-async fn create_live_headline(ctx: &TestContext, admin: &axum::http::HeaderMap) -> HeadlineResponse {
-    let h = create_headline(ctx, admin).await;
+async fn create_live_subject(ctx: &TestContext, admin: &axum::http::HeaderMap) -> SubjectResponse {
+    let h = create_subject(ctx, admin).await;
     let (status, _, body) = crate::test_post! {
         app: ctx.app.clone(),
-        path: &format!("/api/fact-or-fold/admin/headlines/{}/publish", h.id.0),
+        path: &format!("/api/fact-or-fold/admin/subjects/{}/publish", h.id.0),
         headers: admin.clone(),
         body: { "req": { "scheduled_at": null } },
-        response_type: HeadlineResponse,
+        response_type: SubjectResponse,
     };
     assert_eq!(status, 200, "publish-now must succeed: {:?}", body);
     body
@@ -606,7 +606,7 @@ async fn test_get_lobby_rejects_unauthenticated() {
 }
 
 #[tokio::test]
-async fn test_lobby_no_headline_reports_unavailable() {
+async fn test_lobby_no_subject_reports_unavailable() {
     let ctx = TestContext::setup().await;
     let (status, _, body) = crate::test_get! {
         app: ctx.app,
@@ -615,13 +615,13 @@ async fn test_lobby_no_headline_reports_unavailable() {
         response_type: LobbyResponse,
     };
     assert_eq!(status, 200);
-    assert!(!body.headline_available, "no headlines yet");
+    assert!(!body.subject_available, "no subjects yet");
     assert!(body.current_round.is_none(), "no waiting round yet");
     assert!(!body.can_join, "can't join with nothing in the queue");
 }
 
 #[tokio::test]
-async fn test_join_no_headline_returns_unavailable() {
+async fn test_join_no_subject_returns_unavailable() {
     let ctx = TestContext::setup().await;
     let (_, admin) = ctx.create_admin_user().await;
     relax_balance_gate(&ctx, &admin).await;
@@ -632,7 +632,7 @@ async fn test_join_no_headline_returns_unavailable() {
         headers: ctx.test_user.1.clone(),
     };
     // Service-unavailable status shape — we only assert non-200.
-    assert_ne!(status, 200, "join without a headline must fail");
+    assert_ne!(status, 200, "join without a subject must fail");
 }
 
 #[tokio::test]
@@ -640,7 +640,7 @@ async fn test_join_creates_round_and_lobby_state_reflects_it() {
     let ctx = TestContext::setup().await;
     let (_, admin) = ctx.create_admin_user().await;
     relax_balance_gate(&ctx, &admin).await;
-    let _ = create_live_headline(&ctx, &admin).await;
+    let _ = create_live_subject(&ctx, &admin).await;
     grant_chips_for_test(&ctx, &ctx.test_user.0.pk, 1_000).await;
 
     let (status, _, body) = crate::test_post! {
@@ -649,7 +649,7 @@ async fn test_join_creates_round_and_lobby_state_reflects_it() {
         headers: ctx.test_user.1.clone(),
         response_type: RoundResponse,
     };
-    assert_eq!(status, 200, "join must succeed once a headline exists");
+    assert_eq!(status, 200, "join must succeed once a subject exists");
     let round = body;
     assert_eq!(round.participant_pks.len(), 1, "first joiner is alone");
     assert!(matches!(round.status, RoundStatus::Waiting), "still waiting for more players, got {:?}", round.status);
@@ -671,7 +671,7 @@ async fn test_join_again_rejected() {
     let ctx = TestContext::setup().await;
     let (_, admin) = ctx.create_admin_user().await;
     relax_balance_gate(&ctx, &admin).await;
-    let _ = create_live_headline(&ctx, &admin).await;
+    let _ = create_live_subject(&ctx, &admin).await;
     grant_chips_for_test(&ctx, &ctx.test_user.0.pk, 1_000).await;
 
     let (status, _, _) = crate::test_post! {
@@ -694,7 +694,7 @@ async fn test_get_round_after_join() {
     let ctx = TestContext::setup().await;
     let (_, admin) = ctx.create_admin_user().await;
     relax_balance_gate(&ctx, &admin).await;
-    let _ = create_live_headline(&ctx, &admin).await;
+    let _ = create_live_subject(&ctx, &admin).await;
     grant_chips_for_test(&ctx, &ctx.test_user.0.pk, 1_000).await;
 
     let (_, _, body) = crate::test_post! {
@@ -721,7 +721,7 @@ async fn test_leave_after_join_clears_participant() {
     let ctx = TestContext::setup().await;
     let (_, admin) = ctx.create_admin_user().await;
     relax_balance_gate(&ctx, &admin).await;
-    let _ = create_live_headline(&ctx, &admin).await;
+    let _ = create_live_subject(&ctx, &admin).await;
     grant_chips_for_test(&ctx, &ctx.test_user.0.pk, 1_000).await;
 
     let (_, _, _) = crate::test_post! {
@@ -763,7 +763,7 @@ async fn fill_round_to_capacity(
     admin: &axum::http::HeaderMap,
 ) -> (String, axum::http::HeaderMap) {
     relax_balance_gate(ctx, admin).await;
-    let _ = create_live_headline(ctx, admin).await;
+    let _ = create_live_subject(ctx, admin).await;
 
     // First joiner = ctx.test_user
     grant_chips_for_test(ctx, &ctx.test_user.0.pk, 1_000).await;
@@ -847,7 +847,7 @@ async fn test_insider_statement_returns_some_for_one_returns_none_for_others() {
     let ctx = TestContext::setup().await;
     let (_, admin) = ctx.create_admin_user().await;
     relax_balance_gate(&ctx, &admin).await;
-    let _ = create_live_headline(&ctx, &admin).await;
+    let _ = create_live_subject(&ctx, &admin).await;
     grant_chips_for_test(&ctx, &ctx.test_user.0.pk, 1_000).await;
 
     let mut all_user_headers: Vec<axum::http::HeaderMap> =
@@ -1441,7 +1441,7 @@ async fn test_me_stats_after_settlement_reflects_round() {
     let ctx = TestContext::setup().await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
-    // Everyone bets REAL — caller wins (headline default verdict
+    // Everyone bets REAL — caller wins (subject default verdict
     // is REAL).
     seed_bets_for_all(&ctx, &round_id, "REAL").await;
     force_round_to_debate(&ctx, &round_id, 5_000).await;
@@ -1509,7 +1509,7 @@ async fn test_settle_round_marks_round_settled() {
     let ctx = TestContext::setup().await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
-    // Note: default headline verdict from `create_headline` is REAL.
+    // Note: default subject verdict from `create_subject` is REAL.
     // All 4 bet REAL → everyone wins, no loser pool.
     seed_bets_for_all(&ctx, &round_id, "REAL").await;
     force_round_to_debate(&ctx, &round_id, 5_000).await;
@@ -1665,7 +1665,7 @@ async fn test_tick_rejects_non_participant() {
 // ── Round-read endpoints (PR8 — game-room data feed) ────────────────
 
 #[tokio::test]
-async fn test_round_headline_redacts_verdict_until_settled() {
+async fn test_round_subject_redacts_verdict_until_settled() {
     let ctx = TestContext::setup().await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
@@ -1673,14 +1673,14 @@ async fn test_round_headline_redacts_verdict_until_settled() {
     // Before settlement: verdict is None and reveal sources are empty.
     let (status, _, body) = crate::test_get! {
         app: ctx.app.clone(),
-        path: &format!("/api/fact-or-fold/rounds/{}/headline", round_id),
+        path: &format!("/api/fact-or-fold/rounds/{}/subject", round_id),
         headers: headers.clone(),
-        response_type: RoundHeadlineResponse,
+        response_type: RoundSubjectResponse,
     };
     assert_eq!(status, 200);
     assert!(body.verdict.is_none(), "verdict must be hidden pre-settle");
     assert!(body.reveal_summary.is_empty(), "reveal_summary must be hidden pre-settle");
-    assert!(!body.headline_text.is_empty(), "public headline text must be visible");
+    assert!(!body.headline_text.is_empty(), "public subject text must be visible");
 
     // Settle the round.
     seed_bets_for_all(&ctx, &round_id, "REAL").await;
@@ -1695,9 +1695,9 @@ async fn test_round_headline_redacts_verdict_until_settled() {
     // After settlement: verdict + summary surface.
     let (status, _, body) = crate::test_get! {
         app: ctx.app,
-        path: &format!("/api/fact-or-fold/rounds/{}/headline", round_id),
+        path: &format!("/api/fact-or-fold/rounds/{}/subject", round_id),
         headers: headers,
-        response_type: RoundHeadlineResponse,
+        response_type: RoundSubjectResponse,
     };
     assert_eq!(status, 200);
     assert!(
@@ -1709,7 +1709,7 @@ async fn test_round_headline_redacts_verdict_until_settled() {
 }
 
 #[tokio::test]
-async fn test_round_headline_rejects_non_participant() {
+async fn test_round_subject_rejects_non_participant() {
     let ctx = TestContext::setup().await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, _) = fill_round_to_capacity(&ctx, &admin).await;
@@ -1717,10 +1717,10 @@ async fn test_round_headline_rejects_non_participant() {
     let (_, outsider) = ctx.create_another_user().await;
     let (status, _, _) = crate::test_get! {
         app: ctx.app,
-        path: &format!("/api/fact-or-fold/rounds/{}/headline", round_id),
+        path: &format!("/api/fact-or-fold/rounds/{}/subject", round_id),
         headers: outsider,
     };
-    assert_ne!(status, 200, "non-participant must not see the round headline");
+    assert_ne!(status, 200, "non-participant must not see the round subject");
 }
 
 #[tokio::test]
@@ -1740,7 +1740,7 @@ async fn test_round_bets_only_returns_own_during_bet_stage() {
     };
     assert_eq!(status, 200);
     assert_eq!(body.items.len(), 1, "pre-reveal must only contain caller's bet");
-    assert_eq!(body.items[0].user_pk, ctx.test_user.0.pk.to_string());
+    assert_eq!(body.items[0].user_pk, UserPartition::from(ctx.test_user.0.pk.clone()));
 }
 
 #[tokio::test]
@@ -1802,16 +1802,17 @@ async fn test_round_rationales_redacts_text_until_reveal() {
     };
     assert_eq!(status, 200);
     assert_eq!(body.items.len(), 4, "all 4 rationale rows present");
+    let me = UserPartition::from(ctx.test_user.0.pk.clone());
     let own = body
         .items
         .iter()
-        .find(|r| r.user_pk == ctx.test_user.0.pk.to_string())
+        .find(|r| r.user_pk == me)
         .expect("caller's row must be present");
     assert!(!own.text.is_empty(), "caller sees own rationale text");
     let others_with_text = body
         .items
         .iter()
-        .filter(|r| r.user_pk != ctx.test_user.0.pk.to_string() && !r.text.is_empty())
+        .filter(|r| r.user_pk != me && !r.text.is_empty())
         .count();
     assert_eq!(
         others_with_text, 0,

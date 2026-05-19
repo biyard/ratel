@@ -1,10 +1,10 @@
 use dioxus_translate::*;
 
 translate! {
-    FactFoldAdminHeadlinesTranslate;
+    FactFoldAdminSubjectsTranslate;
 
-    page_title: { en: "Headlines", ko: "헤드라인" },
-    empty: { en: "No headlines yet — start with the New headline button.", ko: "헤드라인이 없습니다 — 우상단의 신규 헤드라인 버튼으로 시작하세요." },
+    page_title: { en: "Subjects", ko: "대상" },
+    empty: { en: "No subjects yet — start with the New subject button.", ko: "대상이 없습니다 — 우상단의 신규 대상 버튼으로 시작하세요." },
 
     kpi_total: { en: "Loaded", ko: "현재 페이지" },
     kpi_live: { en: "Live", ko: "진행 중" },
@@ -18,7 +18,7 @@ translate! {
     tab_settled: { en: "Settled", ko: "완료" },
 
     col_id: { en: "Round ID", ko: "라운드 ID" },
-    col_headline: { en: "Headline", ko: "헤드라인" },
+    col_subject: { en: "Subject", ko: "대상" },
     col_verdict: { en: "Verdict", ko: "정답" },
     col_tags: { en: "Tags", ko: "카테고리" },
     col_scheduled: { en: "Scheduled", ko: "공개 일시" },

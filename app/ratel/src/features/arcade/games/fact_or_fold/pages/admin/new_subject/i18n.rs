@@ -1,9 +1,9 @@
 use dioxus_translate::*;
 
 translate! {
-    FactFoldAdminNewHeadlineTranslate;
+    FactFoldAdminNewSubjectTranslate;
 
-    page_title: { en: "New headline", ko: "신규 헤드라인" },
+    page_title: { en: "New subject", ko: "신규 대상" },
 
     section_truth_title: { en: "01 · Truth + difficulty", ko: "01 · 정답 + 난이도" },
     section_truth_sub: { en: "Operator-only — hidden from players until settlement.", ko: "운영자 전용 — 정산 전까지 참가자에게 비공개." },
@@ -11,15 +11,15 @@ translate! {
     verdict_hint: { en: "Pick what the round will reveal as truth at settlement.", ko: "정산 시 진실로 공개될 정답을 선택." },
     difficulty_label: { en: "Difficulty (1–5)", ko: "난이도 (1–5)" },
 
-    section_text_title: { en: "02 · Headline text", ko: "02 · 헤드라인 텍스트" },
+    section_text_title: { en: "02 · Subject text", ko: "02 · 대상 텍스트" },
     section_text_sub: { en: "What players read in stage 1.", ko: "참가자가 단계 1에서 읽는 내용." },
-    headline_text: { en: "Headline", ko: "헤드라인" },
+    headline_text: { en: "Subject", ko: "대상" },
     headline_text_placeholder: { en: "e.g. \"Bank of Korea cuts rate 0.5% on June 4\"", ko: "예: \"한국은행, 6월 4일 0.5%p 인하\"" },
     body_excerpt: { en: "Body excerpt (200–500 chars)", ko: "본문 발췌 (200–500자)" },
     body_excerpt_placeholder: { en: "Quote the article body — players will skim this in 30 seconds.", ko: "기사 본문 발췌 — 참가자가 30초 안에 훑어봅니다." },
 
     section_meta_title: { en: "03 · Source + tags", ko: "03 · 출처 + 태그" },
-    section_meta_sub: { en: "Surfaced alongside the headline.", ko: "헤드라인과 함께 표시됨." },
+    section_meta_sub: { en: "Surfaced alongside the subject.", ko: "대상과 함께 표시됨." },
     source_label: { en: "Source label", ko: "출처 라벨" },
     source_label_placeholder: { en: "e.g. \"Korea Times · 5/13\"", ko: "예: \"한국경제 · 5/13\"" },
     category_tags: { en: "Category tags (comma-separated)", ko: "카테고리 태그 (쉼표로 구분)" },

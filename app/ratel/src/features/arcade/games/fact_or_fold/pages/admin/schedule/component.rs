@@ -7,7 +7,7 @@ use crate::*;
 use super::i18n::FactFoldAdminScheduleTranslate;
 
 /// `/admin/fact-or-fold/schedule` — chronologically-sorted list of
-/// scheduled headlines + the FR-45 queue alarm banner. Calendar /
+/// scheduled subjects + the FR-45 queue alarm banner. Calendar /
 /// drag-to-reschedule view is deferred — needs a date library.
 #[component]
 pub fn FactFoldAdminSchedulePage() -> Element {
@@ -61,7 +61,7 @@ fn AlarmBanner(
 ) -> Element {
     let tr: FactFoldAdminScheduleTranslate = use_translate();
     let nav = use_navigator();
-    let r_new = Route::FactFoldAdminNewHeadlinePage {};
+    let r_new = Route::FactFoldAdminNewSubjectPage {};
     let days_str = format!("{:.1}", days_remaining);
     rsx! {
         div { class: "ff-schedule__banner ff-schedule__banner--alert",
@@ -107,7 +107,7 @@ fn HealthyBanner(days_remaining: f64, scheduled_count: i32) -> Element {
 }
 
 #[component]
-fn ScheduleRow(row: crate::features::arcade::games::fact_or_fold::HeadlineResponse) -> Element {
+fn ScheduleRow(row: crate::features::arcade::games::fact_or_fold::SubjectResponse) -> Element {
     let scheduled_label = row
         .scheduled_at
         .map(|ts| format!("ts:{ts}"))

@@ -1,6 +1,6 @@
 //! DTOs and shared enums for the Fact or Fold game.
 //!
-//! PR1 surface: only the admin headline + settings DTOs are populated.
+//! PR1 surface: only the admin subject + settings DTOs are populated.
 //! Round/lobby/settlement DTOs land alongside PR3+.
 
 use crate::common::*;
@@ -10,7 +10,7 @@ use rmcp::schemars;
 
 // ── Shared enums ───────────────────────────────────────────────────
 
-/// Verdict assigned by the operator at headline-creation time. Hidden
+/// Verdict assigned by the operator at subject-creation time. Hidden
 /// from participants until settlement.
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -22,13 +22,13 @@ pub enum Verdict {
     Fake,
 }
 
-/// Headline lifecycle. `Draft` is creator-editable, `Scheduled` is
+/// Subject lifecycle. `Draft` is creator-editable, `Scheduled` is
 /// queued for `scheduled_at`, `Live` means a round is in progress
-/// (headline becomes mostly immutable — see §FR-43), `Settled` is
+/// (subject becomes mostly immutable — see §FR-43), `Settled` is
 /// post-round and only Reveal sources may grow.
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub enum HeadlineStatus {
+pub enum SubjectStatus {
     #[default]
     Draft,
     Scheduled,
@@ -47,11 +47,11 @@ pub struct RevealSource {
     pub url: String,
 }
 
-// ── Headline DTOs ─────────────────────────────────────────────────
+// ── Subject DTOs ─────────────────────────────────────────────────
 
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct CreateHeadlineRequest {
+pub struct CreateSubjectRequest {
     pub headline_text: String,
     pub body_excerpt: String,
     pub verdict: Verdict,
@@ -80,13 +80,13 @@ pub struct CreateHeadlineRequest {
 ///   - `scheduled_at: None`     → publish now (Live immediately)
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct PublishHeadlineRequest {
+pub struct PublishSubjectRequest {
     pub scheduled_at: Option<i64>,
 }
 
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct UpdateHeadlineRequest {
+pub struct UpdateSubjectRequest {
     pub headline_text: Option<String>,
     pub body_excerpt: Option<String>,
     pub verdict: Option<Verdict>,
@@ -101,9 +101,9 @@ pub struct UpdateHeadlineRequest {
 
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct HeadlineResponse {
-    pub id: FactFoldHeadlineEntityType,
-    pub status: HeadlineStatus,
+pub struct SubjectResponse {
+    pub id: FactFoldSubjectEntityType,
+    pub status: SubjectStatus,
     pub headline_text: String,
     pub body_excerpt: String,
     pub verdict: Verdict,
@@ -128,7 +128,7 @@ pub enum RoundStatus {
     /// Lobby is filling up. Joins still accepted.
     #[default]
     Waiting,
-    /// Stage 1 — players read the headline. Joins closed.
+    /// Stage 1 — players read the subject. Joins closed.
     NewsReveal,
     /// Stage 2 — first bet. (PR4)
     Bet,
@@ -148,10 +148,10 @@ pub enum RoundStatus {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct RoundResponse {
     pub id: FactFoldRoundEntityType,
-    pub headline_id: FactFoldHeadlineEntityType,
+    pub subject_id: FactFoldSubjectEntityType,
     pub status: RoundStatus,
-    /// User pks currently in the round. Order = join order.
-    pub participant_pks: Vec<String>,
+    /// User ids currently in the round. Order = join order.
+    pub participant_pks: Vec<UserPartition>,
     /// Set when the round transitions out of Waiting.
     pub started_at: Option<i64>,
     /// Set when the round reaches Settled.
@@ -173,7 +173,7 @@ pub struct RoundResponse {
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct LobbyResponse {
-    /// `Some` when a Waiting round exists with a usable headline.
+    /// `Some` when a Waiting round exists with a usable subject.
     pub current_round: Option<RoundResponse>,
     /// True iff the lobby has a current round AND the caller is not
     /// already in it AND there is room for one more.
@@ -192,17 +192,17 @@ pub struct LobbyResponse {
     /// number.
     #[serde(default)]
     pub buy_in_chips: i64,
-    /// True iff at least one Scheduled headline is due (or already
+    /// True iff at least one Scheduled subject is due (or already
     /// Live). When `current_round` is None and this is False, the
-    /// lobby is closed: the admin needs to publish more headlines.
-    pub headline_available: bool,
+    /// lobby is closed: the admin needs to publish more subjects.
+    pub subject_available: bool,
 }
 
 // ── Bet + Rationale + Participant (PR4) ───────────────────────────
 
 /// Which side a player bet on. Mirrors `Verdict` shape; kept
 /// separate so future "side options" extensions (e.g. abstain) can
-/// land here without mutating the verdict enum used by headlines.
+/// land here without mutating the verdict enum used by subjects.
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum BetSide {
@@ -234,15 +234,15 @@ pub struct PlaceBetRequest {
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct BetResponse {
-    pub user_pk: String,
+    pub user_pk: UserPartition,
     pub side: BetSide,
     pub amount_rp: i64,
     pub locked_at: i64,
     /// Set after the §FR-29 last-10s flip — the side the player
     /// switched to.
     pub flipped_to: Option<BetSide>,
-    /// User pk whose rationale was cited as the flip trigger.
-    pub flip_cite_user_pk: Option<String>,
+    /// User id whose rationale was cited as the flip trigger.
+    pub flip_cite_user_pk: Option<UserPartition>,
     pub created_at: i64,
     pub updated_at: i64,
 }
@@ -261,7 +261,7 @@ pub struct FlipBetRequest {
     /// Round participant whose rationale drove the flip. §FR-17:
     /// a flip without citation is invalid. §FR-18: settlement
     /// re-verifies the cited user actually submitted a rationale.
-    pub cite_user_pk: String,
+    pub cite_user_pk: UserPartition,
 }
 
 /// `FlipBetResponse` mirrors `BetResponse` shape — the flip has
@@ -269,10 +269,10 @@ pub struct FlipBetRequest {
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct FlipBetResponse {
-    pub user_pk: String,
+    pub user_pk: UserPartition,
     pub original_side: BetSide,
     pub flipped_to: BetSide,
-    pub cite_user_pk: String,
+    pub cite_user_pk: UserPartition,
     pub amount_rp: i64,
 }
 
@@ -291,7 +291,7 @@ pub struct SubmitRationaleRequest {
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct RationaleResponse {
-    pub user_pk: String,
+    pub user_pk: UserPartition,
     pub text: String,
     pub submitted_at: i64,
     /// True iff `text.chars().count() >= RATIONALE_ESSENCE_MIN_CHARS`.
@@ -304,7 +304,7 @@ pub struct RationaleResponse {
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ParticipantResponse {
-    pub user_pk: String,
+    pub user_pk: UserPartition,
     pub joined_at: i64,
     /// True only on the row returned to the insider themselves;
     /// always false on rows surfaced to other players (insider
@@ -338,7 +338,7 @@ pub struct PostChatRequest {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct PostChatResponse {
     pub msg_id: String,
-    pub author_pk: String,
+    pub author_pk: UserPartition,
     pub text: String,
     pub sent_at: i64,
 }
@@ -359,7 +359,7 @@ pub const CHAT_PAGE_LIMIT: usize = 200;
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ChatMessagePayload {
     pub msg_id: String,
-    pub author_pk: String,
+    pub author_pk: UserPartition,
     pub text: String,
     pub sent_at: i64,
 }
@@ -389,15 +389,15 @@ pub struct DeleteRoundChatResponse {
 // admin-side reads where they exist but redact fields that would leak
 // the verdict / other-player decisions before the appropriate stage.
 
-/// Public headline shape served to round participants. The verdict
+/// Public subject shape served to round participants. The verdict
 /// + reveal sources are gated by `round.status` — they only fill in
 /// once the round reaches `Settled`. The insider statement is **not**
 /// in this payload; it has its own per-caller endpoint
 /// (`/insider-statement`) so the response can be tailored per user.
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct RoundHeadlineResponse {
-    pub id: FactFoldHeadlineEntityType,
+pub struct RoundSubjectResponse {
+    pub id: FactFoldSubjectEntityType,
     pub headline_text: String,
     pub body_excerpt: String,
     pub source_label: String,
@@ -438,7 +438,7 @@ pub struct ListRationalesResponse {
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct RoundParticipantSummary {
-    pub user_pk: String,
+    pub user_pk: UserPartition,
     pub username: String,
     pub display_name: String,
     pub profile_url: String,
@@ -469,7 +469,7 @@ pub const RATIONALE_TEXT_MAX_CHARS: usize = 200;
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct UserStatsResponse {
-    pub user_pk: String,
+    pub user_pk: UserPartition,
     pub total_rounds: i64,
     pub correct_count: i64,
     pub accuracy_bps: i32,
@@ -480,7 +480,7 @@ pub struct UserStatsResponse {
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct LeaderboardEntryResponse {
-    pub user_pk: String,
+    pub user_pk: UserPartition,
     /// Resolved from the player's User row at read time so the table
     /// can render without an extra round-trip per entry. Empty string
     /// when the user row is missing (defensive — should never happen).
@@ -500,11 +500,11 @@ pub struct LeaderboardEntryResponse {
 // ── Queue health ──────────────────────────────────────────────────
 
 /// Queue depth + FR-45 alert flag for the admin dashboard. Computed
-/// over `Scheduled` headlines whose `scheduled_at` is in the future.
+/// over `Scheduled` subjects whose `scheduled_at` is in the future.
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct QueueAlarmResponse {
-    /// Days from "now" to the latest scheduled headline. `0.0` when the
+    /// Days from "now" to the latest scheduled subject. `0.0` when the
     /// queue is empty.
     pub queue_days_remaining: f64,
     /// Snapshot of `FactFoldSettings::queue_low_alert_days` at read time
@@ -514,7 +514,7 @@ pub struct QueueAlarmResponse {
     /// True when `queue_days_remaining <= alert_threshold_days`. The UI
     /// uses this directly to drive a banner.
     pub alert: bool,
-    /// Number of `Scheduled` headlines with `scheduled_at >= now`.
+    /// Number of `Scheduled` subjects with `scheduled_at >= now`.
     pub scheduled_future_count: i32,
 }
 
@@ -586,10 +586,10 @@ pub struct UpdateFactOrFoldSettingsRequest {
 
 // ── Constants ─────────────────────────────────────────────────────
 
-/// Headline body excerpt length window — roadmap §FR-40.
+/// Subject body excerpt length window — roadmap §FR-40.
 pub const HEADLINE_BODY_MIN: usize = 200;
 pub const HEADLINE_BODY_MAX: usize = 500;
-/// Max headline display text length — generous; UI typically renders
+/// Max subject display text length — generous; UI typically renders
 /// short copy.
 pub const HEADLINE_TEXT_MAX: usize = 200;
 /// Difficulty stars 1..=5.
@@ -598,3 +598,54 @@ pub const HEADLINE_DIFFICULTY_MAX: i32 = 5;
 /// Reveal sources upper bound (roadmap mentions 2–3 — allow up to 5 for
 /// safety once a round has settled and more sources accumulate).
 pub const REVEAL_SOURCES_MAX: usize = 5;
+
+// ── Model → DTO conversions ───────────────────────────────────────
+//
+// Server-only because the source types are DynamoEntity models. Kept
+// here next to the DTOs so the wire shape and the conversion stay in
+// lockstep when fields evolve.
+
+#[cfg(feature = "server")]
+use crate::features::arcade::games::fact_or_fold::models::{
+    FactFoldBet, FactFoldRound,
+};
+
+#[cfg(feature = "server")]
+impl From<&FactFoldRound> for RoundResponse {
+    fn from(row: &FactFoldRound) -> Self {
+        let id = row.id().unwrap_or_default();
+        RoundResponse {
+            id: FactFoldRoundEntityType(id),
+            subject_id: FactFoldSubjectEntityType(row.subject_id.clone()),
+            status: row.status,
+            participant_pks: row
+                .participant_pks
+                .iter()
+                .cloned()
+                .map(UserPartition::from)
+                .collect(),
+            started_at: row.started_at,
+            settled_at: row.settled_at,
+            stage_started_at: row.stage_started_at,
+            stage_deadline_at: row.stage_deadline_at,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+        }
+    }
+}
+
+#[cfg(feature = "server")]
+impl From<&FactFoldBet> for BetResponse {
+    fn from(row: &FactFoldBet) -> Self {
+        BetResponse {
+            user_pk: UserPartition::from(row.user_pk.clone()),
+            side: row.side,
+            amount_rp: row.amount_rp,
+            locked_at: row.locked_at,
+            flipped_to: row.flipped_to,
+            flip_cite_user_pk: row.flip_cite_user_pk.clone().map(UserPartition::from),
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+        }
+    }
+}

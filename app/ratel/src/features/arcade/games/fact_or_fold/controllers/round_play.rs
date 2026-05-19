@@ -25,7 +25,7 @@ use crate::features::arcade::games::fact_or_fold::types::*;
 use crate::common::models::auth::User;
 #[cfg(feature = "server")]
 use crate::features::arcade::games::fact_or_fold::models::{
-    FactFoldBet, FactFoldHeadline, FactFoldParticipant, FactFoldRationale, FactFoldRound,
+    FactFoldBet, FactFoldSubject, FactFoldParticipant, FactFoldRationale, FactFoldRound,
     FactFoldSettings,
 };
 #[cfg(feature = "server")]
@@ -56,12 +56,8 @@ async fn load_round_advanced_or_404(
 }
 
 #[cfg(feature = "server")]
-fn ensure_participant(round: &FactFoldRound, user_pk_str: &str) -> Result<()> {
-    let in_round = round
-        .participant_pks
-        .iter()
-        .any(|p| p.to_string() == user_pk_str);
-    if !in_round {
+fn ensure_participant(round: &FactFoldRound, user_pk: &Partition) -> Result<()> {
+    if !round.participant_pks.iter().any(|p| p == user_pk) {
         return Err(FactOrFoldError::NotRoundParticipant.into());
     }
     Ok(())
@@ -115,7 +111,7 @@ pub async fn flip_bet_handler(
     if !matches!(round.status, RoundStatus::Debate) {
         return Err(FactOrFoldError::FlipSlotClosed.into());
     }
-    ensure_participant(&round, &user.pk.to_string())?;
+    ensure_participant(&round, &user.pk)?;
 
     // Time-window gate. `stage_deadline_at` is set on every advance;
     // missing means the round is in a stage without a clock (lobby
@@ -129,26 +125,20 @@ pub async fn flip_bet_handler(
         return Err(FactOrFoldError::FlipSlotClosed.into());
     }
 
-    // Citation must point at another round participant. We resolve
-    // by string-compare on the partition; the cited value is the
-    // raw `USER#{id}` pk.
-    let cite_pk_str = req.cite_user_pk.trim();
-    if cite_pk_str.is_empty() || cite_pk_str == user.pk.to_string() {
+    // Citation must point at another round participant.
+    let cite_user_id = req.cite_user_pk.0.trim().to_string();
+    if cite_user_id.is_empty() {
         return Err(FactOrFoldError::FlipInvalidCite.into());
     }
-    let cite_in_round = round
-        .participant_pks
-        .iter()
-        .any(|p| p.to_string() == cite_pk_str);
-    if !cite_in_round {
+    let cite_partition: Partition = Partition::User(cite_user_id.clone());
+    if cite_partition == user.pk {
+        return Err(FactOrFoldError::FlipInvalidCite.into());
+    }
+    if !round.participant_pks.iter().any(|p| p == &cite_partition) {
         return Err(FactOrFoldError::FlipInvalidCite.into());
     }
 
     // Cited participant must have submitted a rationale (§FR-17).
-    let cite_user_id = cite_pk_str
-        .strip_prefix("USER#")
-        .unwrap_or(cite_pk_str)
-        .to_string();
     let (rationale_pk, rationale_sk) =
         FactFoldRationale::keys(&inner_round_id, &cite_user_id);
     let cite_rationale =
@@ -163,12 +153,7 @@ pub async fn flip_bet_handler(
     }
 
     // Caller's existing bet row.
-    let user_id = user
-        .pk
-        .to_string()
-        .strip_prefix("USER#")
-        .unwrap_or(&user.pk.to_string())
-        .to_string();
+    let user_id = UserPartition::from(user.pk.clone()).0;
     let (bet_pk, bet_sk) = FactFoldBet::keys(&inner_round_id, &user_id);
     let mut bet = FactFoldBet::get(cli, &bet_pk, Some(bet_sk.clone()))
         .await
@@ -186,7 +171,7 @@ pub async fn flip_bet_handler(
 
     let original_side = bet.side;
     bet.flipped_to = Some(req.side);
-    bet.flip_cite_user_pk = Some(Partition::User(cite_user_id.clone()));
+    bet.flip_cite_user_pk = Some(cite_partition);
     bet.updated_at = now;
     bet.upsert(cli).await.map_err(|e| {
         crate::error!("flip_bet_handler upsert failed: {e}");
@@ -194,10 +179,10 @@ pub async fn flip_bet_handler(
     })?;
 
     Ok(FlipBetResponse {
-        user_pk: user.pk.to_string(),
+        user_pk: UserPartition::from(user.pk.clone()),
         original_side,
         flipped_to: req.side,
-        cite_user_pk: cite_pk_str.to_string(),
+        cite_user_pk: UserPartition(cite_user_id),
         amount_rp: bet.amount_rp,
     })
 }
@@ -217,7 +202,7 @@ pub async fn place_bet_handler(
     if !matches!(round.status, RoundStatus::Bet) {
         return Err(FactOrFoldError::BetStageMismatch.into());
     }
-    ensure_participant(&round, &user.pk.to_string())?;
+    ensure_participant(&round, &user.pk)?;
 
     let settings = FactFoldSettings::get_or_default(cli).await.unwrap_or_default();
     if req.amount_rp < settings.min_bet_rp || req.amount_rp > settings.max_bet_rp {
@@ -230,16 +215,7 @@ pub async fn place_bet_handler(
         FactOrFoldError::StorageFailure
     })?;
 
-    Ok(BetResponse {
-        user_pk: user.pk.to_string(),
-        side: row.side,
-        amount_rp: row.amount_rp,
-        locked_at: row.locked_at,
-        flipped_to: row.flipped_to,
-        flip_cite_user_pk: row.flip_cite_user_pk.map(|p| p.to_string()),
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-    })
+    Ok(BetResponse::from(&row))
 }
 
 // ── POST /api/fact-or-fold/rounds/{round_id}/rationale ───────────
@@ -257,7 +233,7 @@ pub async fn submit_rationale_handler(
     if !matches!(round.status, RoundStatus::Rationale) {
         return Err(FactOrFoldError::RationaleStageMismatch.into());
     }
-    ensure_participant(&round, &user.pk.to_string())?;
+    ensure_participant(&round, &user.pk)?;
 
     let len = req.text.chars().count();
     if len == 0 || len > RATIONALE_TEXT_MAX_CHARS {
@@ -272,7 +248,7 @@ pub async fn submit_rationale_handler(
     })?;
 
     Ok(RationaleResponse {
-        user_pk: user.pk.to_string(),
+        user_pk: UserPartition::from(user.pk.clone()),
         text: row.text,
         submitted_at: row.submitted_at,
         essence_eligible: row.essence_eligible,
@@ -291,7 +267,7 @@ pub async fn get_insider_statement_handler(
     let inner_round_id = round_id.0.clone();
 
     let round = load_round_advanced_or_404(cli, &inner_round_id).await?;
-    ensure_participant(&round, &user.pk.to_string())?;
+    ensure_participant(&round, &user.pk)?;
 
     let participant = load_participant(cli, &inner_round_id, &user.pk).await?;
     if !participant.is_insider {
@@ -301,18 +277,18 @@ pub async fn get_insider_statement_handler(
         return Ok(InsiderStatementResponse { statement: None });
     }
 
-    let pk = FactFoldHeadline::anchor_pk();
-    let sk: EntityType = FactFoldHeadlineEntityType(round.headline_id.clone()).into();
-    let headline = FactFoldHeadline::get(cli, &pk, Some(sk))
+    let pk = FactFoldSubject::anchor_pk();
+    let sk: EntityType = FactFoldSubjectEntityType(round.subject_id.clone()).into();
+    let subject = FactFoldSubject::get(cli, &pk, Some(sk))
         .await
         .map_err(|e| {
-            crate::error!("get_insider_statement_handler headline read failed: {e}");
+            crate::error!("get_insider_statement_handler subject read failed: {e}");
             FactOrFoldError::StorageFailure
         })?
         .ok_or(FactOrFoldError::RoundNotFound)?;
 
     Ok(InsiderStatementResponse {
-        statement: Some(headline.insider_statement),
+        statement: Some(subject.insider_statement),
     })
 }
 
@@ -327,14 +303,9 @@ pub async fn heartbeat_handler(
     let inner_round_id = round_id.0.clone();
 
     let round = load_round_advanced_or_404(cli, &inner_round_id).await?;
-    ensure_participant(&round, &user.pk.to_string())?;
+    ensure_participant(&round, &user.pk)?;
 
-    let user_id = user
-        .pk
-        .to_string()
-        .strip_prefix("USER#")
-        .unwrap_or(&user.pk.to_string())
-        .to_string();
+    let user_id = UserPartition::from(user.pk.clone()).0;
     let (pk, sk) = FactFoldParticipant::keys(&inner_round_id, &user_id);
     let mut participant = FactFoldParticipant::get(cli, &pk, Some(sk.clone()))
         .await
@@ -353,7 +324,7 @@ pub async fn heartbeat_handler(
     })?;
 
     Ok(ParticipantResponse {
-        user_pk: user.pk.to_string(),
+        user_pk: UserPartition::from(user.pk.clone()),
         joined_at: participant.joined_at,
         // Heartbeat returns the *caller's own* row, so is_insider is
         // safe to surface unredacted.
@@ -384,7 +355,7 @@ pub async fn tick_handler(round_id: FactFoldRoundEntityType) -> Result<RoundResp
     let inner_round_id = round_id.0.clone();
 
     let round = load_round_advanced_or_404(cli, &inner_round_id).await?;
-    ensure_participant(&round, &user.pk.to_string())?;
+    ensure_participant(&round, &user.pk)?;
 
     // PR6: if this tick lands at or past the Debate deadline, drive
     // settlement directly. A follow-up infra PR will add a scheduler /
@@ -401,8 +372,8 @@ pub async fn tick_handler(round_id: FactFoldRoundEntityType) -> Result<RoundResp
         let _ = super::settlement::settle_round_internal(cli, &inner_round_id).await;
         // Re-read so the caller sees Settled + settled_at.
         let round = load_round_advanced_or_404(cli, &inner_round_id).await?;
-        return Ok(super::lobby::round_to_response(&round));
+        return Ok(RoundResponse::from(&round));
     }
 
-    Ok(super::lobby::round_to_response(&round))
+    Ok(RoundResponse::from(&round))
 }

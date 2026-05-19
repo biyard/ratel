@@ -22,7 +22,7 @@ pub fn FirstBetView() -> Element {
     let insider = (ctx.insider)();
 
     let user_ctx = use_user_context();
-    let my_pk = user_ctx().user_pk().unwrap_or_default();
+    let my_pk: UserPartition = UserPartition(user_ctx().user_id().unwrap_or_default());
 
     // Caller's existing bet — server returns only the caller's row
     // during the Bet stage, but we still match on user_pk to be safe.
@@ -158,10 +158,7 @@ fn BetForm(on_submit: EventHandler<(BetSide, i64)>) -> Element {
                     onclick: on_confirm,
                     "{tr.bet_submit}"
                 }
-                span {
-                    style: "font-size: 12px; color: var(--text-muted)",
-                    "{tr.bet_submit_hint}"
-                }
+                span { style: "font-size: 12px; color: var(--text-muted)", "{tr.bet_submit_hint}" }
             }
         }
     }

@@ -9,7 +9,7 @@
 //!      the stage where the operator chose to surface them.
 //!
 //! Surface:
-//!   GET /api/fact-or-fold/rounds/{round_id}/headline       — public headline
+//!   GET /api/fact-or-fold/rounds/{round_id}/subject       — public subject
 //!   GET /api/fact-or-fold/rounds/{round_id}/bets           — bet roster (gated)
 //!   GET /api/fact-or-fold/rounds/{round_id}/rationale      — rationales (gated)
 //!   GET /api/fact-or-fold/rounds/{round_id}/participants   — participants + display meta
@@ -25,7 +25,7 @@ use crate::common::models::auth::User;
 use crate::features::arcade::games::fact_or_fold::controllers::settlement::settle_round_internal;
 #[cfg(feature = "server")]
 use crate::features::arcade::games::fact_or_fold::models::{
-    FactFoldBet, FactFoldHeadline, FactFoldParticipant, FactFoldRationale, FactFoldRound,
+    FactFoldBet, FactFoldSubject, FactFoldParticipant, FactFoldRationale, FactFoldRound,
     FactFoldSettings,
 };
 #[cfg(feature = "server")]
@@ -54,12 +54,8 @@ async fn load_round_advanced_or_404(
 }
 
 #[cfg(feature = "server")]
-fn ensure_participant(round: &FactFoldRound, user_pk_str: &str) -> Result<()> {
-    let in_round = round
-        .participant_pks
-        .iter()
-        .any(|p| p.to_string() == user_pk_str);
-    if !in_round {
+fn ensure_participant(round: &FactFoldRound, user_pk: &Partition) -> Result<()> {
+    if !round.participant_pks.iter().any(|p| p == user_pk) {
         return Err(FactOrFoldError::NotRoundParticipant.into());
     }
     Ok(())
@@ -79,40 +75,40 @@ fn full_reveal_unlocked(status: RoundStatus) -> bool {
     )
 }
 
-// ── GET /api/fact-or-fold/rounds/{round_id}/headline ──────────────
+// ── GET /api/fact-or-fold/rounds/{round_id}/subject ──────────────
 
-#[get("/api/fact-or-fold/rounds/{round_id}/headline", user: User)]
-pub async fn get_round_headline_handler(
+#[get("/api/fact-or-fold/rounds/{round_id}/subject", user: User)]
+pub async fn get_round_subject_handler(
     round_id: FactFoldRoundEntityType,
-) -> Result<RoundHeadlineResponse> {
+) -> Result<RoundSubjectResponse> {
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
     let inner_round_id = round_id.0.clone();
 
     let round = load_round_advanced_or_404(cli, &inner_round_id).await?;
-    ensure_participant(&round, &user.pk.to_string())?;
+    ensure_participant(&round, &user.pk)?;
 
-    let pk = FactFoldHeadline::anchor_pk();
-    let sk: EntityType = FactFoldHeadlineEntityType(round.headline_id.clone()).into();
-    let headline = FactFoldHeadline::get(cli, &pk, Some(sk))
+    let pk = FactFoldSubject::anchor_pk();
+    let sk: EntityType = FactFoldSubjectEntityType(round.subject_id.clone()).into();
+    let subject = FactFoldSubject::get(cli, &pk, Some(sk))
         .await
         .map_err(|e| {
-            crate::error!("get_round_headline_handler read failed: {e}");
+            crate::error!("get_round_subject_handler read failed: {e}");
             FactOrFoldError::StorageFailure
         })?
         .ok_or(FactOrFoldError::RoundNotFound)?;
 
     let settled = matches!(round.status, RoundStatus::Settled);
-    Ok(RoundHeadlineResponse {
-        id: FactFoldHeadlineEntityType(round.headline_id.clone()),
-        headline_text: headline.headline_text,
-        body_excerpt: headline.body_excerpt,
-        source_label: headline.source_label,
-        category_tags: headline.category_tags,
-        difficulty: headline.difficulty,
-        verdict: if settled { Some(headline.verdict) } else { None },
-        reveal_summary: if settled { headline.reveal_summary } else { String::new() },
-        reveal_sources: if settled { headline.reveal_sources } else { Vec::new() },
+    Ok(RoundSubjectResponse {
+        id: FactFoldSubjectEntityType(round.subject_id.clone()),
+        headline_text: subject.headline_text,
+        body_excerpt: subject.body_excerpt,
+        source_label: subject.source_label,
+        category_tags: subject.category_tags,
+        difficulty: subject.difficulty,
+        verdict: if settled { Some(subject.verdict) } else { None },
+        reveal_summary: if settled { subject.reveal_summary } else { String::new() },
+        reveal_sources: if settled { subject.reveal_sources } else { Vec::new() },
     })
 }
 
@@ -127,8 +123,7 @@ pub async fn list_round_bets_handler(
     let inner_round_id = round_id.0.clone();
 
     let round = load_round_advanced_or_404(cli, &inner_round_id).await?;
-    let user_pk_str = user.pk.to_string();
-    ensure_participant(&round, &user_pk_str)?;
+    ensure_participant(&round, &user.pk)?;
 
     let (pk, _) = FactFoldRound::keys(&inner_round_id);
     let opts = FactFoldBet::opt()
@@ -142,17 +137,8 @@ pub async fn list_round_bets_handler(
     let unlocked = full_reveal_unlocked(round.status);
     let items: Vec<BetResponse> = rows
         .into_iter()
-        .filter(|r| unlocked || r.user_pk.to_string() == user_pk_str)
-        .map(|r| BetResponse {
-            user_pk: r.user_pk.to_string(),
-            side: r.side,
-            amount_rp: r.amount_rp,
-            locked_at: r.locked_at,
-            flipped_to: r.flipped_to,
-            flip_cite_user_pk: r.flip_cite_user_pk.map(|p| p.to_string()),
-            created_at: r.created_at,
-            updated_at: r.updated_at,
-        })
+        .filter(|r| unlocked || r.user_pk == user.pk)
+        .map(|r| BetResponse::from(&r))
         .collect();
 
     Ok(ListBetsResponse { items })
@@ -169,8 +155,7 @@ pub async fn list_round_rationales_handler(
     let inner_round_id = round_id.0.clone();
 
     let round = load_round_advanced_or_404(cli, &inner_round_id).await?;
-    let user_pk_str = user.pk.to_string();
-    ensure_participant(&round, &user_pk_str)?;
+    ensure_participant(&round, &user.pk)?;
 
     let (pk, _) = FactFoldRound::keys(&inner_round_id);
     let opts = FactFoldRationale::opt()
@@ -185,7 +170,7 @@ pub async fn list_round_rationales_handler(
     let items: Vec<RationaleResponse> = rows
         .into_iter()
         .map(|r| {
-            let is_self = r.user_pk.to_string() == user_pk_str;
+            let is_self = r.user_pk == user.pk;
             let text = if unlocked || is_self {
                 r.text
             } else {
@@ -194,7 +179,7 @@ pub async fn list_round_rationales_handler(
                 String::new()
             };
             RationaleResponse {
-                user_pk: r.user_pk.to_string(),
+                user_pk: UserPartition::from(r.user_pk),
                 text,
                 submitted_at: r.submitted_at,
                 essence_eligible: r.essence_eligible,
@@ -217,8 +202,7 @@ pub async fn list_round_participants_handler(
     let inner_round_id = round_id.0.clone();
 
     let round = load_round_advanced_or_404(cli, &inner_round_id).await?;
-    let user_pk_str = user.pk.to_string();
-    ensure_participant(&round, &user_pk_str)?;
+    ensure_participant(&round, &user.pk)?;
 
     let (pk, _) = FactFoldRound::keys(&inner_round_id);
     let opts = FactFoldParticipant::opt()
@@ -240,6 +224,9 @@ pub async fn list_round_participants_handler(
         crate::error!("list_round_participants_handler user batch load failed: {e}");
         FactOrFoldError::StorageFailure
     })?;
+    // HashMap keyed on the rendered USER#{id} so we can index back by
+    // `participant.user_pk.to_string()` — Partition itself doesn't
+    // derive Hash, and adding it lives in a shared types crate.
     let user_by_pk: std::collections::HashMap<String, User> = user_rows
         .into_iter()
         .map(|u| (u.pk.to_string(), u))
@@ -248,14 +235,13 @@ pub async fn list_round_participants_handler(
     let items: Vec<RoundParticipantSummary> = rows
         .into_iter()
         .map(|p| {
-            let pk_str = p.user_pk.to_string();
             let (username, display_name, profile_url) = user_by_pk
-                .get(&pk_str)
+                .get(&p.user_pk.to_string())
                 .map(|u| (u.username.clone(), u.display_name.clone(), u.profile_url.clone()))
                 .unwrap_or_default();
-            let is_self = pk_str == user_pk_str;
+            let is_self = p.user_pk == user.pk;
             RoundParticipantSummary {
-                user_pk: pk_str,
+                user_pk: UserPartition::from(p.user_pk),
                 username,
                 display_name,
                 profile_url,
@@ -283,7 +269,7 @@ pub async fn get_round_settlement_handler(
     let inner_round_id = round_id.0.clone();
 
     let round = load_round_advanced_or_404(cli, &inner_round_id).await?;
-    ensure_participant(&round, &user.pk.to_string())?;
+    ensure_participant(&round, &user.pk)?;
 
     if !matches!(round.status, RoundStatus::Settled) {
         return Err(FactOrFoldError::RoundNotSettled.into());

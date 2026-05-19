@@ -65,12 +65,7 @@ pub async fn post_chat_handler(
         return Err(FactOrFoldError::RationaleStageMismatch.into());
     }
 
-    let user_pk_str = user.pk.to_string();
-    let in_round = round
-        .participant_pks
-        .iter()
-        .any(|p| p.to_string() == user_pk_str);
-    if !in_round {
+    if !round.participant_pks.iter().any(|p| p == &user.pk) {
         return Err(FactOrFoldError::NotRoundParticipant.into());
     }
 
@@ -90,7 +85,7 @@ pub async fn post_chat_handler(
 
     Ok(PostChatResponse {
         msg_id: row.id().unwrap_or_default(),
-        author_pk: row.author_pk.to_string(),
+        author_pk: UserPartition::from(row.author_pk.clone()),
         text: row.text,
         sent_at: row.sent_at,
     })
@@ -128,12 +123,7 @@ pub async fn list_chat_handler(
         })?
         .ok_or(FactOrFoldError::RoundNotFound)?;
 
-    let user_pk_str = user.pk.to_string();
-    let in_round = round
-        .participant_pks
-        .iter()
-        .any(|p| p.to_string() == user_pk_str);
-    if !in_round {
+    if !round.participant_pks.iter().any(|p| p == &user.pk) {
         return Err(FactOrFoldError::NotRoundParticipant.into());
     }
 
@@ -193,12 +183,7 @@ pub async fn delete_round_chat_handler(
         })?
         .ok_or(FactOrFoldError::RoundNotFound)?;
 
-    let user_pk_str = user.pk.to_string();
-    let in_round = round
-        .participant_pks
-        .iter()
-        .any(|p| p.to_string() == user_pk_str);
-    if !in_round {
+    if !round.participant_pks.iter().any(|p| p == &user.pk) {
         return Err(FactOrFoldError::NotRoundParticipant.into());
     }
 

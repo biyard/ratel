@@ -19,7 +19,7 @@ translate! {
     panel_recent_sub: { en: "Accuracy trend", ko: "정답률 트렌드" },
     chart_placeholder: { en: "Chart renders once round data exists.", ko: "라운드 데이터가 들어오면 차트가 렌더링됩니다." },
 
-    panel_breakdown: { en: "Per-headline breakdown", ko: "헤드라인별 통계" },
+    panel_breakdown: { en: "Per-subject breakdown", ko: "대상별 통계" },
     panel_breakdown_sub: { en: "Accuracy + insider win + flip count", ko: "정답률 + 인사이더 승 + flip 카운트" },
     empty: { en: "No settled rounds yet.", ko: "정산된 라운드가 아직 없습니다." },
 }

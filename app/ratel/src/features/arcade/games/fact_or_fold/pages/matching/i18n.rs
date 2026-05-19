@@ -9,7 +9,7 @@ translate! {
 
     title: { en: "FACT OR FOLD", ko: "FACT OR FOLD" },
     subtitle: {
-        en: "Today's headline is revealed when the round begins. One of you will be the truth insider — the other three must judge.",
+        en: "Today's subject is revealed when the round begins. One of you will be the truth insider — the other three must judge.",
         ko: "오늘의 뉴스는 라운드 시작 시 공개됩니다. 4명 중 1명이 무작위로 진실 인사이더가 되고, 나머지 3명이 베팅과 근거로 판별합니다.",
     },
     buyin_note: { en: "Buy-in {$chips} chips already escrowed · refunded if you cancel", ko: "buy-in {$chips} 칩 이미 예치됨 · 라운드 종료 시 결과만큼 환원" },

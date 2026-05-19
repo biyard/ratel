@@ -31,12 +31,7 @@ const LEADERBOARD_PAGE_LIMIT: i32 = 50;
 pub async fn get_my_stats_handler() -> Result<UserStatsResponse> {
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
-    let user_id = user
-        .pk
-        .to_string()
-        .strip_prefix("USER#")
-        .unwrap_or(&user.pk.to_string())
-        .to_string();
+    let user_id = UserPartition::from(user.pk.clone()).0;
     let stats = FactFoldUserStats::get_or_default(cli, &user_id)
         .await
         .map_err(|e| {
@@ -49,7 +44,7 @@ pub async fn get_my_stats_handler() -> Result<UserStatsResponse> {
         0
     };
     Ok(UserStatsResponse {
-        user_pk: user.pk.to_string(),
+        user_pk: UserPartition(user_id),
         total_rounds: stats.total_rounds,
         correct_count: stats.correct_count,
         accuracy_bps,
@@ -92,6 +87,7 @@ pub async fn get_leaderboard_handler(
         crate::error!("get_leaderboard_handler user batch load failed: {err}");
         FactOrFoldError::StorageFailure
     })?;
+    // Partition doesn't derive Hash so we key on the rendered string.
     let user_by_pk: std::collections::HashMap<String, User> = user_rows
         .into_iter()
         .map(|u| (u.pk.to_string(), u))
@@ -100,13 +96,12 @@ pub async fn get_leaderboard_handler(
     let items: Vec<LeaderboardEntryResponse> = rows
         .into_iter()
         .map(|e| {
-            let pk_str = e.user_pk.to_string();
             let (username, display_name, profile_url) = user_by_pk
-                .get(&pk_str)
+                .get(&e.user_pk.to_string())
                 .map(|u| (u.username.clone(), u.display_name.clone(), u.profile_url.clone()))
                 .unwrap_or_default();
             LeaderboardEntryResponse {
-                user_pk: pk_str,
+                user_pk: UserPartition::from(e.user_pk),
                 username,
                 display_name,
                 profile_url,

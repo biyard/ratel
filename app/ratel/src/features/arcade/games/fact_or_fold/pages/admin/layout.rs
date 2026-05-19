@@ -4,7 +4,7 @@ use crate::route::Route;
 
 /// Sub-layout for `/admin/fact-or-fold/*` pages. Adds the
 /// arcade-themed brand row + tab navigation between the 5 admin
-/// surfaces (Headlines, Schedule, Stats, Reports, Settings) so each
+/// surfaces (Subjects, Schedule, Stats, Reports, Settings) so each
 /// page module can render only its own content.
 #[component]
 pub fn FactFoldAdminLayout() -> Element {
@@ -14,12 +14,12 @@ pub fn FactFoldAdminLayout() -> Element {
     // Hoist Route values so dx fmt doesn't try to split the empty
     // struct literals across lines (which historically dropped the
     // closing `);` of the surrounding call).
-    let r_headlines = Route::FactFoldAdminHeadlinesPage {};
+    let r_subjects = Route::FactFoldAdminSubjectsPage {};
     let r_schedule = Route::FactFoldAdminSchedulePage {};
     let r_stats = Route::FactFoldAdminStatsPage {};
     let r_reports = Route::FactFoldAdminReportsPage {};
     let r_settings = Route::FactFoldAdminSettingsPage {};
-    let r_new = Route::FactFoldAdminNewHeadlinePage {};
+    let r_new = Route::FactFoldAdminNewSubjectPage {};
 
     rsx! {
         div { class: "ff-admin-arena",
@@ -34,9 +34,9 @@ pub fn FactFoldAdminLayout() -> Element {
                 nav { class: "ff-admin-arena__tabs", role: "tablist",
                     Link {
                         class: "ff-admin-arena__tab",
-                        "aria-selected": route == r_headlines,
-                        to: r_headlines.clone(),
-                        "{tr.tab_headlines}"
+                        "aria-selected": route == r_subjects,
+                        to: r_subjects.clone(),
+                        "{tr.tab_subjects}"
                     }
                     Link {
                         class: "ff-admin-arena__tab",
@@ -66,7 +66,7 @@ pub fn FactFoldAdminLayout() -> Element {
                 div { class: "ff-admin-arena__cta",
                     Link { class: "ff-admin-arena__new-btn", to: r_new,
                         span { class: "ff-admin-arena__new-icon", "✚" }
-                        span { "{tr.new_headline_cta}" }
+                        span { "{tr.new_subject_cta}" }
                     }
                 }
             }

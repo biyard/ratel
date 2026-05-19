@@ -37,7 +37,7 @@ const CHAT_HISTORY_LIMIT: usize = 50;
 pub fn chat_payload_from(row: FactFoldChatMessage) -> ChatMessagePayload {
     ChatMessagePayload {
         msg_id: row.id().unwrap_or_default(),
-        author_pk: row.author_pk.to_string(),
+        author_pk: UserPartition::from(row.author_pk),
         text: row.text,
         sent_at: row.sent_at,
     }
@@ -83,12 +83,8 @@ impl RoomChannel for FactFoldChatChannel {
             })?
             .ok_or(ArcadeError::ChannelForbidden)?;
 
-        let user_pk_str = format!("USER#{}", ctx.user_id);
-        let is_participant = round
-            .participant_pks
-            .iter()
-            .any(|p| p.to_string() == user_pk_str);
-        if !is_participant {
+        let user_pk = Partition::User(ctx.user_id.clone());
+        if !round.participant_pks.iter().any(|p| p == &user_pk) {
             return Err(ArcadeError::ChannelForbidden.into());
         }
 

@@ -1,22 +1,22 @@
 use crate::features::arcade::games::fact_or_fold::hooks::{
-    UseFactFoldAdminHeadlines, use_fact_fold_admin_headlines_provider,
+    UseFactFoldAdminSubjects, use_fact_fold_admin_subjects_provider,
 };
 use crate::features::arcade::games::fact_or_fold::types::{
-    CreateHeadlineRequest, HEADLINE_BODY_MAX, HEADLINE_BODY_MIN, HEADLINE_DIFFICULTY_MAX,
+    CreateSubjectRequest, HEADLINE_BODY_MAX, HEADLINE_BODY_MIN, HEADLINE_DIFFICULTY_MAX,
     HEADLINE_DIFFICULTY_MIN, HEADLINE_TEXT_MAX, REVEAL_SOURCES_MAX, RevealSource, Verdict,
 };
 use crate::route::Route;
 use crate::*;
 
-use super::i18n::FactFoldAdminNewHeadlineTranslate;
+use super::i18n::FactFoldAdminNewSubjectTranslate;
 
-/// `/admin/fact-or-fold/headlines/new` — author a new draft (or
+/// `/admin/fact-or-fold/subjects/new` — author a new draft (or
 /// schedule it directly). On submit, navigates back to the list.
 #[component]
-pub fn FactFoldAdminNewHeadlinePage() -> Element {
-    let tr: FactFoldAdminNewHeadlineTranslate = use_translate();
-    let UseFactFoldAdminHeadlines { .. } = use_fact_fold_admin_headlines_provider()?;
-    let mut ctx = use_fact_fold_admin_headlines_provider()?;
+pub fn FactFoldAdminNewSubjectPage() -> Element {
+    let tr: FactFoldAdminNewSubjectTranslate = use_translate();
+    let UseFactFoldAdminSubjects { .. } = use_fact_fold_admin_subjects_provider()?;
+    let mut ctx = use_fact_fold_admin_subjects_provider()?;
     let nav = use_navigator();
 
     // ── Form signals ──────────────────────────────────────────────
@@ -36,7 +36,7 @@ pub fn FactFoldAdminNewHeadlinePage() -> Element {
 
     let body_len = body_excerpt().chars().count();
     let body_in_range = body_len >= HEADLINE_BODY_MIN && body_len <= HEADLINE_BODY_MAX;
-    let headline_in_range =
+    let subject_in_range =
         !headline_text().trim().is_empty() && headline_text().len() <= HEADLINE_TEXT_MAX;
     let insider_filled = !insider_statement().trim().is_empty();
     let summary_filled = !reveal_summary().trim().is_empty();
@@ -48,18 +48,18 @@ pub fn FactFoldAdminNewHeadlinePage() -> Element {
     // but to be safe and surface server errors early we require the
     // same rules the publish endpoint enforces. Save Draft path
     // stores `scheduled_at = None` which keeps status=Draft.
-    let core_ok = headline_in_range
+    let core_ok = subject_in_range
         && body_in_range
         && difficulty_in_range
         && insider_filled
         && summary_filled
         && source_filled;
 
-    let make_request = move |with_schedule: bool| -> Option<CreateHeadlineRequest> {
+    let make_request = move |with_schedule: bool| -> Option<CreateSubjectRequest> {
         let scheduled_ts = if with_schedule {
             parse_iso_local_to_millis(&scheduled_at_iso())?
         } else {
-            return Some(CreateHeadlineRequest {
+            return Some(CreateSubjectRequest {
                 headline_text: headline_text(),
                 body_excerpt: body_excerpt(),
                 verdict: verdict(),
@@ -72,7 +72,7 @@ pub fn FactFoldAdminNewHeadlinePage() -> Element {
                 scheduled_at: None,
             });
         };
-        Some(CreateHeadlineRequest {
+        Some(CreateSubjectRequest {
             headline_text: headline_text(),
             body_excerpt: body_excerpt(),
             verdict: verdict(),
@@ -101,7 +101,7 @@ pub fn FactFoldAdminNewHeadlinePage() -> Element {
         };
         match ctx.create(req).await {
             Ok(_) => {
-                nav.push(Route::FactFoldAdminHeadlinesPage {});
+                nav.push(Route::FactFoldAdminSubjectsPage {});
             }
             Err(e) => error_msg.set(Some(format!("{e}"))),
         }
@@ -126,7 +126,7 @@ pub fn FactFoldAdminNewHeadlinePage() -> Element {
         };
         match ctx.create(req).await {
             Ok(_) => {
-                nav.push(Route::FactFoldAdminHeadlinesPage {});
+                nav.push(Route::FactFoldAdminSubjectsPage {});
             }
             Err(e) => error_msg.set(Some(format!("{e}"))),
         }
@@ -136,7 +136,7 @@ pub fn FactFoldAdminNewHeadlinePage() -> Element {
     rsx! {
         SeoMeta { title: "{tr.page_title} · Fact or Fold" }
         form {
-            class: "ff-new-headline",
+            class: "ff-new-subject",
             onsubmit: move |e| {
                 e.prevent_default();
             },
@@ -149,7 +149,7 @@ pub fn FactFoldAdminNewHeadlinePage() -> Element {
                 DifficultyPicker { value: difficulty }
             }
 
-            // Section 02 — headline text + body
+            // Section 02 — subject text + body
             FormSection {
                 title: "{tr.section_text_title}",
                 sub: "{tr.section_text_sub}",
@@ -158,7 +158,7 @@ pub fn FactFoldAdminNewHeadlinePage() -> Element {
                     placeholder: "{tr.headline_text_placeholder}",
                     value: headline_text,
                     counter: format!("{} / {}", headline_text().len(), HEADLINE_TEXT_MAX),
-                    invalid: !headline_in_range && !headline_text().is_empty(),
+                    invalid: !subject_in_range && !headline_text().is_empty(),
                 }
                 TextAreaField {
                     label: "{tr.body_excerpt}",
@@ -202,7 +202,7 @@ pub fn FactFoldAdminNewHeadlinePage() -> Element {
                     counter: String::new(),
                     invalid: false,
                 }
-                p { class: "ff-new-headline__hint", "{tr.insider_hint}" }
+                p { class: "ff-new-subject__hint", "{tr.insider_hint}" }
             }
 
             // Section 05 — reveal
@@ -225,12 +225,12 @@ pub fn FactFoldAdminNewHeadlinePage() -> Element {
                 title: "{tr.section_publish_title}",
                 sub: "{tr.section_publish_sub}",
                 ScheduleField { value: scheduled_at_iso }
-                div { class: "ff-new-headline__actions",
+                div { class: "ff-new-subject__actions",
                     if let Some(err) = error_msg() {
-                        span { class: "ff-new-headline__error", "{err}" }
+                        span { class: "ff-new-subject__error", "{err}" }
                     }
                     if !core_ok {
-                        span { class: "ff-new-headline__hint", "{tr.fields_incomplete}" }
+                        span { class: "ff-new-subject__hint", "{tr.fields_incomplete}" }
                     }
                     Button {
                         style: ButtonStyle::Outline,
@@ -257,28 +257,28 @@ pub fn FactFoldAdminNewHeadlinePage() -> Element {
 #[component]
 fn FormSection(title: String, sub: String, children: Element) -> Element {
     rsx! {
-        section { class: "ff-new-headline__section",
-            header { class: "ff-new-headline__section-head",
-                span { class: "ff-new-headline__section-title", "{title}" }
-                span { class: "ff-new-headline__section-sub", "{sub}" }
+        section { class: "ff-new-subject__section",
+            header { class: "ff-new-subject__section-head",
+                span { class: "ff-new-subject__section-title", "{title}" }
+                span { class: "ff-new-subject__section-sub", "{sub}" }
             }
-            div { class: "ff-new-headline__panel", {children} }
+            div { class: "ff-new-subject__panel", {children} }
         }
     }
 }
 
 #[component]
 fn VerdictPicker(value: Signal<Verdict>) -> Element {
-    let tr: FactFoldAdminNewHeadlineTranslate = use_translate();
+    let tr: FactFoldAdminNewSubjectTranslate = use_translate();
     let mut value = value;
     let cur = value();
     rsx! {
-        div { class: "ff-new-headline__field",
-            div { class: "ff-new-headline__label", "{tr.verdict_label}" }
-            div { class: "ff-new-headline__verdict-row",
+        div { class: "ff-new-subject__field",
+            div { class: "ff-new-subject__label", "{tr.verdict_label}" }
+            div { class: "ff-new-subject__verdict-row",
                 button {
                     r#type: "button",
-                    class: "ff-new-headline__verdict-btn",
+                    class: "ff-new-subject__verdict-btn",
                     "data-variant": "real",
                     "aria-selected": matches!(cur, Verdict::Real),
                     onclick: move |_| value.set(Verdict::Real),
@@ -286,37 +286,37 @@ fn VerdictPicker(value: Signal<Verdict>) -> Element {
                 }
                 button {
                     r#type: "button",
-                    class: "ff-new-headline__verdict-btn",
+                    class: "ff-new-subject__verdict-btn",
                     "data-variant": "fake",
                     "aria-selected": matches!(cur, Verdict::Fake),
                     onclick: move |_| value.set(Verdict::Fake),
                     "FAKE"
                 }
             }
-            div { class: "ff-new-headline__hint", "{tr.verdict_hint}" }
+            div { class: "ff-new-subject__hint", "{tr.verdict_hint}" }
         }
     }
 }
 
 #[component]
 fn DifficultyPicker(value: Signal<i32>) -> Element {
-    let tr: FactFoldAdminNewHeadlineTranslate = use_translate();
+    let tr: FactFoldAdminNewSubjectTranslate = use_translate();
     let mut value = value;
     let cur = value();
     rsx! {
-        div { class: "ff-new-headline__field",
-            div { class: "ff-new-headline__label", "{tr.difficulty_label}" }
-            div { class: "ff-new-headline__star-row",
+        div { class: "ff-new-subject__field",
+            div { class: "ff-new-subject__label", "{tr.difficulty_label}" }
+            div { class: "ff-new-subject__star-row",
                 for star in HEADLINE_DIFFICULTY_MIN..=HEADLINE_DIFFICULTY_MAX {
                     button {
                         r#type: "button",
-                        class: "ff-new-headline__star",
+                        class: "ff-new-subject__star",
                         "aria-selected": star <= cur,
                         onclick: move |_| value.set(star),
                         "★"
                     }
                 }
-                span { class: "ff-new-headline__star-label", "{cur} / {HEADLINE_DIFFICULTY_MAX}" }
+                span { class: "ff-new-subject__star-label", "{cur} / {HEADLINE_DIFFICULTY_MAX}" }
             }
         }
     }
@@ -332,19 +332,19 @@ fn TextInputField(
 ) -> Element {
     let mut value = value;
     rsx! {
-        div { class: "ff-new-headline__field",
-            div { class: "ff-new-headline__label-row",
-                div { class: "ff-new-headline__label", "{label}" }
+        div { class: "ff-new-subject__field",
+            div { class: "ff-new-subject__label-row",
+                div { class: "ff-new-subject__label", "{label}" }
                 if !counter.is_empty() {
                     span {
-                        class: "ff-new-headline__counter",
+                        class: "ff-new-subject__counter",
                         "data-invalid": invalid,
                         "{counter}"
                     }
                 }
             }
             input {
-                class: "ff-new-headline__input",
+                class: "ff-new-subject__input",
                 "data-invalid": invalid,
                 r#type: "text",
                 placeholder: "{placeholder}",
@@ -366,19 +366,19 @@ fn TextAreaField(
 ) -> Element {
     let mut value = value;
     rsx! {
-        div { class: "ff-new-headline__field",
-            div { class: "ff-new-headline__label-row",
-                div { class: "ff-new-headline__label", "{label}" }
+        div { class: "ff-new-subject__field",
+            div { class: "ff-new-subject__label-row",
+                div { class: "ff-new-subject__label", "{label}" }
                 if !counter.is_empty() {
                     span {
-                        class: "ff-new-headline__counter",
+                        class: "ff-new-subject__counter",
                         "data-invalid": invalid,
                         "{counter}"
                     }
                 }
             }
             textarea {
-                class: "ff-new-headline__textarea",
+                class: "ff-new-subject__textarea",
                 "data-invalid": invalid,
                 rows: "{rows}",
                 placeholder: "{placeholder}",
@@ -391,20 +391,20 @@ fn TextAreaField(
 
 #[component]
 fn RevealSourcesEditor(value: Signal<Vec<RevealSource>>) -> Element {
-    let tr: FactFoldAdminNewHeadlineTranslate = use_translate();
+    let tr: FactFoldAdminNewSubjectTranslate = use_translate();
     let mut value = value;
     let items = value();
     rsx! {
-        div { class: "ff-new-headline__field",
-            div { class: "ff-new-headline__label-row",
-                div { class: "ff-new-headline__label", "{tr.reveal_sources}" }
-                span { class: "ff-new-headline__counter", "{items.len()} / {REVEAL_SOURCES_MAX}" }
+        div { class: "ff-new-subject__field",
+            div { class: "ff-new-subject__label-row",
+                div { class: "ff-new-subject__label", "{tr.reveal_sources}" }
+                span { class: "ff-new-subject__counter", "{items.len()} / {REVEAL_SOURCES_MAX}" }
             }
-            div { class: "ff-new-headline__sources",
+            div { class: "ff-new-subject__sources",
                 for (idx, src) in items.iter().enumerate() {
-                    div { class: "ff-new-headline__source-row", key: "{idx}",
+                    div { class: "ff-new-subject__source-row", key: "{idx}",
                         input {
-                            class: "ff-new-headline__input ff-new-headline__source-label",
+                            class: "ff-new-subject__input ff-new-subject__source-label",
                             r#type: "text",
                             placeholder: "{tr.reveal_source_label_placeholder}",
                             value: "{src.label}",
@@ -417,7 +417,7 @@ fn RevealSourcesEditor(value: Signal<Vec<RevealSource>>) -> Element {
                             },
                         }
                         input {
-                            class: "ff-new-headline__input ff-new-headline__source-url",
+                            class: "ff-new-subject__input ff-new-subject__source-url",
                             r#type: "url",
                             placeholder: "https://…",
                             value: "{src.url}",
@@ -431,7 +431,7 @@ fn RevealSourcesEditor(value: Signal<Vec<RevealSource>>) -> Element {
                         }
                         button {
                             r#type: "button",
-                            class: "ff-new-headline__source-remove",
+                            class: "ff-new-subject__source-remove",
                             onclick: move |_| {
                                 let mut next = value();
                                 if idx < next.len() {
@@ -446,7 +446,7 @@ fn RevealSourcesEditor(value: Signal<Vec<RevealSource>>) -> Element {
                 if items.len() < REVEAL_SOURCES_MAX {
                     button {
                         r#type: "button",
-                        class: "ff-new-headline__source-add",
+                        class: "ff-new-subject__source-add",
                         onclick: move |_| {
                             let mut next = value();
                             next.push(RevealSource::default());
@@ -462,18 +462,18 @@ fn RevealSourcesEditor(value: Signal<Vec<RevealSource>>) -> Element {
 
 #[component]
 fn ScheduleField(value: Signal<String>) -> Element {
-    let tr: FactFoldAdminNewHeadlineTranslate = use_translate();
+    let tr: FactFoldAdminNewSubjectTranslate = use_translate();
     let mut value = value;
     rsx! {
-        div { class: "ff-new-headline__field",
-            div { class: "ff-new-headline__label", "{tr.schedule_label}" }
+        div { class: "ff-new-subject__field",
+            div { class: "ff-new-subject__label", "{tr.schedule_label}" }
             input {
-                class: "ff-new-headline__input",
+                class: "ff-new-subject__input",
                 r#type: "datetime-local",
                 value: "{value}",
                 oninput: move |e| value.set(e.value()),
             }
-            div { class: "ff-new-headline__hint", "{tr.schedule_hint}" }
+            div { class: "ff-new-subject__hint", "{tr.schedule_hint}" }
         }
     }
 }

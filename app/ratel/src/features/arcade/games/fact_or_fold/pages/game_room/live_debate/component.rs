@@ -20,7 +20,7 @@ pub fn LiveDebateView() -> Element {
     let chat = (ctx.chat)();
 
     let user_ctx = use_user_context();
-    let my_pk = user_ctx().user_pk().unwrap_or_default();
+    let my_pk: UserPartition = UserPartition(user_ctx().user_id().unwrap_or_default());
     let my_bet = bets.items.iter().find(|b| b.user_pk == my_pk).cloned();
 
     let round_id_val = round.id.clone();
@@ -52,7 +52,7 @@ pub fn LiveDebateView() -> Element {
 #[component]
 fn ChatPanel(
     messages: Vec<ChatMessagePayload>,
-    my_pk: String,
+    my_pk: UserPartition,
     participants: Vec<RoundParticipantSummary>,
     debate_started_at: i64,
     on_post: EventHandler<String>,
@@ -132,7 +132,7 @@ fn ChatPanel(
 fn FinalBetBar(
     round: RoundResponse,
     my_bet: Option<BetResponse>,
-    cited_user_pk: Signal<Option<String>>,
+    cited_user_pk: Signal<Option<UserPartition>>,
 ) -> Element {
     let mut ctx = use_fact_fold_round();
     let tr: FactFoldRoomTranslate = use_translate();
@@ -207,17 +207,17 @@ fn FinalBetBar(
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
-fn participant_display(pk: &str, participants: &[RoundParticipantSummary]) -> String {
-    let p = participants.iter().find(|x| x.user_pk == pk);
+fn participant_display(pk: &UserPartition, participants: &[RoundParticipantSummary]) -> String {
+    let p = participants.iter().find(|x| &x.user_pk == pk);
     let Some(p) = p else {
-        return short_pk(pk);
+        return short_pk(&pk.0);
     };
     let src = if !p.display_name.is_empty() {
         &p.display_name
     } else if !p.username.is_empty() {
         &p.username
     } else {
-        pk
+        &pk.0
     };
     src.chars()
         .filter(|c| c.is_alphanumeric())

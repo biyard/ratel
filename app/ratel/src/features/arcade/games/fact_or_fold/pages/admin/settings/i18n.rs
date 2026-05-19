@@ -67,8 +67,8 @@ translate! {
     },
     queue_alert: { en: "Queue alert threshold (days)", ko: "큐 알림 임계 (일)" },
     queue_alert_desc: {
-        en: "When the latest scheduled headline is closer than this, the admin sees a low-queue banner (FR-45).",
-        ko: "최신 스케줄 헤드라인이 이 일수보다 가까우면 관리자에게 큐 부족 배너 표시(FR-45).",
+        en: "When the latest scheduled subject is closer than this, the admin sees a low-queue banner (FR-45).",
+        ko: "최신 스케줄 대상이 이 일수보다 가까우면 관리자에게 큐 부족 배너 표시(FR-45).",
     },
 
     // Mockup-only deferred items

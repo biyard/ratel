@@ -31,7 +31,9 @@ pub fn ArcadeHomePage() -> Element {
                 },
                 RoundStatus::Settled => return rsx! {
                     section { class: "ff-home",
-                        div { class: "ff-home__placeholder", "Round just settled — refresh to see results." }
+                        div { class: "ff-home__placeholder",
+                            "Round just settled — refresh to see results."
+                        }
                     }
                 },
                 _ => Route::FactFoldGameRoomPage {
@@ -134,9 +136,15 @@ fn FeaturedCard(lobby: LobbyResponse) -> Element {
             p { class: "featured-tagline", "{tr.featured_tagline}" }
 
             div { class: "featured-meta",
-                MetaCell { label: tr.meta_capacity.to_string(), value: capacity_label }
+                MetaCell {
+                    label: tr.meta_capacity.to_string(),
+                    value: capacity_label,
+                }
                 MetaCell { label: tr.meta_min_bet.to_string(), value: min_bet_label }
-                MetaCell { label: tr.meta_cycle.to_string(), value: tr.meta_cycle_value.to_string() }
+                MetaCell {
+                    label: tr.meta_cycle.to_string(),
+                    value: tr.meta_cycle_value.to_string(),
+                }
                 MetaCell { label: tr.meta_stage_now.to_string(), value: stage_label }
             }
 
@@ -144,11 +152,7 @@ fn FeaturedCard(lobby: LobbyResponse) -> Element {
                 div { class: "reason-warn", style: "margin-bottom: 14px", "{err}" }
             }
 
-            FeaturedCta {
-                lobby,
-                on_join,
-                submitting: submitting(),
-            }
+            FeaturedCta { lobby, on_join, submitting: submitting() }
         }
     }
 }
@@ -189,7 +193,9 @@ fn FeaturedCta(
                 if let Some(rid) = resume_round_id {
                     Link {
                         class: "btn btn-primary",
-                        to: Route::FactFoldMatchingPage { round_id: rid },
+                        to: Route::FactFoldMatchingPage {
+                            round_id: rid,
+                        },
                         "{tr.cta_resume}"
                     }
                 }
@@ -215,19 +221,11 @@ fn FeaturedCta(
                     }
                 }
             } else if lobby.current_round.is_some() {
-                button {
-                    class: "btn btn-ghost",
-                    disabled: true,
-                    "{tr.cta_in_progress}"
-                }
+                button { class: "btn btn-ghost", disabled: true, "{tr.cta_in_progress}" }
                 span { class: "featured-status", "{tr.status_in_progress}" }
             } else {
-                button {
-                    class: "btn btn-ghost",
-                    disabled: true,
-                    "{tr.cta_no_headline}"
-                }
-                span { class: "featured-status", "{tr.status_no_headline}" }
+                button { class: "btn btn-ghost", disabled: true, "{tr.cta_no_subject}" }
+                span { class: "featured-status", "{tr.status_no_subject}" }
             }
         }
     }
@@ -337,7 +335,7 @@ fn CatalogSection(lobby: LobbyResponse) -> Element {
 fn LeaderboardView(entries: Vec<LeaderboardEntryResponse>) -> Element {
     let tr: ArcadeHomeTranslate = use_translate();
     let user_ctx = use_user_context();
-    let my_pk = user_ctx().user_pk().unwrap_or_default();
+    let my_pk: UserPartition = UserPartition(user_ctx().user_id().unwrap_or_default());
 
     rsx! {
         div { class: "lb-table",
@@ -358,7 +356,7 @@ fn LeaderboardView(entries: Vec<LeaderboardEntryResponse>) -> Element {
             if entries.is_empty() {
                 div { class: "ff-home__placeholder", "{tr.lb_empty}" }
             }
-            for (idx , entry) in entries.iter().enumerate() {
+            for (idx, entry) in entries.iter().enumerate() {
                 LeaderboardRow {
                     key: "{entry.user_pk}",
                     idx,
@@ -430,7 +428,7 @@ fn featured_tag(lobby: &LobbyResponse, tr: &ArcadeHomeTranslate) -> (&'static st
             RoundStatus::Settled => (tr.tag_settled, "settled"),
             _ => (tr.tag_live, "live"),
         }
-    } else if lobby.headline_available {
+    } else if lobby.subject_available {
         (tr.tag_open, "open")
     } else {
         (tr.tag_closed, "closed")

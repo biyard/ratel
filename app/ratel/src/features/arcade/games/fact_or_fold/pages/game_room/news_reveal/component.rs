@@ -1,30 +1,30 @@
 use crate::features::arcade::games::fact_or_fold::pages::game_room::FactFoldRoomTranslate;
 use crate::features::arcade::games::fact_or_fold::{
-    use_fact_fold_round, RoundHeadlineResponse, RoundParticipantSummary, RoundResponse,
+    use_fact_fold_round, RoundSubjectResponse, RoundParticipantSummary, RoundResponse,
     RoundStatus,
 };
 use crate::features::auth::hooks::use_user_context;
 use crate::*;
 
-/// `NewsRevealView` — Stage 1. Shows the public headline (text +
+/// `NewsRevealView` — Stage 1. Shows the public subject (text +
 /// excerpt + source label + category/difficulty pills) alongside a
 /// roster of the 4 participants. Stage auto-advances on timer; this
 /// view is read-only.
 #[component]
 pub fn NewsRevealView() -> Element {
     let ctx = use_fact_fold_round();
-    let headline = (ctx.headline)();
+    let subject = (ctx.subject)();
     let participants = (ctx.participants)();
     let round = (ctx.round)();
 
     let user_ctx = use_user_context();
-    let my_pk = user_ctx().user_pk().unwrap_or_default();
+    let my_pk: UserPartition = UserPartition(user_ctx().user_id().unwrap_or_default());
 
     rsx! {
         section { class: "view", "data-active": true, "data-view": "round",
             div { class: "round-grid",
                 div {
-                    NewsCard { headline: headline.clone() }
+                    NewsCard { subject: subject.clone() }
                     PlayersCard {
                         participants: participants.items.clone(),
                         round: round.clone(),
@@ -37,10 +37,10 @@ pub fn NewsRevealView() -> Element {
 }
 
 #[component]
-fn NewsCard(headline: RoundHeadlineResponse) -> Element {
+fn NewsCard(subject: RoundSubjectResponse) -> Element {
     let tr: FactFoldRoomTranslate = use_translate();
-    let difficulty_label = render_difficulty(headline.difficulty);
-    let primary_tag = headline
+    let difficulty_label = render_difficulty(subject.difficulty);
+    let primary_tag = subject
         .category_tags
         .first()
         .cloned()
@@ -50,12 +50,12 @@ fn NewsCard(headline: RoundHeadlineResponse) -> Element {
         div { class: "news-card",
             div { class: "news-source",
                 span { "📰" }
-                span { "{headline.source_label}" }
+                span { "{subject.source_label}" }
                 span { class: "news-source-dot" }
                 span { "{tr.news_source_lock}" }
             }
-            h2 { class: "news-headline", "{headline.headline_text}" }
-            p { class: "news-excerpt", "{headline.body_excerpt}" }
+            h2 { class: "news-subject", "{subject.headline_text}" }
+            p { class: "news-excerpt", "{subject.body_excerpt}" }
             div { class: "news-meta",
                 span { class: "pill", "{primary_tag}" }
                 span { class: "pill purple", "{tr.news_difficulty} {difficulty_label}" }
@@ -71,7 +71,7 @@ fn NewsCard(headline: RoundHeadlineResponse) -> Element {
 fn PlayersCard(
     participants: Vec<RoundParticipantSummary>,
     round: RoundResponse,
-    my_pk: String,
+    my_pk: UserPartition,
 ) -> Element {
     let tr: FactFoldRoomTranslate = use_translate();
     let capacity = round.participant_pks.len().max(participants.len());
@@ -85,13 +85,12 @@ fn PlayersCard(
         div { class: "players-card",
             div { class: "players-head",
                 div { class: "section-label", "{tr.players_card_title}" }
-                span {
-                    style: "font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted)",
+                span { style: "font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted)",
                     "{count_label}"
                 }
             }
             div { class: "players-list",
-                for (idx , p) in participants.iter().enumerate() {
+                for (idx, p) in participants.iter().enumerate() {
                     PlayerRow {
                         key: "{p.user_pk}",
                         participant: p.clone(),
@@ -109,7 +108,7 @@ fn PlayersCard(
 fn PlayerRow(
     participant: RoundParticipantSummary,
     round_status: RoundStatus,
-    my_pk: String,
+    my_pk: UserPartition,
     avatar_variant: &'static str,
 ) -> Element {
     let tr: FactFoldRoomTranslate = use_translate();

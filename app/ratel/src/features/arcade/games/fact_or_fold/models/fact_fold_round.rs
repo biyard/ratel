@@ -4,7 +4,7 @@ use crate::features::arcade::games::fact_or_fold::types::RoundStatus;
 #[allow(unused_imports)]
 use rmcp::schemars;
 
-/// One round = one headline being judged by ≤ `round_capacity`
+/// One round = one subject being judged by ≤ `round_capacity`
 /// players. Created at lobby-start, transitions through stages, ends
 /// at Settled. Per-participant data (bets, rationales, chat) lives
 /// at separate sk's under the same pk; PR3 only carries the round
@@ -21,9 +21,9 @@ pub struct FactFoldRound {
     pub created_at: i64,
     pub updated_at: i64,
 
-    /// Headline being judged. Anchor pk on the headline side is
-    /// `Partition::FactFoldHeadlines`; this is just the inner id.
-    pub headline_id: String,
+    /// Subject being judged. Anchor pk on the subject side is
+    /// `Partition::FactFoldSubjects`; this is just the inner id.
+    pub subject_id: String,
 
     pub status: RoundStatus,
 
@@ -60,7 +60,7 @@ impl FactFoldRound {
         )
     }
 
-    pub fn new_waiting(round_id: String, headline_id: String, first_user_pk: Partition) -> Self {
+    pub fn new_waiting(round_id: String, subject_id: String, first_user_pk: Partition) -> Self {
         let now = crate::common::utils::time::get_now_timestamp_millis();
         let (pk, sk) = Self::keys(&round_id);
         Self {
@@ -68,7 +68,7 @@ impl FactFoldRound {
             sk,
             created_at: now,
             updated_at: now,
-            headline_id,
+            subject_id,
             status: RoundStatus::Waiting,
             participant_pks: vec![first_user_pk],
             started_at: None,

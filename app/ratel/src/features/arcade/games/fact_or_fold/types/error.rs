@@ -3,38 +3,38 @@ pub use thiserror::Error;
 
 #[derive(Debug, Error, Serialize, Deserialize, Translate, Clone)]
 pub enum FactOrFoldError {
-    // ── Headline CRUD ──────────────────────────────────────────────
-    #[error("headline not found")]
+    // ── Subject CRUD ──────────────────────────────────────────────
+    #[error("subject not found")]
     #[translate(
-        en = "Headline not found",
-        ko = "헤드라인을 찾을 수 없습니다.",
+        en = "Subject not found",
+        ko = "대상을 찾을 수 없습니다.",
     )]
-    HeadlineNotFound,
+    SubjectNotFound,
 
-    #[error("headline already exists")]
+    #[error("subject already exists")]
     #[translate(
-        en = "A headline with the same id already exists",
-        ko = "동일한 ID의 헤드라인이 이미 존재합니다.",
+        en = "A subject with the same id already exists",
+        ko = "동일한 ID의 대상이 이미 존재합니다.",
     )]
-    HeadlineAlreadyExists,
+    SubjectAlreadyExists,
 
-    #[error("headline is locked once a round is in progress")]
+    #[error("subject is locked once a round is in progress")]
     #[translate(
-        en = "This headline has a live or settled round; only verification sources may be appended",
-        ko = "이미 라운드가 진행되었거나 완료된 헤드라인입니다. 검증 출처만 추가할 수 있습니다.",
+        en = "This subject has a live or settled round; only verification sources may be appended",
+        ko = "이미 라운드가 진행되었거나 완료된 대상입니다. 검증 출처만 추가할 수 있습니다.",
     )]
-    HeadlineLocked,
+    SubjectLocked,
 
-    #[error("headline field validation failed")]
+    #[error("subject field validation failed")]
     #[translate(
-        en = "Headline field validation failed (length, range, or required field)",
-        ko = "헤드라인 입력값이 올바르지 않습니다 (길이/범위/필수 항목).",
+        en = "Subject field validation failed (length, range, or required field)",
+        ko = "대상 입력값이 올바르지 않습니다 (길이/범위/필수 항목).",
     )]
-    HeadlineInvalid,
+    SubjectInvalid,
 
     #[error("publish-time invariant violated")]
     #[translate(
-        en = "Cannot schedule a headline in the past or publish a draft that is missing required fields",
+        en = "Cannot schedule a subject in the past or publish a draft that is missing required fields",
         ko = "과거 시각으로 예약하거나 필수 항목이 빠진 초안을 발행할 수 없습니다.",
     )]
     PublishInvariantViolation,
@@ -126,12 +126,12 @@ pub enum FactOrFoldError {
     NotRoundInsider,
 
     // ── Lobby + round (PR3) ───────────────────────────────────────
-    #[error("no headline available for a new round")]
+    #[error("no subject available for a new round")]
     #[translate(
-        en = "No published headline is available right now — try again later",
-        ko = "현재 발행된 헤드라인이 없습니다 — 잠시 후 다시 시도해주세요.",
+        en = "No published subject is available right now — try again later",
+        ko = "현재 발행된 대상이 없습니다 — 잠시 후 다시 시도해주세요.",
     )]
-    LobbyNoHeadlineAvailable,
+    LobbyNoSubjectAvailable,
 
     #[error("lobby round is full")]
     #[translate(
@@ -197,10 +197,10 @@ impl FactOrFoldError {
     pub fn status_code(&self) -> crate::axum::http::StatusCode {
         use crate::axum::http::StatusCode;
         match self {
-            FactOrFoldError::HeadlineNotFound => StatusCode::NOT_FOUND,
-            FactOrFoldError::HeadlineAlreadyExists => StatusCode::CONFLICT,
-            FactOrFoldError::HeadlineLocked
-            | FactOrFoldError::HeadlineInvalid
+            FactOrFoldError::SubjectNotFound => StatusCode::NOT_FOUND,
+            FactOrFoldError::SubjectAlreadyExists => StatusCode::CONFLICT,
+            FactOrFoldError::SubjectLocked
+            | FactOrFoldError::SubjectInvalid
             | FactOrFoldError::PublishInvariantViolation
             | FactOrFoldError::SettingsOutOfRange
             | FactOrFoldError::LobbyAlreadyJoined
@@ -219,7 +219,7 @@ impl FactOrFoldError {
             | FactOrFoldError::FlipNoOriginalBet => StatusCode::BAD_REQUEST,
             FactOrFoldError::NotRoundInsider => StatusCode::FORBIDDEN,
             FactOrFoldError::LobbyFull => StatusCode::CONFLICT,
-            FactOrFoldError::LobbyNoHeadlineAvailable => StatusCode::SERVICE_UNAVAILABLE,
+            FactOrFoldError::LobbyNoSubjectAvailable => StatusCode::SERVICE_UNAVAILABLE,
             FactOrFoldError::RoundNotFound => StatusCode::NOT_FOUND,
             FactOrFoldError::RoundNotSettled => StatusCode::CONFLICT,
             FactOrFoldError::StorageFailure => StatusCode::INTERNAL_SERVER_ERROR,

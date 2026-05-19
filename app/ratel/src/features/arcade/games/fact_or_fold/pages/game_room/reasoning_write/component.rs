@@ -21,7 +21,7 @@ pub fn ReasoningWriteView() -> Element {
     let insider = (ctx.insider)();
 
     let user_ctx = use_user_context();
-    let my_pk = user_ctx().user_pk().unwrap_or_default();
+    let my_pk: UserPartition = UserPartition(user_ctx().user_id().unwrap_or_default());
 
     let my_bet = bets.items.iter().find(|b| b.user_pk == my_pk).cloned();
     let my_rationale = rationales
@@ -38,7 +38,10 @@ pub fn ReasoningWriteView() -> Element {
                 div {
                     if let Some(bet) = my_bet.as_ref() {
                         if let Some(rationale) = my_rationale.as_ref() {
-                            ReasonSubmittedCard { rationale: rationale.clone(), bet: bet.clone() }
+                            ReasonSubmittedCard {
+                                rationale: rationale.clone(),
+                                bet: bet.clone(),
+                            }
                         } else {
                             ReasonWriteCard {
                                 bet: bet.clone(),
@@ -136,15 +139,12 @@ fn ReasonWriteCard(bet: BetResponse, on_submit: EventHandler<String>) -> Element
                 button {
                     class: "btn btn-primary",
                     disabled: submitting()
-                        || len < RATIONALE_ESSENCE_MIN_CHARS
-                        || len > RATIONALE_TEXT_MAX_CHARS,
+                                                                || len < RATIONALE_ESSENCE_MIN_CHARS
+                                                                || len > RATIONALE_TEXT_MAX_CHARS,
                     onclick: on_confirm,
                     "{tr.reason_submit}"
                 }
-                span {
-                    style: "font-size: 12px; color: var(--text-muted)",
-                    "{tr.reason_submit_hint}"
-                }
+                span { style: "font-size: 12px; color: var(--text-muted)", "{tr.reason_submit_hint}" }
             }
         }
     }
@@ -184,7 +184,9 @@ fn ReasonSubmittedCard(rationale: RationaleResponse, bet: BetResponse) -> Elemen
                     "{rationale.text}"
                 }
             }
-            div { class: "reason-warn", style: "background: rgba(110,237,216,0.08); color: var(--teal); border-color: rgba(110,237,216,0.25)",
+            div {
+                class: "reason-warn",
+                style: "background: rgba(110,237,216,0.08); color: var(--teal); border-color: rgba(110,237,216,0.25)",
                 "{tr.reason_submitted_body}"
             }
         }
@@ -195,7 +197,7 @@ fn ReasonSubmittedCard(rationale: RationaleResponse, bet: BetResponse) -> Elemen
 fn ReasonSidePanel(
     participants: Vec<RoundParticipantSummary>,
     rationales: Vec<RationaleResponse>,
-    my_pk: String,
+    my_pk: UserPartition,
     is_insider: bool,
 ) -> Element {
     let tr: FactFoldRoomTranslate = use_translate();
@@ -203,19 +205,26 @@ fn ReasonSidePanel(
     rsx! {
         div { class: "bet-summary",
             h3 { class: "card-title", "{tr.reason_tips_title}" }
-            div {
-                style: "font-size: 13px; color: var(--text-muted); line-height: 1.7; margin-bottom: 14px",
+            div { style: "font-size: 13px; color: var(--text-muted); line-height: 1.7; margin-bottom: 14px",
                 "{tr.reason_tips_body}"
             }
 
             div { class: "section-label", "{tr.reason_others_label}" }
             div { class: "player-pulses",
-                for (idx , p) in participants.iter().enumerate() {
+                for (idx, p) in participants.iter().enumerate() {
                     if p.user_pk != my_pk {
                         {
                             let submitted = rationales.iter().any(|r| r.user_pk == p.user_pk);
-                            let chip_class = if submitted { "pulse-chip done" } else { "pulse-chip thinking" };
-                            let state_label = if submitted { tr.reason_pulse_submitted } else { tr.reason_pulse_writing };
+                            let chip_class = if submitted {
+                                "pulse-chip done"
+                            } else {
+                                "pulse-chip thinking"
+                            };
+                            let state_label = if submitted {
+                                tr.reason_pulse_submitted
+                            } else {
+                                tr.reason_pulse_writing
+                            };
                             let initials = pulse_initials(&p.display_name, &p.username);
                             let avatar_style = pulse_avatar_style(idx);
                             rsx! {
@@ -230,8 +239,7 @@ fn ReasonSidePanel(
             }
 
             if is_insider {
-                div {
-                    style: "margin-top: 18px; padding: 12px 14px; background: var(--purple-soft); border: 1px solid rgba(167,139,250,0.3); border-radius: var(--r-md); font-size: 12.5px; color: var(--text-muted); line-height: 1.6",
+                div { style: "margin-top: 18px; padding: 12px 14px; background: var(--purple-soft); border: 1px solid rgba(167,139,250,0.3); border-radius: var(--r-md); font-size: 12.5px; color: var(--text-muted); line-height: 1.6",
                     strong { style: "color: var(--purple)", "INSIDER: " }
                     "{tr.reason_insider_hint}"
                 }

@@ -9,7 +9,7 @@
 //! Matching algorithm:
 //!   1. Read FactFoldLobby singleton.
 //!   2. If no waiting round → create one (pick the next eligible
-//!      headline; transition it to Live).
+//!      subject; transition it to Live).
 //!   3. Add the user to Round.participant_pks (no-op if already in,
 //!      reject if full or below min_bet_rp).
 //!   4. If after the join the round is full → flip status to
@@ -27,7 +27,7 @@ use crate::features::arcade::games::fact_or_fold::types::*;
 use crate::common::models::auth::User;
 #[cfg(feature = "server")]
 use crate::features::arcade::games::fact_or_fold::models::{
-    FactFoldHeadline, FactFoldLobby, FactFoldParticipant, FactFoldRound, FactFoldSettings,
+    FactFoldSubject, FactFoldLobby, FactFoldParticipant, FactFoldRound, FactFoldSettings,
 };
 #[cfg(feature = "server")]
 use crate::features::arcade::games::fact_or_fold::services::stage_machine;
@@ -37,15 +37,11 @@ use crate::features::arcade::models::ArcadeSettings;
 use crate::features::arcade::wallet::{ArcadeWallet, DdbArcadeWallet};
 
 #[cfg(feature = "server")]
-const HEADLINE_SK_PREFIX: &str = "FACT_FOLD_HEADLINE";
+const HEADLINE_SK_PREFIX: &str = "FACT_FOLD_SUBJECT";
 
 #[cfg(feature = "server")]
 fn user_inner_id(user: &User) -> String {
-    user.pk
-        .to_string()
-        .strip_prefix("USER#")
-        .unwrap_or(&user.pk.to_string())
-        .to_string()
+    UserPartition::from(user.pk.clone()).0
 }
 
 // ── Internal helpers ──────────────────────────────────────────────
@@ -58,19 +54,19 @@ async fn load_settings_or_default(cli: &aws_sdk_dynamodb::Client) -> FactOrFoldS
 }
 
 #[cfg(feature = "server")]
-async fn pick_next_headline(
+async fn pick_next_subject(
     cli: &aws_sdk_dynamodb::Client,
-) -> crate::common::Result<Option<FactFoldHeadline>> {
+) -> crate::common::Result<Option<FactFoldSubject>> {
     // List from the anchor pk. v1 is small enough that a single page
     // (limit 200) is fine; pagination lands when the lifetime queue
     // exceeds it.
-    let opts = FactFoldHeadline::opt()
+    let opts = FactFoldSubject::opt()
         .sk(HEADLINE_SK_PREFIX.to_string())
         .limit(200);
-    let (rows, _) = FactFoldHeadline::query(cli, FactFoldHeadline::anchor_pk(), opts)
+    let (rows, _) = FactFoldSubject::query(cli, FactFoldSubject::anchor_pk(), opts)
         .await
         .map_err(|e| {
-            crate::error!("pick_next_headline query failed: {e}");
+            crate::error!("pick_next_subject query failed: {e}");
             FactOrFoldError::StorageFailure
         })?;
 
@@ -78,11 +74,11 @@ async fn pick_next_headline(
 
     // Eligibility: Live (already activated, but not yet bound to a
     // round) OR Scheduled with scheduled_at <= now.
-    let mut eligible: Vec<FactFoldHeadline> = rows
+    let mut eligible: Vec<FactFoldSubject> = rows
         .into_iter()
         .filter(|h| match h.status {
-            HeadlineStatus::Live => true,
-            HeadlineStatus::Scheduled => h.scheduled_at.map(|ts| ts <= now).unwrap_or(false),
+            SubjectStatus::Live => true,
+            SubjectStatus::Scheduled => h.scheduled_at.map(|ts| ts <= now).unwrap_or(false),
             _ => false,
         })
         .collect();
@@ -146,27 +142,6 @@ async fn create_participants_for_round(
     Ok(())
 }
 
-#[cfg(feature = "server")]
-pub(super) fn round_to_response(row: &FactFoldRound) -> RoundResponse {
-    let id = row.id().unwrap_or_default();
-    RoundResponse {
-        id: FactFoldRoundEntityType(id),
-        headline_id: FactFoldHeadlineEntityType(row.headline_id.clone()),
-        status: row.status,
-        participant_pks: row
-            .participant_pks
-            .iter()
-            .map(|p| p.to_string())
-            .collect(),
-        started_at: row.started_at,
-        settled_at: row.settled_at,
-        stage_started_at: row.stage_started_at,
-        stage_deadline_at: row.stage_deadline_at,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-    }
-}
-
 // ── GET /api/fact-or-fold/lobby ───────────────────────────────────
 
 #[get("/api/fact-or-fold/lobby", user: User)]
@@ -180,8 +155,6 @@ pub async fn get_lobby_handler() -> Result<LobbyResponse> {
         FactOrFoldError::StorageFailure
     })?;
 
-    let user_pk_str = user.pk.to_string();
-
     let mut current_round: Option<RoundResponse> = None;
     let mut already_joined = false;
 
@@ -191,15 +164,12 @@ pub async fn get_lobby_handler() -> Result<LobbyResponse> {
             crate::error!("get_lobby_handler round read failed: {e}");
             FactOrFoldError::StorageFailure
         })? {
-            already_joined = round
-                .participant_pks
-                .iter()
-                .any(|p| p.to_string() == user_pk_str);
-            current_round = Some(round_to_response(&round));
+            already_joined = round.participant_pks.iter().any(|p| p == &user.pk);
+            current_round = Some(RoundResponse::from(&round));
         }
     }
 
-    let headline_available = pick_next_headline(cli).await?.is_some();
+    let subject_available = pick_next_subject(cli).await?.is_some();
 
     let can_join = match &current_round {
         Some(r) => {
@@ -207,7 +177,7 @@ pub async fn get_lobby_handler() -> Result<LobbyResponse> {
                 && (r.participant_pks.len() as i32) < settings.round_capacity
                 && matches!(r.status, RoundStatus::Waiting)
         }
-        None => headline_available,
+        None => subject_available,
     };
 
     let arcade_settings = ArcadeSettings::get_or_default(cli)
@@ -221,7 +191,7 @@ pub async fn get_lobby_handler() -> Result<LobbyResponse> {
         round_capacity: settings.round_capacity,
         min_bet_rp: settings.min_bet_rp,
         buy_in_chips: arcade_settings.default_buy_in_chips,
-        headline_available,
+        subject_available,
     })
 }
 
@@ -253,8 +223,6 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
         FactOrFoldError::StorageFailure
     })?;
 
-    let user_pk_str = user.pk.to_string();
-
     // Try to attach to an existing waiting round.
     if let Some(round_id) = lobby.current_round_id.clone() {
         let (pk, sk) = FactFoldRound::keys(&round_id);
@@ -270,11 +238,7 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
                 // the pointer so the next branch creates a new one.
                 lobby.current_round_id = None;
             } else {
-                if round
-                    .participant_pks
-                    .iter()
-                    .any(|p| p.to_string() == user_pk_str)
-                {
+                if round.participant_pks.iter().any(|p| p == &user.pk) {
                     return Err(FactOrFoldError::LobbyAlreadyJoined.into());
                 }
                 if (round.participant_pks.len() as i32) >= settings.round_capacity {
@@ -306,7 +270,7 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
                 wallet
                     .buy_in(&user_id, &attached_round_id, buy_in_chips)
                     .await?;
-                return Ok(round_to_response(&round));
+                return Ok(RoundResponse::from(&round));
             }
         } else {
             // Pointer dangles — drop it.
@@ -315,32 +279,32 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
     }
 
     // No waiting round (or pointer was stale) — create a new one.
-    let headline = pick_next_headline(cli)
+    let subject = pick_next_subject(cli)
         .await?
-        .ok_or(FactOrFoldError::LobbyNoHeadlineAvailable)?;
-    let headline_id = headline
+        .ok_or(FactOrFoldError::LobbyNoSubjectAvailable)?;
+    let subject_id = subject
         .id()
-        .ok_or(FactOrFoldError::LobbyNoHeadlineAvailable)?;
+        .ok_or(FactOrFoldError::LobbyNoSubjectAvailable)?;
 
-    // Promote Scheduled → Live so the headline is bound to this
+    // Promote Scheduled → Live so the subject is bound to this
     // round and won't be picked again by a parallel matching call.
-    if matches!(headline.status, HeadlineStatus::Scheduled) {
-        let pk = FactFoldHeadline::anchor_pk();
-        let sk: EntityType = FactFoldHeadlineEntityType(headline_id.clone()).into();
+    if matches!(subject.status, SubjectStatus::Scheduled) {
+        let pk = FactFoldSubject::anchor_pk();
+        let sk: EntityType = FactFoldSubjectEntityType(subject_id.clone()).into();
         let now = crate::common::utils::time::get_now_timestamp_millis();
-        FactFoldHeadline::updater(&pk, &sk)
-            .with_status(HeadlineStatus::Live)
+        FactFoldSubject::updater(&pk, &sk)
+            .with_status(SubjectStatus::Live)
             .with_updated_at(now)
             .execute(cli)
             .await
             .map_err(|e| {
-                crate::error!("join_lobby_handler headline promote failed: {e}");
+                crate::error!("join_lobby_handler subject promote failed: {e}");
                 FactOrFoldError::StorageFailure
             })?;
     }
 
-    let round_id = uuid::Uuid::new_v4().to_string();
-    let mut round = FactFoldRound::new_waiting(round_id.clone(), headline_id, user.pk.clone());
+    let round_id = uuid::Uuid::now_v7().to_string();
+    let mut round = FactFoldRound::new_waiting(round_id.clone(), subject_id, user.pk.clone());
 
     // Single-user round is full when round_capacity == 1 — flip
     // straight to NewsReveal in that edge case.
@@ -375,7 +339,7 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
     // Lock chips on the table for this round.
     wallet.buy_in(&user_id, &round_id, buy_in_chips).await?;
 
-    Ok(round_to_response(&round))
+    Ok(RoundResponse::from(&round))
 }
 
 // ── POST /api/fact-or-fold/lobby/leave ────────────────────────────
@@ -404,11 +368,8 @@ pub async fn leave_lobby_handler() -> Result<RoundResponse> {
         })?
         .ok_or(FactOrFoldError::LobbyNotJoined)?;
 
-    let user_pk_str = user.pk.to_string();
     let before_len = round.participant_pks.len();
-    round
-        .participant_pks
-        .retain(|p| p.to_string() != user_pk_str);
+    round.participant_pks.retain(|p| p != &user.pk);
     if round.participant_pks.len() == before_len {
         return Err(FactOrFoldError::LobbyNotJoined.into());
     }
@@ -430,7 +391,7 @@ pub async fn leave_lobby_handler() -> Result<RoundResponse> {
         .settle(&user_id, &round_id, arcade_settings.default_buy_in_chips)
         .await?;
 
-    Ok(round_to_response(&round))
+    Ok(RoundResponse::from(&round))
 }
 
 // ── GET /api/fact-or-fold/rounds/{round_id} ──────────────────────
@@ -458,5 +419,5 @@ pub async fn get_round_handler(round_id: FactFoldRoundEntityType) -> Result<Roun
     let settings = load_settings_or_default(cli).await;
     let now = crate::common::utils::time::get_now_timestamp_millis();
     let round = stage_machine::advance_round_if_due(cli, round, &settings, now).await?;
-    Ok(round_to_response(&round))
+    Ok(RoundResponse::from(&round))
 }

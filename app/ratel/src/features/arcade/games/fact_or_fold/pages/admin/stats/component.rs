@@ -53,7 +53,7 @@ pub fn FactFoldAdminStatsPage() -> Element {
                 }
             }
 
-            // Section B — Per-headline breakdown (placeholder)
+            // Section B — Per-subject breakdown (placeholder)
             div { class: "ff-stats__panel",
                 header { class: "ff-stats__panel-head",
                     span { class: "ff-stats__panel-title", "{tr.panel_breakdown}" }

@@ -3,7 +3,7 @@ use crate::features::arcade::games::fact_or_fold::controllers::settlement::{
 };
 use crate::features::arcade::games::fact_or_fold::pages::game_room::FactFoldRoomTranslate;
 use crate::features::arcade::games::fact_or_fold::{
-    use_fact_fold_round, BetResponse, BetSide, RationaleResponse, RoundHeadlineResponse,
+    use_fact_fold_round, BetResponse, BetSide, RationaleResponse, RoundSubjectResponse,
     RoundParticipantSummary, Verdict,
 };
 use crate::features::auth::hooks::use_user_context;
@@ -16,7 +16,7 @@ use crate::*;
 pub fn SettlementView() -> Element {
     let ctx = use_fact_fold_round();
     let tr: FactFoldRoomTranslate = use_translate();
-    let headline = (ctx.headline)();
+    let subject = (ctx.subject)();
     let settlement_opt = (ctx.settlement)();
     let participants = (ctx.participants)();
     let bets = (ctx.bets)();
@@ -24,7 +24,7 @@ pub fn SettlementView() -> Element {
     let round = (ctx.round)();
 
     let user_ctx = use_user_context();
-    let my_pk = user_ctx().user_pk().unwrap_or_default();
+    let my_pk: UserPartition = UserPartition(user_ctx().user_id().unwrap_or_default());
 
     let my_rationale = rationales
         .items
@@ -34,7 +34,7 @@ pub fn SettlementView() -> Element {
 
     rsx! {
         section { class: "view", "data-active": true, "data-view": "result",
-            RevealBanner { headline: headline.clone() }
+            RevealBanner { subject: subject.clone() }
 
             if let Some(settlement) = settlement_opt {
                 div { class: "result-grid",
@@ -104,9 +104,9 @@ fn SettlementExitRow(round_id: FactFoldRoundEntityType) -> Element {
 }
 
 #[component]
-fn RevealBanner(headline: RoundHeadlineResponse) -> Element {
+fn RevealBanner(subject: RoundSubjectResponse) -> Element {
     let tr: FactFoldRoomTranslate = use_translate();
-    let (verdict_label, verdict_class) = match headline.verdict {
+    let (verdict_label, verdict_class) = match subject.verdict {
         Some(Verdict::Real) => (tr.reveal_verdict_real, "reveal-verdict real"),
         Some(Verdict::Fake) => (tr.reveal_verdict_fake, "reveal-verdict fake"),
         None => ("—", "reveal-verdict"),
@@ -116,11 +116,11 @@ fn RevealBanner(headline: RoundHeadlineResponse) -> Element {
         div { class: "reveal-banner",
             div { class: "reveal-label", "{tr.reveal_banner_label}" }
             div { class: "{verdict_class}", "{verdict_label}" }
-            p { class: "reveal-headline", "{headline.reveal_summary}" }
-            if !headline.reveal_sources.is_empty() {
+            p { class: "reveal-subject", "{subject.reveal_summary}" }
+            if !subject.reveal_sources.is_empty() {
                 div { class: "reveal-source",
                     "{tr.reveal_source_label} "
-                    for (idx , src) in headline.reveal_sources.iter().enumerate() {
+                    for (idx, src) in subject.reveal_sources.iter().enumerate() {
                         if idx > 0 {
                             " · "
                         }
@@ -137,7 +137,7 @@ fn ResultTable(
     settlement: SettleRoundResponse,
     bets: Vec<BetResponse>,
     participants: Vec<RoundParticipantSummary>,
-    my_pk: String,
+    my_pk: UserPartition,
 ) -> Element {
     let tr: FactFoldRoomTranslate = use_translate();
     let round_buy_in = 0; // chips_out delta vs buy_in is shown in the
@@ -151,9 +151,12 @@ fn ResultTable(
                 span { class: "sub", "{tr.result_table_sub}" }
             }
 
-            for (idx , row) in settlement.outcomes.iter().enumerate() {
+            for (idx, row) in settlement.outcomes.iter().enumerate() {
                 {
-                    let participant = participants.iter().find(|p| p.user_pk == row.user_pk).cloned();
+                    let participant = participants
+                        .iter()
+                        .find(|p| p.user_pk == row.user_pk)
+                        .cloned();
                     let bet = bets.iter().find(|b| b.user_pk == row.user_pk).cloned();
                     rsx! {
                         ResultRow {
@@ -191,7 +194,7 @@ fn ResultRow(
                 p.display_name.clone()
             }
         })
-        .unwrap_or_else(|| row.user_pk.clone());
+        .unwrap_or_else(|| row.user_pk.0.clone());
     let initials = participant
         .as_ref()
         .map(|p| {
@@ -268,7 +271,11 @@ fn ResultRow(
                         span { class: "lb-you-badge", style: "margin-left: 6px", "YOU" }
                     }
                     if row.insider_bonus > 0 {
-                        span { class: "insider-truth-badge", style: "margin-left: 6px", "⚐ INSIDER" }
+                        span {
+                            class: "insider-truth-badge",
+                            style: "margin-left: 6px",
+                            "⚐ INSIDER"
+                        }
                     }
                 }
                 div { class: "result-judgement", "{judgement}" }
@@ -280,7 +287,7 @@ fn ResultRow(
 }
 
 #[component]
-fn MySettlementCard(settlement: SettleRoundResponse, my_pk: String) -> Element {
+fn MySettlementCard(settlement: SettleRoundResponse, my_pk: UserPartition) -> Element {
     let tr: FactFoldRoomTranslate = use_translate();
     let mine = settlement
         .outcomes
@@ -296,10 +303,19 @@ fn MySettlementCard(settlement: SettleRoundResponse, my_pk: String) -> Element {
         div { class: "essence-card",
             h3 { class: "card-title", "{tr.my_settlement_title}" }
             FormulaRow { label: tr.my_settle_base.to_string(), value: o.base_refund }
-            FormulaRow { label: tr.my_settle_correct.to_string(), value: o.correct_bonus }
+            FormulaRow {
+                label: tr.my_settle_correct.to_string(),
+                value: o.correct_bonus,
+            }
             FormulaRow { label: tr.my_settle_pool.to_string(), value: o.pool_share }
-            FormulaRow { label: tr.my_settle_influence.to_string(), value: o.influence_bonus }
-            FormulaRow { label: tr.my_settle_insider.to_string(), value: o.insider_bonus }
+            FormulaRow {
+                label: tr.my_settle_influence.to_string(),
+                value: o.influence_bonus,
+            }
+            FormulaRow {
+                label: tr.my_settle_insider.to_string(),
+                value: o.insider_bonus,
+            }
             div { class: "formula-row total",
                 span { class: "lbl", "{tr.my_settle_total}" }
                 span { class: "val", "+{total} RP" }
@@ -363,7 +379,11 @@ fn EssenceCard(
                     div {
                         class: "essence-checkbox",
                         "data-checked": "{already_registered || eligible}",
-                        if already_registered { "✓" } else { "" }
+                        if already_registered {
+                            "✓"
+                        } else {
+                            ""
+                        }
                     }
                     div {
                         div { class: "essence-meta",

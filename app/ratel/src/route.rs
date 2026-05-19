@@ -45,7 +45,7 @@ use crate::features::admin::{AdminLayout, AdminMainPage};
 // player-facing pages (home, matching, game room) share
 // `ArcadeLayout` (top-bar + chip wallet) under `/arcade`.
 use crate::features::arcade::games::fact_or_fold::pages::{
-    FactFoldAdminHeadlinesPage, FactFoldAdminLayout, FactFoldAdminNewHeadlinePage,
+    FactFoldAdminSubjectsPage, FactFoldAdminLayout, FactFoldAdminNewSubjectPage,
     FactFoldAdminReportsPage, FactFoldAdminSchedulePage, FactFoldAdminSettingsPage,
     FactFoldAdminStatsPage, FactFoldGameRoomPage, FactFoldMatchingPage,
 };
@@ -163,10 +163,10 @@ pub enum Route {
 
                 #[nest("/fact-or-fold")]
                     #[layout(FactFoldAdminLayout)]
-                        #[route("/headlines")]
-                        FactFoldAdminHeadlinesPage {},
-                        #[route("/headlines/new")]
-                        FactFoldAdminNewHeadlinePage {},
+                        #[route("/subjects")]
+                        FactFoldAdminSubjectsPage {},
+                        #[route("/subjects/new")]
+                        FactFoldAdminNewSubjectPage {},
                         #[route("/schedule")]
                         FactFoldAdminSchedulePage {},
                         #[route("/stats")]

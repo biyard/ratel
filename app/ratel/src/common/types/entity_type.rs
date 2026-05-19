@@ -278,9 +278,9 @@ pub enum EntityType {
     EngagementSnapshot(String),     // pk=Feed(post_id), inner=platform.to_string()
     UserOnboardingFlags,            // pk=User(user_id), singleton per user
 
-    // Ratel Arcade — *Fact or Fold*. v1 PR1 only registers headline + settings;
+    // Ratel Arcade — *Fact or Fold*. v1 PR1 only registers subject + settings;
     // round/participant/bet/rationale/chat/settlement entries are added in PR3+.
-    FactFoldHeadline(String),       // pk=FactFoldHeadlines, inner=headline_id
+    FactFoldSubject(String),        // pk=FactFoldSubjects, inner=subject_id
     FactFoldSettings,               // pk=FactFoldSettings (singleton)
 
     // PR3 — round + lobby. Per-participant rows (bets, rationales,

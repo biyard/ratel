@@ -6,8 +6,8 @@ translate! {
     // Featured card
     tag_live: { en: "LIVE · Round in progress", ko: "LIVE · 오늘의 라운드 진행 중" },
     tag_waiting: { en: "WAITING · Lobby filling", ko: "WAITING · 로비 모집 중" },
-    tag_open: { en: "OPEN · Headline ready", ko: "OPEN · 헤드라인 준비됨" },
-    tag_closed: { en: "CLOSED · No headlines queued", ko: "CLOSED · 예정 헤드라인 없음" },
+    tag_open: { en: "OPEN · Subject ready", ko: "OPEN · 대상 준비됨" },
+    tag_closed: { en: "CLOSED · No subjects queued", ko: "CLOSED · 예정 대상 없음" },
     tag_settled: { en: "SETTLED · Round complete", ko: "SETTLED · 라운드 종료" },
 
     featured_title: { en: "Fact or Fold", ko: "Fact or Fold" },
@@ -28,7 +28,7 @@ translate! {
     cta_join: { en: "Join round →", ko: "라운드 입장 →" },
     cta_resume: { en: "Resume round →", ko: "라운드 복귀 →" },
     cta_in_progress: { en: "Round in progress", ko: "라운드 진행 중" },
-    cta_no_headline: { en: "No headline queued", ko: "예정된 헤드라인 없음" },
+    cta_no_subject: { en: "No subject queued", ko: "예정된 대상 없음" },
 
     status_can_join_new: {
         en: "Be the first to sit — the round auto-starts at 4 players.",
@@ -42,9 +42,9 @@ translate! {
         en: "You're in. Round starts as soon as the lobby fills.",
         ko: "참여 완료. 로비가 채워지면 자동 시작.",
     },
-    status_no_headline: {
-        en: "Operator hasn't queued a headline yet. Check back soon.",
-        ko: "헤드라인이 발행되지 않았습니다. 잠시 후 다시 확인해주세요.",
+    status_no_subject: {
+        en: "Operator hasn't queued a subject yet. Check back soon.",
+        ko: "대상이 발행되지 않았습니다. 잠시 후 다시 확인해주세요.",
     },
     status_in_progress: {
         en: "A round is already underway. Wait for it to settle.",

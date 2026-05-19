@@ -1,6 +1,6 @@
 pub mod chat;
 pub mod essence;
-pub mod headlines;
+pub mod subjects;
 pub mod lobby;
 pub mod queue;
 pub mod round_play;
@@ -11,7 +11,7 @@ pub mod stats;
 
 pub use chat::*;
 pub use essence::*;
-pub use headlines::*;
+pub use subjects::*;
 pub use lobby::*;
 pub use queue::*;
 pub use round_play::*;

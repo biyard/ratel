@@ -112,11 +112,11 @@ pub enum Partition {
     /// chat, settlements). Used starting PR3.
     FactFold(String),
 
-    /// Anchor pk holding **all** *Fact or Fold* headline rows; each
-    /// headline lives at the same pk with a different sk
-    /// (`EntityType::FactFoldHeadline(headline_id)`) so listing /
-    /// scheduling queries work with a single `query` per pk.
-    FactFoldHeadlines,
+    /// Anchor pk holding **all** *Fact or Fold* subject rows; each
+    /// subject (a news item players will judge) lives at the same pk
+    /// with a different sk (`EntityType::FactFoldSubject(subject_id)`)
+    /// so listing / scheduling queries work with a single `query` per pk.
+    FactFoldSubjects,
 
     /// Singleton row carrying admin-tunable parameters for the
     /// *Fact or Fold* game (stage durations, bet caps, bonus rates).

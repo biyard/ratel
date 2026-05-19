@@ -27,7 +27,7 @@ pub fn ArcadeLayout() -> Element {
     let mut modal_open = use_signal(|| false);
     let r_home = Route::ArcadeHomePage {};
     let r_leaderboard = Route::ArcadeLeaderboardPage {};
-    let r_admin_new = Route::FactFoldAdminNewHeadlinePage {};
+    let r_admin_new = Route::FactFoldAdminNewSubjectPage {};
 
     let on_chip = move |_| modal_open.set(!modal_open());
     let on_close = move |_| modal_open.set(false);

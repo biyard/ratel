@@ -1,50 +1,50 @@
 use crate::features::arcade::games::fact_or_fold::hooks::{
-    UseFactFoldAdminHeadlines, use_fact_fold_admin_headlines_provider,
+    UseFactFoldAdminSubjects, use_fact_fold_admin_subjects_provider,
 };
-use crate::features::arcade::games::fact_or_fold::{HeadlineResponse, HeadlineStatus, Verdict};
+use crate::features::arcade::games::fact_or_fold::{SubjectResponse, SubjectStatus, Verdict};
 use crate::*;
 
-use super::i18n::FactFoldAdminHeadlinesTranslate;
+use super::i18n::FactFoldAdminSubjectsTranslate;
 
-/// `/admin/fact-or-fold/headlines` — list every headline ever
+/// `/admin/fact-or-fold/subjects` — list every subject ever
 /// authored, filterable by status. Mockup also has KPI tiles +
 /// inline search; both deferred to a follow-up since they need a
 /// dedicated count endpoint and free-text search support.
 #[component]
-pub fn FactFoldAdminHeadlinesPage() -> Element {
-    let UseFactFoldAdminHeadlines {
+pub fn FactFoldAdminSubjectsPage() -> Element {
+    let UseFactFoldAdminSubjects {
         status_filter,
-        headlines,
+        subjects,
         ..
-    } = use_fact_fold_admin_headlines_provider()?;
-    let rows = headlines();
-    let tr: FactFoldAdminHeadlinesTranslate = use_translate();
+    } = use_fact_fold_admin_subjects_provider()?;
+    let rows = subjects();
+    let tr: FactFoldAdminSubjectsTranslate = use_translate();
 
     let total = rows.len();
     let count_live = rows
         .iter()
-        .filter(|h| matches!(h.status, HeadlineStatus::Live))
+        .filter(|h| matches!(h.status, SubjectStatus::Live))
         .count();
     let count_scheduled = rows
         .iter()
-        .filter(|h| matches!(h.status, HeadlineStatus::Scheduled))
+        .filter(|h| matches!(h.status, SubjectStatus::Scheduled))
         .count();
     let count_draft = rows
         .iter()
-        .filter(|h| matches!(h.status, HeadlineStatus::Draft))
+        .filter(|h| matches!(h.status, SubjectStatus::Draft))
         .count();
     let count_settled = rows
         .iter()
-        .filter(|h| matches!(h.status, HeadlineStatus::Settled))
+        .filter(|h| matches!(h.status, SubjectStatus::Settled))
         .count();
 
     rsx! {
         SeoMeta { title: "{tr.page_title} · Fact or Fold" }
-        section { class: "ff-headlines",
+        section { class: "ff-subjects",
             // KPI strip — counts are over the *currently filtered*
             // page; a global count needs a count endpoint we'll add
             // when paging in.
-            div { class: "ff-headlines__kpi",
+            div { class: "ff-subjects__kpi",
                 KpiTile { label: "{tr.kpi_total}", value: "{total}" }
                 KpiTile {
                     label: "{tr.kpi_live}",
@@ -74,11 +74,11 @@ pub fn FactFoldAdminHeadlinesPage() -> Element {
             }
 
             // Table
-            div { class: "ff-headlines__panel",
+            div { class: "ff-subjects__panel",
                 if rows.is_empty() {
-                    div { class: "ff-headlines__empty", "{tr.empty}" }
+                    div { class: "ff-subjects__empty", "{tr.empty}" }
                 } else {
-                    HeadlinesTable { rows }
+                    SubjectsTable { rows }
                 }
             }
         }
@@ -88,28 +88,28 @@ pub fn FactFoldAdminHeadlinesPage() -> Element {
 #[component]
 fn KpiTile(label: String, value: String, #[props(default)] accent: String) -> Element {
     rsx! {
-        div { class: "ff-headlines__kpi-tile",
-            div { class: "ff-headlines__kpi-label", "{label}" }
-            div { class: "ff-headlines__kpi-value", "data-accent": "{accent}", "{value}" }
+        div { class: "ff-subjects__kpi-tile",
+            div { class: "ff-subjects__kpi-label", "{label}" }
+            div { class: "ff-subjects__kpi-value", "data-accent": "{accent}", "{value}" }
         }
     }
 }
 
 #[component]
 fn FilterTabs(
-    status_filter: Signal<Option<HeadlineStatus>>,
+    status_filter: Signal<Option<SubjectStatus>>,
     count_total: usize,
     count_live: usize,
     count_scheduled: usize,
     count_draft: usize,
     count_settled: usize,
 ) -> Element {
-    let tr: FactFoldAdminHeadlinesTranslate = use_translate();
+    let tr: FactFoldAdminSubjectsTranslate = use_translate();
     let mut status_filter = status_filter;
     let current = status_filter();
 
     rsx! {
-        div { class: "ff-headlines__tabs",
+        div { class: "ff-subjects__tabs",
             FilterTab {
                 label: "{tr.tab_all}",
                 count: count_total,
@@ -119,26 +119,26 @@ fn FilterTabs(
             FilterTab {
                 label: "{tr.tab_live}",
                 count: count_live,
-                active: matches!(current, Some(HeadlineStatus::Live)),
-                onclick: move |_| status_filter.set(Some(HeadlineStatus::Live)),
+                active: matches!(current, Some(SubjectStatus::Live)),
+                onclick: move |_| status_filter.set(Some(SubjectStatus::Live)),
             }
             FilterTab {
                 label: "{tr.tab_scheduled}",
                 count: count_scheduled,
-                active: matches!(current, Some(HeadlineStatus::Scheduled)),
-                onclick: move |_| status_filter.set(Some(HeadlineStatus::Scheduled)),
+                active: matches!(current, Some(SubjectStatus::Scheduled)),
+                onclick: move |_| status_filter.set(Some(SubjectStatus::Scheduled)),
             }
             FilterTab {
                 label: "{tr.tab_draft}",
                 count: count_draft,
-                active: matches!(current, Some(HeadlineStatus::Draft)),
-                onclick: move |_| status_filter.set(Some(HeadlineStatus::Draft)),
+                active: matches!(current, Some(SubjectStatus::Draft)),
+                onclick: move |_| status_filter.set(Some(SubjectStatus::Draft)),
             }
             FilterTab {
                 label: "{tr.tab_settled}",
                 count: count_settled,
-                active: matches!(current, Some(HeadlineStatus::Settled)),
-                onclick: move |_| status_filter.set(Some(HeadlineStatus::Settled)),
+                active: matches!(current, Some(SubjectStatus::Settled)),
+                onclick: move |_| status_filter.set(Some(SubjectStatus::Settled)),
             }
         }
     }
@@ -153,24 +153,24 @@ fn FilterTab(
 ) -> Element {
     rsx! {
         button {
-            class: "ff-headlines__tab",
+            class: "ff-subjects__tab",
             "aria-selected": active,
             onclick: move |e| onclick.call(e),
             span { "{label}" }
-            span { class: "ff-headlines__tab-count", "{count}" }
+            span { class: "ff-subjects__tab-count", "{count}" }
         }
     }
 }
 
 #[component]
-fn HeadlinesTable(rows: Vec<HeadlineResponse>) -> Element {
-    let tr: FactFoldAdminHeadlinesTranslate = use_translate();
+fn SubjectsTable(rows: Vec<SubjectResponse>) -> Element {
+    let tr: FactFoldAdminSubjectsTranslate = use_translate();
     rsx! {
-        table { class: "ff-headlines__table",
+        table { class: "ff-subjects__table",
             thead {
                 tr {
                     th { "{tr.col_id}" }
-                    th { "{tr.col_headline}" }
+                    th { "{tr.col_subject}" }
                     th { "{tr.col_verdict}" }
                     th { "{tr.col_tags}" }
                     th { "{tr.col_scheduled}" }
@@ -180,7 +180,7 @@ fn HeadlinesTable(rows: Vec<HeadlineResponse>) -> Element {
             }
             tbody {
                 for row in rows {
-                    HeadlineRow { row, key: "{row.id.0}" }
+                    SubjectRow { row, key: "{row.id.0}" }
                 }
             }
         }
@@ -188,9 +188,9 @@ fn HeadlinesTable(rows: Vec<HeadlineResponse>) -> Element {
 }
 
 #[component]
-fn HeadlineRow(row: HeadlineResponse) -> Element {
-    let tr: FactFoldAdminHeadlinesTranslate = use_translate();
-    let mut ctx = use_fact_fold_admin_headlines_provider()?;
+fn SubjectRow(row: SubjectResponse) -> Element {
+    let tr: FactFoldAdminSubjectsTranslate = use_translate();
+    let mut ctx = use_fact_fold_admin_subjects_provider()?;
 
     let mut error_msg = use_signal(|| Option::<String>::None);
     let mut busy = use_signal(|| false);
@@ -225,36 +225,36 @@ fn HeadlineRow(row: HeadlineResponse) -> Element {
         .map(format_millis_short)
         .unwrap_or_else(|| "—".to_string());
 
-    let can_publish_now = matches!(row.status, HeadlineStatus::Draft | HeadlineStatus::Scheduled);
-    let can_delete = !matches!(row.status, HeadlineStatus::Live | HeadlineStatus::Settled);
+    let can_publish_now = matches!(row.status, SubjectStatus::Draft | SubjectStatus::Scheduled);
+    let can_delete = !matches!(row.status, SubjectStatus::Live | SubjectStatus::Settled);
 
     rsx! {
-        tr { class: "ff-headlines__row",
-            td { class: "ff-headlines__cell-mono", "{short_id(&row.id.0)}" }
+        tr { class: "ff-subjects__row",
+            td { class: "ff-subjects__cell-mono", "{short_id(&row.id.0)}" }
             td {
-                div { class: "ff-headlines__headline-text", "{row.headline_text}" }
+                div { class: "ff-subjects__subject-text", "{row.headline_text}" }
                 if let Some(err) = error_msg() {
-                    div { class: "ff-headlines__row-error", "{err}" }
+                    div { class: "ff-subjects__row-error", "{err}" }
                 }
             }
             td {
                 VerdictBadge { verdict: row.verdict }
             }
             td {
-                div { class: "ff-headlines__tags",
+                div { class: "ff-subjects__tags",
                     for tag in row.category_tags.iter() {
-                        span { class: "ff-headlines__pill", "{tag}" }
+                        span { class: "ff-subjects__pill", "{tag}" }
                     }
                 }
             }
-            td { class: "ff-headlines__cell-muted", "{scheduled_label}" }
+            td { class: "ff-subjects__cell-muted", "{scheduled_label}" }
             td {
                 StatusBadge { status: row.status }
             }
-            td { class: "ff-headlines__row-actions",
+            td { class: "ff-subjects__row-actions",
                 if can_publish_now {
                     button {
-                        class: "ff-headlines__icon-btn",
+                        class: "ff-subjects__icon-btn",
                         title: "{tr.action_publish}",
                         disabled: busy(),
                         onclick: on_publish,
@@ -263,7 +263,7 @@ fn HeadlineRow(row: HeadlineResponse) -> Element {
                 }
                 if can_delete {
                     button {
-                        class: "ff-headlines__icon-btn ff-headlines__icon-btn--danger",
+                        class: "ff-subjects__icon-btn ff-subjects__icon-btn--danger",
                         title: "{tr.action_delete}",
                         disabled: busy(),
                         onclick: on_delete,
@@ -282,25 +282,25 @@ fn VerdictBadge(verdict: Verdict) -> Element {
         Verdict::Fake => ("fake", "FAKE"),
     };
     rsx! {
-        span { class: "ff-headlines__verdict", "data-variant": "{variant}", "{label}" }
+        span { class: "ff-subjects__verdict", "data-variant": "{variant}", "{label}" }
     }
 }
 
 #[component]
-fn StatusBadge(status: HeadlineStatus) -> Element {
+fn StatusBadge(status: SubjectStatus) -> Element {
     let (variant, label) = match status {
-        HeadlineStatus::Draft => ("draft", "DRAFT"),
-        HeadlineStatus::Scheduled => ("scheduled", "SCHEDULED"),
-        HeadlineStatus::Live => ("live", "LIVE"),
-        HeadlineStatus::Settled => ("settled", "SETTLED"),
-        HeadlineStatus::Deleted => ("deleted", "DELETED"),
+        SubjectStatus::Draft => ("draft", "DRAFT"),
+        SubjectStatus::Scheduled => ("scheduled", "SCHEDULED"),
+        SubjectStatus::Live => ("live", "LIVE"),
+        SubjectStatus::Settled => ("settled", "SETTLED"),
+        SubjectStatus::Deleted => ("deleted", "DELETED"),
     };
     rsx! {
-        span { class: "ff-headlines__status", "data-variant": "{variant}", "{label}" }
+        span { class: "ff-subjects__status", "data-variant": "{variant}", "{label}" }
     }
 }
 
-/// Trim a UUID-shaped headline id to the first 8 chars so the table
+/// Trim a UUID-shaped subject id to the first 8 chars so the table
 /// stays scannable. Short id only used for display — the full id is
 /// always carried in actions / links.
 fn short_id(id: &str) -> String {

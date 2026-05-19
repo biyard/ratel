@@ -62,7 +62,7 @@ pub fn FactFoldMatchingPage(round_id: ReadSignal<FactFoldRoundEntityType>) -> El
 fn MatchingShell(lobby: LobbyResponse) -> Element {
     let tr: FactFoldMatchingTranslate = use_translate();
     let user_ctx = use_user_context();
-    let my_pk = user_ctx().user_pk().unwrap_or_default();
+    let my_pk = user_ctx().user_id().unwrap_or_default();
     let my_display = user_ctx()
         .user
         .as_ref()
@@ -79,7 +79,7 @@ fn MatchingShell(lobby: LobbyResponse) -> Element {
     let capacity = lobby.round_capacity.max(1) as usize;
     let participants: Vec<String> = round
         .as_ref()
-        .map(|r| r.participant_pks.clone())
+        .map(|r| r.participant_pks.iter().map(|p| p.0.clone()).collect())
         .unwrap_or_default();
     let current = participants.len();
     let ready = round
@@ -316,7 +316,11 @@ fn CancelRow() -> Element {
             span { class: "matching-actions-hint", "{tr.cancel_hint}" }
         }
         if let Some(err) = error() {
-            div { class: "reason-warn", style: "margin-top: 10px; max-width: 520px", "{err}" }
+            div {
+                class: "reason-warn",
+                style: "margin-top: 10px; max-width: 520px",
+                "{err}"
+            }
         }
     }
 }

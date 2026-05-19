@@ -40,11 +40,7 @@ impl FactFoldRationale {
     }
 
     pub fn new(round_id: &str, user_pk: Partition, text: String, essence_eligible: bool) -> Self {
-        let user_id = user_pk
-            .to_string()
-            .strip_prefix("USER#")
-            .unwrap_or(&user_pk.to_string())
-            .to_string();
+        let user_id = UserPartition::from(user_pk.clone()).0;
         let now = crate::common::utils::time::get_now_timestamp_millis();
         let (pk, sk) = Self::keys(round_id, &user_id);
         Self {

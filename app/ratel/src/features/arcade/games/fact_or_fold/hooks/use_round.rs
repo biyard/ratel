@@ -19,12 +19,12 @@ use crate::features::arcade::games::fact_or_fold::controllers::essence::{
 use crate::features::arcade::games::fact_or_fold::controllers::settlement::SettleRoundResponse;
 use crate::features::arcade::games::fact_or_fold::{
     delete_round_chat_handler, flip_bet_handler, get_insider_statement_handler, get_round_handler,
-    get_round_headline_handler, get_round_settlement_handler, heartbeat_handler,
+    get_round_subject_handler, get_round_settlement_handler, heartbeat_handler,
     list_chat_handler, list_round_bets_handler, list_round_participants_handler,
     list_round_rationales_handler, place_bet_handler, post_chat_handler,
     submit_rationale_handler, tick_handler, BetResponse, BetSide, ChatMessagePayload,
     FlipBetRequest, InsiderStatementResponse, ListBetsResponse, ListParticipantsResponse,
-    ListRationalesResponse, PlaceBetRequest, PostChatRequest, RoundHeadlineResponse,
+    ListRationalesResponse, PlaceBetRequest, PostChatRequest, RoundSubjectResponse,
     RoundResponse, SubmitRationaleRequest,
 };
 use crate::FactFoldRoundEntityType;
@@ -33,7 +33,7 @@ use crate::*;
 #[derive(Clone, Copy, DioxusController)]
 pub struct UseFactFoldRound {
     pub round: Loader<RoundResponse>,
-    pub headline: Loader<RoundHeadlineResponse>,
+    pub subject: Loader<RoundSubjectResponse>,
     pub participants: Loader<ListParticipantsResponse>,
     pub bets: Loader<ListBetsResponse>,
     pub rationales: Loader<ListRationalesResponse>,
@@ -46,11 +46,11 @@ pub struct UseFactFoldRound {
     /// asks the server for messages newer than `last_chat_id`.
     pub chat: Signal<Vec<ChatMessagePayload>>,
     pub last_chat_id: Signal<Option<String>>,
-    /// User pk that the caller marked as "decisive" during the reveal
+    /// User id that the caller marked as "decisive" during the reveal
     /// stage (mockup's ⌬ icon). Carries the citation across into the
     /// live-debate flip slot — `flip_bet` uses this as the default
     /// cite_user_pk. Cleared when the round terminates.
-    pub cited_user_pk: Signal<Option<String>>,
+    pub cited_user_pk: Signal<Option<UserPartition>>,
 }
 
 impl UseFactFoldRound {
@@ -59,7 +59,7 @@ impl UseFactFoldRound {
     /// is intentionally excluded — it is incremental, not replace-all.
     pub fn refresh_all(&mut self) {
         self.round.restart();
-        self.headline.restart();
+        self.subject.restart();
         self.participants.restart();
         self.bets.restart();
         self.rationales.restart();
@@ -121,7 +121,7 @@ impl UseFactFoldRound {
         &mut self,
         round_id: FactFoldRoundEntityType,
         side: BetSide,
-        cite_user_pk: String,
+        cite_user_pk: UserPartition,
     ) -> crate::common::Result<()> {
         let _ = flip_bet_handler(round_id, FlipBetRequest { side, cite_user_pk }).await?;
         self.bets.restart();
@@ -202,8 +202,8 @@ pub fn use_fact_fold_round_provider(
     }
 
     let round = use_loader(move || async move { get_round_handler(round_id()).await })?;
-    let headline =
-        use_loader(move || async move { get_round_headline_handler(round_id()).await })?;
+    let subject =
+        use_loader(move || async move { get_round_subject_handler(round_id()).await })?;
     let participants =
         use_loader(move || async move { list_round_participants_handler(round_id()).await })?;
     let bets = use_loader(move || async move { list_round_bets_handler(round_id()).await })?;
@@ -223,11 +223,11 @@ pub fn use_fact_fold_round_provider(
 
     let chat = use_signal(Vec::<ChatMessagePayload>::new);
     let last_chat_id = use_signal(|| None::<String>);
-    let cited_user_pk = use_signal(|| None::<String>);
+    let cited_user_pk = use_signal(|| None::<UserPartition>);
 
     Ok(use_context_provider(|| UseFactFoldRound {
         round,
-        headline,
+        subject,
         participants,
         bets,
         rationales,

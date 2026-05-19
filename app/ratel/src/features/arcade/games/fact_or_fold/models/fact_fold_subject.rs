@@ -1,13 +1,14 @@
 use crate::common::*;
-use crate::features::arcade::games::fact_or_fold::types::{HeadlineStatus, RevealSource, Verdict};
+use crate::features::arcade::games::fact_or_fold::types::{RevealSource, SubjectStatus, Verdict};
 
 #[allow(unused_imports)]
 use rmcp::schemars;
 
-/// Single headline = single round's content. Stored under the shared
-/// anchor pk `Partition::FactFoldHeadlines` with a sk carrying the
-/// headline id (`EntityType::FactFoldHeadline(headline_id)`) so a
-/// single `query` on the anchor pk lists every headline.
+/// Single subject = single round's content (a news item players will
+/// judge as Real or Fake). Stored under the shared anchor pk
+/// `Partition::FactFoldSubjects` with a sk carrying the subject id
+/// (`EntityType::FactFoldSubject(subject_id)`) so a single `query` on
+/// the anchor pk lists every subject.
 ///
 /// Lifecycle: Draft → Scheduled (optional) → Live (round in progress)
 /// → Settled. Once Live, only `reveal_sources` may grow (roadmap §FR-43).
@@ -16,17 +17,17 @@ use rmcp::schemars;
     feature = "server",
     derive(DynamoEntity, rmcp::schemars::JsonSchema)
 )]
-pub struct FactFoldHeadline {
-    pub pk: Partition,  // Partition::FactFoldHeadlines
-    pub sk: EntityType, // EntityType::FactFoldHeadline(headline_id)
+pub struct FactFoldSubject {
+    pub pk: Partition,  // Partition::FactFoldSubjects
+    pub sk: EntityType, // EntityType::FactFoldSubject(subject_id)
 
     pub created_at: i64,
     pub updated_at: i64,
 
-    /// Operator who authored this headline.
+    /// Operator who authored this subject.
     pub creator_pk: Partition,
 
-    pub status: HeadlineStatus,
+    pub status: SubjectStatus,
     pub verdict: Verdict,
 
     pub headline_text: String,
@@ -50,27 +51,27 @@ pub struct FactFoldHeadline {
     pub reveal_sources: Vec<RevealSource>,
 
     /// Millis since epoch; None for plain drafts. When Some, the
-    /// scheduler activates the headline as the live round at this time.
+    /// scheduler activates the subject as the live round at this time.
     pub scheduled_at: Option<i64>,
 }
 
 #[cfg(feature = "server")]
-impl FactFoldHeadline {
+impl FactFoldSubject {
     pub fn anchor_pk() -> Partition {
-        Partition::FactFoldHeadlines
+        Partition::FactFoldSubjects
     }
 
-    pub fn keys(headline_id: &str) -> (Partition, EntityType) {
+    pub fn keys(subject_id: &str) -> (Partition, EntityType) {
         (
-            Partition::FactFoldHeadlines,
-            EntityType::FactFoldHeadline(headline_id.to_string()),
+            Partition::FactFoldSubjects,
+            EntityType::FactFoldSubject(subject_id.to_string()),
         )
     }
 
     /// Build a fresh draft from a creation request. Caller is responsible
     /// for validation and uniqueness check; this only assembles the row.
     pub fn new_draft(
-        headline_id: String,
+        subject_id: String,
         creator_pk: Partition,
         headline_text: String,
         body_excerpt: String,
@@ -85,13 +86,13 @@ impl FactFoldHeadline {
     ) -> Self {
         let now = crate::common::utils::time::get_now_timestamp_millis();
         let status = if scheduled_at.is_some() {
-            HeadlineStatus::Scheduled
+            SubjectStatus::Scheduled
         } else {
-            HeadlineStatus::Draft
+            SubjectStatus::Draft
         };
         Self {
-            pk: Partition::FactFoldHeadlines,
-            sk: EntityType::FactFoldHeadline(headline_id),
+            pk: Partition::FactFoldSubjects,
+            sk: EntityType::FactFoldSubject(subject_id),
             created_at: now,
             updated_at: now,
             creator_pk,
@@ -112,14 +113,14 @@ impl FactFoldHeadline {
     /// Inner id encoded in the sort key.
     pub fn id(&self) -> Option<String> {
         match &self.sk {
-            EntityType::FactFoldHeadline(id) => Some(id.clone()),
+            EntityType::FactFoldSubject(id) => Some(id.clone()),
             _ => None,
         }
     }
 
-    /// True once a round has been started against this headline; mutation
+    /// True once a round has been started against this subject; mutation
     /// rules tighten (roadmap §FR-43).
     pub fn is_locked(&self) -> bool {
-        matches!(self.status, HeadlineStatus::Live | HeadlineStatus::Settled)
+        matches!(self.status, SubjectStatus::Live | SubjectStatus::Settled)
     }
 }

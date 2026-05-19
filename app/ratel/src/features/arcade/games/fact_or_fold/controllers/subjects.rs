@@ -1,12 +1,12 @@
-//! Admin headline CRUD endpoints for *Fact or Fold*.
+//! Admin subject CRUD endpoints for *Fact or Fold*.
 //!
 //! Surface mirrored from the design doc (PR1 in §"Scope & PR slicing"):
-//!  - POST   /api/fact-or-fold/admin/headlines          create draft or scheduled
-//!  - GET    /api/fact-or-fold/admin/headlines          list with status filter
-//!  - GET    /api/fact-or-fold/admin/headlines/:id      single headline
-//!  - PATCH  /api/fact-or-fold/admin/headlines/:id      edit (locked once Live)
-//!  - DELETE /api/fact-or-fold/admin/headlines/:id      soft-delete
-//!  - POST   /api/fact-or-fold/admin/headlines/:id/publish  schedule or publish-now
+//!  - POST   /api/fact-or-fold/admin/subjects          create draft or scheduled
+//!  - GET    /api/fact-or-fold/admin/subjects          list with status filter
+//!  - GET    /api/fact-or-fold/admin/subjects/:id      single subject
+//!  - PATCH  /api/fact-or-fold/admin/subjects/:id      edit (locked once Live)
+//!  - DELETE /api/fact-or-fold/admin/subjects/:id      soft-delete
+//!  - POST   /api/fact-or-fold/admin/subjects/:id/publish  schedule or publish-now
 //!
 //! All endpoints are gated by `AdminUser` — only the operator role per
 //! roadmap §FR-39.
@@ -17,7 +17,7 @@ use crate::features::arcade::games::fact_or_fold::types::*;
 #[cfg(feature = "server")]
 use crate::common::models::auth::AdminUser;
 #[cfg(feature = "server")]
-use crate::features::arcade::games::fact_or_fold::models::FactFoldHeadline;
+use crate::features::arcade::games::fact_or_fold::models::FactFoldSubject;
 
 #[cfg(feature = "server")]
 const PAGE_LIMIT: i32 = 50;
@@ -25,24 +25,24 @@ const PAGE_LIMIT: i32 = 50;
 // ── Helpers ───────────────────────────────────────────────────────
 
 #[cfg(feature = "server")]
-fn validate_headline_fields(
+fn validate_subject_fields(
     headline_text: &str,
     body_excerpt: &str,
     difficulty: i32,
     reveal_sources_len: usize,
 ) -> Result<()> {
     if headline_text.trim().is_empty() || headline_text.len() > HEADLINE_TEXT_MAX {
-        return Err(FactOrFoldError::HeadlineInvalid.into());
+        return Err(FactOrFoldError::SubjectInvalid.into());
     }
     let body_len = body_excerpt.chars().count();
     if body_len < HEADLINE_BODY_MIN || body_len > HEADLINE_BODY_MAX {
-        return Err(FactOrFoldError::HeadlineInvalid.into());
+        return Err(FactOrFoldError::SubjectInvalid.into());
     }
     if !(HEADLINE_DIFFICULTY_MIN..=HEADLINE_DIFFICULTY_MAX).contains(&difficulty) {
-        return Err(FactOrFoldError::HeadlineInvalid.into());
+        return Err(FactOrFoldError::SubjectInvalid.into());
     }
     if reveal_sources_len > REVEAL_SOURCES_MAX {
-        return Err(FactOrFoldError::HeadlineInvalid.into());
+        return Err(FactOrFoldError::SubjectInvalid.into());
     }
     Ok(())
 }
@@ -59,10 +59,10 @@ fn validate_scheduled_at(scheduled_at: Option<i64>) -> Result<()> {
 }
 
 #[cfg(feature = "server")]
-fn to_response(row: FactFoldHeadline) -> HeadlineResponse {
+fn to_response(row: FactFoldSubject) -> SubjectResponse {
     let id = row.id().unwrap_or_default();
-    HeadlineResponse {
-        id: FactFoldHeadlineEntityType(id),
+    SubjectResponse {
+        id: FactFoldSubjectEntityType(id),
         status: row.status,
         headline_text: row.headline_text,
         body_excerpt: row.body_excerpt,
@@ -79,13 +79,13 @@ fn to_response(row: FactFoldHeadline) -> HeadlineResponse {
     }
 }
 
-// ── POST /api/fact-or-fold/admin/headlines ───────────────────────
+// ── POST /api/fact-or-fold/admin/subjects ───────────────────────
 
-#[post("/api/fact-or-fold/admin/headlines", user: AdminUser)]
-pub async fn create_headline_handler(
-    req: CreateHeadlineRequest,
-) -> Result<HeadlineResponse> {
-    validate_headline_fields(
+#[post("/api/fact-or-fold/admin/subjects", user: AdminUser)]
+pub async fn create_subject_handler(
+    req: CreateSubjectRequest,
+) -> Result<SubjectResponse> {
+    validate_subject_fields(
         &req.headline_text,
         &req.body_excerpt,
         req.difficulty,
@@ -94,15 +94,15 @@ pub async fn create_headline_handler(
     validate_scheduled_at(req.scheduled_at)?;
 
     if req.insider_statement.trim().is_empty() || req.source_label.trim().is_empty() {
-        return Err(FactOrFoldError::HeadlineInvalid.into());
+        return Err(FactOrFoldError::SubjectInvalid.into());
     }
 
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
 
-    let headline_id = uuid::Uuid::new_v4().to_string();
-    let row = FactFoldHeadline::new_draft(
-        headline_id,
+    let subject_id = uuid::Uuid::now_v7().to_string();
+    let row = FactFoldSubject::new_draft(
+        subject_id,
         user.pk.clone(),
         req.headline_text,
         req.body_excerpt,
@@ -117,34 +117,34 @@ pub async fn create_headline_handler(
     );
 
     row.create(cli).await.map_err(|e| {
-        crate::error!("create_headline_handler create failed: {e}");
+        crate::error!("create_subject_handler create failed: {e}");
         FactOrFoldError::StorageFailure
     })?;
 
     Ok(to_response(row))
 }
 
-// ── GET /api/fact-or-fold/admin/headlines ────────────────────────
+// ── GET /api/fact-or-fold/admin/subjects ────────────────────────
 
-const HEADLINE_SK_PREFIX: &str = "FACT_FOLD_HEADLINE";
+const HEADLINE_SK_PREFIX: &str = "FACT_FOLD_SUBJECT";
 
-#[get("/api/fact-or-fold/admin/headlines?bookmark&status", _user: AdminUser)]
-pub async fn list_headlines_handler(
+#[get("/api/fact-or-fold/admin/subjects?bookmark&status", _user: AdminUser)]
+pub async fn list_subjects_handler(
     bookmark: Option<String>,
-    status: Option<HeadlineStatus>,
-) -> Result<ListResponse<HeadlineResponse>> {
+    status: Option<SubjectStatus>,
+) -> Result<ListResponse<SubjectResponse>> {
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
 
-    // All headlines share a single anchor pk so a sk-prefix query lists
+    // All subjects share a single anchor pk so a sk-prefix query lists
     // them in one round-trip.
-    let opts = FactFoldHeadline::opt_with_bookmark(bookmark)
+    let opts = FactFoldSubject::opt_with_bookmark(bookmark)
         .sk(HEADLINE_SK_PREFIX.to_string())
         .limit(PAGE_LIMIT);
-    let (rows, next) = FactFoldHeadline::query(cli, FactFoldHeadline::anchor_pk(), opts)
+    let (rows, next) = FactFoldSubject::query(cli, FactFoldSubject::anchor_pk(), opts)
         .await
         .map_err(|e| {
-            crate::error!("list_headlines_handler query failed: {e}");
+            crate::error!("list_subjects_handler query failed: {e}");
             FactOrFoldError::StorageFailure
         })?;
 
@@ -157,7 +157,7 @@ pub async fn list_headlines_handler(
         })
         .filter(|h| {
             if exclude_deleted {
-                !matches!(h.status, HeadlineStatus::Deleted)
+                !matches!(h.status, SubjectStatus::Deleted)
             } else {
                 true
             }
@@ -165,51 +165,51 @@ pub async fn list_headlines_handler(
         .collect();
     items.sort_by(|a, b| b.created_at.cmp(&a.created_at));
 
-    let responses: Vec<HeadlineResponse> = items.into_iter().map(to_response).collect();
+    let responses: Vec<SubjectResponse> = items.into_iter().map(to_response).collect();
     Ok((responses, next).into())
 }
 
-// ── GET /api/fact-or-fold/admin/headlines/{headline_id} ───────────
+// ── GET /api/fact-or-fold/admin/subjects/{subject_id} ───────────
 
-#[get("/api/fact-or-fold/admin/headlines/{headline_id}", _user: AdminUser)]
-pub async fn get_headline_handler(
-    headline_id: FactFoldHeadlineEntityType,
-) -> Result<HeadlineResponse> {
+#[get("/api/fact-or-fold/admin/subjects/{subject_id}", _user: AdminUser)]
+pub async fn get_subject_handler(
+    subject_id: FactFoldSubjectEntityType,
+) -> Result<SubjectResponse> {
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
 
-    let sk: EntityType = headline_id.into();
-    let row = FactFoldHeadline::get(cli, &FactFoldHeadline::anchor_pk(), Some(sk))
+    let sk: EntityType = subject_id.into();
+    let row = FactFoldSubject::get(cli, &FactFoldSubject::anchor_pk(), Some(sk))
         .await
         .map_err(|e| {
-            crate::error!("get_headline_handler get failed: {e}");
+            crate::error!("get_subject_handler get failed: {e}");
             FactOrFoldError::StorageFailure
         })?
-        .ok_or(FactOrFoldError::HeadlineNotFound)?;
+        .ok_or(FactOrFoldError::SubjectNotFound)?;
 
     Ok(to_response(row))
 }
 
-// ── PATCH /api/fact-or-fold/admin/headlines/{headline_id} ─────────
+// ── PATCH /api/fact-or-fold/admin/subjects/{subject_id} ─────────
 
-#[patch("/api/fact-or-fold/admin/headlines/{headline_id}", _user: AdminUser)]
-pub async fn update_headline_handler(
-    headline_id: FactFoldHeadlineEntityType,
-    req: UpdateHeadlineRequest,
-) -> Result<HeadlineResponse> {
+#[patch("/api/fact-or-fold/admin/subjects/{subject_id}", _user: AdminUser)]
+pub async fn update_subject_handler(
+    subject_id: FactFoldSubjectEntityType,
+    req: UpdateSubjectRequest,
+) -> Result<SubjectResponse> {
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
 
-    let pk = FactFoldHeadline::anchor_pk();
-    let sk: EntityType = headline_id.into();
+    let pk = FactFoldSubject::anchor_pk();
+    let sk: EntityType = subject_id.into();
 
-    let mut existing = FactFoldHeadline::get(cli, &pk, Some(sk.clone()))
+    let mut existing = FactFoldSubject::get(cli, &pk, Some(sk.clone()))
         .await
         .map_err(|e| {
-            crate::error!("update_headline_handler get failed: {e}");
+            crate::error!("update_subject_handler get failed: {e}");
             FactOrFoldError::StorageFailure
         })?
-        .ok_or(FactOrFoldError::HeadlineNotFound)?;
+        .ok_or(FactOrFoldError::SubjectNotFound)?;
 
     let locked = existing.is_locked();
 
@@ -226,7 +226,7 @@ pub async fn update_headline_handler(
             && req.reveal_summary.is_none()
             && req.scheduled_at.is_none();
         if !only_reveal_sources_change {
-            return Err(FactOrFoldError::HeadlineLocked.into());
+            return Err(FactOrFoldError::SubjectLocked.into());
         }
     }
 
@@ -235,13 +235,13 @@ pub async fn update_headline_handler(
     }
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
-    let mut updater = FactFoldHeadline::updater(&pk, &sk).with_updated_at(now);
+    let mut updater = FactFoldSubject::updater(&pk, &sk).with_updated_at(now);
     existing.updated_at = now;
     let mut changed = false;
 
     if let Some(v) = req.headline_text {
         if v.trim().is_empty() || v.len() > HEADLINE_TEXT_MAX {
-            return Err(FactOrFoldError::HeadlineInvalid.into());
+            return Err(FactOrFoldError::SubjectInvalid.into());
         }
         updater = updater.with_headline_text(v.clone());
         existing.headline_text = v;
@@ -250,7 +250,7 @@ pub async fn update_headline_handler(
     if let Some(v) = req.body_excerpt {
         let body_len = v.chars().count();
         if body_len < HEADLINE_BODY_MIN || body_len > HEADLINE_BODY_MAX {
-            return Err(FactOrFoldError::HeadlineInvalid.into());
+            return Err(FactOrFoldError::SubjectInvalid.into());
         }
         updater = updater.with_body_excerpt(v.clone());
         existing.body_excerpt = v;
@@ -263,7 +263,7 @@ pub async fn update_headline_handler(
     }
     if let Some(v) = req.difficulty {
         if !(HEADLINE_DIFFICULTY_MIN..=HEADLINE_DIFFICULTY_MAX).contains(&v) {
-            return Err(FactOrFoldError::HeadlineInvalid.into());
+            return Err(FactOrFoldError::SubjectInvalid.into());
         }
         updater = updater.with_difficulty(v);
         existing.difficulty = v;
@@ -276,7 +276,7 @@ pub async fn update_headline_handler(
     }
     if let Some(v) = req.source_label {
         if v.trim().is_empty() {
-            return Err(FactOrFoldError::HeadlineInvalid.into());
+            return Err(FactOrFoldError::SubjectInvalid.into());
         }
         updater = updater.with_source_label(v.clone());
         existing.source_label = v;
@@ -284,7 +284,7 @@ pub async fn update_headline_handler(
     }
     if let Some(v) = req.insider_statement {
         if v.trim().is_empty() {
-            return Err(FactOrFoldError::HeadlineInvalid.into());
+            return Err(FactOrFoldError::SubjectInvalid.into());
         }
         updater = updater.with_insider_statement(v.clone());
         existing.insider_statement = v;
@@ -297,7 +297,7 @@ pub async fn update_headline_handler(
     }
     if let Some(v) = req.reveal_sources {
         if v.len() > REVEAL_SOURCES_MAX {
-            return Err(FactOrFoldError::HeadlineInvalid.into());
+            return Err(FactOrFoldError::SubjectInvalid.into());
         }
         updater = updater.with_reveal_sources(v.clone());
         existing.reveal_sources = v;
@@ -306,16 +306,16 @@ pub async fn update_headline_handler(
     if let Some(v) = req.scheduled_at {
         updater = updater.with_scheduled_at(v);
         existing.scheduled_at = Some(v);
-        if matches!(existing.status, HeadlineStatus::Draft) {
-            updater = updater.with_status(HeadlineStatus::Scheduled);
-            existing.status = HeadlineStatus::Scheduled;
+        if matches!(existing.status, SubjectStatus::Draft) {
+            updater = updater.with_status(SubjectStatus::Scheduled);
+            existing.status = SubjectStatus::Scheduled;
         }
         changed = true;
     }
 
     if changed {
         updater.execute(cli).await.map_err(|e| {
-            crate::error!("update_headline_handler execute failed: {e}");
+            crate::error!("update_subject_handler execute failed: {e}");
             FactOrFoldError::StorageFailure
         })?;
     }
@@ -323,75 +323,75 @@ pub async fn update_headline_handler(
     Ok(to_response(existing))
 }
 
-// ── DELETE /api/fact-or-fold/admin/headlines/{headline_id} ────────
+// ── DELETE /api/fact-or-fold/admin/subjects/{subject_id} ────────
 
-#[delete("/api/fact-or-fold/admin/headlines/{headline_id}", _user: AdminUser)]
-pub async fn delete_headline_handler(
-    headline_id: FactFoldHeadlineEntityType,
-) -> Result<HeadlineResponse> {
+#[delete("/api/fact-or-fold/admin/subjects/{subject_id}", _user: AdminUser)]
+pub async fn delete_subject_handler(
+    subject_id: FactFoldSubjectEntityType,
+) -> Result<SubjectResponse> {
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
 
-    let pk = FactFoldHeadline::anchor_pk();
-    let sk: EntityType = headline_id.into();
+    let pk = FactFoldSubject::anchor_pk();
+    let sk: EntityType = subject_id.into();
 
-    let mut existing = FactFoldHeadline::get(cli, &pk, Some(sk.clone()))
+    let mut existing = FactFoldSubject::get(cli, &pk, Some(sk.clone()))
         .await
         .map_err(|e| {
-            crate::error!("delete_headline_handler get failed: {e}");
+            crate::error!("delete_subject_handler get failed: {e}");
             FactOrFoldError::StorageFailure
         })?
-        .ok_or(FactOrFoldError::HeadlineNotFound)?;
+        .ok_or(FactOrFoldError::SubjectNotFound)?;
 
     if existing.is_locked() {
-        return Err(FactOrFoldError::HeadlineLocked.into());
+        return Err(FactOrFoldError::SubjectLocked.into());
     }
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
-    FactFoldHeadline::updater(&pk, &sk)
-        .with_status(HeadlineStatus::Deleted)
+    FactFoldSubject::updater(&pk, &sk)
+        .with_status(SubjectStatus::Deleted)
         .with_updated_at(now)
         .execute(cli)
         .await
         .map_err(|e| {
-            crate::error!("delete_headline_handler execute failed: {e}");
+            crate::error!("delete_subject_handler execute failed: {e}");
             FactOrFoldError::StorageFailure
         })?;
 
-    existing.status = HeadlineStatus::Deleted;
+    existing.status = SubjectStatus::Deleted;
     existing.updated_at = now;
     Ok(to_response(existing))
 }
 
-// ── POST /api/fact-or-fold/admin/headlines/{headline_id}/publish ──
+// ── POST /api/fact-or-fold/admin/subjects/{subject_id}/publish ──
 
 /// Drafts must satisfy the full validation (insider statement, body
 /// length, sources) before they can leave Draft. Mode (schedule vs
-/// publish-now) is encoded in `PublishHeadlineRequest::scheduled_at`.
-#[post("/api/fact-or-fold/admin/headlines/{headline_id}/publish", _user: AdminUser)]
-pub async fn publish_headline_handler(
-    headline_id: FactFoldHeadlineEntityType,
-    req: PublishHeadlineRequest,
-) -> Result<HeadlineResponse> {
+/// publish-now) is encoded in `PublishSubjectRequest::scheduled_at`.
+#[post("/api/fact-or-fold/admin/subjects/{subject_id}/publish", _user: AdminUser)]
+pub async fn publish_subject_handler(
+    subject_id: FactFoldSubjectEntityType,
+    req: PublishSubjectRequest,
+) -> Result<SubjectResponse> {
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
 
-    let pk = FactFoldHeadline::anchor_pk();
-    let sk: EntityType = headline_id.into();
+    let pk = FactFoldSubject::anchor_pk();
+    let sk: EntityType = subject_id.into();
 
-    let mut existing = FactFoldHeadline::get(cli, &pk, Some(sk.clone()))
+    let mut existing = FactFoldSubject::get(cli, &pk, Some(sk.clone()))
         .await
         .map_err(|e| {
-            crate::error!("publish_headline_handler get failed: {e}");
+            crate::error!("publish_subject_handler get failed: {e}");
             FactOrFoldError::StorageFailure
         })?
-        .ok_or(FactOrFoldError::HeadlineNotFound)?;
+        .ok_or(FactOrFoldError::SubjectNotFound)?;
 
     if existing.is_locked() {
-        return Err(FactOrFoldError::HeadlineLocked.into());
+        return Err(FactOrFoldError::SubjectLocked.into());
     }
 
-    validate_headline_fields(
+    validate_subject_fields(
         &existing.headline_text,
         &existing.body_excerpt,
         existing.difficulty,
@@ -412,12 +412,12 @@ pub async fn publish_headline_handler(
             if ts < now {
                 return Err(FactOrFoldError::PublishInvariantViolation.into());
             }
-            (HeadlineStatus::Scheduled, Some(ts))
+            (SubjectStatus::Scheduled, Some(ts))
         }
-        None => (HeadlineStatus::Live, None),
+        None => (SubjectStatus::Live, None),
     };
 
-    let updater = FactFoldHeadline::updater(&pk, &sk)
+    let updater = FactFoldSubject::updater(&pk, &sk)
         .with_status(next_status)
         .with_updated_at(now);
     let updater = match next_scheduled_at {
@@ -427,7 +427,7 @@ pub async fn publish_headline_handler(
         None => updater.remove_scheduled_at(),
     };
     updater.execute(cli).await.map_err(|e| {
-        crate::error!("publish_headline_handler execute failed: {e}");
+        crate::error!("publish_subject_handler execute failed: {e}");
         FactOrFoldError::StorageFailure
     })?;
 
