@@ -22,6 +22,9 @@ pub struct UserRewardHistory {
 
     #[serde(default)]
     pub description: Option<String>,
+
+    #[serde(default)]
+    pub action_name: Option<String>,
 }
 
 #[cfg(feature = "server")]
@@ -91,4 +94,18 @@ pub async fn resolve_reward_description(
     } else {
         format!("{}#{}", space_pk_str, post.title)
     }
+}
+
+/// Resolves the user-facing behavior label for a UserRewardHistory row
+/// (e.g. "투표 응답", "토론 댓글", "퀴즈 답변", "팔로우", "회의 참석").
+///
+/// Reads `reward_key.behavior` directly — no DB hit. The label set is
+/// the one declared via `#[translate(...)]` on `RewardUserBehavior`,
+/// rendered in Korean. The list/detail UIs that need a different
+/// locale can still re-render from `sk.0.behavior`; storing the KO
+/// label here is a convenience for callers that want a ready-to-show
+/// string without re-translating.
+pub fn resolve_action_name(reward_key: &RewardKey) -> String {
+    use dioxus_translate::{Language, Translate};
+    reward_key.behavior.translate(&Language::Ko).to_string()
 }

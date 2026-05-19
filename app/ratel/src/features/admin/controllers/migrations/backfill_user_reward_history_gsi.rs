@@ -15,6 +15,7 @@ pub struct BackfillUserRewardHistoryResponse {
     pub updated: usize,
     pub skipped_already_complete: usize,
     pub description_resolved: usize,
+    pub action_name_resolved: usize,
     pub transaction_matched: usize,
     pub no_biyard_match: usize,
     pub biyard_scanned: usize,
@@ -245,6 +246,18 @@ pub async fn backfill_user_reward_history_gsi(
             }
         }
 
+        // Behavior label (e.g. "투표 응답", "토론 댓글") rendered from
+        // `sk.0.behavior` — no DB hit, no `is_none` guard. Earlier
+        // backfill passes wrote `SpaceAction.title` here (e.g. the
+        // post title for a quiz row); each run now reseeds the field
+        // to the canonical behavior label so stale strings get
+        // overwritten.
+        let name = crate::common::models::reward::resolve_action_name(&history.sk.0);
+        if !name.is_empty() {
+            history.action_name = Some(name);
+            response.action_name_resolved += 1;
+        }
+
         // `upsert` re-runs `indexed_fields()` so any missing
         // `gsi1_pk` / `gsi1_sk` get populated at the same time as
         // description / transaction_id / month.
@@ -260,9 +273,10 @@ pub async fn backfill_user_reward_history_gsi(
         updated = response.updated,
         skipped = response.skipped_already_complete,
         description_resolved = response.description_resolved,
+        action_name_resolved = response.action_name_resolved,
         transaction_matched = response.transaction_matched,
         no_biyard_match = response.no_biyard_match,
-        "UserRewardHistory backfill (GSI + description + transaction_id) complete",
+        "UserRewardHistory backfill (GSI + description + action_name + transaction_id) complete",
     );
 
     Ok(response)
