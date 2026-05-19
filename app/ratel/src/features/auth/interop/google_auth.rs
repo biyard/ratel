@@ -18,13 +18,13 @@ use super::*;
 //   - regular web/SSR build → has `fullstack` → web functions below
 //   - Tauri Android shell   → no `fullstack` (Cargo.toml note line 122)
 //                              → native sign_in re-export further down.
-#[cfg(not(feature = "tauri-web"))]
+#[cfg(feature = "fullstack")]
 define_invoke_js!(
     init_firebase,
     "init_firebase",
     crate::common::FirebaseConfig
 );
-#[cfg(not(feature = "tauri-web"))]
+#[cfg(feature = "fullstack")]
 define_invoke_js!(sign_in, "signIn", res: super::UserInfo);
 
 // Tauri-web build (Android shell only, never web): route through native
@@ -39,10 +39,10 @@ define_invoke_js!(sign_in, "signIn", res: super::UserInfo);
 // where dx silently enables `tauri-web` alongside `web,fullstack`,
 // `fullstack` is on and this branch is skipped — the `fullstack` arm
 // above provides the real Firebase implementation instead.
-#[cfg(feature = "tauri-web")]
+#[cfg(all(feature = "tauri-web", not(feature = "fullstack")))]
 pub async fn init_firebase(_: &crate::common::FirebaseConfig) -> crate::common::Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "tauri-web")]
+#[cfg(all(feature = "tauri-web", not(feature = "fullstack")))]
 pub use crate::tauri::sign_in;
