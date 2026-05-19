@@ -18,6 +18,31 @@ translate! {
         ko: "생성",
     },
 
+    compose_post: {
+        en: "Compose post",
+        ko: "글 작성",
+    },
+
+    engage: {
+        en: "Engage",
+        ko: "참여",
+    },
+
+    account: {
+        en: "Account",
+        ko: "계정",
+    },
+
+    profile: {
+        en: "Profile",
+        ko: "프로필",
+    },
+
+    ai_assist: {
+        en: "AI assist",
+        ko: "AI 어시스트",
+    },
+
     drafts: {
         en: "Drafts",
         ko: "임시저장",
@@ -171,5 +196,20 @@ translate! {
     create_team: {
         en: "Create Team",
         ko: "팀 생성",
+    },
+
+    menu: {
+        en: "Menu",
+        ko: "메뉴",
+    },
+
+    open_menu: {
+        en: "Open menu",
+        ko: "메뉴 열기",
+    },
+
+    close_menu: {
+        en: "Close menu",
+        ko: "메뉴 닫기",
     },
 }

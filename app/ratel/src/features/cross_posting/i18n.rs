@@ -36,7 +36,7 @@ translate! {
     // LinkedIn card (1B)
     linkedin_name: { en: "LinkedIn", ko: "LinkedIn" },
     linkedin_limit: { en: "3,000 chars · OAuth 2.0", ko: "3,000자 · OAuth 2.0" },
-    linkedin_subtitle: { en: "OAuth integration arrives in Phase 1B", ko: "OAuth 연동은 Phase 1B 에서 활성화됩니다" },
+    linkedin_subtitle_default: { en: "OAuth 2.0 flow · revocable anytime", ko: "OAuth 2.0 방식 · 언제든 폐기 가능" },
 
     // Threads card (1C)
     threads_name: { en: "Threads", ko: "Threads" },
@@ -122,6 +122,8 @@ translate! {
     connect_btn_bluesky: { en: "Connect Bluesky", ko: "Bluesky 연결" },
     connect_btn_linkedin: { en: "Connect LinkedIn", ko: "LinkedIn 연결" },
     connect_btn_threads: { en: "Connect Threads", ko: "Threads 연결" },
+
+    coming_soon: { en: "Coming soon", ko: "곧 출시" },
 }
 
 translate! {
@@ -157,6 +159,7 @@ translate! {
     awaiting_dispatch: { en: "Awaiting dispatch", ko: "발송 대기" },
     not_connected: { en: "Not connected", ko: "연결 안 됨" },
     btn_connect_bluesky: { en: "Connect Bluesky", ko: "Bluesky 연결하기" },
+    btn_connect_linkedin: { en: "Connect LinkedIn", ko: "LinkedIn 연결하기" },
     panel_coming_soon: { en: "Coming soon", ko: "곧 출시" },
     panel_linkedin_coming_soon_hint: {
         en: "LinkedIn cross-posting arrives in Phase 1B.",

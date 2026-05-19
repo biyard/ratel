@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { click, fill, goto, getEditor } from "../utils";
+import { click, fill, goto, getEditor, openHomeMenuItem } from "../utils";
 
 /**
  * Delete Draft from Home Page
@@ -34,8 +34,10 @@ test.describe.serial("Delete draft from home page", () => {
 
     await goto(page, "/");
 
-    // Open the post editor from the home arena top bar
-    await click(page, { testId: "home-btn-create" });
+    // Open the post editor via the hamburger overlay on the home arena
+    // top bar. After the renewed-menu refactor the Compose tile lives
+    // inside the `home-btn-menu` overlay as `home-menu-compose`.
+    await openHomeMenuItem(page, "home-menu-compose");
 
     await page.waitForURL(/\/posts\/.*\/edit/, { waitUntil: "load" });
 
@@ -59,7 +61,8 @@ test.describe.serial("Delete draft from home page", () => {
   }) => {
     await goto(page, "/");
 
-    await click(page, { testId: "home-btn-drafts" });
+    // Drafts moved into the hamburger overlay after the topbar regroup.
+    await openHomeMenuItem(page, "home-menu-drafts");
 
     // Drafts route is /{username}/drafts
     await page.waitForURL(/\/[^/]+\/drafts$/, { waitUntil: "load" });
@@ -74,7 +77,7 @@ test.describe.serial("Delete draft from home page", () => {
     page,
   }) => {
     await goto(page, "/");
-    await click(page, { testId: "home-btn-drafts" });
+    await openHomeMenuItem(page, "home-menu-drafts");
     await page.waitForURL(/\/[^/]+\/drafts$/, { waitUntil: "load" });
 
     const draftCard = page.locator(".draft-card", { hasText: draftTitle });

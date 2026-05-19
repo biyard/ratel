@@ -189,8 +189,6 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
         let plain = strip_html(&content());
         plain.split_whitespace().count()
     });
-    let read_minutes =
-        use_memo(move || std::cmp::max(1, (content_word_count() as f32 / 200.0).ceil() as usize));
 
     let can_submit = use_memo(move || {
         !title().is_empty()
@@ -226,20 +224,36 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
     // Cross-posting controller — installs the `UseCrossPosting` provider
     // for the compose sidebar (per-post platform toggles + reach summary)
     // and also lets the publish action read the resolved enabled set.
+    let mut cp_ctx = use_cross_posting_provider()?;
     let UseCrossPosting {
         connections: cp_connections,
         per_post_enabled,
         ..
-    } = use_cross_posting_provider()?;
+    } = cp_ctx;
 
-    // Cross-post connect button on a disconnected platform card → send the
-    // user to Settings → Connections (Bluesky modal lives there). Username
-    // comes from the auth context already loaded above.
+    // Cross-post connect button on a disconnected platform card:
+    //   * LinkedIn → kick off the OAuth flow with the current post-edit
+    //     URL baked into `return_to`, so the callback bounces the user
+    //     straight back here instead of dumping them on the settings page.
+    //   * Bluesky / Threads → no OAuth dance; send the user to Settings →
+    //     Connections where the Bluesky app-password modal lives.
     let cp_username = user_handle.clone();
-    let on_cp_connect = move |_platform: SocialPlatform| {
-        nav.push(crate::Route::UserSettingsConnectionsPage {
-            username: cp_username.clone(),
-        });
+    let on_cp_connect = move |platform: SocialPlatform| {
+        // Clone the captured String *before* the async block so the outer
+        // closure stays FnMut — `async move` would otherwise drain
+        // `cp_username` out of the closure env on the first invocation.
+        let username = cp_username.clone();
+        async move {
+            match platform {
+                SocialPlatform::LinkedIn => {
+                    let return_to = format!("/posts/{}/edit", post_id().0);
+                    let _ = cp_ctx.connect_linkedin(Some(return_to)).await;
+                }
+                _ => {
+                    nav.push(crate::Route::UserSettingsConnectionsPage { username });
+                }
+            }
+        }
     };
     let existing_space_id_sig = use_signal(move || existing_space_id.clone());
 
@@ -922,8 +936,8 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                         }
                         strong { "{content_word_count}" }
                         " {tr.stat_words} · "
-                        strong { "{read_minutes} {tr.stat_min}" }
-                        " {tr.stat_read}"
+                        strong { "{content_text_chars}" }
+                        " {tr.stat_chars}"
                     }
                     span { class: "bottom-bar__stat",
                         svg {
@@ -940,19 +954,6 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                     }
                 }
                 div { class: "bottom-bar__right",
-                    button { class: "bottom-bar__btn bottom-bar__btn--desktop",
-                        svg {
-                            view_box: "0 0 24 24",
-                            fill: "none",
-                            stroke: "currentColor",
-                            stroke_width: "2",
-                            stroke_linecap: "round",
-                            stroke_linejoin: "round",
-                            polyline { points: "9 11 12 14 22 4" }
-                            path { d: "M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" }
-                        }
-                        "{tr.spell_check}"
-                    }
                     button {
                         class: "bottom-bar__btn bottom-bar__btn--mobile",
                         onclick: move |_| drawer_open.set(true),

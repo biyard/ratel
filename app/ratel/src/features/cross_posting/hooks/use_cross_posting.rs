@@ -21,7 +21,8 @@
 
 use crate::common::*;
 use crate::features::cross_posting::controllers::{
-    connect_bluesky_handler, disconnect_handler, list_connections_handler, toggle_auto_post_handler,
+    connect_bluesky_handler, connect_linkedin_init_handler, disconnect_handler,
+    list_connections_handler, toggle_auto_post_handler,
 };
 use crate::features::cross_posting::models::ConnectionStatus;
 use crate::features::cross_posting::types::{
@@ -100,6 +101,30 @@ impl UseCrossPosting {
     pub async fn disconnect(&mut self, platform: SocialPlatform) -> crate::common::Result<()> {
         disconnect_handler(platform).await?;
         self.connections.restart();
+        Ok(())
+    }
+
+    /// Kick off the LinkedIn OAuth flow. Calls the init endpoint to mint
+    /// a signed state token + LinkedIn authorize URL, then bounces the
+    /// browser there. `nav.push(Route)` is SPA-internal and would lose
+    /// the redirect, so we use the interop helper which goes through
+    /// `dioxus::document::eval` (see `conventions/dioxus-app.md` §
+    /// JS Interop).
+    ///
+    /// `return_to` is an optional SPA-internal path the OAuth callback
+    /// will bounce the user back to on success (e.g. the post-edit URL
+    /// they came from). `None` ⇒ default to the connections page.
+    ///
+    /// Server-side seal/upsert happens in the `/callback` handler after
+    /// LinkedIn bounces the user back; this method does NOT refresh
+    /// `connections` because the page is about to leave anyway.
+    pub async fn connect_linkedin(
+        &mut self,
+        return_to: Option<String>,
+    ) -> crate::common::Result<()> {
+        let req = crate::features::cross_posting::types::LinkedInOauthInitRequest { return_to };
+        let resp = connect_linkedin_init_handler(req).await?;
+        crate::features::cross_posting::interop::redirect_to_external(&resp.authorize_url);
         Ok(())
     }
 }

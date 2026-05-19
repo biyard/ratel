@@ -162,6 +162,21 @@ pub fn RatelArenaTopbar(active: Option<RatelArenaTopbarSection>) -> Element {
         nav.push(Route::Index {});
     };
 
+    let connections_username = username.clone();
+    let go_connections = move |_: Event<MouseData>| {
+        if !has_user {
+            popup
+                .open(rsx! {
+                    LoginModal { on_success: on_login_success }
+                })
+                .with_title("Start building your Essence");
+            return;
+        }
+        nav.push(Route::UserSettingsConnectionsPage {
+            username: connections_username.clone(),
+        });
+    };
+
     let is_home = active == Some(RatelArenaTopbarSection::Home);
     let is_character = active == Some(RatelArenaTopbarSection::Character);
 
@@ -364,6 +379,24 @@ pub fn RatelArenaTopbar(active: Option<RatelArenaTopbarSection>) -> Element {
                         circle { cx: "16", cy: "16", r: "1" }
                     }
                     span { class: "hud-btn__label", "{t.arcade}" }
+                }
+                button {
+                    class: "hud-btn",
+                    aria_label: "{t.connections}",
+                    "data-testid": "home-btn-connections",
+                    onclick: go_connections,
+                    svg {
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        stroke_width: "1.6",
+                        view_box: "0 0 24 24",
+                        xmlns: "http://www.w3.org/2000/svg",
+                        path { d: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" }
+                        path { d: "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.71" }
+                    }
+                    span { class: "hud-btn__label", "{t.connections}" }
                 }
                 button {
                     class: "hud-btn",

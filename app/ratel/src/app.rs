@@ -39,6 +39,10 @@ pub fn App() -> Element {
     });
 
     rsx! {
+        document::Meta {
+            content: "width=device-width, initial-scale=1.0, viewport-fit=cover",
+            name: "viewport",
+        }
         document::Link { rel: "icon", href: crate::common::assets::FAVICON }
         document::Link { rel: "preconnect", href: "https://fonts.googleapis.com" }
         document::Link {

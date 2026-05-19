@@ -41,21 +41,30 @@ struct RouteAttr {
     /// Names of server-only extractor params (e.g. `user`, `role`, `_space`).
     /// Stripped from client stubs.
     extractors: HashSet<String>,
+    /// Raw tokens of `, name: Type, name: Type, ...` after the path literal.
+    /// Preserved so we can re-emit the attribute for the dioxus-fullstack
+    /// passthrough with a normalized path literal (`:name` → `{name}`).
+    extractor_tokens: TokenStream2,
 }
 
 impl Parse for RouteAttr {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let path: LitStr = input.parse()?;
         let mut extractors = HashSet::new();
+        let mut extractor_tokens = TokenStream2::new();
         while !input.is_empty() {
-            input.parse::<Token![,]>()?;
-            // `name: Type` — we only care about the name.
+            let comma: Token![,] = input.parse()?;
             let name: Ident = input.parse()?;
-            input.parse::<Token![:]>()?;
-            let _ty: Type = input.parse()?;
+            let colon: Token![:] = input.parse()?;
+            let ty: Type = input.parse()?;
             extractors.insert(name.to_string());
+            extractor_tokens.extend(quote! { #comma #name #colon #ty });
         }
-        Ok(RouteAttr { path, extractors })
+        Ok(RouteAttr {
+            path,
+            extractors,
+            extractor_tokens,
+        })
     }
 }
 
@@ -93,6 +102,10 @@ fn unwrap_form_type(ty: &Type) -> Option<Type> {
 ///  - format-string template `"/api/posts/{}/comments"` (path piece only)
 ///  - path placeholder names in order: `["id"]`
 ///  - query placeholder names: `["after", "before"]`
+///
+/// Both `{name}` (axum 0.8+ / dioxus-fullstack) and `:name` (axum 0.7 style)
+/// placeholders are accepted. A `:name` segment begins immediately after a
+/// `/` and runs until the next `/` or end of path.
 fn parse_path(path: &str) -> (String, Vec<String>, Vec<String>) {
     let (path_part, query_part) = match path.find('?') {
         Some(i) => (&path[..i], Some(&path[i + 1..])),
@@ -102,6 +115,7 @@ fn parse_path(path: &str) -> (String, Vec<String>, Vec<String>) {
     let mut path_args = Vec::new();
     let mut template = String::new();
     let mut chars = path_part.chars().peekable();
+    let mut prev = '\0';
     while let Some(c) = chars.next() {
         if c == '{' {
             let mut name = String::new();
@@ -115,11 +129,27 @@ fn parse_path(path: &str) -> (String, Vec<String>, Vec<String>) {
             }
             path_args.push(name);
             template.push_str("{}");
+            prev = '}';
+        } else if c == ':' && (prev == '\0' || prev == '/') {
+            // `:name` placeholder — read until next '/' or end.
+            let mut name = String::new();
+            while let Some(&nc) = chars.peek() {
+                if nc == '/' {
+                    break;
+                }
+                name.push(nc);
+                chars.next();
+            }
+            prev = name.chars().last().unwrap_or(':');
+            path_args.push(name);
+            template.push_str("{}");
         } else if c == '}' {
             // unbalanced — keep literal
             template.push(c);
+            prev = c;
         } else {
             template.push(c);
+            prev = c;
         }
     }
 
@@ -135,7 +165,54 @@ fn parse_path(path: &str) -> (String, Vec<String>, Vec<String>) {
     (template, path_args, query_args)
 }
 
+/// Rewrite any `:name` path placeholders into `{name}` so the path can be
+/// forwarded verbatim to `#[::dioxus::fullstack::<method>(...)]`, which
+/// expects axum 0.8+ `{name}` syntax. Query strings are passed through
+/// unchanged.
+fn normalize_path_for_dioxus(path: &str) -> String {
+    let (path_part, query_part) = match path.find('?') {
+        Some(i) => (&path[..i], Some(&path[i..])), // keep '?' in query_part
+        None => (path, None),
+    };
+
+    let mut out = String::with_capacity(path.len());
+    let mut chars = path_part.chars().peekable();
+    let mut prev = '\0';
+    while let Some(c) = chars.next() {
+        if c == ':' && (prev == '\0' || prev == '/') {
+            out.push('{');
+            let mut last = ':';
+            while let Some(&nc) = chars.peek() {
+                if nc == '/' {
+                    break;
+                }
+                out.push(nc);
+                last = nc;
+                chars.next();
+            }
+            out.push('}');
+            prev = last;
+        } else {
+            out.push(c);
+            prev = c;
+        }
+    }
+
+    if let Some(q) = query_part {
+        out.push_str(q);
+    }
+    out
+}
+
 pub fn server_fn_impl(method: &str, attr: TokenStream, item: TokenStream) -> TokenStream {
+    // Keep a raw passthrough copy of the item — we re-emit it under the
+    // `cfg(not(tauri-web))` branch with the dioxus-fullstack attribute so
+    // dioxus generates the normal SSR + browser-RPC code path for web
+    // builds. The attribute itself is rebuilt below from the parsed
+    // `RouteAttr` so that `:name` placeholders in the path literal are
+    // normalized to `{name}` (dioxus-fullstack expects axum 0.8+ syntax).
+    let item_passthrough: TokenStream2 = item.clone().into();
+
     let route = parse_macro_input!(attr as RouteAttr);
     let func = parse_macro_input!(item as ItemFn);
 
@@ -297,12 +374,23 @@ pub fn server_fn_impl(method: &str, attr: TokenStream, item: TokenStream) -> Tok
         }
         "POST" | "PUT" | "PATCH" => {
             let fn_name = format_ident!("{}", method.to_lowercase());
-            // Body is the first remaining body arg. If none, send `&()`.
+            // dioxus-fullstack's server-side request decoder expects the
+            // body JSON to be an object keyed by the handler's argument
+            // names, e.g. for `fn handler(req: T)` it parses
+            // `{"req": <T>}`. The auto-generated args struct fails to
+            // deserialize a bare `T`. Wrap accordingly.
+            //
+            // If none, send `&()` — an empty JSON object isn't required
+            // (dioxus accepts an empty body for zero-arg POSTs).
             if let Some(body) = body_idents.first() {
+                let body_name = LitStr::new(&body.to_string(), body.span());
                 quote! {
-                    crate::common::fullstack::server_fn::#fn_name(&__url, &#body)
-                .await
-                .map_err(::std::convert::Into::into)
+                    crate::common::fullstack::server_fn::#fn_name(
+                        &__url,
+                        &::serde_json::json!({ #body_name: &#body }),
+                    )
+                    .await
+                    .map_err(::std::convert::Into::into)
                 }
             } else {
                 quote! {
@@ -325,8 +413,27 @@ pub fn server_fn_impl(method: &str, attr: TokenStream, item: TokenStream) -> Tok
         }
     };
 
+    // Re-attach dioxus-fullstack's own attribute macro on the not-tauri-web
+    // branch. dioxus-fullstack's `#[get]/#[post]/...` accept the same
+    // attribute syntax (`"/path", extractor: Type, ...`) we parsed, BUT only
+    // recognize `{name}` path placeholders. Rebuild the attribute from the
+    // normalized path + the preserved extractor tokens so callers can write
+    // either `{name}` or `:name` and the dioxus side always sees `{name}`.
+    let method_ident = format_ident!("{}", method.to_lowercase());
+    let normalized_path = normalize_path_for_dioxus(&route.path.value());
+    let normalized_path_lit = LitStr::new(&normalized_path, route.path.span());
+    let extractor_tokens = &route.extractor_tokens;
+    let dioxus_passthrough = quote! {
+        #[::dioxus::fullstack::#method_ident( #normalized_path_lit #extractor_tokens )]
+        #item_passthrough
+    };
+
     quote! {
+        #[cfg(feature = "tauri-web")]
         #tauri
+
+        #[cfg(not(feature = "tauri-web"))]
+        #dioxus_passthrough
     }
     .into()
 }

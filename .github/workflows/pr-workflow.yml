@@ -113,12 +113,15 @@ jobs:
           dx check --ios
           dx check --android
 
-      # The tauri-web / tauri-types / ratel-tauri shell checks below are
-      # informational while the tauri integration is WIP. They surface
-      # build-graph issues for the mobile/desktop wrapper without blocking
-      # merges on app/ratel until the migration lands.
+      # The `asset!("/assets/tailwind.css")` macro in app.rs checks the
+      # file exists at compile time. `dx check --web` above runs through
+      # the manganis asset resolver which auto-creates placeholders, but
+      # plain `cargo check` doesn't. Touch a placeholder so the macro
+      # passes — contents don't matter for compile-time checks.
+      - name: Ensure tailwind.css placeholder
+        run: touch assets/tailwind.css
+
       - name: cargo check --features tauri-web
-        continue-on-error: true
         env:
           RUSTFLAGS: "-D warnings"
           DYNAMO_TABLE_PREFIX: ratel-dev
@@ -126,26 +129,23 @@ jobs:
           cargo check --features tauri-web --no-default-features
 
       - name: dx check --web --features tauri-web
-        continue-on-error: true
         env:
           RUSTFLAGS: "-D warnings"
           DYNAMO_TABLE_PREFIX: ratel-dev
         run: |
           dx check --web --features tauri-web --no-default-features
 
-      - name: cargo check --features tauri-types (DTO-only)
-        continue-on-error: true
-        env:
-          RUSTFLAGS: "-D warnings"
-          DYNAMO_TABLE_PREFIX: ratel-dev
-        run: |
-          cargo check --features tauri-types --no-default-features
-
       - name: cargo check app/ratel-tauri shell crate
-        continue-on-error: true
         working-directory: app/ratel-tauri/src-tauri
         env:
           DYNAMO_TABLE_PREFIX: ratel-dev
+          # commands/google_sign_in.rs uses
+          #   option_env!("GOOGLE_OAUTH_CLIENT_ID").expect(...)
+          # which panics at compile time if the env var is unset. Any
+          # non-empty value lets the compile pass; runtime Google sign-in
+          # is exercised by the dev workflow's APK build with the real
+          # GOOGLE_OAUTH_CLIENT_ID_DEV secret.
+          GOOGLE_OAUTH_CLIENT_ID: placeholder-for-compile-only
         run: |
           cargo check
 
@@ -437,3 +437,295 @@ jobs:
           path: |
             playwright-report/
           retention-days: 30
+
+  # ────────────────────────────────────────────────────────────────────────
+  # Tauri Android build: produces a debuggable x86_64 APK that the smoke
+  # test job below installs on an emulator. The arm64 variant is built by
+  # `dev-workflow.yml` for real-device distribution; here we only need
+  # x86_64 because GitHub-hosted Linux runners can't accelerate arm64
+  # Android emulators.
+  # ────────────────────────────────────────────────────────────────────────
+  tauri-android-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Restore cache
+        uses: actions/cache/restore@v5
+        with:
+          key: tauri-android-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            tauri-android-build-${{ runner.os }}-rust-
+          path: |
+            ~/.cargo/bin
+            target
+            app/ratel-tauri/dx-tauri-target
+
+      # Rust toolchain + the two targets the Tauri build needs: wasm32 for
+      # the dx-build step (web bundle that gets shipped inside the APK)
+      # and x86_64-linux-android for the native Tauri shell that the
+      # emulator can actually run.
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-unknown-unknown,x86_64-linux-android
+          cache: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Java 21 + Android SDK + NDK — `cargo tauri android build` invokes
+      # Gradle which needs all three. `android-actions/setup-android` pulls
+      # the SDK; the NDK comes via `ndkmanager` in the same image.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: "platforms;android-34 build-tools;34.0.0 ndk;29.0.14206865"
+
+      - uses: cargo-bins/cargo-binstall@main
+
+      - name: Install dioxus-cli + tauri-cli
+        run: |
+          cargo binstall -y dioxus-cli
+          cargo binstall -y --version "^2.0.0" tauri-cli
+
+      - name: Build x86_64 debug APK
+        working-directory: app/ratel-tauri
+        env:
+          # The smoke-test job below brings up the same `app-shell-testing`
+          # docker stack the regular playwright job uses (built with the
+          # `bypass` feature so `000000` is accepted as a verification
+          # code) and exposes it via `adb reverse tcp:8080 tcp:8080`.
+          # Emulator-side `http://localhost:8080` therefore reaches the
+          # host docker container.
+          #
+          # Hosting at `localhost` is critical: the WebView origin is
+          # `http://tauri.localhost`, eTLD+1 = `localhost`, same-site
+          # with `http://localhost:8080`. That lets the SameSite=Lax
+          # session cookie issued by the local backend (ENV=local) ride
+          # across the cross-origin fetch.
+          MOBILE_API_URL: http://localhost:8080
+          ENV: dev
+          ANDROID_TARGET: x86_64-linux-android
+          # Match dev profile of the workspace; release wasm so the bundle
+          # under dist/ is shaped the way real users see it.
+          DYNAMO_TABLE_PREFIX: ratel-dev
+          RUSTFLAGS: "-D warnings"
+
+          # `commands/google_sign_in.rs` panics at compile time if this
+          # is unset. Smoke uses email/password signup so the runtime
+          # value doesn't matter — any non-empty string satisfies the
+          # compile-time `option_env!().expect()` chain.
+          GOOGLE_OAUTH_CLIENT_ID: placeholder-for-compile-only
+
+          # `app/ratel/Makefile`'s BUILD_ENV interpolates these and the
+          # default for AWS_ACCOUNT_ID is `$(shell aws sts ...)` which
+          # fails without credentials. We don't actually need AWS for the
+          # web/tauri-web bundle, so any non-empty value satisfies it.
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: ap-northeast-2
+          AWS_ACCOUNT_ID: test
+        run: |
+          # The setup-android action exports ANDROID_HOME at job scope.
+          # Re-point the Makefile's NDK_HOME at the version we just
+          # installed (Makefile defaults to /opt/android-ndk which doesn't
+          # exist on GH runners).
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/29.0.14206865"
+          export NDK_HOME="$ANDROID_NDK_HOME"
+          make dx-build
+          make build-android-debug
+
+      - name: Locate APK
+        id: locate
+        working-directory: app/ratel-tauri
+        run: |
+          APK=$(find src-tauri/gen/android -name 'app-*-debug.apk' | head -1)
+          if [ -z "$APK" ]; then
+            echo "::error::no debug APK produced under src-tauri/gen/android"
+            find src-tauri/gen/android -name '*.apk' || true
+            exit 1
+          fi
+          echo "apk=$APK" >> $GITHUB_OUTPUT
+          ls -la "$APK"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: tauri-android-apk-${{ github.sha }}
+          path: app/ratel-tauri/${{ steps.locate.outputs.apk }}
+          retention-days: 7
+
+      - name: Save cache
+        if: always()
+        uses: actions/cache/save@v5
+        with:
+          key: tauri-android-build-${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          path: |
+            ~/.cargo/bin
+            target
+            app/ratel-tauri/dx-tauri-target
+
+  # ────────────────────────────────────────────────────────────────────────
+  # Tauri Android smoke test: boots an x86_64 Android emulator, brings up
+  # the same `app-shell-testing` docker stack the regular playwright job
+  # uses (so we get the `bypass` feature for `000000` verification codes
+  # against a backend built from this PR's commit), installs the APK from
+  # `tauri-android-build`, exposes the WebView's CDP socket via
+  # `adb forward`, exposes the host backend inside the emulator via
+  # `adb reverse`, and runs the Playwright spec at
+  # `playwright/tests/tauri/create-space.spec.js`.
+  #
+  # Needs `ratel-app` because the APK is built with
+  # `MOBILE_API_URL=http://localhost:8080` and we have to stand up that
+  # backend somewhere reachable. Pointing at the live dev backend was a
+  # dead end — dev has no `bypass`, and any wire-format drift between the
+  # PR's tauri-web client and dev's deployed app-shell shows up as opaque
+  # 500s.
+  # ────────────────────────────────────────────────────────────────────────
+  tauri-android-smoke-test:
+    runs-on: ubuntu-latest
+    needs: [tauri-android-build, ratel-app]
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Required for the Android SDK + emulator that
+      # reactivecircus/android-emulator-runner provisions.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      # `enable-hw-accel: true` requires KVM. ubuntu-latest doesn't expose
+      # /dev/kvm by default, so the action falls back to software
+      # emulation — slower but works without extra setup.
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Download APK artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: tauri-android-apk-${{ github.sha }}
+          path: /tmp/apk
+
+      - name: Locate downloaded APK
+        id: apk
+        run: |
+          APK=$(find /tmp/apk -name '*.apk' | head -1)
+          if [ -z "$APK" ]; then
+            echo "::error::no APK in downloaded artifact"
+            ls -la /tmp/apk
+            exit 1
+          fi
+          echo "path=$APK" >> $GITHUB_OUTPUT
+          ls -la "$APK"
+
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: app-shell-image-${{ github.sha }}
+          path: /tmp
+
+      - name: Load Docker image
+        run: |
+          docker load < /tmp/app-shell-image.tar.gz
+          docker images
+
+      - name: Bring up testing infra
+        env:
+          COMMIT: pr-${{ github.sha }}
+          RESET_DB: "true"
+        run: |
+          docker compose --profile testing up -d localstack qdrant
+          echo "Waiting for LocalStack to be healthy..."
+          timeout 120 bash -c 'until curl -sf http://localhost:4566/_localstack/health > /dev/null 2>&1; do sleep 5; done'
+          echo "LocalStack is healthy, starting remaining services..."
+          docker compose --profile testing up -d
+
+      - name: Wait for app-shell
+        run: |
+          echo "🔄 Checking app-shell..."
+          timeout=180
+          interval=10
+          elapsed=0
+          while [ $elapsed -lt $timeout ]; do
+            if curl -f -s http://localhost:8080/ > /dev/null 2>&1; then
+              echo "✅ app-shell is responding (took ${elapsed}s)"
+              break
+            fi
+            echo "⏳ app-shell not ready yet... (${elapsed}/${timeout}s)"
+            sleep $interval
+            elapsed=$((elapsed + interval))
+          done
+          if [ $elapsed -ge $timeout ]; then
+            echo "❌ app-shell failed to respond within ${timeout}s"
+            docker compose ps
+            docker compose logs app-shell-testing
+            exit 1
+          fi
+
+      - name: Install Playwright dependencies
+        working-directory: playwright
+        run: npm i
+
+      # Boot emulator, install APK, set up adb forward (WebView CDP) +
+      # adb reverse (emulator→host backend), run the smoke spec. The
+      # whole flow lives inside the action's `script:` block so the
+      # emulator stays alive for the entire test run.
+      - name: Run Tauri smoke test
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          TAURI_API_BASE: http://localhost:8080
+        with:
+          api-level: 34
+          target: default
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          # The action's inline script: feeds each line to a separate
+          # `sh -c` invocation, so multi-line for/if/while blocks break.
+          # We use a one-line invocation of a script file so the entire
+          # smoke test runs in a single bash process.
+          script: bash .github/scripts/run-tauri-smoke-test.sh '${{ steps.apk.outputs.path }}'
+
+      - name: Capture app-shell logs
+        if: always()
+        run: |
+          docker compose --profile testing logs app-shell-testing > /tmp/app-shell-testing.log 2>&1 || true
+          docker compose --profile testing ps > /tmp/docker-compose-ps.txt 2>&1 || true
+
+      - name: Upload smoke test artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: tauri-smoke-artifacts-${{ github.sha }}
+          path: |
+            playwright/playwright-report/
+            playwright/test-results/
+            /tmp/tauri-logcat.txt
+            /tmp/tauri-devtools-list.json
+            /tmp/tauri-devtools-version.json
+            /tmp/app-shell-testing.log
+            /tmp/docker-compose-ps.txt
+          retention-days: 7

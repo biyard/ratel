@@ -46,6 +46,14 @@ pub fn OnboardingPage() -> Element {
         .as_ref()
         .map(|c| c.status == ConnectionStatus::Connected)
         .unwrap_or(false);
+    let linkedin: Option<ConnectionResponse> = conn_list
+        .iter()
+        .find(|c| c.platform == SocialPlatform::LinkedIn)
+        .cloned();
+    let linkedin_connected = linkedin
+        .as_ref()
+        .map(|c| c.status == ConnectionStatus::Connected)
+        .unwrap_or(false);
 
     // FR-2 #13 — flip the seen flag and land on home. Failure to update the
     // flag is non-fatal (the user can always re-trigger onboarding from
@@ -196,12 +204,11 @@ pub fn OnboardingPage() -> Element {
                             }
                         }
 
-                        // LinkedIn — Phase 1B placeholder
+                        // LinkedIn — Phase 1B active
                         article {
                             class: "onboarding-row",
                             "data-platform": "linkedin",
-                            "data-connected": "false",
-                            "data-soon": "true",
+                            "data-connected": "{linkedin_connected}",
                             span { class: "onboarding-logo onboarding-logo--linkedin",
                                 svg {
                                     "viewBox": "0 0 24 24",
@@ -211,13 +218,53 @@ pub fn OnboardingPage() -> Element {
                             }
                             div { class: "onboarding-body",
                                 div { class: "onboarding-name", "LinkedIn" }
-                                div { class: "onboarding-meta", "{t.linkedin_meta}" }
+                                div { class: "onboarding-meta",
+                                    if let Some(c) = linkedin.as_ref() {
+                                        if c.status == ConnectionStatus::Connected {
+                                            strong { "{c.external_handle}" }
+                                        } else {
+                                            "{t.linkedin_meta}"
+                                        }
+                                    } else {
+                                        "{t.linkedin_meta}"
+                                    }
+                                }
                             }
                             div { class: "onboarding-action",
-                                button {
-                                    class: "onboarding-btn-connect onboarding-btn-connect--soon",
-                                    disabled: true,
-                                    "{t.coming_soon}"
+                                if linkedin_connected {
+                                    span { class: "onboarding-connected-badge",
+                                        svg {
+                                            "viewBox": "0 0 24 24",
+                                            "fill": "none",
+                                            "stroke": "currentColor",
+                                            "stroke-width": "3",
+                                            "stroke-linecap": "round",
+                                            "stroke-linejoin": "round",
+                                            polyline { "points": "20 6 9 17 4 12" }
+                                        }
+                                        "{t.status_connected}"
+                                    }
+                                } else {
+                                    button {
+                                        class: "onboarding-btn-connect onboarding-btn-connect--linkedin",
+                                        "data-testid": "onboarding-connect-linkedin",
+                                        onclick: move |_| async move {
+                                            if let Err(e) = cp.connect_linkedin(None).await {
+                                                toast.error(e);
+                                            }
+                                        },
+                                        svg {
+                                            "viewBox": "0 0 24 24",
+                                            "fill": "none",
+                                            "stroke": "currentColor",
+                                            "stroke-width": "2.5",
+                                            "stroke-linecap": "round",
+                                            "stroke-linejoin": "round",
+                                            polyline { "points": "5 12 19 12" }
+                                            polyline { "points": "12 5 19 12 12 19" }
+                                        }
+                                        "{t.btn_connect}"
+                                    }
                                 }
                             }
                         }

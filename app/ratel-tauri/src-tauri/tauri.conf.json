@@ -21,7 +21,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self' tauri: http://tauri.localhost https://ratel.foundation https://*.ratel.foundation; script-src 'self' https://cdn.portone.io 'wasm-unsafe-eval' 'unsafe-eval' tauri: http://tauri.localhost https://www.gstatic.com; connect-src 'self' tauri: ipc: http://*:8000 http://tauri.localhost https://ratel.foundation https://*.ratel.foundation https://*.googleapis.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com"
+      "csp": "default-src 'self' tauri: http://tauri.localhost https://ratel.foundation https://*.ratel.foundation; script-src 'self' https://cdn.portone.io 'wasm-unsafe-eval' 'unsafe-eval' tauri: http://tauri.localhost https://www.gstatic.com; connect-src 'self' tauri: ipc: http://*:8000 http://*:8080 http://tauri.localhost https://ratel.foundation https://*.ratel.foundation https://*.googleapis.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com"
     }
   },
   "bundle": {

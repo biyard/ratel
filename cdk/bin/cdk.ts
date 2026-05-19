@@ -77,20 +77,24 @@ escStack.addDependency(vpcEndpointStack);
 //   icpIdentityPem: process.env.ICP_IDENTITY_PEM,
 // });
 
-new RegionalLambdaStack(app, `ratel-${env}-svc-ap-northeast-2`, {
-  env: {
-    account: awsAccount,
-    region: "ap-northeast-2",
+const ap_northeast_2_svc = new RegionalLambdaStack(
+  app,
+  `ratel-${env}-svc-ap-northeast-2`,
+  {
+    env: {
+      account: awsAccount,
+      region: "ap-northeast-2",
+    },
+    stage: env,
+    commit: process.env.COMMIT!,
+    baseDomain,
+    apiDomain,
+    webOrigin: `https://${webDomain}`,
+    runtimeEnvironment: {
+      BIYARD_API_URL: publicBiyardApiUrl,
+    },
   },
-  stage: env,
-  commit: process.env.COMMIT!,
-  baseDomain,
-  apiDomain,
-  webOrigin: `https://${webDomain}`,
-  runtimeEnvironment: {
-    BIYARD_API_URL: publicBiyardApiUrl,
-  },
-});
+);
 
 // Shared ALB for Qdrant gRPC across dev and prod
 // const albStack = new AlbStack(app, "ratel-alb-ap-northeast-2", {
@@ -199,4 +203,11 @@ new DynamoStreamEventStack(app, `ratel-${env}-stream-ap-northeast-2`, {
   // Lambda created alongside the API Lambda in the same regional
   // stack. Falls back transparently when undefined.
   analyzeLambdaFunction: ap_northeast_2_lambda.analyzeLambdaFunction,
+  // Cross-posting rules go to the non-VPC svc Lambda because the
+  // VPC-attached `lambdaFunction` has no NAT egress and can't reach
+  // bsky.social / api.linkedin.com — every dispatch hits the 30 s
+  // Lambda timeout and the SyndicationJob row sticks in `pending`
+  // with the lock held. Remove this override once NAT is added to
+  // the shared VPC.
+  crossPostingLambda: ap_northeast_2_svc.lambdaFunction,
 });

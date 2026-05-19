@@ -43,8 +43,8 @@ use crate::features::cross_posting::models::{
     ConnectionStatus, ErrorCategory, JobState, LOCK_TTL_SEC, SocialConnection, SyndicationJob,
 };
 use crate::features::cross_posting::services::adapters::{
-    BlueskyAdapter, CrossPostAdapter, DecryptedCredentials, ImageRef, LinkCard, PlatformError,
-    PublishedRef,
+    BlueskyAdapter, CrossPostAdapter, DecryptedCredentials, ImageRef, LinkCard, LinkedInAdapter,
+    PlatformError, PublishedRef,
 };
 use crate::features::cross_posting::services::{credentials, format, shard};
 use crate::features::cross_posting::types::{CrossPostingError, SocialPlatform};
@@ -113,16 +113,20 @@ pub async fn handle_syndication_job_ready(job: SyndicationJob) -> Result<()> {
         return Ok(());
     }
 
-    // ── Adapter selection (Phase 1A: Bluesky only) ────────────────────
-    let adapter = match job.platform {
-        SocialPlatform::Bluesky => BlueskyAdapter::new(),
-        SocialPlatform::LinkedIn | SocialPlatform::Threads => {
+    // ── Adapter selection ─────────────────────────────────────────────
+    // Boxed trait object so each platform can return its own concrete type.
+    // Threads (1C) still falls through to the not-implemented branch until
+    // its adapter and OAuth flow land.
+    let adapter: Box<dyn CrossPostAdapter> = match job.platform {
+        SocialPlatform::Bluesky => Box::new(BlueskyAdapter::new()),
+        SocialPlatform::LinkedIn => Box::new(LinkedInAdapter::new()),
+        SocialPlatform::Threads => {
             tracing::warn!(
                 pk = ?job.pk,
                 platform = ?job.platform,
-                "dispatcher: platform not implemented in Phase 1A — marking Failed"
+                "dispatcher: platform adapter not implemented yet — marking Failed"
             );
-            let msg = "platform adapter not implemented in Phase 1A".to_string();
+            let msg = "platform adapter not implemented yet".to_string();
             commit_failed(
                 cli,
                 &table,
@@ -436,10 +440,20 @@ async fn try_acquire_lock(
 
     match resp {
         Ok(out) => {
+            // A brand-new job written by `services/factory.rs` carries
+            // `dispatch_lock_id: Option<String> = None`, which DynamoEntity
+            // serializes as an explicit NULL-typed attribute (not a missing
+            // attribute). `is_some()` here would treat that NULL as a real
+            // prior lock, sending every first-dispatch through the reconcile
+            // probe — which on LinkedIn surfaces a 403 (ugcPosts FINDER
+            // permission), and on Bluesky burns an extra `listRecords` call
+            // per publish. Only a String-typed attribute means a real
+            // dispatcher previously held the lock (and its TTL elapsed).
             let had_existing_lock = out
                 .attributes()
                 .and_then(|a| a.get("dispatch_lock_id"))
-                .is_some();
+                .map(|v| !matches!(v, AV::Null(_)))
+                .unwrap_or(false);
             Ok(Some(LockAcquired { had_existing_lock }))
         }
         Err(e) => {
