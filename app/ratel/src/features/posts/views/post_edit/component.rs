@@ -224,20 +224,36 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
     // Cross-posting controller — installs the `UseCrossPosting` provider
     // for the compose sidebar (per-post platform toggles + reach summary)
     // and also lets the publish action read the resolved enabled set.
+    let mut cp_ctx = use_cross_posting_provider()?;
     let UseCrossPosting {
         connections: cp_connections,
         per_post_enabled,
         ..
-    } = use_cross_posting_provider()?;
+    } = cp_ctx;
 
-    // Cross-post connect button on a disconnected platform card → send the
-    // user to Settings → Connections (Bluesky modal lives there). Username
-    // comes from the auth context already loaded above.
+    // Cross-post connect button on a disconnected platform card:
+    //   * LinkedIn → kick off the OAuth flow with the current post-edit
+    //     URL baked into `return_to`, so the callback bounces the user
+    //     straight back here instead of dumping them on the settings page.
+    //   * Bluesky / Threads → no OAuth dance; send the user to Settings →
+    //     Connections where the Bluesky app-password modal lives.
     let cp_username = user_handle.clone();
-    let on_cp_connect = move |_platform: SocialPlatform| {
-        nav.push(crate::Route::UserSettingsConnectionsPage {
-            username: cp_username.clone(),
-        });
+    let on_cp_connect = move |platform: SocialPlatform| {
+        // Clone the captured String *before* the async block so the outer
+        // closure stays FnMut — `async move` would otherwise drain
+        // `cp_username` out of the closure env on the first invocation.
+        let username = cp_username.clone();
+        async move {
+            match platform {
+                SocialPlatform::LinkedIn => {
+                    let return_to = format!("/posts/{}/edit", post_id().0);
+                    let _ = cp_ctx.connect_linkedin(Some(return_to)).await;
+                }
+                _ => {
+                    nav.push(crate::Route::UserSettingsConnectionsPage { username });
+                }
+            }
+        }
     };
     let existing_space_id_sig = use_signal(move || existing_space_id.clone());
 

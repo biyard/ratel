@@ -21,6 +21,13 @@ export interface DynamoStreamEventStackProps extends StackProps {
   /// to `lambdaFunction` — matches the pre-split behaviour. Provided
   /// in regions that wire up a bigger-memory analyze Lambda.
   analyzeLambdaFunction?: lambda.Function;
+  /// Optional dedicated Lambda for the two cross-posting rules
+  /// (`CrossPostingStage1Rule` and `CrossPostingStage2Rule`). When
+  /// omitted both fall back to `lambdaFunction`. Used to route these
+  /// rules to a non-VPC Lambda that can reach external platform APIs
+  /// (bsky.social / api.linkedin.com); the default `lambdaFunction`
+  /// lives in a VPC without NAT and times out on every dispatch.
+  crossPostingLambda?: lambda.Function;
 }
 
 export class DynamoStreamEventStack extends Stack {
@@ -36,6 +43,10 @@ export class DynamoStreamEventStack extends Stack {
     // otherwise reuses the API Lambda (legacy single-Lambda layout).
     const analyzeLambdaFunction =
       props.analyzeLambdaFunction ?? props.lambdaFunction;
+    // Resolves to the non-VPC svc Lambda when provided, otherwise
+    // reuses the default. See prop docstring for the why.
+    const crossPostingLambdaFunction =
+      props.crossPostingLambda ?? props.lambdaFunction;
 
     // Import the existing EventBridge bus
     const eventBus = events.EventBus.fromEventBusName(
@@ -1831,7 +1842,7 @@ export class DynamoStreamEventStack extends Stack {
         source: ["ratel.dynamodb.stream"],
         detailType: ["PostPublishedForSyndication"],
       },
-      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+      targets: [new eventsTargets.LambdaFunction(crossPostingLambdaFunction)],
     });
 
     // ── Pipe: Cross-posting Stage 2 — SyndicationJob ready for dispatch ──
@@ -1883,7 +1894,7 @@ export class DynamoStreamEventStack extends Stack {
         source: ["ratel.dynamodb.stream"],
         detailType: ["SyndicationJobReady"],
       },
-      targets: [new eventsTargets.LambdaFunction(props.lambdaFunction)],
+      targets: [new eventsTargets.LambdaFunction(crossPostingLambdaFunction)],
     });
 
   }

@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — Get your Bluesky app password</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* ─── Theme tokens (space toggle pattern: dark/light) ──────────── */
+    html[data-theme="dark"]  { --dark: initial; --light: ; }
+    html[data-theme="light"] { --dark: ; --light: initial; }
+
+    :root {
+      --font-display: 'Orbitron', sans-serif;
+      --font-body: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+      /* Accent — same in both themes */
+      --bsky-blue: #0a85ff;
+      --bsky-cyan: #1da1f2;
+      --accent-gold: #fcb300;
+      --accent-teal: #6eedd8;
+      --accent-green: #22c55e;
+      --accent-coral: #ef4444;
+    }
+
+    .bsky-setup {
+      /* Surface tokens — swap via space toggle */
+      --bsky-setup__bg-void:     var(--dark, #06060e)           var(--light, #f5f6fb);
+      --bsky-setup__bg-glow-a:   var(--dark, rgba(10,133,255,0.07))  var(--light, rgba(10,133,255,0.10));
+      --bsky-setup__bg-glow-b:   var(--dark, rgba(110,237,216,0.05)) var(--light, rgba(110,237,216,0.10));
+
+      --bsky-setup__bg-glass:    var(--dark, rgba(12,12,26,0.65))    var(--light, rgba(255,255,255,0.72));
+      --bsky-setup__bg-glass-strong: var(--dark, rgba(12,12,26,0.92)) var(--light, rgba(255,255,255,0.94));
+      --bsky-setup__bg-inset:    var(--dark, rgba(0,0,0,0.30))       var(--light, rgba(0,0,0,0.04));
+      --bsky-setup__bg-code:     var(--dark, rgba(0,0,0,0.45))       var(--light, rgba(10,20,40,0.05));
+
+      --bsky-setup__border-subtle:  var(--dark, rgba(255,255,255,0.06)) var(--light, rgba(10,20,40,0.08));
+      --bsky-setup__border-strong:  var(--dark, rgba(255,255,255,0.12)) var(--light, rgba(10,20,40,0.14));
+
+      --bsky-setup__text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
+      --bsky-setup__text-muted:   var(--dark, #8888a8) var(--light, #545478);
+      --bsky-setup__text-dim:     var(--dark, #55556a) var(--light, #8a8aa3);
+
+      --bsky-setup__shadow-card:  var(--dark, 0 8px 32px rgba(0,0,0,0.40)) var(--light, 0 8px 32px rgba(10,20,40,0.08));
+      --bsky-setup__shadow-cta:   var(--dark, 0 4px 22px rgba(10,133,255,0.35)) var(--light, 0 4px 22px rgba(10,133,255,0.25));
+
+      background: var(--bsky-setup__bg-void);
+      color: var(--bsky-setup__text-primary);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      position: relative;
+      isolation: isolate;
+    }
+    html, body { min-height: 100%; }
+    body { overflow-x: hidden; background: transparent; }
+    .bsky-setup::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -1; pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 60% at 30% 15%, var(--bsky-setup__bg-glow-a) 0%, transparent 55%),
+        radial-gradient(ellipse 55% 60% at 85% 75%, var(--bsky-setup__bg-glow-b) 0%, transparent 60%);
+    }
+
+    /* ─── Top bar ──────────────────────────────────────────────── */
+    .bsky-setup__topbar {
+      position: sticky; top: 0; z-index: 30;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 28px;
+      background: var(--bsky-setup__bg-glass);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--bsky-setup__border-subtle);
+    }
+    .bsky-setup__topbar-left { display: flex; align-items: center; gap: 14px; }
+    .bsky-setup__back-btn {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: var(--bsky-setup__bg-glass);
+      border: 1px solid var(--bsky-setup__border-subtle);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; padding: 0;
+      transition: all 0.25s ease;
+      color: var(--bsky-setup__text-muted);
+    }
+    .bsky-setup__back-btn:hover {
+      border-color: rgba(252,179,0,0.25);
+      color: var(--accent-gold);
+    }
+    .bsky-setup__back-btn svg { width: 18px; height: 18px; }
+
+    .bsky-setup__topbar-title { display: flex; flex-direction: column; gap: 2px; }
+    .bsky-setup__topbar-eyebrow {
+      font-family: var(--font-display);
+      font-size: 9px; font-weight: 600;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--bsky-setup__text-dim);
+    }
+    .bsky-setup__topbar-main {
+      font-family: var(--font-display);
+      font-size: 16px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--bsky-setup__text-primary);
+    }
+
+    .bsky-setup__theme-toggle {
+      display: inline-flex; align-items: center; gap: 7px;
+      height: 38px; padding: 0 14px; border-radius: 10px;
+      border: 1px solid var(--bsky-setup__border-subtle);
+      background: var(--bsky-setup__bg-glass);
+      font-family: var(--font-display);
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.10em; text-transform: uppercase;
+      color: var(--bsky-setup__text-muted);
+      cursor: pointer; transition: all 0.25s ease;
+    }
+    .bsky-setup__theme-toggle:hover {
+      border-color: rgba(252,179,0,0.25);
+      color: var(--accent-gold);
+    }
+    .bsky-setup__theme-toggle svg { width: 13px; height: 13px; }
+
+    /* ─── Page shell ───────────────────────────────────────────── */
+    .bsky-setup__page {
+      position: relative; z-index: 1;
+      max-width: 760px; margin: 0 auto; width: 100%;
+      padding: 40px 28px 64px;
+      display: flex; flex-direction: column; gap: 26px;
+    }
+
+    /* ─── Hero ─────────────────────────────────────────────────── */
+    .bsky-setup__hero {
+      position: relative; overflow: hidden;
+      border-radius: 22px;
+      border: 1px solid var(--bsky-setup__border-subtle);
+      background: var(--bsky-setup__bg-glass);
+      backdrop-filter: blur(16px);
+      padding: 32px 32px 30px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .bsky-setup__hero::before {
+      content: '';
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 55% 60% at 12% 18%, rgba(10,133,255,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 45% 55% at 92% 88%, rgba(110,237,216,0.10) 0%, transparent 60%);
+    }
+    .bsky-setup__hero > * { position: relative; z-index: 1; }
+
+    .bsky-setup__hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--font-display);
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--bsky-setup__text-dim);
+    }
+    .bsky-setup__hero-eyebrow-dot {
+      width: 22px; height: 22px; border-radius: 6px;
+      background: linear-gradient(135deg, var(--bsky-blue), var(--bsky-cyan));
+      display: inline-flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 18px rgba(10,133,255,0.45);
+    }
+    .bsky-setup__hero-eyebrow-dot svg { width: 13px; height: 13px; color: #fff; }
+
+    .bsky-setup__hero-title {
+      font-family: var(--font-display);
+      font-size: 28px; font-weight: 700;
+      letter-spacing: 0.02em; line-height: 1.2;
+      color: var(--bsky-setup__text-primary);
+    }
+    .bsky-setup__hero-title-accent {
+      background: linear-gradient(135deg, var(--bsky-blue), var(--accent-teal));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .bsky-setup__hero-sub {
+      font-size: 14px; line-height: 1.6; max-width: 540px;
+      color: var(--bsky-setup__text-muted);
+    }
+    .bsky-setup__hero-meta {
+      display: flex; gap: 18px; flex-wrap: wrap; margin-top: 4px;
+      font-family: var(--font-display);
+      font-size: 9.5px; font-weight: 600;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--bsky-setup__text-dim);
+    }
+    .bsky-setup__hero-meta-item { display: inline-flex; align-items: center; gap: 7px; }
+    .bsky-setup__hero-meta-item svg { width: 11px; height: 11px; color: var(--accent-green); }
+
+    /* ─── Section heading ───────────────────────────────────────── */
+    .bsky-setup__section-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin: 4px 2px -8px;
+    }
+    .bsky-setup__section-title {
+      display: flex; align-items: center; gap: 10px;
+      font-family: var(--font-display);
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--bsky-setup__text-muted);
+    }
+    .bsky-setup__section-title::before {
+      content: ''; width: 4px; height: 14px; border-radius: 2px;
+      background: linear-gradient(180deg, var(--accent-gold), transparent);
+    }
+    .bsky-setup__section-meta {
+      font-family: var(--font-display);
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.10em; text-transform: uppercase;
+      color: var(--bsky-setup__text-dim);
+    }
+
+    /* ─── Step cards ────────────────────────────────────────────── */
+    .bsky-setup__steps { display: flex; flex-direction: column; gap: 14px; }
+
+    .bsky-setup__step-card {
+      position: relative; overflow: hidden;
+      border-radius: 18px;
+      border: 1px solid var(--bsky-setup__border-subtle);
+      background: var(--bsky-setup__bg-glass);
+      backdrop-filter: blur(16px);
+      padding: 22px 24px;
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 22px;
+      align-items: start;
+      transition: border-color 0.25s ease, transform 0.25s ease;
+    }
+    .bsky-setup__step-card:hover {
+      border-color: var(--bsky-setup__border-strong);
+    }
+
+    .bsky-setup__step-num {
+      width: 56px; height: 56px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--bsky-blue), var(--bsky-cyan));
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-size: 22px; font-weight: 800;
+      letter-spacing: 0.02em;
+      color: #fff;
+      box-shadow: 0 0 24px rgba(10,133,255,0.30);
+      flex-shrink: 0;
+    }
+
+    .bsky-setup__step-body { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+    .bsky-setup__step-title {
+      font-family: var(--font-display);
+      font-size: 15px; font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--bsky-setup__text-primary);
+    }
+    .bsky-setup__step-desc {
+      font-size: 13.5px; line-height: 1.6;
+      color: var(--bsky-setup__text-muted);
+    }
+    .bsky-setup__step-desc strong {
+      color: var(--bsky-setup__text-primary);
+      font-weight: 600;
+    }
+
+    /* ─── Inline mockup (browser/screenshot placeholder) ─────────── */
+    .bsky-setup__mockup {
+      border-radius: 12px;
+      border: 1px solid var(--bsky-setup__border-subtle);
+      background: var(--bsky-setup__bg-inset);
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .bsky-setup__mockup-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--bsky-setup__border-subtle);
+      background: var(--bsky-setup__bg-code);
+    }
+    .bsky-setup__mockup-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--bsky-setup__text-dim);
+      opacity: 0.45;
+    }
+    .bsky-setup__mockup-dot:nth-child(1) { background: #ff5f57; opacity: 0.65; }
+    .bsky-setup__mockup-dot:nth-child(2) { background: #ffbd2e; opacity: 0.65; }
+    .bsky-setup__mockup-dot:nth-child(3) { background: #28ca42; opacity: 0.65; }
+    .bsky-setup__mockup-url {
+      flex: 1;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--bsky-setup__text-muted);
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--bsky-setup__bg-code);
+      margin-left: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .bsky-setup__mockup-url strong {
+      color: var(--bsky-blue);
+      font-weight: 700;
+    }
+    .bsky-setup__mockup-body {
+      padding: 16px 16px 18px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .bsky-setup__mockup-row {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12.5px;
+      color: var(--bsky-setup__text-muted);
+    }
+    .bsky-setup__mockup-row svg { width: 14px; height: 14px; color: var(--bsky-setup__text-dim); flex-shrink: 0; }
+    .bsky-setup__mockup-input {
+      flex: 1;
+      padding: 7px 10px;
+      border-radius: 7px;
+      border: 1px dashed var(--bsky-setup__border-strong);
+      background: var(--bsky-setup__bg-code);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--bsky-setup__text-primary);
+    }
+    .bsky-setup__mockup-input--placeholder { color: var(--bsky-setup__text-dim); }
+    .bsky-setup__mockup-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 10px;
+      border-radius: 7px;
+      background: linear-gradient(135deg, var(--bsky-blue), var(--bsky-cyan));
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      box-shadow: 0 2px 12px rgba(10,133,255,0.30);
+    }
+
+    /* ─── Copy chip (handle / password format) ──────────────────── */
+    .bsky-setup__copy-chip {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--bsky-setup__border-strong);
+      background: var(--bsky-setup__bg-code);
+      font-family: var(--font-mono);
+      font-size: 13px; font-weight: 600;
+      color: var(--bsky-setup__text-primary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      align-self: flex-start;
+    }
+    .bsky-setup__copy-chip:hover {
+      border-color: var(--bsky-blue);
+      box-shadow: 0 0 0 3px rgba(10,133,255,0.10);
+    }
+    .bsky-setup__copy-chip svg {
+      width: 14px; height: 14px;
+      color: var(--bsky-setup__text-dim);
+      transition: color 0.2s ease;
+    }
+    .bsky-setup__copy-chip:hover svg { color: var(--bsky-blue); }
+    .bsky-setup__copy-chip[data-copied="true"] {
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+    }
+    .bsky-setup__copy-chip[data-copied="true"] svg { color: var(--accent-green); }
+    .bsky-setup__copy-chip-val { letter-spacing: 0.05em; }
+    .bsky-setup__copy-chip-status {
+      font-family: var(--font-display);
+      font-size: 9.5px; font-weight: 700;
+      letter-spacing: 0.10em; text-transform: uppercase;
+      color: var(--bsky-setup__text-dim);
+    }
+    .bsky-setup__copy-chip[data-copied="true"] .bsky-setup__copy-chip-status {
+      color: var(--accent-green);
+    }
+
+    /* ─── Warning / tip callouts inside step ────────────────────── */
+    .bsky-setup__callout {
+      display: flex; gap: 10px;
+      padding: 12px 14px;
+      border-radius: 11px;
+      font-size: 12.5px; line-height: 1.55;
+      color: var(--bsky-setup__text-muted);
+    }
+    .bsky-setup__callout svg {
+      width: 16px; height: 16px;
+      flex-shrink: 0; margin-top: 2px;
+    }
+    .bsky-setup__callout--warn {
+      background: rgba(252,179,0,0.06);
+      border: 1px solid rgba(252,179,0,0.22);
+    }
+    .bsky-setup__callout--warn svg { color: var(--accent-gold); }
+    .bsky-setup__callout--info {
+      background: rgba(10,133,255,0.06);
+      border: 1px solid rgba(10,133,255,0.20);
+    }
+    .bsky-setup__callout--info svg { color: var(--bsky-blue); }
+    .bsky-setup__callout--info a { color: var(--bsky-blue); text-decoration: none; font-weight: 600; }
+    .bsky-setup__callout--info a:hover { text-decoration: underline; }
+
+    /* ─── Trust / reassurance section ───────────────────────────── */
+    .bsky-setup__trust {
+      position: relative; overflow: hidden;
+      border-radius: 18px;
+      border: 1px solid var(--bsky-setup__border-subtle);
+      background: var(--bsky-setup__bg-glass);
+      backdrop-filter: blur(16px);
+      padding: 24px 26px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .bsky-setup__trust::before {
+      content: '';
+      position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse 60% 70% at 10% 0%, rgba(110,237,216,0.07) 0%, transparent 60%);
+    }
+    .bsky-setup__trust > * { position: relative; z-index: 1; }
+    .bsky-setup__trust-head {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .bsky-setup__trust-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: rgba(110,237,216,0.12);
+      border: 1px solid rgba(110,237,216,0.25);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent-teal);
+      flex-shrink: 0;
+    }
+    .bsky-setup__trust-icon svg { width: 17px; height: 17px; }
+    .bsky-setup__trust-title {
+      font-family: var(--font-display);
+      font-size: 14px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--bsky-setup__text-primary);
+    }
+    .bsky-setup__trust-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .bsky-setup__trust-item {
+      display: flex; gap: 10px;
+      padding: 12px 14px;
+      border-radius: 11px;
+      background: var(--bsky-setup__bg-inset);
+      border: 1px solid var(--bsky-setup__border-subtle);
+    }
+    .bsky-setup__trust-item svg {
+      width: 15px; height: 15px;
+      color: var(--accent-teal);
+      flex-shrink: 0; margin-top: 2px;
+    }
+    .bsky-setup__trust-item-body { display: flex; flex-direction: column; gap: 3px; }
+    .bsky-setup__trust-item-name {
+      font-family: var(--font-display);
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.10em; text-transform: uppercase;
+      color: var(--bsky-setup__text-primary);
+    }
+    .bsky-setup__trust-item-desc {
+      font-size: 12px; line-height: 1.5;
+      color: var(--bsky-setup__text-muted);
+    }
+
+    /* ─── CTA bar ───────────────────────────────────────────────── */
+    .bsky-setup__cta {
+      position: sticky; bottom: 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 14px; flex-wrap: wrap;
+      padding: 16px 20px;
+      border-radius: 16px;
+      border: 1px solid var(--bsky-setup__border-strong);
+      background: var(--bsky-setup__bg-glass-strong);
+      backdrop-filter: blur(20px);
+      box-shadow: var(--bsky-setup__shadow-card);
+    }
+    .bsky-setup__cta-msg {
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .bsky-setup__cta-msg-eyebrow {
+      font-family: var(--font-display);
+      font-size: 9.5px; font-weight: 600;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--bsky-setup__text-dim);
+    }
+    .bsky-setup__cta-msg-main {
+      font-size: 13.5px; font-weight: 600;
+      color: var(--bsky-setup__text-primary);
+    }
+    .bsky-setup__cta-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .bsky-setup__btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 18px;
+      border-radius: 11px;
+      font-family: var(--font-display);
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.10em; text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      border: 1px solid transparent;
+    }
+    .bsky-setup__btn svg { width: 13px; height: 13px; }
+    .bsky-setup__btn-ghost {
+      background: transparent;
+      border-color: var(--bsky-setup__border-subtle);
+      color: var(--bsky-setup__text-muted);
+    }
+    .bsky-setup__btn-ghost:hover {
+      border-color: var(--bsky-setup__border-strong);
+      color: var(--bsky-setup__text-primary);
+    }
+    .bsky-setup__btn-primary {
+      background: linear-gradient(135deg, var(--bsky-blue), var(--bsky-cyan));
+      color: #fff;
+      box-shadow: 0 2px 14px rgba(10,133,255,0.30);
+    }
+    .bsky-setup__btn-primary:hover {
+      box-shadow: var(--bsky-setup__shadow-cta);
+      transform: translateY(-1px);
+    }
+
+    /* ─── Toast ─────────────────────────────────────────────────── */
+    .bsky-setup__toast {
+      position: fixed; left: 50%; bottom: 28px;
+      transform: translate(-50%, 24px);
+      padding: 10px 16px;
+      border-radius: 100px;
+      background: rgba(34,197,94,0.14);
+      border: 1px solid rgba(34,197,94,0.40);
+      color: var(--accent-green);
+      font-family: var(--font-display);
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.10em; text-transform: uppercase;
+      backdrop-filter: blur(12px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      z-index: 80;
+    }
+    .bsky-setup__toast[data-show="true"] {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    /* ─── Responsive ────────────────────────────────────────────── */
+    @media (max-width: 720px) {
+      .bsky-setup__hero-title { font-size: 22px; }
+      .bsky-setup__trust-grid { grid-template-columns: 1fr; }
+    }
+    /* Ratel mobile breakpoint == max-mobile (≤ 500px) */
+    @media (max-width: 500px) {
+      .bsky-setup__topbar { padding: 12px 14px; }
+      .bsky-setup__topbar-eyebrow { display: none; }
+      .bsky-setup__topbar-main { font-size: 13px; }
+      .bsky-setup__theme-toggle { padding: 0 10px; font-size: 9px; }
+      .bsky-setup__page { padding: 22px 14px 56px; gap: 18px; }
+      .bsky-setup__hero { padding: 22px 20px; }
+      .bsky-setup__hero-title { font-size: 20px; }
+      .bsky-setup__step-card {
+        grid-template-columns: 44px 1fr;
+        gap: 14px;
+        padding: 18px 18px;
+      }
+      .bsky-setup__step-num {
+        width: 44px; height: 44px;
+        border-radius: 12px;
+        font-size: 18px;
+      }
+      .bsky-setup__step-title { font-size: 14px; }
+      .bsky-setup__step-desc { font-size: 13px; }
+      .bsky-setup__trust { padding: 20px; }
+      .bsky-setup__cta {
+        position: static;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 16px;
+      }
+      .bsky-setup__cta-actions { justify-content: stretch; }
+      .bsky-setup__btn { flex: 1; justify-content: center; padding: 12px 14px; }
+      .bsky-setup__mockup-url { font-size: 10.5px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bsky-setup">
+
+    <!-- ─── TOP BAR ─── -->
+    <div class="bsky-setup__topbar">
+      <div class="bsky-setup__topbar-left">
+        <button class="bsky-setup__back-btn" aria-label="Back to Connect Bluesky">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="bsky-setup__topbar-title">
+          <span class="bsky-setup__topbar-eyebrow">Connect · Bluesky</span>
+          <span class="bsky-setup__topbar-main">App Password Guide</span>
+        </div>
+      </div>
+      <button class="bsky-setup__theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="themeIconDark"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="themeIconLight" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <span id="themeLabel">Light</span>
+      </button>
+    </div>
+
+    <main class="bsky-setup__page">
+
+      <!-- ─── HERO ─── -->
+      <section class="bsky-setup__hero">
+        <span class="bsky-setup__hero-eyebrow">
+          <span class="bsky-setup__hero-eyebrow-dot">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.5c-1.3-2.5-4.9-7.2-8.2-9.5C.7-1.2 0 .5 0 1.5c0 1.1.6 9.1 1 10.3.8 4 5.5 5.1 9.6 4.4-6.5 1.1-12.3 3.5-4.7 11.4 2.5 2.6 3.5-2.6 4-5.2.5 2.6 1.6 7.8 4 5.2 7.7-7.9 1.9-10.4-4.6-11.5 4 .7 8.8-.4 9.6-4.4.4-1.2 1-9.2 1-10.3 0-1-.7-2.7-3.8-.5-3.3 2.3-6.9 7-8.2 9.6z"/></svg>
+          </span>
+          Bluesky · Setup guide
+        </span>
+        <h1 class="bsky-setup__hero-title">
+          Get your <span class="bsky-setup__hero-title-accent">app password</span><br />
+          in under a minute.
+        </h1>
+        <p class="bsky-setup__hero-sub">
+          Bluesky uses app passwords instead of OAuth. You'll generate one on Bluesky,
+          paste it back into Ratel, and that's it — we'll never see your main password.
+        </p>
+        <div class="bsky-setup__hero-meta">
+          <span class="bsky-setup__hero-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            4 steps
+          </span>
+          <span class="bsky-setup__hero-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            ~60 seconds
+          </span>
+          <span class="bsky-setup__hero-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Revocable anytime
+          </span>
+        </div>
+      </section>
+
+      <!-- ─── SECTION HEAD ─── -->
+      <div class="bsky-setup__section-head">
+        <span class="bsky-setup__section-title">How to do it</span>
+        <span class="bsky-setup__section-meta">4 steps</span>
+      </div>
+
+      <!-- ─── STEPS ─── -->
+      <div class="bsky-setup__steps">
+
+        <!-- ─── STEP 1 ─── -->
+        <article class="bsky-setup__step-card">
+          <div class="bsky-setup__step-num">1</div>
+          <div class="bsky-setup__step-body">
+            <h2 class="bsky-setup__step-title">Open Bluesky's app passwords page</h2>
+            <p class="bsky-setup__step-desc">
+              Sign in to Bluesky first (in any browser tab) and then visit the
+              <strong>App Passwords</strong> page in your account settings.
+            </p>
+            <div class="bsky-setup__mockup" aria-hidden="true">
+              <div class="bsky-setup__mockup-bar">
+                <span class="bsky-setup__mockup-dot"></span>
+                <span class="bsky-setup__mockup-dot"></span>
+                <span class="bsky-setup__mockup-dot"></span>
+                <span class="bsky-setup__mockup-url">
+                  https://<strong>bsky.app/settings/app-passwords</strong>
+                </span>
+              </div>
+              <div class="bsky-setup__mockup-body">
+                <div class="bsky-setup__mockup-row">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                  <span>Settings · Privacy &amp; Security · App Passwords</span>
+                </div>
+              </div>
+            </div>
+            <button class="bsky-setup__copy-chip" data-copy="https://bsky.app/settings/app-passwords" type="button" aria-label="Copy URL">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span class="bsky-setup__copy-chip-val">bsky.app/settings/app-passwords</span>
+              <span class="bsky-setup__copy-chip-status" data-status>Copy</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- ─── STEP 2 ─── -->
+        <article class="bsky-setup__step-card">
+          <div class="bsky-setup__step-num">2</div>
+          <div class="bsky-setup__step-body">
+            <h2 class="bsky-setup__step-title">Tap "Add App Password" and name it</h2>
+            <p class="bsky-setup__step-desc">
+              Bluesky will ask for a short label so you can revoke this specific token later
+              without affecting your other apps. Name it <strong>Ratel</strong> so it's easy to spot.
+            </p>
+            <div class="bsky-setup__mockup" aria-hidden="true">
+              <div class="bsky-setup__mockup-bar">
+                <span class="bsky-setup__mockup-dot"></span>
+                <span class="bsky-setup__mockup-dot"></span>
+                <span class="bsky-setup__mockup-dot"></span>
+                <span class="bsky-setup__mockup-url">bsky.app · App Password Name</span>
+              </div>
+              <div class="bsky-setup__mockup-body">
+                <div class="bsky-setup__mockup-row">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                  <span class="bsky-setup__mockup-input">Ratel</span>
+                  <span class="bsky-setup__mockup-pill">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Create
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="bsky-setup__callout bsky-setup__callout--info">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <div>
+                Any label is fine — but a clear name (e.g. <strong>Ratel</strong>) makes it easy
+                to find and revoke later in Bluesky's settings.
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- ─── STEP 3 ─── -->
+        <article class="bsky-setup__step-card">
+          <div class="bsky-setup__step-num">3</div>
+          <div class="bsky-setup__step-body">
+            <h2 class="bsky-setup__step-title">Copy the generated password</h2>
+            <p class="bsky-setup__step-desc">
+              Bluesky will show you a fresh password in the
+              <strong>xxxx-xxxx-xxxx-xxxx</strong> format.
+              Copy it right away — Bluesky only displays it <strong>once</strong>.
+            </p>
+            <button class="bsky-setup__copy-chip" data-copy="xxxx-xxxx-xxxx-xxxx" type="button" aria-label="Copy password format">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span class="bsky-setup__copy-chip-val">xxxx-xxxx-xxxx-xxxx</span>
+              <span class="bsky-setup__copy-chip-status" data-status>Format</span>
+            </button>
+            <div class="bsky-setup__callout bsky-setup__callout--warn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <div>
+                <strong>Save it before closing the tab.</strong>
+                If you lose it you can't view it again — just revoke and create a new one.
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- ─── STEP 4 ─── -->
+        <article class="bsky-setup__step-card">
+          <div class="bsky-setup__step-num">4</div>
+          <div class="bsky-setup__step-body">
+            <h2 class="bsky-setup__step-title">Come back here and paste it in</h2>
+            <p class="bsky-setup__step-desc">
+              Enter your <strong>handle</strong> (without the @) and the app password you just
+              copied. Ratel encrypts and stores it — you can disconnect anytime.
+            </p>
+            <button class="bsky-setup__copy-chip" data-copy="you.bsky.social" type="button" aria-label="Copy handle format">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span class="bsky-setup__copy-chip-val">you.bsky.social</span>
+              <span class="bsky-setup__copy-chip-status" data-status>Example</span>
+            </button>
+          </div>
+        </article>
+
+      </div>
+
+      <!-- ─── SECTION HEAD ─── -->
+      <div class="bsky-setup__section-head">
+        <span class="bsky-setup__section-title">Why Ratel needs this</span>
+      </div>
+
+      <!-- ─── TRUST / REASSURANCE ─── -->
+      <section class="bsky-setup__trust" aria-labelledby="trustTitle">
+        <div class="bsky-setup__trust-head">
+          <span class="bsky-setup__trust-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </span>
+          <h2 class="bsky-setup__trust-title" id="trustTitle">Your main password stays yours</h2>
+        </div>
+        <div class="bsky-setup__trust-grid">
+          <div class="bsky-setup__trust-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <div class="bsky-setup__trust-item-body">
+              <span class="bsky-setup__trust-item-name">Encrypted at rest</span>
+              <span class="bsky-setup__trust-item-desc">
+                Stored with KMS-grade encryption. Ratel never sees your main Bluesky password.
+              </span>
+            </div>
+          </div>
+          <div class="bsky-setup__trust-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            <div class="bsky-setup__trust-item-body">
+              <span class="bsky-setup__trust-item-name">Revocable anytime</span>
+              <span class="bsky-setup__trust-item-desc">
+                Revoke from Bluesky settings or disconnect inside Ratel — both work instantly.
+              </span>
+            </div>
+          </div>
+          <div class="bsky-setup__trust-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <div class="bsky-setup__trust-item-body">
+              <span class="bsky-setup__trust-item-name">Used only for posting</span>
+              <span class="bsky-setup__trust-item-desc">
+                Ratel uses this token to syndicate your Ratel posts to your Bluesky timeline — nothing else.
+              </span>
+            </div>
+          </div>
+          <div class="bsky-setup__trust-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/></svg>
+            <div class="bsky-setup__trust-item-body">
+              <span class="bsky-setup__trust-item-name">Scoped by Bluesky</span>
+              <span class="bsky-setup__trust-item-desc">
+                App passwords can't change your email, password, or delete your account — Bluesky enforces this.
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── CTA BAR ─── -->
+      <div class="bsky-setup__cta">
+        <div class="bsky-setup__cta-msg">
+          <span class="bsky-setup__cta-msg-eyebrow">Ready to connect</span>
+          <span class="bsky-setup__cta-msg-main">Got your app password? Let's plug it in.</span>
+        </div>
+        <div class="bsky-setup__cta-actions">
+          <a class="bsky-setup__btn bsky-setup__btn-ghost" href="https://bsky.app/settings/app-passwords" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Open Bluesky
+          </a>
+          <button class="bsky-setup__btn bsky-setup__btn-primary" id="goConnect">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Got it, take me to Connect
+          </button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ─── TOAST ─── -->
+  <div class="bsky-setup__toast" id="toast" role="status" aria-live="polite">Copied to clipboard</div>
+
+  <script>
+    (function () {
+      // ─── Theme toggle ─────────────────────────────────────────
+      var html = document.documentElement;
+      var toggle = document.getElementById('themeToggle');
+      var iconDark = document.getElementById('themeIconDark');
+      var iconLight = document.getElementById('themeIconLight');
+      var label = document.getElementById('themeLabel');
+
+      function applyTheme(theme) {
+        html.setAttribute('data-theme', theme);
+        var isDark = theme === 'dark';
+        iconDark.style.display = isDark ? '' : 'none';
+        iconLight.style.display = isDark ? 'none' : '';
+        label.textContent = isDark ? 'Light' : 'Dark';
+      }
+
+      toggle.addEventListener('click', function () {
+        var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+      });
+
+      // ─── Copy chips ───────────────────────────────────────────
+      var toast = document.getElementById('toast');
+      var toastTimer = null;
+      function showToast() {
+        toast.setAttribute('data-show', 'true');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          toast.setAttribute('data-show', 'false');
+        }, 1600);
+      }
+
+      document.querySelectorAll('.bsky-setup__copy-chip').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          var val = chip.getAttribute('data-copy') || '';
+          var statusEl = chip.querySelector('[data-status]');
+          var prevStatus = statusEl ? statusEl.textContent : '';
+
+          function done() {
+            chip.setAttribute('data-copied', 'true');
+            if (statusEl) statusEl.textContent = 'Copied';
+            showToast();
+            setTimeout(function () {
+              chip.removeAttribute('data-copied');
+              if (statusEl) statusEl.textContent = prevStatus;
+            }, 1600);
+          }
+
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(val).then(done).catch(done);
+          } else {
+            // Fallback for older browsers
+            var ta = document.createElement('textarea');
+            ta.value = val;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); } catch (_) {}
+            document.body.removeChild(ta);
+            done();
+          }
+        });
+      });
+
+      // ─── CTA ──────────────────────────────────────────────────
+      var goConnect = document.getElementById('goConnect');
+      goConnect.addEventListener('click', function () {
+        // Demo only — in Dioxus this navigates to the Bluesky connect modal/route
+        alert('In Ratel this would open the Connect Bluesky modal.');
+      });
+    })();
+  </script>
+</body>
+</html>

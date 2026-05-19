@@ -52,4 +52,9 @@ translate! {
         en: "Settings",
         ko: "설정",
     },
+
+    connections: {
+        en: "Connections",
+        ko: "연동",
+    },
 }
