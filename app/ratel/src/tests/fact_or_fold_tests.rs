@@ -34,6 +34,76 @@ fn valid_body() -> String {
     "x".repeat(200)
 }
 
+/// Wipe shared singletons + queued subjects so the next test starts
+/// from a clean slate. Sibling tests routinely write to:
+///   - `FactFoldSettings` / `ArcadeSettings` singletons
+///     (`relax_balance_gate`, settings PUT tests)
+///   - `FactFoldLobby` singleton (every `join_lobby` test)
+///   - `FactFoldSubjects` anchor pk (every test that calls
+///     `create_live_subject`)
+/// Tests that assert default behaviour (no subjects queued, default
+/// stage timings, fresh lobby) must call this at the top — otherwise
+/// the assertion drifts based on test execution order.
+async fn reset_fact_fold_state(ctx: &TestContext) {
+    use crate::common::types::EntityType;
+    use crate::features::arcade::games::fact_or_fold::models::{
+        FactFoldLobby, FactFoldSettings, FactFoldSubject,
+    };
+    use crate::features::arcade::models::ArcadeSettings;
+
+    // Settings singletons (delete returns NotFound when row absent —
+    // we don't care).
+    let _ = ArcadeSettings::delete(
+        &ctx.ddb,
+        &Partition::ArcadeSettings,
+        Some(EntityType::ArcadeSettings),
+    )
+    .await;
+    let _ = FactFoldSettings::delete(
+        &ctx.ddb,
+        &Partition::FactFoldSettings,
+        Some(EntityType::FactFoldSettings),
+    )
+    .await;
+
+    // Lobby pointer singleton.
+    let _ = FactFoldLobby::delete(
+        &ctx.ddb,
+        &Partition::FactFoldLobbySingleton,
+        Some(EntityType::FactFoldLobby),
+    )
+    .await;
+
+    // Subjects accumulated by prior tests under the shared anchor pk.
+    let opts = FactFoldSubject::opt()
+        .sk("FACT_FOLD_SUBJECT".to_string())
+        .limit(200);
+    if let Ok((subjects, _)) =
+        FactFoldSubject::query(&ctx.ddb, FactFoldSubject::anchor_pk(), opts).await
+    {
+        for s in subjects {
+            let _ = FactFoldSubject::delete(&ctx.ddb, &s.pk, Some(s.sk)).await;
+        }
+    }
+
+    // Leaderboard entries — written by settlement, shared anchor pk.
+    use crate::features::arcade::games::fact_or_fold::models::FactFoldLeaderboardEntry;
+    let lb_opts = FactFoldLeaderboardEntry::opt()
+        .sk("FACT_FOLD_LEADERBOARD_ENTRY".to_string())
+        .limit(200);
+    if let Ok((entries, _)) = FactFoldLeaderboardEntry::query(
+        &ctx.ddb,
+        FactFoldLeaderboardEntry::anchor_pk(),
+        lb_opts,
+    )
+    .await
+    {
+        for e in entries {
+            let _ = FactFoldLeaderboardEntry::delete(&ctx.ddb, &e.pk, Some(e.sk)).await;
+        }
+    }
+}
+
 async fn create_subject(ctx: &TestContext, admin: &axum::http::HeaderMap) -> SubjectResponse {
     let (status, _, body) = crate::test_post! {
         app: ctx.app.clone(),
@@ -64,6 +134,7 @@ async fn create_subject(ctx: &TestContext, admin: &axum::http::HeaderMap) -> Sub
 #[tokio::test]
 async fn test_create_subject_rejects_non_admin() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     // ctx.test_user is Individual, not Admin
     let (status, _, _) = crate::test_post! {
         app: ctx.app.clone(),
@@ -87,6 +158,7 @@ async fn test_create_subject_rejects_non_admin() {
 #[tokio::test]
 async fn test_create_subject_rejects_unauthenticated() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (status, _, _) = crate::test_post! {
         app: ctx.app,
         path: "/api/fact-or-fold/admin/subjects",
@@ -108,6 +180,7 @@ async fn test_create_subject_rejects_unauthenticated() {
 #[tokio::test]
 async fn test_list_subjects_rejects_non_admin() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (status, _, _) = crate::test_get! {
         app: ctx.app.clone(),
         path: "/api/fact-or-fold/admin/subjects",
@@ -119,6 +192,7 @@ async fn test_list_subjects_rejects_non_admin() {
 #[tokio::test]
 async fn test_get_settings_rejects_non_admin() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (status, _, _) = crate::test_get! {
         app: ctx.app.clone(),
         path: "/api/fact-or-fold/admin/settings",
@@ -132,6 +206,7 @@ async fn test_get_settings_rejects_non_admin() {
 #[tokio::test]
 async fn test_create_and_get_subject() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin_headers) = ctx.create_admin_user().await;
 
     let created = create_subject(&ctx, &admin_headers).await;
@@ -157,6 +232,7 @@ async fn test_create_and_get_subject() {
 #[tokio::test]
 async fn test_list_subjects_returns_created() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin_headers) = ctx.create_admin_user().await;
 
     let created = create_subject(&ctx, &admin_headers).await;
@@ -178,6 +254,7 @@ async fn test_list_subjects_returns_created() {
 #[tokio::test]
 async fn test_update_subject_patches_fields() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin_headers) = ctx.create_admin_user().await;
     let created = create_subject(&ctx, &admin_headers).await;
     let subject_id = created.id.0;
@@ -202,6 +279,7 @@ async fn test_update_subject_patches_fields() {
 #[tokio::test]
 async fn test_delete_subject_soft_deletes() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin_headers) = ctx.create_admin_user().await;
     let created = create_subject(&ctx, &admin_headers).await;
     let subject_id = created.id.0;
@@ -226,6 +304,7 @@ async fn test_delete_subject_soft_deletes() {
 #[tokio::test]
 async fn test_create_rejects_body_too_short() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin_headers) = ctx.create_admin_user().await;
     let (status, _, _) = crate::test_post! {
         app: ctx.app,
@@ -249,6 +328,7 @@ async fn test_create_rejects_body_too_short() {
 #[tokio::test]
 async fn test_create_rejects_invalid_difficulty() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin_headers) = ctx.create_admin_user().await;
     let (status, _, _) = crate::test_post! {
         app: ctx.app,
@@ -272,6 +352,7 @@ async fn test_create_rejects_invalid_difficulty() {
 #[tokio::test]
 async fn test_create_rejects_empty_insider_statement() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin_headers) = ctx.create_admin_user().await;
     let (status, _, _) = crate::test_post! {
         app: ctx.app,
@@ -297,6 +378,7 @@ async fn test_create_rejects_empty_insider_statement() {
 #[tokio::test]
 async fn test_publish_now_moves_to_live() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin_headers) = ctx.create_admin_user().await;
     let created = create_subject(&ctx, &admin_headers).await;
     let subject_id = created.id.0;
@@ -321,6 +403,7 @@ async fn test_publish_now_moves_to_live() {
 #[tokio::test]
 async fn test_publish_in_the_past_rejected() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin_headers) = ctx.create_admin_user().await;
     let created = create_subject(&ctx, &admin_headers).await;
     let subject_id = created.id.0;
@@ -337,6 +420,7 @@ async fn test_publish_in_the_past_rejected() {
 #[tokio::test]
 async fn test_update_locked_when_live() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin_headers) = ctx.create_admin_user().await;
     let created = create_subject(&ctx, &admin_headers).await;
     let subject_id = created.id.0;
@@ -373,6 +457,7 @@ async fn test_update_locked_when_live() {
 #[tokio::test]
 async fn test_get_settings_returns_defaults() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin_headers) = ctx.create_admin_user().await;
 
     let (status, _, body) = crate::test_get! {
@@ -391,6 +476,7 @@ async fn test_get_settings_returns_defaults() {
 #[tokio::test]
 async fn test_update_settings_persists_patch() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin_headers) = ctx.create_admin_user().await;
 
     let (status, _, body) = crate::test_put! {
@@ -423,6 +509,7 @@ async fn test_update_settings_persists_patch() {
 #[tokio::test]
 async fn test_queue_alarm_rejects_non_admin() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (status, _, _) = crate::test_get! {
         app: ctx.app.clone(),
         path: "/api/fact-or-fold/admin/queue/alarm",
@@ -434,6 +521,7 @@ async fn test_queue_alarm_rejects_non_admin() {
 #[tokio::test]
 async fn test_queue_alarm_alerts_when_empty_or_near_threshold() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin_headers) = ctx.create_admin_user().await;
 
     // Empty queue → alert=true, days_remaining=0
@@ -467,6 +555,7 @@ async fn test_queue_alarm_alerts_when_empty_or_near_threshold() {
 #[tokio::test]
 async fn test_queue_alarm_clears_when_far_future_scheduled() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin_headers) = ctx.create_admin_user().await;
 
     // Schedule far enough out (10 days) to clear the default 5-day alert.
@@ -518,6 +607,7 @@ async fn create_subject_scheduled(
 #[tokio::test]
 async fn test_update_settings_rejects_out_of_range() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin_headers) = ctx.create_admin_user().await;
     // round_capacity must be >= 2; 1 should be rejected
     let (status, _, _) = crate::test_put! {
@@ -560,11 +650,13 @@ async fn grant_chips_for_test(ctx: &TestContext, user_pk: &Partition, chips: i64
 /// `min_bet_rp` knob is still zeroed because the FOF bet endpoint
 /// continues to validate against it.
 async fn relax_balance_gate(ctx: &TestContext, admin: &axum::http::HeaderMap) {
+    // `min_bet_rp` validator requires `> 0`; 1 is the minimum allowed
+    // value and effectively disables the gate for test flows.
     let (status, _, _) = crate::test_put! {
         app: ctx.app.clone(),
         path: "/api/fact-or-fold/admin/settings",
         headers: admin.clone(),
-        body: { "req": { "min_bet_rp": 0 } }
+        body: { "req": { "min_bet_rp": 1 } }
     };
     assert_eq!(status, 200, "relax_balance_gate (FOF settings) must succeed");
 
@@ -598,6 +690,7 @@ async fn create_live_subject(ctx: &TestContext, admin: &axum::http::HeaderMap) -
 #[tokio::test]
 async fn test_get_lobby_rejects_unauthenticated() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (status, _, _) = crate::test_get! {
         app: ctx.app,
         path: "/api/fact-or-fold/lobby",
@@ -608,6 +701,7 @@ async fn test_get_lobby_rejects_unauthenticated() {
 #[tokio::test]
 async fn test_lobby_no_subject_reports_unavailable() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (status, _, body) = crate::test_get! {
         app: ctx.app,
         path: "/api/fact-or-fold/lobby",
@@ -623,6 +717,7 @@ async fn test_lobby_no_subject_reports_unavailable() {
 #[tokio::test]
 async fn test_join_no_subject_returns_unavailable() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     relax_balance_gate(&ctx, &admin).await;
 
@@ -638,6 +733,7 @@ async fn test_join_no_subject_returns_unavailable() {
 #[tokio::test]
 async fn test_join_creates_round_and_lobby_state_reflects_it() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     relax_balance_gate(&ctx, &admin).await;
     let _ = create_live_subject(&ctx, &admin).await;
@@ -669,6 +765,7 @@ async fn test_join_creates_round_and_lobby_state_reflects_it() {
 #[tokio::test]
 async fn test_join_again_rejected() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     relax_balance_gate(&ctx, &admin).await;
     let _ = create_live_subject(&ctx, &admin).await;
@@ -692,6 +789,7 @@ async fn test_join_again_rejected() {
 #[tokio::test]
 async fn test_get_round_after_join() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     relax_balance_gate(&ctx, &admin).await;
     let _ = create_live_subject(&ctx, &admin).await;
@@ -719,6 +817,7 @@ async fn test_get_round_after_join() {
 #[tokio::test]
 async fn test_leave_after_join_clears_participant() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     relax_balance_gate(&ctx, &admin).await;
     let _ = create_live_subject(&ctx, &admin).await;
@@ -744,6 +843,7 @@ async fn test_leave_after_join_clears_participant() {
 #[tokio::test]
 async fn test_get_round_not_found() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (status, _, _) = crate::test_get! {
         app: ctx.app,
         path: "/api/fact-or-fold/rounds/nonexistent-id",
@@ -795,6 +895,7 @@ async fn fill_round_to_capacity(
 #[tokio::test]
 async fn test_round_starts_after_capacity_reached() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -813,6 +914,7 @@ async fn test_round_starts_after_capacity_reached() {
 #[tokio::test]
 async fn test_bet_rejected_outside_bet_stage() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -829,6 +931,7 @@ async fn test_bet_rejected_outside_bet_stage() {
 #[tokio::test]
 async fn test_heartbeat_updates_last_seen() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -845,6 +948,7 @@ async fn test_heartbeat_updates_last_seen() {
 #[tokio::test]
 async fn test_insider_statement_returns_some_for_one_returns_none_for_others() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     relax_balance_gate(&ctx, &admin).await;
     let _ = create_live_subject(&ctx, &admin).await;
@@ -891,6 +995,7 @@ async fn test_insider_statement_returns_some_for_one_returns_none_for_others() {
 #[tokio::test]
 async fn test_non_participant_cannot_bet_or_heartbeat() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, _) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -937,6 +1042,7 @@ async fn backdate_stage_deadline(
 #[tokio::test]
 async fn test_round_stage_clock_set_on_capacity_reached() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -958,6 +1064,7 @@ async fn test_round_stage_clock_set_on_capacity_reached() {
 #[tokio::test]
 async fn test_get_round_advances_news_reveal_when_deadline_passed() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -983,6 +1090,7 @@ async fn test_get_round_advances_news_reveal_when_deadline_passed() {
 #[tokio::test]
 async fn test_get_round_rolls_through_multiple_stages_at_once() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -1008,6 +1116,7 @@ async fn test_get_round_rolls_through_multiple_stages_at_once() {
 #[tokio::test]
 async fn test_bet_succeeds_after_lazy_advance_into_bet_stage() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -1030,6 +1139,7 @@ async fn test_bet_succeeds_after_lazy_advance_into_bet_stage() {
 #[tokio::test]
 async fn test_rationale_succeeds_after_lazy_advance_into_rationale_stage() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -1056,6 +1166,7 @@ async fn test_rationale_succeeds_after_lazy_advance_into_rationale_stage() {
 #[tokio::test]
 async fn test_post_chat_rejects_non_participant() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, _) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -1072,6 +1183,7 @@ async fn test_post_chat_rejects_non_participant() {
 #[tokio::test]
 async fn test_post_chat_rejects_outside_debate_stage() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -1089,6 +1201,7 @@ async fn test_post_chat_rejects_outside_debate_stage() {
 #[tokio::test]
 async fn test_chat_polling_returns_empty_for_fresh_round() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -1106,6 +1219,7 @@ async fn test_chat_polling_returns_empty_for_fresh_round() {
 #[tokio::test]
 async fn test_chat_polling_rejects_non_participant() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, _) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -1121,6 +1235,7 @@ async fn test_chat_polling_rejects_non_participant() {
 #[tokio::test]
 async fn test_post_chat_rejects_empty_or_overlong() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -1185,6 +1300,7 @@ async fn seed_rationale(ctx: &TestContext, round_id: &str, user_pk: &Partition) 
 #[tokio::test]
 async fn test_flip_rejected_outside_debate_stage() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
     // Round is in NewsReveal.
@@ -1202,6 +1318,7 @@ async fn test_flip_rejected_outside_debate_stage() {
 async fn test_flip_rejected_when_slot_closed_too_early() {
     // Debate stage but >10s remaining → slot still closed.
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
     seed_bet(&ctx, &round_id, &ctx.test_user.0.pk, "REAL").await;
@@ -1223,6 +1340,7 @@ async fn test_flip_rejected_when_slot_closed_too_early() {
 #[tokio::test]
 async fn test_flip_rejected_self_cite() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
     seed_bet(&ctx, &round_id, &ctx.test_user.0.pk, "REAL").await;
@@ -1241,6 +1359,7 @@ async fn test_flip_rejected_self_cite() {
 #[tokio::test]
 async fn test_flip_rejected_when_cite_has_no_rationale() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
     seed_bet(&ctx, &round_id, &ctx.test_user.0.pk, "REAL").await;
@@ -1271,6 +1390,7 @@ async fn test_flip_rejected_when_cite_has_no_rationale() {
 #[tokio::test]
 async fn test_flip_succeeds_in_last_10s_with_valid_cite() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
     seed_bet(&ctx, &round_id, &ctx.test_user.0.pk, "REAL").await;
@@ -1303,6 +1423,7 @@ async fn test_flip_succeeds_in_last_10s_with_valid_cite() {
 #[tokio::test]
 async fn test_flip_rejected_when_already_used() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
     seed_bet(&ctx, &round_id, &ctx.test_user.0.pk, "REAL").await;
@@ -1344,6 +1465,7 @@ async fn test_flip_rejected_when_already_used() {
 #[tokio::test]
 async fn test_essence_register_rejects_unregister_request() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
     let (status, _, _) = crate::test_post! {
@@ -1361,6 +1483,7 @@ async fn test_essence_register_rejects_unregister_request() {
 #[tokio::test]
 async fn test_essence_register_rejects_no_rationale() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
     // Caller has no rationale row → reject.
@@ -1379,6 +1502,7 @@ async fn test_essence_register_rejects_no_rationale() {
 #[tokio::test]
 async fn test_essence_register_rejects_short_rationale() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -1409,6 +1533,7 @@ async fn test_essence_register_rejects_short_rationale() {
 #[tokio::test]
 async fn test_me_stats_returns_zero_for_new_user() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (status, _, body) = crate::test_get! {
         app: ctx.app,
         path: "/api/fact-or-fold/me/stats",
@@ -1424,6 +1549,7 @@ async fn test_me_stats_returns_zero_for_new_user() {
 #[tokio::test]
 async fn test_leaderboard_returns_empty_when_no_settlements() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (status, _, body) = crate::test_get! {
         app: ctx.app,
         path: "/api/fact-or-fold/leaderboard",
@@ -1439,6 +1565,7 @@ async fn test_leaderboard_returns_empty_when_no_settlements() {
 #[tokio::test]
 async fn test_me_stats_after_settlement_reflects_round() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
     // Everyone bets REAL — caller wins (subject default verdict
@@ -1483,6 +1610,7 @@ async fn seed_bets_for_all(ctx: &TestContext, round_id: &str, side: &str) {
 #[tokio::test]
 async fn test_settle_round_admin_only() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
     force_round_to_debate(&ctx, &round_id, 5_000).await;
@@ -1507,6 +1635,7 @@ async fn test_settle_round_admin_only() {
 #[tokio::test]
 async fn test_settle_round_marks_round_settled() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
     // Note: default subject verdict from `create_subject` is REAL.
@@ -1540,6 +1669,7 @@ async fn test_settle_round_marks_round_settled() {
 #[tokio::test]
 async fn test_settle_round_idempotent() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, _) = fill_round_to_capacity(&ctx, &admin).await;
     seed_bets_for_all(&ctx, &round_id, "REAL").await;
@@ -1565,6 +1695,7 @@ async fn test_settle_round_idempotent() {
 #[tokio::test]
 async fn test_chat_post_succeeds_during_debate() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
     force_round_to_debate(&ctx, &round_id, 30_000).await;
@@ -1583,6 +1714,7 @@ async fn test_chat_post_succeeds_during_debate() {
 #[tokio::test]
 async fn test_tick_before_deadline_is_noop() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -1604,6 +1736,7 @@ async fn test_tick_before_deadline_is_noop() {
 #[tokio::test]
 async fn test_tick_after_deadline_advances_stage() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -1627,10 +1760,15 @@ async fn test_tick_after_deadline_advances_stage() {
 #[tokio::test]
 async fn test_tick_rolls_through_multiple_stages() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
-    // Walk all the way to Debate in one tick (PR5 terminal stage).
+    // Backdate far enough that every stage's deadline is already past,
+    // so the tick handler walks through NewsReveal → Bet → Rationale →
+    // Reveal → Debate → Settlement → Settled in one call. PR6 added
+    // auto-settlement at the Debate deadline (was terminal in PR5), so
+    // the terminal stage we expect to land on is Settled, not Debate.
     backdate_stage_deadline(&ctx, &round_id, 5 * 60 * 1000).await;
 
     let (status, _, body) = crate::test_post! {
@@ -1641,8 +1779,8 @@ async fn test_tick_rolls_through_multiple_stages() {
     };
     assert_eq!(status, 200);
     assert!(
-        matches!(body.status, RoundStatus::Debate),
-        "tick walks to PR5 terminal Debate, got {:?}",
+        matches!(body.status, RoundStatus::Settled),
+        "tick must walk all the way to Settled with auto-settlement, got {:?}",
         body.status,
     );
 }
@@ -1650,6 +1788,7 @@ async fn test_tick_rolls_through_multiple_stages() {
 #[tokio::test]
 async fn test_tick_rejects_non_participant() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, _) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -1667,6 +1806,7 @@ async fn test_tick_rejects_non_participant() {
 #[tokio::test]
 async fn test_round_subject_redacts_verdict_until_settled() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -1711,6 +1851,7 @@ async fn test_round_subject_redacts_verdict_until_settled() {
 #[tokio::test]
 async fn test_round_subject_rejects_non_participant() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, _) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -1726,6 +1867,7 @@ async fn test_round_subject_rejects_non_participant() {
 #[tokio::test]
 async fn test_round_bets_only_returns_own_during_bet_stage() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
     seed_bets_for_all(&ctx, &round_id, "REAL").await;
@@ -1746,6 +1888,7 @@ async fn test_round_bets_only_returns_own_during_bet_stage() {
 #[tokio::test]
 async fn test_round_bets_returns_all_at_reveal_or_later() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
     seed_bets_for_all(&ctx, &round_id, "REAL").await;
@@ -1764,6 +1907,7 @@ async fn test_round_bets_returns_all_at_reveal_or_later() {
 #[tokio::test]
 async fn test_round_bets_rejects_non_participant() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, _) = fill_round_to_capacity(&ctx, &admin).await;
     let (_, outsider) = ctx.create_another_user().await;
@@ -1779,6 +1923,7 @@ async fn test_round_bets_rejects_non_participant() {
 #[tokio::test]
 async fn test_round_rationales_redacts_text_until_reveal() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -1837,6 +1982,7 @@ async fn test_round_rationales_redacts_text_until_reveal() {
 #[tokio::test]
 async fn test_round_participants_lists_with_display_metadata() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -1861,6 +2007,7 @@ async fn test_round_participants_lists_with_display_metadata() {
 #[tokio::test]
 async fn test_round_participants_rejects_non_participant() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, _) = fill_round_to_capacity(&ctx, &admin).await;
     let (_, outsider) = ctx.create_another_user().await;
@@ -1876,6 +2023,7 @@ async fn test_round_participants_rejects_non_participant() {
 #[tokio::test]
 async fn test_round_settlement_rejects_when_not_settled() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
 
@@ -1891,6 +2039,7 @@ async fn test_round_settlement_rejects_when_not_settled() {
 #[tokio::test]
 async fn test_round_settlement_returns_breakdown_after_settle() {
     let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
     seed_bets_for_all(&ctx, &round_id, "REAL").await;

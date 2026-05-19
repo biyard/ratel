@@ -30,6 +30,20 @@ async fn grant_rp_for_test(ctx: &TestContext, user_pk: &Partition, rp: i64) {
         .expect("grant rp update");
 }
 
+/// Reset the singleton `ArcadeSettings` row so the next read returns
+/// `ArcadeSettingsResponse::default()`. Sibling tests that PUT a
+/// custom config (e.g. `test_arcade_settings_put_persists`,
+/// `test_redeem_flag_can_be_flipped`) leave the row dirty across
+/// parallel runs against a shared LocalStack — any test that asserts
+/// default behaviour must reset first.
+async fn reset_arcade_settings(ctx: &TestContext) {
+    use crate::features::arcade::models::ArcadeSettings;
+    let (pk, sk) = ArcadeSettings::keys();
+    // Delete returns NotFound when the row hasn't been written yet;
+    // either way the post-condition is "row absent".
+    let _ = ArcadeSettings::delete(&ctx.ddb, &pk, Some(sk)).await;
+}
+
 async fn enable_redeem(ctx: &TestContext, admin: &axum::http::HeaderMap) {
     let (status, _, _) = crate::test_put! {
         app: ctx.app.clone(),
@@ -45,6 +59,7 @@ async fn enable_redeem(ctx: &TestContext, admin: &axum::http::HeaderMap) {
 #[tokio::test]
 async fn test_wallet_zero_balance_for_new_user() {
     let ctx = TestContext::setup().await;
+    reset_arcade_settings(&ctx).await;
     let (status, _, body) = crate::test_get! {
         app: ctx.app,
         path: "/api/arcade/wallet",
@@ -73,6 +88,9 @@ async fn test_wallet_requires_auth() {
 #[tokio::test]
 async fn test_convert_rp_to_chip_debits_rp_and_credits_chip() {
     let ctx = TestContext::setup().await;
+    // Reset settings so the 1:1 default ratio is in effect — sibling
+    // PUT test installs 2:1 which would skew chips_credited below.
+    reset_arcade_settings(&ctx).await;
     grant_rp_for_test(&ctx, &ctx.test_user.0.pk, 500).await;
 
     let (status, _, body) = crate::test_post! {
@@ -113,6 +131,9 @@ async fn test_convert_rejects_insufficient_rp() {
 #[tokio::test]
 async fn test_convert_rejects_below_minimum() {
     let ctx = TestContext::setup().await;
+    // Reset so default min_convert_rp=100 is the gate (siblings can
+    // PUT custom min).
+    reset_arcade_settings(&ctx).await;
     grant_rp_for_test(&ctx, &ctx.test_user.0.pk, 10_000).await;
     let (status, _, _) = crate::test_post! {
         app: ctx.app,
@@ -166,6 +187,7 @@ async fn test_redeem_disabled_in_v1() {
 #[tokio::test]
 async fn test_arcade_settings_get_returns_defaults() {
     let ctx = TestContext::setup().await;
+    reset_arcade_settings(&ctx).await;
     let (_, admin) = ctx.create_admin_user().await;
     let (status, _, body) = crate::test_get! {
         app: ctx.app,
