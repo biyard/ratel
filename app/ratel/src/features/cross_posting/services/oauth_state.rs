@@ -59,6 +59,10 @@ pub struct DecodedState {
     pub user_pk: Partition,
     pub nonce: String,
     pub expires_at: i64,
+    /// SPA-internal path to bounce the user to after a successful
+    /// connect (e.g. the post-edit page they came from). `None` ⇒ use
+    /// the default `/{username}/settings/connections` destination.
+    pub return_to: Option<String>,
 }
 
 /// JSON payload shape — kept private so callers can't depend on field
@@ -68,15 +72,22 @@ struct Payload<'a> {
     user_pk: &'a str,
     nonce: &'a str,
     exp: i64,
+    /// Optional SPA-internal return path. Omitted from serialized JSON
+    /// when `None` so existing state tokens stay deserializable and we
+    /// don't bloat every state with a `null` field.
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "rt")]
+    return_to: Option<&'a str>,
 }
 
 /// Build a fresh state token tied to `user_pk` with a random `nonce` and
 /// a `now + STATE_TTL_SECS` expiry. Only the init controller should call
-/// this.
-pub fn encode(user_pk: &Partition) -> Result<String, OauthStateError> {
+/// this. `return_to` is an optional SPA-internal path (must start with
+/// `/`, see [`sanitize_return_to`]) that the callback will bounce the
+/// user back to on success — typically the post-edit URL they came from.
+pub fn encode(user_pk: &Partition, return_to: Option<&str>) -> Result<String, OauthStateError> {
     let nonce = uuid::Uuid::now_v7().to_string();
     let exp = (time::now() / 1000) + STATE_TTL_SECS;
-    encode_with(user_pk, &nonce, exp)
+    encode_with(user_pk, &nonce, exp, return_to)
 }
 
 /// Lower-level encode — exposed for tests so a fixed nonce / exp can be
@@ -85,12 +96,15 @@ pub fn encode_with(
     user_pk: &Partition,
     nonce: &str,
     exp: i64,
+    return_to: Option<&str>,
 ) -> Result<String, OauthStateError> {
     let user_pk_str = user_pk.to_string();
+    let sanitized = return_to.and_then(sanitize_return_to);
     let payload = Payload {
         user_pk: &user_pk_str,
         nonce,
         exp,
+        return_to: sanitized.as_deref(),
     };
     let payload_bytes = serde_json::to_vec(&payload).map_err(|e| {
         OauthStateError::Subkey(format!("payload serialize: {e}"))
@@ -101,6 +115,27 @@ pub fn encode_with(
         B64.encode(&payload_bytes),
         B64.encode(mac)
     ))
+}
+
+/// Reject anything that isn't a safe same-origin path. Open-redirect
+/// guard: only allow strings that begin with a single `/` and have no
+/// scheme, protocol-relative prefix, or path traversal. Caps length so
+/// the state token stays under typical URL limits.
+pub fn sanitize_return_to(raw: &str) -> Option<String> {
+    const MAX_LEN: usize = 256;
+    if raw.is_empty() || raw.len() > MAX_LEN {
+        return None;
+    }
+    if !raw.starts_with('/') || raw.starts_with("//") {
+        return None;
+    }
+    if raw.contains("..") {
+        return None;
+    }
+    if raw.chars().any(|c| c.is_control()) {
+        return None;
+    }
+    Some(raw.to_string())
 }
 
 /// Verify the HMAC, parse, and check expiry. The caller is then
@@ -133,10 +168,13 @@ pub fn decode_and_verify(state: &str) -> Result<DecodedState, OauthStateError> {
         .parse()
         .map_err(|_| OauthStateError::Malformed)?;
 
+    let return_to = parsed.return_to.and_then(sanitize_return_to);
+
     Ok(DecodedState {
         user_pk,
         nonce: parsed.nonce.to_string(),
         expires_at: parsed.exp,
+        return_to,
     })
 }
 
@@ -190,7 +228,7 @@ mod tests {
             return;
         }
         let now_secs = time::now() / 1000;
-        let token = encode_with(&pk(), "abc-nonce", now_secs + 60).unwrap();
+        let token = encode_with(&pk(), "abc-nonce", now_secs + 60, None).unwrap();
         let decoded = decode_and_verify(&token).unwrap();
         assert_eq!(decoded.user_pk, pk());
         assert_eq!(decoded.nonce, "abc-nonce");
@@ -212,7 +250,7 @@ mod tests {
             return;
         }
         let now_secs = time::now() / 1000;
-        let token = encode_with(&pk(), "abc", now_secs + 60).unwrap();
+        let token = encode_with(&pk(), "abc", now_secs + 60, None).unwrap();
         // Swap the payload b64 segment for a different (valid b64) string.
         let (_, sig) = token.split_once('.').unwrap();
         let bad_payload = B64.encode(b"{\"user_pk\":\"USER#evil\",\"nonce\":\"x\",\"exp\":999999999999}");
@@ -227,9 +265,31 @@ mod tests {
             return;
         }
         let now_secs = time::now() / 1000;
-        let token = encode_with(&pk(), "abc", now_secs - 1).unwrap();
+        let token = encode_with(&pk(), "abc", now_secs - 1, None).unwrap();
         let err = decode_and_verify(&token).unwrap_err();
         assert!(matches!(err, OauthStateError::Expired));
+    }
+
+    #[test]
+    fn return_to_roundtrips_when_valid() {
+        if !key_available() {
+            return;
+        }
+        let now_secs = time::now() / 1000;
+        let token = encode_with(&pk(), "n", now_secs + 60, Some("/posts/abc/edit")).unwrap();
+        let decoded = decode_and_verify(&token).unwrap();
+        assert_eq!(decoded.return_to.as_deref(), Some("/posts/abc/edit"));
+    }
+
+    #[test]
+    fn return_to_rejected_when_not_same_origin_path() {
+        // Pure validation logic — no key needed.
+        assert!(sanitize_return_to("https://evil.example.com").is_none());
+        assert!(sanitize_return_to("//evil.example.com").is_none());
+        assert!(sanitize_return_to("javascript:alert(1)").is_none());
+        assert!(sanitize_return_to("/../etc/passwd").is_none());
+        assert!(sanitize_return_to("").is_none());
+        assert!(sanitize_return_to("/posts/abc").is_some());
     }
 
     #[test]

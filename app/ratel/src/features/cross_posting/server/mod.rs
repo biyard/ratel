@@ -183,9 +183,19 @@ async fn linkedin_callback(
         return Redirect::to(&connections_url("error")).into_response();
     }
 
-    // (6) Success — bounce the user back to the connections page with a
-    // success marker. The page reads `?linkedin=ok` and shows a toast.
-    Redirect::to(&connections_url("ok")).into_response()
+    // (6) Success — prefer the `return_to` carried in the state token
+    // (e.g. the post-edit page the user was composing on when they hit
+    // Connect) over the default connections page. `return_to` is
+    // already sanitized to a same-origin path by `oauth_state`. We
+    // tack on `?linkedin=ok` so the destination can show a toast.
+    let success_url = match decoded.return_to.as_deref() {
+        Some(path) => {
+            let sep = if path.contains('?') { '&' } else { '?' };
+            format!("{}{path}{sep}linkedin=ok", site_base_url())
+        }
+        None => connections_url("ok"),
+    };
+    Redirect::to(&success_url).into_response()
 }
 
 pub fn router() -> Router {

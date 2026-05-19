@@ -111,11 +111,19 @@ impl UseCrossPosting {
     /// `dioxus::document::eval` (see `conventions/dioxus-app.md` §
     /// JS Interop).
     ///
+    /// `return_to` is an optional SPA-internal path the OAuth callback
+    /// will bounce the user back to on success (e.g. the post-edit URL
+    /// they came from). `None` ⇒ default to the connections page.
+    ///
     /// Server-side seal/upsert happens in the `/callback` handler after
     /// LinkedIn bounces the user back; this method does NOT refresh
     /// `connections` because the page is about to leave anyway.
-    pub async fn connect_linkedin(&mut self) -> crate::common::Result<()> {
-        let resp = connect_linkedin_init_handler().await?;
+    pub async fn connect_linkedin(
+        &mut self,
+        return_to: Option<String>,
+    ) -> crate::common::Result<()> {
+        let req = crate::features::cross_posting::types::LinkedInOauthInitRequest { return_to };
+        let resp = connect_linkedin_init_handler(req).await?;
         crate::features::cross_posting::interop::redirect_to_external(&resp.authorize_url);
         Ok(())
     }

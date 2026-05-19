@@ -294,7 +294,12 @@ fn PlatformCard(
                 }
             }
 
-            if !connected {
+            if platform == SocialPlatform::Threads {
+                div { class: "connect-cta",
+                    p { class: "connect-cta__hint", "{connect_hint}" }
+                    span { class: "connect-cta__coming-soon", "{t.coming_soon}" }
+                }
+            } else if !connected {
                 div { class: "connect-cta",
                     p { class: "connect-cta__hint", "{connect_hint}" }
                     button {

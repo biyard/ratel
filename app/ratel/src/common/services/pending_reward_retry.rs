@@ -60,6 +60,109 @@ pub async fn retry_pending_rewards(cli: &aws_sdk_dynamodb::Client) -> Result<Ret
                 .await
             {
                 Ok(user_res) => {
+                    // Backfill UserRewardHistory.transaction_id/month for
+                    // the row created during the original award attempt
+                    // (now that Biyard sync is finally proven by this
+                    // retry). Reconstruct the history sk by reading
+                    // `SpaceReward.period` so we can derive the same
+                    // TimeKey the original award used.
+                    //
+                    // Best-effort: if SpaceReward is gone (reward
+                    // re-configured / removed) or the history row was
+                    // never written, just log and move on — Biyard /
+                    // PendingReward state is the source of truth for
+                    // "did the user get their points?", and we already
+                    // know the answer is yes.
+                    if let (Some(space_pk_sub), Some(action_id)) = (
+                        item.reward_key.space_pk.clone(),
+                        item.reward_key.action_id.clone(),
+                    ) {
+                        use crate::common::models::reward::UserRewardHistory;
+                        use crate::common::types::{
+                            CompositePartition, UserRewardHistoryKey,
+                        };
+                        use crate::features::spaces::space_common::models::space_reward::SpaceReward;
+
+                        let behavior = item.reward_key.behavior.clone();
+                        match SpaceReward::get_by_action(
+                            cli,
+                            space_pk_sub,
+                            action_id,
+                            behavior,
+                        )
+                        .await
+                        {
+                            Ok(space_reward) => {
+                                let time_key = space_reward
+                                    .period
+                                    .to_time_key(item.created_at);
+                                let history_pk = CompositePartition(
+                                    item.target_pk.clone(),
+                                    Partition::Reward,
+                                );
+                                let history_sk = UserRewardHistoryKey(
+                                    item.reward_key.clone(),
+                                    time_key,
+                                );
+
+                                // Confirm the row exists before updating —
+                                // `updater().execute()` is upsert-shaped, so
+                                // a wrong sk would otherwise create a blank
+                                // row instead of failing. The extra read is
+                                // cheap and keeps the data clean if
+                                // `SpaceReward.period` changed between award
+                                // and retry.
+                                match UserRewardHistory::get(
+                                    cli,
+                                    &history_pk,
+                                    Some(&history_sk),
+                                )
+                                .await
+                                {
+                                    Ok(Some(_)) => {
+                                        if let Err(e) =
+                                            UserRewardHistory::updater(&history_pk, &history_sk)
+                                                .with_transaction_id(
+                                                    user_res.transaction_id.clone(),
+                                                )
+                                                .with_month(user_res.month.clone())
+                                                .execute(cli)
+                                                .await
+                                        {
+                                            tracing::warn!(
+                                                pending_sk = %item.sk,
+                                                history_sk = %history_sk,
+                                                error = %e,
+                                                "UserRewardHistory updater failed after retry succeeded",
+                                            );
+                                        }
+                                    }
+                                    Ok(None) => {
+                                        tracing::warn!(
+                                            pending_sk = %item.sk,
+                                            history_sk = %history_sk,
+                                            "UserRewardHistory row not found for retry-history backfill (period changed since award?)",
+                                        );
+                                    }
+                                    Err(e) => {
+                                        tracing::warn!(
+                                            pending_sk = %item.sk,
+                                            error = %e,
+                                            "UserRewardHistory get failed during retry-history backfill",
+                                        );
+                                    }
+                                }
+                            }
+                            Err(e) => {
+                                tracing::warn!(
+                                    pending_sk = %item.sk,
+                                    error = %e,
+                                    "SpaceReward lookup for retry-history backfill failed",
+                                );
+                            }
+                        }
+                    }
+
                     if let Some(owner) = owner_pk {
                         if owner != target_pk && item.amount > 0 {
                             let owner_amount = item.amount * 10 / 100;
