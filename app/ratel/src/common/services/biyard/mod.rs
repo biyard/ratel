@@ -148,6 +148,10 @@ pub struct BiyardService {
 
 #[cfg(feature = "server")]
 impl BiyardService {
+    pub fn project_id(&self) -> &str {
+        &self.project_id
+    }
+
     pub fn new(api_secret: String, project_id: String, base_url: String) -> Self {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
