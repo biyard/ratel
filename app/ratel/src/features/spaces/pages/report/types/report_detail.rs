@@ -1,0 +1,263 @@
+//! Mock data types for the report detail page. Mirrors the shapes
+//! exercised by `assets/design/reports/reports-edit.html`'s ANALYZES
+//! mock — once a backend exists these will be replaced one-for-one by
+//! handler response DTOs.
+
+use serde::{Deserialize, Serialize};
+
+/// Identifies which action surface an aggregate came from. Drives the
+/// per-source color tokens in CSS and the tab grouping in the picker.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum ActionSource {
+    Poll,
+    Quiz,
+    Discussion,
+    Follow,
+}
+
+impl ActionSource {
+    pub const VARIANTS: [ActionSource; 4] = [
+        ActionSource::Poll,
+        ActionSource::Quiz,
+        ActionSource::Discussion,
+        ActionSource::Follow,
+    ];
+
+    pub fn as_token(&self) -> &'static str {
+        match self {
+            ActionSource::Poll => "poll",
+            ActionSource::Quiz => "quiz",
+            ActionSource::Discussion => "discussion",
+            ActionSource::Follow => "follow",
+        }
+    }
+}
+
+/// One pickable aggregate inside an analyze, grouped by source.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct AnalyzeItem {
+    pub id: String,
+    pub title: String,
+    /// Free-text meta line ("5 옵션 · 매칭 응답 1,248" etc.) shown
+    /// under the title in the picker list.
+    pub meta: String,
+}
+
+/// One element of the analyze's cross-filter set — rendered as a small
+/// source-tinted chip under the analyze label in the picker dropdown.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct CrossFilterChip {
+    pub source: ActionSource,
+    pub label: String,
+}
+
+/// A saved analyze that the report can pull aggregates from.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Analyze {
+    pub id: String,
+    pub name: String,
+    pub respondents: u32,
+    /// Cross-filters that defined the analyze's audience (action +
+    /// option / keyword intersections).
+    pub filters: Vec<CrossFilterChip>,
+    pub poll: Vec<AnalyzeItem>,
+    pub quiz: Vec<AnalyzeItem>,
+    pub discussion: Vec<AnalyzeItem>,
+    pub follow: Vec<AnalyzeItem>,
+}
+
+impl Analyze {
+    pub fn items_for(&self, src: ActionSource) -> &[AnalyzeItem] {
+        match src {
+            ActionSource::Poll => &self.poll,
+            ActionSource::Quiz => &self.quiz,
+            ActionSource::Discussion => &self.discussion,
+            ActionSource::Follow => &self.follow,
+        }
+    }
+
+    pub fn total_items(&self) -> usize {
+        self.poll.len() + self.quiz.len() + self.discussion.len() + self.follow.len()
+    }
+}
+
+/// One outline entry derived from the report body — H1/H2/H3 heading
+/// or an inserted chart block. Drives the right-rail outline list.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct OutlineEntry {
+    pub id: String,
+    pub kind: OutlineKind,
+    pub label: String,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum OutlineKind {
+    H1,
+    H2,
+    H3,
+    Chart,
+}
+
+/// Visual rendering for a Chart block. The picker stamps each chart
+/// with a default type when it inserts; the outline swap then lets the
+/// author pick a different one (bar → pie etc.). Source (poll/quiz/...)
+/// controls *which* data the chart pulls from — type controls how it's
+/// drawn. The Bar/Pie/Table trio covers poll/quiz/follow aggregates;
+/// the LDA/TfIdf/Network trio is reserved for discussion text analysis.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum ChartType {
+    /// Bar chart — response distribution for poll/quiz/follow.
+    Bar,
+    /// Pie chart — proportion breakdown for poll/quiz/follow.
+    Pie,
+    /// Raw aggregate table — option × count grid.
+    Table,
+    /// LDA topic block — discussion-only. Topic weights + top keywords.
+    Lda,
+    /// TF-IDF ranked term table — discussion-only.
+    TfIdf,
+    /// Text-network graph — discussion-only. Nodes = terms, edges =
+    /// co-occurrence frequency.
+    Network,
+}
+
+impl ChartType {
+    pub const VARIANTS: [ChartType; 6] = [
+        ChartType::Bar,
+        ChartType::Pie,
+        ChartType::Table,
+        ChartType::Lda,
+        ChartType::TfIdf,
+        ChartType::Network,
+    ];
+
+    pub fn as_token(&self) -> &'static str {
+        match self {
+            ChartType::Bar => "bar",
+            ChartType::Pie => "pie",
+            ChartType::Table => "table",
+            ChartType::Lda => "lda",
+            ChartType::TfIdf => "tfidf",
+            ChartType::Network => "network",
+        }
+    }
+
+    /// Chart types available for a given data source. Mirrors the
+    /// mockup's `chartTypeOptions` map in `assets/design/reports/
+    /// reports-edit.html` — discussion data goes through LDA/TF-IDF/
+    /// Network text-analysis renderings, while poll/quiz/follow share
+    /// the Bar/Pie/Table trio.
+    pub fn options_for(source: ActionSource) -> &'static [ChartType] {
+        match source {
+            ActionSource::Poll | ActionSource::Quiz | ActionSource::Follow => &[
+                ChartType::Bar,
+                ChartType::Pie,
+                ChartType::Table,
+            ],
+            ActionSource::Discussion => &[
+                ChartType::Lda,
+                ChartType::TfIdf,
+                ChartType::Network,
+            ],
+        }
+    }
+
+    /// Default chart type for a freshly inserted chart, picked by the
+    /// data source. The first entry of `options_for(source)` doubles as
+    /// the default so a swap into a fresh source always starts somewhere
+    /// valid.
+    pub fn default_for(source: ActionSource) -> ChartType {
+        Self::options_for(source)[0]
+    }
+
+    /// True when this chart type is valid for the given source. Used by
+    /// the outline-swap UI to filter the option list.
+    pub fn is_valid_for(&self, source: ActionSource) -> bool {
+        Self::options_for(source).contains(self)
+    }
+}
+
+/// One block in the report body. Mirrors the mockup's Notion-style
+/// block editor: each block renders independently with its own handle
+/// and contenteditable affordance.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub enum ReportBlock {
+    H1 { id: String, text: String },
+    H2 { id: String, text: String },
+    H3 { id: String, text: String },
+    /// Paragraph — `html` may contain inline `<strong>`/`<em>` etc.
+    Text { id: String, html: String },
+    /// Inserted chart block. `source` is the analyze source that
+    /// supplied the data (drives badge color); `chart_type` controls
+    /// the visual rendering (bar/pie/topics/table).
+    Chart {
+        id: String,
+        source: ActionSource,
+        chart_type: ChartType,
+        analyze_name: String,
+        item_title: String,
+        meta: String,
+    },
+}
+
+impl ReportBlock {
+    pub fn id(&self) -> &str {
+        match self {
+            ReportBlock::H1 { id, .. }
+            | ReportBlock::H2 { id, .. }
+            | ReportBlock::H3 { id, .. }
+            | ReportBlock::Text { id, .. }
+            | ReportBlock::Chart { id, .. } => id,
+        }
+    }
+}
+
+/// Full state for one detail page. `blocks` is the ordered block list
+/// rendered by `DocCanvas`; `outline` is derived from it (heading + chart
+/// rows) and rebuilt whenever the block list changes.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ReportDetail {
+    pub id: String,
+    pub eyebrow: String,
+    pub title: String,
+    pub subtitle: String,
+    pub blocks: Vec<ReportBlock>,
+    pub author: String,
+    pub created_relative: String,
+    pub edited_relative: String,
+    pub analyzes: Vec<Analyze>,
+}
+
+impl ReportDetail {
+    /// Auto-derive the outline from the current block list.
+    pub fn outline_from_blocks(&self) -> Vec<OutlineEntry> {
+        self.blocks
+            .iter()
+            .filter_map(|b| match b {
+                ReportBlock::H1 { id, text } => Some(OutlineEntry {
+                    id: id.clone(),
+                    kind: OutlineKind::H1,
+                    label: text.clone(),
+                }),
+                ReportBlock::H2 { id, text } => Some(OutlineEntry {
+                    id: id.clone(),
+                    kind: OutlineKind::H2,
+                    label: text.clone(),
+                }),
+                ReportBlock::H3 { id, text } => Some(OutlineEntry {
+                    id: id.clone(),
+                    kind: OutlineKind::H3,
+                    label: text.clone(),
+                }),
+                ReportBlock::Chart {
+                    id, item_title, ..
+                } => Some(OutlineEntry {
+                    id: id.clone(),
+                    kind: OutlineKind::Chart,
+                    label: item_title.clone(),
+                }),
+                ReportBlock::Text { .. } => None,
+            })
+            .collect()
+    }
+}

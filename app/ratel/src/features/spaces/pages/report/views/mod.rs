@@ -2,6 +2,7 @@ use crate::features::spaces::pages::report::*;
 
 mod candidate_page;
 mod creator_page;
+mod detail;
 mod i18n;
 mod list_page;
 mod participant_page;
@@ -9,6 +10,7 @@ mod viewer_page;
 
 use candidate_page::*;
 use creator_page::*;
+pub use detail::*;
 use i18n::*;
 use list_page::*;
 use participant_page::*;

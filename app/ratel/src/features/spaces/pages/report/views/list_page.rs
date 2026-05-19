@@ -141,12 +141,21 @@ pub fn ReportListPage() -> Element {
 
 #[component]
 fn ReportCreateCard() -> Element {
+    let ctx = use_report_list_context();
+    let nav = use_navigator();
     rsx! {
         a {
             class: "report-card report-card--create",
             href: "#",
             "data-index": "0",
             "data-kind": "create",
+            onclick: move |e| {
+                e.prevent_default();
+                nav.push(Route::ReportDetailPage {
+                    space_id: ctx.space_id(),
+                    report_id: "new".to_string(),
+                });
+            },
             div { class: "report-card__wave" }
             div { class: "report-card__create-icon",
                 svg {
@@ -192,6 +201,8 @@ fn matches_filter(filter: ReportFilter, status: ReportStatus) -> bool {
 
 #[component]
 fn ReportCard(idx: i32, item: ReportListItem, hidden: bool) -> Element {
+    let ctx = use_report_list_context();
+    let nav = use_navigator();
     let badge_class = match item.status {
         ReportStatus::Draft => "report-card__badge report-card__badge--draft",
         ReportStatus::Published => "report-card__badge report-card__badge--published",
@@ -200,11 +211,19 @@ fn ReportCard(idx: i32, item: ReportListItem, hidden: bool) -> Element {
         ReportStatus::Draft => "Draft",
         ReportStatus::Published => "Published",
     };
+    let report_id = item.id.clone();
 
     rsx! {
         a {
             class: "report-card",
             href: "#",
+            onclick: move |e| {
+                e.prevent_default();
+                nav.push(Route::ReportDetailPage {
+                    space_id: ctx.space_id(),
+                    report_id: report_id.clone(),
+                });
+            },
             "data-index": "{idx}",
             hidden,
             div { class: "report-card__wave" }

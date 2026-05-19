@@ -12,6 +12,16 @@ pub struct EditorProps {
     pub on_content_change: Option<EventHandler<String>>,
     #[props(default)]
     pub class: String,
+    /// Optional "Insert data" affordance — when set, the toolbar
+    /// renders an extra primary-tone button that fires this handler.
+    /// Consumers (e.g. the report detail page) open a picker modal in
+    /// response and write back to `content` to inject a block.
+    #[props(default)]
+    pub on_insert_data: Option<EventHandler<()>>,
+    /// Label shown next to the insert-data icon. Defaults to the
+    /// English string; pass a translated string from the consumer.
+    #[props(default = "Insert data".to_string())]
+    pub insert_data_label: String,
 }
 
 #[component]
@@ -769,6 +779,27 @@ pub fn Editor(props: EditorProps) -> Element {
                                     y1: "3",
                                     y2: "21",
                                 }
+                            }
+                        }
+                    }
+                    if let Some(handler) = props.on_insert_data {
+                        div { class: "re-toolbar__group re-toolbar__group--insert",
+                            button {
+                                aria_label: "{props.insert_data_label}",
+                                class: "re-tb-btn re-tb-btn--insert-data",
+                                "data-tip": "{props.insert_data_label}",
+                                r#type: "button",
+                                onclick: move |_| handler.call(()),
+                                svg {
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    stroke_width: "2.2",
+                                    view_box: "0 0 24 24",
+                                    polyline { points: "22 12 18 12 15 21 9 3 6 12 2 12" }
+                                }
+                                span { "{props.insert_data_label}" }
                             }
                         }
                     }
