@@ -1,6 +1,7 @@
 #[allow(unused)]
 mod i18n;
 
+use super::components::RewardHistorySection;
 use super::controllers::{
     get_monthly_summaries_handler, get_user_rewards_handler, list_user_transactions_handler,
     request_claim_signature_handler, ClaimSignatureRequest,
@@ -446,10 +447,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                                     // Multi-line form: dx fmt + rustywind both
                                     // mangle the single-line variant of
                                     // `div { class: "X", "{tr.Y}" }`.
-                                    div {
-                                        class: "empty-desc",
-                                        "{tr.activity_empty}"
-                                    }
+                                    div { class: "empty-desc", "{tr.activity_empty}" }
                                 } else {
                                     for (name, value, color) in donut_items.iter() {
                                         div {
@@ -494,10 +492,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                                         path { d: "M16 10H8" }
                                     }
                                 }
-                                div {
-                                    class: "empty__desc",
-                                    "{tr.activity_empty}"
-                                }
+                                div { class: "empty__desc", "{tr.activity_empty}" }
                             }
                         } else {
                             for tx in tx_list.iter() {
@@ -549,8 +544,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                             " {tr.claimable}"
                         }
                     }
-                    div {
-                        class: "section-note",
+                    div { class: "section-note",
                         svg {
                             view_box: "0 0 24 24",
                             fill: "none",
@@ -580,14 +574,8 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                                         path { d: "M16 10H8" }
                                     }
                                 }
-                                div {
-                                    class: "empty__title",
-                                    "{tr.past_empty_title}"
-                                }
-                                div {
-                                    class: "empty__desc",
-                                    "{tr.past_empty_desc}"
-                                }
+                                div { class: "empty__title", "{tr.past_empty_title}" }
+                                div { class: "empty__desc", "{tr.past_empty_desc}" }
                             }
                         } else {
                             for item in past_months.iter() {
@@ -603,6 +591,8 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                         }
                     }
                 }
+
+                RewardHistorySection { username }
             }
         }
     }
