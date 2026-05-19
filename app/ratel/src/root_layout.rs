@@ -1,10 +1,13 @@
-use crate::*;
+use dioxus::core::Runtime;
+
+use crate::{hooks::set_app_layout_scope_id, *};
 
 #[component]
 pub fn RootLayout() -> Element {
-    debug!("Initializing RootLayout contexts...");
+    let rt = Runtime::current();
+    set_app_layout_scope_id(rt.current_scope_id());
+
     crate::features::auth::Context::init()?;
-    debug!("Auth context initialized.");
     crate::common::contexts::TeamContext::init()?;
 
     rsx! {

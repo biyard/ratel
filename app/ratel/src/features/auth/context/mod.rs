@@ -12,36 +12,28 @@ pub struct Context {
 
 impl Context {
     pub fn init() -> Result<Self, Loading> {
-        debug!("Auth Context::init - starting initialization of Context");
-        let user_ctx = use_loader(move || async move {
-            debug!("Context::init - calling get_me_handler to fetch user context");
-            let res = Ok::<_, Error>(match get_me_handler().await {
-                Ok(resp) => UserContext {
-                    user: resp.user,
-                    refresh_token: None,
-                    membership: resp.membership,
-                },
-                Err(e) => {
-                    crate::error!("get_me failed during Context::init: {e}");
-                    UserContext::default()
-                }
+        use_app_context_provider(|| {
+            let user_ctx = use_loader(move || async move {
+                let res = Ok::<_, Error>(match get_me_handler().await {
+                    Ok(resp) => UserContext {
+                        user: resp.user,
+                        refresh_token: None,
+                        membership: resp.membership,
+                    },
+                    Err(e) => {
+                        crate::error!("get_me failed during Context::init: {e}");
+                        UserContext::default()
+                    }
+                });
+                res
             });
-            debug!("Context::init - fetched user context: {:?}", res);
-            res
-        });
-        debug!("Auth Context::init - finished initializing loader for user context, now awaiting result");
+            let user_ctx = user_ctx?();
 
-        let user_ctx = user_ctx?();
-        debug!(
-            "Auth Context::init - successfully loaded user context: {:?}",
-            user_ctx
-        );
+            let ctx = Self {
+                user_context: use_store(move || user_ctx),
+            };
 
-        let ctx = Self {
-            user_context: use_store(move || user_ctx),
-        };
-        use_context_provider(move || ctx);
-
-        Ok(ctx)
+            Ok(ctx)
+        })
     }
 }
