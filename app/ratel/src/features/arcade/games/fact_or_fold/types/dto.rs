@@ -27,7 +27,18 @@ pub enum Verdict {
 /// (subject becomes mostly immutable — see §FR-43), `Settled` is
 /// post-round and only Reveal sources may grow.
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    strum::Display,
+    strum::EnumString,
+)]
 pub enum SubjectStatus {
     #[default]
     Draft,

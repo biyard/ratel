@@ -304,8 +304,9 @@ pub async fn update_subject_handler(
         changed = true;
     }
     if let Some(v) = req.scheduled_at {
-        updater = updater.with_scheduled_at(v);
+        updater = updater.with_scheduled_at(v).with_pick_at(v);
         existing.scheduled_at = Some(v);
+        existing.pick_at = v;
         if matches!(existing.status, SubjectStatus::Draft) {
             updater = updater.with_status(SubjectStatus::Scheduled);
             existing.status = SubjectStatus::Scheduled;
@@ -407,18 +408,23 @@ pub async fn publish_subject_handler(
     }
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
-    let (next_status, next_scheduled_at) = match req.scheduled_at {
+    let (next_status, next_scheduled_at, next_pick_at) = match req.scheduled_at {
         Some(ts) => {
             if ts < now {
                 return Err(FactOrFoldError::PublishInvariantViolation.into());
             }
-            (SubjectStatus::Scheduled, Some(ts))
+            // Scheduled → the row is pickable when its scheduled time
+            // arrives, so the GSI3 sort key tracks `ts` directly.
+            (SubjectStatus::Scheduled, Some(ts), ts)
         }
-        None => (SubjectStatus::Live, None),
+        // Publish-now → row enters Live with `pick_at = now` so its
+        // FIFO slot reflects publish order.
+        None => (SubjectStatus::Live, None, now),
     };
 
     let updater = FactFoldSubject::updater(&pk, &sk)
         .with_status(next_status)
+        .with_pick_at(next_pick_at)
         .with_updated_at(now);
     let updater = match next_scheduled_at {
         Some(ts) => updater.with_scheduled_at(ts),
@@ -433,6 +439,7 @@ pub async fn publish_subject_handler(
 
     existing.status = next_status;
     existing.scheduled_at = next_scheduled_at;
+    existing.pick_at = next_pick_at;
     existing.updated_at = now;
     Ok(to_response(existing))
 }

@@ -27,7 +27,17 @@ pub struct FactFoldSubject {
     /// Operator who authored this subject.
     pub creator_pk: Partition,
 
+    /// Status drives the GSI3 partition: `pick_next_subject` queries
+    /// `Live` (already-activated, FIFO-pickable) and `Scheduled`
+    /// (queued for a future timestamp) partitions independently, so
+    /// the per-status FIFO is computed at index time rather than in
+    /// memory.
+    #[cfg_attr(
+        feature = "server",
+        dynamo(prefix = "FFS", name = "find_by_status", index = "gsi3", pk)
+    )]
     pub status: SubjectStatus,
+
     pub verdict: Verdict,
 
     pub headline_text: String,
@@ -53,6 +63,18 @@ pub struct FactFoldSubject {
     /// Millis since epoch; None for plain drafts. When Some, the
     /// scheduler activates the subject as the live round at this time.
     pub scheduled_at: Option<i64>,
+
+    /// Materialized sort key for FIFO picking — equal to
+    /// `scheduled_at.unwrap_or(created_at)`. Lives on the row as a
+    /// real i64 (not derived per query) so the GSI3 sort key sees a
+    /// stable, indexable column. Update sites that change
+    /// `scheduled_at` must also update this field.
+    #[serde(default)]
+    #[cfg_attr(
+        feature = "server",
+        dynamo(prefix = "PICK", index = "gsi3", sk)
+    )]
+    pub pick_at: i64,
 }
 
 #[cfg(feature = "server")]
@@ -90,6 +112,7 @@ impl FactFoldSubject {
         } else {
             SubjectStatus::Draft
         };
+        let pick_at = scheduled_at.unwrap_or(now);
         Self {
             pk: Partition::FactFoldSubjects,
             sk: EntityType::FactFoldSubject(subject_id),
@@ -107,6 +130,7 @@ impl FactFoldSubject {
             reveal_summary,
             reveal_sources,
             scheduled_at,
+            pick_at,
         }
     }
 

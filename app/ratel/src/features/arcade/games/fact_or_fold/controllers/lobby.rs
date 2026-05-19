@@ -37,9 +37,6 @@ use crate::features::arcade::models::ArcadeSettings;
 use crate::features::arcade::wallet::{ArcadeWallet, DdbArcadeWallet};
 
 #[cfg(feature = "server")]
-const HEADLINE_SK_PREFIX: &str = "FACT_FOLD_SUBJECT";
-
-#[cfg(feature = "server")]
 fn user_inner_id(user: &User) -> String {
     UserPartition::from(user.pk.clone()).0
 }
@@ -53,44 +50,43 @@ async fn load_settings_or_default(cli: &aws_sdk_dynamodb::Client) -> FactOrFoldS
         .unwrap_or_default()
 }
 
+/// Pick the next eligible subject for a new round.
+///
+/// Uses the GSI3 (status, pick_at) index so the DB hands back already-sorted
+/// FIFO order — no in-memory scan or sort. Two limit-1 queries:
+///
+/// 1. `Live` partition — any already-activated subject not yet bound to a
+///    round wins immediately (oldest by `pick_at`).
+/// 2. `Scheduled` partition — the oldest scheduled row is usable only when
+///    its `pick_at` (= `scheduled_at`) is past-due. Because the GSI hands
+///    back rows ASC, the first row's `pick_at` is the minimum: if it's still
+///    in the future, every other Scheduled row is too.
 #[cfg(feature = "server")]
 async fn pick_next_subject(
     cli: &aws_sdk_dynamodb::Client,
 ) -> crate::common::Result<Option<FactFoldSubject>> {
-    // List from the anchor pk. v1 is small enough that a single page
-    // (limit 200) is fine; pagination lands when the lifetime queue
-    // exceeds it.
-    let opts = FactFoldSubject::opt()
-        .sk(HEADLINE_SK_PREFIX.to_string())
-        .limit(200);
-    let (rows, _) = FactFoldSubject::query(cli, FactFoldSubject::anchor_pk(), opts)
-        .await
-        .map_err(|e| {
-            crate::error!("pick_next_subject query failed: {e}");
-            FactOrFoldError::StorageFailure
-        })?;
+    let live_opts = FactFoldSubject::opt().limit(1).oldest();
+    let (live, _) =
+        FactFoldSubject::find_by_status(cli, SubjectStatus::Live, live_opts)
+            .await
+            .map_err(|e| {
+                crate::error!("pick_next_subject live query failed: {e}");
+                FactOrFoldError::StorageFailure
+            })?;
+    if let Some(row) = live.into_iter().next() {
+        return Ok(Some(row));
+    }
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
-
-    // Eligibility: Live (already activated, but not yet bound to a
-    // round) OR Scheduled with scheduled_at <= now.
-    let mut eligible: Vec<FactFoldSubject> = rows
-        .into_iter()
-        .filter(|h| match h.status {
-            SubjectStatus::Live => true,
-            SubjectStatus::Scheduled => h.scheduled_at.map(|ts| ts <= now).unwrap_or(false),
-            _ => false,
-        })
-        .collect();
-
-    // Pick the oldest scheduled time first so the queue is FIFO.
-    eligible.sort_by(|a, b| {
-        a.scheduled_at
-            .unwrap_or(a.created_at)
-            .cmp(&b.scheduled_at.unwrap_or(b.created_at))
-    });
-
-    Ok(eligible.into_iter().next())
+    let sched_opts = FactFoldSubject::opt().limit(1).oldest();
+    let (sched, _) =
+        FactFoldSubject::find_by_status(cli, SubjectStatus::Scheduled, sched_opts)
+            .await
+            .map_err(|e| {
+                crate::error!("pick_next_subject scheduled query failed: {e}");
+                FactOrFoldError::StorageFailure
+            })?;
+    Ok(sched.into_iter().find(|row| row.pick_at <= now))
 }
 
 #[cfg(feature = "server")]
@@ -149,11 +145,26 @@ pub async fn get_lobby_handler() -> Result<LobbyResponse> {
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
 
-    let settings = load_settings_or_default(cli).await;
-    let lobby = FactFoldLobby::get_or_default(cli).await.map_err(|e| {
-        crate::error!("get_lobby_handler lobby read failed: {e}");
-        FactOrFoldError::StorageFailure
-    })?;
+    // Independent reads — kick them off in parallel so the four DDB
+    // round-trips collapse to one. `current_round` depends on
+    // `lobby.current_round_id` so it's loaded after this join.
+    let settings_fut = async { Ok::<_, crate::common::Error>(load_settings_or_default(cli).await) };
+    let lobby_fut = async {
+        FactFoldLobby::get_or_default(cli).await.map_err(|e| {
+            crate::error!("get_lobby_handler lobby read failed: {e}");
+            crate::common::Error::from(FactOrFoldError::StorageFailure)
+        })
+    };
+    let arcade_fut = async {
+        Ok::<_, crate::common::Error>(
+            ArcadeSettings::get_or_default(cli)
+                .await
+                .unwrap_or_default(),
+        )
+    };
+    let pick_fut = async { pick_next_subject(cli).await.map(|s| s.is_some()) };
+    let (settings, lobby, arcade_settings, subject_available) =
+        tokio::try_join!(settings_fut, lobby_fut, arcade_fut, pick_fut)?;
 
     let mut current_round: Option<RoundResponse> = None;
     let mut already_joined = false;
@@ -169,8 +180,6 @@ pub async fn get_lobby_handler() -> Result<LobbyResponse> {
         }
     }
 
-    let subject_available = pick_next_subject(cli).await?.is_some();
-
     let can_join = match &current_round {
         Some(r) => {
             !already_joined
@@ -179,10 +188,6 @@ pub async fn get_lobby_handler() -> Result<LobbyResponse> {
         }
         None => subject_available,
     };
-
-    let arcade_settings = ArcadeSettings::get_or_default(cli)
-        .await
-        .unwrap_or_default();
 
     Ok(LobbyResponse {
         current_round,
@@ -202,26 +207,34 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
 
-    let settings = load_settings_or_default(cli).await;
-
-    // Chip balance gate (replaces the legacy RP gate). v1 buy-in is
-    // a fixed amount from arcade settings; user must have converted
-    // RP → chip via the arcade wallet endpoint first.
-    let arcade_settings = ArcadeSettings::get_or_default(cli)
-        .await
-        .unwrap_or_default();
-    let buy_in_chips = arcade_settings.default_buy_in_chips;
     let wallet = DdbArcadeWallet::new(cli.clone());
     let user_id = user_inner_id(&user);
-    let chip_balance = wallet.balance(&user_id).await?;
+
+    // Settings, lobby, wallet balance and arcade settings are all
+    // independent reads — fan them out in parallel before applying
+    // the chip-balance gate.
+    let settings_fut = async { Ok::<_, crate::common::Error>(load_settings_or_default(cli).await) };
+    let arcade_fut = async {
+        Ok::<_, crate::common::Error>(
+            ArcadeSettings::get_or_default(cli)
+                .await
+                .unwrap_or_default(),
+        )
+    };
+    let balance_fut = async { wallet.balance(&user_id).await };
+    let lobby_fut = async {
+        FactFoldLobby::get_or_default(cli).await.map_err(|e| {
+            crate::error!("join_lobby_handler lobby read failed: {e}");
+            crate::common::Error::from(FactOrFoldError::StorageFailure)
+        })
+    };
+    let (settings, arcade_settings, chip_balance, mut lobby) =
+        tokio::try_join!(settings_fut, arcade_fut, balance_fut, lobby_fut)?;
+
+    let buy_in_chips = arcade_settings.default_buy_in_chips;
     if chip_balance < buy_in_chips {
         return Err(crate::features::arcade::ArcadeError::WalletInsufficientChip.into());
     }
-
-    let mut lobby = FactFoldLobby::get_or_default(cli).await.map_err(|e| {
-        crate::error!("join_lobby_handler lobby read failed: {e}");
-        FactOrFoldError::StorageFailure
-    })?;
 
     // Try to attach to an existing waiting round.
     if let Some(round_id) = lobby.current_round_id.clone() {
