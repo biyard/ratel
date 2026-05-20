@@ -37,6 +37,10 @@ pub struct UserEssenceStats {
     pub total_poll: i64,
     #[serde(default)]
     pub total_quiz: i64,
+    /// Count of Fact-or-Fold rationales registered to Essence
+    /// (PR6 step 4). Mirrors `total_post` / `total_comment` etc.
+    #[serde(default)]
+    pub total_fact_fold_rationale: i64,
 }
 
 #[cfg(feature = "server")]

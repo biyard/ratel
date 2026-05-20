@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Matching · Fact or Fold · 라텔 오락실</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    />
+    <link rel="stylesheet" href="shared.css" />
+    <style>
+      /* 매칭 페이지 한정 — main.css 변환 시 .ff-matching 스코프 아래로 이동 */
+      .matching-shell {
+        max-width: 880px;
+        margin: 48px auto 0;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        align-items: center;
+        text-align: center;
+      }
+
+      .matching-eyebrow {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.24em;
+        color: var(--gold);
+        text-transform: uppercase;
+        padding: 6px 14px;
+        background: var(--gold-soft);
+        border: 1px solid rgba(252, 179, 0, 0.35);
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .matching-eyebrow-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--gold);
+        animation: pulse 1.2s ease-in-out infinite;
+      }
+
+      .matching-title {
+        font-family: "Orbitron", sans-serif;
+        font-weight: 800;
+        font-size: 48px;
+        letter-spacing: 0.04em;
+        margin: 0;
+        background: linear-gradient(120deg, #fff 0%, #fcb300 60%, #db2780 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .matching-subtitle {
+        font-size: 15px;
+        color: var(--text-muted);
+        max-width: 540px;
+        margin: 0;
+        line-height: 1.6;
+      }
+
+      /* 4 player slot 카드 */
+      .matching-slots {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        width: 100%;
+        margin-top: 8px;
+      }
+
+      .matching-slot {
+        position: relative;
+        padding: 22px 16px 18px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-lg);
+        backdrop-filter: blur(14px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        min-height: 168px;
+        overflow: hidden;
+        transition: all 0.25s ease;
+      }
+
+      .matching-slot[data-state="filled"] {
+        border-color: rgba(252, 179, 0, 0.35);
+        background: linear-gradient(180deg, var(--gold-soft), var(--surface));
+        box-shadow: 0 0 0 4px rgba(252, 179, 0, 0.08);
+      }
+
+      .matching-slot[data-state="me"] {
+        border-color: var(--gold);
+        background: linear-gradient(180deg, rgba(252, 179, 0, 0.16), var(--surface));
+        box-shadow: 0 0 0 5px rgba(252, 179, 0, 0.18);
+      }
+
+      .matching-slot[data-state="empty"] {
+        border-style: dashed;
+        border-color: rgba(255, 255, 255, 0.16);
+      }
+
+      .matching-slot[data-state="empty"]::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          repeating-linear-gradient(
+            45deg,
+            rgba(255, 255, 255, 0.018),
+            rgba(255, 255, 255, 0.018) 6px,
+            transparent 6px,
+            transparent 14px
+          );
+        pointer-events: none;
+        animation: slot-scan 5s linear infinite;
+      }
+
+      @keyframes slot-scan {
+        from { background-position: 0 0; }
+        to { background-position: 40px 40px; }
+      }
+
+      .matching-slot-avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #4f3aaf, #7d3aaf);
+        display: grid;
+        place-items: center;
+        font-family: "Orbitron", sans-serif;
+        font-weight: 700;
+        font-size: 18px;
+        color: white;
+        border: 2px solid var(--border-strong);
+      }
+
+      .matching-slot[data-state="empty"] .matching-slot-avatar {
+        background: transparent;
+        border: 2px dashed rgba(255, 255, 255, 0.18);
+        color: var(--text-faint);
+        animation: pulse 1.6s ease-in-out infinite;
+      }
+
+      .matching-slot-avatar.a2 {
+        background: linear-gradient(135deg, #3aaf7d, #6eedd8);
+        color: #042a1f;
+      }
+      .matching-slot-avatar.a3 {
+        background: linear-gradient(135deg, #af3a7d, #db2780);
+      }
+      .matching-slot-avatar.a4 {
+        background: linear-gradient(135deg, #af7d3a, #fcb300);
+        color: #1a0a00;
+      }
+
+      .matching-slot-name {
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.2;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .matching-slot-name .you-tag {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9px;
+        background: var(--gold);
+        color: #1a0a00;
+        padding: 2px 6px;
+        border-radius: 4px;
+        letter-spacing: 0.1em;
+      }
+
+      .matching-slot-pill {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: var(--surface-3);
+        color: var(--text-muted);
+      }
+
+      .matching-slot[data-state="filled"] .matching-slot-pill,
+      .matching-slot[data-state="me"] .matching-slot-pill {
+        background: var(--teal-soft);
+        color: var(--teal);
+      }
+
+      .matching-slot[data-state="empty"] .matching-slot-pill {
+        color: var(--text-faint);
+      }
+
+      .matching-slot-placeholder {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        color: var(--text-faint);
+        line-height: 1.4;
+      }
+
+      .matching-slot-num {
+        position: absolute;
+        top: 8px;
+        left: 10px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        color: var(--text-faint);
+        opacity: 0.6;
+      }
+
+      /* 진행 바 */
+      .matching-progress {
+        width: 100%;
+        max-width: 520px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .matching-progress-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+
+      .matching-progress-count {
+        color: var(--text-primary);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .matching-progress-bar {
+        height: 6px;
+        background: var(--surface-3);
+        border-radius: 999px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .matching-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--teal), var(--gold));
+        border-radius: 999px;
+        transition: width 0.4s ease;
+      }
+
+      /* 룰 힌트 strip */
+      .matching-hints {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        width: 100%;
+        margin-top: 4px;
+      }
+
+      .matching-hint {
+        padding: 12px 14px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--text-muted);
+        text-align: left;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+      }
+
+      .matching-hint-icon {
+        font-size: 14px;
+        color: var(--gold);
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+
+      .matching-hint strong {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+
+      /* 액션 */
+      .matching-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-top: 8px;
+      }
+
+      .matching-actions .btn-ghost {
+        padding: 10px 18px;
+        font-size: 13px;
+      }
+
+      .matching-actions-hint {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        color: var(--text-faint);
+      }
+
+      /* 상단 칩 잠금 안내 */
+      .matching-buyin-note {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        color: var(--text-muted);
+        padding: 6px 12px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+      }
+
+      .matching-buyin-note strong {
+        color: var(--gold);
+      }
+
+      @media (max-width: 720px) {
+        .matching-slots {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .matching-hints {
+          grid-template-columns: 1fr;
+        }
+        .matching-title {
+          font-size: 36px;
+        }
+      }
+
+      /* ── Light-theme overrides for page-scoped styles ─────── */
+      [data-theme="light"] .matching-title {
+        background: linear-gradient(120deg, #14141e 0%, #c98300 60%, #c41f6d 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      [data-theme="light"] .matching-slot[data-state="empty"] {
+        border-color: rgba(15, 15, 35, 0.18);
+      }
+
+      [data-theme="light"] .matching-slot[data-state="empty"]::before {
+        background: repeating-linear-gradient(
+          45deg,
+          rgba(15, 15, 35, 0.025),
+          rgba(15, 15, 35, 0.025) 6px,
+          transparent 6px,
+          transparent 14px
+        );
+      }
+
+      [data-theme="light"] .matching-slot-avatar {
+        background: linear-gradient(135deg, #6e5cf0, #9d7aff);
+        border: 2px solid rgba(255, 255, 255, 0.85);
+        box-shadow: 0 2px 8px rgba(15, 15, 40, 0.12);
+      }
+
+      [data-theme="light"] .matching-slot[data-state="empty"] .matching-slot-avatar {
+        border: 2px dashed rgba(15, 15, 35, 0.2);
+        box-shadow: none;
+      }
+
+      [data-theme="light"] .matching-slot-avatar.a2 {
+        background: linear-gradient(135deg, #1ab39a, #6eedd8);
+      }
+
+      [data-theme="light"] .matching-slot-avatar.a3 {
+        background: linear-gradient(135deg, #d04a8d, #db2780);
+      }
+
+      [data-theme="light"] .matching-slot-avatar.a4 {
+        background: linear-gradient(135deg, #f0a000, #fcb300);
+      }
+
+      [data-theme="light"] .matching-slot-name .you-tag {
+        background: var(--gold-bright);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <!-- ═══ TOP BAR (ArcadeLayout가 owner — 여기선 mockup standalone) ═══ -->
+      <div class="top-bar">
+        <div class="brand">
+          <div class="brand-logo">R</div>
+          <div class="brand-text">
+            <div class="brand-name">RATEL ARCADE</div>
+            <div class="brand-sub">Fact or Fold · MATCHING</div>
+          </div>
+        </div>
+        <nav class="top-nav" role="tablist">
+          <button class="top-nav-btn" onclick="window.location.href='lobby.html'">
+            <span class="top-nav-btn-icon">⌂</span><span>오락실</span>
+          </button>
+          <button class="top-nav-btn" onclick="window.location.href='lobby.html#leaderboard'">
+            <span class="top-nav-btn-icon">♛</span><span>리더보드</span>
+          </button>
+        </nav>
+        <div class="user-stats">
+          <div class="stat-chip gold">
+            <span class="stat-chip-icon">◆</span>
+            <span>240 칩</span>
+          </div>
+          <div class="avatar">DY</div>
+        </div>
+      </div>
+
+      <!-- ═══ MATCHING SHELL ═══ -->
+      <section class="matching-shell">
+        <div class="matching-eyebrow">
+          <span class="matching-eyebrow-dot"></span>
+          <span>매칭 중 · 4명이 모이면 자동 시작</span>
+        </div>
+
+        <h1 class="matching-title">FACT OR FOLD</h1>
+        <p class="matching-subtitle">
+          오늘의 뉴스는 라운드 시작 시 공개됩니다. 4명이 모이면 한 명이 무작위로 진실 인사이더가 되고,
+          나머지 3명이 베팅과 근거로 판별합니다.
+        </p>
+
+        <div class="matching-buyin-note">
+          buy-in <strong>20 칩</strong> 이미 예치됨 · 라운드 종료 시 결과만큼 환원
+        </div>
+
+        <!-- 4 슬롯 -->
+        <div class="matching-slots">
+          <div class="matching-slot" data-state="me">
+            <div class="matching-slot-num">SEAT 1</div>
+            <div class="matching-slot-avatar">DY</div>
+            <div class="matching-slot-name">
+              doyoon
+              <span class="you-tag">YOU</span>
+            </div>
+            <div class="matching-slot-pill">READY</div>
+          </div>
+
+          <div class="matching-slot" data-state="filled">
+            <div class="matching-slot-num">SEAT 2</div>
+            <div class="matching-slot-avatar a4">MK</div>
+            <div class="matching-slot-name">minkyu</div>
+            <div class="matching-slot-pill">READY</div>
+          </div>
+
+          <div class="matching-slot" data-state="filled">
+            <div class="matching-slot-num">SEAT 3</div>
+            <div class="matching-slot-avatar a2">SH</div>
+            <div class="matching-slot-name">sehoon</div>
+            <div class="matching-slot-pill">READY</div>
+          </div>
+
+          <div class="matching-slot" data-state="empty">
+            <div class="matching-slot-num">SEAT 4</div>
+            <div class="matching-slot-avatar">··</div>
+            <div class="matching-slot-placeholder">대기 중…</div>
+            <div class="matching-slot-pill">EMPTY</div>
+          </div>
+        </div>
+
+        <!-- 진행 바 -->
+        <div class="matching-progress">
+          <div class="matching-progress-head">
+            <span>모임 진행</span>
+            <span class="matching-progress-count">3 / 4</span>
+          </div>
+          <div class="matching-progress-bar">
+            <div class="matching-progress-fill" style="width: 75%"></div>
+          </div>
+        </div>
+
+        <!-- 룰 빠른 힌트 -->
+        <div class="matching-hints">
+          <div class="matching-hint">
+            <span class="matching-hint-icon">◇</span>
+            <span>
+              <strong>약 3분</strong>: 뉴스 30s · 베팅 10s · 근거 30s · 공개 20s · 토론 70s · 정산
+            </span>
+          </div>
+          <div class="matching-hint">
+            <span class="matching-hint-icon">⚐</span>
+            <span>
+              <strong>1명은 인사이더</strong>: 진실을 알지만 다른 3명을 흔들어야 보너스를 얻습니다.
+            </span>
+          </div>
+          <div class="matching-hint">
+            <span class="matching-hint-icon">◆</span>
+            <span>
+              <strong>설득력 있는 근거</strong>가 RP를 만듭니다. 토론 마지막 10초에 베팅 변경 슬롯 1회.
+            </span>
+          </div>
+        </div>
+
+        <!-- 액션 -->
+        <div class="matching-actions">
+          <button class="btn btn-ghost">매칭 취소 · 칩 환불</button>
+          <span class="matching-actions-hint">
+            4명 모이는 즉시 자동으로 라운드 화면으로 이동합니다 (round-stage.html)
+          </span>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      // mockup 인터랙션: 4번째 자리에 누군가 도착하는 시뮬레이션 (4초 후)
+      setTimeout(function () {
+        var slot = document.querySelectorAll('.matching-slot')[3];
+        if (!slot) return;
+        slot.setAttribute('data-state', 'filled');
+        slot.querySelector('.matching-slot-avatar').textContent = 'JE';
+        slot.querySelector('.matching-slot-avatar').className = 'matching-slot-avatar a3';
+        var name = slot.querySelector('.matching-slot-name');
+        if (name) name.textContent = 'jenny';
+        var placeholder = slot.querySelector('.matching-slot-placeholder');
+        if (placeholder) placeholder.remove();
+        slot.querySelector('.matching-slot-pill').textContent = 'READY';
+        document.querySelector('.matching-progress-count').textContent = '4 / 4';
+        document.querySelector('.matching-progress-fill').style.width = '100%';
+        document.querySelector('.matching-eyebrow').innerHTML =
+          '<span class="matching-eyebrow-dot"></span><span>매칭 완료 · 라운드 시작</span>';
+
+        // 2초 후 round-stage.html로 이동
+        setTimeout(function () {
+          window.location.href = 'round-stage.html';
+        }, 1800);
+      }, 4000);
+    </script>
+    <script src="theme-toggle.js" defer></script>
+  </body>
+</html>

@@ -191,6 +191,18 @@ pub async fn handle_stream_record(
                 }
             } else if sk.starts_with("SYNDICATION_JOB#") {
                 try_dispatch_pending_syndication_job(image, "INSERT").await?;
+            } else if sk.starts_with("FACT_FOLD_CHAT#") {
+                // PR4f — chat fan-out: every active SSE invocation
+                // sees this Stream record and publishes locally for
+                // its own subscribers. The hub is per-process, so
+                // each invocation's `global_hub` is a different one
+                // — the publish here only reaches the subscribers
+                // that *this* invocation happens to hold.
+                let row: crate::features::arcade::games::fact_or_fold::models::FactFoldChatMessage =
+                    deserialize(image)?;
+                if let Err(e) = handle_fact_fold_chat_inserted(row).await {
+                    tracing::error!(error = %e, "stream: FactFoldChat fan-out failed");
+                }
             } else if sk.starts_with("SUB_TEAM_ANNOUNCEMENT#") {
                 // Direct ("이 하위팀에만 공지") announcements skip the Draft
                 // step and write `status: Published` straight on INSERT,
@@ -390,6 +402,42 @@ pub async fn handle_stream_record(
 /// `cdk/lib/dynamo-stream-event.ts`) so local-dev behaviour matches Lambda;
 /// both INSERT (Stage 1 factory enqueue) and MODIFY (user-initiated retry
 /// flipping state back to pending) flow through this single entry point.
+/// FactFoldChat INSERT fan-out helper. Pulls the room id out of the
+/// row's pk (`FACT_FOLD#{round_id}`) and publishes a `chat_message`
+/// event to the matching `fof.chat:{round_id}` channel on the
+/// per-invocation hub. Each Lambda invocation receives this same
+/// Stream record and runs its own publish, so all subscribers
+/// across the cluster get the message regardless of which
+/// invocation holds their SSE connection.
+#[cfg(feature = "server")]
+async fn handle_fact_fold_chat_inserted(
+    row: crate::features::arcade::games::fact_or_fold::models::FactFoldChatMessage,
+) -> crate::common::Result<()> {
+    use crate::features::arcade::games::fact_or_fold::realtime::chat_payload_from;
+    use crate::features::arcade::games::fact_or_fold::types::ChatMessagePayload;
+    use crate::features::arcade::realtime::channel::ChannelId;
+    use crate::features::arcade::realtime::hub::global_hub;
+
+    let round_id = row
+        .pk
+        .to_string()
+        .strip_prefix("FACT_FOLD#")
+        .unwrap_or(&row.pk.to_string())
+        .to_string();
+    let channel = ChannelId(format!("fof.chat:{round_id}"));
+
+    let payload: ChatMessagePayload = chat_payload_from(row);
+    let payload = serde_json::to_value(payload).map_err(|e| {
+        crate::error!("FactFoldChat fan-out serialize failed: {e}");
+        crate::features::arcade::ArcadeError::ChannelPayloadInvalid
+    })?;
+
+    let _id = global_hub()
+        .publish(&channel, "chat_message", payload)
+        .await?;
+    Ok(())
+}
+
 #[cfg(feature = "server")]
 async fn try_dispatch_pending_syndication_job(
     image: &std::collections::HashMap<String, serde_dynamo::AttributeValue>,

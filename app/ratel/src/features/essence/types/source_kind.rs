@@ -25,6 +25,11 @@ pub enum EssenceSourceKind {
     DiscussionComment,
     #[translate(en = "Notion", ko = "노션")]
     Notion,
+    /// Rationale text written during a Fact or Fold round (≥50 chars
+    /// per §FR-37). Registered after settlement when the user
+    /// explicitly opts in.
+    #[translate(en = "Fact or Fold rationale", ko = "팩트 오어 폴드 근거")]
+    FactFoldRationale,
 }
 
 impl EssenceSourceKind {

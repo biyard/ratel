@@ -133,6 +133,10 @@ pub fn Index() -> Element {
         nav.auth_push(Route::EssenceSourcesPage {});
     };
 
+    let go_arcade = move |_: Event<MouseData>| {
+        nav.auth_push(Route::ArcadeHomePage {});
+    };
+
     let go_my_ai = move |_: Event<MouseData>| {
         nav.auth_push(Route::MyAiPage {});
     };
@@ -181,6 +185,177 @@ pub fn Index() -> Element {
                             class: "hud-btn",
                             onclick: move |_| notifications_open.toggle(),
                         }
+                    }
+                    button {
+                        class: "hud-btn hud-btn--primary",
+                        aria_label: "{t.create}",
+                        "data-testid": "home-btn-create",
+                        onclick: go_create_post,
+                        svg {
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            stroke_width: "1.6",
+                            view_box: "0 0 24 24",
+                            xmlns: "http://www.w3.org/2000/svg",
+                            path { d: "M12 20h9" }
+                            path { d: "M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" }
+                        }
+                        span { class: "hud-btn__label", "{t.create}" }
+                    }
+                    button {
+                        class: "hud-btn",
+                        aria_label: "{t.drafts}",
+                        "data-testid": "home-btn-drafts",
+                        onclick: go_drafts,
+                        svg {
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            stroke_width: "1.6",
+                            view_box: "0 0 24 24",
+                            xmlns: "http://www.w3.org/2000/svg",
+                            path { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }
+                            polyline { points: "14 2 14 8 20 8" }
+                            line {
+                                x1: "9",
+                                y1: "13",
+                                x2: "15",
+                                y2: "13",
+                            }
+                            line {
+                                x1: "9",
+                                y1: "17",
+                                x2: "13",
+                                y2: "17",
+                            }
+                        }
+                        span { class: "hud-btn__label", "{t.drafts}" }
+                    }
+                    button {
+                        class: "hud-btn",
+                        aria_label: "{t.rewards}",
+                        "data-testid": "home-btn-rewards",
+                        onclick: go_rewards,
+                        svg {
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            stroke_width: "1.6",
+                            view_box: "0 0 24 24",
+                            xmlns: "http://www.w3.org/2000/svg",
+                            polyline { points: "20 12 20 22 4 22 4 12" }
+                            rect {
+                                x: "2",
+                                y: "7",
+                                width: "20",
+                                height: "5",
+                            }
+                            line {
+                                x1: "12",
+                                y1: "22",
+                                x2: "12",
+                                y2: "7",
+                            }
+                            path { d: "M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" }
+                            path { d: "M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" }
+                        }
+                        span { class: "hud-btn__label", "{t.rewards}" }
+                    }
+
+                    button {
+                        class: "hud-btn",
+                        aria_label: "{t.credentials}",
+                        "data-testid": "home-btn-credentials",
+                        onclick: go_credentials,
+                        svg {
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            stroke_width: "1.6",
+                            view_box: "0 0 24 24",
+                            xmlns: "http://www.w3.org/2000/svg",
+                            path { d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" }
+                            path { d: "m9 12 2 2 4-4" }
+                        }
+                        span { class: "hud-btn__label", "{t.credentials}" }
+                    }
+                    // My AI — opens the personal MCP endpoint page so an
+                    // AI agent (Claude Code, Cursor, etc.) can be wired up
+                    // to act on the user's behalf. Cyan accent so it reads
+                    // as an external integration affordance distinct from
+                    // the gold action buttons.
+                    button {
+                        class: "hud-btn hud-btn--ai",
+                        aria_label: "{t.my_ai}",
+                        "data-testid": "home-btn-my-ai",
+                        onclick: go_my_ai,
+                        svg {
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            stroke_width: "1.6",
+                            view_box: "0 0 24 24",
+                            xmlns: "http://www.w3.org/2000/svg",
+                            path { d: "M12 3 13.6 9.4 20 11l-6.4 1.6L12 19l-1.6-6.4L4 11l6.4-1.6L12 3Z" }
+                            path {
+                                d: "M19 4 19.7 6.3 22 7l-2.3 0.7L19 10l-0.7-2.3L16 7l2.3-0.7L19 4Z",
+                                opacity: "0.7",
+                                stroke_width: "1.2",
+                            }
+                        }
+                        span { class: "hud-btn__label", "{t.my_ai}" }
+                    }
+                    button {
+                        class: "hud-btn",
+                        aria_label: "{t.essence}",
+                        "data-testid": "home-btn-essence",
+                        onclick: go_essence,
+                        svg {
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            stroke_width: "1.6",
+                            view_box: "0 0 24 24",
+                            xmlns: "http://www.w3.org/2000/svg",
+                            path { d: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20" }
+                            path { d: "M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" }
+                        }
+                        span { class: "hud-btn__label", "{t.essence}" }
+                    }
+                    button {
+                        class: "hud-btn",
+                        aria_label: "{t.arcade}",
+                        "data-testid": "home-btn-arcade",
+                        onclick: go_arcade,
+                        svg {
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            stroke_width: "1.6",
+                            view_box: "0 0 24 24",
+                            xmlns: "http://www.w3.org/2000/svg",
+                            rect {
+                                x: "3",
+                                y: "3",
+                                width: "18",
+                                height: "18",
+                                rx: "2",
+                            }
+                            circle { cx: "8", cy: "8", r: "1" }
+                            circle { cx: "16", cy: "8", r: "1" }
+                            circle { cx: "12", cy: "12", r: "1" }
+                            circle { cx: "8", cy: "16", r: "1" }
+                            circle { cx: "16", cy: "16", r: "1" }
+                        }
+                        span { class: "hud-btn__label", "{t.arcade}" }
                     }
                     if has_user {
                         div { class: "hud-teams", "aria-expanded": teams_open(),

@@ -40,6 +40,19 @@ use crate::features::spaces::pages::actions::SpaceActionsPage;
 
 use crate::features::admin::{AdminLayout, AdminMainPage};
 
+// Fact or Fold — admin pages share `FactFoldAdminLayout` (sub-tabs)
+// nested under the global `AdminLayout` (admin-only guard). The
+// player-facing pages (home, matching, game room) share
+// `ArcadeLayout` (top-bar + chip wallet) under `/arcade`.
+use crate::features::arcade::games::fact_or_fold::pages::{
+    FactFoldAdminSubjectsPage, FactFoldAdminLayout, FactFoldAdminNewSubjectPage,
+    FactFoldAdminReportsPage, FactFoldAdminSchedulePage, FactFoldAdminSettingsPage,
+    FactFoldAdminStatsPage, FactFoldGameRoomPage, FactFoldMatchingPage,
+};
+use crate::features::arcade::layout::ArcadeLayout;
+use crate::features::arcade::pages::{ArcadeHomePage, ArcadeLeaderboardPage};
+use crate::FactFoldRoundEntityType;
+
 // Sub-team governance pages — placeholders wired up now; content lives
 // under `features::sub_team::pages::*` and will be fleshed out by the
 // UI-implementation dispatches.
@@ -130,10 +143,40 @@ pub enum Route {
         #[route("/me/character")]
         CharacterPage { },
 
+        #[nest("/arcade")]
+            #[layout(ArcadeLayout)]
+                #[route("/home")]
+                ArcadeHomePage { },
+                #[route("/leaderboard")]
+                ArcadeLeaderboardPage { },
+                #[route("/games/fact-or-fold/matching/:round_id")]
+                FactFoldMatchingPage { round_id: FactFoldRoundEntityType },
+                #[route("/games/fact-or-fold/rounds/:round_id")]
+                FactFoldGameRoomPage { round_id: FactFoldRoundEntityType },
+            #[end_layout]
+        #[end_nest]
+
         #[nest("/admin")]
             #[layout(AdminLayout)]
                 #[route("/")]
                 AdminMainPage {},
+
+                #[nest("/fact-or-fold")]
+                    #[layout(FactFoldAdminLayout)]
+                        #[route("/subjects")]
+                        FactFoldAdminSubjectsPage {},
+                        #[route("/subjects/new")]
+                        FactFoldAdminNewSubjectPage {},
+                        #[route("/schedule")]
+                        FactFoldAdminSchedulePage {},
+                        #[route("/stats")]
+                        FactFoldAdminStatsPage {},
+                        #[route("/reports")]
+                        FactFoldAdminReportsPage {},
+                        #[route("/settings")]
+                        FactFoldAdminSettingsPage {},
+                    #[end_layout]
+                #[end_nest]
             #[end_layout]
         #[end_nest]
 

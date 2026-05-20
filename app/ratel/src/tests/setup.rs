@@ -30,9 +30,17 @@ impl TestContext {
         );
 
         let mcp_router = crate::common::mcp::mcp_router();
-        let dioxus_router = dioxus::server::router(App).merge(mcp_router);
+        let arcade_router = crate::features::arcade::server::router();
+        let dioxus_router = dioxus::server::router(App)
+            .merge(mcp_router)
+            .merge(arcade_router);
         let app = dioxus_router.layer(session_layer);
         crate::common::mcp::set_app_router(app.clone());
+
+        // Match the production startup sequence: register arcade
+        // realtime channels with the per-process global hub so the
+        // SSE endpoint can resolve handlers in tests too.
+        crate::features::arcade::games::fact_or_fold::realtime::register_channels().await;
 
         let ddb = cli.clone();
         let test_user = create_user_session(app.clone(), &ddb).await;
@@ -46,6 +54,10 @@ impl TestContext {
 
     pub async fn create_another_user(&self) -> (User, axum::http::HeaderMap) {
         create_user_session(self.app.clone(), &self.ddb).await
+    }
+
+    pub async fn create_admin_user(&self) -> (User, axum::http::HeaderMap) {
+        create_admin_user_session(self.app.clone(), &self.ddb).await
     }
 }
 
@@ -83,6 +95,21 @@ pub async fn create_user_session(
     app: Router,
     cli: &aws_sdk_dynamodb::Client,
 ) -> (User, axum::http::HeaderMap) {
+    create_session_with_user_type(app, cli, UserType::Individual).await
+}
+
+pub async fn create_admin_user_session(
+    app: Router,
+    cli: &aws_sdk_dynamodb::Client,
+) -> (User, axum::http::HeaderMap) {
+    create_session_with_user_type(app, cli, UserType::SystemAdmin).await
+}
+
+async fn create_session_with_user_type(
+    app: Router,
+    cli: &aws_sdk_dynamodb::Client,
+    user_type: UserType,
+) -> (User, axum::http::HeaderMap) {
     let uid = uuid::Uuid::new_v4().to_string();
     let email = format!("{}@example.com", uid);
     let password = hash_password(&uid);
@@ -92,7 +119,7 @@ pub async fn create_user_session(
         "https://metadata.ratel.foundation/ratel/default-profile.png".to_string(),
         true,
         true,
-        UserType::Individual,
+        user_type,
         uid.clone(),
         Some(password),
     );

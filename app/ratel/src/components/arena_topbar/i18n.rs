@@ -48,6 +48,11 @@ translate! {
         ko: "Essence",
     },
 
+    arcade: {
+        en: "Arcade",
+        ko: "오락실",
+    },
+
     settings: {
         en: "Settings",
         ko: "설정",

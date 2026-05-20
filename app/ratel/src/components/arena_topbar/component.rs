@@ -142,6 +142,18 @@ pub fn RatelArenaTopbar(active: Option<RatelArenaTopbarSection>) -> Element {
         nav.push(Route::EssenceSourcesPage {});
     };
 
+    let go_arcade = move |_: Event<MouseData>| {
+        if !has_user {
+            popup
+                .open(rsx! {
+                    LoginModal { on_success: on_login_success }
+                })
+                .with_title("Start building your Essence");
+            return;
+        }
+        nav.push(Route::ArcadeHomePage {});
+    };
+
     let go_home_settings = move |_: Event<MouseData>| {
         // The settings panel is owned by the Home Arena view; this
         // shared topbar simply navigates back home where the panel is
@@ -339,6 +351,34 @@ pub fn RatelArenaTopbar(active: Option<RatelArenaTopbarSection>) -> Element {
                         path { d: "M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" }
                     }
                     span { class: "hud-btn__label", "{t.essence}" }
+                }
+                button {
+                    class: "hud-btn",
+                    aria_label: "{t.arcade}",
+                    "data-testid": "home-btn-arcade",
+                    onclick: go_arcade,
+                    svg {
+                        fill: "none",
+                        stroke: "currentColor",
+                        stroke_linecap: "round",
+                        stroke_linejoin: "round",
+                        stroke_width: "1.6",
+                        view_box: "0 0 24 24",
+                        xmlns: "http://www.w3.org/2000/svg",
+                        rect {
+                            x: "3",
+                            y: "3",
+                            width: "18",
+                            height: "18",
+                            rx: "2",
+                        }
+                        circle { cx: "8", cy: "8", r: "1" }
+                        circle { cx: "16", cy: "8", r: "1" }
+                        circle { cx: "12", cy: "12", r: "1" }
+                        circle { cx: "8", cy: "16", r: "1" }
+                        circle { cx: "16", cy: "16", r: "1" }
+                    }
+                    span { class: "hud-btn__label", "{t.arcade}" }
                 }
                 button {
                     class: "hud-btn",
