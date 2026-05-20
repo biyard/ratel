@@ -13,6 +13,7 @@ mod reward;
 mod space;
 mod space_page;
 mod space_user_role;
+mod team_item;
 mod user_or_team;
 
 pub use auth::*;
@@ -29,6 +30,7 @@ pub use reward::*;
 pub use space::*;
 pub use space_page::*;
 pub use space_user_role::*;
+pub use team_item::*;
 pub use user_or_team::*;
 
 mod list_response;

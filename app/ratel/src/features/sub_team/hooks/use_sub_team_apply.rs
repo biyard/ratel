@@ -19,7 +19,7 @@
 //!     `(applicant_team, parent_team)`, so the applicant can leave
 //!     and resume.
 
-use crate::common::contexts::TeamItem;
+use crate::common::TeamItem;
 use crate::features::social::controllers::list_admin_teams_handler;
 use crate::features::sub_team::controllers::{
     delete_sub_team_application_draft_handler, get_sub_team_apply_context_handler,
