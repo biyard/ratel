@@ -42,7 +42,7 @@ pub fn Index() -> Element {
     let is_admin = user_ctx()
         .user
         .as_ref()
-        .map(|u| matches!(u.user_type, UserType::Admin))
+        .map(|u| matches!(u.user_type, UserType::SystemAdmin))
         .unwrap_or(false);
     let mut settings_open = use_signal(|| false);
     let mut teams_open = use_signal(|| false);

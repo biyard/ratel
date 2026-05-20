@@ -27,7 +27,7 @@ where
             .await
             .map_err(|_| Error::NoSessionFound)?;
 
-        if user.user_type != UserType::Admin {
+        if user.user_type != UserType::SystemAdmin {
             return Err(Error::NoPermission);
         }
 
