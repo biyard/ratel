@@ -77,14 +77,6 @@ pub fn ArenaTopbar(
 
     let mut dd_open = use_signal(|| false);
 
-    // Own the team list locally via infinite query so the switcher can page
-    // past the server's default 20-team limit. The parent `team_arena` layout
-    // also populates `team_ctx` for other consumers (sidebar fallback, etc.),
-    // but the topbar reads directly from this query to control pagination.
-    //
-    // `get_user_teams_handler` requires a session — guard on `has_user` so a
-    // logged-out visitor to a public team page doesn't bubble NoSessionFound
-    // up to the global ErrorBoundary ("먼저 로그인 해주세요" overlay).
     let team_ctx = use_team_context();
     let all_teams = team_ctx.teams();
 

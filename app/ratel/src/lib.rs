@@ -38,7 +38,7 @@ pub use rmcp::schemars;
 
 use dioxus_primitives::dioxus_attributes::attributes;
 use dioxus_primitives::merge_attributes;
-use features::auth::{use_auth_context, AuthContext, OptionalUser, User};
+use features::auth::{use_auth_context, AuthContext, AuthorizedNavigator, OptionalUser, User};
 
 #[cfg(test)]
 pub mod tests;
