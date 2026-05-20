@@ -28,9 +28,9 @@ impl UseArcadeWallet {
     /// their own site.
     pub fn state(&self) -> std::result::Result<Loader<WalletStateResponse>, Loading> {
         let refresh = self.state_refresh;
-        use_loader(move || async move {
+        use_loader(move || {
             let _ = refresh();
-            get_wallet_handler().await
+            async move { get_wallet_handler().await }
         })
     }
 

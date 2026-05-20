@@ -16,9 +16,9 @@ pub struct UseFactFoldAdminSettings {
 impl UseFactFoldAdminSettings {
     pub fn settings(&self) -> std::result::Result<Loader<FactOrFoldSettingsResponse>, Loading> {
         let refresh = self.settings_refresh;
-        use_loader(move || async move {
+        use_loader(move || {
             let _ = refresh();
-            get_settings_handler().await
+            async move { get_settings_handler().await }
         })
     }
 

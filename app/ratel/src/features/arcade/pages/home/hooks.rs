@@ -24,17 +24,17 @@ pub struct UseArcadeHome {
 impl UseArcadeHome {
     pub fn lobby(&self) -> std::result::Result<Loader<LobbyResponse>, Loading> {
         let refresh = self.lobby_refresh;
-        use_loader(move || async move {
+        use_loader(move || {
             let _ = refresh();
-            get_lobby_handler().await
+            async move { get_lobby_handler().await }
         })
     }
 
     pub fn my_stats(&self) -> std::result::Result<Loader<UserStatsResponse>, Loading> {
         let refresh = self.my_stats_refresh;
-        use_loader(move || async move {
+        use_loader(move || {
             let _ = refresh();
-            get_my_stats_handler().await
+            async move { get_my_stats_handler().await }
         })
     }
 

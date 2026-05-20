@@ -69,54 +69,60 @@ impl UseFactFoldRound {
     pub fn round(&self) -> std::result::Result<Loader<RoundResponse>, Loading> {
         let round_id = self.round_id;
         let refresh = self.round_refresh;
-        use_loader(move || async move {
+        use_loader(move || {
             let _ = refresh();
-            get_round_handler(round_id()).await
+            let rid = round_id();
+            async move { get_round_handler(rid).await }
         })
     }
 
     pub fn subject(&self) -> std::result::Result<Loader<RoundSubjectResponse>, Loading> {
         let round_id = self.round_id;
         let refresh = self.subject_refresh;
-        use_loader(move || async move {
+        use_loader(move || {
             let _ = refresh();
-            get_round_subject_handler(round_id()).await
+            let rid = round_id();
+            async move { get_round_subject_handler(rid).await }
         })
     }
 
     pub fn participants(&self) -> std::result::Result<Loader<ListParticipantsResponse>, Loading> {
         let round_id = self.round_id;
         let refresh = self.participants_refresh;
-        use_loader(move || async move {
+        use_loader(move || {
             let _ = refresh();
-            list_round_participants_handler(round_id()).await
+            let rid = round_id();
+            async move { list_round_participants_handler(rid).await }
         })
     }
 
     pub fn bets(&self) -> std::result::Result<Loader<ListBetsResponse>, Loading> {
         let round_id = self.round_id;
         let refresh = self.bets_refresh;
-        use_loader(move || async move {
+        use_loader(move || {
             let _ = refresh();
-            list_round_bets_handler(round_id()).await
+            let rid = round_id();
+            async move { list_round_bets_handler(rid).await }
         })
     }
 
     pub fn rationales(&self) -> std::result::Result<Loader<ListRationalesResponse>, Loading> {
         let round_id = self.round_id;
         let refresh = self.rationales_refresh;
-        use_loader(move || async move {
+        use_loader(move || {
             let _ = refresh();
-            list_round_rationales_handler(round_id()).await
+            let rid = round_id();
+            async move { list_round_rationales_handler(rid).await }
         })
     }
 
     pub fn insider(&self) -> std::result::Result<Loader<InsiderStatementResponse>, Loading> {
         let round_id = self.round_id;
         let refresh = self.insider_refresh;
-        use_loader(move || async move {
+        use_loader(move || {
             let _ = refresh();
-            get_insider_statement_handler(round_id()).await
+            let rid = round_id();
+            async move { get_insider_statement_handler(rid).await }
         })
     }
 
@@ -125,15 +131,18 @@ impl UseFactFoldRound {
     ) -> std::result::Result<Loader<Option<SettleRoundResponse>>, Loading> {
         let round_id = self.round_id;
         let refresh = self.settlement_refresh;
-        use_loader(move || async move {
+        use_loader(move || {
             let _ = refresh();
+            let rid = round_id();
             // Settlement GET returns 409 RoundNotSettled before the
             // round wraps up. Treat that as "not ready yet" so the
             // loader keeps returning Ok(None) instead of flipping
             // into an error state.
-            match get_round_settlement_handler(round_id()).await {
-                Ok(r) => Ok::<_, crate::common::Error>(Some(r)),
-                Err(_) => Ok(None),
+            async move {
+                match get_round_settlement_handler(rid).await {
+                    Ok(r) => Ok::<_, crate::common::Error>(Some(r)),
+                    Err(_) => Ok(None),
+                }
             }
         })
     }

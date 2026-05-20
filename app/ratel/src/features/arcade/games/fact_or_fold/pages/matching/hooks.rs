@@ -14,9 +14,9 @@ pub struct UseFactFoldMatching {
 impl UseFactFoldMatching {
     pub fn lobby(&self) -> std::result::Result<Loader<LobbyResponse>, Loading> {
         let refresh = self.lobby_refresh;
-        use_loader(move || async move {
+        use_loader(move || {
             let _ = refresh();
-            get_lobby_handler().await
+            async move { get_lobby_handler().await }
         })
     }
 

@@ -21,20 +21,22 @@ pub struct UseFactFoldAdminSchedule {
 impl UseFactFoldAdminSchedule {
     pub fn scheduled(&self) -> std::result::Result<Loader<Vec<SubjectResponse>>, Loading> {
         let refresh = self.scheduled_refresh;
-        use_loader(move || async move {
+        use_loader(move || {
             let _ = refresh();
-            let resp = list_subjects_handler(None, Some(SubjectStatus::Scheduled)).await?;
-            let mut items = resp.items;
-            items.sort_by(|a, b| a.scheduled_at.unwrap_or(0).cmp(&b.scheduled_at.unwrap_or(0)));
-            Ok::<Vec<SubjectResponse>, crate::common::Error>(items)
+            async move {
+                let resp = list_subjects_handler(None, Some(SubjectStatus::Scheduled)).await?;
+                let mut items = resp.items;
+                items.sort_by(|a, b| a.scheduled_at.unwrap_or(0).cmp(&b.scheduled_at.unwrap_or(0)));
+                Ok::<Vec<SubjectResponse>, crate::common::Error>(items)
+            }
         })
     }
 
     pub fn alarm(&self) -> std::result::Result<Loader<QueueAlarmResponse>, Loading> {
         let refresh = self.alarm_refresh;
-        use_loader(move || async move {
+        use_loader(move || {
             let _ = refresh();
-            get_queue_alarm_handler().await
+            async move { get_queue_alarm_handler().await }
         })
     }
 }
