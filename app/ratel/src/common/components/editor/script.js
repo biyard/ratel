@@ -83,6 +83,74 @@
     editor.addEventListener("input", scheduleUpdate);
     editor.addEventListener("paste", function () { setTimeout(scheduleUpdate, 0); });
 
+    // ── Slash-command watcher (opt-in) ─────────────────────
+    // Fires whenever the caret-prefixing token matches `/<word>`. The
+    // consumer decides what's a valid command (e.g. /data) — the
+    // watcher just surfaces the raw token and caret position.
+    var slashBridge = root.querySelector(".re-slash-bridge");
+    var slashEnabled = root.dataset.slash === "true" && !!slashBridge;
+    var lastSlashRaw = "";
+    function emitSlash(payload) {
+      if (!slashBridge) return;
+      var v = payload ? JSON.stringify(payload) : "";
+      if (v === slashBridge.value) return;
+      slashBridge.value = v;
+      slashBridge.dispatchEvent(new Event("input", { bubbles: true }));
+      lastSlashRaw = payload ? payload.raw : "";
+    }
+    function clearSlash() {
+      if (lastSlashRaw === "") return;
+      emitSlash(null);
+    }
+    function parseSlashAtCaret() {
+      var sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return null;
+      var range = sel.getRangeAt(0);
+      if (!editor.contains(range.startContainer)) return null;
+      var node = range.startContainer;
+      if (node.nodeType !== 3) return null; // need a text node
+      var text = node.textContent || "";
+      var caret = range.startOffset;
+      // Walk back from caret looking for `/<word>` with no whitespace.
+      var before = text.slice(0, caret);
+      // Match the last slash-prefixed token at the end of `before`.
+      var m = before.match(/(^|[\s　\xa0])(\/[^\s　\xa0]*)$/);
+      if (!m) return null;
+      var raw = m[2];
+      // Need at least one non-`/` char after `/` to make a "word" — bare
+      // `/` shouldn't auto-open. Allow trailing `:` so multi-level
+      // tokens like `/data:` qualify.
+      if (raw.length < 2) return null;
+      // Caret position — viewport-relative rect.
+      var rect = range.getBoundingClientRect();
+      var px = rect.left;
+      var py = rect.bottom;
+      var ESTIMATED_POPUP_H = 340;
+      var PAD = 6;
+      var spaceBelow = window.innerHeight - py;
+      var placement = spaceBelow >= ESTIMATED_POPUP_H + PAD ? "below" : "above";
+      var y = placement === "below" ? py + PAD : rect.top - PAD;
+      return { raw: raw, caret_x: px, caret_y: y, placement: placement };
+    }
+    function checkSlash() {
+      if (!slashEnabled) return;
+      if (composing) return; // wait for IME commit
+      var payload = parseSlashAtCaret();
+      if (!payload) {
+        clearSlash();
+        return;
+      }
+      emitSlash(payload);
+    }
+    if (slashEnabled) {
+      editor.addEventListener("input", checkSlash);
+      editor.addEventListener("keyup", checkSlash);
+      editor.addEventListener("focusout", clearSlash);
+      document.addEventListener("selectionchange", function () {
+        if (document.activeElement === editor) checkSlash();
+      });
+    }
+
     // ── Toolbar wiring ─────────────────────────────────────
     function applyCmd(cmd, value) {
       editor.focus();
@@ -456,6 +524,12 @@
       function updateBubble() {
         if (composing) return hideBubble();
         if (!isFocusInsideEditor()) return hideBubble();
+        // Drag-selecting table cells leaves an artifact text Range
+        // that's non-collapsed but contains no meaningful inline text
+        // (the selection straddles cell boundaries). Showing the
+        // text-format bubble there is confusing — the user is picking
+        // cells for a future merge, not formatting text.
+        if (editor.querySelector(".re-cell-selected")) return hideBubble();
         var sel = window.getSelection();
         if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return hideBubble();
         var range = sel.getRangeAt(0);
@@ -488,6 +562,401 @@
           hideBubble();
           editor.focus();
         }
+      });
+    }
+
+    // ── Table actions (insert row/col, delete row/col/table) ─────
+    // Floating mini-toolbar that appears above the table the caret is
+    // inside. Operations are pure DOM mutations — execCommand doesn't
+    // ship anything for row/column manipulation, and these need
+    // index-based logic anyway.
+    var tableActions = root.querySelector(".re-table-actions");
+    if (tableActions) {
+      // Prevent toolbar mousedown from collapsing the caret.
+      tableActions.addEventListener("mousedown", function (e) { e.preventDefault(); });
+
+      var currentCell = null;
+
+      function findCell(node) {
+        while (node && node !== editor) {
+          if (node.nodeType === 1 && (node.tagName === "TD" || node.tagName === "TH")) return node;
+          node = node.parentNode;
+        }
+        return null;
+      }
+
+      // ── Drag-selection across cells ─────────────────────
+      // Track mousedown → mousemove → mouseup inside a table and
+      // mark the rectangle of cells the user is dragging across with
+      // `.re-cell-selected`. The merge action consumes this set, and
+      // any caret movement or click outside clears it.
+      var dragAnchor = null; // first cell where mouse went down
+      var dragActive = false;
+
+      function clearCellSelection() {
+        editor
+          .querySelectorAll(".re-cell-selected")
+          .forEach(function (c) { c.classList.remove("re-cell-selected"); });
+      }
+
+      function markSelectionRect(startCell, endCell) {
+        clearCellSelection();
+        if (!startCell || !endCell) return;
+        var table = startCell.closest("table");
+        if (!table || endCell.closest("table") !== table) return;
+        var rows = Array.prototype.slice.call(table.rows);
+        var s = { r: rows.indexOf(startCell.parentNode), c: Array.prototype.indexOf.call(startCell.parentNode.cells, startCell) };
+        var e2 = { r: rows.indexOf(endCell.parentNode), c: Array.prototype.indexOf.call(endCell.parentNode.cells, endCell) };
+        var minR = Math.min(s.r, e2.r), maxR = Math.max(s.r, e2.r);
+        var minC = Math.min(s.c, e2.c), maxC = Math.max(s.c, e2.c);
+        for (var rr = minR; rr <= maxR; rr++) {
+          var rrow = rows[rr];
+          if (!rrow) continue;
+          for (var cc = minC; cc <= maxC; cc++) {
+            var ce = rrow.cells[cc];
+            if (ce) ce.classList.add("re-cell-selected");
+          }
+        }
+      }
+
+      var multiCell = false; // true once drag has crossed cell boundary
+
+      editor.addEventListener("mousedown", function (e) {
+        var cell = findCell(e.target);
+        if (!cell) {
+          clearCellSelection();
+          dragAnchor = null;
+          dragActive = false;
+          multiCell = false;
+          return;
+        }
+        dragAnchor = cell;
+        dragActive = true;
+        multiCell = false;
+        clearCellSelection();
+      });
+      editor.addEventListener("mousemove", function (e) {
+        if (!dragActive || !dragAnchor) return;
+        var over = findCell(e.target);
+        if (!over) return;
+        if (over !== dragAnchor) {
+          multiCell = true;
+        }
+        if (multiCell) {
+          // Suppress the browser's native text selection: it overlays
+          // our purple cell highlight and triggers the .re-bubble
+          // text-format popup, which is confusing when the user is
+          // really selecting cells (not text).
+          //
+          // We collapse the selection INSIDE the anchor cell rather
+          // than removing all ranges — keeping a valid editor-bound
+          // range means `document.activeElement === editor` stays true,
+          // `syncTableActions` finds a current cell, and the merge
+          // toolbar above the table stays visible after the user
+          // releases the mouse.
+          e.preventDefault();
+          var sel = window.getSelection();
+          if (sel) {
+            var anchorRange = document.createRange();
+            anchorRange.selectNodeContents(dragAnchor);
+            anchorRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(anchorRange);
+          }
+          markSelectionRect(dragAnchor, over);
+        }
+      });
+      // mouseup may land outside the editor (user releases over the
+      // toolbar etc.), so listen on document.
+      document.addEventListener("mouseup", function () {
+        dragActive = false;
+      });
+      // Click events after a multi-cell drag fire on the COMMON
+      // ANCESTOR of mousedown/mouseup targets (often the <table> or
+      // <tbody>), not on a specific cell — so we can't trust them to
+      // tell us whether the user is "still inside a cell". Instead,
+      // clear marks only when a fresh mousedown starts somewhere
+      // outside the cell grid (the editor's `mousedown` handler above
+      // wipes marks at the start of every new gesture; this guards
+      // taps that miss the editor entirely).
+      document.addEventListener("mousedown", function (e) {
+        if (editor.contains(e.target)) return;
+        if (tableActions && tableActions.contains(e.target)) return;
+        clearCellSelection();
+      });
+
+      function positionTableActions(cell) {
+        var table = cell.closest("table");
+        if (!table) return false;
+        var tr = table.getBoundingClientRect();
+        var pad = 6;
+        var th = tableActions.offsetHeight || 36;
+        var tw = tableActions.offsetWidth || 220;
+        var top = tr.top - th - pad;
+        // Flip below if there's no room above.
+        if (top < 8) top = tr.bottom + pad;
+        var left = tr.left;
+        // Keep within viewport horizontally.
+        left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
+        tableActions.style.top = top + "px";
+        tableActions.style.left = left + "px";
+        return true;
+      }
+
+      function syncTableActions() {
+        if (document.activeElement !== editor) {
+          tableActions.dataset.visible = "false";
+          currentCell = null;
+          return;
+        }
+        var sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) {
+          tableActions.dataset.visible = "false";
+          currentCell = null;
+          return;
+        }
+        var cell = findCell(sel.getRangeAt(0).startContainer);
+        if (!cell) {
+          tableActions.dataset.visible = "false";
+          currentCell = null;
+          return;
+        }
+        currentCell = cell;
+        if (positionTableActions(cell)) {
+          tableActions.dataset.visible = "true";
+        }
+      }
+
+      document.addEventListener("selectionchange", syncTableActions);
+      window.addEventListener("scroll", syncTableActions, { passive: true, capture: true });
+      window.addEventListener("resize", syncTableActions);
+
+      function makeRow(colCount, useTh) {
+        var tr = document.createElement("tr");
+        var tag = useTh ? "th" : "td";
+        for (var i = 0; i < colCount; i++) {
+          var c = document.createElement(tag);
+          c.innerHTML = "&nbsp;";
+          tr.appendChild(c);
+        }
+        return tr;
+      }
+
+      function focusCell(cell) {
+        if (!cell) return;
+        var range = document.createRange();
+        range.selectNodeContents(cell);
+        range.collapse(true);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        scheduleUpdate();
+      }
+
+      function doTableAction(act) {
+        if (!currentCell || !editor.contains(currentCell)) return;
+        var cell = currentCell;
+        var row = cell.parentNode;
+        var table = cell.closest("table");
+        if (!table) return;
+        var allRows = Array.prototype.slice.call(table.rows);
+        var rowIdx = allRows.indexOf(row);
+        var colIdx = Array.prototype.slice.call(row.cells).indexOf(cell);
+        var colCount = row.cells.length;
+        switch (act) {
+          case "row-above": {
+            var newRow = makeRow(colCount, false);
+            row.parentNode.insertBefore(newRow, row);
+            focusCell(newRow.cells[colIdx] || newRow.cells[0]);
+            break;
+          }
+          case "row-below": {
+            var newRow2 = makeRow(colCount, false);
+            if (row.nextSibling) row.parentNode.insertBefore(newRow2, row.nextSibling);
+            else row.parentNode.appendChild(newRow2);
+            focusCell(newRow2.cells[colIdx] || newRow2.cells[0]);
+            break;
+          }
+          case "col-left":
+          case "col-right": {
+            var insertAt = act === "col-left" ? colIdx : colIdx + 1;
+            for (var i = 0; i < allRows.length; i++) {
+              var r = allRows[i];
+              var tag = i === 0 && r.cells[0] && r.cells[0].tagName === "TH" ? "th" : "td";
+              var nc = document.createElement(tag);
+              nc.innerHTML = "&nbsp;";
+              if (insertAt >= r.cells.length) r.appendChild(nc);
+              else r.insertBefore(nc, r.cells[insertAt]);
+            }
+            focusCell(allRows[rowIdx].cells[insertAt] || allRows[rowIdx].cells[allRows[rowIdx].cells.length - 1]);
+            break;
+          }
+          case "row-delete": {
+            if (allRows.length <= 1) {
+              // Last row — remove the whole table.
+              return doTableAction("table-delete");
+            }
+            var nextRow = allRows[rowIdx + 1] || allRows[rowIdx - 1];
+            row.parentNode.removeChild(row);
+            focusCell(nextRow ? nextRow.cells[colIdx] || nextRow.cells[0] : null);
+            break;
+          }
+          case "col-delete": {
+            if (colCount <= 1) {
+              // Last column — remove the whole table.
+              return doTableAction("table-delete");
+            }
+            for (var j = 0; j < allRows.length; j++) {
+              var rr = allRows[j];
+              if (rr.cells[colIdx]) rr.removeChild(rr.cells[colIdx]);
+            }
+            var sameRow = allRows[rowIdx];
+            var nextCell = sameRow.cells[colIdx] || sameRow.cells[sameRow.cells.length - 1];
+            focusCell(nextCell);
+            break;
+          }
+          case "table-delete": {
+            var after = table.nextSibling;
+            table.parentNode.removeChild(table);
+            // Place caret in the following block, or append a fresh
+            // paragraph if there's nothing after the table.
+            if (after && after.nodeType === 1) {
+              var ra = document.createRange();
+              ra.selectNodeContents(after);
+              ra.collapse(true);
+              var sa = window.getSelection();
+              sa.removeAllRanges();
+              sa.addRange(ra);
+            } else {
+              var p = document.createElement("p");
+              p.appendChild(document.createElement("br"));
+              editor.appendChild(p);
+              var rb = document.createRange();
+              rb.selectNodeContents(p);
+              rb.collapse(true);
+              var sb = window.getSelection();
+              sb.removeAllRanges();
+              sb.addRange(rb);
+            }
+            currentCell = null;
+            tableActions.dataset.visible = "false";
+            scheduleUpdate();
+            return;
+          }
+          case "merge": {
+            // Source for the rectangular range:
+            //   1. preferred: cells the user drag-selected (visible
+            //      `.re-cell-selected` highlight)
+            //   2. fallback: Range start/end cells from the current
+            //      text selection
+            // Cell positions are taken as `cellIndex` within each row —
+            // existing `rowSpan` / `colSpan` are NOT resolved; we treat
+            // the selection's corners as a clean rectangle. Good enough
+            // for the common case.
+            var selectedCells = Array.prototype.slice.call(
+              editor.querySelectorAll(".re-cell-selected")
+            ).filter(function (c) { return c.closest("table") === table; });
+            var sCell, eCell;
+            if (selectedCells.length >= 2) {
+              sCell = selectedCells[0];
+              eCell = selectedCells[selectedCells.length - 1];
+            } else {
+              var sel = window.getSelection();
+              if (!sel || sel.rangeCount === 0) return;
+              var r0 = sel.getRangeAt(0);
+              sCell = findCell(r0.startContainer);
+              eCell = findCell(r0.endContainer);
+            }
+            if (!sCell || !eCell || sCell.closest("table") !== table) return;
+            if (sCell === eCell) return;
+            var sRow = sCell.parentNode;
+            var eRow = eCell.parentNode;
+            var sRowIdx = allRows.indexOf(sRow);
+            var eRowIdx = allRows.indexOf(eRow);
+            var sColIdx = Array.prototype.indexOf.call(sRow.cells, sCell);
+            var eColIdx = Array.prototype.indexOf.call(eRow.cells, eCell);
+            var minRow = Math.min(sRowIdx, eRowIdx);
+            var maxRow = Math.max(sRowIdx, eRowIdx);
+            var minCol = Math.min(sColIdx, eColIdx);
+            var maxCol = Math.max(sColIdx, eColIdx);
+            var anchor = allRows[minRow].cells[minCol];
+            if (!anchor) return;
+            var collected = [];
+            // Walk in reverse column order so removeChild doesn't shift
+            // indices we still need.
+            for (var rr = minRow; rr <= maxRow; rr++) {
+              var rrow = allRows[rr];
+              for (var cc = maxCol; cc >= minCol; cc--) {
+                if (rr === minRow && cc === minCol) continue;
+                var cellToMerge = rrow.cells[cc];
+                if (!cellToMerge) continue;
+                var inner = cellToMerge.innerHTML;
+                if (inner && inner.replace(/&nbsp;|\s/g, "") !== "") {
+                  collected.unshift(inner);
+                }
+                rrow.removeChild(cellToMerge);
+              }
+            }
+            var rs = maxRow - minRow + 1;
+            var cs = maxCol - minCol + 1;
+            if (rs > 1) anchor.rowSpan = rs;
+            if (cs > 1) anchor.colSpan = cs;
+            if (collected.length > 0) {
+              var anchorInner = anchor.innerHTML;
+              if (anchorInner && anchorInner.replace(/&nbsp;|\s/g, "") !== "") {
+                collected.unshift(anchorInner);
+              }
+              anchor.innerHTML = collected.join(" ");
+            }
+            clearCellSelection();
+            focusCell(anchor);
+            break;
+          }
+          case "split": {
+            // Split a merged cell back into its individual cells.
+            // Only handles cells whose rowSpan / colSpan > 1. We
+            // re-create the hidden cells in their original positions,
+            // making the simplifying assumption that there are no
+            // other merged cells overlapping this one's column band in
+            // the rows below.
+            var rspan = cell.rowSpan || 1;
+            var cspan = cell.colSpan || 1;
+            if (rspan === 1 && cspan === 1) return;
+            cell.rowSpan = 1;
+            cell.colSpan = 1;
+            // Add (cspan - 1) cells to the right of the anchor in its
+            // own row.
+            for (var k = 1; k < cspan; k++) {
+              var nc = document.createElement(cell.tagName === "TH" ? "th" : "td");
+              nc.innerHTML = "&nbsp;";
+              cell.parentNode.insertBefore(nc, cell.nextSibling);
+            }
+            // For each subsequent row covered by the original rowspan,
+            // insert `cspan` cells at the original column position.
+            for (var rr2 = 1; rr2 < rspan; rr2++) {
+              var nextRow = allRows[rowIdx + rr2];
+              if (!nextRow) continue;
+              var insertBefore = nextRow.cells[colIdx] || null;
+              for (var kk = 0; kk < cspan; kk++) {
+                var nc2 = document.createElement("td");
+                nc2.innerHTML = "&nbsp;";
+                if (insertBefore) nextRow.insertBefore(nc2, insertBefore);
+                else nextRow.appendChild(nc2);
+              }
+            }
+            focusCell(cell);
+            break;
+          }
+        }
+        scheduleUpdate();
+        syncTableActions();
+      }
+
+      tableActions.querySelectorAll("[data-act]").forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          doTableAction(btn.getAttribute("data-act"));
+        });
       });
     }
 

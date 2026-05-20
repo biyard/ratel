@@ -9,7 +9,7 @@ mod component;
 mod data_picker;
 mod doc_canvas;
 mod edit_banner;
-mod format_toolbar;
+pub(crate) mod figure_html;
 mod i18n;
 mod outline;
 mod slash_popup;

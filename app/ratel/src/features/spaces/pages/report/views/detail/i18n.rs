@@ -26,6 +26,26 @@ translate! {
     },
     insert_data: { en: "Insert data", ko: "데이터 삽입" },
 
+    fmt_block_paragraph: { en: "Paragraph", ko: "본문" },
+    fmt_block_h1: { en: "Heading 1", ko: "제목 1" },
+    fmt_block_h2: { en: "Heading 2", ko: "제목 2" },
+    fmt_block_h3: { en: "Heading 3", ko: "제목 3" },
+    fmt_image: { en: "Insert image", ko: "이미지 삽입" },
+    fmt_youtube: { en: "Embed YouTube", ko: "YouTube 삽입" },
+    fmt_table: { en: "Insert table", ko: "표 삽입" },
+    fmt_prompt_image: { en: "Image URL", ko: "이미지 URL" },
+    fmt_prompt_youtube: { en: "YouTube URL", ko: "YouTube URL" },
+    fmt_prompt_table: { en: "Table size (rows x cols)", ko: "표 크기 (행 x 열)" },
+    fmt_prompt_link: { en: "URL", ko: "URL" },
+    fmt_youtube_invalid: {
+        en: "Could not parse the YouTube URL.",
+        ko: "YouTube URL을 인식할 수 없습니다.",
+    },
+    fmt_table_range: {
+        en: "Rows 1-20, columns 1-10.",
+        ko: "행은 1~20, 열은 1~10 범위로 입력해 주세요.",
+    },
+
     outline_heading: { en: "Outline", ko: "목차" },
     outline_empty: {
         en: "No headings yet — add an H1/H2/H3 and it'll appear here.",

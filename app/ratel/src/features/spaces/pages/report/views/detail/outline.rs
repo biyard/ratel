@@ -15,8 +15,8 @@ pub fn Outline() -> Element {
                 OutlineMode::Default => rsx! {
                     OutlineDefault {}
                 },
-                OutlineMode::ChartTypeSwap { block_id } => rsx! {
-                    OutlineSwap { block_id }
+                OutlineMode::ChartTypeSwap { chart_id } => rsx! {
+                    OutlineSwap { chart_id }
                 },
             }
         }
@@ -58,28 +58,18 @@ fn OutlineDefault() -> Element {
 }
 
 /// Chart-type swap mode — picks a new visual rendering for the focused
-/// chart block. The option list is filtered by the chart's source
+/// chart figure. The option list is filtered by the chart's source
 /// (`ChartType::options_for(source)`): poll/quiz/follow get
 /// Bar/Pie/Table, discussion gets LDA/TF-IDF/Network. Source stays the
 /// same — only the rendering shape changes.
 #[component]
-fn OutlineSwap(block_id: String) -> Element {
+fn OutlineSwap(chart_id: String) -> Element {
     let mut ctx = use_report_detail_context();
-    let (current_type, source, title) = ctx
-        .blocks
-        .read()
-        .iter()
-        .find_map(|b| match b {
-            ReportBlock::Chart {
-                id,
-                chart_type,
-                source,
-                item_title,
-                ..
-            } if id == &block_id => Some((*chart_type, *source, item_title.clone())),
-            _ => None,
-        })
-        .unwrap_or((ChartType::Bar, ActionSource::Poll, String::new()));
+    let meta = ctx.chart_meta(&chart_id);
+    let (current_type, source, title) = match meta.as_ref() {
+        Some(m) => (m.chart_type, m.source, m.item_title.clone()),
+        None => (ChartType::Bar, ActionSource::Poll, String::new()),
+    };
     let options = ChartType::options_for(source);
     rsx! {
         div { class: "report-detail__outline-section report-detail__outline-swap",
@@ -116,7 +106,7 @@ fn OutlineSwap(block_id: String) -> Element {
                 for ct in options.iter().copied() {
                     SwapOption {
                         key: "{ct.as_token()}",
-                        block_id: block_id.clone(),
+                        chart_id: chart_id.clone(),
                         chart_type: ct,
                         active: ct == current_type,
                     }
@@ -130,7 +120,7 @@ fn OutlineSwap(block_id: String) -> Element {
 }
 
 #[component]
-fn SwapOption(block_id: String, chart_type: ChartType, active: bool) -> Element {
+fn SwapOption(chart_id: String, chart_type: ChartType, active: bool) -> Element {
     let mut ctx = use_report_detail_context();
     let (label, hint, preview_icon) = match chart_type {
         ChartType::Bar => ("막대 차트", "응답 분포를 막대 그래프로", swap_icon_bar()),
@@ -140,7 +130,7 @@ fn SwapOption(block_id: String, chart_type: ChartType, active: bool) -> Element 
         ChartType::TfIdf => ("TF-IDF", "단어 중요도 순위표", swap_icon_tfidf()),
         ChartType::Network => ("Network", "공출현 단어 네트워크", swap_icon_network()),
     };
-    let id_for_click = block_id.clone();
+    let id_for_click = chart_id.clone();
     rsx! {
         button {
             class: "report-detail__swap-opt",
@@ -149,7 +139,6 @@ fn SwapOption(block_id: String, chart_type: ChartType, active: bool) -> Element 
             r#type: "button",
             onclick: move |_| {
                 ctx.swap_chart_type(&id_for_click, chart_type);
-                ctx.close_outline_swap();
             },
             div { class: "report-detail__swap-opt-icon", {preview_icon} }
             div { class: "report-detail__swap-opt-text",
@@ -396,13 +385,58 @@ fn OutlineRow(entry: ReportListItemRow) -> Element {
         OutlineKind::H3 => "report-detail__outline-row--h3",
         OutlineKind::Chart => "report-detail__outline-row--chart",
     };
+    let id_for_click = entry.id.clone();
+    let kind_for_click = entry.kind;
     rsx! {
-        a {
+        button {
             class: "report-detail__outline-row {kind_class}",
-            href: "#{entry.id}",
+            r#type: "button",
+            onclick: move |_| scroll_to_outline_entry(&id_for_click, kind_for_click),
             span { "{entry.label}" }
         }
     }
+}
+
+/// Scroll to the outline entry's underlying DOM node inside the body
+/// editor. For chart figures we have a real DOM id (the chart-id);
+/// for headings, the editor doesn't auto-add ids, so we synthesize
+/// `h{level}-{n}` in the outline parser and walk to the n-th heading
+/// of that level on click.
+fn scroll_to_outline_entry(id: &str, kind: OutlineKind) {
+    let mut runner = dioxus::document::eval(
+        r#"
+        const data = await dioxus.recv();
+        const editor = document.querySelector('.report-detail .ratel-editor .re-content');
+        if (!editor) { dioxus.send(null); return; }
+        let target = null;
+        if (data.kind === 'chart') {
+            target = editor.querySelector('figure[data-chart-id="' + data.id + '"]');
+        } else {
+            const m = data.id.match(/^h([1-3])-(\d+)$/);
+            if (m) {
+                const tag = 'h' + m[1];
+                const nth = parseInt(m[2], 10) - 1;
+                const list = editor.querySelectorAll(tag);
+                target = list[nth] || null;
+            }
+        }
+        if (target && target.scrollIntoView) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        dioxus.send(null);
+        "#,
+    );
+    let kind_token = match kind {
+        OutlineKind::Chart => "chart",
+        OutlineKind::H1 | OutlineKind::H2 | OutlineKind::H3 => "heading",
+    };
+    let _ = runner.send(serde_json::json!({
+        "id": id,
+        "kind": kind_token,
+    }));
+    dioxus::prelude::spawn(async move {
+        let _ = runner.recv::<Option<()>>().await;
+    });
 }
 
 #[component]

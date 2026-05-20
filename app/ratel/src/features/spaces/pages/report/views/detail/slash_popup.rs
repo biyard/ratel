@@ -20,18 +20,24 @@ pub fn SlashPopup() -> Element {
         2 => "DATA SOURCE",
         _ => "ITEMS",
     };
-    // Coords come from `read_caret_pos` and are doc-scroll-relative.
-    // For `placement = "above"` we translate the popup up by its own
-    // height via `transform: translateY(-100%)` so JS doesn't need to
-    // know the rendered popup height ahead of time.
+    // Coords come from the editor's slash watcher and are viewport-
+    // relative (from `getBoundingClientRect`). The popup is positioned
+    // `fixed` so we don't have to compute scroll offsets. For
+    // `placement = "above"` we translate the popup up by its own height
+    // via `transform: translateY(-100%)` so JS doesn't need to know the
+    // rendered popup height ahead of time.
     let style = if state.placement == "above" {
         format!(
-            "top: {top}px; left: {left}px; transform: translateY(-100%);",
+            "position: fixed; top: {top}px; left: {left}px; transform: translateY(-100%);",
             top = state.caret_y,
             left = state.caret_x
         )
     } else {
-        format!("top: {top}px; left: {left}px;", top = state.caret_y, left = state.caret_x)
+        format!(
+            "position: fixed; top: {top}px; left: {left}px;",
+            top = state.caret_y,
+            left = state.caret_x
+        )
     };
 
     let options = ctx.slash_options();

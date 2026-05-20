@@ -2,7 +2,7 @@ use crate::features::spaces::pages::report::*;
 
 mod candidate_page;
 mod creator_page;
-mod detail;
+pub(crate) mod detail;
 mod i18n;
 mod list_page;
 mod participant_page;

@@ -1,3 +1,6 @@
+use crate::features::spaces::pages::apps::apps::analyzes::{
+    NetworkEdge, NetworkNode, TermScore, TopicRow,
+};
 #[cfg(feature = "server")]
 #[allow(unused_imports)]
 use rmcp::schemars;
@@ -32,8 +35,30 @@ impl ActionSource {
     }
 }
 
+/// LDA / TF-IDF / text-network result payload for one discussion under
+/// one analyze report. Sourced from `SpaceAnalyzeDiscussionResult` and
+/// embedded in `AnalyzeItem` + `ReportBlock::Chart` so the picker hands
+/// the canvas a ready-to-render shape (mirrors the eager-data pattern
+/// poll/quiz/follow already use via `options`).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+pub struct DiscussionData {
+    #[serde(default)]
+    pub topics: Vec<TopicRow>,
+    #[serde(default)]
+    pub tfidf_terms: Vec<TermScore>,
+    #[serde(default)]
+    pub network_nodes: Vec<NetworkNode>,
+    #[serde(default)]
+    pub network_edges: Vec<NetworkEdge>,
+}
+
 /// One pickable aggregate inside an analyze, grouped by source.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// Carries the actual tally data so the picker can hand a ready-to-
+/// render payload straight into the Chart block on insertion — the
+/// detail editor doesn't need to round-trip back to the server when
+/// the user picks an item.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct AnalyzeItem {
     pub id: String,
@@ -41,6 +66,27 @@ pub struct AnalyzeItem {
     /// Free-text meta line ("5 옵션 · 매칭 응답 1,248" etc.) shown
     /// under the title in the picker list.
     pub meta: String,
+    /// Per-option tally for poll/quiz/follow items. Empty for
+    /// discussion items (their data lives in `discussion_data`).
+    #[serde(default)]
+    pub options: Vec<ChartOption>,
+    /// Denominator for percentage math. Stays 0 when there's no
+    /// useful base count (e.g. follow items where the picker shows
+    /// counts directly).
+    #[serde(default)]
+    pub respondent_count: u32,
+    /// LDA / TF-IDF / network payload for discussion items. `None` for
+    /// poll/quiz/follow.
+    #[serde(default)]
+    pub discussion_data: Option<DiscussionData>,
+}
+
+/// One bar / pie slice / table row inside a chart payload.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
+pub struct ChartOption {
+    pub label: String,
+    pub count: u32,
 }
 
 /// One element of the analyze's cross-filter set — rendered as a small
@@ -201,7 +247,11 @@ pub enum ReportBlock {
     },
     /// Inserted chart block. `source` is the analyze source that
     /// supplied the data (drives badge color); `chart_type` controls
-    /// the visual rendering (bar/pie/topics/table).
+    /// the visual rendering (bar/pie/topics/table). `options` /
+    /// `respondent_count` carry the actual tally so Bar/Pie/Table
+    /// render real data instead of mock numbers. Empty `options`
+    /// (e.g. discussion items, or an inserted-but-stale block) makes
+    /// the canvas render an empty-state message.
     Chart {
         id: String,
         source: ActionSource,
@@ -209,6 +259,15 @@ pub enum ReportBlock {
         analyze_name: String,
         item_title: String,
         meta: String,
+        #[serde(default)]
+        options: Vec<ChartOption>,
+        #[serde(default)]
+        respondent_count: u32,
+        /// LDA / TF-IDF / network payload — populated only for
+        /// `source = Discussion`. `None` for poll/quiz/follow charts
+        /// (their data lives in `options`).
+        #[serde(default)]
+        discussion_data: Option<DiscussionData>,
     },
 }
 
@@ -230,6 +289,17 @@ pub struct ReportDetail {
     pub eyebrow: String,
     pub title: String,
     pub subtitle: String,
+    /// Body HTML — produced by the shared `Editor` component's
+    /// `on_content_change` callback and persisted via
+    /// `update_report.html_contents`. Replaces the old `blocks` model.
+    /// Inline chart figures live inside this string as
+    /// `<figure contenteditable="false" data-chart-id="…">…</figure>`.
+    #[serde(default)]
+    pub html_contents: String,
+    /// Legacy block list — kept on the in-memory model only because the
+    /// `GetReportResponse` DTO still returns it. The detail page ignores
+    /// it; outline + chart manipulation read from `html_contents`. Will
+    /// be dropped once the DTO is cleaned up.
     pub blocks: Vec<ReportBlock>,
     pub author: String,
     pub created_at: i64,

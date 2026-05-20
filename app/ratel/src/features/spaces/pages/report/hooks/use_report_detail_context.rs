@@ -1,15 +1,19 @@
-//! Detail page context — turn-key data + UI state for the block editor.
-//! Mirrors the `use_wall_context` pattern from PR #1593: a single
-//! `use_loader` resolves the report (mock data for now), the wrapping
-//! `DioxusController` exposes signals for picker / banner state, and
-//! sub-components consume via `use_report_detail_context()`.
+//! Report detail page context — single rich-text body editor backed by
+//! the shared `crate::common::components::editor::Editor`, plus the
+//! picker / slash / outline UI pieces that wrap it.
 //!
-//! Mutation (insert chart from picker → append `Chart` block) goes
-//! through `insert_chart_for_item` which pushes to the `blocks` Signal;
-//! the outline rail and `DocCanvas` re-render reactively.
+//! Charts are embedded in the body as `<figure contenteditable="false">`
+//! elements built by `figure_html::build_chart_figure`. Picker selection,
+//! chart-type swaps, and chart deletions all flow through small JS
+//! dispatches against the editor's contenteditable so the Editor's own
+//! debounced `on_content_change` callback handles persistence.
 
+use super::super::views::detail::figure_html::{build_chart_figure, build_chart_inner};
+use crate::common::components::editor::EditorSlashSignal;
 use crate::features::spaces::pages::report::types::*;
 use crate::*;
+use dioxus::document::eval as dx_eval;
+use regex::Regex;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum DetailDrawerTarget {
@@ -23,27 +27,37 @@ pub enum DetailDrawerTarget {
 #[derive(Clone, PartialEq, Eq)]
 pub enum OutlineMode {
     Default,
-    ChartTypeSwap { block_id: String },
+    ChartTypeSwap { chart_id: String },
+}
+
+/// Snapshot of one chart figure embedded in the body HTML, sufficient
+/// to drive the swap UI and re-render the chart after a type change.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ChartMeta {
+    pub chart_id: String,
+    pub source: ActionSource,
+    pub chart_type: ChartType,
+    pub analyze_name: String,
+    pub item_title: String,
+    pub item_meta: String,
+    pub respondent_count: u32,
+    pub options: Vec<ChartOption>,
+    pub discussion_data: Option<DiscussionData>,
 }
 
 /// State for the slash-command popup (`/data`, `/data:analyze`, ...).
 /// `level` mirrors the mockup's tier system: 0=command, 1=analyze,
-/// 2=source, 3=item. `caret_x` / `caret_y` are viewport-relative pixels
-/// from `window.getSelection().getRangeAt(0).getBoundingClientRect()`
-/// so the popup anchors right under the caret. `selected_index` is
-/// the keyboard-driven highlight inside the visible option list.
+/// 2=source, 3=item. Coordinates are viewport pixels emitted by the
+/// editor's slash watcher.
 #[derive(Clone, PartialEq)]
 pub struct SlashState {
-    pub block_id: String,
     pub raw: String,
     pub level: u8,
     pub query: String,
     pub analyze_id: Option<String>,
     pub source: Option<ActionSource>,
-    /// Doc-relative caret position (scrolls with `.report-detail__doc`).
     pub caret_x: f64,
     pub caret_y: f64,
-    /// "below" = popup top at caret_y; "above" = popup bottom at caret_y.
     pub placement: String,
     pub selected_index: usize,
 }
@@ -78,15 +92,13 @@ pub enum SlashAction {
 
 #[derive(Clone, Copy, DioxusController)]
 pub struct UseReportDetailContext {
-    pub space_id: ReadSignal<SpacePartition>,
-    pub report_id: ReadSignal<String>,
     pub detail: Loader<ReportDetail>,
-    /// Block list rendered by `DocCanvas`. Mutated by the picker (insert
-    /// chart) and by `remove_block` / `swap_chart_source`.
-    pub blocks: Signal<Vec<ReportBlock>>,
     /// Editable title / subtitle for the doc header.
     pub title: Signal<String>,
     pub subtitle: Signal<String>,
+    /// Body HTML — the single source of truth for the body. Mirrored
+    /// from the shared `Editor`'s `on_content_change` callback.
+    pub body_html: Signal<String>,
     /// Picker / overlay routing. Only one drawer is open at a time.
     pub drawer: Signal<DetailDrawerTarget>,
     /// Currently selected analyze id in the picker dropdown.
@@ -97,15 +109,12 @@ pub struct UseReportDetailContext {
     pub outline_mode: Signal<OutlineMode>,
     /// Slash-command popup state. `None` means the popup is hidden.
     pub slash: Signal<Option<SlashState>>,
-    /// Monotonic counter used to mint unique block ids. Mock blocks own
-    /// authored ids ("report-h1-insights", "chart-policy-q1") so we
-    /// start the sequence well above those to avoid collisions even
-    /// when an inserted block happens to share an item id with a mock.
-    pub next_block_seq: Signal<u64>,
-    /// Save the current title/subtitle/blocks back to the server via
-    /// `update_report_handler`. The action restarts the `detail`
-    /// loader on success so any server-side normalization (timestamps,
-    /// trimmed fields) round-trips back into the editor.
+    /// Save the current title/subtitle/body_html back to the server.
+    /// Triggered by the Editor's debounced content-change callback,
+    /// title/subtitle blurs, and chart insert/swap/delete (those last
+    /// three already touch the DOM, so the Editor's `input` event
+    /// fires for free — but we still call `handle_save` explicitly so
+    /// the latest body roundtrips even if the user never blurs).
     pub handle_save: Action<(), ()>,
 }
 
@@ -113,14 +122,10 @@ impl UseReportDetailContext {
     // ──────────────────────────────────────────────────────────────────
     // Lazy accessors — every consumer reads through these methods so
     // the loader / signal access happens at the RSX node that needs the
-    // value (not at the top of a component). Once the upcoming
-    // `Blur<Result<Loader<T>, _>>` wrapper lands the same accessor list
-    // can be reshaped to return the wrapped result instead of the bare
-    // value, with no caller-side change. See
+    // value (not at the top of a component). See
     // `feedback_lazy_loader_resolve.md`.
     // ──────────────────────────────────────────────────────────────────
 
-    // -- Loader-derived (immutable initial values from server) -------
     pub fn eyebrow(&self) -> String {
         self.detail().eyebrow.clone()
     }
@@ -148,7 +153,6 @@ impl UseReportDetailContext {
         self.detail().analyzes.clone()
     }
 
-    // -- Signal-derived (editor-mutable state) -----------------------
     pub fn title_value(&self) -> String {
         self.title.read().clone()
     }
@@ -157,8 +161,12 @@ impl UseReportDetailContext {
         self.subtitle.read().clone()
     }
 
-    pub fn blocks_list(&self) -> Vec<ReportBlock> {
-        self.blocks.read().clone()
+    /// Snapshot of the body HTML taken once at first render. Passed
+    /// into the `Editor` as `content` — the Editor never re-reads this
+    /// (it would clobber the caret on every keystroke), so the function
+    /// must return the value that was current when the editor mounted.
+    pub fn initial_body_html(&self) -> String {
+        self.body_html.peek().clone()
     }
 
     pub fn outline_mode_value(&self) -> OutlineMode {
@@ -200,10 +208,6 @@ impl UseReportDetailContext {
             .or_else(|| self.detail().analyzes.first().cloned())
     }
 
-    /// Aggregate items belonging to the currently-selected analyze /
-    /// source tab combination in the right-rail picker. Computed at
-    /// call time so the picker view can defer signal+loader reads to
-    /// the RSX node that needs them.
     pub fn current_picker_items(&self) -> Vec<AnalyzeItem> {
         let source = self.picker_source_value();
         self.current_analyze()
@@ -220,9 +224,6 @@ impl UseReportDetailContext {
             .unwrap_or(true)
     }
 
-    /// How many items the currently-selected analyze has for the given
-    /// source. Used by the picker source-tab row to show counts and
-    /// disable empty tabs.
     pub fn picker_items_count_for(&self, source: ActionSource) -> usize {
         self.current_analyze()
             .as_ref()
@@ -230,246 +231,100 @@ impl UseReportDetailContext {
             .unwrap_or(0)
     }
 
-    pub fn outline(&self) -> Vec<OutlineEntry> {
-        self.blocks
-            .read()
-            .iter()
-            .filter_map(|b| match b {
-                ReportBlock::H1 { id, text } => Some(OutlineEntry {
-                    id: id.clone(),
-                    kind: OutlineKind::H1,
-                    label: text.clone(),
-                }),
-                ReportBlock::H2 { id, text } => Some(OutlineEntry {
-                    id: id.clone(),
-                    kind: OutlineKind::H2,
-                    label: text.clone(),
-                }),
-                ReportBlock::H3 { id, text } => Some(OutlineEntry {
-                    id: id.clone(),
-                    kind: OutlineKind::H3,
-                    label: text.clone(),
-                }),
-                ReportBlock::Chart { id, item_title, .. } => Some(OutlineEntry {
-                    id: id.clone(),
-                    kind: OutlineKind::Chart,
-                    label: item_title.clone(),
-                }),
-                ReportBlock::Text { .. } => None,
-            })
-            .collect()
+    /// Mint a unique chart id. UUIDv7 keeps lex-order = creation order
+    /// and prevents collisions across remounts (see PR comment in the
+    /// old block-based implementation).
+    fn mint_chart_id(&self) -> String {
+        format!("chart-{}", uuid::Uuid::now_v7())
     }
 
-    /// True when no block in the current document contributes an
-    /// outline entry. Lets the outline rail render the empty-state
-    /// branch without first materializing the entry list.
-    pub fn outline_is_empty(&self) -> bool {
-        !self
-            .blocks
-            .read()
-            .iter()
-            .any(|b| !matches!(b, ReportBlock::Text { .. }))
-    }
-
-    /// Mint a unique block id with the given prefix. The sequence
-    /// counter is monotonic across the session so even repeated picks of
-    /// the same analyze item produce distinct chart blocks (the keyed
-    /// diff panics on duplicate sibling keys).
-    fn mint_id(&mut self, prefix: &str) -> String {
-        let seq = *self.next_block_seq.peek();
-        self.next_block_seq.set(seq + 1);
-        format!("{prefix}-{seq}")
-    }
-
-    /// Push a Chart block built from the picker's selection. The chart
-    /// type is picked from `ChartType::default_for(source)` so
-    /// discussion data lands as a topics list, follow data as a pie, etc.
-    /// If `after_block_id` is provided the chart is inserted right after
-    /// that block (slash-command flow); otherwise it is appended (right-
-    /// rail picker flow). A trailing empty Text block is always inserted
-    /// so the author has somewhere to type below the new chart.
-    pub fn insert_chart_for_item(
+    /// Picker selection — insert a fresh chart figure into the body at
+    /// the editor's caret. Builds the figure HTML in Rust, then asks
+    /// the editor's contenteditable to execute `insertHTML` with it. The
+    /// Editor's input listener fires for free, which roundtrips to
+    /// `body_html` via `on_content_change` → handle_save runs once
+    /// debounce settles.
+    pub fn insert_chart_from_picker(
         &mut self,
         analyze: &Analyze,
         item: &AnalyzeItem,
-        after_block_id: Option<&str>,
-    ) -> (String, String) {
-        let src = analyze
-            .filters
-            .first()
-            .map(|c| c.source)
-            .unwrap_or(ActionSource::Poll);
-        let chart_id = self.mint_id("chart");
-        let text_id = self.mint_id("text");
-        let chart_block = ReportBlock::Chart {
-            id: chart_id.clone(),
-            source: src,
-            chart_type: ChartType::default_for(src),
-            analyze_name: analyze.name.clone(),
-            item_title: item.title.clone(),
-            meta: item.meta.clone(),
-        };
-        let trailing_text = ReportBlock::Text {
-            id: text_id.clone(),
-            html: String::new(),
-        };
-
-        let mut cur = self.blocks.peek().clone();
-        let insert_pos = after_block_id
-            .and_then(|aid| cur.iter().position(|b| b.id() == aid))
-            .map(|i| i + 1)
-            .unwrap_or(cur.len());
-        cur.insert(insert_pos, chart_block);
-        cur.insert(insert_pos + 1, trailing_text);
-        self.blocks.set(cur);
-        (chart_id, text_id)
-    }
-
-    pub fn update_block_text(&mut self, block_id: &str, new_text: String) {
-        let mut cur = self.blocks.peek().clone();
-        let mut changed = false;
-        for b in cur.iter_mut() {
-            if b.id() == block_id {
-                match b {
-                    ReportBlock::H1 { text, .. }
-                    | ReportBlock::H2 { text, .. }
-                    | ReportBlock::H3 { text, .. } => {
-                        if *text != new_text {
-                            *text = new_text.clone();
-                            changed = true;
-                        }
-                    }
-                    ReportBlock::Text { html, .. } => {
-                        if *html != new_text {
-                            *html = new_text.clone();
-                            changed = true;
-                        }
-                    }
-                    ReportBlock::Chart { .. } => {}
-                }
-                break;
-            }
-        }
-        if changed {
-            self.blocks.set(cur);
-        }
-    }
-
-    pub fn append_text_block(&mut self) -> String {
-        let text_id = self.mint_id("text");
-        let new_block = ReportBlock::Text {
-            id: text_id.clone(),
-            html: String::new(),
-        };
-        let mut cur = self.blocks.peek().clone();
-        cur.push(new_block);
-        self.blocks.set(cur);
-        text_id
-    }
-
-    pub fn first_editable_block_id(&self) -> Option<String> {
-        self.blocks
-            .peek()
-            .iter()
-            .find(|b| !matches!(b, ReportBlock::Chart { .. }))
-            .map(|b| b.id().to_string())
-    }
-
-    /// Insert an empty Text block right after `after_block_id` and
-    /// return its id. Used by the Enter-key handler in `DocBlock` so the
-    /// author can break out of a heading or chart into a fresh paragraph.
-    pub fn insert_text_after(&mut self, after_block_id: &str) -> String {
-        let text_id = self.mint_id("text");
-        let new_block = ReportBlock::Text {
-            id: text_id.clone(),
-            html: String::new(),
-        };
-        let mut cur = self.blocks.peek().clone();
-        let pos = cur
-            .iter()
-            .position(|b| b.id() == after_block_id)
-            .map(|i| i + 1)
-            .unwrap_or(cur.len());
-        cur.insert(pos, new_block);
-        self.blocks.set(cur);
-        text_id
-    }
-
-    /// Backspace-on-empty-block path: remove the block at `block_id` and
-    /// return the id of the previous editable block (H1/H2/H3/Text) so
-    /// the caller can focus it. Returns `None` when there is no editable
-    /// sibling before this block (caret has nowhere to land — leave the
-    /// block in place so the user doesn't get stuck on a chart).
-    pub fn collapse_block(&mut self, block_id: &str) -> Option<String> {
-        let cur = self.blocks.peek().clone();
-        let idx = cur.iter().position(|b| b.id() == block_id)?;
-        // Walk backwards to find the nearest editable (non-Chart) block.
-        let prev_id = cur[..idx].iter().rev().find_map(|b| match b {
-            ReportBlock::Chart { .. } => None,
-            _ => Some(b.id().to_string()),
-        })?;
-        let mut next = cur;
-        next.remove(idx);
-        self.blocks.set(next);
-        Some(prev_id)
-    }
-
-    /// Drop a block (chart trash icon, or future block menu).
-    pub fn remove_block(&mut self, id: &str) {
-        let mut cur = self.blocks.peek().clone();
-        cur.retain(|b| b.id() != id);
-        self.blocks.set(cur);
-    }
-
-    /// Re-render an existing chart block as a different visual type
-    /// (bar → pie etc.). Triggered from the outline rail's chart-swap
-    /// mode.
-    pub fn swap_chart_type(&mut self, id: &str, new_type: ChartType) {
-        let mut cur = self.blocks.peek().clone();
-        for b in cur.iter_mut() {
-            if b.id() == id {
-                if let ReportBlock::Chart { chart_type, .. } = b {
-                    *chart_type = new_type;
-                }
-            }
-        }
-        self.blocks.set(cur);
-    }
-
-    pub fn open_chart_swap(&mut self, id: &str) {
-        self.outline_mode.set(OutlineMode::ChartTypeSwap {
-            block_id: id.to_string(),
-        });
-    }
-
-    pub fn close_outline_swap(&mut self) {
-        self.outline_mode.set(OutlineMode::Default);
-    }
-
-    pub fn close_slash(&mut self) {
-        self.slash.set(None);
+        source: ActionSource,
+    ) {
+        let chart_id = self.mint_chart_id();
+        let chart_type = ChartType::default_for(source);
+        let figure = build_chart_figure(&chart_id, source, chart_type, analyze, item);
+        // Append an empty paragraph after the figure so the author has
+        // somewhere to type. The figure itself is `contenteditable="false"`,
+        // so without a trailing editable node the caret can get stuck.
+        let html = format!("{figure}<p><br></p>");
+        dispatch_insert_html(html);
+        self.close_drawer();
     }
 
     /// Apply the picked slash option. `analyze` + `item` are resolved
     /// by the popup before calling so this stays a pure mutation.
-    /// The chart is inserted right after the block where the slash was
-    /// active, the trailing slash token is stripped from that block's
-    /// contenteditable, and focus jumps to the freshly-created empty
-    /// Text block so the author can keep typing.
-    pub fn apply_slash_chart(&mut self, analyze: &Analyze, item: &AnalyzeItem) {
-        let (source_id, raw_token) = self
+    /// The chart is inserted right after the slash token is wiped from
+    /// the editor.
+    pub fn apply_slash_chart(
+        &mut self,
+        analyze: &Analyze,
+        item: &AnalyzeItem,
+        source: ActionSource,
+    ) {
+        let chart_id = self.mint_chart_id();
+        let chart_type = ChartType::default_for(source);
+        let figure = build_chart_figure(&chart_id, source, chart_type, analyze, item);
+        let html = format!("{figure}<p><br></p>");
+        let raw = self
             .slash
             .peek()
             .as_ref()
-            .map(|s| (s.block_id.clone(), s.raw.clone()))
-            .unzip();
-        let (_, text_id) = self.insert_chart_for_item(analyze, item, source_id.as_deref());
+            .map(|s| s.raw.clone())
+            .unwrap_or_default();
         self.slash.set(None);
-        if let (Some(sid), Some(raw)) = (source_id, raw_token) {
-            cleanup_slash_and_focus(&sid, &raw, Some(&text_id));
-        } else {
-            cleanup_slash_and_focus("", "", Some(&text_id));
+        dispatch_replace_slash_and_insert(raw, html);
+    }
+
+    /// Update slash state from the Editor's on-slash signal. Empty `raw`
+    /// (the cleared sentinel) hides the popup. Anything that doesn't
+    /// match `/data...` is also dropped — the editor surfaces every
+    /// `/<word>` token; this surface only cares about /data.
+    pub fn handle_slash_signal(&mut self, signal: EditorSlashSignal) {
+        if signal.raw.is_empty() {
+            if self.slash.peek().is_some() {
+                self.slash.set(None);
+            }
+            return;
         }
+        let Some(parsed) = parse_slash_token(&signal.raw) else {
+            if self.slash.peek().is_some() {
+                self.slash.set(None);
+            }
+            return;
+        };
+        let prev_idx = self
+            .slash
+            .peek()
+            .as_ref()
+            .map(|s| (s.level, s.selected_index))
+            .filter(|(lvl, _)| *lvl == parsed.level)
+            .map(|(_, idx)| idx)
+            .unwrap_or(0);
+        self.slash.set(Some(SlashState {
+            raw: parsed.raw,
+            level: parsed.level,
+            query: parsed.query,
+            analyze_id: parsed.analyze_id,
+            source: parsed.source,
+            caret_x: signal.caret_x,
+            caret_y: signal.caret_y,
+            placement: signal.placement,
+            selected_index: prev_idx,
+        }));
+    }
+
+    pub fn close_slash(&mut self) {
+        self.slash.set(None);
     }
 
     /// Build the visible option list for the current slash state.
@@ -482,16 +337,15 @@ impl UseReportDetailContext {
     }
 
     /// Adjust the keyboard-highlighted option (ArrowDown=+1,
-    /// ArrowUp=-1) with wrap-around. Clamped to the current option
-    /// list size so the keyboard cursor stays in range across level
-    /// transitions.
+    /// ArrowUp=-1) with wrap-around.
     pub fn move_slash_selection(&mut self, delta: i32) {
         let opts = self.slash_options();
         if opts.is_empty() {
             return;
         }
-        let cur = self.slash.peek().clone();
-        let Some(mut state) = cur else { return };
+        let Some(mut state) = self.slash.peek().clone() else {
+            return;
+        };
         let len = opts.len() as i32;
         let mut next = state.selected_index as i32 + delta;
         next = ((next % len) + len) % len;
@@ -499,10 +353,6 @@ impl UseReportDetailContext {
         self.slash.set(Some(state));
     }
 
-    /// Apply whatever option is currently highlighted (Enter key from
-    /// the contenteditable, or click from the popup). Routes through
-    /// the same `SlashAction` switch as the click handler so the two
-    /// paths stay in sync.
     pub fn apply_slash_selected(&mut self) {
         let opts = self.slash_options();
         if opts.is_empty() {
@@ -519,9 +369,9 @@ impl UseReportDetailContext {
     }
 
     pub fn apply_slash_action(&mut self, action: &SlashAction) {
-        let cur = self.slash.peek().clone();
-        let Some(mut state) = cur else { return };
-        let block_id = state.block_id.clone();
+        let Some(mut state) = self.slash.peek().clone() else {
+            return;
+        };
         let old_raw = state.raw.clone();
 
         match action {
@@ -532,7 +382,7 @@ impl UseReportDetailContext {
                 state.selected_index = 0;
                 let new_raw = state.raw.clone();
                 self.slash.set(Some(state));
-                replace_slash_text(&block_id, &old_raw, &new_raw);
+                dispatch_replace_slash_token(old_raw, new_raw);
             }
             SlashAction::PickAnalyze { analyze_id } => {
                 state.level = 2;
@@ -542,7 +392,7 @@ impl UseReportDetailContext {
                 state.selected_index = 0;
                 let new_raw = state.raw.clone();
                 self.slash.set(Some(state));
-                replace_slash_text(&block_id, &old_raw, &new_raw);
+                dispatch_replace_slash_token(old_raw, new_raw);
             }
             SlashAction::PickSource { source } => {
                 state.level = 3;
@@ -556,7 +406,7 @@ impl UseReportDetailContext {
                 state.selected_index = 0;
                 let new_raw = state.raw.clone();
                 self.slash.set(Some(state));
-                replace_slash_text(&block_id, &old_raw, &new_raw);
+                dispatch_replace_slash_token(old_raw, new_raw);
             }
             SlashAction::InsertItem {
                 analyze_id,
@@ -569,15 +419,227 @@ impl UseReportDetailContext {
                     {
                         let analyze_clone = analyze.clone();
                         let item_clone = item.clone();
-                        self.apply_slash_chart(&analyze_clone, &item_clone);
+                        self.apply_slash_chart(&analyze_clone, &item_clone, *source);
                     }
                 }
             }
         }
     }
+
+    /// Outline entries derived from the current body HTML. H1/H2/H3 +
+    /// chart figures contribute; everything else (paragraphs, lists, …)
+    /// is ignored.
+    pub fn outline(&self) -> Vec<OutlineEntry> {
+        let html = self.body_html.read().clone();
+        parse_outline(&html)
+    }
+
+    pub fn outline_is_empty(&self) -> bool {
+        self.outline().is_empty()
+    }
+
+    /// Read a chart figure's metadata back out of the body HTML — used
+    /// by the outline-swap panel to know which source / type / data to
+    /// offer for the picked chart.
+    pub fn chart_meta(&self, chart_id: &str) -> Option<ChartMeta> {
+        let html = self.body_html.read().clone();
+        parse_chart_meta(&html, chart_id)
+    }
+
+    pub fn open_chart_swap(&mut self, id: &str) {
+        self.outline_mode.set(OutlineMode::ChartTypeSwap {
+            chart_id: id.to_string(),
+        });
+    }
+
+    pub fn close_outline_swap(&mut self) {
+        self.outline_mode.set(OutlineMode::Default);
+    }
+
+    /// Re-render an existing chart figure with a different chart type.
+    /// Reads the figure's saved data attributes (via the parsed meta),
+    /// rebuilds the inner HTML with the new type, and dispatches a JS
+    /// replace-children op. The figure's data attributes themselves stay
+    /// unchanged except for `data-type`, which the JS op updates inline.
+    pub fn swap_chart_type(&mut self, chart_id: &str, new_type: ChartType) {
+        let Some(meta) = self.chart_meta(chart_id) else {
+            return;
+        };
+        let new_inner = build_chart_inner(
+            chart_id,
+            meta.source,
+            new_type,
+            &meta.analyze_name,
+            &meta.item_title,
+            &meta.item_meta,
+            &meta.options,
+            meta.respondent_count,
+            meta.discussion_data.as_ref(),
+        );
+        dispatch_swap_chart(chart_id.to_string(), new_type.as_token().to_string(), new_inner);
+        self.close_outline_swap();
+    }
+
+    /// Trash icon click — remove the chart figure from the body.
+    pub fn delete_chart(&mut self, chart_id: &str) {
+        dispatch_delete_chart(chart_id.to_string());
+    }
 }
 
-/// Shared by `slash_options()` (context method) and the popup component.
+#[track_caller]
+pub fn use_report_detail_context() -> UseReportDetailContext {
+    use_context()
+}
+
+#[track_caller]
+pub fn use_report_detail_context_provider(
+    space_id: ReadSignal<SpacePartition>,
+    report_id: ReadSignal<String>,
+) -> Result<UseReportDetailContext, Loading> {
+    let detail = use_loader(move || {
+        let sid = space_id();
+        let rid = report_id();
+        async move {
+            let report_id_typed: SpaceReportEntityType = rid.clone().into();
+            let resp = crate::features::spaces::pages::report::controllers::get_report(
+                sid.clone(),
+                report_id_typed,
+            )
+            .await?;
+            let analyzes =
+                crate::features::spaces::pages::report::controllers::list_report_analyzes(
+                    sid.clone(),
+                )
+                .await
+                .map(|r| r.items)
+                .unwrap_or_default();
+            Ok::<_, crate::common::Error>(ReportDetail {
+                id: resp.id,
+                eyebrow: "Action · Report".to_string(),
+                title: resp.title,
+                subtitle: resp.description,
+                blocks: resp.blocks,
+                author: resp.author,
+                created_at: resp.created_at,
+                updated_at: resp.updated_at,
+                analyzes,
+                html_contents: resp.html_contents.unwrap_or_default(),
+            })
+        }
+    })?;
+
+    let snapshot = detail();
+    // Edit-buffer signals seeded once from the loader snapshot. They are
+    // the exception to the "no signal duplication" rule — the editor
+    // needs writable local state independent of the server value until
+    // `handle_save` persists it. The signals do NOT auto-resync on
+    // `detail.restart()` (by design — that would clobber in-flight
+    // edits).
+    let title = use_signal(|| snapshot.title.clone());
+    let subtitle = use_signal(|| snapshot.subtitle.clone());
+    let body_html = use_signal(|| snapshot.html_contents.clone());
+    let drawer = use_signal(|| DetailDrawerTarget::Closed);
+    let picker_analyze_id = use_signal(String::new);
+    let picker_source = use_signal(|| ActionSource::Poll);
+    let outline_mode = use_signal(|| OutlineMode::Default);
+    let slash = use_signal(|| Option::<SlashState>::None);
+
+    let mut detail_for_save = detail;
+    let handle_save = use_action(move || async move {
+        let report_id_typed: SpaceReportEntityType = report_id().into();
+        let req = crate::features::spaces::pages::report::controllers::UpdateReportRequest {
+            title: Some(title.peek().clone()),
+            description: Some(subtitle.peek().clone()),
+            blocks: None,
+            status: None,
+            html_contents: Some(body_html.peek().clone()),
+        };
+        crate::features::spaces::pages::report::controllers::update_report(
+            space_id(),
+            report_id_typed,
+            req,
+        )
+        .await?;
+        detail_for_save.restart();
+        Ok::<(), crate::common::Error>(())
+    });
+
+    let ctx = use_context_provider(move || UseReportDetailContext {
+        detail,
+        title,
+        subtitle,
+        body_html,
+        drawer,
+        picker_analyze_id,
+        picker_source,
+        outline_mode,
+        slash,
+        handle_save,
+    });
+
+    Ok(ctx)
+}
+
+// ── Slash token parsing ────────────────────────────────────
+
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct ParsedSlash {
+    pub raw: String,
+    pub level: u8,
+    pub query: String,
+    pub analyze_id: Option<String>,
+    pub source: Option<ActionSource>,
+}
+
+fn parse_slash_token(raw: &str) -> Option<ParsedSlash> {
+    if !raw.starts_with('/') {
+        return None;
+    }
+    let body = raw.trim_start_matches('/');
+    let parts: Vec<&str> = body.split(':').collect();
+    match parts.as_slice() {
+        [cmd] => Some(ParsedSlash {
+            raw: raw.to_string(),
+            level: 0,
+            query: (*cmd).to_string(),
+            analyze_id: None,
+            source: None,
+        }),
+        [cmd, q] if *cmd == "data" => Some(ParsedSlash {
+            raw: raw.to_string(),
+            level: 1,
+            query: (*q).to_string(),
+            analyze_id: None,
+            source: None,
+        }),
+        [cmd, aid, q] if *cmd == "data" => Some(ParsedSlash {
+            raw: raw.to_string(),
+            level: 2,
+            query: (*q).to_string(),
+            analyze_id: Some((*aid).to_string()),
+            source: None,
+        }),
+        [cmd, aid, src, q] if *cmd == "data" => Some(ParsedSlash {
+            raw: raw.to_string(),
+            level: 3,
+            query: (*q).to_string(),
+            analyze_id: Some((*aid).to_string()),
+            source: parse_source(src),
+        }),
+        _ => None,
+    }
+}
+
+fn parse_source(s: &str) -> Option<ActionSource> {
+    match s {
+        "poll" => Some(ActionSource::Poll),
+        "quiz" => Some(ActionSource::Quiz),
+        "discussion" => Some(ActionSource::Discussion),
+        "follow" => Some(ActionSource::Follow),
+        _ => None,
+    }
+}
+
 fn build_slash_options(state: &SlashState, analyzes: &[Analyze]) -> Vec<SlashOption> {
     let q = state.query.to_lowercase();
     match state.level {
@@ -669,100 +731,418 @@ fn build_slash_options(state: &SlashState, analyzes: &[Analyze]) -> Vec<SlashOpt
     }
 }
 
-#[track_caller]
-pub fn use_report_detail_context() -> UseReportDetailContext {
-    use_context()
+// ── HTML parsing for outline + chart meta ────────────────
+
+fn parse_outline(html: &str) -> Vec<OutlineEntry> {
+    // Two passes — headings and chart figures. We don't have full DOM
+    // parsing here, but the editor produces well-formed `<h1>` / `<h2>`
+    // / `<h3>` / `<figure>` tags so naïve regex is sufficient. Heading
+    // ids may not exist (the editor doesn't auto-generate them), so we
+    // index headings positionally and synthesize ids for outline jumps.
+    //
+    // Rust's `regex` crate doesn't support backreferences, so we run a
+    // separate regex per heading level instead of `<h([1-3])>…</h\1>`.
+    let mut entries: Vec<(usize, OutlineEntry)> = Vec::new();
+    let mut counters = [0usize; 3];
+
+    for level in 1..=3usize {
+        let pattern = format!(r#"(?is)<h{level}\b[^>]*>(.*?)</h{level}>"#);
+        let Ok(re) = Regex::new(&pattern) else {
+            continue;
+        };
+        for caps in re.captures_iter(html) {
+            let full = caps.get(0).unwrap();
+            let inner = caps.get(1).unwrap().as_str();
+            let text = strip_tags(inner).trim().to_string();
+            if text.is_empty() {
+                continue;
+            }
+            counters[level - 1] += 1;
+            let kind = match level {
+                1 => OutlineKind::H1,
+                2 => OutlineKind::H2,
+                _ => OutlineKind::H3,
+            };
+            let id = format!("h{}-{}", level, counters[level - 1]);
+            entries.push((
+                full.start(),
+                OutlineEntry {
+                    id,
+                    kind,
+                    label: text,
+                },
+            ));
+        }
+    }
+
+    // Chart figures — capture id + item title.
+    let figure_re = Regex::new(
+        r#"(?is)<figure\b[^>]*\bid=['"]([^'"]+)['"][^>]*\bdata-item-title=['"]([^'"]*)['"][^>]*>"#,
+    )
+    .unwrap();
+    for caps in figure_re.captures_iter(html) {
+        let full = caps.get(0).unwrap();
+        let id = caps.get(1).unwrap().as_str().to_string();
+        let title_attr = caps.get(2).unwrap().as_str();
+        let label = decode_attr(title_attr);
+        entries.push((
+            full.start(),
+            OutlineEntry {
+                id,
+                kind: OutlineKind::Chart,
+                label,
+            },
+        ));
+    }
+
+    entries.sort_by_key(|(pos, _)| *pos);
+    entries.into_iter().map(|(_, e)| e).collect()
 }
 
-#[track_caller]
-pub fn use_report_detail_context_provider(
-    space_id: ReadSignal<SpacePartition>,
-    report_id: ReadSignal<String>,
-) -> Result<UseReportDetailContext, Loading> {
-    // Fetch the saved report from the server. No mock data — the
-    // server response is mapped 1:1 into the page-local `ReportDetail`
-    // shape so the rest of the controller layer doesn't need to
-    // change. `analyzes` stays empty for now; the slash popup will
-    // surface zero options until the analyze_reports integration is
-    // wired in a follow-up.
-    let detail = use_loader(move || {
-        let sid = space_id();
-        let rid = report_id();
-        async move {
-            let report_id_typed: SpaceReportEntityType = rid.clone().into();
-            let resp = crate::features::spaces::pages::report::controllers::get_report(
-                sid,
-                report_id_typed,
-            )
-            .await?;
-            Ok::<_, crate::common::Error>(ReportDetail {
-                id: resp.id,
-                eyebrow: "Action · Report".to_string(),
-                title: resp.title,
-                subtitle: resp.description,
-                blocks: resp.blocks,
-                author: resp.author,
-                created_at: resp.created_at,
-                updated_at: resp.updated_at,
-                analyzes: Vec::new(),
-            })
+fn parse_chart_meta(html: &str, chart_id: &str) -> Option<ChartMeta> {
+    let escaped_id = regex::escape(chart_id);
+    let pattern = format!(
+        r#"(?is)<figure\b[^>]*\bid=['"]{escaped_id}['"][^>]*>"#
+    );
+    let re = Regex::new(&pattern).ok()?;
+    let m = re.find(html)?;
+    let opening = m.as_str();
+    let source_str = read_attr(opening, "data-source")?;
+    let type_str = read_attr(opening, "data-type")?;
+    let source = parse_source(&source_str)?;
+    let chart_type = parse_chart_type(&type_str)?;
+    let analyze_name = read_attr(opening, "data-analyze-name").unwrap_or_default();
+    let item_title = read_attr(opening, "data-item-title").unwrap_or_default();
+    let item_meta = read_attr(opening, "data-meta").unwrap_or_default();
+    let respondent_count: u32 = read_attr(opening, "data-respondent-count")
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(0);
+    let options: Vec<ChartOption> = read_attr(opening, "data-options")
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default();
+    let discussion_data: Option<DiscussionData> = read_attr(opening, "data-discussion")
+        .filter(|s| !s.trim().is_empty())
+        .and_then(|s| serde_json::from_str(&s).ok());
+
+    Some(ChartMeta {
+        chart_id: chart_id.to_string(),
+        source,
+        chart_type,
+        analyze_name,
+        item_title,
+        item_meta,
+        respondent_count,
+        options,
+        discussion_data,
+    })
+}
+
+fn parse_chart_type(s: &str) -> Option<ChartType> {
+    match s {
+        "bar" => Some(ChartType::Bar),
+        "pie" => Some(ChartType::Pie),
+        "table" => Some(ChartType::Table),
+        "lda" => Some(ChartType::Lda),
+        "tfidf" => Some(ChartType::TfIdf),
+        "network" => Some(ChartType::Network),
+        _ => None,
+    }
+}
+
+/// Pull a `name='...'` or `name="..."` attribute value out of a tag's
+/// opening string. Returns the HTML-decoded value. We have to try
+/// single- and double-quoted patterns separately because JSON
+/// attribute values (`data-options='[{"…":"…"}]'`) embed `"` in their
+/// payload — a combined `[^'"]*` capture would stop at the first `"`.
+fn read_attr(tag: &str, name: &str) -> Option<String> {
+    let escaped_name = regex::escape(name);
+    let single = format!(r#"\b{escaped_name}='([^']*)'"#);
+    if let Some(value) = Regex::new(&single)
+        .ok()
+        .and_then(|re| re.captures(tag).and_then(|c| c.get(1).map(|m| m.as_str().to_string())))
+    {
+        return Some(decode_attr(&value));
+    }
+    let double = format!(r#"\b{escaped_name}="([^"]*)""#);
+    Regex::new(&double)
+        .ok()
+        .and_then(|re| re.captures(tag).and_then(|c| c.get(1).map(|m| m.as_str().to_string())))
+        .map(|s| decode_attr(&s))
+}
+
+fn decode_attr(s: &str) -> String {
+    // The browser re-serializes single-quoted attributes as
+    // double-quoted on every `innerHTML` read and encodes any embedded
+    // `"` as `&quot;`. Our JSON payloads (`data-options`,
+    // `data-discussion`) are full of `"`, so without this decode the
+    // first chart-type swap loses every option. `&amp;` is decoded last
+    // so a literal `&amp;quot;` round-trips to `&quot;` rather than `"`.
+    s.replace("&quot;", "\"")
+        .replace("&#39;", "'")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&amp;", "&")
+}
+
+fn strip_tags(s: &str) -> String {
+    let re = Regex::new(r"<[^>]*>").unwrap();
+    re.replace_all(s, "").to_string()
+}
+
+// ── JS dispatchers ─────────────────────────────────────────
+
+fn dispatch_insert_html(html: String) {
+    // Range-API based insertion. `execCommand("insertHTML")` is
+    // deprecated and unreliable when focus has bounced off the editor
+    // (picker modal → close → editor.focus())– in that case the cached
+    // selection is gone and the command becomes a no-op, so the user
+    // can insert exactly one chart then the second click silently does
+    // nothing. We instead grab the editor's current Range if it still
+    // lives inside the contenteditable; otherwise fall back to a
+    // collapsed range at the very end of the content, which guarantees
+    // the chart lands SOMEWHERE rather than vanishing.
+    let mut runner = dx_eval(
+        r#"
+        const html = await dioxus.recv();
+        const editor = document.querySelector('.report-detail .ratel-editor .re-content');
+        if (!editor) { dioxus.send(null); return; }
+        editor.focus();
+        const sel = window.getSelection();
+        let range;
+        if (sel && sel.rangeCount > 0 && editor.contains(sel.getRangeAt(0).startContainer)) {
+          range = sel.getRangeAt(0);
+        } else {
+          range = document.createRange();
+          range.selectNodeContents(editor);
+          range.collapse(false);
         }
-    })?;
-
-    let snapshot = detail();
-    let blocks = use_signal(|| snapshot.blocks.clone());
-    let title = use_signal(|| snapshot.title.clone());
-    let subtitle = use_signal(|| snapshot.subtitle.clone());
-    let drawer = use_signal(|| DetailDrawerTarget::Closed);
-    let picker_analyze_id = use_signal(|| {
-        snapshot
-            .analyzes
-            .first()
-            .map(|a| a.id.clone())
-            .unwrap_or_default()
+        // Build a fragment from the HTML and insert it at the range.
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        const frag = document.createDocumentFragment();
+        let lastNode = null;
+        while (tmp.firstChild) {
+          lastNode = tmp.firstChild;
+          frag.appendChild(tmp.firstChild);
+        }
+        range.deleteContents();
+        range.insertNode(frag);
+        // Position caret after the inserted block so the next keystroke
+        // continues right where the insertion ended (typically inside
+        // the trailing <p><br></p>).
+        if (lastNode) {
+          const r = document.createRange();
+          r.setStartAfter(lastNode);
+          r.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(r);
+        }
+        editor.dispatchEvent(new Event('input', { bubbles: true }));
+        dioxus.send(null);
+        "#,
+    );
+    let _ = runner.send(serde_json::json!(html));
+    dioxus::prelude::spawn(async move {
+        let _ = runner.recv::<Option<()>>().await;
     });
-    let picker_source = use_signal(|| ActionSource::Poll);
-    let outline_mode = use_signal(|| OutlineMode::Default);
-    let slash = use_signal(|| Option::<SlashState>::None);
-    let next_block_seq = use_signal(|| 1000u64);
+}
 
-    let mut detail_for_save = detail;
-    let handle_save = use_action(move || async move {
-        let report_id_typed: SpaceReportEntityType = report_id().into();
-        let req = crate::features::spaces::pages::report::controllers::UpdateReportRequest {
-            title: Some(title.peek().clone()),
-            description: Some(subtitle.peek().clone()),
-            blocks: Some(blocks.peek().clone()),
-            status: None,
-            html_contents: None,
-        };
-        crate::features::spaces::pages::report::controllers::update_report(
-            space_id(),
-            report_id_typed,
-            req,
-        )
-        .await?;
-        detail_for_save.restart();
-        Ok::<(), crate::common::Error>(())
+/// Shared JS helper code: walks back from the current caret to find a
+/// range that exactly covers the last `oldLen` characters and returns
+/// it. Returns null when the walk can't find that much text behind the
+/// caret without leaving the editor. Used by both slash-text replace
+/// flows below.
+const SLASH_HELPERS_JS: &str = r#"
+function findSlashRange(editor, oldLen) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return null;
+    const caret = sel.getRangeAt(0);
+    if (!editor.contains(caret.startContainer)) return null;
+    // Caret end of the range to be replaced.
+    const endContainer = caret.startContainer;
+    const endOffset = caret.startOffset;
+    // Walk backwards through text nodes only (skip `<figure
+    // contenteditable=false>` and other element boundaries — the slash
+    // chain is always inside one paragraph).
+    let needed = oldLen;
+    let startNode = endContainer;
+    let startOffset = endOffset;
+    while (needed > 0 && startNode) {
+        if (startNode.nodeType === 3) {
+            if (startOffset > 0) {
+                const take = Math.min(startOffset, needed);
+                startOffset -= take;
+                needed -= take;
+                if (needed === 0) break;
+            }
+            // Step to previous text node within the editor — walk up to
+            // parent then to its previousSibling, descending into the
+            // last text leaf there.
+            let cursor = startNode;
+            while (cursor && !cursor.previousSibling && cursor !== editor) {
+                cursor = cursor.parentNode;
+            }
+            if (!cursor || cursor === editor) return null;
+            let prev = cursor.previousSibling;
+            // Skip non-text leaves (e.g. figure, br) — they don't
+            // contribute to the slash token.
+            while (prev && prev.nodeType !== 3) {
+                if (prev.lastChild) {
+                    prev = prev.lastChild;
+                } else {
+                    prev = prev.previousSibling;
+                }
+            }
+            if (!prev || prev.nodeType !== 3) return null;
+            startNode = prev;
+            startOffset = (prev.textContent || "").length;
+        } else {
+            return null;
+        }
+    }
+    if (needed > 0) return null;
+    const range = document.createRange();
+    range.setStart(startNode, startOffset);
+    range.setEnd(endContainer, endOffset);
+    return range;
+}
+"#;
+
+fn dispatch_replace_slash_token(old_raw: String, new_raw: String) {
+    let mut runner = dx_eval(&format!(
+        r#"
+        {helpers}
+        const data = await dioxus.recv();
+        const editor = document.querySelector('.report-detail .ratel-editor .re-content');
+        if (!editor) {{ dioxus.send(null); return; }}
+        const r = findSlashRange(editor, data.old.length);
+        if (!r) {{ dioxus.send(null); return; }}
+        r.deleteContents();
+        const textNode = document.createTextNode(data.new);
+        r.insertNode(textNode);
+        // Caret must land INSIDE the new text node so the editor's
+        // slash watcher (which only parses when caret is in a text
+        // node) re-emits the new `/data:` token. `setStartAfter` would
+        // place the caret in the parent element and break detection.
+        const finalRange = document.createRange();
+        finalRange.setStart(textNode, (textNode.textContent || "").length);
+        finalRange.collapse(true);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(finalRange);
+        editor.dispatchEvent(new Event('input', {{ bubbles: true }}));
+        dioxus.send(null);
+        "#,
+        helpers = SLASH_HELPERS_JS
+    ));
+    let _ = runner.send(serde_json::json!({ "old": old_raw, "new": new_raw }));
+    dioxus::prelude::spawn(async move {
+        let _ = runner.recv::<Option<()>>().await;
     });
+}
 
-    let ctx = use_context_provider(move || UseReportDetailContext {
-        space_id,
-        report_id,
-        detail,
-        blocks,
-        title,
-        subtitle,
-        drawer,
-        picker_analyze_id,
-        picker_source,
-        outline_mode,
-        slash,
-        next_block_seq,
-        handle_save,
+fn dispatch_replace_slash_and_insert(old_raw: String, figure_html: String) {
+    let mut runner = dx_eval(&format!(
+        r#"
+        {helpers}
+        const data = await dioxus.recv();
+        const editor = document.querySelector('.report-detail .ratel-editor .re-content');
+        if (!editor) {{ dioxus.send(null); return; }}
+        const r = findSlashRange(editor, data.old.length);
+        if (!r) {{
+          // Fall through: still insert the chart at the end so the user
+          // doesn't lose the picked item even when the slash chain is
+          // weirdly placed.
+          const fallback = document.createRange();
+          fallback.selectNodeContents(editor);
+          fallback.collapse(false);
+          const tmp = document.createElement('div');
+          tmp.innerHTML = data.html;
+          const frag = document.createDocumentFragment();
+          let lastNode = null;
+          while (tmp.firstChild) {{ lastNode = tmp.firstChild; frag.appendChild(tmp.firstChild); }}
+          fallback.insertNode(frag);
+          if (lastNode) {{
+            const c = document.createRange();
+            c.setStartAfter(lastNode);
+            c.collapse(true);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(c);
+          }}
+          editor.dispatchEvent(new Event('input', {{ bubbles: true }}));
+          dioxus.send(null);
+          return;
+        }}
+        r.deleteContents();
+        const tmp = document.createElement('div');
+        tmp.innerHTML = data.html;
+        const frag = document.createDocumentFragment();
+        let lastNode = null;
+        while (tmp.firstChild) {{ lastNode = tmp.firstChild; frag.appendChild(tmp.firstChild); }}
+        r.insertNode(frag);
+        // Caret right after the inserted block (typically inside the
+        // trailing <p><br></p>).
+        if (lastNode) {{
+          const c = document.createRange();
+          c.setStartAfter(lastNode);
+          c.collapse(true);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(c);
+        }}
+        editor.dispatchEvent(new Event('input', {{ bubbles: true }}));
+        dioxus.send(null);
+        "#,
+        helpers = SLASH_HELPERS_JS
+    ));
+    let _ = runner.send(serde_json::json!({ "old": old_raw, "html": figure_html }));
+    dioxus::prelude::spawn(async move {
+        let _ = runner.recv::<Option<()>>().await;
     });
+}
 
-    Ok(ctx)
+fn dispatch_swap_chart(chart_id: String, type_token: String, new_inner: String) {
+    let mut runner = dx_eval(
+        r#"
+        const data = await dioxus.recv();
+        const editor = document.querySelector('.report-detail .ratel-editor .re-content');
+        if (!editor) { dioxus.send(null); return; }
+        const figure = editor.querySelector('figure[data-chart-id="' + data.id + '"]');
+        if (!figure) { dioxus.send(null); return; }
+        figure.innerHTML = data.inner;
+        figure.setAttribute('data-type', data.type);
+        editor.dispatchEvent(new Event('input', { bubbles: true }));
+        dioxus.send(null);
+        "#,
+    );
+    let _ = runner.send(serde_json::json!({
+        "id": chart_id,
+        "type": type_token,
+        "inner": new_inner,
+    }));
+    dioxus::prelude::spawn(async move {
+        let _ = runner.recv::<Option<()>>().await;
+    });
+}
+
+fn dispatch_delete_chart(chart_id: String) {
+    let mut runner = dx_eval(
+        r#"
+        const data = await dioxus.recv();
+        const editor = document.querySelector('.report-detail .ratel-editor .re-content');
+        if (!editor) { dioxus.send(null); return; }
+        const figure = editor.querySelector('figure[data-chart-id="' + data.id + '"]');
+        if (!figure) { dioxus.send(null); return; }
+        figure.remove();
+        editor.dispatchEvent(new Event('input', { bubbles: true }));
+        dioxus.send(null);
+        "#,
+    );
+    let _ = runner.send(serde_json::json!({ "id": chart_id }));
+    dioxus::prelude::spawn(async move {
+        let _ = runner.recv::<Option<()>>().await;
+    });
 }
 
 fn format_relative_kr(timestamp_millis: i64) -> String {
@@ -795,133 +1175,3 @@ fn format_relative_kr(timestamp_millis: i64) -> String {
     format!("{years}년 전")
 }
 
-/// Fire-and-forget DOM patch: replace the trailing `old_raw` substring
-/// at the end of the source contenteditable with `new_raw`. Used when
-/// the slash popup transitions levels (e.g. `/da` → `/data:` →
-/// `/data:policy-priority:`) so the editor reflects the picked path
-/// instead of leaving the user to keep typing the next segment by hand.
-/// The caret is placed at the end of the inserted text so the next
-/// keystroke continues the slash chain.
-fn replace_slash_text(block_id: &str, old_raw: &str, new_raw: &str) {
-    let mut runner = document::eval(
-        r#"
-        const data = await dioxus.recv();
-        const blockId = data.blockId || "";
-        const oldRaw = data.oldRaw || "";
-        const newRaw = data.newRaw || "";
-        const el = document.getElementById(blockId);
-        if (!el) { dioxus.send(null); return; }
-
-        // 1. Strip `oldRaw.length` characters from the tail, walking
-        //    text nodes back-to-front so inline formatting earlier in
-        //    the block is preserved.
-        let remaining = oldRaw.length;
-        let node = el.lastChild;
-        while (node && remaining > 0) {
-            if (node.nodeType === 3) {
-                const t = node.textContent || "";
-                if (t.length <= remaining) {
-                    remaining -= t.length;
-                    const prev = node.previousSibling;
-                    node.remove();
-                    node = prev;
-                } else {
-                    node.textContent = t.slice(0, t.length - remaining);
-                    remaining = 0;
-                }
-            } else {
-                node = node.previousSibling;
-            }
-        }
-
-        // 2. Append the new raw token as a fresh text node.
-        if (newRaw) {
-            el.appendChild(document.createTextNode(newRaw));
-        }
-
-        // 3. Place the caret at the very end of the block so the user
-        //    can keep typing the next segment.
-        el.focus();
-        const range = document.createRange();
-        const sel = window.getSelection();
-        range.selectNodeContents(el);
-        range.collapse(false);
-        sel.removeAllRanges();
-        sel.addRange(range);
-        dioxus.send(null);
-        "#,
-    );
-    let _ = runner.send(serde_json::json!({
-        "blockId": block_id,
-        "oldRaw": old_raw,
-        "newRaw": new_raw,
-    }));
-}
-
-/// Fire-and-forget DOM cleanup after a block-list mutation:
-/// 1. Strip the trailing slash token from the source block (so the
-///    `/data:...` text the user typed disappears once the chart is in).
-/// 2. Focus the new target block and place the caret at its start.
-///
-/// `source_block_id` / `raw_token` may be empty when there is no slash
-/// state to clean up (right-rail picker flow, Enter-to-new-block);
-/// in that case only the focus step runs.
-fn cleanup_slash_and_focus(source_block_id: &str, raw_token: &str, focus_block_id: Option<&str>) {
-    let mut runner = document::eval(
-        r#"
-        const data = await dioxus.recv();
-        const sourceId = data.sourceId || "";
-        const raw = data.raw || "";
-        const focusId = data.focusId || "";
-
-        if (sourceId && raw) {
-            const el = document.getElementById(sourceId);
-            if (el) {
-                // Walk text nodes from the end, peeling off characters
-                // until we have removed `raw.length` chars. Preserves
-                // any inline HTML earlier in the block.
-                let remaining = raw.length;
-                let node = el.lastChild;
-                while (node && remaining > 0) {
-                    if (node.nodeType === 3) {
-                        const t = node.textContent || "";
-                        if (t.length <= remaining) {
-                            remaining -= t.length;
-                            const prev = node.previousSibling;
-                            node.remove();
-                            node = prev;
-                        } else {
-                            node.textContent = t.slice(0, t.length - remaining);
-                            remaining = 0;
-                        }
-                    } else {
-                        node = node.previousSibling;
-                    }
-                }
-            }
-        }
-
-        if (focusId) {
-            // Defer focus to the next frame so the freshly-inserted
-            // Dioxus block is in the DOM before we try to focus it.
-            requestAnimationFrame(() => {
-                const target = document.getElementById(focusId);
-                if (!target) return;
-                target.focus();
-                const range = document.createRange();
-                const sel = window.getSelection();
-                range.selectNodeContents(target);
-                range.collapse(true);
-                sel.removeAllRanges();
-                sel.addRange(range);
-            });
-        }
-        dioxus.send(null);
-        "#,
-    );
-    let _ = runner.send(serde_json::json!({
-        "sourceId": source_block_id,
-        "raw": raw_token,
-        "focusId": focus_block_id.unwrap_or(""),
-    }));
-}

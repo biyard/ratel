@@ -167,9 +167,15 @@ fn ItemRow(item: AnalyzeItem) -> Element {
             r#type: "button",
             onclick: move |_| {
                 if let Some(analyze) = ctx.current_analyze() {
-                    ctx.insert_chart_for_item(&analyze, &cloned, None);
+                    // The picker's source tab decides which aggregate
+                    // bucket the item lives in — pass that source down
+                    // so the inserted figure is keyed to the right
+                    // surface (drives badge color + chart-type swap).
+                    let source = ctx.picker_source_value();
+                    ctx.insert_chart_from_picker(&analyze, &cloned, source);
+                } else {
+                    ctx.close_drawer();
                 }
-                ctx.close_drawer();
             },
             div { class: "report-detail__picker-item-title", "{item.title}" }
             div { class: "report-detail__picker-item-meta", "{item.meta}" }
