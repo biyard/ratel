@@ -12,28 +12,25 @@ pub struct Context {
 
 impl Context {
     pub fn init() -> Result<Self, Loading> {
-        use_app_context_provider(|| {
-            let user_ctx = use_loader(move || async move {
-                let res = Ok::<_, Error>(match get_me_handler().await {
-                    Ok(resp) => UserContext {
-                        user: resp.user,
-                        refresh_token: None,
-                        membership: resp.membership,
-                    },
-                    Err(e) => {
-                        crate::error!("get_me failed during Context::init: {e}");
-                        UserContext::default()
-                    }
-                });
-                res
+        let user_ctx = use_loader(move || async move {
+            let res = Ok::<_, Error>(match get_me_handler().await {
+                Ok(resp) => UserContext {
+                    user: resp.user,
+                    refresh_token: None,
+                    membership: resp.membership,
+                },
+                Err(e) => UserContext::default(),
             });
-            let user_ctx = user_ctx?();
+            res
+        });
 
-            let ctx = Self {
-                user_context: use_store(move || user_ctx),
-            };
+        let user_ctx = user_ctx?();
 
-            Ok(ctx)
-        })
+        let ctx = Self {
+            user_context: use_store(move || user_ctx),
+        };
+        use_context_provider(move || ctx);
+
+        Ok(ctx)
     }
 }

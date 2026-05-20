@@ -4,9 +4,6 @@ use crate::{hooks::set_app_layout_scope_id, *};
 
 #[component]
 pub fn RootLayout() -> Element {
-    let rt = Runtime::current();
-    set_app_layout_scope_id(rt.current_scope_id());
-
     crate::features::auth::Context::init()?;
     crate::common::contexts::TeamContext::init()?;
 
