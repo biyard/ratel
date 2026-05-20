@@ -1,6 +1,4 @@
-use dioxus::core::Runtime;
-
-use crate::{hooks::set_app_layout_scope_id, *};
+use crate::*;
 
 #[component]
 pub fn RootLayout() -> Element {
