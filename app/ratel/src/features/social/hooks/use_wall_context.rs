@@ -25,6 +25,7 @@ pub fn use_wall_context() -> UseWallContext {
 pub fn use_wall_context_provider(username: ReadSignal<String>) -> Result<UseWallContext, Loading> {
     let data = use_loader(move || {
         let username = username();
+        debug!("Loading wall for username: {}", username);
 
         async move { get_wall_by_username(username).await }
     })?;
