@@ -129,6 +129,11 @@ fn SwapOption(chart_id: String, chart_type: ChartType, active: bool) -> Element 
         ChartType::Lda => ("LDA Topics", "토픽별 상위 키워드", swap_icon_lda()),
         ChartType::TfIdf => ("TF-IDF", "단어 중요도 순위표", swap_icon_tfidf()),
         ChartType::Network => ("Network", "공출현 단어 네트워크", swap_icon_network()),
+        // `TextList` never reaches this branch — the chart-type swap
+        // button is hidden on TextList figures, so the user can't open
+        // the swap panel against one. Render a generic table icon for
+        // exhaustiveness in case the enum gets reused elsewhere.
+        ChartType::TextList => ("주관식 응답", "응답 목록", swap_icon_table()),
     };
     let id_for_click = chart_id.clone();
     rsx! {

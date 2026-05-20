@@ -34,10 +34,11 @@ pub fn build_chart_figure(
         format!("{} · {}", analyze.name, item.meta)
     };
 
-    // Serialize options + optional discussion data into HTML-attribute-
-    // safe JSON. We use single-quoted attributes everywhere below so the
-    // JSON's `"` doesn't collide; the helper escapes the only character
-    // that could break a single-quoted attribute (`'`).
+    // Serialize options + optional discussion data + text_answers into
+    // HTML-attribute-safe JSON. We use single-quoted attributes
+    // everywhere below so the JSON's `"` doesn't collide; the helper
+    // escapes the only character that could break a single-quoted
+    // attribute (`'`).
     let options_json =
         attr_safe_json(&serde_json::to_string(&item.options).unwrap_or_else(|_| "[]".to_string()));
     let discussion_json = item
@@ -46,6 +47,11 @@ pub fn build_chart_figure(
         .and_then(|d| serde_json::to_string(d).ok())
         .map(|s| attr_safe_json(&s))
         .unwrap_or_default();
+    let answers_json = if item.text_answers.is_empty() {
+        String::new()
+    } else {
+        attr_safe_json(&serde_json::to_string(&item.text_answers).unwrap_or_else(|_| "[]".to_string()))
+    };
 
     // ── Figure root ─────────────────────────────────────
     write!(
@@ -79,10 +85,11 @@ pub fn build_chart_figure(
     .ok();
     write!(
         out,
-        r#"data-respondent-count="{rc}" data-options='{opts}' data-discussion='{disc}' "#,
+        r#"data-respondent-count="{rc}" data-options='{opts}' data-discussion='{disc}' data-answers='{ans}' "#,
         rc = item.respondent_count,
         opts = options_json,
         disc = discussion_json,
+        ans = answers_json,
     )
     .ok();
     out.push_str(r#"contenteditable="false">"#);
@@ -102,7 +109,12 @@ pub fn build_chart_figure(
     )
     .ok();
     out.push_str(r#"<div class="report-detail__chart-actions">"#);
-    push_action_button(&mut out, chart_id, "swap", SVG_SETTINGS, "Change chart type");
+    // Hide the chart-type swap button for single-mode charts
+    // (currently `TextList`): there's no alternate rendering to swap
+    // to, so the gear icon would land on an empty panel.
+    if !chart_type.is_single_mode() {
+        push_action_button(&mut out, chart_id, "swap", SVG_SETTINGS, "Change chart type");
+    }
     push_action_button(
         &mut out,
         chart_id,
@@ -127,6 +139,7 @@ pub fn build_chart_figure(
         &item.options,
         item.respondent_count,
         item.discussion_data.as_ref(),
+        &item.text_answers,
     );
 
     out.push_str("</figure>");
@@ -137,6 +150,7 @@ pub fn build_chart_figure(
 /// figure when the chart_type changes. The returned string contains
 /// every CHILD of the figure (top strip, meta, viz) ready to be set as
 /// `figure.innerHTML` from JS.
+#[allow(clippy::too_many_arguments)]
 pub fn build_chart_inner(
     chart_id: &str,
     source: ActionSource,
@@ -147,6 +161,7 @@ pub fn build_chart_inner(
     options: &[ChartOption],
     respondent_count: u32,
     discussion: Option<&DiscussionData>,
+    text_answers: &[String],
 ) -> String {
     let mut out = String::with_capacity(512);
     let badge = format!("{} · {}", source_word(source), type_word(chart_type));
@@ -170,7 +185,9 @@ pub fn build_chart_inner(
     )
     .ok();
     out.push_str(r#"<div class="report-detail__chart-actions">"#);
-    push_action_button(&mut out, chart_id, "swap", SVG_SETTINGS, "Change chart type");
+    if !chart_type.is_single_mode() {
+        push_action_button(&mut out, chart_id, "swap", SVG_SETTINGS, "Change chart type");
+    }
     push_action_button(
         &mut out,
         chart_id,
@@ -185,7 +202,7 @@ pub fn build_chart_inner(
         html_text(&meta_text)
     )
     .ok();
-    render_chart_viz(&mut out, chart_type, options, respondent_count, discussion);
+    render_chart_viz(&mut out, chart_type, options, respondent_count, discussion, text_answers);
     out
 }
 
@@ -195,6 +212,7 @@ fn render_chart_viz(
     options: &[ChartOption],
     respondent_count: u32,
     discussion: Option<&DiscussionData>,
+    text_answers: &[String],
 ) {
     match chart_type {
         ChartType::Bar => render_bar(out, options),
@@ -203,7 +221,30 @@ fn render_chart_viz(
         ChartType::Lda => render_lda(out, discussion),
         ChartType::TfIdf => render_tfidf(out, discussion),
         ChartType::Network => render_network(out, discussion),
+        ChartType::TextList => render_text_list(out, text_answers),
     }
+}
+
+fn render_text_list(out: &mut String, answers: &[String]) {
+    if answers.is_empty() {
+        return push_chart_empty(out);
+    }
+    out.push_str(
+        r#"<div class="report-detail__chart-canvas report-detail__chart-canvas--textlist">"#,
+    );
+    out.push_str(r#"<table class="report-detail__chart-table">"#);
+    out.push_str(r#"<thead><tr><th class="report-detail__textlist-rank-h">#</th><th>응답</th></tr></thead>"#);
+    out.push_str("<tbody>");
+    for (i, ans) in answers.iter().enumerate() {
+        write!(
+            out,
+            r#"<tr><td class="report-detail__textlist-rank">{}</td><td class="report-detail__textlist-cell">{}</td></tr>"#,
+            i + 1,
+            html_text(ans)
+        )
+        .ok();
+    }
+    out.push_str("</tbody></table></div>");
 }
 
 fn render_bar(out: &mut String, options: &[ChartOption]) {
@@ -531,6 +572,7 @@ fn type_word(t: ChartType) -> &'static str {
         ChartType::Lda => "LDA",
         ChartType::TfIdf => "TF-IDF",
         ChartType::Network => "NETWORK",
+        ChartType::TextList => "ANSWERS",
     }
 }
 

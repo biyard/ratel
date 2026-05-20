@@ -1933,6 +1933,14 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
 }
 .ratel-editor .re-tb-btn--insert-data {
   width: auto;
+  /* Keep the pill at a single row's height (the wrapping toolbar uses
+     `row-gap` for vertical separation between rows; without these the
+     uppercase Orbitron label was breaking across two lines inside the
+     btn's flex column when the toolbar got cramped on mobile). */
+  height: auto;
+  min-width: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
   padding: 0 14px;
   gap: 6px;
   background: linear-gradient(135deg, rgba(168, 85, 247, 0.28), rgba(168, 85, 247, 0.10));
@@ -1943,6 +1951,27 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   font-weight: 700;
   letter-spacing: 0.10em;
   text-transform: uppercase;
+}
+.ratel-editor .re-tb-btn--insert-data span {
+  white-space: nowrap;
+}
+
+/* Mobile: the floating toolbar pill is horizontally scrollable, but
+   the Orbitron "INSERT DATA" label is still wide enough to overrun
+   the button's own background on the smallest viewports. Drop the
+   label there and keep the icon — same affordance the topbar action
+   buttons use on mobile. */
+@media (max-width: 500px) {
+  .ratel-editor .re-tb-btn--insert-data {
+    padding: 0 10px;
+  }
+  .ratel-editor .re-tb-btn--insert-data span {
+    display: none;
+  }
+  .ratel-editor .re-tb-btn--insert-data svg {
+    width: 16px;
+    height: 16px;
+  }
 }
 .ratel-editor .re-tb-btn--insert-data:hover {
   background: linear-gradient(135deg, rgba(168, 85, 247, 0.40), rgba(168, 85, 247, 0.16));
@@ -2113,14 +2142,22 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   width: 100%;
   border-collapse: collapse;
   margin: 0.75rem 0;
-  table-layout: fixed;
+  /* Use `auto` layout so the browser sizes columns to their content —
+     with `fixed` + the empty-cell `&nbsp;` placeholders the columns
+     collapsed to a hairline and borders weren't visible at a glance. */
+  table-layout: auto;
+  border: 1px solid var(--dark, rgba(255, 255, 255, 0.22)) var(--light, rgba(0, 0, 0, 0.28));
 }
 .ratel-editor .re-content table th,
 .ratel-editor .re-content table td {
-  border: 1px solid var(--re-border-strong);
-  padding: 6px 10px;
+  /* Make grid lines clearly visible — the previous `--re-border-strong`
+     was too dim on dark mode (12% white) and made fresh empty tables
+     read as a featureless dark block. */
+  border: 1px solid var(--dark, rgba(255, 255, 255, 0.22)) var(--light, rgba(0, 0, 0, 0.28));
+  padding: 8px 12px;
   text-align: left;
   min-width: 60px;
+  min-height: 32px;
   /* Long unbroken strings (no spaces between letters) must wrap so a
      wide cell doesn't push the rest of the table off-screen. */
   word-break: keep-all;
@@ -46536,6 +46573,7 @@ body.comments-panel-resizing {
 .report-detail__outline-row {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 8px;
   padding: 6px 8px;
   border-radius: 6px;
@@ -46543,6 +46581,23 @@ body.comments-panel-resizing {
   color: var(--rd-text-muted);
   cursor: pointer;
   text-decoration: none;
+  /* The row is rendered as a <button> for click handling; browsers
+     center-align button text by default. Force left so multi-line
+     outline labels read as expected. */
+  text-align: left;
+  width: 100%;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+}
+.report-detail__outline-row > span {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
 }
 .report-detail__outline-row:hover { background: rgba(255, 255, 255, 0.04); color: var(--rd-text-primary); }
 .report-detail__outline-row--h1 { font-weight: 700; color: var(--rd-text-primary); }
@@ -46766,6 +46821,122 @@ body.comments-panel-resizing {
 @media (max-width: 900px) {
   .report-detail__grid { grid-template-columns: 1fr; }
   .report-detail__outline { display: none; }
+}
+
+/* ─── Mobile responsiveness ───────────────────────
+   At narrow viewports the topbar action row needs to shed its labels
+   (icons survive), the doc gutters tighten up, the chart card stacks
+   its top strip and squeezes its viz canvases (pie/bar/table) into
+   the single column, and the format toolbar pill (already
+   horizontal-scroll on small screens via the global override) gets
+   pulled in even further so it doesn't escape the viewport. */
+@media (max-width: 768px) {
+  .report-detail__topbar {
+    padding: 10px 12px;
+    gap: 6px;
+  }
+  .report-detail__autosave {
+    display: none;
+  }
+  .report-detail__breadcrumb-current {
+    max-width: 110px;
+  }
+  .report-detail__topbar-btn {
+    padding: 0 9px;
+  }
+  .report-detail__topbar-btn span {
+    display: none;
+  }
+  .report-detail__topbar-btn svg {
+    margin: 0;
+  }
+
+  .report-detail__doc {
+    padding: 16px 14px;
+  }
+  .report-detail__doc-inner {
+    max-width: 100%;
+  }
+
+  /* Chart card — pad less, stack badge above title since both
+     compete for horizontal space, and let the chart-meta line wrap
+     cleanly instead of pushing off-screen. */
+  .report-detail__chart-block {
+    padding: 14px 12px;
+    border-radius: 12px;
+  }
+  .report-detail__chart-top {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .report-detail__chart-top .report-detail__chart-title {
+    width: 100%;
+    line-height: 1.3;
+  }
+  .report-detail__chart-actions {
+    margin-left: auto;
+  }
+  .report-detail__chart-meta {
+    font-size: 11px;
+  }
+
+  /* Pie viz — stack disc above legend so the disc gets the full
+     row width and the legend (right-aligned) wraps under it. */
+  .report-detail__chart-canvas--pie {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 14px;
+  }
+  .report-detail__chart-pie {
+    width: 140px;
+    height: 140px;
+    margin: 0 auto;
+  }
+  .report-detail__chart-pie-legend {
+    justify-content: end;
+  }
+
+  /* Bar canvas — tighter gap + thinner labels so 5+ bars fit. */
+  .report-detail__chart-canvas--bar {
+    gap: 10px;
+    height: 200px;
+    padding: 14px 8px 44px;
+  }
+  .report-detail__chart-bar { max-width: 70px; }
+  .report-detail__chart-bar::after { font-size: 9.5px; }
+
+  /* Table — smaller font, narrower number columns. */
+  .report-detail__chart-table {
+    font-size: 11px;
+  }
+  .report-detail__chart-table th:nth-child(2),
+  .report-detail__chart-table td:nth-child(2),
+  .report-detail__chart-table th:nth-child(3),
+  .report-detail__chart-table td:nth-child(3) {
+    width: 64px;
+  }
+
+  /* LDA / TF-IDF / Network — pad less. */
+  .report-detail__chart-canvas--lda,
+  .report-detail__chart-canvas--network {
+    padding: 14px;
+  }
+  .report-detail__network-svg {
+    height: 220px;
+  }
+
+  /* Editor format toolbar (floating pill) already wraps to a single
+     scrollable row at ≤ 980px via the global rule; nothing extra
+     needed here. */
+}
+
+@media (max-width: 500px) {
+  .report-detail__breadcrumb-current { max-width: 80px; font-size: 12px; }
+  .report-detail__topbar-btn { height: 30px; padding: 0 8px; }
+  .report-detail__topbar-btn svg { width: 12px; height: 12px; }
+  .report-detail__title { font-size: 26px !important; }
+  .report-detail__doc { padding: 12px 10px; }
+  .report-detail__chart-canvas--bar { padding: 14px 6px 44px; gap: 6px; }
 }
 
 /* ── Block editor (Notion-style) ─────────────── */
@@ -47357,6 +47528,37 @@ body.comments-panel-resizing {
   text-align: right;
   white-space: nowrap;
 }
+/* TextList canvas — subjective-answer chart. Same base styling as
+   the TF-IDF table (rank + content), but the content column wraps. */
+.report-detail__chart-canvas--textlist {
+  display: block;
+  padding: 0;
+  background: transparent;
+  height: auto;
+}
+.report-detail__chart-canvas--textlist .report-detail__chart-table {
+  table-layout: auto;
+}
+.report-detail__chart-canvas--textlist .report-detail__chart-table th:nth-child(2),
+.report-detail__chart-canvas--textlist .report-detail__chart-table td:nth-child(2) {
+  width: auto;
+  text-align: left;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.report-detail__textlist-rank-h,
+.report-detail__textlist-rank {
+  width: 48px !important;
+  text-align: right !important;
+  color: var(--rd-text-dim);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10.5px;
+}
+.report-detail__textlist-cell {
+  line-height: 1.55;
+}
+
 /* TF-IDF table has its own column shape (Rank / Term / Score). */
 .report-detail__chart-canvas--tfidf .report-detail__chart-table {
   table-layout: auto;

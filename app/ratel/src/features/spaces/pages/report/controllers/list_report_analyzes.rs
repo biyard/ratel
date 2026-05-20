@@ -252,6 +252,7 @@ async fn latest_finished_discussions(
                 network_nodes: row.network_nodes,
                 network_edges: row.network_edges,
             }),
+            text_answers: Vec::new(),
         });
     }
     Ok(items)
@@ -259,6 +260,22 @@ async fn latest_finished_discussions(
 
 #[cfg(feature = "server")]
 fn poll_to_item(agg: &PollQuestionAggregate) -> AnalyzeItem {
+    let options: Vec<ChartOption> = agg
+        .options
+        .iter()
+        .map(|o| ChartOption {
+            label: o.label.clone(),
+            count: o.count,
+        })
+        .collect();
+    // Subjective poll questions ship with no options but a populated
+    // `text_answers` list — surface that here so the picker / report
+    // can render it as a text-list chart.
+    let meta = if options.is_empty() && !agg.text_answers.is_empty() {
+        format!("{} · 주관식 · {} 응답", agg.poll_title, agg.text_answers.len())
+    } else {
+        format!("{} · {} 응답", agg.poll_title, agg.respondent_count)
+    };
     AnalyzeItem {
         id: format!("{}#{}", agg.poll_id, agg.question_idx),
         title: if agg.question_title.is_empty() {
@@ -266,22 +283,32 @@ fn poll_to_item(agg: &PollQuestionAggregate) -> AnalyzeItem {
         } else {
             agg.question_title.clone()
         },
-        meta: format!("{} · {} 응답", agg.poll_title, agg.respondent_count),
-        options: agg
-            .options
-            .iter()
-            .map(|o| ChartOption {
-                label: o.label.clone(),
-                count: o.count,
-            })
-            .collect(),
+        meta,
+        options,
         respondent_count: agg.respondent_count,
         discussion_data: None,
+        text_answers: agg.text_answers.clone(),
     }
 }
 
 #[cfg(feature = "server")]
 fn quiz_to_item(agg: &QuizQuestionAggregate) -> AnalyzeItem {
+    let options: Vec<ChartOption> = agg
+        .options
+        .iter()
+        .map(|o| ChartOption {
+            label: o.label.clone(),
+            count: o.count,
+        })
+        .collect();
+    let meta = if options.is_empty() && !agg.text_answers.is_empty() {
+        format!("{} · 주관식 · {} 응답", agg.quiz_title, agg.text_answers.len())
+    } else {
+        format!(
+            "{} · 정답 {}/{}",
+            agg.quiz_title, agg.correct_count, agg.respondent_count
+        )
+    };
     AnalyzeItem {
         id: format!("{}#{}", agg.quiz_id, agg.question_idx),
         title: if agg.question_title.is_empty() {
@@ -289,20 +316,11 @@ fn quiz_to_item(agg: &QuizQuestionAggregate) -> AnalyzeItem {
         } else {
             agg.question_title.clone()
         },
-        meta: format!(
-            "{} · 정답 {}/{}",
-            agg.quiz_title, agg.correct_count, agg.respondent_count
-        ),
-        options: agg
-            .options
-            .iter()
-            .map(|o| ChartOption {
-                label: o.label.clone(),
-                count: o.count,
-            })
-            .collect(),
+        meta,
+        options,
         respondent_count: agg.respondent_count,
         discussion_data: None,
+        text_answers: agg.text_answers.clone(),
     }
 }
 
@@ -326,6 +344,7 @@ fn follow_to_item(agg: &FollowTargetAggregate) -> AnalyzeItem {
         }],
         respondent_count: agg.count,
         discussion_data: None,
+        text_answers: Vec::new(),
     }
 }
 

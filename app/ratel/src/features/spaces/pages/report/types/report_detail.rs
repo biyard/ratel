@@ -67,7 +67,9 @@ pub struct AnalyzeItem {
     /// under the title in the picker list.
     pub meta: String,
     /// Per-option tally for poll/quiz/follow items. Empty for
-    /// discussion items (their data lives in `discussion_data`).
+    /// discussion items (their data lives in `discussion_data`) AND
+    /// for subjective (short-answer) poll/quiz items where the data
+    /// lives in `text_answers` instead.
     #[serde(default)]
     pub options: Vec<ChartOption>,
     /// Denominator for percentage math. Stays 0 when there's no
@@ -79,6 +81,12 @@ pub struct AnalyzeItem {
     /// poll/quiz/follow.
     #[serde(default)]
     pub discussion_data: Option<DiscussionData>,
+    /// Free-text answers for subjective poll/quiz questions
+    /// (short / long answer style — no multi-option tally). When
+    /// non-empty the chart is rendered as a numbered list of answers
+    /// (`ChartType::TextList`), and the type-swap UI is hidden.
+    #[serde(default)]
+    pub text_answers: Vec<String>,
 }
 
 /// One bar / pie slice / table row inside a chart payload.
@@ -170,16 +178,22 @@ pub enum ChartType {
     /// Text-network graph — discussion-only. Nodes = terms, edges =
     /// co-occurrence frequency.
     Network,
+    /// Free-text answer list — short/long-answer poll/quiz questions.
+    /// The only valid type when the item has no options; the figure
+    /// renders as a simple numbered table of respondent answers and
+    /// the chart-type swap affordance is hidden in this mode.
+    TextList,
 }
 
 impl ChartType {
-    pub const VARIANTS: [ChartType; 6] = [
+    pub const VARIANTS: [ChartType; 7] = [
         ChartType::Bar,
         ChartType::Pie,
         ChartType::Table,
         ChartType::Lda,
         ChartType::TfIdf,
         ChartType::Network,
+        ChartType::TextList,
     ];
 
     pub fn as_token(&self) -> &'static str {
@@ -190,7 +204,16 @@ impl ChartType {
             ChartType::Lda => "lda",
             ChartType::TfIdf => "tfidf",
             ChartType::Network => "network",
+            ChartType::TextList => "textlist",
         }
+    }
+
+    /// True when this chart type doesn't allow any alternate renderings
+    /// — i.e. the chart-type swap UI should be suppressed for it.
+    /// Currently only `TextList` qualifies; subjective answers don't
+    /// have a "bar chart" equivalent to flip to.
+    pub fn is_single_mode(&self) -> bool {
+        matches!(self, ChartType::TextList)
     }
 
     /// Chart types available for a given data source. Mirrors the
@@ -213,6 +236,36 @@ impl ChartType {
     /// valid.
     pub fn default_for(source: ActionSource) -> ChartType {
         Self::options_for(source)[0]
+    }
+
+    /// Default + valid-options based on the actual item shape, not just
+    /// the source surface. A poll item with empty `options` + non-empty
+    /// `text_answers` is a subjective question and the only sensible
+    /// rendering is `TextList`; for everything else we fall back to the
+    /// source-based default.
+    pub fn default_for_item(item: &AnalyzeItem, source: ActionSource) -> ChartType {
+        if Self::is_text_list_item(item) {
+            ChartType::TextList
+        } else {
+            Self::default_for(source)
+        }
+    }
+
+    /// Valid chart types for THIS specific item — narrows
+    /// `options_for(source)` down to `[TextList]` when the item is
+    /// subjective. Returns owned `Vec` because the textlist case can't
+    /// be expressed as a `'static` slice alongside the others without
+    /// duplicating constants.
+    pub fn options_for_item(item: &AnalyzeItem, source: ActionSource) -> Vec<ChartType> {
+        if Self::is_text_list_item(item) {
+            vec![ChartType::TextList]
+        } else {
+            Self::options_for(source).to_vec()
+        }
+    }
+
+    fn is_text_list_item(item: &AnalyzeItem) -> bool {
+        item.options.is_empty() && !item.text_answers.is_empty()
     }
 
     /// True when this chart type is valid for the given source. Used by

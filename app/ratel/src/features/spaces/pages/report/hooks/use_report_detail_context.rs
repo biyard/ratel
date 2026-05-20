@@ -43,6 +43,7 @@ pub struct ChartMeta {
     pub respondent_count: u32,
     pub options: Vec<ChartOption>,
     pub discussion_data: Option<DiscussionData>,
+    pub text_answers: Vec<String>,
 }
 
 /// State for the slash-command popup (`/data`, `/data:analyze`, ...).
@@ -251,7 +252,10 @@ impl UseReportDetailContext {
         source: ActionSource,
     ) {
         let chart_id = self.mint_chart_id();
-        let chart_type = ChartType::default_for(source);
+        // Pick the chart type based on the item's data shape, not just
+        // its source — a subjective poll/quiz question (empty options +
+        // populated `text_answers`) gets `TextList` rendering.
+        let chart_type = ChartType::default_for_item(item, source);
         let figure = build_chart_figure(&chart_id, source, chart_type, analyze, item);
         // Append an empty paragraph after the figure so the author has
         // somewhere to type. The figure itself is `contenteditable="false"`,
@@ -272,7 +276,7 @@ impl UseReportDetailContext {
         source: ActionSource,
     ) {
         let chart_id = self.mint_chart_id();
-        let chart_type = ChartType::default_for(source);
+        let chart_type = ChartType::default_for_item(item, source);
         let figure = build_chart_figure(&chart_id, source, chart_type, analyze, item);
         let html = format!("{figure}<p><br></p>");
         let raw = self
@@ -475,6 +479,7 @@ impl UseReportDetailContext {
             &meta.options,
             meta.respondent_count,
             meta.discussion_data.as_ref(),
+            &meta.text_answers,
         );
         dispatch_swap_chart(chart_id.to_string(), new_type.as_token().to_string(), new_inner);
         self.close_outline_swap();
@@ -796,7 +801,25 @@ fn parse_outline(html: &str) -> Vec<OutlineEntry> {
     }
 
     entries.sort_by_key(|(pos, _)| *pos);
-    entries.into_iter().map(|(_, e)| e).collect()
+    // Dedupe by `id` — the body HTML can legitimately end up with two
+    // figures sharing the same chart-id when the user copy-pastes a
+    // chart inside the editor (the browser preserves the `id`
+    // attribute verbatim). A duplicate Dioxus `key:` further down
+    // panics the keyed-diff assertion, so we keep the FIRST occurrence
+    // and tag subsequent duplicates with an `-N` suffix so the outline
+    // still surfaces them as separate rows.
+    let mut seen: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+    entries
+        .into_iter()
+        .map(|(_, mut e)| {
+            let count = seen.entry(e.id.clone()).or_insert(0);
+            if *count > 0 {
+                e.id = format!("{}-{}", e.id, *count);
+            }
+            *count += 1;
+            e
+        })
+        .collect()
 }
 
 fn parse_chart_meta(html: &str, chart_id: &str) -> Option<ChartMeta> {
@@ -823,6 +846,10 @@ fn parse_chart_meta(html: &str, chart_id: &str) -> Option<ChartMeta> {
     let discussion_data: Option<DiscussionData> = read_attr(opening, "data-discussion")
         .filter(|s| !s.trim().is_empty())
         .and_then(|s| serde_json::from_str(&s).ok());
+    let text_answers: Vec<String> = read_attr(opening, "data-answers")
+        .filter(|s| !s.trim().is_empty())
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default();
 
     Some(ChartMeta {
         chart_id: chart_id.to_string(),
@@ -834,6 +861,7 @@ fn parse_chart_meta(html: &str, chart_id: &str) -> Option<ChartMeta> {
         respondent_count,
         options,
         discussion_data,
+        text_answers,
     })
 }
 
@@ -845,6 +873,7 @@ fn parse_chart_type(s: &str) -> Option<ChartType> {
         "lda" => Some(ChartType::Lda),
         "tfidf" => Some(ChartType::TfIdf),
         "network" => Some(ChartType::Network),
+        "textlist" => Some(ChartType::TextList),
         _ => None,
     }
 }
