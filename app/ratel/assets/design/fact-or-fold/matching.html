@@ -338,6 +338,55 @@
           font-size: 36px;
         }
       }
+
+      /* ── Light-theme overrides for page-scoped styles ─────── */
+      [data-theme="light"] .matching-title {
+        background: linear-gradient(120deg, #14141e 0%, #c98300 60%, #c41f6d 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      [data-theme="light"] .matching-slot[data-state="empty"] {
+        border-color: rgba(15, 15, 35, 0.18);
+      }
+
+      [data-theme="light"] .matching-slot[data-state="empty"]::before {
+        background: repeating-linear-gradient(
+          45deg,
+          rgba(15, 15, 35, 0.025),
+          rgba(15, 15, 35, 0.025) 6px,
+          transparent 6px,
+          transparent 14px
+        );
+      }
+
+      [data-theme="light"] .matching-slot-avatar {
+        background: linear-gradient(135deg, #6e5cf0, #9d7aff);
+        border: 2px solid rgba(255, 255, 255, 0.85);
+        box-shadow: 0 2px 8px rgba(15, 15, 40, 0.12);
+      }
+
+      [data-theme="light"] .matching-slot[data-state="empty"] .matching-slot-avatar {
+        border: 2px dashed rgba(15, 15, 35, 0.2);
+        box-shadow: none;
+      }
+
+      [data-theme="light"] .matching-slot-avatar.a2 {
+        background: linear-gradient(135deg, #1ab39a, #6eedd8);
+      }
+
+      [data-theme="light"] .matching-slot-avatar.a3 {
+        background: linear-gradient(135deg, #d04a8d, #db2780);
+      }
+
+      [data-theme="light"] .matching-slot-avatar.a4 {
+        background: linear-gradient(135deg, #f0a000, #fcb300);
+      }
+
+      [data-theme="light"] .matching-slot-name .you-tag {
+        background: var(--gold-bright);
+      }
     </style>
   </head>
   <body>
@@ -486,5 +535,6 @@
         }, 1800);
       }, 4000);
     </script>
+    <script src="theme-toggle.js" defer></script>
   </body>
 </html>

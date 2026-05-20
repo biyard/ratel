@@ -31,6 +31,38 @@
         --r-xl: 24px;
       }
 
+      :root[data-theme="light"] {
+        /* 라텔 시맨틱 토큰 — light theme (clean white + gold accent) */
+        --bg: #f6f6fb;
+        --bg-grad-1: #ffffff;
+        --bg-grad-2: #fafafa;
+        --surface: rgba(255, 255, 255, 0.82);
+        --surface-2: rgba(244, 244, 250, 0.72);
+        --surface-3: rgba(232, 232, 242, 0.68);
+        --border: rgba(15, 15, 35, 0.08);
+        --border-strong: rgba(15, 15, 35, 0.18);
+        --text-primary: #14141e;
+        --text-muted: #5a5a72;
+        --text-faint: #9a9ab2;
+
+        --gold: #c98300; /* RatelPoint, 진짜 — 화이트 위 대비를 위해 톤 조정 */
+        --gold-bright: #fcb300; /* 채워진 배경용 */
+        --gold-soft: rgba(252, 179, 0, 0.16);
+        --pink: #c41f6d; /* 가짜 */
+        --pink-bright: #db2780;
+        --pink-soft: rgba(219, 39, 128, 0.10);
+        --teal: #0e9b87; /* 액센트, 영향력 */
+        --teal-bright: #14c3a8;
+        --teal-soft: rgba(20, 195, 168, 0.14);
+        --purple: #6747e0; /* 마피아/거짓말 */
+        --purple-bright: #8a6df0;
+        --purple-soft: rgba(138, 109, 240, 0.12);
+
+        --shadow-sm: 0 2px 8px rgba(15, 15, 40, 0.06);
+        --shadow-md: 0 8px 24px rgba(15, 15, 40, 0.08);
+        --shadow-lg: 0 24px 64px rgba(15, 15, 40, 0.12);
+      }
+
       * {
         box-sizing: border-box;
       }
@@ -2664,4 +2696,268 @@
         font-size: 10.5px;
         color: var(--text-muted);
         line-height: 1.4;
+      }
+
+      /* ============================================
+         LIGHT-THEME OVERRIDES (data-theme="light")
+         ============================================ */
+
+      [data-theme="light"] body::before {
+        background:
+          radial-gradient(900px 700px at 12% 8%, rgba(252, 179, 0, 0.18), transparent 60%),
+          radial-gradient(800px 600px at 88% 12%, rgba(138, 109, 240, 0.14), transparent 60%),
+          radial-gradient(1100px 800px at 50% 110%, rgba(20, 195, 168, 0.12), transparent 60%);
+      }
+
+      [data-theme="light"] body::after {
+        background-image: linear-gradient(transparent 0px, transparent 2px, rgba(15, 15, 35, 0.018) 3px, transparent 4px);
+      }
+
+      [data-theme="light"] .top-nav-btn[aria-selected="true"] {
+        border-color: rgba(252, 179, 0, 0.4);
+      }
+
+      [data-theme="light"] .brand-logo {
+        background: linear-gradient(135deg, var(--gold-bright), var(--pink-bright));
+      }
+
+      [data-theme="light"] .stat-chip.gold {
+        border-color: rgba(252, 179, 0, 0.4);
+      }
+
+      [data-theme="light"] .avatar {
+        background: linear-gradient(135deg, #7a5cf0, #db2780);
+        border: 2px solid rgba(255, 255, 255, 0.9);
+        box-shadow: 0 2px 6px rgba(15, 15, 40, 0.12);
+      }
+
+      [data-theme="light"] .pill.gold {
+        border-color: rgba(252, 179, 0, 0.4);
+      }
+      [data-theme="light"] .pill.teal {
+        border-color: rgba(20, 195, 168, 0.3);
+      }
+      [data-theme="light"] .pill.purple {
+        border-color: rgba(138, 109, 240, 0.3);
+      }
+
+      [data-theme="light"] .btn-primary {
+        background: var(--gold-bright);
+        border-color: var(--gold-bright);
+      }
+
+      [data-theme="light"] .featured {
+        background:
+          radial-gradient(circle at 90% 0%, rgba(252, 179, 0, 0.22), transparent 55%),
+          radial-gradient(circle at 0% 100%, rgba(138, 109, 240, 0.18), transparent 55%),
+          var(--surface);
+      }
+
+      [data-theme="light"] .featured::before {
+        background-image:
+          repeating-linear-gradient(
+            45deg,
+            rgba(15, 15, 35, 0.025) 0,
+            rgba(15, 15, 35, 0.025) 1px,
+            transparent 1px,
+            transparent 12px
+          );
+      }
+
+      [data-theme="light"] .featured-tag {
+        background: var(--gold-bright);
+      }
+
+      [data-theme="light"] .featured-title {
+        background: linear-gradient(120deg, #14141e 0%, #c98300 60%, #c41f6d 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      [data-theme="light"] .meta-cell {
+        background: rgba(15, 15, 35, 0.04);
+      }
+
+      [data-theme="light"] .game-tile-icon.gold {
+        box-shadow: 0 0 24px rgba(252, 179, 0, 0.18) inset;
+      }
+
+      [data-theme="light"] .stage-step[data-state="active"] .stage-dot {
+        background: var(--gold-bright);
+        border-color: var(--gold-bright);
+        box-shadow: 0 0 0 6px rgba(252, 179, 0, 0.22);
+      }
+
+      [data-theme="light"] .insider-card {
+        background:
+          repeating-linear-gradient(
+            45deg,
+            rgba(138, 109, 240, 0.05),
+            rgba(138, 109, 240, 0.05) 8px,
+            transparent 8px,
+            transparent 16px
+          ),
+          rgba(247, 244, 255, 0.85);
+        border: 1px solid rgba(138, 109, 240, 0.35);
+      }
+
+      [data-theme="light"] .insider-foot {
+        border-top: 1px dashed rgba(138, 109, 240, 0.3);
+      }
+
+      [data-theme="light"] .player-row.me {
+        border-color: rgba(252, 179, 0, 0.4);
+      }
+
+      [data-theme="light"] .p-avatar {
+        background: linear-gradient(135deg, #6e5cf0, #9d7aff);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.85);
+        box-shadow: 0 2px 6px rgba(15, 15, 40, 0.12);
+      }
+
+      [data-theme="light"] .p-avatar.a2 {
+        background: linear-gradient(135deg, #1ab39a, #6eedd8);
+      }
+
+      [data-theme="light"] .p-avatar.a3 {
+        background: linear-gradient(135deg, #d04a8d, #db2780);
+      }
+
+      [data-theme="light"] .p-avatar.a4 {
+        background: linear-gradient(135deg, #f0a000, #fcb300);
+      }
+
+      [data-theme="light"] .p-name .you-tag {
+        background: var(--gold-bright);
+      }
+
+      [data-theme="light"] .bet-option[data-selected="true"][data-side="real"] {
+        box-shadow: 0 0 0 4px rgba(252, 179, 0, 0.18);
+      }
+
+      [data-theme="light"] .bet-option[data-selected="true"][data-side="fake"] {
+        box-shadow: 0 0 0 4px rgba(219, 39, 128, 0.18);
+      }
+
+      [data-theme="light"] .rp-slider::-webkit-slider-thumb {
+        background: var(--gold-bright);
+        box-shadow: 0 0 0 4px rgba(252, 179, 0, 0.22);
+      }
+
+      [data-theme="light"] .reason-textarea {
+        background: rgba(15, 15, 35, 0.03);
+      }
+
+      [data-theme="light"] .debate-card.me {
+        background: linear-gradient(180deg, rgba(252, 179, 0, 0.08), var(--surface));
+      }
+
+      [data-theme="light"] .thread-msg.me .thread-bubble {
+        border-color: rgba(252, 179, 0, 0.4);
+      }
+
+      [data-theme="light"] .thread-quote {
+        background: rgba(15, 15, 35, 0.04);
+      }
+
+      [data-theme="light"] .thread-input {
+        background: rgba(15, 15, 35, 0.03);
+      }
+
+      [data-theme="light"] .change-mind-card {
+        border: 1px solid rgba(138, 109, 240, 0.3);
+      }
+
+      [data-theme="light"] .reveal-banner {
+        background:
+          radial-gradient(circle at 20% 20%, rgba(219, 39, 128, 0.16), transparent 50%),
+          radial-gradient(circle at 80% 80%, rgba(138, 109, 240, 0.14), transparent 50%),
+          linear-gradient(180deg, rgba(219, 39, 128, 0.06), var(--surface));
+      }
+
+      [data-theme="light"] .reveal-banner::before {
+        background-image: repeating-linear-gradient(
+          135deg,
+          rgba(15, 15, 35, 0.025) 0,
+          rgba(15, 15, 35, 0.025) 1px,
+          transparent 1px,
+          transparent 14px
+        );
+      }
+
+      [data-theme="light"] .reveal-verdict {
+        text-shadow: 0 4px 24px rgba(219, 39, 128, 0.25);
+      }
+
+      [data-theme="light"] .reveal-source {
+        background: rgba(15, 15, 35, 0.05);
+      }
+
+      [data-theme="light"] .liar-badge {
+        color: #ffffff;
+      }
+
+      [data-theme="light"] .essence-checkbox[data-checked="true"] {
+        background: var(--gold-bright);
+        border-color: var(--gold-bright);
+      }
+
+      [data-theme="light"] .camp-side.real {
+        border-color: rgba(252, 179, 0, 0.4);
+      }
+
+      [data-theme="light"] .reveal-hint {
+        border: 1px solid rgba(20, 195, 168, 0.35);
+      }
+
+      [data-theme="light"] .reveal-card.me {
+        background: linear-gradient(180deg, rgba(252, 179, 0, 0.08), var(--surface));
+      }
+
+      [data-theme="light"] .speaker-row.now {
+        box-shadow: 0 0 0 3px rgba(252, 179, 0, 0.12);
+      }
+
+      [data-theme="light"] .speaker-row.now .speaker-row-state {
+        background: var(--gold-bright);
+      }
+
+      [data-theme="light"] .chat-input {
+        background: rgba(15, 15, 35, 0.03);
+      }
+
+      [data-theme="light"] .final-bet-bar {
+        border: 1px solid rgba(138, 109, 240, 0.4);
+      }
+
+      [data-theme="light"] .final-bet-tag {
+        border: 1px solid rgba(138, 109, 240, 0.4);
+      }
+
+      [data-theme="light"] .mini-btn.gold {
+        background: var(--gold-bright);
+        border-color: var(--gold-bright);
+      }
+
+      [data-theme="light"] .mini-btn.pink {
+        background: var(--pink-bright);
+        border-color: var(--pink-bright);
+      }
+
+      [data-theme="light"] .lb-row.me {
+        border: 1px solid rgba(252, 179, 0, 0.4);
+      }
+
+      [data-theme="light"] .lb-rank.top2 {
+        color: #8a8aa0;
+      }
+      [data-theme="light"] .lb-rank.top3 {
+        color: #b8763a;
+      }
+
+      [data-theme="light"] .lb-you-badge {
+        background: var(--gold-bright);
+        box-shadow: 0 0 0 3px rgba(252, 179, 0, 0.22);
       }
