@@ -1,7 +1,7 @@
 use crate::features::arcade::games::fact_or_fold::pages::game_room::FactFoldRoomTranslate;
 use crate::features::arcade::games::fact_or_fold::{
     use_fact_fold_round, BetResponse, BetSide, RationaleResponse, RoundParticipantSummary,
-    RATIONALE_ESSENCE_MIN_CHARS, RATIONALE_TEXT_MAX_CHARS,
+    RATIONALE_TEXT_MAX_CHARS,
 };
 use crate::features::auth::hooks::use_user_context;
 use crate::*;
@@ -86,7 +86,7 @@ fn ReasonWriteCard(bet: BetResponse, on_submit: EventHandler<String>) -> Element
         }
         let body = text();
         let len = body.chars().count();
-        if !(RATIONALE_ESSENCE_MIN_CHARS..=RATIONALE_TEXT_MAX_CHARS).contains(&len) {
+        if body.trim().is_empty() || len > RATIONALE_TEXT_MAX_CHARS {
             return;
         }
         submitting.set(true);
@@ -95,7 +95,7 @@ fn ReasonWriteCard(bet: BetResponse, on_submit: EventHandler<String>) -> Element
     };
 
     let len = text().chars().count();
-    let counter_class = if len >= RATIONALE_ESSENCE_MIN_CHARS && len <= RATIONALE_TEXT_MAX_CHARS {
+    let counter_class = if len > 0 && len <= RATIONALE_TEXT_MAX_CHARS {
         "char-counter ok"
     } else {
         "char-counter warn"
@@ -138,9 +138,7 @@ fn ReasonWriteCard(bet: BetResponse, on_submit: EventHandler<String>) -> Element
             div { class: "submit-row",
                 button {
                     class: "btn btn-primary",
-                    disabled: submitting()
-                                                                                    || len < RATIONALE_ESSENCE_MIN_CHARS
-                                                                                    || len > RATIONALE_TEXT_MAX_CHARS,
+                    disabled: submitting() || len == 0 || len > RATIONALE_TEXT_MAX_CHARS,
                     onclick: on_confirm,
                     "{tr.reason_submit}"
                 }

@@ -2,8 +2,8 @@ use crate::features::arcade::games::fact_or_fold::hooks::{
     UseFactFoldAdminSubjects, use_fact_fold_admin_subjects_provider,
 };
 use crate::features::arcade::games::fact_or_fold::types::{
-    CreateSubjectRequest, HEADLINE_BODY_MAX, HEADLINE_BODY_MIN, HEADLINE_DIFFICULTY_MAX,
-    HEADLINE_DIFFICULTY_MIN, HEADLINE_TEXT_MAX, REVEAL_SOURCES_MAX, RevealSource, Verdict,
+    CreateSubjectRequest, HEADLINE_BODY_MAX, HEADLINE_DIFFICULTY_MAX, HEADLINE_DIFFICULTY_MIN,
+    HEADLINE_TEXT_MAX, REVEAL_SOURCES_MAX, RevealSource, Verdict,
 };
 use crate::route::Route;
 use crate::*;
@@ -35,7 +35,7 @@ pub fn FactFoldAdminNewSubjectPage() -> Element {
     let mut error_msg = use_signal(|| Option::<String>::None);
 
     let body_len = body_excerpt().chars().count();
-    let body_in_range = body_len >= HEADLINE_BODY_MIN && body_len <= HEADLINE_BODY_MAX;
+    let body_in_range = !body_excerpt().trim().is_empty() && body_len <= HEADLINE_BODY_MAX;
     let subject_in_range =
         !headline_text().trim().is_empty() && headline_text().len() <= HEADLINE_TEXT_MAX;
     let insider_filled = !insider_statement().trim().is_empty();
@@ -165,7 +165,7 @@ pub fn FactFoldAdminNewSubjectPage() -> Element {
                     placeholder: "{tr.body_excerpt_placeholder}",
                     value: body_excerpt,
                     rows: 6,
-                    counter: format!("{} / {}–{}", body_len, HEADLINE_BODY_MIN, HEADLINE_BODY_MAX),
+                    counter: format!("{} / {}", body_len, HEADLINE_BODY_MAX),
                     invalid: !body_in_range && !body_excerpt().is_empty(),
                 }
             }

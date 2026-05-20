@@ -35,7 +35,7 @@ fn validate_subject_fields(
         return Err(FactOrFoldError::SubjectInvalid.into());
     }
     let body_len = body_excerpt.chars().count();
-    if body_len < HEADLINE_BODY_MIN || body_len > HEADLINE_BODY_MAX {
+    if body_excerpt.trim().is_empty() || body_len > HEADLINE_BODY_MAX {
         return Err(FactOrFoldError::SubjectInvalid.into());
     }
     if !(HEADLINE_DIFFICULTY_MIN..=HEADLINE_DIFFICULTY_MAX).contains(&difficulty) {
@@ -249,7 +249,7 @@ pub async fn update_subject_handler(
     }
     if let Some(v) = req.body_excerpt {
         let body_len = v.chars().count();
-        if body_len < HEADLINE_BODY_MIN || body_len > HEADLINE_BODY_MAX {
+        if v.trim().is_empty() || body_len > HEADLINE_BODY_MAX {
             return Err(FactOrFoldError::SubjectInvalid.into());
         }
         updater = updater.with_body_excerpt(v.clone());

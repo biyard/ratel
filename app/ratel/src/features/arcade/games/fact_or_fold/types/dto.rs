@@ -294,8 +294,8 @@ pub const FLIP_SLOT_LAST_MS: i64 = 10_000;
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct SubmitRationaleRequest {
-    /// 50–200 chars per spec. Texts shorter than 50 still post but
-    /// are flagged `essence_eligible = false` (not promoted).
+    /// Up to 200 chars. Texts shorter than `RATIONALE_ESSENCE_MIN_CHARS`
+    /// still post but are flagged `essence_eligible = false` (not promoted).
     pub text: String,
 }
 
@@ -597,8 +597,7 @@ pub struct UpdateFactOrFoldSettingsRequest {
 
 // ── Constants ─────────────────────────────────────────────────────
 
-/// Subject body excerpt length window — roadmap §FR-40.
-pub const HEADLINE_BODY_MIN: usize = 200;
+/// Subject body excerpt upper bound — roadmap §FR-40.
 pub const HEADLINE_BODY_MAX: usize = 500;
 /// Max subject display text length — generous; UI typically renders
 /// short copy.

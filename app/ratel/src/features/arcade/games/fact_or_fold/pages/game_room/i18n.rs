@@ -104,8 +104,8 @@ translate! {
     reason_prompt_text_real: { en: "REAL · {$amount} RP — why?", ko: "REAL · {$amount} RP — 왜?" },
     reason_prompt_text_fake: { en: "FAKE · {$amount} RP — why?", ko: "FAKE · {$amount} RP — 왜?" },
     reason_textarea_label: {
-        en: "One-line rationale (50–200 chars, single submission)",
-        ko: "한 줄 근거 (50~200자, 한 번만 제출)",
+        en: "One-line rationale (up to 200 chars, single submission)",
+        ko: "한 줄 근거 (최대 200자, 한 번만 제출)",
     },
     reason_textarea_placeholder: {
         en: "Why did you judge it that way? A sentence or two…",

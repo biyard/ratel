@@ -29,7 +29,7 @@ use crate::features::arcade::games::fact_or_fold::types::{
 
 // ── Helpers ───────────────────────────────────────────────────────
 
-/// A body excerpt at the minimum length (200 chars).
+/// A non-empty body excerpt within the 500-char upper bound.
 fn valid_body() -> String {
     "x".repeat(200)
 }
@@ -302,7 +302,7 @@ async fn test_delete_subject_soft_deletes() {
 // ── Validation invariants (FR-40, FR-42) ─────────────────────────
 
 #[tokio::test]
-async fn test_create_rejects_body_too_short() {
+async fn test_create_rejects_empty_body() {
     let ctx = TestContext::setup().await;
     reset_fact_fold_state(&ctx).await;
     let (_, admin_headers) = ctx.create_admin_user().await;
@@ -313,7 +313,7 @@ async fn test_create_rejects_body_too_short() {
         body: {
             "req": {
                 "headline_text": "Subject",
-                "body_excerpt": "too short",
+                "body_excerpt": "   ",
                 "verdict": "REAL",
                 "difficulty": 3,
                 "source_label": "s",
@@ -322,7 +322,7 @@ async fn test_create_rejects_body_too_short() {
             }
         }
     };
-    assert_ne!(status, 200, "body shorter than 200 chars must be rejected");
+    assert_ne!(status, 200, "empty body must be rejected");
 }
 
 #[tokio::test]
