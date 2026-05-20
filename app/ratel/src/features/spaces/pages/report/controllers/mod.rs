@@ -5,6 +5,7 @@ mod get_analyze;
 mod get_report;
 mod list_reports;
 mod update_analyze;
+mod update_report;
 
 pub use create_ai_report::*;
 pub use create_report::*;
@@ -13,3 +14,4 @@ pub use get_analyze::*;
 pub use get_report::*;
 pub use list_reports::*;
 pub use update_analyze::*;
+pub use update_report::*;

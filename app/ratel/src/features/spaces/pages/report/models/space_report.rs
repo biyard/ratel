@@ -22,6 +22,14 @@ pub struct SpaceReport {
     pub description: String,
     #[serde(default)]
     pub html_contents: Option<String>,
+
+    /// Notion-style block list rendered by the detail editor. Stored
+    /// inline on the row so the editor can fetch + save in a single
+    /// round-trip; for large reports this risks the 400 KB per-item
+    /// DynamoDB ceiling, but the realistic upper bound (a few dozen
+    /// blocks, a few KB each) sits comfortably under it.
+    #[serde(default)]
+    pub blocks: Vec<ReportBlock>,
 }
 
 #[cfg(feature = "server")]
@@ -40,6 +48,7 @@ impl SpaceReport {
             title,
             description,
             html_contents: None,
+            blocks: Vec::new(),
         }
     }
 

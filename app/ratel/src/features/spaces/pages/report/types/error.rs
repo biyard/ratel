@@ -30,6 +30,10 @@ pub enum SpaceReportError {
     #[error("report delete failed")]
     #[translate(en = "Failed to delete report", ko = "보고서를 삭제하지 못했습니다.")]
     ReportDeleteFailed,
+
+    #[error("report update failed")]
+    #[translate(en = "Failed to update report", ko = "보고서를 저장하지 못했습니다.")]
+    ReportUpdateFailed,
 }
 
 #[cfg(feature = "server")]

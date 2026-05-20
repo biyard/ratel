@@ -1,5 +1,6 @@
+use crate::common::models::space::SpaceCommon;
 use crate::features::spaces::pages::report::models::SpaceReport;
-use crate::features::spaces::pages::report::types::SpaceReportError;
+use crate::features::spaces::pages::report::types::{ReportBlock, SpaceReportError};
 use crate::features::spaces::pages::report::*;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -11,6 +12,8 @@ pub struct GetReportResponse {
     pub html_contents: Option<String>,
     pub created_at: i64,
     pub updated_at: i64,
+    pub blocks: Vec<ReportBlock>,
+    pub author: String,
 }
 
 #[get("/v3/spaces/{space_pk}/reports/{report_id}", role: SpaceUserRole)]
@@ -38,6 +41,13 @@ pub async fn get_report(
         _ => String::new(),
     };
 
+    let author = SpaceCommon::get(dynamo, &space_partition, Some(EntityType::SpaceCommon))
+        .await
+        .ok()
+        .flatten()
+        .map(|s| s.author_display_name)
+        .unwrap_or_default();
+
     Ok(GetReportResponse {
         id,
         status: report.status,
@@ -46,5 +56,7 @@ pub async fn get_report(
         html_contents: report.html_contents,
         created_at: report.created_at,
         updated_at: report.updated_at,
+        blocks: report.blocks,
+        author,
     })
 }

@@ -63,8 +63,12 @@ pub struct SlashOption {
 #[derive(Clone, PartialEq)]
 pub enum SlashAction {
     PickCommand,
-    PickAnalyze { analyze_id: String },
-    PickSource { source: ActionSource },
+    PickAnalyze {
+        analyze_id: String,
+    },
+    PickSource {
+        source: ActionSource,
+    },
     InsertItem {
         analyze_id: String,
         source: ActionSource,
@@ -98,6 +102,11 @@ pub struct UseReportDetailContext {
     /// start the sequence well above those to avoid collisions even
     /// when an inserted block happens to share an item id with a mock.
     pub next_block_seq: Signal<u64>,
+    /// Save the current title/subtitle/blocks back to the server via
+    /// `update_report_handler`. The action restarts the `detail`
+    /// loader on success so any server-side normalization (timestamps,
+    /// trimmed fields) round-trips back into the editor.
+    pub handle_save: Action<(), ()>,
 }
 
 impl UseReportDetailContext {
@@ -128,11 +137,11 @@ impl UseReportDetailContext {
     }
 
     pub fn created_relative(&self) -> String {
-        self.detail().created_relative.clone()
+        format_relative_kr(self.detail().created_at)
     }
 
     pub fn edited_relative(&self) -> String {
-        self.detail().edited_relative.clone()
+        format_relative_kr(self.detail().updated_at)
     }
 
     pub fn analyzes(&self) -> Vec<Analyze> {
@@ -316,6 +325,56 @@ impl UseReportDetailContext {
         (chart_id, text_id)
     }
 
+    pub fn update_block_text(&mut self, block_id: &str, new_text: String) {
+        let mut cur = self.blocks.peek().clone();
+        let mut changed = false;
+        for b in cur.iter_mut() {
+            if b.id() == block_id {
+                match b {
+                    ReportBlock::H1 { text, .. }
+                    | ReportBlock::H2 { text, .. }
+                    | ReportBlock::H3 { text, .. } => {
+                        if *text != new_text {
+                            *text = new_text.clone();
+                            changed = true;
+                        }
+                    }
+                    ReportBlock::Text { html, .. } => {
+                        if *html != new_text {
+                            *html = new_text.clone();
+                            changed = true;
+                        }
+                    }
+                    ReportBlock::Chart { .. } => {}
+                }
+                break;
+            }
+        }
+        if changed {
+            self.blocks.set(cur);
+        }
+    }
+
+    pub fn append_text_block(&mut self) -> String {
+        let text_id = self.mint_id("text");
+        let new_block = ReportBlock::Text {
+            id: text_id.clone(),
+            html: String::new(),
+        };
+        let mut cur = self.blocks.peek().clone();
+        cur.push(new_block);
+        self.blocks.set(cur);
+        text_id
+    }
+
+    pub fn first_editable_block_id(&self) -> Option<String> {
+        self.blocks
+            .peek()
+            .iter()
+            .find(|b| !matches!(b, ReportBlock::Chart { .. }))
+            .map(|b| b.id().to_string())
+    }
+
     /// Insert an empty Text block right after `after_block_id` and
     /// return its id. Used by the Enter-key handler in `DocBlock` so the
     /// author can break out of a heading or chart into a fresh paragraph.
@@ -345,13 +404,10 @@ impl UseReportDetailContext {
         let cur = self.blocks.peek().clone();
         let idx = cur.iter().position(|b| b.id() == block_id)?;
         // Walk backwards to find the nearest editable (non-Chart) block.
-        let prev_id = cur[..idx]
-            .iter()
-            .rev()
-            .find_map(|b| match b {
-                ReportBlock::Chart { .. } => None,
-                _ => Some(b.id().to_string()),
-            })?;
+        let prev_id = cur[..idx].iter().rev().find_map(|b| match b {
+            ReportBlock::Chart { .. } => None,
+            _ => Some(b.id().to_string()),
+        })?;
         let mut next = cur;
         next.remove(idx);
         self.blocks.set(next);
@@ -509,8 +565,7 @@ impl UseReportDetailContext {
             } => {
                 let detail = self.detail();
                 if let Some(analyze) = detail.analyzes.iter().find(|a| &a.id == analyze_id) {
-                    if let Some(item) =
-                        analyze.items_for(*source).iter().find(|i| &i.id == item_id)
+                    if let Some(item) = analyze.items_for(*source).iter().find(|i| &i.id == item_id)
                     {
                         let analyze_clone = analyze.clone();
                         let item_clone = item.clone();
@@ -624,9 +679,34 @@ pub fn use_report_detail_context_provider(
     space_id: ReadSignal<SpacePartition>,
     report_id: ReadSignal<String>,
 ) -> Result<UseReportDetailContext, Loading> {
-    let detail = use_loader(move || async move {
-        let id = report_id();
-        Ok::<_, crate::common::Error>(mock_detail_for(&id))
+    // Fetch the saved report from the server. No mock data — the
+    // server response is mapped 1:1 into the page-local `ReportDetail`
+    // shape so the rest of the controller layer doesn't need to
+    // change. `analyzes` stays empty for now; the slash popup will
+    // surface zero options until the analyze_reports integration is
+    // wired in a follow-up.
+    let detail = use_loader(move || {
+        let sid = space_id();
+        let rid = report_id();
+        async move {
+            let report_id_typed: SpaceReportEntityType = rid.clone().into();
+            let resp = crate::features::spaces::pages::report::controllers::get_report(
+                sid,
+                report_id_typed,
+            )
+            .await?;
+            Ok::<_, crate::common::Error>(ReportDetail {
+                id: resp.id,
+                eyebrow: "Action · Report".to_string(),
+                title: resp.title,
+                subtitle: resp.description,
+                blocks: resp.blocks,
+                author: resp.author,
+                created_at: resp.created_at,
+                updated_at: resp.updated_at,
+                analyzes: Vec::new(),
+            })
+        }
     })?;
 
     let snapshot = detail();
@@ -646,6 +726,26 @@ pub fn use_report_detail_context_provider(
     let slash = use_signal(|| Option::<SlashState>::None);
     let next_block_seq = use_signal(|| 1000u64);
 
+    let mut detail_for_save = detail;
+    let handle_save = use_action(move || async move {
+        let report_id_typed: SpaceReportEntityType = report_id().into();
+        let req = crate::features::spaces::pages::report::controllers::UpdateReportRequest {
+            title: Some(title.peek().clone()),
+            description: Some(subtitle.peek().clone()),
+            blocks: Some(blocks.peek().clone()),
+            status: None,
+            html_contents: None,
+        };
+        crate::features::spaces::pages::report::controllers::update_report(
+            space_id(),
+            report_id_typed,
+            req,
+        )
+        .await?;
+        detail_for_save.restart();
+        Ok::<(), crate::common::Error>(())
+    });
+
     let ctx = use_context_provider(move || UseReportDetailContext {
         space_id,
         report_id,
@@ -659,141 +759,40 @@ pub fn use_report_detail_context_provider(
         outline_mode,
         slash,
         next_block_seq,
+        handle_save,
     });
 
     Ok(ctx)
 }
 
-fn mock_detail_for(_id: &str) -> ReportDetail {
-    ReportDetail {
-        id: _id.to_string(),
-        eyebrow: "Action · Report".to_string(),
-        title: "2026 Q1 정책 우선순위 토론 분석".to_string(),
-        subtitle: "응답자 1,248명 기반 — Quantum / Climate / Open Source 정책 핫이슈 정리"
-            .to_string(),
-        blocks: vec![
-            ReportBlock::H1 {
-                id: "report-h1-insights".to_string(),
-                text: "핵심 인사이트".to_string(),
-            },
-            ReportBlock::Text {
-                id: "report-text-1".to_string(),
-                html: "본 분기 정책 토론에서 응답자의 <strong>64%</strong>가 \"탄소 상쇄 정책\"을 1순위로 꼽았다. 아래 차트는 <em>\"정책 우선순위 응답자 분석\"</em>의 Poll Q1 응답 분포를 시각화한 결과다. <strong>이 문장을 드래그</strong>해보면 옆에 인라인 포맷 툴바가 뜬다.".to_string(),
-            },
-            ReportBlock::Chart {
-                id: "chart-policy-q1".to_string(),
-                source: ActionSource::Poll,
-                chart_type: ChartType::Bar,
-                analyze_name: "정책 우선순위 응답자 분석".to_string(),
-                item_title: "Q1: 가장 시급한 정책은?".to_string(),
-                meta: "Poll Q1 응답 분포 · 매칭 응답 1,248".to_string(),
-            },
-            ReportBlock::H2 {
-                id: "report-h2-flow".to_string(),
-                text: "참여 흐름".to_string(),
-            },
-            ReportBlock::Text {
-                id: "report-text-2".to_string(),
-                html: "참여 시점 분포를 보면 Quest 시작 24시간 내 60% 이상의 응답이 몰렸으며, 이후 시간이 지날수록 응답률이 빠르게 줄어들었다.".to_string(),
-            },
-        ],
-        author: "@lee".to_string(),
-        created_relative: "3d ago".to_string(),
-        edited_relative: "방금".to_string(),
-        analyzes: mock_analyzes(),
+fn format_relative_kr(timestamp_millis: i64) -> String {
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    let diff = (now - timestamp_millis).max(0);
+    if diff < 60_000 {
+        return "방금".to_string();
     }
-}
-
-fn mock_analyzes() -> Vec<Analyze> {
-    vec![
-        Analyze {
-            id: "policy-priority".to_string(),
-            name: "정책 우선순위 응답자 분석".to_string(),
-            respondents: 1_248,
-            filters: vec![
-                CrossFilterChip { source: ActionSource::Poll, label: "탄소세 도입".to_string() },
-                CrossFilterChip { source: ActionSource::Poll, label: "재생에너지 확대".to_string() },
-                CrossFilterChip { source: ActionSource::Quiz, label: "정답".to_string() },
-            ],
-            poll: vec![
-                AnalyzeItem { id: "policy-q1".to_string(), title: "Q1: 가장 시급한 정책은?".to_string(), meta: "5 옵션 · 매칭 응답 1,248".to_string() },
-                AnalyzeItem { id: "policy-q2".to_string(), title: "Q2: 정책 시행 시점은?".to_string(), meta: "4 옵션 · 매칭 응답 1,201".to_string() },
-            ],
-            quiz: vec![
-                AnalyzeItem { id: "quiz-q1".to_string(), title: "Q1: 탄소 상쇄의 정의는?".to_string(), meta: "통과율 · 정답률 · 분포".to_string() },
-                AnalyzeItem { id: "quiz-q2".to_string(), title: "Q2: 재생에너지 비율 산식".to_string(), meta: "통과율 67% · 매칭 응답 684".to_string() },
-            ],
-            discussion: vec![
-                AnalyzeItem { id: "disc-1".to_string(), title: "탄소 상쇄 정책안".to_string(), meta: "198 매칭 댓글".to_string() },
-                AnalyzeItem { id: "disc-2".to_string(), title: "재생에너지 보조금".to_string(), meta: "112 매칭 댓글".to_string() },
-            ],
-            follow: vec![AnalyzeItem {
-                id: "follow-1".to_string(),
-                title: "@climate · 매칭 응답자 중 팔로워 비율".to_string(),
-                meta: "312 팔로워 / 936 비팔로워".to_string(),
-            }],
-        },
-        Analyze {
-            id: "personas".to_string(),
-            name: "참여자 페르소나 분류".to_string(),
-            respondents: 2_104,
-            filters: vec![
-                CrossFilterChip { source: ActionSource::Poll, label: "20대".to_string() },
-                CrossFilterChip { source: ActionSource::Poll, label: "30대".to_string() },
-                CrossFilterChip { source: ActionSource::Follow, label: "@climate_kr".to_string() },
-            ],
-            poll: vec![AnalyzeItem {
-                id: "age".to_string(),
-                title: "Q: 연령대 분포".to_string(),
-                meta: "4 옵션 · 매칭 응답 2,104".to_string(),
-            }],
-            quiz: vec![],
-            discussion: vec![],
-            follow: vec![
-                AnalyzeItem { id: "fl-1".to_string(), title: "@climate_kr".to_string(), meta: "892 매칭 팔로워".to_string() },
-                AnalyzeItem { id: "fl-2".to_string(), title: "@energy_kr".to_string(), meta: "534 매칭 팔로워".to_string() },
-            ],
-        },
-        Analyze {
-            id: "quiz-pass-rate".to_string(),
-            name: "정책 이해도 퀴즈 통과율 분석".to_string(),
-            respondents: 684,
-            filters: vec![CrossFilterChip {
-                source: ActionSource::Quiz,
-                label: "정답".to_string(),
-            }],
-            poll: vec![],
-            quiz: vec![
-                AnalyzeItem { id: "qp-1".to_string(), title: "Q1: 탄소 상쇄의 정의?".to_string(), meta: "통과율 67% · 응시 684".to_string() },
-                AnalyzeItem { id: "qp-2".to_string(), title: "Q2: 재생에너지 비율 산식".to_string(), meta: "통과율 58% · 응시 684".to_string() },
-                AnalyzeItem { id: "qp-3".to_string(), title: "Q3: 국제 협약 가입국".to_string(), meta: "통과율 41% · 응시 684".to_string() },
-            ],
-            discussion: vec![],
-            follow: vec![],
-        },
-        Analyze {
-            id: "carbon-vote".to_string(),
-            name: "탄소 상쇄 투표 응답자".to_string(),
-            respondents: 892,
-            filters: vec![
-                CrossFilterChip { source: ActionSource::Poll, label: "탄소 상쇄 찬성".to_string() },
-                CrossFilterChip { source: ActionSource::Discussion, label: "탄소세".to_string() },
-                CrossFilterChip { source: ActionSource::Follow, label: "@climate".to_string() },
-            ],
-            poll: vec![AnalyzeItem {
-                id: "cv-1".to_string(),
-                title: "Q: 탄소 상쇄 정책 선호".to_string(),
-                meta: "3 옵션 · 매칭 응답 892".to_string(),
-            }],
-            quiz: vec![],
-            discussion: vec![AnalyzeItem {
-                id: "cv-d-1".to_string(),
-                title: "탄소 상쇄 정책 토의".to_string(),
-                meta: "342 매칭 댓글".to_string(),
-            }],
-            follow: vec![],
-        },
-    ]
+    let mins = diff / 60_000;
+    if mins < 60 {
+        return format!("{mins}분 전");
+    }
+    let hours = mins / 60;
+    if hours < 24 {
+        return format!("{hours}시간 전");
+    }
+    let days = hours / 24;
+    if days < 7 {
+        return format!("{days}일 전");
+    }
+    let weeks = days / 7;
+    if weeks < 5 {
+        return format!("{weeks}주 전");
+    }
+    let months = days / 30;
+    if months < 12 {
+        return format!("{months}개월 전");
+    }
+    let years = days / 365;
+    format!("{years}년 전")
 }
 
 /// Fire-and-forget DOM patch: replace the trailing `old_raw` substring
@@ -867,11 +866,7 @@ fn replace_slash_text(block_id: &str, old_raw: &str, new_raw: &str) {
 /// `source_block_id` / `raw_token` may be empty when there is no slash
 /// state to clean up (right-rail picker flow, Enter-to-new-block);
 /// in that case only the focus step runs.
-fn cleanup_slash_and_focus(
-    source_block_id: &str,
-    raw_token: &str,
-    focus_block_id: Option<&str>,
-) {
+fn cleanup_slash_and_focus(source_block_id: &str, raw_token: &str, focus_block_id: Option<&str>) {
     let mut runner = document::eval(
         r#"
         const data = await dioxus.recv();

@@ -13,7 +13,7 @@ use crate::common::types::{
     EntityType, ListResponse, Partition, SpacePublishState, SpaceStatus, SpaceVisibility,
 };
 use crate::features::spaces::pages::report::controllers::{
-    CreateReportResponse, DeleteReportResponse, GetReportResponse,
+    CreateReportResponse, DeleteReportResponse, GetReportResponse, UpdateReportResponse,
 };
 use crate::features::spaces::pages::report::types::{ReportListItem, ReportStatus};
 
@@ -272,6 +272,7 @@ async fn seed_report_with_status(
         title: title.to_string(),
         description: String::new(),
         html_contents: None,
+        blocks: Vec::new(),
     };
     let id = match &report.sk {
         EntityType::SpaceReport(id) => id.clone(),
@@ -426,4 +427,86 @@ async fn test_delete_report_forbidden_for_non_creator() {
         body
     );
     assert_eq!(body.id, report_id);
+}
+
+#[tokio::test]
+async fn test_update_report_round_trips_title_and_blocks() {
+    use crate::features::spaces::pages::report::types::ReportBlock;
+
+    let ctx = TestContext::setup().await;
+    let space_id = seed_space(&ctx).await;
+
+    // Create a fresh row.
+    let (_, _, body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/v3/spaces/{}/reports", space_id),
+        headers: ctx.test_user.1.clone(),
+        body: { "req": { "title": "draft v1" } },
+        response_type: CreateReportResponse,
+    };
+    let report_id = body.id.clone();
+
+    // PATCH the title + add one heading block.
+    let (status, _, body) = crate::test_patch! {
+        app: ctx.app.clone(),
+        path: &format!("/v3/spaces/{}/reports/{}", space_id, report_id),
+        headers: ctx.test_user.1.clone(),
+        body: {
+            "req": {
+                "title": "draft v2",
+                "blocks": [
+                    { "H1": { "id": "h1", "text": "Insights" } }
+                ]
+            }
+        },
+        response_type: UpdateReportResponse,
+    };
+    assert_eq!(status, 200, "update_report: {:?}", body);
+    assert_eq!(body.id, report_id);
+    assert!(body.updated_at > 0, "updated_at should advance");
+
+    // Re-fetch and confirm the title + block survived.
+    let (status, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/v3/spaces/{}/reports/{}", space_id, report_id),
+        headers: ctx.test_user.1.clone(),
+        response_type: GetReportResponse,
+    };
+    assert_eq!(status, 200, "get after update: {:?}", body);
+    assert_eq!(body.title, "draft v2");
+    assert_eq!(body.blocks.len(), 1, "block list should hold the H1");
+    match &body.blocks[0] {
+        ReportBlock::H1 { id, text } => {
+            assert_eq!(id, "h1");
+            assert_eq!(text, "Insights");
+        }
+        other => panic!("expected H1 block, got {:?}", other),
+    }
+}
+
+#[tokio::test]
+async fn test_update_report_forbidden_for_non_creator() {
+    let ctx = TestContext::setup().await;
+    let space_id = seed_space(&ctx).await;
+    let (_other_user, other_headers) = ctx.create_another_user().await;
+
+    let (_, _, body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/v3/spaces/{}/reports", space_id),
+        headers: ctx.test_user.1.clone(),
+        body: { "req": { "title": "owner only" } },
+        response_type: CreateReportResponse,
+    };
+    let report_id = body.id;
+
+    let (status, _, _) = crate::test_patch! {
+        app: ctx.app,
+        path: &format!("/v3/spaces/{}/reports/{}", space_id, report_id),
+        headers: other_headers,
+        body: { "req": { "title": "hijacked" } }
+    };
+    assert_ne!(
+        status, 200,
+        "non-creator must not be allowed to update a report"
+    );
 }

@@ -1,13 +1,12 @@
-//! Mock data types for the report detail page. Mirrors the shapes
-//! exercised by `assets/design/reports/reports-edit.html`'s ANALYZES
-//! mock — once a backend exists these will be replaced one-for-one by
-//! handler response DTOs.
-
+#[cfg(feature = "server")]
+#[allow(unused_imports)]
+use rmcp::schemars;
 use serde::{Deserialize, Serialize};
 
 /// Identifies which action surface an aggregate came from. Drives the
 /// per-source color tokens in CSS and the tab grouping in the picker.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum ActionSource {
     Poll,
     Quiz,
@@ -35,6 +34,7 @@ impl ActionSource {
 
 /// One pickable aggregate inside an analyze, grouped by source.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct AnalyzeItem {
     pub id: String,
     pub title: String,
@@ -46,6 +46,7 @@ pub struct AnalyzeItem {
 /// One element of the analyze's cross-filter set — rendered as a small
 /// source-tinted chip under the analyze label in the picker dropdown.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct CrossFilterChip {
     pub source: ActionSource,
     pub label: String,
@@ -53,6 +54,7 @@ pub struct CrossFilterChip {
 
 /// A saved analyze that the report can pull aggregates from.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct Analyze {
     pub id: String,
     pub name: String,
@@ -84,6 +86,7 @@ impl Analyze {
 /// One outline entry derived from the report body — H1/H2/H3 heading
 /// or an inserted chart block. Drives the right-rail outline list.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub struct OutlineEntry {
     pub id: String,
     pub kind: OutlineKind,
@@ -91,6 +94,7 @@ pub struct OutlineEntry {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum OutlineKind {
     H1,
     H2,
@@ -105,6 +109,7 @@ pub enum OutlineKind {
 /// drawn. The Bar/Pie/Table trio covers poll/quiz/follow aggregates;
 /// the LDA/TfIdf/Network trio is reserved for discussion text analysis.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum ChartType {
     /// Bar chart — response distribution for poll/quiz/follow.
     Bar,
@@ -149,16 +154,10 @@ impl ChartType {
     /// the Bar/Pie/Table trio.
     pub fn options_for(source: ActionSource) -> &'static [ChartType] {
         match source {
-            ActionSource::Poll | ActionSource::Quiz | ActionSource::Follow => &[
-                ChartType::Bar,
-                ChartType::Pie,
-                ChartType::Table,
-            ],
-            ActionSource::Discussion => &[
-                ChartType::Lda,
-                ChartType::TfIdf,
-                ChartType::Network,
-            ],
+            ActionSource::Poll | ActionSource::Quiz | ActionSource::Follow => {
+                &[ChartType::Bar, ChartType::Pie, ChartType::Table]
+            }
+            ActionSource::Discussion => &[ChartType::Lda, ChartType::TfIdf, ChartType::Network],
         }
     }
 
@@ -181,12 +180,25 @@ impl ChartType {
 /// block editor: each block renders independently with its own handle
 /// and contenteditable affordance.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
 pub enum ReportBlock {
-    H1 { id: String, text: String },
-    H2 { id: String, text: String },
-    H3 { id: String, text: String },
+    H1 {
+        id: String,
+        text: String,
+    },
+    H2 {
+        id: String,
+        text: String,
+    },
+    H3 {
+        id: String,
+        text: String,
+    },
     /// Paragraph — `html` may contain inline `<strong>`/`<em>` etc.
-    Text { id: String, html: String },
+    Text {
+        id: String,
+        html: String,
+    },
     /// Inserted chart block. `source` is the analyze source that
     /// supplied the data (drives badge color); `chart_type` controls
     /// the visual rendering (bar/pie/topics/table).
@@ -212,9 +224,6 @@ impl ReportBlock {
     }
 }
 
-/// Full state for one detail page. `blocks` is the ordered block list
-/// rendered by `DocCanvas`; `outline` is derived from it (heading + chart
-/// rows) and rebuilt whenever the block list changes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ReportDetail {
     pub id: String,
@@ -223,8 +232,8 @@ pub struct ReportDetail {
     pub subtitle: String,
     pub blocks: Vec<ReportBlock>,
     pub author: String,
-    pub created_relative: String,
-    pub edited_relative: String,
+    pub created_at: i64,
+    pub updated_at: i64,
     pub analyzes: Vec<Analyze>,
 }
 
@@ -249,9 +258,7 @@ impl ReportDetail {
                     kind: OutlineKind::H3,
                     label: text.clone(),
                 }),
-                ReportBlock::Chart {
-                    id, item_title, ..
-                } => Some(OutlineEntry {
+                ReportBlock::Chart { id, item_title, .. } => Some(OutlineEntry {
                     id: id.clone(),
                     kind: OutlineKind::Chart,
                     label: item_title.clone(),

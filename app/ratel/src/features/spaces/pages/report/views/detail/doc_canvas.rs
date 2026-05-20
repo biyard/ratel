@@ -86,6 +86,26 @@ async fn is_block_empty_at_start(block_id: &str) -> bool {
     runner.recv::<bool>().await.unwrap_or(false)
 }
 
+fn jump_into_first_block(ctx: &mut UseReportDetailContext) {
+    let target_id = ctx
+        .first_editable_block_id()
+        .unwrap_or_else(|| ctx.append_text_block());
+    focus_block(&target_id);
+}
+
+async fn read_block_text(block_id: &str) -> Option<String> {
+    let mut runner = document::eval(
+        r#"
+        const id = await dioxus.recv();
+        const el = document.getElementById(id);
+        if (!el) { dioxus.send(null); return; }
+        dioxus.send(el.textContent || "");
+        "#,
+    );
+    runner.send(serde_json::json!(block_id)).ok()?;
+    runner.recv::<Option<String>>().await.ok().flatten()
+}
+
 /// Read the caret's position INSIDE the scrolling doc container.
 /// Returns `(x, y, placement)` where:
 /// - `x` / `y` are pixel offsets relative to `.report-detail__doc`'s
@@ -232,12 +252,33 @@ pub fn DocCanvas() -> Element {
                     placeholder: tr.title_placeholder,
                     value: "{ctx.title_value()}",
                     oninput: move |e| ctx.title.set(e.value()),
+                    // Save on blur — Dioxus event handlers can be async,
+                    // so this maps the focusout into an `update_report`
+                    // call without firing on every keystroke. Same
+                    // pattern on subtitle / block contenteditables below.
+                    onfocusout: move |_| ctx.handle_save.call(),
+                    // Pressing Enter in the title shouldn't submit a
+                    // form (we're not in one) — just move focus into
+                    // the first editable body block instead.
+                    onkeydown: move |e| {
+                        if matches!(e.key(), Key::Enter) {
+                            e.prevent_default();
+                            jump_into_first_block(&mut ctx);
+                        }
+                    },
                 }
                 input {
                     class: "report-detail__subtitle",
                     placeholder: tr.subtitle_placeholder,
                     value: "{ctx.subtitle_value()}",
                     oninput: move |e| ctx.subtitle.set(e.value()),
+                    onfocusout: move |_| ctx.handle_save.call(),
+                    onkeydown: move |e| {
+                        if matches!(e.key(), Key::Enter) {
+                            e.prevent_default();
+                            jump_into_first_block(&mut ctx);
+                        }
+                    },
                 }
                 div { class: "report-detail__blocks",
                     for block in ctx.blocks_list() {
@@ -361,6 +402,18 @@ fn DocBlock(block: ReportBlock) -> Element {
         }
     };
 
+    let id_for_blur = id.clone();
+    let onfocusout = move |evt: Event<FocusData>| {
+        let block_id = id_for_blur.clone();
+        let _ = evt;
+        async move {
+            if let Some(text) = read_block_text(&block_id).await {
+                ctx.update_block_text(&block_id, text);
+            }
+            ctx.handle_save.call();
+        }
+    };
+
     match block {
         ReportBlock::H1 { id, text } => rsx! {
             div { class: "report-detail__block", "data-type": "h1",
@@ -371,6 +424,7 @@ fn DocBlock(block: ReportBlock) -> Element {
                     "spellcheck": "false",
                     oninput,
                     onkeydown,
+                    onfocusout,
                     "{text}"
                 }
             }
@@ -384,6 +438,7 @@ fn DocBlock(block: ReportBlock) -> Element {
                     "spellcheck": "false",
                     oninput,
                     onkeydown,
+                    onfocusout,
                     "{text}"
                 }
             }
@@ -397,6 +452,7 @@ fn DocBlock(block: ReportBlock) -> Element {
                     "spellcheck": "false",
                     oninput,
                     onkeydown,
+                    onfocusout,
                     "{text}"
                 }
             }
@@ -410,6 +466,7 @@ fn DocBlock(block: ReportBlock) -> Element {
                     "spellcheck": "false",
                     oninput,
                     onkeydown,
+                    onfocusout,
                     dangerous_inner_html: "{html}",
                 }
             }
@@ -598,7 +655,7 @@ fn ChartCanvas(chart_type: ChartType) -> Element {
                         }
                     }
                     tbody {
-                        for (opt, n, pct) in [
+                        for (opt , n , pct) in [
                             ("탄소 상쇄 정책", "800", "64%"),
                             ("재생에너지 확대", "280", "22%"),
                             ("규제 강화", "120", "10%"),
@@ -626,16 +683,61 @@ fn ChartCanvas(chart_type: ChartType) -> Element {
 fn LdaCanvas() -> Element {
     // Per-topic mock data: (weight%, [(keyword, weight)])
     let topics: [(u32, [(&str, f32); 5]); 5] = [
-        (32, [("탄소", 0.18), ("상쇄", 0.14), ("정책", 0.11), ("시장", 0.09), ("거래", 0.07)]),
-        (24, [("재생", 0.16), ("에너지", 0.13), ("보조금", 0.10), ("전력", 0.08), ("태양광", 0.06)]),
-        (18, [("규제", 0.15), ("법안", 0.12), ("기준", 0.09), ("감축", 0.08), ("의무", 0.06)]),
-        (15, [("협약", 0.13), ("국제", 0.10), ("파리", 0.09), ("목표", 0.07), ("공조", 0.06)]),
-        (11, [("시민", 0.12), ("교육", 0.10), ("참여", 0.08), ("홍보", 0.07), ("캠페인", 0.05)]),
+        (
+            32,
+            [
+                ("탄소", 0.18),
+                ("상쇄", 0.14),
+                ("정책", 0.11),
+                ("시장", 0.09),
+                ("거래", 0.07),
+            ],
+        ),
+        (
+            24,
+            [
+                ("재생", 0.16),
+                ("에너지", 0.13),
+                ("보조금", 0.10),
+                ("전력", 0.08),
+                ("태양광", 0.06),
+            ],
+        ),
+        (
+            18,
+            [
+                ("규제", 0.15),
+                ("법안", 0.12),
+                ("기준", 0.09),
+                ("감축", 0.08),
+                ("의무", 0.06),
+            ],
+        ),
+        (
+            15,
+            [
+                ("협약", 0.13),
+                ("국제", 0.10),
+                ("파리", 0.09),
+                ("목표", 0.07),
+                ("공조", 0.06),
+            ],
+        ),
+        (
+            11,
+            [
+                ("시민", 0.12),
+                ("교육", 0.10),
+                ("참여", 0.08),
+                ("홍보", 0.07),
+                ("캠페인", 0.05),
+            ],
+        ),
     ];
     let max_w = topics.iter().map(|(w, _)| *w).max().unwrap_or(1) as f32;
     rsx! {
         div { class: "report-detail__chart-canvas report-detail__chart-canvas--lda",
-            for (i, (weight, kws)) in topics.iter().enumerate() {
+            for (i , (weight , kws)) in topics.iter().enumerate() {
                 {
                     let bar_pct = (*weight as f32 / max_w * 100.0) as u32;
                     rsx! {
@@ -648,7 +750,7 @@ fn LdaCanvas() -> Element {
                                 div { style: "width: {bar_pct}%" }
                             }
                             div { class: "report-detail__lda-keywords",
-                                for (w, pr) in kws.iter() {
+                                for (w , pr) in kws.iter() {
                                     span { key: "{w}", class: "report-detail__lda-kw",
                                         "{w}"
                                         em { "{pr:.2}" }
@@ -691,7 +793,7 @@ fn TfIdfCanvas() -> Element {
                     }
                 }
                 tbody {
-                    for (i, (term, score)) in terms.iter().enumerate() {
+                    for (i , (term , score)) in terms.iter().enumerate() {
                         tr { key: "{term}",
                             td { class: "report-detail__tfidf-rank", "{i + 1}" }
                             td { "{term}" }
@@ -735,7 +837,7 @@ fn NetworkCanvas() -> Element {
     rsx! {
         div { class: "report-detail__chart-canvas report-detail__chart-canvas--network",
             svg { class: "report-detail__network-svg", view_box: "0 0 500 280",
-                for (i, (a, b)) in edges.iter().enumerate() {
+                for (i , (a , b)) in edges.iter().enumerate() {
                     line {
                         key: "e-{i}",
                         class: "report-detail__network-edge",
@@ -749,7 +851,7 @@ fn NetworkCanvas() -> Element {
                 // first, label layer on top — so each `for` loop owns a
                 // single keyed root and Dioxus's "keys only on first
                 // node in block" rule is satisfied.
-                for (x, y, r, label) in nodes.iter() {
+                for (x , y , r , label) in nodes.iter() {
                     {
                         let opacity = (0.35 + r / 40.0).min(1.0);
                         rsx! {
@@ -764,7 +866,7 @@ fn NetworkCanvas() -> Element {
                         }
                     }
                 }
-                for (x, y, _, label) in nodes.iter() {
+                for (x , y , _ , label) in nodes.iter() {
                     text {
                         key: "t-{label}",
                         class: "report-detail__network-label",
