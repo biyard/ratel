@@ -11,7 +11,17 @@ use super::Partition;
 use rmcp::schemars;
 
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
-#[derive(Debug, Clone, PartialEq, Eq, SerializeDisplay, DeserializeFromStr, Default, DynamoEnum, SubPartition)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    SerializeDisplay,
+    DeserializeFromStr,
+    Default,
+    DynamoEnum,
+    SubPartition,
+)]
 pub enum EntityType {
     #[default]
     None,
@@ -25,7 +35,7 @@ pub enum EntityType {
     // USER_PK index is aligned by gsi1-index
     User,
     UserEvmAddress,
-    UserNotification(String), //notification id
+    UserNotification(String),      //notification id
     UserInboxNotification(String), // uuid_v7, time-ordered
     InboxDedupMarker(String),      // "{kind}#{source_hash}"
     UserReferralCode,
@@ -45,8 +55,8 @@ pub enum EntityType {
 
     // Character (account-level progression)
     CharacterXp,
-    CharacterXpSource(String),    // space_id (unprefixed; SubPartition wraps SpacePartition)
-    CharacterSkill(String),       // skill_id ("money_tree", "ranker", ...)
+    CharacterXpSource(String), // space_id (unprefixed; SubPartition wraps SpacePartition)
+    CharacterSkill(String),    // skill_id ("money_tree", "ranker", ...)
 
     // Feed entity types
     Post,
@@ -99,7 +109,7 @@ pub enum EntityType {
     SpaceQuizAttempt(String), // SpaceQuizAttempt#{quiz_id}#{attempt_id}
 
     // Meet action entity types
-    SpaceMeet(String),        // SpaceMeet#{uuid}
+    SpaceMeet(String), // SpaceMeet#{uuid}
 
     // Survery space entity types
     SurveySpace,
@@ -156,7 +166,7 @@ pub enum EntityType {
     FileLink(String), // FileLink#{file_id}
     SpaceAnalyze,
     SpaceAnalyzeRequest(String),
-    SpaceAnalyzeReport(String), // SPACE_ANALYZE_REPORT#{ulid}
+    SpaceAnalyzeReport(String),       // SPACE_ANALYZE_REPORT#{ulid}
     SpaceAnalyzeReportResult(String), // SPACE_ANALYZE_REPORT_RESULT#{report_id} — poll/quiz/follow aggregations, 1:1 with report
     SpaceAnalyzeDiscussionResult(String, String), // SPACE_ANALYZE_DISCUSSION_RESULT#{report_id}#{discussion_id_and_request_uuid} — second field is "{discussion_id}#{request_uuid}" composite so begins_with by (report_id, discussion_id) groups history together
     SpaceDiscussion(String),
@@ -164,7 +174,7 @@ pub enum EntityType {
     SpaceDiscussionParticipant(String, String),
 
     SpaceRecommendation,
-    SpaceReport,
+    SpaceReport(String), // SPACE_REPORT#{uuid} — one row per saved report on the space
     SpacePanels,
     SpacePanel(String),
     SpacePanelAttribute(String, String),
@@ -198,7 +208,7 @@ pub enum EntityType {
     UserPurchase(String),
     TeamPurchase(String),
 
-    Notification(String), // notification id
+    Notification(String),           // notification id
     SpaceStatusChangeEvent(String), // uuid_v7 (same id as pk)
 
     //
@@ -244,21 +254,21 @@ pub enum EntityType {
     // pk = TEAM#{parent_team_id} throughout (SubTeamDocAgreement's composite
     // sk encodes application_id + doc_id so one parent pk can hold
     // agreements for many applications).
-    SubTeamLink(String),                  // SUB_TEAM_LINK#{child_team_id}
-    SubTeamDocument(String),              // SUB_TEAM_DOCUMENT#{doc_id}
+    SubTeamLink(String),     // SUB_TEAM_LINK#{child_team_id}
+    SubTeamDocument(String), // SUB_TEAM_DOCUMENT#{doc_id}
     /// Immutable snapshot of a `SubTeamDocument` at a specific version.
     /// Second segment is the version **zero-padded to 8 digits** so the
     /// lexicographic sk order matches numeric order (v1 < v2 < … < v10).
     SubTeamDocumentVersion(String, String), // SUB_TEAM_DOCUMENT_VERSION#{doc_id}#{version:08}
-    SubTeamDocAgreement(String, String),  // SUB_TEAM_DOC_AGREEMENT#{app_id}#{doc_id}
-    SubTeamFormField(String),             // SUB_TEAM_FORM_FIELD#{field_id}
-    SubTeamApplication(String),           // SUB_TEAM_APPLICATION#{application_id}
+    SubTeamDocAgreement(String, String), // SUB_TEAM_DOC_AGREEMENT#{app_id}#{doc_id}
+    SubTeamFormField(String), // SUB_TEAM_FORM_FIELD#{field_id}
+    SubTeamApplication(String), // SUB_TEAM_APPLICATION#{application_id}
     /// In-progress (not yet submitted) sub-team application body —
     /// stored under the *applicant* team pk and keyed by the parent
     /// team id so a single applicant can hold one draft per parent
     /// they're considering.
-    SubTeamApplicationDraft(String),      // SUB_TEAM_APPLICATION_DRAFT#{parent_team_id}
-    SubTeamAnnouncement(String),          // SUB_TEAM_ANNOUNCEMENT#{announcement_id}
+    SubTeamApplicationDraft(String), // SUB_TEAM_APPLICATION_DRAFT#{parent_team_id}
+    SubTeamAnnouncement(String), // SUB_TEAM_ANNOUNCEMENT#{announcement_id}
     /// Lightweight marker that exposes a parent's anchor announcement
     /// Post on a recognized child team's wall WITHOUT cloning the Post
     /// row. One row per (child team, announcement). Listed by
@@ -268,15 +278,15 @@ pub enum EntityType {
     /// child, the URL is the same anchor URL everywhere, and the parent
     /// admin sees the full reception on their own anchor detail page.
     /// pk = TEAM#{child_team_id}, this sk encodes the announcement id.
-    SubTeamAnnouncementFanout(String),    // SUB_TEAM_ANNOUNCEMENT_FANOUT#{announcement_id}
+    SubTeamAnnouncementFanout(String), // SUB_TEAM_ANNOUNCEMENT_FANOUT#{announcement_id}
 
     // Cross-posting feature (Phase 1: Bluesky / LinkedIn / Threads). All entities
     // share an existing Partition variant (User or Feed) — no new Partition.
-    SocialConnection(String),       // pk=User(user_id), inner=platform.to_string()
-    SyndicationDirective,           // pk=Feed(post_id), singleton per published post
-    SyndicationJob(String),         // pk=Feed(post_id), inner=platform.to_string()
-    EngagementSnapshot(String),     // pk=Feed(post_id), inner=platform.to_string()
-    UserOnboardingFlags,            // pk=User(user_id), singleton per user
+    SocialConnection(String), // pk=User(user_id), inner=platform.to_string()
+    SyndicationDirective,     // pk=Feed(post_id), singleton per published post
+    SyndicationJob(String),   // pk=Feed(post_id), inner=platform.to_string()
+    EngagementSnapshot(String), // pk=Feed(post_id), inner=platform.to_string()
+    UserOnboardingFlags,      // pk=User(user_id), singleton per user
 }
 
 impl TryInto<Partition> for EntityType {

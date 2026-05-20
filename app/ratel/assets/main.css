@@ -45274,14 +45274,34 @@ body.comments-panel-resizing {
    are intentionally dropped for the initial port; cards render at
    full opacity in a horizontally-scrollable strip. */
 .reports-arena {
-  --bg-void: #06060e;
-  --bg-glass: rgba(12, 12, 26, 0.65);
-  --bg-glass-hover: rgba(20, 20, 40, 0.80);
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.12);
-  --text-primary: #f0f0f5;
-  --text-muted: #8888a8;
-  --text-dim: #55556a;
+  /* Tokens. The space-toggle pattern (`var(--dark, X) var(--light, Y)`)
+     leans on the `--dark` / `--light` custom properties that
+     `dx-components-theme.css` flips on `html[data-theme=...]` — at
+     runtime one branch resolves to the value, the other to a space,
+     so only the active theme's color is applied. The accent
+     (`--report-color`) and its glow are deliberately NOT toggled —
+     the purple stays identical in both themes by design. */
+  --bg-void: var(--dark, #06060e) var(--light, #f4f3ef);
+  --bg-glass: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, rgba(255, 255, 255, 0.78));
+  --bg-glass-hover: var(--dark, rgba(20, 20, 40, 0.80)) var(--light, rgba(255, 255, 255, 0.92));
+  --border-subtle: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(0, 0, 0, 0.08));
+  --border-strong: var(--dark, rgba(255, 255, 255, 0.12)) var(--light, rgba(0, 0, 0, 0.14));
+  --text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
+  --text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+  --text-dim: var(--dark, #55556a) var(--light, #9999aa);
+  --card-shadow: var(--dark, rgba(0, 0, 0, 0.5)) var(--light, rgba(0, 0, 0, 0.10));
+  --card-shadow-soft: var(--dark, rgba(0, 0, 0, 0.45)) var(--light, rgba(0, 0, 0, 0.08));
+  /* Modal scrim is always a real dim — even in light mode the modal
+     must visually pop out, so we tint with dark (not pale) overlay.
+     Panel keeps a strong contrast: deep glass in dark, bright white
+     card with a hairline border in light. */
+  --modal-scrim: var(--dark, rgba(4, 4, 12, 0.65)) var(--light, rgba(20, 20, 35, 0.45));
+  --modal-panel: var(--dark, linear-gradient(160deg, rgba(22, 22, 38, 0.97), rgba(10, 10, 20, 0.99))) var(--light, linear-gradient(160deg, #ffffff, #fafaf6));
+  --menu-panel: var(--dark, linear-gradient(160deg, rgba(22, 22, 38, 0.96), rgba(10, 10, 20, 0.98))) var(--light, #ffffff);
+  /* Danger pink reads on glass-dark, but vanishes on white — switch
+     to a strong rose-red on light so 삭제하기 is unmistakably visible. */
+  --danger-fg: var(--dark, #e7a8a8) var(--light, #b91c1c);
+  --danger-fg-hover: var(--dark, #f5b5b5) var(--light, #991b1b);
   --accent-gold: #fcb300;
   --accent-teal: #6eedd8;
   --report-color: #a855f7;
@@ -45543,19 +45563,24 @@ body.comments-panel-resizing {
   scroll-snap-align: center;
   position: relative;
   overflow: hidden;
-  transform: scale(0.78);
-  opacity: 0.3;
-  filter: blur(5px);
+  /* Spotlight effect on desktop — active card stands out, siblings
+     dim. Mobile keeps every card uniform (the same effect at 84vw
+     card width on a phone screen ate too much of the carousel and
+     read as "broken edges" rather than spotlight focus). The mobile
+     override lives in the `@media (max-width: 500px)` block below. */
+  transform: scale(0.82);
+  opacity: 0.4;
+  filter: blur(4px);
   transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   text-decoration: none;
   color: inherit;
 }
 .reports-arena .report-card[hidden] { display: none !important; }
 .reports-arena .report-card.active {
-  transform: scale(1.05);
+  transform: scale(1.03);
   opacity: 1;
   filter: blur(0);
-  box-shadow: 0 12px 60px rgba(0, 0, 0, 0.5), 0 0 50px var(--report-glow);
+  box-shadow: 0 12px 60px var(--card-shadow), 0 0 50px var(--report-glow);
   border-color: var(--report-border);
 }
 /* Aurora wave — only animates on the active card. */
@@ -45601,23 +45626,25 @@ body.comments-panel-resizing {
   40% { transform: translate3d(-5%, 4%, 0) rotate(-10deg) scale(1.05); opacity: 0.95; }
   70% { transform: translate3d(5%, -3%, 0) rotate(7deg) scale(0.98); opacity: 0.8; }
 }
-/* Stationary idle tint behind dimmed cards. */
-.reports-arena .report-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 20px;
-  pointer-events: none;
-  opacity: 0.35;
-  transition: opacity 0.6s ease;
-  background: radial-gradient(ellipse 70% 50% at 30% 30%, rgba(168, 85, 247, 0.06) 0%, transparent 70%);
-}
-.reports-arena .report-card.active::before { opacity: 0; }
+/* Stationary tint disabled — was an idle purple wash that read as
+   "faded corner" once the spotlight scale/opacity dimming was
+   removed; better to keep every card visually uniform. */
+.reports-arena .report-card::before { display: none; }
 .reports-arena .report-card > *:not(.report-card__wave) {
   position: relative;
   z-index: 1;
 }
-.reports-arena .report-card__top {
+/* Top row sits in its own stacking context above the rest of the
+   card body — otherwise the dropdown menu (`position: absolute` inside
+   `.report-card__menu-wrap`) loses to later siblings like
+   `.report-card__identity` whose text would visually cover the menu
+   even though its own z-index is only 30 within its parent.
+   The selector matches the specificity of the `report-card > *`
+   wildcard above (3 class selectors), so this z-index actually wins
+   the cascade — using just `.reports-arena .report-card__top` is
+   one class lighter and gets overridden back to z-index: 1. */
+.reports-arena .report-card > .report-card__top {
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -45660,7 +45687,7 @@ body.comments-panel-resizing {
 }
 .reports-arena .report-card__menu-btn:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--dark, rgba(255, 255, 255, 0.04)) var(--light, rgba(0, 0, 0, 0.04));
 }
 .reports-arena .report-card__menu-btn svg { width: 14px; height: 14px; }
 .reports-arena .report-card__identity {
@@ -45758,7 +45785,7 @@ body.comments-panel-resizing {
   background: rgba(168, 85, 247, 0.08);
   border-color: var(--report-color);
   border-style: dashed;
-  box-shadow: 0 12px 60px rgba(0, 0, 0, 0.45), 0 0 40px var(--report-glow);
+  box-shadow: 0 12px 60px var(--card-shadow-soft), 0 0 40px var(--report-glow);
 }
 .reports-arena .report-card__create-icon {
   width: 64px;
@@ -45844,6 +45871,221 @@ body.comments-panel-resizing {
   .reports-arena .reports-topbar__btn { padding: 0 10px; }
   .reports-arena .report-card { width: 84vw; min-height: 360px; }
   .reports-arena .carousel-track { gap: 16px; padding: 28px 12px; }
+
+  /* Mobile carousels show one card at a time (~84vw wide), so the
+     spotlight scale/opacity dim doesn't help focus — it just makes
+     the off-center edges look broken. Reset every card to a
+     uniform full-opacity render here; the JS `.active` class still
+     toggles the box-shadow / border-color in the base rule so the
+     selected card keeps the purple glow but stays the same size. */
+  .reports-arena .report-card {
+    transform: none;
+    opacity: 1;
+    filter: none;
+  }
+  .reports-arena .report-card.active {
+    transform: none;
+  }
+}
+
+/* ── Card overflow menu (the `...` dropdown) ─────────
+   Dioxus renders one dropdown per card and shows/hides it based on
+   `ctx.menu_open_for` — no JS positioning needed (unlike the mockup
+   which uses a single shared dropdown). */
+.reports-arena .report-card__menu-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.reports-arena .card-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px;
+  min-width: 170px;
+  background: var(--menu-panel);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  box-shadow: 0 18px 50px var(--card-shadow), 0 0 22px rgba(168, 85, 247, 0.06);
+}
+.reports-arena .card-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.14s;
+}
+.reports-arena .card-menu__item:hover {
+  /* Subtle wash that flips lightness so the hover state stays
+     readable in both themes. */
+  background: var(--dark, rgba(255, 255, 255, 0.05)) var(--light, rgba(0, 0, 0, 0.04));
+  color: var(--text-primary);
+}
+.reports-arena .card-menu__item svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+.reports-arena .card-menu__item--danger {
+  color: var(--danger-fg);
+  font-weight: 600;
+}
+.reports-arena .card-menu__item--danger:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(168, 85, 247, 0.04));
+  color: var(--danger-fg-hover);
+}
+
+/* ── Delete-confirm modal — arena glass + purple aurora ── */
+.reports-arena .confirm-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--modal-scrim);
+  backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.reports-arena .confirm-modal__panel {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  border-radius: 18px;
+  background: var(--modal-panel);
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 30px 80px var(--card-shadow), 0 0 60px rgba(168, 85, 247, 0.1);
+  padding: 32px 26px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  overflow: hidden;
+}
+.reports-arena .confirm-modal__panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(168, 85, 247, 0.1) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(239, 68, 68, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.reports-arena .confirm-modal__panel > * { position: relative; z-index: 1; }
+.reports-arena .confirm-modal__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--danger-fg);
+  padding: 3px 11px;
+  border-radius: 99px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.22);
+}
+.reports-arena .confirm-modal__eyebrow svg { width: 11px; height: 11px; }
+.reports-arena .confirm-modal__icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.16), rgba(168, 85, 247, 0.04));
+  border: 1px solid rgba(239, 68, 68, 0.32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--danger-fg);
+  margin-top: 8px;
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.reports-arena .confirm-modal__icon svg { width: 26px; height: 26px; }
+.reports-arena .confirm-modal__title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+  margin-top: 4px;
+}
+.reports-arena .confirm-modal__body {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  padding: 0 4px;
+}
+.reports-arena .confirm-modal__body strong {
+  color: var(--report-color);
+  font-weight: 700;
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13.5px;
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+.reports-arena .confirm-modal__note {
+  font-size: 11px;
+  color: var(--text-dim);
+  display: block;
+  margin-top: 8px;
+  letter-spacing: 0.02em;
+}
+.reports-arena .confirm-modal__actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 18px;
+}
+.reports-arena .confirm-modal__btn {
+  flex: 1;
+  padding: 11px 12px;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.14s;
+  border: 1px solid transparent;
+}
+.reports-arena .confirm-modal__btn--ghost {
+  background: var(--dark, rgba(255, 255, 255, 0.04)) var(--light, rgba(0, 0, 0, 0.03));
+  border-color: var(--border-strong);
+  color: var(--text-muted);
+}
+.reports-arena .confirm-modal__btn--ghost:hover {
+  background: var(--dark, rgba(255, 255, 255, 0.08)) var(--light, rgba(0, 0, 0, 0.06));
+  color: var(--text-primary);
+}
+.reports-arena .confirm-modal__btn--danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+  border-color: rgba(239, 68, 68, 0.6);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+}
+.reports-arena .confirm-modal__btn--danger:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.4);
+}
+.reports-arena .confirm-modal__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 
