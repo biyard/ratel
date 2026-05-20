@@ -194,8 +194,17 @@ fn FilledSlot(
     let initials = initials(&display);
     let _ = pk;
 
+    let slot_testid = if is_me {
+        "ff-matching-slot-self".to_string()
+    } else {
+        format!("ff-matching-slot-{idx}")
+    };
+
     rsx! {
-        div { class: "matching-slot", "data-state": state,
+        div {
+            class: "matching-slot",
+            "data-testid": "{slot_testid}",
+            "data-state": state,
             div { class: "matching-slot-num", "{seat_label}" }
             div { class: "{avatar_class}", "{initials}" }
             div { class: "matching-slot-name",
@@ -309,6 +318,7 @@ fn CancelRow() -> Element {
         div { class: "matching-actions",
             button {
                 class: "btn btn-ghost",
+                "data-testid": "ff-matching-cancel",
                 style: "padding: 10px 18px; font-size: 13px",
                 disabled: submitting(),
                 onclick: on_cancel,

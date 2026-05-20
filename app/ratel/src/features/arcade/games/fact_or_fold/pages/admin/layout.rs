@@ -34,37 +34,45 @@ pub fn FactFoldAdminLayout() -> Element {
                 nav { class: "ff-admin-arena__tabs", role: "tablist",
                     Link {
                         class: "ff-admin-arena__tab",
+                        "data-testid": "ff-admin-tab-subjects",
                         "aria-selected": route == r_subjects,
                         to: r_subjects.clone(),
                         "{tr.tab_subjects}"
                     }
                     Link {
                         class: "ff-admin-arena__tab",
+                        "data-testid": "ff-admin-tab-schedule",
                         "aria-selected": route == r_schedule,
                         to: r_schedule.clone(),
                         "{tr.tab_schedule}"
                     }
                     Link {
                         class: "ff-admin-arena__tab",
+                        "data-testid": "ff-admin-tab-stats",
                         "aria-selected": route == r_stats,
                         to: r_stats.clone(),
                         "{tr.tab_stats}"
                     }
                     Link {
                         class: "ff-admin-arena__tab",
+                        "data-testid": "ff-admin-tab-reports",
                         "aria-selected": route == r_reports,
                         to: r_reports.clone(),
                         "{tr.tab_reports}"
                     }
                     Link {
                         class: "ff-admin-arena__tab",
+                        "data-testid": "ff-admin-tab-settings",
                         "aria-selected": route == r_settings,
                         to: r_settings.clone(),
                         "{tr.tab_settings}"
                     }
                 }
                 div { class: "ff-admin-arena__cta",
-                    Link { class: "ff-admin-arena__new-btn", to: r_new,
+                    Link {
+                        class: "ff-admin-arena__new-btn",
+                        "data-testid": "ff-admin-new-subject-cta",
+                        to: r_new,
                         span { class: "ff-admin-arena__new-icon", "✚" }
                         span { "{tr.new_subject_cta}" }
                     }

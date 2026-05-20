@@ -189,6 +189,7 @@ fn SettingsForm(initial: FactOrFoldSettingsResponse) -> Element {
                     desc: "{tr.queue_alert_desc}",
                     suffix: "{tr.unit_day}",
                     value: queue_low_alert_days,
+                    testid: "ff-admin-settings-queue-low".to_string(),
                 }
             }
 
@@ -214,6 +215,7 @@ fn SettingsForm(initial: FactOrFoldSettingsResponse) -> Element {
                 }
                 button {
                     class: "btn btn--primary",
+                    "data-testid": "ff-admin-settings-save",
                     disabled: submitting(),
                     onclick: on_save,
                     if submitting() {
@@ -241,7 +243,13 @@ fn SettingsSection(title: String, sub: String, children: Element) -> Element {
 }
 
 #[component]
-fn IntRow(label: String, desc: String, suffix: String, value: Signal<i32>) -> Element {
+fn IntRow(
+    label: String,
+    desc: String,
+    suffix: String,
+    value: Signal<i32>,
+    #[props(default)] testid: String,
+) -> Element {
     let mut value = value;
     rsx! {
         div { class: "ff-settings__row",
@@ -252,6 +260,7 @@ fn IntRow(label: String, desc: String, suffix: String, value: Signal<i32>) -> El
             div { class: "ff-settings__control",
                 input {
                     class: "ff-settings__input",
+                    "data-testid": "{testid}",
                     r#type: "number",
                     value: "{value}",
                     oninput: move |e| {

@@ -159,6 +159,7 @@ pub fn FactFoldAdminNewSubjectPage() -> Element {
                     value: headline_text,
                     counter: format!("{} / {}", headline_text().len(), HEADLINE_TEXT_MAX),
                     invalid: !subject_in_range && !headline_text().is_empty(),
+                    testid: "ff-admin-headline".to_string(),
                 }
                 TextAreaField {
                     label: "{tr.body_excerpt}",
@@ -167,6 +168,7 @@ pub fn FactFoldAdminNewSubjectPage() -> Element {
                     rows: 6,
                     counter: format!("{} / {}", body_len, HEADLINE_BODY_MAX),
                     invalid: !body_in_range && !body_excerpt().is_empty(),
+                    testid: "ff-admin-body".to_string(),
                 }
             }
 
@@ -180,6 +182,7 @@ pub fn FactFoldAdminNewSubjectPage() -> Element {
                     value: source_label,
                     counter: String::new(),
                     invalid: false,
+                    testid: "ff-admin-source".to_string(),
                 }
                 TextInputField {
                     label: "{tr.category_tags}",
@@ -187,6 +190,7 @@ pub fn FactFoldAdminNewSubjectPage() -> Element {
                     value: category_tags_raw,
                     counter: String::new(),
                     invalid: false,
+                    testid: "ff-admin-tags".to_string(),
                 }
             }
 
@@ -201,6 +205,7 @@ pub fn FactFoldAdminNewSubjectPage() -> Element {
                     rows: 4,
                     counter: String::new(),
                     invalid: false,
+                    testid: "ff-admin-insider".to_string(),
                 }
                 p { class: "ff-new-subject__hint", "{tr.insider_hint}" }
             }
@@ -216,6 +221,7 @@ pub fn FactFoldAdminNewSubjectPage() -> Element {
                     rows: 3,
                     counter: String::new(),
                     invalid: false,
+                    testid: "ff-admin-summary".to_string(),
                 }
                 RevealSourcesEditor { value: reveal_sources }
             }
@@ -234,12 +240,14 @@ pub fn FactFoldAdminNewSubjectPage() -> Element {
                     }
                     button {
                         class: "btn btn--ghost",
+                        "data-testid": "ff-admin-save-draft",
                         disabled: submitting() || !core_ok,
                         onclick: save_draft,
                         "{tr.save_draft}"
                     }
                     button {
                         class: "btn btn--primary",
+                        "data-testid": "ff-admin-schedule-publish",
                         disabled: submitting() || !core_ok || scheduled_at_iso().is_empty(),
                         onclick: schedule_publish,
                         "{tr.schedule_publish}"
@@ -327,6 +335,7 @@ fn TextInputField(
     value: Signal<String>,
     counter: String,
     invalid: bool,
+    #[props(default)] testid: String,
 ) -> Element {
     let mut value = value;
     rsx! {
@@ -343,6 +352,7 @@ fn TextInputField(
             }
             input {
                 class: "ff-new-subject__input",
+                "data-testid": "{testid}",
                 "data-invalid": invalid,
                 r#type: "text",
                 placeholder: "{placeholder}",
@@ -361,6 +371,7 @@ fn TextAreaField(
     rows: i32,
     counter: String,
     invalid: bool,
+    #[props(default)] testid: String,
 ) -> Element {
     let mut value = value;
     rsx! {
@@ -377,6 +388,7 @@ fn TextAreaField(
             }
             textarea {
                 class: "ff-new-subject__textarea",
+                "data-testid": "{testid}",
                 "data-invalid": invalid,
                 rows: "{rows}",
                 placeholder: "{placeholder}",

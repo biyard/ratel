@@ -15,6 +15,7 @@ pub fn ChipBalance(on_click: EventHandler<()>) -> Element {
     rsx! {
         button {
             class: "stat-chip gold ff-arcade__chip-btn",
+            "data-testid": "ff-arcade-chip",
             "aria-label": "{tr.chip_aria}",
             onclick: move |_| on_click.call(()),
             span { class: "stat-chip-icon", "◆" }

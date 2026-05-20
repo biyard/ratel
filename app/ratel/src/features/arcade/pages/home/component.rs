@@ -208,6 +208,7 @@ fn FeaturedCta(
             } else if lobby.can_join {
                 button {
                     class: "btn btn-primary",
+                    "data-testid": "ff-arcade-join",
                     disabled: submitting,
                     onclick: move |e| on_join.call(e),
                     "{tr.cta_join}"

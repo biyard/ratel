@@ -226,8 +226,14 @@ fn SubjectRow(row: SubjectResponse) -> Element {
     let can_publish_now = matches!(row.status, SubjectStatus::Draft | SubjectStatus::Scheduled);
     let can_delete = !matches!(row.status, SubjectStatus::Live | SubjectStatus::Settled);
 
+    let row_testid = format!("ff-admin-row-{}", row.id.0);
+    let publish_testid = format!("ff-admin-row-publish-{}", row.id.0);
+    let delete_testid = format!("ff-admin-row-delete-{}", row.id.0);
+
     rsx! {
-        tr { class: "ff-subjects__row",
+        tr {
+            class: "ff-subjects__row",
+            "data-testid": "{row_testid}",
             td { class: "ff-subjects__cell-mono", "{short_id(&row.id.0)}" }
             td {
                 div { class: "ff-subjects__subject-text", "{row.headline_text}" }
@@ -253,6 +259,7 @@ fn SubjectRow(row: SubjectResponse) -> Element {
                 if can_publish_now {
                     button {
                         class: "ff-subjects__icon-btn",
+                        "data-testid": "{publish_testid}",
                         title: "{tr.action_publish}",
                         disabled: busy(),
                         onclick: on_publish,
@@ -262,6 +269,7 @@ fn SubjectRow(row: SubjectResponse) -> Element {
                 if can_delete {
                     button {
                         class: "ff-subjects__icon-btn ff-subjects__icon-btn--danger",
+                        "data-testid": "{delete_testid}",
                         title: "{tr.action_delete}",
                         disabled: busy(),
                         onclick: on_delete,

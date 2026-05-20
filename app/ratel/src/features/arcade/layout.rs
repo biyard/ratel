@@ -47,6 +47,7 @@ pub fn ArcadeLayout() -> Element {
                 nav { class: "top-nav", role: "tablist",
                     Link {
                         class: "top-nav-btn",
+                        "data-testid": "ff-arcade-tab-home",
                         "aria-selected": route == r_home,
                         to: r_home.clone(),
                         span { class: "top-nav-btn-icon", "⌂" }
@@ -54,6 +55,7 @@ pub fn ArcadeLayout() -> Element {
                     }
                     Link {
                         class: "top-nav-btn",
+                        "data-testid": "ff-arcade-tab-leaderboard",
                         "aria-selected": route == r_leaderboard,
                         to: r_leaderboard.clone(),
                         span { class: "top-nav-btn-icon", "♛" }
@@ -64,6 +66,7 @@ pub fn ArcadeLayout() -> Element {
                     if is_admin {
                         button {
                             class: "ff-arcade__admin-cta",
+                            "data-testid": "ff-arcade-admin-cta",
                             onclick: go_admin_new,
                             span { class: "top-nav-btn-icon", "⚐" }
                             span { "{tr.admin_create_round}" }
