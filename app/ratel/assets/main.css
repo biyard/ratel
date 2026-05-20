@@ -46939,6 +46939,277 @@ body.comments-panel-resizing {
   .report-detail__chart-canvas--bar { padding: 14px 6px 44px; gap: 6px; }
 }
 
+/* ─── Print / Save-as-PDF view ──────────────────────────
+   When the user hits "PDF 다운로드" we call `window.print()`. The
+   browser's print pipeline rasterises a snapshot of the page using
+   only these styles. We strip every editor / app chrome (topbar,
+   outline rail, format toolbar, table-action toolbar, selection
+   bubble, chart settings/trash buttons) and reflow the doc body for
+   an A4-ish page. Backgrounds / colors are preserved via
+   `print-color-adjust: exact` so chart figures don't drop their
+   gradient fills. */
+@media print {
+  /* Real `@page` margins (so every page has the same gutter — body
+     padding only applies on page 1, which left pages 2+ glued to the
+     top edge), then explicitly empty out the six margin-box slots so
+     the browser has nowhere to inject its own header (timestamp + tab
+     title) / footer (URL + page number). Chrome 90+ / Edge support
+     these empty content() declarations as suppression hints. */
+  @page {
+    size: A4 portrait;
+    margin: 18mm 16mm;
+    @top-left { content: ""; }
+    @top-center { content: ""; }
+    @top-right { content: ""; }
+    @bottom-left { content: ""; }
+    @bottom-center { content: ""; }
+    @bottom-right { content: ""; }
+  }
+
+  html {
+    background: #ffffff !important;
+    color: #111 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  body {
+    background: #ffffff !important;
+    color: #111 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Force light tokens for the print snapshot so the dark UI doesn't
+     bake into the PDF as a sea of dark grey. The `--dark` / `--light`
+     toggle (defined in dx-components-theme.css) flips based on
+     `data-theme`; we override here. */
+  html,
+  body,
+  .report-detail,
+  .report-detail .ratel-editor {
+    --dark: ;
+    --light: initial;
+    color-scheme: light;
+  }
+
+  /* Preserve gradient + background colors for charts. Default browser
+     print "economy" mode would otherwise drop them. */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Strip every UI chrome that isn't the document body. */
+  .report-detail__topbar,
+  .report-detail__outline,
+  .report-detail__banner,
+  .report-detail__picker-overlay,
+  .report-detail__slash-pop,
+  .ratel-editor .re-toolbar,
+  .ratel-editor .re-bubble,
+  .ratel-editor .re-table-actions,
+  .ratel-editor .re-statusbar,
+  .ratel-editor .re-bridge,
+  .ratel-editor .re-slash-bridge,
+  .report-detail__cmd-bridge,
+  .report-detail__chart-actions,
+  /* Editor-page-only chrome that doesn't belong in the printed report:
+     the "ACTION · REPORT" eyebrow strip above the title, the
+     "{analyze_name} · {item_meta}" debug strip under each chart badge,
+     and the LDA topic weight + network stats are workflow hints
+     (filler percentages / debug counts), not document content. */
+  .report-detail__cover,
+  .report-detail__chart-meta,
+  .report-detail__lda-topic-weight,
+  .report-detail__lda-topic-bar,
+  .report-detail__network-stats,
+  /* Any other floating modals or overlays anywhere on the page. */
+  body > [class*="modal"],
+  body > [class*="overlay"],
+  body > [class*="toast"],
+  /* Global `Layover` (right-side drawer). It stays in the DOM with
+     `position: fixed; inset: 0; bg-black + translate-x-full` even when
+     closed, and the browser print engine renders that black backdrop
+     as a faint dark vertical bar along the right edge of every PDF
+     page. Drop the whole tree when printing. */
+  .fixed.inset-0.z-100 {
+    display: none !important;
+  }
+  /* Strip any leftover fixed-position element that would render at the
+     same viewport coords on every print page — those create the
+     "phantom vertical bar" along the right margin in print snapshots. */
+  .report-detail *[style*="position: fixed"],
+  .report-detail *[style*="position:fixed"] {
+    display: none !important;
+  }
+  .ratel-editor .re-bubble,
+  .ratel-editor .re-table-actions,
+  .report-detail__slash-pop {
+    position: static !important;
+  }
+
+  /* The doc surface drops scrolling so the printer can paginate the
+     full content. Width takes the printable area. */
+  .report-detail {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    color: #111 !important;
+  }
+  .report-detail__grid {
+    /* The on-screen grid is two columns (body + 280px outline rail);
+       in print the outline is hidden, but the empty 280px column
+       still consumed space and left a vertical seam on the right
+       side of the page. Flatten the grid to a single column. */
+    display: block !important;
+    grid-template-columns: 1fr !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+  /* Ensure no leftover element still renders a scrollbar gutter on
+     the right side of the printable area. Every scroll container in
+     the editor UI was hidden / unset above; this is a belt-and-
+     braces sweep that catches anything we missed. */
+  .report-detail,
+  .report-detail *,
+  .ratel-editor,
+  .ratel-editor * {
+    scrollbar-width: none !important;
+  }
+  .report-detail ::-webkit-scrollbar,
+  .ratel-editor ::-webkit-scrollbar,
+  .report-detail::-webkit-scrollbar,
+  .ratel-editor::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  .report-detail__doc {
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  .report-detail__doc-inner {
+    max-width: 100% !important;
+  }
+  .report-detail .ratel-editor {
+    display: block !important;
+    background: transparent !important;
+    border: none !important;
+  }
+  .report-detail .ratel-editor .re-content {
+    overflow: visible !important;
+    padding: 0 !important;
+    color: #111 !important;
+  }
+
+  /* Title + subtitle inputs render as readonly headings on paper. */
+  .report-detail__title,
+  .report-detail__subtitle {
+    background: transparent !important;
+    border: none !important;
+    color: #111 !important;
+    outline: none !important;
+  }
+  /* Hide subtitle row entirely when it's still showing its placeholder
+     (= no value entered). `:placeholder-shown` is supported in every
+     evergreen browser. */
+  .report-detail__subtitle:placeholder-shown {
+    display: none !important;
+  }
+
+  /* Network chart: tone down the saturated purple fills + edge strokes
+     so the densely-overlapping graph reads as a soft sketch on white
+     paper instead of an opaque purple blob. */
+  .report-detail__network-node {
+    fill: rgba(168, 85, 247, 0.20) !important;
+    stroke: rgba(168, 85, 247, 0.45) !important;
+    stroke-width: 0.8 !important;
+  }
+  .report-detail__network-edge {
+    stroke: rgba(120, 90, 180, 0.18) !important;
+    stroke-width: 0.6 !important;
+  }
+  .report-detail__network-label {
+    fill: #333 !important;
+    font-size: 9.5px !important;
+  }
+
+  /* Charts: keep the colored fills, but darken text contrast for
+     paper. */
+  .report-detail__chart-block {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    background: #f7f6f3 !important;
+    color: #111 !important;
+    border-color: rgba(0, 0, 0, 0.10) !important;
+  }
+  .report-detail__chart-title,
+  .report-detail__chart-meta,
+  .report-detail__chart-meta-key,
+  .report-detail__chart-meta-val,
+  .report-detail__chart-table th,
+  .report-detail__chart-table td,
+  .report-detail__chart-pie-row,
+  .report-detail__chart-pie-row > span,
+  .report-detail__chart-pie-row > strong,
+  .report-detail__lda-topic-id,
+  .report-detail__lda-topic-weight,
+  .report-detail__lda-kw,
+  .report-detail__network-stats,
+  .report-detail__network-label {
+    color: #111 !important;
+  }
+  .report-detail__chart-table {
+    border-color: rgba(0, 0, 0, 0.15) !important;
+  }
+  .report-detail__chart-table th,
+  .report-detail__chart-table td {
+    border-color: rgba(0, 0, 0, 0.15) !important;
+  }
+  .report-detail__chart-table th {
+    background: rgba(0, 0, 0, 0.04) !important;
+  }
+  .report-detail__chart-canvas {
+    background: rgba(0, 0, 0, 0.02) !important;
+  }
+
+  /* Headings + paragraphs in the body editor: paper colors. */
+  .ratel-editor .re-content h1,
+  .ratel-editor .re-content h2,
+  .ratel-editor .re-content h3,
+  .ratel-editor .re-content p,
+  .ratel-editor .re-content li,
+  .ratel-editor .re-content td,
+  .ratel-editor .re-content th {
+    color: #111 !important;
+  }
+  .ratel-editor .re-content blockquote {
+    color: #333 !important;
+    border-color: rgba(0, 0, 0, 0.20) !important;
+  }
+  .ratel-editor .re-content a {
+    color: #1056d1 !important;
+  }
+  .ratel-editor .re-content table th,
+  .ratel-editor .re-content table td {
+    border-color: rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* Page-break friendliness for figures + tables. */
+  figure,
+  table {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
+
 /* ── Block editor (Notion-style) ─────────────── */
 .report-detail__doc { padding: 28px 28px 120px; }
 .report-detail__blocks { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
@@ -47355,12 +47626,14 @@ body.comments-panel-resizing {
   gap: 14px;
   /* Reset the default bar-canvas fixed height — LDA stacks topics
      vertically and must grow with the topic count instead of being
-     clipped (or overflowing into the next block) at 240px. */
+     clipped (or overflowing into the next block) at 240px. No inset
+     background — same reasoning as the network canvas, the chart
+     card's own surface already gives the visual frame. */
   height: auto;
-  padding: 18px;
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 10px;
-  border: 1px solid var(--rd-border-subtle);
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
 }
 .report-detail__lda-topic {
   display: flex;
@@ -47447,12 +47720,15 @@ body.comments-panel-resizing {
   color: var(--rd-discussion);
 }
 
-/* Text-network canvas — SVG graph with co-occurrence nodes / edges. */
+/* Text-network canvas — SVG graph with co-occurrence nodes / edges.
+   No inner background; the SVG sits transparently inside the chart
+   card so the card's own color (light or dark themed) shows through
+   without a grey inset rectangle. */
 .report-detail__chart-canvas--network {
   border-radius: 10px;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--rd-border-subtle);
-  padding: 14px;
+  background: transparent;
+  border: none;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -47463,10 +47739,23 @@ body.comments-panel-resizing {
   height: 300px;
   display: block;
 }
-.report-detail__network-node { stroke-width: 1.5; }
+/* Force-set network viz colors. The SVG generator writes inline
+   `style="fill: …; stroke: …"` on every node + edge, so the only way
+   to retro-fix figures already saved in a report body is with
+   `!important` here. Tuned for ON-SCREEN viewing — lines are visible
+   but not saturated. The PDF / print pipeline has its own further-
+   muted overrides inside `@media print`. */
+.report-detail svg line.report-detail__network-edge,
 .report-detail__network-edge {
-  stroke: rgba(168, 85, 247, 0.22);
-  stroke-width: 1;
+  stroke: rgba(168, 85, 247, 0.35) !important;
+  stroke-width: 1 !important;
+  stroke-linecap: round !important;
+}
+.report-detail svg circle.report-detail__network-node,
+.report-detail__network-node {
+  stroke-width: 1.2 !important;
+  fill: rgba(168, 85, 247, 0.55) !important;
+  stroke: rgba(168, 85, 247, 0.85) !important;
 }
 .report-detail__network-label {
   font-family: 'Orbitron', sans-serif;

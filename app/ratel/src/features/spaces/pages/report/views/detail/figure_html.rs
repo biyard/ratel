@@ -476,13 +476,18 @@ fn render_network(out: &mut String, discussion: Option<&DiscussionData>) {
         r#"<div class="report-detail__chart-canvas report-detail__chart-canvas--network">"#,
     );
     out.push_str(r#"<svg class="report-detail__network-svg" viewBox="0 0 500 280">"#);
+    // Edges: 100+ edges in a complete-ish graph stack their semi-
+    // transparent strokes into one opaque purple wall. Keep individual
+    // edges very light so the overall density reads as a softer mesh.
     for e in &d.network_edges {
         if let (Some(a), Some(b)) = (by_term.get(e.source.as_str()), by_term.get(e.target.as_str()))
         {
-            let stroke = 1.0 + (e.weight as f32 / max_edge_weight) * 2.0;
+            // Stroke width 0.5..1.0 (was 1..3) so weighted edges still
+            // differ but no single line dominates.
+            let stroke = 0.5 + (e.weight as f32 / max_edge_weight) * 0.5;
             write!(
                 out,
-                r#"<line class="report-detail__network-edge" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" style="stroke-width: {sw};"/>"#,
+                r#"<line class="report-detail__network-edge" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" style="stroke: rgba(168, 85, 247, 0.08); stroke-width: {sw};"/>"#,
                 x1 = a.x,
                 y1 = a.y,
                 x2 = b.x,
@@ -493,10 +498,11 @@ fn render_network(out: &mut String, discussion: Option<&DiscussionData>) {
         }
     }
     for node in &laid {
-        let opacity = (0.35 + node.r / 40.0).min(1.0);
+        // Node fill 0.18..0.32 (was 0.35..1.0), stroke 0.35 (was 0.7).
+        let opacity = (0.18 + node.r / 80.0).min(0.32);
         write!(
             out,
-            r#"<circle class="report-detail__network-node" cx="{cx}" cy="{cy}" r="{r}" style="fill: rgba(168, 85, 247, {op}); stroke: rgba(168, 85, 247, 0.7);"/>"#,
+            r#"<circle class="report-detail__network-node" cx="{cx}" cy="{cy}" r="{r}" style="fill: rgba(168, 85, 247, {op}); stroke: rgba(168, 85, 247, 0.35);"/>"#,
             cx = node.x,
             cy = node.y,
             r = node.r,

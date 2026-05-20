@@ -9,6 +9,7 @@ translate! {
     autosave_just_now: { en: "Auto-saved · just now", ko: "자동 저장됨 · 방금" },
     share_btn: { en: "Share", ko: "공유" },
     export_btn: { en: "Export", ko: "내보내기" },
+    pdf_download_btn: { en: "PDF Download", ko: "PDF 다운로드" },
     publish_btn: { en: "Publish", ko: "발행" },
 
     banner_eyebrow: { en: "Document Editor", ko: "문서 편집기" },

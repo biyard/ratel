@@ -2,6 +2,24 @@ use super::i18n::ReportDetailTranslate;
 use crate::features::spaces::pages::report::*;
 use crate::*;
 
+/// Trigger the browser's native print dialog, scoped to the report
+/// body via the `@media print` styles in `main.css`. The user can pick
+/// "Save as PDF" as the destination from the system print dialog —
+/// no extra dependency needed, the printed HTML is the same content
+/// the browser already renders so figures (charts / tables) survive
+/// without rasterization.
+fn trigger_pdf_print() {
+    let _ = dioxus::document::eval(
+        r#"
+        // Use a tiny delay so any pending Dioxus re-render settles
+        // before the print snapshot is taken. Without this, charts
+        // freshly inserted via execCommand can flicker in the printed
+        // output.
+        setTimeout(function () { window.print(); }, 50);
+        "#,
+    );
+}
+
 /// Top chrome row — back arrow + breadcrumb + autosave + Share /
 /// Export / Publish buttons. Consumes detail context for the report
 /// title (breadcrumb) and the autosave state (mock for now).
@@ -36,7 +54,10 @@ pub fn TopBar() -> Element {
                 span { class: "report-detail__autosave", "{tr.autosave_just_now}" }
             }
             div { class: "report-detail__topbar-right",
-                button { class: "report-detail__topbar-btn",
+                button {
+                    class: "report-detail__topbar-btn",
+                    "aria-label": tr.pdf_download_btn,
+                    onclick: move |_| trigger_pdf_print(),
                     svg {
                         view_box: "0 0 24 24",
                         fill: "none",
@@ -44,42 +65,23 @@ pub fn TopBar() -> Element {
                         stroke_width: "2",
                         stroke_linecap: "round",
                         stroke_linejoin: "round",
-                        circle { cx: "18", cy: "5", r: "3" }
-                        circle { cx: "6", cy: "12", r: "3" }
-                        circle { cx: "18", cy: "19", r: "3" }
+                        path { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }
+                        polyline { points: "14 2 14 8 20 8" }
                         line {
-                            x1: "8.59",
-                            y1: "13.51",
-                            x2: "15.42",
-                            y2: "17.49",
+                            x1: "9",
+                            y1: "15",
+                            x2: "15",
+                            y2: "15",
                         }
-                        line {
-                            x1: "15.41",
-                            y1: "6.51",
-                            x2: "8.59",
-                            y2: "10.49",
-                        }
-                    }
-                    span { "{tr.share_btn}" }
-                }
-                button { class: "report-detail__topbar-btn",
-                    svg {
-                        view_box: "0 0 24 24",
-                        fill: "none",
-                        stroke: "currentColor",
-                        stroke_width: "2",
-                        stroke_linecap: "round",
-                        stroke_linejoin: "round",
-                        path { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }
-                        polyline { points: "7 10 12 15 17 10" }
                         line {
                             x1: "12",
-                            y1: "15",
+                            y1: "12",
                             x2: "12",
-                            y2: "3",
+                            y2: "18",
                         }
+                        polyline { points: "10 16 12 18 14 16" }
                     }
-                    span { "{tr.export_btn}" }
+                    span { "{tr.pdf_download_btn}" }
                 }
                 button { class: "report-detail__topbar-btn report-detail__topbar-btn--primary",
                     svg {
