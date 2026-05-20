@@ -5,40 +5,37 @@ pub use user_context::*;
 
 use crate::features::auth::{controllers::get_me_handler, *};
 
-#[derive(Clone, Copy)]
-pub struct Context {
+#[derive(Clone, Copy, DioxusController)]
+pub struct AuthContext {
     pub user_context: Store<UserContext>,
+    pub logged_in: Memo<bool>,
 }
 
-impl Context {
+impl AuthContext {
     pub fn init() -> Result<Self, Loading> {
-        debug!("Auth Context::init - starting initialization of Context");
         let user_ctx = use_loader(move || async move {
-            debug!("Context::init - calling get_me_handler to fetch user context");
             let res = Ok::<_, Error>(match get_me_handler().await {
                 Ok(resp) => UserContext {
                     user: resp.user,
                     refresh_token: None,
                     membership: resp.membership,
                 },
-                Err(e) => {
-                    crate::error!("get_me failed during Context::init: {e}");
-                    UserContext::default()
-                }
+                Err(_) => UserContext::default(),
             });
-            debug!("Context::init - fetched user context: {:?}", res);
             res
         });
-        debug!("Auth Context::init - finished initializing loader for user context, now awaiting result");
 
-        let user_ctx = user_ctx?();
-        debug!(
-            "Auth Context::init - successfully loaded user context: {:?}",
-            user_ctx
-        );
+        let user_ctx = user_ctx?;
+        let user_context = use_store(move || user_ctx());
+        let logged_in = use_memo(move || {
+            let ctx = user_context();
+            debug!("AuthContext initialized with user: {:?}", ctx.user);
+            ctx.user.is_some()
+        });
 
         let ctx = Self {
-            user_context: use_store(move || user_ctx),
+            user_context,
+            logged_in,
         };
         use_context_provider(move || ctx);
 

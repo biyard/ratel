@@ -144,7 +144,9 @@ impl RatelMcpServer {
         description = "Get current user info and membership details."
     )]
     async fn get_me(&self) -> McpResult {
-        get_me_handler_mcp_impl(self.mcp_secret.clone()).await.into_mcp()
+        get_me_handler_mcp_impl(self.mcp_secret.clone())
+            .await
+            .into_mcp()
     }
 
     #[rmcp::tool(name = "get_post", description = "Get post details by ID.")]
@@ -234,9 +236,15 @@ impl RatelMcpServer {
     )]
     async fn get_space(
         &self,
-        Parameters(req): Parameters<crate::features::spaces::space_common::controllers::GetSpaceMcpRequest>,
+        Parameters(req): Parameters<
+            crate::features::spaces::space_common::controllers::GetSpaceMcpRequest,
+        >,
     ) -> McpResult {
-        crate::features::spaces::space_common::controllers::get_space_mcp_handler(&self.mcp_secret, req).await
+        crate::features::spaces::space_common::controllers::get_space_mcp_handler(
+            &self.mcp_secret,
+            req,
+        )
+        .await
     }
 
     #[rmcp::tool(
@@ -245,9 +253,15 @@ impl RatelMcpServer {
     )]
     async fn update_space(
         &self,
-        Parameters(req): Parameters<crate::features::spaces::space_common::controllers::UpdateSpaceMcpRequest>,
+        Parameters(req): Parameters<
+            crate::features::spaces::space_common::controllers::UpdateSpaceMcpRequest,
+        >,
     ) -> McpResult {
-        crate::features::spaces::space_common::controllers::update_space_mcp_handler(&self.mcp_secret, req).await
+        crate::features::spaces::space_common::controllers::update_space_mcp_handler(
+            &self.mcp_secret,
+            req,
+        )
+        .await
     }
 
     #[rmcp::tool(
@@ -256,9 +270,15 @@ impl RatelMcpServer {
     )]
     async fn delete_space(
         &self,
-        Parameters(req): Parameters<crate::features::spaces::pages::apps::apps::general::controllers::DeleteSpaceMcpRequest>,
+        Parameters(req): Parameters<
+            crate::features::spaces::pages::apps::apps::general::controllers::DeleteSpaceMcpRequest,
+        >,
     ) -> McpResult {
-        crate::features::spaces::pages::apps::apps::general::controllers::delete_space_mcp_handler(&self.mcp_secret, req).await
+        crate::features::spaces::pages::apps::apps::general::controllers::delete_space_mcp_handler(
+            &self.mcp_secret,
+            req,
+        )
+        .await
     }
 
     // ── Poll tools ──────────────────────────────────────────────────
@@ -389,9 +409,15 @@ impl RatelMcpServer {
     )]
     async fn get_meet(
         &self,
-        Parameters(req): Parameters<crate::features::spaces::pages::actions::actions::meet::controllers::GetMeetMcpRequest>,
+        Parameters(req): Parameters<
+            crate::features::spaces::pages::actions::actions::meet::controllers::GetMeetMcpRequest,
+        >,
     ) -> McpResult {
-        crate::features::spaces::pages::actions::actions::meet::controllers::get_meet_mcp_handler(&self.mcp_secret, req).await
+        crate::features::spaces::pages::actions::actions::meet::controllers::get_meet_mcp_handler(
+            &self.mcp_secret,
+            req,
+        )
+        .await
     }
 
     #[rmcp::tool(
@@ -424,9 +450,15 @@ impl RatelMcpServer {
     )]
     async fn install_space_app(
         &self,
-        Parameters(req): Parameters<crate::features::spaces::pages::apps::controllers::InstallSpaceAppMcpRequest>,
+        Parameters(req): Parameters<
+            crate::features::spaces::pages::apps::controllers::InstallSpaceAppMcpRequest,
+        >,
     ) -> McpResult {
-        crate::features::spaces::pages::apps::controllers::install_space_app_mcp_handler(&self.mcp_secret, req).await
+        crate::features::spaces::pages::apps::controllers::install_space_app_mcp_handler(
+            &self.mcp_secret,
+            req,
+        )
+        .await
     }
 
     #[rmcp::tool(
@@ -435,9 +467,15 @@ impl RatelMcpServer {
     )]
     async fn uninstall_space_app(
         &self,
-        Parameters(req): Parameters<crate::features::spaces::pages::apps::controllers::UninstallSpaceAppMcpRequest>,
+        Parameters(req): Parameters<
+            crate::features::spaces::pages::apps::controllers::UninstallSpaceAppMcpRequest,
+        >,
     ) -> McpResult {
-        crate::features::spaces::pages::apps::controllers::uninstall_space_app_mcp_handler(&self.mcp_secret, req).await
+        crate::features::spaces::pages::apps::controllers::uninstall_space_app_mcp_handler(
+            &self.mcp_secret,
+            req,
+        )
+        .await
     }
 
     // ── Poll participant tools ───────────────────────────────────────
@@ -448,9 +486,15 @@ impl RatelMcpServer {
     )]
     async fn get_poll(
         &self,
-        Parameters(req): Parameters<crate::features::spaces::pages::actions::actions::poll::controllers::GetPollMcpRequest>,
+        Parameters(req): Parameters<
+            crate::features::spaces::pages::actions::actions::poll::controllers::GetPollMcpRequest,
+        >,
     ) -> McpResult {
-        crate::features::spaces::pages::actions::actions::poll::controllers::get_poll_mcp_handler(&self.mcp_secret, req).await
+        crate::features::spaces::pages::actions::actions::poll::controllers::get_poll_mcp_handler(
+            &self.mcp_secret,
+            req,
+        )
+        .await
     }
 
     #[rmcp::tool(
@@ -472,9 +516,15 @@ impl RatelMcpServer {
     )]
     async fn get_quiz(
         &self,
-        Parameters(req): Parameters<crate::features::spaces::pages::actions::actions::quiz::controllers::GetQuizMcpRequest>,
+        Parameters(req): Parameters<
+            crate::features::spaces::pages::actions::actions::quiz::controllers::GetQuizMcpRequest,
+        >,
     ) -> McpResult {
-        crate::features::spaces::pages::actions::actions::quiz::controllers::get_quiz_mcp_handler(&self.mcp_secret, req).await
+        crate::features::spaces::pages::actions::actions::quiz::controllers::get_quiz_mcp_handler(
+            &self.mcp_secret,
+            req,
+        )
+        .await
     }
 
     #[rmcp::tool(
@@ -490,10 +540,7 @@ impl RatelMcpServer {
 
     // ── Discussion participant tools ────────────────────────────────
 
-    #[rmcp::tool(
-        name = "get_discussion",
-        description = "Get discussion details by ID."
-    )]
+    #[rmcp::tool(name = "get_discussion", description = "Get discussion details by ID.")]
     async fn get_discussion(
         &self,
         Parameters(req): Parameters<crate::features::spaces::pages::actions::actions::discussion::controllers::GetDiscussionMcpRequest>,
@@ -555,9 +602,15 @@ impl RatelMcpServer {
     )]
     async fn list_actions(
         &self,
-        Parameters(req): Parameters<crate::features::spaces::pages::actions::controllers::ListActionsMcpRequest>,
+        Parameters(req): Parameters<
+            crate::features::spaces::pages::actions::controllers::ListActionsMcpRequest,
+        >,
     ) -> McpResult {
-        crate::features::spaces::pages::actions::controllers::list_actions_mcp_handler(&self.mcp_secret, req).await
+        crate::features::spaces::pages::actions::controllers::list_actions_mcp_handler(
+            &self.mcp_secret,
+            req,
+        )
+        .await
     }
 
     // ── AI Moderator tools ───────────────────────────────────────────
@@ -568,9 +621,15 @@ impl RatelMcpServer {
     )]
     async fn update_ai_moderator(
         &self,
-        Parameters(req): Parameters<crate::features::ai_moderator::controllers::UpdateAiModeratorConfigMcpRequest>,
+        Parameters(req): Parameters<
+            crate::features::ai_moderator::controllers::UpdateAiModeratorConfigMcpRequest,
+        >,
     ) -> McpResult {
-        crate::features::ai_moderator::controllers::update_ai_moderator_config_mcp_handler(&self.mcp_secret, req).await
+        crate::features::ai_moderator::controllers::update_ai_moderator_config_mcp_handler(
+            &self.mcp_secret,
+            req,
+        )
+        .await
     }
 
     // ── Team tools ──────────────────────────────────────────────────
@@ -579,11 +638,9 @@ impl RatelMcpServer {
         name = "list_teams",
         description = "List all teams the user belongs to with their role and permissions. Use team_id from the result as the team_id parameter in create_post to post under a team."
     )]
-    async fn list_teams(
-        &self,
-        Parameters(req): Parameters<crate::features::social::controllers::GetUserTeamsHandlerMcpRequest>,
-    ) -> McpResult {
-        crate::features::social::controllers::get_user_teams_handler_mcp_handler(&self.mcp_secret, req).await
+    async fn list_teams(&self) -> McpResult {
+        crate::features::social::controllers::get_user_teams_handler_mcp_handler(&self.mcp_secret)
+            .await
     }
 
     // ── Notification inbox tools ────────────────────────────────────
@@ -594,9 +651,15 @@ impl RatelMcpServer {
     )]
     async fn list_inbox(
         &self,
-        Parameters(req): Parameters<crate::features::notifications::controllers::list_inbox::ListInboxHandlerMcpRequest>,
+        Parameters(req): Parameters<
+            crate::features::notifications::controllers::list_inbox::ListInboxHandlerMcpRequest,
+        >,
     ) -> McpResult {
-        crate::features::notifications::controllers::list_inbox::list_inbox_handler_mcp_handler(&self.mcp_secret, req).await
+        crate::features::notifications::controllers::list_inbox::list_inbox_handler_mcp_handler(
+            &self.mcp_secret,
+            req,
+        )
+        .await
     }
 
     #[rmcp::tool(

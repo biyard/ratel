@@ -10,3 +10,8 @@ pub use use_interval::*;
 pub use use_origin::*;
 pub use use_platform::*;
 pub use use_scroll_lock::*;
+
+#[cfg(feature = "fullstack")]
+mod use_loader;
+#[cfg(feature = "fullstack")]
+pub use use_loader::*;

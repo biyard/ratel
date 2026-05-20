@@ -1,56 +1,11 @@
 use crate::{
-    auth::use_user_context,
-    common::{types::UserType, Error},
+    common::{types::UserType, Error, TeamItem},
     posts::types::TeamGroupPermissions,
     social::controllers::{create_team_handler, get_user_teams_handler, CreateTeamRequest},
     *,
 };
 
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-pub struct TeamItem {
-    pub pk: String,
-    pub nickname: String,
-    pub username: String,
-    pub profile_url: String,
-    pub user_type: UserType,
-    #[serde(default)]
-    pub permissions: Vec<u8>,
-    #[serde(default)]
-    pub description: String,
-    /// Epoch-ms the team was created. `0` for legacy rows. Used by
-    /// the sub-team apply page to live-evaluate the parent's
-    /// `min_sub_team_age_days` requirement against the picked team.
-    #[serde(default)]
-    pub created_at: i64,
-    /// Member count (UserTeam rows). `0` for legacy rows. Used by
-    /// the sub-team apply page to live-evaluate the parent's
-    /// `min_sub_team_members` requirement against the picked team.
-    #[serde(default)]
-    pub member_count: i64,
-}
-
-impl TeamItem {
-    pub fn permission_mask(&self) -> i64 {
-        let mut mask = 0i64;
-        for v in &self.permissions {
-            mask |= 1i64 << (*v as i32);
-        }
-        mask
-    }
-
-    pub fn has_permission(
-        &self,
-        permission: crate::features::posts::types::TeamGroupPermission,
-    ) -> bool {
-        let permissions: crate::features::posts::types::TeamGroupPermissions =
-            self.permission_mask().into();
-        permissions.contains(permission)
-    }
-}
-
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, DioxusController)]
 pub struct TeamContext {
     pub teams: Loader<Vec<TeamItem>>,
     pub selected_index: Signal<usize>,
@@ -102,26 +57,6 @@ impl TeamContext {
         Ok(team_item)
     }
 
-    pub fn init() -> Result<Self, Loading> {
-        let user_ctx = use_user_context();
-        let teams = use_loader(move || async move {
-            let logged_in = user_ctx().is_logged_in();
-
-            if !logged_in {
-                return Ok(Vec::new());
-            }
-
-            Ok::<_, Error>(get_user_teams_handler(None).await.unwrap_or_default().items)
-        })?;
-        let selected_index = use_signal(|| 0);
-
-        let ctx = use_context_provider(move || TeamContext {
-            teams,
-            selected_index,
-        });
-        Ok(ctx)
-    }
-
     pub fn set_teams(&mut self, teams: Vec<TeamItem>) {
         self.teams.set(teams);
     }
@@ -136,7 +71,7 @@ impl TeamContext {
         teams.get(idx).cloned()
     }
 
-    pub fn set_selected_index(&mut self, index: usize) {
+    pub fn select_team_by_idx(&mut self, index: usize) {
         self.selected_index.set(index);
     }
 
@@ -148,7 +83,34 @@ impl TeamContext {
     }
 }
 
+pub fn use_team_context_provider() -> Result<TeamContext, Loading> {
+    let AuthContext { logged_in, .. } = use_auth_context();
+    let teams = use_loader(move || {
+        let logged_in = logged_in();
+        debug!("Loading teams, logged_in: {}", logged_in);
+
+        async move {
+            if !logged_in {
+                return Ok(Vec::new());
+            }
+
+            Ok::<_, Error>(get_user_teams_handler().await.unwrap_or_default().items)
+        }
+    })?;
+    let selected_index = use_signal(|| 0);
+
+    let ctx = use_context_provider(move || TeamContext {
+        teams,
+        selected_index,
+    });
+    Ok(ctx)
+}
+
 #[track_caller]
 pub fn use_team_context() -> TeamContext {
     use_context::<TeamContext>()
+}
+
+pub fn consume_team_context() -> TeamContext {
+    consume_context::<TeamContext>()
 }

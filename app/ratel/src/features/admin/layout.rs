@@ -7,7 +7,7 @@ pub fn AppLayout() -> Element {
     let nav = use_navigator();
 
     match &user {
-        Some(u) if u.user_type == UserType::Admin => {
+        Some(u) if u.user_type == UserType::SystemAdmin => {
             rsx! {
                 section { class: "admin-arena",
                     // Sticky topbar — back button + ARENA-style title.

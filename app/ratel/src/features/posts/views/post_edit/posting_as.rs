@@ -1,7 +1,7 @@
 use crate::common::*;
 
 use super::i18n::PostEditTranslate;
-use crate::common::contexts::TeamItem;
+use crate::common::TeamItem;
 
 const DEFAULT_AVATAR: &str = "https://metadata.ratel.foundation/ratel/default-profile.png";
 
