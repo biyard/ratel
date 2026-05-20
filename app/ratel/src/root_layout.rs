@@ -2,8 +2,10 @@ use crate::*;
 
 #[component]
 pub fn RootLayout() -> Element {
-    crate::features::auth::Context::init()?;
-    crate::common::contexts::TeamContext::init()?;
+    crate::features::auth::AuthContext::init()?;
+    let team_ctx = use_team_context_provider();
+
+    team_ctx?;
 
     rsx! {
         ErrorBoundary {

@@ -97,16 +97,20 @@ Reference implementations:
 Use `use_loader` for loading server data. `use_loader` returns a `Loader<T>` which requires `T: PartialEq`.
 
 ```rust
-// Single async call — use_loader with closure
-let resource = use_loader(move || async move {
-    get_my_handler(space_id()).await
+// Read signal dependencies in the SYNC prefix, then move them into the async body.
+let resource = use_loader(move || {
+    let space_id = space_id();          // tracked — sync read
+    async move {
+        get_my_handler(space_id).await  // uses captured value
+    }
 })?;
 let data = resource();  // returns Result<T>
 
 // Reactive prop — accept ReadSignal<T> so signal is Copy (no clone needed)
 fn MyComponent(space_id: ReadSignal<SpacePartition>) -> Element {
-    let resource = use_loader(move || async move {
-        get_handler(space_id(), None).await
+    let resource = use_loader(move || {
+        let space_id = space_id();
+        async move { get_handler(space_id, None).await }
     })?;
 }
 ```
@@ -114,6 +118,31 @@ fn MyComponent(space_id: ReadSignal<SpacePartition>) -> Element {
 - Response types must derive `PartialEq` (required by `Loader<T>`)
 - Access data with `resource()` — not `.read()`
 - Accept `ReadSignal<T>` props when used only in loaders — avoids `use_reactive` + `.clone()`
+
+### Dependency tracking: sync prefix only
+
+`use_loader` re-runs only when signals it depends on change. Dependency tracking happens **during the synchronous prefix of the closure** — every `Signal` / `Memo` read that executes *before* the `async move` block is registered. Reads performed *inside* `async move` are NOT tracked — the future is polled later, outside the reactive scope, so signals touched there are invisible to the dependency graph and the loader will not re-run when they change.
+
+```rust
+// GOOD — `logged_in` is read in the sync prefix, so the loader re-runs on
+// login/logout. The captured `bool` is what the async block uses.
+let teams = use_loader(move || {
+    let logged_in = logged_in();
+    async move {
+        if !logged_in { return Ok(Vec::new()); }
+        Ok::<_, Error>(get_user_teams_handler().await.unwrap_or_default().items)
+    }
+})?;
+
+// BAD — `logged_in()` is read inside `async move`. The loader runs ONCE on
+// first render and never re-runs when login state flips.
+let teams = use_loader(move || async move {
+    if !logged_in() { return Ok(Vec::new()); }
+    Ok::<_, Error>(get_user_teams_handler().await.unwrap_or_default().items)
+})?;
+```
+
+Rule of thumb: every signal/memo the loader should react to must be read into a plain local **before** `async move`. If the value isn't `Copy`, clone it into the local — the async block then owns the snapshot.
 
 ## Pagination with `use_infinite_query`
 

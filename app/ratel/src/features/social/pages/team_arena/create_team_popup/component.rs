@@ -1,12 +1,10 @@
 use crate::auth::UserType;
+use crate::common::*;
 use crate::common::{use_popup, use_team_context, TeamCreationForm, TeamCreationPayload, TeamItem};
-use crate::features::social::controllers::{
-    create_team_handler, get_user_teams_handler, CreateTeamRequest,
-};
+use crate::features::social::controllers::{create_team_handler, CreateTeamRequest};
 use crate::posts::types::TeamGroupPermissions;
 use crate::route::Route;
 use crate::social::pages::member::dto::TeamRole;
-use crate::common::*;
 
 /// Arena-styled wrapper around the existing `TeamCreationForm`.
 /// Reuses the form contents verbatim but hosts it inside a glass panel that

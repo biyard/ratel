@@ -107,9 +107,12 @@ impl PopupService {
         }
         self
     }
-
 }
 
 pub fn use_popup() -> PopupService {
     use_context::<PopupService>()
+}
+
+pub fn consume_popup() -> PopupService {
+    consume_context::<PopupService>()
 }

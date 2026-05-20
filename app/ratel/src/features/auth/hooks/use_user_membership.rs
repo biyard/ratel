@@ -3,7 +3,7 @@ use crate::features::membership::controllers::get_membership_handler;
 use crate::features::membership::models::UserMembershipResponse;
 
 pub fn use_user_membership() -> Option<UserMembershipResponse> {
-    let ctx = use_context::<Context>();
+    let ctx = use_context::<AuthContext>();
     let mut user_ctx = ctx.user_context;
 
     let _loader = use_resource(move || async move {
