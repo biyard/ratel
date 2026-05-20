@@ -14,7 +14,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
     let nav = use_navigator();
 
     // Highlight the "Home" tab in the arena topbar.
-    let mut arena = use_team_arena();
+    let arena = use_team_arena();
 
     let description_html = arena.description();
     let created_at = arena.created_at();

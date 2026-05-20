@@ -1,9 +1,9 @@
 use super::space_card::*;
 use super::*;
 use crate::common::components::{Robots, SeoMeta};
-use crate::common::contexts::TeamItem;
 use crate::common::hooks::use_infinite_query;
 use crate::common::types::ListResponse;
+use crate::common::TeamItem;
 use crate::features::auth::LoginModal;
 use crate::features::posts::controllers::create_post::create_post_handler;
 use crate::features::social::pages::team_arena::ArenaTeamCreationPopup;
@@ -42,7 +42,7 @@ pub fn Index() -> Element {
     let is_admin = user_ctx()
         .user
         .as_ref()
-        .map(|u| matches!(u.user_type, UserType::Admin))
+        .map(|u| matches!(u.user_type, UserType::SystemAdmin))
         .unwrap_or(false);
     let mut settings_open = use_signal(|| false);
     let mut teams_open = use_signal(|| false);
@@ -51,34 +51,10 @@ pub fn Index() -> Element {
     // dropdown groups with a single flat tile grid).
     let mut menu_open = use_signal(|| false);
 
-    debug!("before hot spaces");
     let hot_spaces = use_loader(|| async move { list_hot_spaces_handler().await })?;
-    debug!("after hot spaces");
 
-    // Read user_ctx inside the async so the fetch reflects the current
-    // login state at invocation time. Login from the home page triggers
-    // `teams_query.restart()` via the LoginModal's `on_success` callback
-    // (wired into each HUD button below) instead of a use_effect.
-    let mut teams_query = use_infinite_query(move |bookmark| {
-        let logged_in = user_ctx().user.is_some();
-
-        async move {
-            if logged_in {
-                crate::features::social::controllers::get_user_teams_handler(bookmark).await
-            } else {
-                Ok(ListResponse::<TeamItem>::default())
-            }
-        }
-    })?;
-    let teams: Vec<TeamItem> = teams_query.items();
-    let teams_more = teams_query.more_element();
-
-    // Shared restart callback passed into every LoginModal we open from
-    // this page — fires right after a successful login so the Teams
-    // dropdown reloads without a full page reload.
-    let on_login_success: Callback<()> = use_callback(move |_| {
-        teams_query.restart();
-    });
+    let team_ctx = use_team_context();
+    let teams: Vec<TeamItem> = team_ctx.teams();
 
     let keywords = vec![
         "ratel".to_string(),
@@ -120,7 +96,7 @@ pub fn Index() -> Element {
         if !has_user {
             popup
                 .open(rsx! {
-                    LoginModal { on_success: on_login_success }
+                    LoginModal {}
                 })
                 .with_title("Start building your Essence");
             return;
@@ -137,80 +113,32 @@ pub fn Index() -> Element {
         }
     };
 
-    let mut go_drafts = move |_: Event<MouseData>| {
-        if !has_user {
-            popup
-                .open(rsx! {
-                    LoginModal { on_success: on_login_success }
-                })
-                .with_title("Start building your Essence");
-            return;
-        }
-        nav.push(Route::SocialDraft {
+    let go_drafts = move |_: Event<MouseData>| {
+        nav.auth_push(Route::SocialDraft {
             username: username(),
         });
     };
 
-    let mut go_rewards = move |_: Event<MouseData>| {
-        if !has_user {
-            popup
-                .open(rsx! {
-                    LoginModal { on_success: on_login_success }
-                })
-                .with_title("Start building your Essence");
-            return;
-        }
-        nav.push(Route::SocialReward {
+    let go_rewards = move |_: Event<MouseData>| {
+        nav.auth_push(Route::SocialReward {
             username: username(),
         });
     };
 
-    let mut go_credentials = move |_: Event<MouseData>| {
-        if !has_user {
-            popup
-                .open(rsx! {
-                    LoginModal { on_success: on_login_success }
-                })
-                .with_title("Start building your Essence");
-            return;
-        }
-        nav.push(Route::CredentialsHome {});
+    let go_credentials = move |_: Event<MouseData>| {
+        nav.auth_push(Route::CredentialsHome {});
     };
 
-    let mut go_essence = move |_: Event<MouseData>| {
-        if !has_user {
-            popup
-                .open(rsx! {
-                    LoginModal { on_success: on_login_success }
-                })
-                .with_title("Start building your Essence");
-            return;
-        }
-        nav.push(Route::EssenceSourcesPage {});
+    let go_essence = move |_: Event<MouseData>| {
+        nav.auth_push(Route::EssenceSourcesPage {});
     };
 
     let go_arcade = move |_: Event<MouseData>| {
-        if !has_user {
-            popup
-                .open(rsx! {
-                    LoginModal { on_success: on_login_success }
-                })
-                .with_title("Start building your Essence");
-            return;
-        }
-        nav.push(Route::ArcadeHomePage {});
+        nav.auth_push(Route::ArcadeHomePage {});
     };
 
-    let mut go_my_ai = move |_: Event<MouseData>| {
-        if !has_user {
-            popup
-                .open(rsx! {
-                    LoginModal { on_success: on_login_success }
-                })
-                .with_title("Start building your Essence");
-            return;
-        }
-        nav.push(Route::MyAiPage {});
+    let go_my_ai = move |_: Event<MouseData>| {
+        nav.auth_push(Route::MyAiPage {});
     };
 
     let open_settings = move |_: Event<MouseData>| {
@@ -365,17 +293,7 @@ pub fn Index() -> Element {
                         class: "hud-btn hud-btn--ai",
                         aria_label: "{t.my_ai}",
                         "data-testid": "home-btn-my-ai",
-                        onclick: move |_| {
-                            if !has_user {
-                                popup
-                                    .open(rsx! {
-                                    LoginModal { on_success: on_login_success }
-                                })
-                                .with_title("Start building your Essence");
-                                return;
-                            }
-                            nav.push(Route::MyAiPage {});
-                        },
+                        onclick: go_my_ai,
                         svg {
                             fill: "none",
                             stroke: "currentColor",
@@ -479,22 +397,6 @@ pub fn Index() -> Element {
                                 div {
                                     class: "team-dd__list",
                                     id: "home-teams-dd-list",
-                                    // The shared `use_infinite_query` sentinel uses
-                                    // IntersectionObserver against the viewport, which
-                                    // doesn't fire for internal scrolling inside this
-                                    // bounded dropdown. Detect near-bottom directly via
-                                    // onscroll + JS so pagination triggers reliably.
-                                    onscroll: move |_| {
-                                        let mut ctrl = teams_query;
-                                        spawn(async move {
-                                            let mut eval = document::eval(include_str!("./web/team-list.js"));
-                                            if let Ok(near_bottom) = eval.recv::<bool>().await {
-                                                if near_bottom && ctrl.has_more() && !ctrl.is_loading() {
-                                                    ctrl.next();
-                                                }
-                                            }
-                                        });
-                                    },
                                     if teams.is_empty() {
                                         div { class: "team-dd__empty", "{t.teams_empty}" }
                                     } else {
@@ -510,7 +412,6 @@ pub fn Index() -> Element {
                                             }
                                         }
                                     }
-                                    {teams_more}
                                 }
                                 div {
                                     class: "team-dd__footer",
@@ -561,7 +462,7 @@ pub fn Index() -> Element {
                             "data-testid": "home-btn-signin",
                             onclick: move |_| {
                                 popup.open(rsx! {
-                                    LoginModal { on_success: on_login_success }
+                                    LoginModal {}
                                 }).with_title("Start building your Essence");
                             },
                             svg {
@@ -789,28 +690,28 @@ pub fn Index() -> Element {
                         }
                     }
                 }
-                        // button {
-            //     class: "browse-btn",
-            //     "data-testid": "home-btn-browse",
-            //     onclick: go_browse_all,
-            //     svg {
-            //         fill: "none",
-            //         stroke: "currentColor",
-            //         stroke_linecap: "round",
-            //         stroke_linejoin: "round",
-            //         stroke_width: "2",
-            //         view_box: "0 0 24 24",
-            //         xmlns: "http://www.w3.org/2000/svg",
-            //         circle { cx: "11", cy: "11", r: "8" }
-            //         line {
-            //             x1: "21",
-            //             y1: "21",
-            //             x2: "16.65",
-            //             y2: "16.65",
-            //         }
-            //     }
-            //     "{t.browse_all}"
-            // }
+                // button {
+                //     class: "browse-btn",
+                //     "data-testid": "home-btn-browse",
+                //     onclick: go_browse_all,
+                //     svg {
+                //         fill: "none",
+                //         stroke: "currentColor",
+                //         stroke_linecap: "round",
+                //         stroke_linejoin: "round",
+                //         stroke_width: "2",
+                //         view_box: "0 0 24 24",
+                //         xmlns: "http://www.w3.org/2000/svg",
+                //         circle { cx: "11", cy: "11", r: "8" }
+                //         line {
+                //             x1: "21",
+                //             y1: "21",
+                //             x2: "16.65",
+                //             y2: "16.65",
+                //         }
+                //     }
+                //     "{t.browse_all}"
+                // }
             }
 
             // SETTINGS PANEL — same component as Space Arena

@@ -102,7 +102,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
     let render_menu = |profile_url: String,
                        display_name: String,
                        permissions_vec: Vec<u8>,
-                       _teams: Vec<crate::common::contexts::TeamItem>| {
+                       _teams: Vec<crate::common::TeamItem>| {
         let team_home_route = Route::SocialIndex {
             username: username.clone(),
         }
@@ -369,7 +369,7 @@ fn TeamSidemenu(username: String, logged_in: bool) -> Element {
                 let profile_url = team.profile_url.clone().unwrap_or_default();
                 let mut teams = team_ctx.teams.read().clone();
                 if !teams.iter().any(|item| item.username == team.username) {
-                    teams.push(crate::common::contexts::TeamItem {
+                    teams.push(crate::common::TeamItem {
                         pk: team.pk.clone(),
                         nickname: team.nickname.clone(),
                         username: team.username.clone(),

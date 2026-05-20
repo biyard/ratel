@@ -108,7 +108,7 @@ pub fn ActionRewardSetting(
             .map_or(0, |membership| membership.remaining_credits.max(0) as u64)
     };
     let mut remaining_credits = use_signal(move || base_remaining_credits);
-    let mut auth_ctx = use_context::<crate::features::auth::context::Context>();
+    let mut auth_ctx = use_context::<crate::features::auth::context::AuthContext>();
     use_effect(move || {
         if !is_team_space {
             let new_credits = auth_ctx

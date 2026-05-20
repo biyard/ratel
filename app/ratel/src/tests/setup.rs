@@ -102,7 +102,7 @@ pub async fn create_admin_user_session(
     app: Router,
     cli: &aws_sdk_dynamodb::Client,
 ) -> (User, axum::http::HeaderMap) {
-    create_session_with_user_type(app, cli, UserType::Admin).await
+    create_session_with_user_type(app, cli, UserType::SystemAdmin).await
 }
 
 async fn create_session_with_user_type(

@@ -20,7 +20,7 @@ pub fn ArcadeLayout() -> Element {
     let user_ctx = use_user_context();
     let is_admin = matches!(
         user_ctx().user.as_ref().map(|u| u.user_type),
-        Some(crate::common::types::UserType::Admin),
+        Some(crate::common::types::UserType::SystemAdmin),
     );
 
     let mut modal_open = use_signal(|| false);

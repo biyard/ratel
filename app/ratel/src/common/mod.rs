@@ -13,6 +13,7 @@ mod traits;
 pub mod types;
 
 pub use config::*;
+pub use hooks::*;
 pub use provider::*;
 
 pub use by_macros::*;
@@ -41,7 +42,13 @@ pub use fullstack::{
 pub use dioxus::prelude::{delete, get, patch, post, put, *};
 
 #[cfg(feature = "fullstack")]
-pub use dioxus::fullstack::{Form, Loader, Loading};
+pub use dioxus::fullstack::{Form, Loader};
+
+#[cfg(feature = "fullstack")]
+pub type Loading = RenderError;
+
+#[cfg(feature = "fullstack")]
+pub use hooks::use_loader;
 
 pub use dioxus::logger::tracing::{debug, error, info, warn};
 
