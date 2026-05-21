@@ -702,6 +702,10 @@
     });
 
     editor.addEventListener("keydown", function (e) {
+      // IME composition: never fire while a CJK candidate is being committed
+      // (e.g. Enter is used to commit Korean syllables; intercepting it would
+      // corrupt the composition).
+      if (composing) return;
       // Tab / Shift+Tab inside a list item: nest deeper / un-nest.
       if (e.key === "Tab" && !e.metaKey && !e.ctrlKey && !e.altKey) {
         if (mdAncestorTag("LI")) {

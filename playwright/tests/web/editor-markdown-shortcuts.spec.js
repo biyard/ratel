@@ -165,9 +165,9 @@ test.describe.serial("Editor markdown shortcuts", () => {
     await page.keyboard.type("After");
     await expect(editor.locator("ul > li")).toHaveCount(1);
     await expect(editor.locator("ul > li")).toHaveText("Item");
-    // "After" should NOT live inside the <ul>.
-    const afterInUl = await editor.locator("ul").innerText();
-    expect(afterInUl).not.toContain("After");
+    // "After" should NOT live inside the <ul>; it should appear in the
+    // editor at large (i.e. in the paragraph that the Enter-exit produced).
+    await expect(editor.locator("ul")).not.toContainText("After");
     await expect(editor).toContainText("After");
   });
 });
