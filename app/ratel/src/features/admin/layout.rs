@@ -33,7 +33,12 @@ pub fn AppLayout() -> Element {
                             }
                             span { "Back" }
                         }
-                        span { class: "admin-arena__title", "Admin" }
+                        div { class: "ff-admin-arena__brand",
+                            div { class: "ff-admin-arena__brand-logo", "R" }
+                            div { class: "ff-admin-arena__brand-text",
+                                div { class: "ff-admin-arena__brand-name", "Admin" }
+                            }
+                        }
                     }
                     Outlet::<Route> {}
                 }

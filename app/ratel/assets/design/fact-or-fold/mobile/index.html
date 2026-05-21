@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Fact or Fold · Mobile Mockups</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px;
+    background: #07070f;
+    color: #f0f0f5;
+    font-family: "Outfit", system-ui, sans-serif;
+  }
+  h1 {
+    font-family: "Orbitron", sans-serif;
+    font-size: 22px;
+    margin: 0 0 6px;
+  }
+  .lead {
+    color: #8a8aa6;
+    margin: 0 0 24px;
+    font-size: 13px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 24px;
+  }
+  .preview {
+    background: rgba(18, 18, 32, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .preview-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .preview-title {
+    font-family: "Orbitron", sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: #fcb300;
+  }
+  .preview-link {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: #8a8aa6;
+    text-decoration: none;
+  }
+  .preview-link:hover { color: #fcb300; }
+  .preview-frame {
+    flex: 1;
+    width: 100%;
+    height: 760px;
+    border: 0;
+    background: #07070f;
+  }
+</style>
+</head>
+<body>
+  <h1>Fact or Fold — Mobile Mockups</h1>
+  <p class="lead">
+    6 라운드 모바일 시안 (≤420px 기준). 각 시안은 stand-alone HTML이라 폰
+    뷰포트로 직접 열어도 됩니다. 데스크탑 mockup은
+    <code>../round-stage.html</code>.
+  </p>
+  <div class="grid">
+    <article class="preview">
+      <div class="preview-head">
+        <span class="preview-title">1. NEWS REVEAL</span>
+        <a class="preview-link" href="1-news-reveal.html">open ↗</a>
+      </div>
+      <iframe class="preview-frame" src="1-news-reveal.html"></iframe>
+    </article>
+
+    <article class="preview">
+      <div class="preview-head">
+        <span class="preview-title">2. FIRST BET</span>
+        <a class="preview-link" href="2-first-bet.html">open ↗</a>
+      </div>
+      <iframe class="preview-frame" src="2-first-bet.html"></iframe>
+    </article>
+
+    <article class="preview">
+      <div class="preview-head">
+        <span class="preview-title">3. REASONING WRITE</span>
+        <a class="preview-link" href="3-reasoning-write.html">open ↗</a>
+      </div>
+      <iframe class="preview-frame" src="3-reasoning-write.html"></iframe>
+    </article>
+
+    <article class="preview">
+      <div class="preview-head">
+        <span class="preview-title">4. REASONING REVEAL</span>
+        <a class="preview-link" href="4-reasoning-reveal.html">open ↗</a>
+      </div>
+      <iframe class="preview-frame" src="4-reasoning-reveal.html"></iframe>
+    </article>
+
+    <article class="preview">
+      <div class="preview-head">
+        <span class="preview-title">5. LIVE DEBATE</span>
+        <a class="preview-link" href="5-live-debate.html">open ↗</a>
+      </div>
+      <iframe class="preview-frame" src="5-live-debate.html"></iframe>
+    </article>
+
+    <article class="preview">
+      <div class="preview-head">
+        <span class="preview-title">6. SETTLEMENT</span>
+        <a class="preview-link" href="6-settlement.html">open ↗</a>
+      </div>
+      <iframe class="preview-frame" src="6-settlement.html"></iframe>
+    </article>
+  </div>
+</body>
+</html>

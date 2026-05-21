@@ -149,7 +149,7 @@ fn PlayerRow(
 
 /// `★★★☆☆` etc — 1..=5 stars rendering. Out-of-range falls back to
 /// `?` so the row stays useful even if the operator sends bad data.
-fn render_difficulty(d: i32) -> String {
+pub(crate) fn render_difficulty(d: i32) -> String {
     if !(1..=5).contains(&d) {
         return "?".to_string();
     }

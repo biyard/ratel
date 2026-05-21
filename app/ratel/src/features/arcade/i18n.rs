@@ -103,6 +103,8 @@ translate! {
     chip_unit: { en: "chips", ko: "칩" },
     chip_aria: { en: "Open chip exchange", ko: "칩 환전 열기" },
     admin_create_round: { en: "Create round", ko: "라운드 생성" },
+    menu_open: { en: "Open menu", ko: "메뉴 열기" },
+    menu_close: { en: "Close menu", ko: "메뉴 닫기" },
 }
 
 translate! {

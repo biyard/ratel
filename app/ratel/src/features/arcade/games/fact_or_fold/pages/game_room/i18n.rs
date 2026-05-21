@@ -47,6 +47,8 @@ translate! {
     news_difficulty: { en: "Difficulty", ko: "난이도" },
     news_pill_category_default: { en: "Subject", ko: "대상" },
     news_cta_label: { en: "Auto-advances to 1st bet", ko: "1차 베팅으로 자동 진행" },
+    news_label: { en: "News", ko: "뉴스" },
+    news_headline_pending: { en: "Headline pending…", ko: "헤드라인 준비 중…" },
     players_card_title: { en: "Round participants", ko: "라운드 참가자" },
     players_card_count: { en: "{$count} / {$capacity} present", ko: "{$count} / {$capacity} 도착" },
     players_status_reading: {

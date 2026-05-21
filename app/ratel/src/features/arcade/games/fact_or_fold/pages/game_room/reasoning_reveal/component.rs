@@ -96,12 +96,10 @@ fn CampBar(
         .reveal_camp_count
         .replace("{$count}", &fake_count.to_string())
         .replace("{$rp}", &fake_total.to_string());
-    let real_flex = real_total.max(1);
-    let fake_flex = fake_total.max(1);
 
     rsx! {
         div { class: "camp-bar",
-            div { class: "camp-side real", style: "flex: {real_flex}",
+            div { class: "camp-side real",
                 div { class: "camp-side-head",
                     span { class: "camp-label", "{tr.reveal_camp_real_label}" }
                     span { class: "camp-count", "{real_label}" }
@@ -109,7 +107,7 @@ fn CampBar(
                 div { class: "camp-avatars", {camp_avatars(&real_owners, &participants)} }
             }
             div { class: "camp-vs", "{tr.reveal_camp_vs}" }
-            div { class: "camp-side fake", style: "flex: {fake_flex}",
+            div { class: "camp-side fake",
                 div { class: "camp-side-head",
                     span { class: "camp-label", "{tr.reveal_camp_fake_label}" }
                     span { class: "camp-count", "{fake_label}" }

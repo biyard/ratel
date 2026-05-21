@@ -8,10 +8,10 @@
 
 use crate::features::arcade::games::fact_or_fold::pages::game_room::{
     FactFoldRoomTranslate, FirstBetView, LiveDebateView, NewsRevealView, ReasoningRevealView,
-    ReasoningWriteView, SettlementView,
+    ReasoningWriteView, RoundNewsCollapsible, SettlementView,
 };
 use crate::features::arcade::games::fact_or_fold::{
-    use_fact_fold_round_provider, RoundResponse, RoundStatus,
+    use_fact_fold_round, use_fact_fold_round_provider, RoundResponse, RoundStatus,
 };
 use crate::FactFoldRoundEntityType;
 use crate::*;
@@ -66,6 +66,11 @@ pub fn FactFoldGameRoomPage(round_id: ReadSignal<FactFoldRoundEntityType>) -> El
 
     rsx! {
         SeoMeta { title: "Fact or Fold · Ratel Arcade" }
+        // Keeps the active stage-step pill horizontally centered on
+        // mobile. `defer` runs once after SSR; the script's internal
+        // MutationObserver re-centers whenever Dioxus flips a
+        // stage-step's `data-state`. No-op on desktop.
+        document::Script { defer: true, src: asset!("./stage_scroll.js") }
         div { class: "ff-room",
             // Top bar now lives in ArcadeLayout (wraps every /arcade
             // page). The round-status sub-line is folded into the
@@ -237,19 +242,27 @@ fn render_stage(round: &RoundResponse) -> Element {
                 div { class: "ff-room__placeholder", "{tr.waiting_for_players}" }
             }
         },
+        // NewsReveal owns its own NewsCard — no collapsible needed.
         RoundStatus::NewsReveal => rsx! {
             NewsRevealView {}
         },
+        // Stages 2+ each get a collapsible news header so players can
+        // re-read the published headline without leaving the stage.
+        // Closed by default; tap the summary row to expand.
         RoundStatus::Bet => rsx! {
+            StageNewsHeader {}
             FirstBetView {}
         },
         RoundStatus::Rationale => rsx! {
+            StageNewsHeader {}
             ReasoningWriteView {}
         },
         RoundStatus::Reveal => rsx! {
+            StageNewsHeader {}
             ReasoningRevealView {}
         },
         RoundStatus::Debate => rsx! {
+            StageNewsHeader {}
             LiveDebateView {}
         },
         RoundStatus::Settlement => rsx! {
@@ -258,8 +271,22 @@ fn render_stage(round: &RoundResponse) -> Element {
             }
         },
         RoundStatus::Settled => rsx! {
+            StageNewsHeader {}
             SettlementView {}
         },
+    }
+}
+
+/// Thin wrapper that reads the current round's subject from context
+/// and renders the collapsible news header. Lives here (instead of
+/// inside the view structs) so each stage view stays focused on its
+/// own UI and the collapsible mounts in a single, predictable slot.
+#[component]
+fn StageNewsHeader() -> Element {
+    let ctx = use_fact_fold_round();
+    let subject = ctx.subject()?();
+    rsx! {
+        RoundNewsCollapsible { subject, default_open: false }
     }
 }
 
