@@ -644,8 +644,14 @@
 
     function mdTryConvert(inputEvent) {
       var block = mdGetCaretBlock();
-      if (!block || block === editor) return false;
-      // Already a heading / quote / code? Don't double-process.
+      if (!block) return false;
+      // block === editor happens when the caret is in bare text directly
+      // inside the .re-content root — Chrome leaves the very first line of
+      // a fresh contenteditable unwrapped until the user presses Enter.
+      // We still want conversion in that case; formatBlock / insertList
+      // will wrap the current line into the target tag. The SKIP_BLOCK_TAGS
+      // guard below only applies to nested block elements, not the editor
+      // itself, so it's harmless when block === editor.
       if (SKIP_BLOCK_TAGS.indexOf(block.nodeName) >= 0) return false;
       // Inside a <pre> ancestor anywhere up the tree? Skip.
       if (mdHasAncestorTag("PRE")) return false;

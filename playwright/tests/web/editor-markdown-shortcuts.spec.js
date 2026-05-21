@@ -246,6 +246,20 @@ test.describe.serial("Editor markdown shortcuts", () => {
     });
   });
 
+  test("# converts bare text at editor root (no <p>/<div> wrapper)", async ({ page }) => {
+    const editor = await openEditor(page);
+    // Wipe the openEditor seed `<p><br></p>` so the editor is truly empty.
+    // Chrome's contenteditable then keeps the first typed line as a bare
+    // text node directly inside .re-content with no wrapper.
+    await page.evaluate(() => {
+      const ed = document.querySelector(".re-content");
+      ed.innerHTML = "";
+      ed.focus();
+    });
+    await page.keyboard.type("# Title");
+    await expect(editor.locator("h1")).toHaveText("Title");
+  });
+
   test("``` + Enter inside an existing <pre> is literal, not a new <pre>", async ({ page }) => {
     const editor = await openEditor(page);
     // Make a <pre> first.
