@@ -6,8 +6,10 @@ use super::posting_as::PostingAs;
 use crate::common::components::editor::Editor as RichEditor;
 use crate::common::contexts::use_team_context;
 use crate::common::types::{SpacePartition, TeamPartition, UserType};
-use crate::features::auth::hooks::use_user_context;
+use crate::features::auth::hooks::{use_user_context, use_user_membership};
 use crate::features::cross_posting::components::CrossPostSidebar;
+use crate::features::posts::components::ai_draft::{AiDraftButton, AiDraftModal, UpsellModal};
+use crate::features::posts::types::AiDraftLanguage;
 use crate::features::cross_posting::hooks::{use_cross_posting_provider, UseCrossPosting};
 use crate::features::cross_posting::models::ConnectionStatus;
 use crate::features::cross_posting::types::{ConnectionResponse, SocialPlatform};
@@ -67,6 +69,7 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
     // surface the "syndicated copies remain visible" notice.
     let already_published_public =
         post.status == PostStatus::Published && initial_visibility == Visibility::Public;
+    let initial_ai_draft_used = post.ai_draft_used;
     let Post {
         title: init_title,
         body: init_body,
@@ -119,6 +122,19 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
     let mut title = use_signal(move || init_title.clone());
     let mut content = use_signal(move || html_contents.clone());
     let mut status = use_signal(|| EditorStatus::Idle);
+
+    // AI draft state — flipped to true once a successful generation lands.
+    // Hides the AI entry point (AC-13) and is also enforced server-side
+    // via the conditional update on Post.ai_draft_used.
+    let mut ai_draft_used = use_signal(move || initial_ai_draft_used);
+    let user_membership = use_user_membership();
+    let is_paid_user = user_membership.as_ref().map(|m| m.is_paid()).unwrap_or(false);
+    // Default the AI form language to the user's current UI locale.
+    let initial_ai_language = match use_language()() {
+        Language::En => AiDraftLanguage::En,
+        Language::Ko => AiDraftLanguage::Ko,
+    };
+    let nav_for_ai = use_navigator();
 
     let initial_categories_for_signal = initial_categories.clone();
     let mut last_saved =
@@ -458,6 +474,41 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                 }
                 div { class: "arena-topbar__right",
                     span { class: "autosave", "{autosave_label}" }
+
+                    if !*ai_draft_used.read() {
+                        AiDraftButton {
+                            on_click: move |_| {
+                                if !is_paid_user {
+                                    popup.open(rsx! {
+                                        UpsellModal {
+                                            on_close: move |_| popup.close(),
+                                            on_upgrade: move |_| {
+                                                popup.close();
+                                                nav_for_ai.push("/membership");
+                                            },
+                                        }
+                                    });
+                                } else {
+                                    popup.open(rsx! {
+                                        AiDraftModal {
+                                            post_id: post_id(),
+                                            initial_language: initial_ai_language,
+                                            on_close: move |_| popup.close(),
+                                            on_success: move |
+                                                resp: crate::features::posts::controllers::generate_ai_draft::GenerateAiDraftResponse|
+                                            {
+                                                title.set(resp.title);
+                                                content.set(resp.body_html);
+                                                ai_draft_used.set(true);
+                                                popup.close();
+                                            },
+                                        }
+                                    });
+                                }
+                            },
+                        }
+                    }
+
                     button {
                         class: "topbar-btn",
                         disabled: status() == EditorStatus::Saving || status() == EditorStatus::Publishing,

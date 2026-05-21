@@ -103,3 +103,71 @@ impl dioxus::fullstack::AsStatusCode for PostError {
         self.status_code()
     }
 }
+
+#[derive(Debug, Error, Serialize, Deserialize, Translate, Clone)]
+pub enum AiPostDraftError {
+    #[error("ai draft is a paid-only feature")]
+    #[translate(
+        en = "AI draft is available on Pro or higher membership.",
+        ko = "AI 초안 작성은 Pro 이상 멤버십에서 사용할 수 있습니다."
+    )]
+    PaidOnly,
+
+    #[error("ai draft already used on this post")]
+    #[translate(
+        en = "AI draft has already been used on this post.",
+        ko = "이 포스트는 이미 AI 초안을 사용했습니다."
+    )]
+    AlreadyUsed,
+
+    #[error("required ai draft input missing")]
+    #[translate(
+        en = "Required fields are missing.",
+        ko = "필수 입력 항목이 비어있습니다."
+    )]
+    InvalidInput,
+
+    #[error("ai model call failed")]
+    #[translate(
+        en = "AI generation failed. Please try again.",
+        ko = "AI 초안 생성에 실패했습니다. 다시 시도해 주세요."
+    )]
+    BedrockFailed,
+
+    #[error("ai response could not be parsed")]
+    #[translate(
+        en = "AI returned an unexpected response. Please try again.",
+        ko = "AI 응답을 처리하지 못했습니다. 다시 시도해 주세요."
+    )]
+    GenerationFailed,
+}
+
+#[cfg(feature = "server")]
+impl AiPostDraftError {
+    pub fn status_code(&self) -> crate::axum::http::StatusCode {
+        use crate::axum::http::StatusCode;
+        match self {
+            AiPostDraftError::PaidOnly => StatusCode::FORBIDDEN,
+            AiPostDraftError::AlreadyUsed => StatusCode::CONFLICT,
+            AiPostDraftError::InvalidInput => StatusCode::BAD_REQUEST,
+            AiPostDraftError::BedrockFailed | AiPostDraftError::GenerationFailed => {
+                StatusCode::BAD_GATEWAY
+            }
+        }
+    }
+}
+
+#[cfg(feature = "server")]
+impl dioxus::fullstack::axum::response::IntoResponse for AiPostDraftError {
+    fn into_response(self) -> crate::axum::response::Response {
+        use crate::axum::response::IntoResponse;
+        (self.status_code(), self.to_string()).into_response()
+    }
+}
+
+#[cfg(feature = "server")]
+impl dioxus::fullstack::AsStatusCode for AiPostDraftError {
+    fn as_status_code(&self) -> crate::axum::http::StatusCode {
+        self.status_code()
+    }
+}

@@ -265,8 +265,12 @@ pub struct UserMembershipResponse {
 }
 
 impl UserMembershipResponse {
+    /// True for any non-Free tier (Pro / Max / Vip / Enterprise).
+    /// Compares case-insensitively because `MembershipTier::Free` is rendered
+    /// `FREE` by `DynamoEnum`'s Display impl, while older comparisons in this
+    /// codebase used the `Free` casing.
     pub fn is_paid(&self) -> bool {
-        !self.tier.0.contains("Free")
+        !self.tier.0.eq_ignore_ascii_case("Free")
     }
 }
 

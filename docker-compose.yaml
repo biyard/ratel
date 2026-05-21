@@ -5,6 +5,10 @@ services:
     environment:
       IP: "0.0.0.0"
       PORT: "8080"
+      # CI / Playwright skip real AI calls. `fixture` is only parsed when
+      # the server binary was compiled with `--features bypass` (which
+      # `make build-testing` does); production builds ignore this value.
+      RATEL_AI_WRITER_TYPE: fixture
     ports:
       - "8080:8080"
     healthcheck:
@@ -73,6 +77,15 @@ services:
       QDRANT_URL: http://qdrant:6333
       QDRANT_API_KEY: ${QDRANT_API_KEY:-}
 
+      # AI writer backend. Defaults route local dev traffic to the
+      # in-network Ollama container so developers don't burn Bedrock
+      # cost. Override to `aws` (and supply credentials) to exercise
+      # the production path locally. See
+      # docs/superpower/2026-05-21-ai-post-draft.md for full details.
+      RATEL_AI_WRITER_TYPE: ${RATEL_AI_WRITER_TYPE:-ollama}
+      RATEL_AI_WRITER_MODEL: ${RATEL_AI_WRITER_MODEL:-qwen2.5:3b}
+      RATEL_AI_WRITER_ENDPOINT: ${RATEL_AI_WRITER_ENDPOINT:-http://ollama:11434}
+
       # Cross-posting credential encryption (envvar AEAD; KMS migration tracked
       # in docs/superpowers/specs/2026-04-28-cross-posting-design.md). Local
       # dev defaults to a fixed all-zero key for reproducibility — DO NOT use
@@ -98,6 +111,8 @@ services:
       localstack:
         condition: service_healthy
       localstack-init:
+        condition: service_completed_successfully
+      ollama-init:
         condition: service_completed_successfully
     networks:
       - ratel-network
@@ -218,11 +233,52 @@ services:
     networks:
       - ratel-network
 
+  # Ollama serves the local-dev AI writer backend so developers don't burn
+  # Bedrock cost while iterating. CI uses fixture (see app-shell-testing).
+  ollama:
+    image: ollama/ollama:latest
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    profiles:
+      - development
+      - infra
+    networks:
+      - ratel-network
+
+  # Pulls the default writer model so the first AI draft request doesn't
+  # block on a multi-gigabyte download. Override the model via
+  # RATEL_AI_WRITER_MODEL to pre-warm a different one.
+  ollama-init:
+    image: ollama/ollama:latest
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >
+        OLLAMA_HOST=http://ollama:11434
+        ollama pull "${RATEL_AI_WRITER_MODEL:-qwen2.5:3b}"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    profiles:
+      - development
+      - infra
+    networks:
+      - ratel-network
+
 volumes:
   node_modules:
   comp-node_modules:
   web-node_modules:
   cargo-target:
+  ollama-data:
 
 networks:
   ratel-network:

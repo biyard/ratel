@@ -387,6 +387,10 @@ pub enum Error {
 
     #[error("{0}")]
     #[translate(from)]
+    AiPostDraft(#[from] crate::features::posts::types::AiPostDraftError),
+
+    #[error("{0}")]
+    #[translate(from)]
     Social(#[from] crate::features::social::types::SocialError),
 
     #[error("{0}")]
@@ -514,6 +518,7 @@ impl dioxus::fullstack::axum::response::IntoResponse for Error {
             Error::SubTeam(e) => e.status_code(),
             Error::Auth(e) => e.status_code(),
             Error::Post(e) => e.status_code(),
+            Error::AiPostDraft(e) => e.status_code(),
             Error::Social(e) => e.status_code(),
             Error::MembershipPayment(e) => e.status_code(),
             Error::Timeline(e) => e.status_code(),
@@ -639,6 +644,7 @@ impl dioxus::fullstack::AsStatusCode for Error {
             Error::SubTeam(e) => e.status_code(),
             Error::Auth(e) => e.status_code(),
             Error::Post(e) => e.status_code(),
+            Error::AiPostDraft(e) => e.status_code(),
             Error::Social(e) => e.status_code(),
             Error::MembershipPayment(e) => e.status_code(),
             Error::Timeline(e) => e.status_code(),

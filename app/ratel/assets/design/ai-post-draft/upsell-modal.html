@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratel — AI Post Draft / Upsell modal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-void:#06060e;--bg-glass:rgba(12,12,26,0.65);--bg-glass-hover:rgba(20,20,40,0.80);
+      --bg-input:rgba(255,255,255,0.025);
+      --border-subtle:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.12);
+      --text-primary:#f0f0f5;--text-muted:#8888a8;--text-dim:#55556a;
+      --accent-gold:#fcb300;--accent-teal:#6eedd8;--accent-coral:#ef4444;
+      --font-display:'Orbitron',sans-serif;--font-body:'Outfit',sans-serif;
+    }
+    html,body{min-height:100%;background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body)}
+    body{overflow-x:hidden}
+
+    /* ─── Backdrop: blurred editor underneath ──────────── */
+    .stage{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px}
+    .stage::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 30%,rgba(252,179,0,0.05) 0%,transparent 60%),radial-gradient(ellipse 120% 100% at 50% 120%,rgba(110,237,216,0.04) 0%,transparent 50%);z-index:-1;pointer-events:none}
+
+    /* Faked editor in the background — heavily blurred for context */
+    .bg-editor{position:fixed;inset:0;padding:32px;filter:blur(8px) brightness(0.5);pointer-events:none;z-index:0}
+    .bg-editor__title{font-size:30px;font-weight:700;color:var(--text-muted);margin-top:80px}
+    .bg-editor__line{height:14px;border-radius:6px;background:rgba(255,255,255,0.04);margin-top:14px}
+    .bg-editor__line.s{width:60%}
+    .bg-editor__line.m{width:85%}
+    .bg-editor__line.l{width:95%}
+
+    .scrim{position:fixed;inset:0;background:rgba(6,6,14,0.65);backdrop-filter:blur(12px);z-index:50}
+
+    /* ─── Modal ─────────────────────────────────────────── */
+    .modal{position:relative;z-index:60;width:100%;max-width:540px;background:linear-gradient(180deg,rgba(20,20,40,0.85),rgba(12,12,26,0.92));backdrop-filter:blur(28px);border:1px solid var(--border-strong);border-radius:20px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,0.7),0 0 60px rgba(252,179,0,0.08)}
+    .modal::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 100% 80% at 50% 0%,rgba(252,179,0,0.10) 0%,transparent 50%);pointer-events:none}
+
+    .modal__head{position:relative;padding:32px 32px 0;display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center}
+
+    .modal__close{position:absolute;top:18px;right:18px;width:32px;height:32px;border-radius:9px;border:1px solid var(--border-subtle);background:var(--bg-glass);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted);transition:all 0.2s ease}
+    .modal__close:hover{border-color:rgba(252,179,0,0.30);color:var(--accent-gold)}
+    .modal__close svg{width:14px;height:14px}
+
+    .sparkle-orb{width:84px;height:84px;border-radius:50%;background:radial-gradient(circle,rgba(252,179,0,0.30) 0%,rgba(252,179,0,0.08) 60%,transparent 100%);display:flex;align-items:center;justify-content:center;position:relative}
+    .sparkle-orb::before,.sparkle-orb::after{content:'';position:absolute;border-radius:50%;border:1px solid rgba(252,179,0,0.25);animation:orb-pulse 3s ease-in-out infinite}
+    .sparkle-orb::before{inset:-6px}
+    .sparkle-orb::after{inset:-14px;animation-delay:0.8s;opacity:0.6}
+    @keyframes orb-pulse{0%,100%{opacity:0.5;transform:scale(1)}50%{opacity:0;transform:scale(1.15)}}
+    .sparkle-orb svg{width:36px;height:36px;color:var(--accent-gold);filter:drop-shadow(0 0 12px rgba(252,179,0,0.7))}
+
+    .modal__eyebrow{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:var(--accent-gold)}
+    .modal__title{font-family:var(--font-display);font-size:24px;font-weight:700;letter-spacing:0.02em;color:var(--text-primary);line-height:1.25}
+    .modal__title em{color:var(--accent-gold);font-style:normal}
+    .modal__sub{font-size:14px;line-height:1.6;color:var(--text-muted);max-width:400px}
+
+    .modal__body{position:relative;padding:24px 32px 8px}
+
+    .benefits{display:flex;flex-direction:column;gap:12px}
+    .benefit{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:11px;background:var(--bg-input);border:1px solid var(--border-subtle)}
+    .benefit__icon{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,rgba(252,179,0,0.16),rgba(110,237,216,0.10));border:1px solid rgba(252,179,0,0.22);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--accent-gold)}
+    .benefit__icon svg{width:14px;height:14px}
+    .benefit__text{display:flex;flex-direction:column;gap:2px}
+    .benefit__text strong{font-size:13.5px;font-weight:600;color:var(--text-primary);letter-spacing:-0.005em}
+    .benefit__text span{font-size:12.5px;color:var(--text-muted);line-height:1.45}
+
+    .modal__foot{position:relative;padding:24px 32px 32px;display:flex;flex-direction:column;gap:12px}
+
+    .cta-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 22px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--accent-gold),#e5a200);color:#0a0a0a;font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;transition:all 0.25s ease;box-shadow:0 4px 18px rgba(252,179,0,0.30)}
+    .cta-primary:hover{background:linear-gradient(135deg,#ffd24a,var(--accent-gold));box-shadow:0 6px 28px rgba(252,179,0,0.50);transform:translateY(-1px)}
+    .cta-primary svg{width:14px;height:14px}
+
+    .cta-secondary{display:inline-flex;align-items:center;justify-content:center;height:38px;background:transparent;border:none;font-family:var(--font-body);font-size:12.5px;font-weight:500;color:var(--text-muted);cursor:pointer;transition:color 0.2s ease}
+    .cta-secondary:hover{color:var(--text-primary)}
+
+    .modal__tier{position:relative;padding:14px 32px;border-top:1px solid var(--border-subtle);background:rgba(6,6,14,0.5);display:flex;align-items:center;justify-content:center;gap:8px;font-size:11.5px;color:var(--text-dim)}
+    .modal__tier strong{color:var(--accent-teal);font-weight:700}
+  </style>
+</head>
+<body>
+  <div class="stage">
+
+    <!-- Background editor (blurred for context) -->
+    <div class="bg-editor">
+      <div class="bg-editor__title">제목을 입력하세요…</div>
+      <div class="bg-editor__line s"></div>
+      <div class="bg-editor__line m"></div>
+      <div class="bg-editor__line l"></div>
+      <div class="bg-editor__line m"></div>
+      <div class="bg-editor__line s"></div>
+      <div class="bg-editor__line l"></div>
+      <div class="bg-editor__line m"></div>
+    </div>
+
+    <div class="scrim"></div>
+
+    <!-- Modal -->
+    <section class="modal" role="dialog" aria-labelledby="upsell-title" aria-modal="true">
+      <button class="modal__close" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+
+      <header class="modal__head">
+        <div class="sparkle-orb">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z"/>
+            <path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14z"/>
+          </svg>
+        </div>
+        <div class="modal__eyebrow">Pro feature</div>
+        <h2 class="modal__title" id="upsell-title">AI 초안 작성은 <em>Pro 이상</em>에서 사용 가능합니다</h2>
+        <p class="modal__sub">짧은 입력 몇 줄만으로 정리된 의견수렴 포스트 초안을 받아보세요. 추진배경부터 참여 안내까지 5개 섹션이 자동으로 채워집니다.</p>
+      </header>
+
+      <div class="modal__body">
+        <div class="benefits">
+          <div class="benefit">
+            <div class="benefit__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z"/></svg>
+            </div>
+            <div class="benefit__text">
+              <strong>구조화된 초안 자동 생성</strong>
+              <span>주제와 배경, 듣고 싶은 의견만 짧게 입력하면 5개 섹션이 모두 채워진 초안이 에디터에 들어옵니다.</span>
+            </div>
+          </div>
+
+          <div class="benefit">
+            <div class="benefit__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            </div>
+            <div class="benefit__text">
+              <strong>10분 → 1분</strong>
+              <span>백지에서 형식을 잡는 시간을 줄이고, 내용 다듬는 데 집중할 수 있습니다.</span>
+            </div>
+          </div>
+
+          <div class="benefit">
+            <div class="benefit__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h12M3 12h12M3 19h8"/><path d="M19 8v8M15 12h8"/></svg>
+            </div>
+            <div class="benefit__text">
+              <strong>한국어 · 영어 출력 지원</strong>
+              <span>UI 언어에 맞춰 자동 선택되며, 폼에서 다른 언어로 명시적으로 바꿀 수도 있습니다.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="modal__foot">
+        <button class="cta-primary">
+          <span>멤버십 업그레이드</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+        <button class="cta-secondary">다음에 다시 볼래요</button>
+      </footer>
+
+      <div class="modal__tier">
+        필요 멤버십: <strong>Pro</strong> · 더 높은 티어(Max / Vip / Enterprise)에서도 동일하게 사용 가능
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>

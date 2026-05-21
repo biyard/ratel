@@ -364,6 +364,7 @@ pub async fn publish_announcement_handler(
         // above the regular feed. `list_team_posts_handler` sorts on
         // this flag first, then created_at desc.
         pinned_as_announcement: true,
+        ai_draft_used: false,
     };
     if let Err(e) = anchor_post.create(cli).await {
         crate::error!("publish_announcement: anchor post create failed: {e}");

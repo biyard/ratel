@@ -9,6 +9,7 @@ This is the product index. Each checkbox maps to **exactly one spec file** in `r
 - [ ] [Character XP & Skill Tree (cross-space progression)](roadmap/character-xp-skills.md)
 - [ ] [Cross-posting (Bluesky / LinkedIn / Threads)](roadmap/cross-posting.md)
 - [ ] [Fact or Fold (4-player news judgment game for Essence)](roadmap/fact-or-fold.md)
+- [ ] [AI post draft (opinion-gathering template, paid only)](roadmap/ai-post-draft.md)
 
 ## Planned
 

@@ -131,6 +131,7 @@ pub async fn send_direct_message_handler(
         announcement_id: Some(announcement.announcement_id.clone()),
         announcement_parent_team_id: Some(parent_team_id_str),
         pinned_as_announcement: false,
+        ai_draft_used: false,
     };
     anchor_post.create(cli).await.map_err(|e| {
         crate::error!("send_direct_message anchor post create failed: {e}");

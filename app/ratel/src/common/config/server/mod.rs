@@ -1,4 +1,5 @@
 #![allow(static_mut_refs)]
+pub mod ai_writer_config;
 pub mod aws_config;
 pub mod aws_s3;
 pub mod aws_ses;
@@ -43,6 +44,9 @@ impl ServerConfig {
     }
     pub fn canister(&self) -> &crate::common::services::icp::CanisterService {
         &icp::CANISTER_SERVICE
+    }
+    pub fn ai_writer(&self) -> &'static ai_writer_config::AiWriterConfig {
+        ai_writer_config::get()
     }
 }
 

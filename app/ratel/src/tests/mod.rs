@@ -5,6 +5,7 @@ pub mod setup;
 // after `use super::*;` without each declaring its own `use crate::axum;`.
 pub use crate::axum;
 
+mod ai_post_draft_tests;
 mod arcade_tests;
 mod cors_tests;
 mod cross_posting_tests;

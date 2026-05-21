@@ -94,6 +94,13 @@ pub struct Post {
     pub announcement_parent_team_id: Option<String>,
     #[serde(default)]
     pub pinned_as_announcement: bool,
+
+    /// True once a successful AI draft generation has been applied to this
+    /// post. Set once at first successful generation and never cleared.
+    /// Enforces the per-post one-shot rule for the AI drafting feature
+    /// (see roadmap/ai-post-draft.md AC-13, AC-15).
+    #[serde(default)]
+    pub ai_draft_used: bool,
 }
 
 /// Backward-compatible deserializer: accepts both a single string (old format)
@@ -220,6 +227,7 @@ impl Post {
             announcement_id: None,
             announcement_parent_team_id: None,
             pinned_as_announcement: false,
+            ai_draft_used: false,
         }
     }
 
