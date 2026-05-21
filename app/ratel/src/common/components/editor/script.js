@@ -665,7 +665,31 @@
       // by re-typing a bullet marker inside a list item.
       if (mdHasAncestorTag("LI")) return false;
 
-      var before = mdTextBeforeCaretInBlock(block);
+      // Compute the text to test against the marker regex. For a real block
+      // the marker must be at the start of the block's content. For bare
+      // text at the editor root the "line" is just the caret's text node —
+      // `mdTextBeforeCaretInBlock(editor)` would include text from preceding
+      // sibling blocks (e.g. a <ul> above) and break the start-of-line
+      // assumption, so use the text node's data up to the caret offset.
+      var before;
+      if (block === editor) {
+        var sel0 = window.getSelection();
+        if (!sel0 || !sel0.rangeCount) return false;
+        var caretRange0 = sel0.getRangeAt(0);
+        var caretNode0 = caretRange0.startContainer;
+        if (caretNode0.nodeType !== 3 || caretNode0.parentNode !== editor) {
+          return false;
+        }
+        // Require the text node to be at the start of its line — i.e. no
+        // adjacent text node immediately before it (a <br> or block sibling
+        // before it is fine and is what we want).
+        if (caretNode0.previousSibling && caretNode0.previousSibling.nodeType === 3) {
+          return false;
+        }
+        before = caretNode0.data.slice(0, caretRange0.startOffset);
+      } else {
+        before = mdTextBeforeCaretInBlock(block);
+      }
       var info = mdMatchBlockMarker(before);
       if (!info) return false;
 
