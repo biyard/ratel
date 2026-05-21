@@ -30,7 +30,15 @@
   // SPA / CSR safety net — watch the entire document for `data-state`
   // attribute flips on stage-steps. Each round status change in
   // Dioxus rewrites that attribute, which is our cue to re-center.
-  if (window.__ratelStageScrollObserver) return;
+  //
+  // Helpers are registered on `window.ratel.<module>` per the
+  // project's JS namespace convention (see
+  // `conventions/html-first-components.md` § "JS Namespace
+  // Convention"). The observer is stashed so re-running this script
+  // on SPA navigation doesn't pile up duplicate observers.
+  window.ratel = window.ratel || {};
+  window.ratel.factOrFold = window.ratel.factOrFold || {};
+  if (window.ratel.factOrFold.stageScrollObserver) return;
   var observer = new MutationObserver(function (mutations) {
     for (var i = 0; i < mutations.length; i++) {
       var m = mutations[i];
@@ -67,5 +75,5 @@
     attributes: true,
     attributeFilter: ["data-state"],
   });
-  window.__ratelStageScrollObserver = observer;
+  window.ratel.factOrFold.stageScrollObserver = observer;
 })();

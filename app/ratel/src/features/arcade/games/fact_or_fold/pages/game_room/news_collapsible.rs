@@ -23,9 +23,9 @@ pub fn RoundNewsCollapsible(
         .unwrap_or_else(|| tr.news_pill_category_default.to_string());
 
     let headline = if subject.headline_text.is_empty() {
-        tr.news_headline_pending.to_string()
+        tr.news_headline_pending
     } else {
-        subject.headline_text.clone()
+        subject.headline_text.as_str()
     };
 
     rsx! {
