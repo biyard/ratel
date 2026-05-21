@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>FF · 4. Reasoning Reveal (mobile)</title>
+<link rel="stylesheet" href="_shared.css" />
+<style>
+  /* Camp bar — REAL vs FAKE split. Stays full-width on mobile but
+   * font drops to a tight scale so both totals + the dividing rail
+   * fit a 360px frame. */
+  .camp-bar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: stretch;
+    gap: 0;
+    margin-bottom: 14px;
+    border-radius: var(--r-md);
+    overflow: hidden;
+    border: 1px solid var(--border-strong);
+  }
+  .camp-side {
+    padding: 12px;
+    text-align: center;
+  }
+  .camp-side.real {
+    background: var(--teal-soft);
+    border-right: 1px solid rgba(110,237,216,0.3);
+  }
+  .camp-side.fake {
+    background: var(--pink-soft);
+  }
+  .camp-side .camp-label {
+    font-family: "Orbitron", sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+  }
+  .camp-side.real .camp-label { color: var(--teal); }
+  .camp-side.fake .camp-label { color: var(--pink); }
+  .camp-side .camp-count {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .camp-side .camp-avatars {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .camp-side .camp-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5b3aaf, #db2780);
+    border: 1.5px solid var(--bg);
+    display: grid;
+    place-items: center;
+    font-size: 9px;
+    font-weight: 700;
+  }
+  .camp-bar .vs {
+    display: grid;
+    place-items: center;
+    padding: 0 4px;
+    background: var(--bg);
+    font-family: "Orbitron", sans-serif;
+    font-size: 11px;
+    color: var(--text-faint);
+    font-weight: 700;
+  }
+
+  /* Stack of 4 reveal cards — 1-col on mobile. */
+  .reveal-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .reveal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 14px;
+  }
+  .reveal-card[data-side="real"] {
+    border-left: 3px solid var(--teal);
+  }
+  .reveal-card[data-side="fake"] {
+    border-left: 3px solid var(--pink);
+  }
+  .reveal-card-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .reveal-card-head .p-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5b3aaf, #db2780);
+    display: grid;
+    place-items: center;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .reveal-card-head .p-name {
+    font-size: 13px;
+    flex: 1;
+  }
+  .reveal-card-head .p-bet {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .reveal-card-head .p-bet.real { color: var(--teal); }
+  .reveal-card-head .p-bet.fake { color: var(--pink); }
+  .reveal-card-text {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text-muted);
+    margin: 0 0 10px;
+  }
+  .quote-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  .quote-btn[data-active="true"] {
+    background: var(--gold-soft);
+    border-color: rgba(252,179,0,0.3);
+    color: var(--gold);
+  }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <header class="topbar">
+      <span class="brand-name">RATEL · FACT OR FOLD</span>
+    </header>
+
+    <nav class="stage-strip">
+      <a class="step done" href="1-news-reveal.html">1 · 뉴스</a>
+      <a class="step done" href="2-first-bet.html">2 · 베팅</a>
+      <a class="step done" href="3-reasoning-write.html">3 · 근거</a>
+      <a class="step active" href="4-reasoning-reveal.html">4 · 공개</a>
+      <a class="step" href="5-live-debate.html">5 · 토론</a>
+      <a class="step" href="6-settlement.html">6 · 정산</a>
+    </nav>
+
+    <div class="timer">
+      <span class="stage-name">REASONING REVEAL</span>
+      <span class="countdown">0:24</span>
+    </div>
+
+    <details class="card news-collapsible">
+      <summary class="news-summary">
+        <span class="news-summary-label">뉴스</span>
+        <span class="news-summary-title">카카오뱅크, 7월 1일부로 비대면 대출 한도 1.5배 상향한다</span>
+        <span class="news-summary-toggle">▾</span>
+      </summary>
+      <div class="news-body">
+        <div class="news-meta">
+          <span class="news-tag">기술</span>
+          <span class="news-tag">국내</span>
+          <span class="news-difficulty">★★★☆☆</span>
+        </div>
+        <h2 class="news-headline-full">"카카오뱅크, 7월 1일부로 비대면 대출 한도 1.5배 상향한다"</h2>
+        <p class="news-excerpt">
+          업계 관계자에 따르면 한도 상향은 청년층 신용 한도 부족 문제 해결을 위한
+          조치로, 신용 평점 720점 이상 사용자에게 우선 적용될 예정이다.
+        </p>
+        <div class="news-source">출처 · 뉴스1 · 2025-06-12</div>
+      </div>
+    </details>
+
+    <section class="card">
+      <div class="section-label">진영 분포</div>
+
+      <div class="camp-bar">
+        <div class="camp-side real">
+          <div class="camp-label">REAL</div>
+          <div class="camp-count">1명 · 800 RP</div>
+          <div class="camp-avatars">
+            <div class="camp-avatar">AK</div>
+          </div>
+        </div>
+        <div class="vs">VS</div>
+        <div class="camp-side fake">
+          <div class="camp-label">FAKE</div>
+          <div class="camp-count">3명 · 1,250 RP</div>
+          <div class="camp-avatars">
+            <div class="camp-avatar">JN</div>
+            <div class="camp-avatar" style="background:linear-gradient(135deg,#fcb300,#db2780); color:#1a0a00">ME</div>
+            <div class="camp-avatar">RS</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal-grid">
+        <article class="reveal-card" data-side="real">
+          <div class="reveal-card-head">
+            <div class="p-avatar">AK</div>
+            <span class="p-name">Alex Kim</span>
+            <span class="p-bet real">REAL · 800</span>
+          </div>
+          <p class="reveal-card-text">
+            카뱅이 5월 컨퍼런스콜에서 청년 대출 확대 의지를 밝힌 적 있음.
+            7월 적용은 분기 사이클과 맞아떨어짐.
+          </p>
+          <button class="quote-btn" data-active="false">💬 따옴</button>
+        </article>
+
+        <article class="reveal-card" data-side="fake">
+          <div class="reveal-card-head">
+            <div class="p-avatar">JN</div>
+            <span class="p-name">Jina Noh</span>
+            <span class="p-bet fake">FAKE · 300</span>
+          </div>
+          <p class="reveal-card-text">
+            단일 매체 출처 + 720점 컷오프가 비현실적. 공식 발표 검색해도 안 나옴.
+          </p>
+          <button class="quote-btn" data-active="true">💬 따옴 ✓</button>
+        </article>
+
+        <article class="reveal-card" data-side="fake">
+          <div class="reveal-card-head">
+            <div class="p-avatar" style="background:linear-gradient(135deg,#fcb300,#db2780); color:#1a0a00">ME</div>
+            <span class="p-name">나</span>
+            <span class="p-bet fake">FAKE · 450</span>
+          </div>
+          <p class="reveal-card-text">
+            720점 기준은 기존 정책과 충돌. 보도자료 부재.
+          </p>
+          <button class="quote-btn" data-active="false">💬 따옴</button>
+        </article>
+
+        <article class="reveal-card" data-side="fake">
+          <div class="reveal-card-head">
+            <div class="p-avatar">RS</div>
+            <span class="p-name">Rachel Suh</span>
+            <span class="p-bet fake">FAKE · 500</span>
+          </div>
+          <p class="reveal-card-text">
+            한도 1.5배 상향이면 자본 비율 영향 큰데 IR 발표 없음.
+          </p>
+          <button class="quote-btn" data-active="false">💬 따옴</button>
+        </article>
+      </div>
+    </section>
+  </div>
+  <span class="mockup-caption">round-4 · reasoning reveal</span>
+</body>
+</html>

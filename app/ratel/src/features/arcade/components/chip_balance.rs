@@ -6,7 +6,13 @@ use crate::features::arcade::i18n::ArcadeLayoutTranslate;
 use crate::*;
 
 #[component]
-pub fn ChipBalance(on_click: EventHandler<()>) -> Element {
+pub fn ChipBalance(
+    on_click: EventHandler<()>,
+    // Optional override so callers that render two instances on the
+    // same page (header + mobile drawer) can avoid a duplicate-testid
+    // strict-mode failure in Playwright.
+    #[props(default = "ff-arcade-chip".to_string())] testid: String,
+) -> Element {
     let tr: ArcadeLayoutTranslate = use_translate();
     let wallet = use_arcade_wallet();
     let state = wallet.state()?;
@@ -15,7 +21,7 @@ pub fn ChipBalance(on_click: EventHandler<()>) -> Element {
     rsx! {
         button {
             class: "stat-chip gold ff-arcade__chip-btn",
-            "data-testid": "ff-arcade-chip",
+            "data-testid": "{testid}",
             "aria-label": "{tr.chip_aria}",
             onclick: move |_| on_click.call(()),
             span { class: "stat-chip-icon", "◆" }

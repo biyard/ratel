@@ -41810,15 +41810,6 @@ body.comments-panel-resizing {
   stroke-width: 2.4;
 }
 
-.admin-arena__title {
-  font-family: var(--font-display, "Orbitron", sans-serif);
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--accent-gold);
-}
-
 .admin-arena__container {
   position: relative;
   z-index: 1;
@@ -45143,7 +45134,10 @@ body.comments-panel-resizing {
   font-weight: 700;
   font-size: 13px;
   letter-spacing: 0.18em;
-  color: var(--ff-text-primary);
+  /* Falls back to `.admin-arena --text-primary` when the brand is
+   * rendered outside `.ff-admin-arena` (the generic /admin layout
+   * reuses this brand block without the ff-* variable scope). */
+  color: var(--ff-text-primary, var(--text-primary));
 }
 
 .ff-admin-arena__brand-sub {
@@ -45184,39 +45178,44 @@ body.comments-panel-resizing {
   border-color: rgba(252, 179, 0, 0.3);
 }
 
-.ff-admin-arena__cta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.ff-admin-arena__new-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border: 1px solid rgba(219, 39, 128, 0.4);
-  background: rgba(219, 39, 128, 0.08);
-  color: var(--ff-pink);
-  font-family: "JetBrains Mono", "Outfit", monospace;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.ff-admin-arena__new-btn:hover {
-  background: rgba(219, 39, 128, 0.16);
-}
-
-.ff-admin-arena__new-icon {
-  font-size: 13px;
-}
-
 .ff-admin-arena__main {
   min-height: 60vh;
+}
+
+/* Mobile (≤720px) — keep the admin tab row horizontal even on narrow
+ * viewports. The default `flex-wrap: wrap` was stacking the five tabs
+ * into two rows under ~500px and pushing the CTA below them; switch
+ * to a nowrap row that scrolls horizontally instead. The CTA stays
+ * pinned to the right via `margin-left: auto`. */
+@media (max-width: 720px) {
+  .ff-admin-arena {
+    padding: 12px 14px 24px;
+    gap: 12px;
+  }
+  .ff-admin-arena__topbar {
+    gap: 10px;
+    padding: 10px 12px;
+  }
+  .ff-admin-arena__brand-sub {
+    display: none;
+  }
+  .ff-admin-arena__tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-left: 6px;
+    /* Hide the scrollbar so the tab strip stays clean. The row stays
+     * scrollable via touch/trackpad. */
+    scrollbar-width: none;
+  }
+  .ff-admin-arena__tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .ff-admin-arena__tab {
+    flex-shrink: 0;
+    padding: 8px 10px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+  }
 }
 
 /* === src/features/fact_or_fold/pages/admin/(stub pages) === */
@@ -47616,7 +47615,12 @@ body.comments-panel-resizing {
 .ff-room .chat-input {
   flex: 1;
   padding: 9px 12px;
-  background: rgba(0, 0, 0, 0.3);
+  /* Dark: deep transparent inset against the chat panel.
+   * Light: faint near-black wash — mirrors `.comment-input__textarea`
+   * (`var(--surface-raised)`) so the field reads as an input box and
+   * not solid grey under the light theme. */
+  background: var(--dark, rgba(0, 0, 0, 0.3))
+    var(--light, rgba(15, 15, 35, 0.04));
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   color: var(--text-primary);
@@ -48112,6 +48116,396 @@ body.comments-panel-resizing {
   .sub-team-broadcast-compose .arena-topbar .topbar-btn--primary,
   .sub-team-doc-compose .arena-topbar .topbar-btn--primary {
     display: none;
+  }
+}
+
+/* ── RoundNewsCollapsible — shared "re-read the news" card mounted by
+ * game_room/component.rs on every stage after NewsReveal. Built on
+ * native <details>/<summary>, lives inside `.ff-room` so it picks up
+ * the surface/border tokens defined on `.ff-arcade`. */
+.ff-room .news-collapsible {
+  /* `display: block` + `gap: 0` override the global `.card` rule
+   * which sets `display: flex; flex-direction: column; gap: 1.5rem`
+   * and would otherwise insert a 24px flex-gap between the summary
+   * row and the body. We keep the `card` class on the element so its
+   * box-shadow / color / radius defaults still cascade. */
+  display: block;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  margin-bottom: 14px;
+}
+.ff-room .news-collapsible > .news-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.ff-room .news-collapsible > .news-summary::-webkit-details-marker {
+  display: none;
+}
+.ff-room .news-collapsible .news-summary-label {
+  flex-shrink: 0;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.ff-room .news-collapsible .news-summary-title {
+  flex: 1;
+  font-family: "Orbitron", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ff-room .news-collapsible[open] .news-summary-title {
+  white-space: normal;
+}
+.ff-room .news-collapsible .news-summary-toggle {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+.ff-room .news-collapsible[open] .news-summary-toggle {
+  transform: rotate(180deg);
+}
+.ff-room .news-collapsible .news-body {
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--border);
+}
+.ff-room .news-collapsible .news-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.ff-room .news-collapsible .news-headline-full {
+  font-family: "Orbitron", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 0 0 10px;
+}
+.ff-room .news-collapsible .news-excerpt {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0 0 8px;
+}
+.ff-room .news-collapsible .news-source {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--text-faint);
+}
+.ff-room .news-collapsible .news-source-dot {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  background: var(--text-faint);
+  border-radius: 50%;
+  align-self: center;
+}
+
+/* ── Mobile (≤720px) — game-room shell + stage timeline + per-stage
+ * grids. Layout/sidebar baseline rules already live in the mobile
+ * media query at line ~50125; this block layers the stage-step
+ * compacting + per-view grid stacks on top so each round's content
+ * actually fits a phone viewport. */
+@media (max-width: 720px) {
+  /* Hide the arcade hamburger when the user is inside a live round.
+   * The drawer it controls is irrelevant during play — the stage
+   * already owns the user's attention. Keeps the header just brand
+   * + avatar so the chrome stays quiet. */
+  .ff-arcade__top-bar[data-game-room="true"] .ff-arcade__menu-toggle {
+    display: none;
+  }
+
+  /* Stage timeline → horizontal pill strip. The desktop component
+   * renders each step as `dot + label-name + label-time`; on mobile
+   * we collapse it to a single rounded pill (name only) and let the
+   * row scroll horizontally.
+   *
+   * Selector specificity matters: the desktop rule is scoped to
+   * `.ff-room .stage-timeline.stage-timeline-global` (0,3,0), so the
+   * mobile override has to match that depth — a bare
+   * `.stage-timeline-global` (0,2,0) loses the cascade.
+   */
+  .ff-room .stage-timeline.stage-timeline-global {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    overflow-x: auto;
+    gap: 6px;
+    padding: 8px;
+    scrollbar-width: none;
+  }
+  .ff-room .stage-timeline.stage-timeline-global::-webkit-scrollbar {
+    display: none;
+  }
+  .ff-room .stage-timeline-global .stage-step {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    /* Strip the desktop hover lift — touch devices stick on it. */
+    transition: none;
+  }
+  /* The desktop layout draws a vertical connector line between
+   * consecutive steps with `::after`. It overshoots into the
+   * horizontal pill strip on mobile, so hide it outright. */
+  .ff-room .stage-timeline-global .stage-step:not(:last-child)::after {
+    display: none;
+  }
+  .ff-room .stage-timeline-global .stage-step[data-state="active"] {
+    background: var(--gold-soft);
+    border-color: rgba(252, 179, 0, 0.4);
+    color: var(--gold);
+  }
+  .ff-room .stage-timeline-global .stage-step[data-state="done"] {
+    color: var(--text-faint);
+  }
+  .ff-room .stage-dot {
+    width: 16px;
+    height: 16px;
+    font-size: 9px;
+    background: transparent;
+    border: 1px solid currentColor;
+    box-shadow: none;
+  }
+  .ff-room .stage-step[data-state="active"] .stage-dot {
+    background: var(--gold);
+    color: #1a0a00;
+    border-color: var(--gold);
+    box-shadow: none;
+  }
+  .ff-room .stage-step[data-state="done"] .stage-dot {
+    background: transparent;
+    color: var(--text-faint);
+    border-color: var(--text-faint);
+  }
+  /* Drop the time sublabel — too noisy in a pill. */
+  .ff-room .stage-label-time {
+    display: none;
+  }
+  .ff-room .stage-label-name {
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* Timer card → compact one-row pill. Override desktop padding /
+   * text-align / circular-ring layout.
+   *
+   * Selectors are scoped through `.sidebar` to match the desktop
+   * `.ff-room .sidebar .timer-card .timer-ring` (0,3,0) cascade.
+   * Without that depth the desktop rule keeps the 120×120 ring on
+   * mobile and the card balloons to ~150px tall. */
+  .ff-room .sidebar .timer-card {
+    padding: 10px 14px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .ff-room .sidebar .timer-card .section-label,
+  .ff-room .sidebar .timer-card .timer-deadline,
+  .ff-room .sidebar .timer-card .timer-display-sub {
+    display: none;
+  }
+  .ff-room .sidebar .timer-card .timer-stage {
+    font-family: "Orbitron", sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-primary);
+    margin: 0;
+  }
+  /* Replace the SVG ring with bare countdown digits. */
+  .ff-room .sidebar .timer-card .timer-ring {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+  }
+  .ff-room .sidebar .timer-card .timer-ring svg {
+    display: none;
+  }
+  .ff-room .sidebar .timer-card .timer-display {
+    position: static;
+    display: inline-block;
+  }
+  .ff-room .sidebar .timer-card .timer-display-time {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+
+  /* Per-stage grids — each desktop layout collapses to a single
+   * column on mobile so cards stack vertically and never overflow
+   * a phone width. `minmax(0, 1fr)` (not bare `1fr`) prevents the
+   * grid column from blowing past the viewport when a child has
+   * nowrap or long content; `min-width: 0` on grid items extends
+   * the same fix down into flex/grid descendants. */
+  .ff-room .round-grid,
+  .ff-room .bet-grid,
+  .ff-room .reveal-grid,
+  .ff-room .reason-grid,
+  .ff-room .result-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px;
+  }
+  .ff-room .round-grid > *,
+  .ff-room .bet-grid > *,
+  .ff-room .reveal-grid > *,
+  .ff-room .reason-grid > *,
+  .ff-room .result-grid > * {
+    min-width: 0;
+  }
+
+  /* News-reveal stage cards (NewsCard + PlayersCard) — tighten the
+   * desktop 28px / 22px padding down to phone spacing and shrink the
+   * headline from 24px so it fits without horizontal scroll. */
+  .ff-room .news-card,
+  .ff-room .players-card {
+    padding: 16px;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .ff-room .news-card {
+    margin-bottom: 12px;
+  }
+  .ff-room .news-headline {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+  .ff-room .news-excerpt {
+    font-size: 13px;
+    margin-bottom: 14px;
+    padding-left: 10px;
+  }
+  .ff-room .news-source {
+    flex-wrap: wrap;
+    font-size: 10px;
+    margin-bottom: 10px;
+  }
+  .ff-room .news-meta {
+    gap: 6px;
+  }
+  .ff-room .news-cta {
+    margin-left: 0;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  /* Reasoning-reveal stage — camp-bar (REAL vs FAKE summary).
+   * Desktop puts the label + count on the same row via `space-between`
+   * inside `.camp-side-head`. On a 358px phone width each camp side
+   * shrinks to ~120px of inner space, so the 16px Orbitron label +
+   * "{count}명 · {rp} RP" count don't fit a single row — text wraps
+   * or clips. Switch to a column stack and trim font sizes to match
+   * the mobile mockup. */
+  .ff-room .camp-bar {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .ff-room .camp-side {
+    padding: 10px 12px;
+    gap: 8px;
+    border-radius: var(--r-md);
+  }
+  .ff-room .camp-side-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .ff-room .camp-label {
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+  .ff-room .camp-count {
+    font-size: 11px;
+  }
+  .ff-room .camp-vs {
+    padding: 0 4px;
+    font-size: 11px;
+  }
+  .ff-room .camp-avatars {
+    gap: 4px;
+  }
+
+  /* Text-wrap safety net — long content (URLs, dense Korean blobs,
+   * pasted single tokens) was pushing reason textarea, chat bubbles,
+   * and essence rows past their parent card. `overflow-wrap:
+   * anywhere` + `word-break: break-word` force a break, and
+   * `min-width: 0` on flex/grid children unsticks the cascade. */
+  .ff-room .reason-textarea {
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .ff-room .chat-msg {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .ff-room .chat-msg-body {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: pre-wrap;
+    max-width: 100%;
+  }
+  .ff-room .essence-item {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .ff-room .essence-item > * {
+    min-width: 0;
+  }
+  .ff-room .essence-text {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .ff-room .reveal-card {
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 14px 16px;
+  }
+  .ff-room .reveal-card-head {
+    min-width: 0;
+    gap: 8px;
+  }
+  .ff-room .reveal-card-text {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: pre-wrap;
+    min-width: 0;
+  }
+
+  /* Pad the room wrapper itself down so the stage-strip + cards
+   * have breathing room above the device's bottom safe-area. */
+  .ff-room {
+    padding-bottom: 24px;
   }
 }
 
@@ -48792,7 +49186,9 @@ body.comments-panel-resizing {
 .ff-arcade .user-stats {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 18px;
+  margin-left: auto;
 }
 .ff-arcade .stat-chip {
   display: flex;
@@ -48873,6 +49269,219 @@ body.comments-panel-resizing {
   box-shadow: 0 4px 12px rgba(252, 179, 0, 0.18);
 }
 
+/* Hamburger toggle — modeled on the home arena's `hud-btn--primary`
+ * (`home-btn-menu` in `views/index/component.rs`). 42px glass square
+ * with a gold-tinted gradient + thin border, hover floats a sliver
+ * and adds a gold glow, label sits below and fades in on hover. The
+ * `display: none` default keeps it desktop-hidden until the matching
+ * media query below flips it on. */
+.ff-arcade__menu-toggle {
+  position: relative;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(252, 179, 0, 0.18),
+    rgba(252, 179, 0, 0.06)
+  );
+  border: 1px solid rgba(252, 179, 0, 0.3);
+  border-radius: 11px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.ff-arcade__menu-toggle svg {
+  width: 18px;
+  height: 18px;
+  color: var(--gold-bright);
+  transition: color 0.2s;
+}
+
+.ff-arcade__menu-toggle:hover {
+  border-color: rgba(252, 179, 0, 0.45);
+  box-shadow: 0 0 20px rgba(252, 179, 0, 0.25);
+  transform: translateY(-1px);
+}
+
+.ff-arcade__menu-toggle[aria-expanded="true"] {
+  border-color: rgba(252, 179, 0, 0.55);
+  box-shadow: 0 0 18px rgba(252, 179, 0, 0.2);
+}
+
+/* Hover label — same Orbitron caps treatment as home-arena hud-btn,
+ * positioned outside the button so it doesn't compete with the SVG. */
+.ff-arcade__menu-toggle .hud-btn__label {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: "Orbitron", sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.ff-arcade__menu-toggle:hover .hud-btn__label {
+  opacity: 1;
+}
+
+.ff-arcade__menu-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 7, 15, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 900;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.ff-arcade__menu-scrim[data-open="true"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ff-arcade__menu-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(280px, 80vw);
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  border-left: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-lg);
+  z-index: 901;
+  padding: 64px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transform: translateX(100%);
+  /* Always mounted so the slide-in/out transition has both endpoints
+   * to animate between. `visibility` + `pointer-events` keep the
+   * closed drawer out of the tab order. */
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.2s ease, visibility 0s linear 0.2s;
+}
+
+.ff-arcade__menu-drawer[data-open="true"] {
+  transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
+  transition: transform 0.2s ease, visibility 0s linear 0s;
+}
+
+.ff-arcade__menu-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ff-arcade__menu-nav .top-nav-btn,
+.ff-arcade__menu-nav .ff-arcade__admin-cta,
+.ff-arcade__menu-nav .stat-chip {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 12px 14px;
+  font-size: 14px;
+  border-radius: var(--r-md);
+}
+
+/* The chip pill is normally a rounded 999px button — inside the
+ * drawer it sits next to the nav links, so square it off and align
+ * the icon + label to the leading edge for a row that matches the
+ * surrounding entries. */
+.ff-arcade__menu-nav .ff-arcade__chip-btn {
+  border-radius: var(--r-md);
+}
+.ff-arcade__menu-nav .ff-arcade__chip-btn:hover {
+  transform: none;
+  box-shadow: none;
+  background: rgba(252, 179, 0, 0.16);
+}
+
+/* Mobile (≤720px) — collapse the inline nav into the drawer, drop the
+ * sub-line + admin CTA label, and tighten the rest of the top bar so
+ * everything fits in a phone-width header. */
+@media (max-width: 720px) {
+  .ff-arcade {
+    padding: 12px 16px 64px;
+    font-size: 14px;
+  }
+
+  .ff-arcade__top-bar {
+    margin-bottom: 14px;
+  }
+
+  .ff-arcade .top-bar {
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .ff-arcade .brand {
+    gap: 10px;
+  }
+  .ff-arcade .brand-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  .ff-arcade .brand-name {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+  }
+  /* Drop the sub-label entirely on mobile — too noisy for a 360px header. */
+  .ff-arcade .brand-sub {
+    display: none;
+  }
+
+  /* Hide the inline desktop tab nav; the drawer takes over. The
+   * drawer-internal `.top-nav-btn`s stay visible because their parent
+   * is `.ff-arcade__menu-nav`, not `.ff-arcade > .top-bar`. */
+  .ff-arcade > .top-bar > .top-nav {
+    display: none;
+  }
+
+  .ff-arcade .user-stats {
+    gap: 8px;
+  }
+
+  /* Admin CTA + chip pill live in the drawer on mobile, so hide them
+   * from the header entirely. The drawer renders its own instances of
+   * both — keeping them in the header on mobile would just duplicate
+   * the controls and re-introduce the overflow this fix targets. */
+  .ff-arcade__top-bar .ff-arcade__admin-cta,
+  .ff-arcade__top-bar .ff-arcade__chip-btn {
+    display: none;
+  }
+
+  .ff-arcade .avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+
+  .ff-arcade__menu-toggle {
+    display: inline-flex;
+  }
+}
+
 /* === src/features/arcade/components/exchange_modal === */
 .ff-arcade__modal-scrim {
   position: fixed;
@@ -48942,7 +49551,12 @@ body.comments-panel-resizing {
 .ff-arcade__modal-input {
   width: 100%;
   padding: 10px 14px;
-  background: rgba(0, 0, 0, 0.25);
+  /* Dark: deep inset against the modal surface.
+   * Light: faint near-black wash so the field reads against a white
+   * modal card. The previous hard-coded `rgba(0,0,0,0.25)` rendered
+   * as solid grey under the light theme. */
+  background: var(--dark, rgba(0, 0, 0, 0.25))
+    var(--light, rgba(15, 15, 35, 0.05));
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   color: var(--text-primary);
@@ -48964,6 +49578,35 @@ body.comments-panel-resizing {
   border-radius: var(--r-sm);
   font-size: 12.5px;
   color: var(--teal);
+}
+
+/* Mobile / touch (`hover: none`) — undo the sticky `:hover` look on
+ * arcade buttons. On touch devices, `:hover` stays applied after a
+ * tap and only clears when the user taps somewhere else, leaving the
+ * modal confirm/cancel and the settlement exit ("정산완료 → 홈으로")
+ * in a permanent hover appearance. These reset rules pull each
+ * `:hover` selector back to the same paint as its base state under
+ * `hover: none`. */
+@media (hover: none) {
+  /* Exchange modal — Confirm + Cancel both go through the global
+   * `.btn` styles, which paint gold border/text on hover. */
+  .ff-arcade__modal-card .btn:hover {
+    border-color: var(--btn-border);
+    color: var(--btn-text);
+    background: transparent;
+  }
+
+  /* Game-room primary button (used by `.settlement-exit-row`). The
+   * base rule already sets the gold background; only `transform` and
+   * `box-shadow` change on hover, so reset just those. */
+  .ff-room .btn-primary:hover:not(:disabled) {
+    transform: none;
+    box-shadow: 0 4px 16px rgba(252, 179, 0, 0.25);
+  }
+  .ff-room .btn-ghost:hover:not(:disabled) {
+    background: var(--surface-2);
+    border-color: var(--border);
+  }
 }
 
 /* === src/features/arcade/pages/home === */
@@ -49450,6 +50093,97 @@ html[data-theme="light"] .ff-home .featured-title {
   }
 }
 
+/* Mobile (≤720px) — drop secondary descriptions and condense cards so
+ * the lobby/leaderboard fit a phone viewport without horizontal
+ * overflow. `featured-tagline`, the section-head sub-line, and the
+ * catalog tile description are all "nice to have" copy that adds zero
+ * actionable info on mobile. */
+@media (max-width: 720px) {
+  .ff-home .featured {
+    padding: 22px 18px;
+    border-radius: var(--r-lg);
+  }
+  .ff-home .featured-title {
+    font-size: 26px;
+    margin-bottom: 6px;
+  }
+  .ff-home .featured-tag {
+    margin-bottom: 12px;
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+  .ff-home .featured-tagline {
+    display: none;
+  }
+  .ff-home .featured-meta {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .ff-home .meta-cell {
+    padding: 8px 10px;
+  }
+  .ff-home .meta-cell-label {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+  }
+  .ff-home .meta-cell-value {
+    font-size: 14px;
+  }
+  .ff-home .featured-cta {
+    gap: 8px;
+  }
+  .ff-home .featured-status {
+    font-size: 11px;
+  }
+  .ff-home .my-stats-card,
+  .ff-home .history-card,
+  .ff-home .lb-table {
+    padding: 16px;
+  }
+  .ff-home .game-tile {
+    padding: 16px;
+  }
+  .ff-home .game-tile-desc {
+    display: none;
+  }
+  /* `.section-head .sub` lives on the right side of every card title;
+   * the lift it gives the layout isn't worth the wrap on mobile. */
+  .ff-home .section-head .sub {
+    display: none;
+  }
+
+  /* Leaderboard table: collapse the participation column entirely
+   * (info is implicit in rank + accuracy) and tighten the rest. */
+  .ff-home .lb-row {
+    grid-template-columns: 28px 32px minmax(70px, 1fr) 56px 70px;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .ff-home .lb-stat {
+    display: none;
+  }
+  .ff-home .lb-row.head > div:nth-child(4) {
+    display: none;
+  }
+  .ff-home .lb-row.me {
+    margin: 0 -10px;
+    padding: 10px;
+  }
+  .ff-home .lb-rank {
+    font-size: 14px;
+  }
+  .ff-home .lb-name {
+    font-size: 13px;
+  }
+  .ff-home .lb-accuracy {
+    font-size: 12px;
+  }
+  .ff-home .lb-primary {
+    font-size: 14px;
+  }
+}
+
 /* === src/features/arcade/games/fact_or_fold/pages/matching === */
 .ff-matching {
   max-width: 880px;
@@ -49764,6 +50498,77 @@ html[data-theme="light"] .ff-home .featured-title {
   }
   border-top: 1px solid var(--border-subtle);
 }
+
+/* Mobile (≤720px) — extra arcade overrides for matching + game room.
+ * Kept as a separate block from the existing matching media query so
+ * the prior rules stay untouched. */
+@media (max-width: 720px) {
+  /* Matching page: shrink the headline + drop the long subtitle so
+   * four slot cards fit a phone width. */
+  .ff-matching {
+    margin: 16px auto 0;
+    gap: 18px;
+    padding: 0 4px;
+  }
+  .ff-matching .matching-title {
+    font-size: 28px;
+    letter-spacing: 0.02em;
+  }
+  .ff-matching .matching-subtitle {
+    display: none;
+  }
+  .ff-matching .matching-slot {
+    padding: 16px 10px 14px;
+    min-height: 140px;
+  }
+  .ff-matching .matching-eyebrow {
+    font-size: 10px;
+    padding: 5px 10px;
+    letter-spacing: 0.16em;
+  }
+
+  /* Game room: stack the sidebar above the view-stack on mobile so
+   * the 176px-fixed sidebar doesn't squeeze the main view off-screen.
+   * Sidebar itself stays a vertical stack — its two children
+   * (.stage-timeline horizontal-strip, .timer-card compact pill) are
+   * full-width rows, matching the mobile mockup.
+   *
+   * `minmax(0, 1fr)` (instead of bare `1fr`) is what keeps the grid
+   * column from blowing past the viewport when a child has nowrap
+   * content (the 6 stage-step pills). Without it the column adopts
+   * the grid item's min-content width, and the whole room scrolls
+   * horizontally. The matching `min-width: 0` on the children
+   * cascades the same fix down one level for flex/grid descendants. */
+  .ff-room .layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .ff-room .layout > * {
+    min-width: 0;
+  }
+  .ff-room .sidebar {
+    position: static;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+  }
+  .ff-room .sidebar > * {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  /* Belt-and-braces clamp — explicit max-width so the pill strip and
+   * collapsible news never push past the room width even when their
+   * inner contents are nowrap or have wide whitespace. */
+  .ff-room .stage-timeline.stage-timeline-global,
+  .ff-room .timer-card,
+  .ff-room .news-collapsible {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
 .reports-arena .report-card__meta {
   display: inline-flex;
   align-items: center;

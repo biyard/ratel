@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>FF · 6. Settlement (mobile)</title>
+<link rel="stylesheet" href="_shared.css" />
+<style>
+  /* Verdict banner — large gold/pink hero block telling the truth. */
+  .reveal-banner {
+    padding: 20px 18px;
+    text-align: center;
+    border-radius: var(--r-lg);
+    border: 1px solid var(--border-strong);
+    margin-bottom: 12px;
+  }
+  .reveal-banner[data-verdict="real"] {
+    background: linear-gradient(180deg, var(--teal-soft), transparent);
+    border-color: rgba(110,237,216,0.4);
+  }
+  .reveal-banner[data-verdict="fake"] {
+    background: linear-gradient(180deg, var(--pink-soft), transparent);
+    border-color: rgba(219,39,128,0.4);
+  }
+  .reveal-banner .verdict-label {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.16em;
+    margin-bottom: 4px;
+  }
+  .reveal-banner .reveal-verdict {
+    font-family: "Orbitron", sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+  }
+  .reveal-banner[data-verdict="real"] .reveal-verdict { color: var(--teal); }
+  .reveal-banner[data-verdict="fake"] .reveal-verdict { color: var(--pink); }
+  .reveal-banner .verdict-reason {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* Result table — 4 rows, each player. Mobile collapses the
+   * stats column and uses two lines per row. */
+  .result-table .result-row {
+    display: grid;
+    grid-template-columns: 30px 30px 1fr auto;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .result-table .result-row:last-child {
+    border-bottom: none;
+  }
+  .result-table .result-row.me {
+    background: var(--gold-soft);
+    margin: 0 -10px;
+    padding: 10px;
+    border-radius: var(--r-sm);
+  }
+  .result-table .rank {
+    font-family: "Orbitron", sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    text-align: center;
+    color: var(--text-faint);
+  }
+  .result-table .rank.top1 { color: var(--gold); }
+  .result-table .p-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5b3aaf, #db2780);
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .result-table .p-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .result-table .p-name {
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .result-table .p-verdict {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  .result-table .p-verdict.right { color: var(--teal); }
+  .result-table .p-verdict.wrong { color: var(--pink); }
+  .result-table .delta {
+    font-family: "Orbitron", sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .result-table .delta.up { color: var(--gold); }
+  .result-table .delta.down { color: var(--pink); }
+
+  /* Essence card — formula rows for the player's own payout
+   * breakdown + opt-in. */
+  .essence-card .formula-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--border);
+    font-size: 13px;
+  }
+  .essence-card .formula-row:last-of-type {
+    border-bottom: none;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    margin-top: 4px;
+  }
+  .essence-card .formula-label {
+    color: var(--text-muted);
+  }
+  .essence-card .formula-value {
+    font-family: "JetBrains Mono", monospace;
+    color: var(--text-primary);
+  }
+  .essence-card .formula-row.total .formula-label {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+  .essence-card .formula-row.total .formula-value {
+    font-family: "Orbitron", sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+
+  .essence-opt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+  }
+  .essence-opt input { width: 16px; height: 16px; }
+  .essence-opt label {
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text-muted);
+  }
+  .essence-opt label b { color: var(--text-primary); }
+
+  .exit-row {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <header class="topbar">
+      <span class="brand-name">RATEL · FACT OR FOLD</span>
+    </header>
+
+    <nav class="stage-strip">
+      <a class="step done" href="1-news-reveal.html">1 · 뉴스</a>
+      <a class="step done" href="2-first-bet.html">2 · 베팅</a>
+      <a class="step done" href="3-reasoning-write.html">3 · 근거</a>
+      <a class="step done" href="4-reasoning-reveal.html">4 · 공개</a>
+      <a class="step done" href="5-live-debate.html">5 · 토론</a>
+      <a class="step active" href="6-settlement.html">6 · 정산</a>
+    </nav>
+
+    <div class="reveal-banner" data-verdict="fake">
+      <div class="verdict-label">최종 판정</div>
+      <div class="reveal-verdict">FAKE</div>
+      <p class="verdict-reason">
+        카뱅 공식 채널에서 한도 상향 발표 사실 없음. 단일 매체 보도가 근거였음.
+      </p>
+    </div>
+
+    <details class="card news-collapsible">
+      <summary class="news-summary">
+        <span class="news-summary-label">뉴스</span>
+        <span class="news-summary-title">카카오뱅크, 7월 1일부로 비대면 대출 한도 1.5배 상향한다</span>
+        <span class="news-summary-toggle">▾</span>
+      </summary>
+      <div class="news-body">
+        <div class="news-meta">
+          <span class="news-tag">기술</span>
+          <span class="news-tag">국내</span>
+          <span class="news-difficulty">★★★☆☆</span>
+        </div>
+        <h2 class="news-headline-full">"카카오뱅크, 7월 1일부로 비대면 대출 한도 1.5배 상향한다"</h2>
+        <p class="news-excerpt">
+          업계 관계자에 따르면 한도 상향은 청년층 신용 한도 부족 문제 해결을 위한
+          조치로, 신용 평점 720점 이상 사용자에게 우선 적용될 예정이다.
+        </p>
+        <div class="news-source">출처 · 뉴스1 · 2025-06-12</div>
+      </div>
+    </details>
+
+    <section class="card result-table">
+      <div class="section-label">4명 결과</div>
+
+      <div class="result-row me">
+        <span class="rank top1">1</span>
+        <div class="p-avatar" style="background:linear-gradient(135deg,#fcb300,#db2780); color:#1a0a00">ME</div>
+        <div class="p-info">
+          <span class="p-name">나 (Mateo Y)</span>
+          <span class="p-verdict right">FAKE · 정답</span>
+        </div>
+        <span class="delta up">+780</span>
+      </div>
+
+      <div class="result-row">
+        <span class="rank">2</span>
+        <div class="p-avatar">RS</div>
+        <div class="p-info">
+          <span class="p-name">Rachel Suh</span>
+          <span class="p-verdict right">FAKE · 정답</span>
+        </div>
+        <span class="delta up">+520</span>
+      </div>
+
+      <div class="result-row">
+        <span class="rank">3</span>
+        <div class="p-avatar">JN</div>
+        <div class="p-info">
+          <span class="p-name">Jina Noh</span>
+          <span class="p-verdict right">FAKE · 정답</span>
+        </div>
+        <span class="delta up">+260</span>
+      </div>
+
+      <div class="result-row">
+        <span class="rank">4</span>
+        <div class="p-avatar">AK</div>
+        <div class="p-info">
+          <span class="p-name">Alex Kim</span>
+          <span class="p-verdict wrong">REAL · 오답</span>
+        </div>
+        <span class="delta down">−800</span>
+      </div>
+    </section>
+
+    <section class="card essence-card">
+      <div class="section-label">내 정산 공식</div>
+      <div class="formula-row">
+        <span class="formula-label">기본 회수 (베팅 환급)</span>
+        <span class="formula-value">+450</span>
+      </div>
+      <div class="formula-row">
+        <span class="formula-label">정답 보너스</span>
+        <span class="formula-value">+225</span>
+      </div>
+      <div class="formula-row">
+        <span class="formula-label">영향력 보너스 (따옴 1)</span>
+        <span class="formula-value">+105</span>
+      </div>
+      <div class="formula-row total">
+        <span class="formula-label">총 RatelPoint</span>
+        <span class="formula-value">+780</span>
+      </div>
+
+      <div class="essence-opt">
+        <input type="checkbox" id="essence" checked />
+        <label for="essence">
+          이 라운드를 <b>Essence</b>에 기록 — 정확도 통계와 영향력 점수에 반영
+        </label>
+      </div>
+    </section>
+
+    <div class="exit-row">
+      <button class="cta">정산완료 → 홈으로</button>
+    </div>
+  </div>
+  <span class="mockup-caption">round-6 · settlement</span>
+</body>
+</html>

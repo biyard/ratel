@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>FF · 1. News Reveal (mobile)</title>
+<link rel="stylesheet" href="_shared.css" />
+<style>
+  /* Round-1 specific — 4-player roster row. News card styles live
+   * in _shared.css under `.news-collapsible`. */
+  .players-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .player-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+  }
+  .player-row .p-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5b3aaf, #db2780);
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 12px;
+  }
+  .player-row .p-name {
+    flex: 1;
+    font-size: 13px;
+  }
+  .player-row .p-status {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--teal-soft);
+    color: var(--teal);
+    border: 1px solid rgba(110,237,216,0.25);
+  }
+  .player-row .p-status.me {
+    background: var(--gold-soft);
+    color: var(--gold);
+    border-color: rgba(252,179,0,0.3);
+  }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <header class="topbar">
+      <span class="brand-name">RATEL · FACT OR FOLD</span>
+    </header>
+
+    <nav class="stage-strip">
+      <a class="step active" href="1-news-reveal.html">1 · 뉴스</a>
+      <a class="step" href="2-first-bet.html">2 · 베팅</a>
+      <a class="step" href="3-reasoning-write.html">3 · 근거</a>
+      <a class="step" href="4-reasoning-reveal.html">4 · 공개</a>
+      <a class="step" href="5-live-debate.html">5 · 토론</a>
+      <a class="step" href="6-settlement.html">6 · 정산</a>
+    </nav>
+
+    <div class="timer">
+      <span class="stage-name">NEWS REVEAL</span>
+      <span class="countdown">0:18</span>
+    </div>
+
+    <details class="card news-collapsible" open>
+      <summary class="news-summary">
+        <span class="news-summary-label">뉴스</span>
+        <span class="news-summary-title">카카오뱅크, 7월 1일부로 비대면 대출 한도 1.5배 상향한다</span>
+        <span class="news-summary-toggle">▾</span>
+      </summary>
+      <div class="news-body">
+        <div class="news-meta">
+          <span class="news-tag">기술</span>
+          <span class="news-tag">국내</span>
+          <span class="news-difficulty">★★★☆☆</span>
+        </div>
+        <h2 class="news-headline-full">"카카오뱅크, 7월 1일부로 비대면 대출 한도 1.5배 상향한다"</h2>
+        <p class="news-excerpt">
+          업계 관계자에 따르면 한도 상향은 청년층 신용 한도 부족 문제 해결을 위한
+          조치로, 신용 평점 720점 이상 사용자에게 우선 적용될 예정이다.
+        </p>
+        <div class="news-source">출처 · 뉴스1 · 2025-06-12</div>
+      </div>
+    </details>
+
+    <section class="card">
+      <div class="section-label">4명 참가자</div>
+      <div class="players-list">
+        <div class="player-row">
+          <div class="p-avatar">AK</div>
+          <div class="p-name">Alex Kim</div>
+          <div class="p-status">대기</div>
+        </div>
+        <div class="player-row">
+          <div class="p-avatar">JN</div>
+          <div class="p-name">Jina Noh</div>
+          <div class="p-status">대기</div>
+        </div>
+        <div class="player-row">
+          <div class="p-avatar" style="background:linear-gradient(135deg,#fcb300,#db2780); color:#1a0a00">ME</div>
+          <div class="p-name">나 (Mateo Y)</div>
+          <div class="p-status me">대기</div>
+        </div>
+        <div class="player-row">
+          <div class="p-avatar">RS</div>
+          <div class="p-name">Rachel Suh</div>
+          <div class="p-status">대기</div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <span class="mockup-caption">round-1 · news reveal</span>
+</body>
+</html>
