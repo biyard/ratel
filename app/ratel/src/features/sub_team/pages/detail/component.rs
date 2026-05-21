@@ -369,10 +369,12 @@ fn DirectAnnouncementCard(username: String, sub_team_id: String) -> Element {
             div { class: "direct-msg",
                 div { class: "direct-msg__foot",
                     span { class: "direct-msg__note", "{tr.direct_announce_note}" }
-                    button {
-                        class: "btn btn--primary btn--small",
+                    Button {
+                        size: ButtonSize::Small,
+                        style: ButtonStyle::Primary,
+                        shape: ButtonShape::Rounded,
+                        class: "inline-flex gap-2 items-center".to_string(),
                         "data-testid": "sub-team-direct-msg-compose-cta",
-                        r#type: "button",
                         onclick: move |_| {
                             nav.push(Route::TeamSubTeamDirectComposePage {
                                 username: username_for_nav.clone(),
