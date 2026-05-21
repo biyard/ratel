@@ -665,9 +665,26 @@
 
       var snap = mdSnapshotForRevert(before);
 
+      // Bare text directly inside the editor root: wrap the current line in
+      // a <p> first so subsequent execCommand calls have a proper block
+      // element to format. Without this, Chrome's formatBlock can silently
+      // no-op or produce browser-dependent output when there's no block
+      // ancestor between the text node and the contenteditable.
+      if (block === editor) {
+        document.execCommand("formatBlock", false, "<P>");
+        block = mdGetCaretBlock();
+        if (!block || block === editor) {
+          // Wrap didn't take — restore and bail.
+          mdRevert(snap);
+          return false;
+        }
+      }
+
       // Strip the marker chars (`# `, `## `, etc.) from the start of the block.
       if (!mdDeleteFirstChars(block, info.markerLen)) {
-        // Aborted mid-strip; do not apply the format.
+        // Aborted mid-strip — restore the snapshot so the user's typed
+        // marker remains exactly as they entered it.
+        mdRevert(snap);
         return false;
       }
       // Re-anchor the caret at the start of the (now shortened) block content.
