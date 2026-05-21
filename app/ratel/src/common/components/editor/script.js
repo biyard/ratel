@@ -559,27 +559,20 @@
     }
 
     function mdDeleteFirstChars(blockEl, count) {
-      // Walk forward from the start of blockEl, removing `count` characters of
-      // visible text. Returns true on success.
+      // Walk forward from the start of blockEl, deleting up to `count`
+      // characters of visible text. Empty text nodes are removed inline so
+      // we never end up with a stale walker reference.
       var walker = document.createTreeWalker(blockEl, NodeFilter.SHOW_TEXT, null);
       var node;
       var remaining = count;
       while ((node = walker.nextNode())) {
-        if (node.length >= remaining) {
-          node.deleteData(0, remaining);
-          return true;
+        var take = node.length < remaining ? node.length : remaining;
+        node.deleteData(0, take);
+        remaining -= take;
+        if (node.length === 0 && node.parentNode) {
+          node.parentNode.removeChild(node);
         }
-        remaining -= node.length;
-        var dead = node;
-        var next = walker.nextNode();
-        dead.parentNode.removeChild(dead);
-        if (!next) break;
-        node = next;
-        if (node.length >= remaining) {
-          node.deleteData(0, remaining);
-          return true;
-        }
-        remaining -= node.length;
+        if (remaining === 0) return true;
       }
       return false;
     }
@@ -606,6 +599,11 @@
       if (!sel || sel.rangeCount === 0) return null;
       var range = sel.getRangeAt(0);
       var sentinel = document.createTextNode(REVERT_SENTINEL);
+      // NOTE: insertNode splits the caret's text node. We immediately remove
+      // the sentinel, but the split halves remain. This is fine because every
+      // caller proceeds to mutate the block (formatBlock, indent, etc.) which
+      // serializes innerHTML again. Do not call this function on a code path
+      // that may not perform a follow-up mutation, or you'll leak the split.
       range.insertNode(sentinel);
       var html = editor.innerHTML;
       sentinel.parentNode.removeChild(sentinel);
