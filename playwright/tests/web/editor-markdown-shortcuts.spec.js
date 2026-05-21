@@ -170,4 +170,10 @@ test.describe.serial("Editor markdown shortcuts", () => {
     await expect(editor.locator("ul")).not.toContainText("After");
     await expect(editor).toContainText("After");
   });
+
+  test("> → <blockquote>", async ({ page }) => {
+    const editor = await openEditor(page);
+    await page.keyboard.type("> Quoted");
+    await expect(editor.locator("blockquote")).toContainText("Quoted");
+  });
 });

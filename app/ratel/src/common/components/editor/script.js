@@ -678,6 +678,9 @@
         case "olist":
           document.execCommand("insertOrderedList", false);
           break;
+        case "blockquote":
+          document.execCommand("formatBlock", false, "<BLOCKQUOTE>");
+          break;
         // Other kinds added in later tasks.
         default:
           // Kind isn't handled yet — undo the marker strip so the block
