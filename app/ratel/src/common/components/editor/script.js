@@ -909,16 +909,36 @@
 
       // ``` + Enter → <pre>. Trigger is Enter (not space) because the marker
       // is followed by a newline-to-code-block, not a space-to-text.
+      // Always followed by an empty paragraph so the user can exit the pre
+      // by arrow-down or by clicking below it.
       if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
         var fenceBlock = mdGetCaretBlock();
         if (fenceBlock && !mdHasAncestorTag("PRE")) {
-          // Bare text at editor root: textContent of the editor itself is
-          // exactly "```". Build the <pre> directly via DOM and place caret
-          // inside a <br> placeholder.
+          // Helper: install a <pre><br></pre><p><br></p> pair at the given
+          // anchor (either replacing a node or inserting at editor root),
+          // placing the caret inside the <pre> ready for code.
+          function fenceInstall(replaceNode, parent, nextSibling) {
+            var pre = document.createElement("pre");
+            pre.appendChild(document.createElement("br"));
+            var followP = document.createElement("p");
+            followP.appendChild(document.createElement("br"));
+            if (replaceNode) {
+              parent.replaceChild(pre, replaceNode);
+            } else {
+              parent.insertBefore(pre, nextSibling);
+            }
+            parent.insertBefore(followP, pre.nextSibling);
+            var preCaret = document.createRange();
+            preCaret.setStart(pre, 0);
+            preCaret.collapse(true);
+            var preSel = window.getSelection();
+            preSel.removeAllRanges();
+            preSel.addRange(preCaret);
+          }
+
+          // Bare text at editor root: the editor's only content is a single
+          // bare text node "```".
           if (fenceBlock === editor && editor.textContent === "```") {
-            // Make sure the ``` is the only content typed at root and not
-            // bleeding into existing blocks. Walk and check there's a
-            // single bare text node "```".
             var onlyBareFence = false;
             var bareNode = null;
             for (var ci = 0; ci < editor.childNodes.length; ci++) {
@@ -935,28 +955,18 @@
             if (onlyBareFence && bareNode) {
               e.preventDefault();
               var snap = mdSnapshotForRevert("```");
-              var pre = document.createElement("pre");
-              pre.appendChild(document.createElement("br"));
-              editor.replaceChild(pre, bareNode);
-              var preCaret = document.createRange();
-              preCaret.setStart(pre, 0);
-              preCaret.collapse(true);
-              var preSel = window.getSelection();
-              preSel.removeAllRanges();
-              preSel.addRange(preCaret);
+              fenceInstall(bareNode, editor, null);
               lastConversion = snap;
               scheduleUpdate();
               return;
             }
           }
-          // Block-wrapped case: <p>```</p> + Enter
+          // Block-wrapped case: <p>```</p> + Enter. Replace the whole block
+          // with <pre><br></pre><p><br></p>.
           if (fenceBlock !== editor && fenceBlock.textContent === "```") {
             e.preventDefault();
             var snap2 = mdSnapshotForRevert("```");
-            while (fenceBlock.firstChild) fenceBlock.removeChild(fenceBlock.firstChild);
-            fenceBlock.appendChild(document.createTextNode(""));
-            mdPlaceCaretAtBlockStart(fenceBlock);
-            document.execCommand("formatBlock", false, "<PRE>");
+            fenceInstall(fenceBlock, fenceBlock.parentNode, null);
             lastConversion = snap2;
             scheduleUpdate();
             return;
