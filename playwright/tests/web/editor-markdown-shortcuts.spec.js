@@ -177,18 +177,19 @@ test.describe.serial("Editor markdown shortcuts", () => {
     await expect(editor.locator("blockquote")).toContainText("Quoted");
   });
 
-  test("``` + Enter → <pre>", async ({ page }) => {
+  test("``` → <pre> (third backtick triggers immediately)", async ({ page }) => {
     const editor = await openEditor(page);
     await page.keyboard.type("```");
-    await page.keyboard.press("Enter");
+    // The fence trigger fires on the third backtick — no Enter required.
+    // Caret lands inside the new <pre>, so subsequent typing goes there.
     await page.keyboard.type("console.log(1)");
+    await expect(editor.locator("pre")).toHaveCount(1);
     await expect(editor.locator("pre")).toContainText("console.log(1)");
   });
 
   test("- inside <pre> is literal, not a list", async ({ page }) => {
     const editor = await openEditor(page);
     await page.keyboard.type("```");
-    await page.keyboard.press("Enter");
     await page.keyboard.type("- not a list");
     await expect(editor.locator("pre")).toContainText("- not a list");
     await expect(editor.locator("ul")).toHaveCount(0);
@@ -260,17 +261,15 @@ test.describe.serial("Editor markdown shortcuts", () => {
     await expect(editor.locator("h1")).toHaveText("Title");
   });
 
-  test("``` + Enter inside an existing <pre> is literal, not a new <pre>", async ({ page }) => {
+  test("``` inside an existing <pre> is literal, not a new <pre>", async ({ page }) => {
     const editor = await openEditor(page);
-    // Make a <pre> first.
+    // First ``` creates the pre (caret lands inside).
     await page.keyboard.type("```");
-    await page.keyboard.press("Enter");
     await expect(editor.locator("pre")).toHaveCount(1);
-    // Inside the <pre>, type ``` then Enter. Without the guard this would
-    // double-fire the conversion. With the guard, the keystrokes are literal.
+    // A second ``` typed inside the pre must NOT fire the fence trigger
+    // again — the PRE-ancestor guard short-circuits both the input handler
+    // (mdTryFence) and the keydown Enter fallback.
     await page.keyboard.type("```");
-    await page.keyboard.press("Enter");
-    // Still exactly one <pre>, no nested <pre> inside it.
     await expect(editor.locator("pre")).toHaveCount(1);
     await expect(editor.locator("pre pre")).toHaveCount(0);
   });
