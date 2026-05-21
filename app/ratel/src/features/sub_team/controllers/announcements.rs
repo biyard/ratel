@@ -151,11 +151,34 @@ pub async fn create_announcement_handler(
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
 
+    // Direct-message draft: verify the target is a recognized sub-team of
+    // this parent before creating the row. Stops the composer from being
+    // hand-pointed at arbitrary team ids via the request body. Broadcast
+    // drafts (target = None) skip this — the recognized-list is enforced
+    // at publish time via `count_recognized_sub_teams`.
+    if let Some(target) = &body.target_child_team_id {
+        let link_sk = EntityType::SubTeamLink(target.0.clone());
+        let link = crate::features::sub_team::models::SubTeamLink::get(
+            cli,
+            &team.pk,
+            Some(link_sk),
+        )
+        .await
+        .map_err(|e| {
+            crate::error!("create_announcement target link lookup failed: {e}");
+            SubTeamError::SubTeamLinkNotFound
+        })?;
+        if link.is_none() {
+            return Err(SubTeamError::SubTeamLinkNotFound.into());
+        }
+    }
+
     let mut ann = SubTeamAnnouncement::new_draft(
         team.pk.clone(),
         body.title,
         body.body,
         user.pk.to_string(),
+        body.target_child_team_id,
     );
     ann.html_contents = body.html_contents;
     ann.tags = body.tags;
@@ -283,9 +306,33 @@ pub async fn publish_announcement_handler(
         return Err(SubTeamError::AnnouncementNotInDraft.into());
     }
 
-    let count = count_recognized_sub_teams(cli, &team.pk).await?;
-    if count > MAX_RECOGNIZED_SUB_TEAMS {
-        return Err(SubTeamError::BroadcastTooManySubTeams.into());
+    // Direct messages target exactly one sub-team and bypass the cap
+    // check entirely. Broadcasts must stay under MAX_RECOGNIZED_SUB_TEAMS
+    // because the fanout writes one marker row per recognized child.
+    let is_direct = existing.target_child_team_id.is_some();
+    if !is_direct {
+        let count = count_recognized_sub_teams(cli, &team.pk).await?;
+        if count > MAX_RECOGNIZED_SUB_TEAMS {
+            return Err(SubTeamError::BroadcastTooManySubTeams.into());
+        }
+    } else if let Some(target_id) = existing.target_child_team_id.clone() {
+        // Re-verify the link still exists at publish time — the
+        // relationship may have been deregistered between draft save
+        // and publish.
+        let link_sk = EntityType::SubTeamLink(target_id);
+        let link = crate::features::sub_team::models::SubTeamLink::get(
+            cli,
+            &team.pk,
+            Some(link_sk),
+        )
+        .await
+        .map_err(|e| {
+            crate::error!("publish_announcement direct link lookup failed: {e}");
+            SubTeamError::SubTeamLinkNotFound
+        })?;
+        if link.is_none() {
+            return Err(SubTeamError::SubTeamLinkNotFound.into());
+        }
     }
 
     let now = crate::common::utils::time::get_now_timestamp_millis();
@@ -326,6 +373,17 @@ pub async fn publish_announcement_handler(
         None
     };
 
+    // Anchor `user_pk` decides which wall the Post surfaces on. Broadcasts
+    // own the parent's wall (children read it through fanout markers).
+    // Direct messages live on the **target child's** wall so they show up
+    // in that team's `Post::find_by_user_and_status` query and stay off
+    // the parent's. `pinned_as_announcement` follows the same split: only
+    // broadcasts pin.
+    let anchor_user_pk: Partition = match existing.target_child_team_id.clone() {
+        Some(child_id) => Partition::Team(child_id),
+        None => team.pk.clone(),
+    };
+
     let anchor_post = Post {
         pk: Partition::Feed(existing.announcement_id.clone()),
         sk: EntityType::Post,
@@ -335,16 +393,17 @@ pub async fn publish_announcement_handler(
         body: ContentBody::html(anchor_post_body),
         post_type: PostType::Post,
         status: PostStatus::Published,
-        // Sub-team broadcasts are NEVER publicly visible — `Visibility::Broadcast`
-        // hands access control over to
+        // Sub-team broadcasts / direct messages are NEVER publicly visible —
+        // `Visibility::Broadcast` hands access control over to
         // `sub_team::services::broadcast_access::can_view_broadcast_post`
-        // (parent team's members + every recognized child team's members).
+        // (parent team's members + every recognized child team's members
+        // for broadcast, parent + one target child for direct).
         visibility: Some(crate::features::posts::types::Visibility::Broadcast),
         shares: 0,
         likes: 0,
         comments: 0,
         reports: 0,
-        user_pk: team.pk.clone(),
+        user_pk: anchor_user_pk,
         author_display_name: team.display_name.clone(),
         author_profile_url: team.profile_url.clone(),
         author_username: team.username.clone(),
@@ -362,8 +421,10 @@ pub async fn publish_announcement_handler(
         // Broadcasts pin to the top of every receiving team's wall —
         // parent + recognized children — so the announcement card sits
         // above the regular feed. `list_team_posts_handler` sorts on
-        // this flag first, then created_at desc.
-        pinned_as_announcement: true,
+        // this flag first, then created_at desc. Direct messages skip
+        // the pin so the target child's wall isn't permanently locked
+        // to this card.
+        pinned_as_announcement: !is_direct,
         ai_draft_used: false,
     };
     if let Err(e) = anchor_post.create(cli).await {
@@ -380,12 +441,20 @@ pub async fn publish_announcement_handler(
         existing.space_pk = Some(space_pk_str);
     }
 
+    let anchor_post_pk_str = Partition::Feed(existing.announcement_id.clone()).to_string();
     let mut updater = SubTeamAnnouncement::updater(&team.pk, &sk)
         .with_status(SubTeamAnnouncementStatus::Published)
         .with_published_at(now)
         .with_updated_at(now);
     if let Some(space_pk) = existing.space_pk.clone() {
         updater = updater.with_space_pk(space_pk);
+    }
+    // Pre-populate `target_post_pk` on direct messages so the parent's
+    // history row can deep-link without waiting for the stream-driven
+    // fanout to fill it in. Fanout will overwrite with the same value
+    // later — the anchor pk is deterministic (`Feed(announcement_id)`).
+    if is_direct {
+        updater = updater.with_target_post_pk(anchor_post_pk_str.clone());
     }
     updater.execute(cli).await.map_err(|e| {
         crate::error!("publish_announcement execute failed: {e}");
@@ -395,6 +464,9 @@ pub async fn publish_announcement_handler(
     existing.status = SubTeamAnnouncementStatus::Published;
     existing.published_at = Some(now);
     existing.updated_at = now;
+    if is_direct {
+        existing.target_post_pk = Some(anchor_post_pk_str);
+    }
 
     // Fan-out happens asynchronously via the DynamoDB Stream → Pipe → Lambda
     // chain in deployed envs, or via the local-dev stream poller which

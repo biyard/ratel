@@ -643,7 +643,12 @@ jobs:
 
       - name: Install Dioxus-cli
         run: |
-          cargo binstall dioxus-cli --force
+          # `--locked` makes the `cargo install` fallback (when binstall
+          # can't find a prebuilt binary) honor dioxus-cli's published
+          # Cargo.lock. Without it, fresh transitive resolution picks up
+          # `git2 0.21`, which breaks `auth-git2 0.5.8`'s
+          # `Cred::credential_helper` call → dioxus-cli build fails.
+          cargo binstall dioxus-cli --force --locked
 
       - name: Building test
         id: build
@@ -746,8 +751,13 @@ jobs:
 
       - name: Install dioxus-cli + tauri-cli
         run: |
-          cargo binstall -y dioxus-cli
-          cargo binstall -y --version "^2.0.0" tauri-cli
+          # See companion `--locked` notes above: dioxus-cli's source-build
+          # fallback otherwise grabs `git2 0.21`, which kills
+          # `auth-git2 0.5.8` (`Cred::credential_helper` was removed in
+          # the new git2). `--locked` pins to the lockfile shipped with
+          # the published crate, which used `git2 0.20`.
+          cargo binstall -y --locked dioxus-cli
+          cargo binstall -y --locked --version "^2.0.0" tauri-cli
 
       - name: Build arm64 debug APK (dev)
         working-directory: app/ratel-tauri
