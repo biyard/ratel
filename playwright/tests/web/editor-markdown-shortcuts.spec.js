@@ -224,4 +224,25 @@ test.describe.serial("Editor markdown shortcuts", () => {
     await expect(editor.locator("h1")).toBeVisible();
     await expect(editor.locator("h1")).toHaveText("");
   });
+
+  test("No conversion fires while IME composition is active", async ({ page }) => {
+    await openEditor(page);
+    // Simulate the start of an IME composition session by dispatching
+    // compositionstart directly on the editor — the script listens on
+    // .re-content and flips `composing = true`.
+    await page.evaluate(() => {
+      const ed = document.querySelector(".re-content");
+      ed.dispatchEvent(new CompositionEvent("compositionstart"));
+    });
+    // Now type "# " — the input event fires, but `composing` is true so no
+    // conversion should happen.
+    await page.keyboard.type("# ");
+    await expect(page.locator(".re-content h1")).toHaveCount(0);
+    await expect(page.locator(".re-content")).toContainText("# ");
+    // End the composition session so the editor returns to a clean state.
+    await page.evaluate(() => {
+      const ed = document.querySelector(".re-content");
+      ed.dispatchEvent(new CompositionEvent("compositionend"));
+    });
+  });
 });
