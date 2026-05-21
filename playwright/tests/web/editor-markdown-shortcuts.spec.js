@@ -193,4 +193,13 @@ test.describe.serial("Editor markdown shortcuts", () => {
     await expect(editor.locator("pre")).toContainText("- not a list");
     await expect(editor.locator("ul")).toHaveCount(0);
   });
+
+  test("--- + space → <hr> followed by an empty paragraph", async ({ page }) => {
+    const editor = await openEditor(page);
+    await page.keyboard.type("--- ");
+    await page.keyboard.type("after");
+    await expect(editor.locator("hr")).toHaveCount(1);
+    const html = await editor.evaluate((el) => el.innerHTML);
+    expect(html).toMatch(/<hr[^>]*>\s*<p[^>]*>after<\/p>/);
+  });
 });

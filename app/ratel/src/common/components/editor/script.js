@@ -681,7 +681,31 @@
         case "blockquote":
           document.execCommand("formatBlock", false, "<BLOCKQUOTE>");
           break;
-        // Other kinds added in later tasks.
+        case "hr":
+          // After mdDeleteFirstChars, the block is empty (4 chars stripped).
+          // execCommand("insertHorizontalRule") drops an <hr> at the caret;
+          // afterward we ensure a typeable paragraph follows it and move
+          // the caret into that paragraph so the next keystroke types text.
+          document.execCommand("insertHorizontalRule", false);
+          var sel2 = window.getSelection();
+          if (sel2 && sel2.rangeCount > 0) {
+            var hr = editor.querySelector("hr:last-of-type");
+            if (hr) {
+              var nextBlock = hr.nextElementSibling;
+              if (!nextBlock || (nextBlock.nodeName !== "P" && nextBlock.nodeName !== "DIV")) {
+                var p = document.createElement("p");
+                p.appendChild(document.createElement("br"));
+                hr.parentNode.insertBefore(p, hr.nextSibling);
+                nextBlock = p;
+              }
+              var caret = document.createRange();
+              caret.setStart(nextBlock, 0);
+              caret.collapse(true);
+              sel2.removeAllRanges();
+              sel2.addRange(caret);
+            }
+          }
+          break;
         default:
           // Kind isn't handled yet — undo the marker strip so the block
           // is left exactly as the user typed it. This guard is what makes
