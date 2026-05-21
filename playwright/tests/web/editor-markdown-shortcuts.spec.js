@@ -176,4 +176,21 @@ test.describe.serial("Editor markdown shortcuts", () => {
     await page.keyboard.type("> Quoted");
     await expect(editor.locator("blockquote")).toContainText("Quoted");
   });
+
+  test("``` + Enter → <pre>", async ({ page }) => {
+    const editor = await openEditor(page);
+    await page.keyboard.type("```");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("console.log(1)");
+    await expect(editor.locator("pre")).toContainText("console.log(1)");
+  });
+
+  test("- inside <pre> is literal, not a list", async ({ page }) => {
+    const editor = await openEditor(page);
+    await page.keyboard.type("```");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("- not a list");
+    await expect(editor.locator("pre")).toContainText("- not a list");
+    await expect(editor.locator("ul")).toHaveCount(0);
+  });
 });

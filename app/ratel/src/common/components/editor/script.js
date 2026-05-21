@@ -735,6 +735,25 @@
           return;
         }
       }
+
+      // ``` + Enter → <pre>. Trigger is Enter (not space) because the marker
+      // is followed by a newline-to-code-block, not a space-to-text.
+      if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        var fenceBlock = mdGetCaretBlock();
+        if (fenceBlock && fenceBlock !== editor && fenceBlock.textContent === "```") {
+          e.preventDefault();
+          var snap = mdSnapshotForRevert("```");
+          // Clear the marker text from the block and drop an empty text node
+          // so the subsequent formatBlock has something to act on.
+          while (fenceBlock.firstChild) fenceBlock.removeChild(fenceBlock.firstChild);
+          fenceBlock.appendChild(document.createTextNode(""));
+          mdPlaceCaretAtBlockStart(fenceBlock);
+          document.execCommand("formatBlock", false, "<PRE>");
+          lastConversion = snap;
+          scheduleUpdate();
+          return;
+        }
+      }
     });
 
     // Initial paint so word/char counts and toolbar state are correct.
