@@ -491,6 +491,176 @@
       });
     }
 
+    // ── Markdown shortcuts ─────────────────────────────────
+    // Notion-style block conversions triggered by typing a marker + space at
+    // the start of a block. Sibling lifecycle: lives inside init(root) so it
+    // shares `composing`, `editor`, `scheduleUpdate` with the rest of the
+    // editor. See docs/superpowers/specs/2026-05-21-editor-markdown-shortcuts-design.md.
+
+    var BLOCK_TAGS = ["P", "DIV", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE", "PRE", "LI"];
+    var SKIP_BLOCK_TAGS = ["H1", "H2", "H3", "H4", "H5", "H6", "PRE", "BLOCKQUOTE"];
+    // U+FEFF (BOM/zero-width no-break space) is invisible and wouldn't be
+    // typed by a user, so wrapping the unique tag with it guarantees we can
+    // round-trip it through innerHTML restoration without colliding with
+    // real content.
+    var REVERT_SENTINEL = "﻿__RATEL_REVERT_SENTINEL__﻿";
+
+    var lastConversion = null;
+
+    function mdGetCaretBlock() {
+      var sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return null;
+      var node = sel.getRangeAt(0).startContainer;
+      if (node.nodeType === 3) node = node.parentNode;
+      while (node && node !== editor) {
+        if (BLOCK_TAGS.indexOf(node.nodeName) >= 0) return node;
+        node = node.parentNode;
+      }
+      return editor;
+    }
+
+    function mdAncestorTag(tag) {
+      var sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return null;
+      var node = sel.getRangeAt(0).startContainer;
+      if (node.nodeType === 3) node = node.parentNode;
+      while (node && node !== editor) {
+        if (node.nodeName === tag) return node;
+        node = node.parentNode;
+      }
+      return null;
+    }
+
+    function mdHasAncestorTag(tag) {
+      return mdAncestorTag(tag) !== null;
+    }
+
+    function mdTextBeforeCaretInBlock(blockEl) {
+      var sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return "";
+      var range = sel.getRangeAt(0);
+      var clone = range.cloneRange();
+      clone.selectNodeContents(blockEl);
+      clone.setEnd(range.startContainer, range.startOffset);
+      return clone.toString();
+    }
+
+    function mdMatchBlockMarker(text) {
+      // Longest patterns first so /^### / wins over /^# /.
+      if (/^### $/.test(text)) return { kind: "heading", level: 3, markerLen: 4 };
+      if (/^## $/.test(text)) return { kind: "heading", level: 2, markerLen: 3 };
+      if (/^# $/.test(text)) return { kind: "heading", level: 1, markerLen: 2 };
+      if (/^[\*\-\+] $/.test(text)) return { kind: "ulist", markerLen: 2 };
+      var m = text.match(/^(\d+)\. $/);
+      if (m) return { kind: "olist", markerLen: m[0].length };
+      if (/^> $/.test(text)) return { kind: "blockquote", markerLen: 2 };
+      if (/^(---|\*\*\*) $/.test(text)) return { kind: "hr", markerLen: 4 };
+      return null;
+    }
+
+    function mdDeleteFirstChars(blockEl, count) {
+      // Walk forward from the start of blockEl, removing `count` characters of
+      // visible text. Returns true on success.
+      var walker = document.createTreeWalker(blockEl, NodeFilter.SHOW_TEXT, null);
+      var node;
+      var remaining = count;
+      while ((node = walker.nextNode())) {
+        if (node.length >= remaining) {
+          node.deleteData(0, remaining);
+          return true;
+        }
+        remaining -= node.length;
+        var dead = node;
+        var next = walker.nextNode();
+        dead.parentNode.removeChild(dead);
+        if (!next) break;
+        node = next;
+        if (node.length >= remaining) {
+          node.deleteData(0, remaining);
+          return true;
+        }
+        remaining -= node.length;
+      }
+      return false;
+    }
+
+    function mdPlaceCaretAtBlockStart(blockEl) {
+      var walker = document.createTreeWalker(blockEl, NodeFilter.SHOW_TEXT, null);
+      var firstText = walker.nextNode();
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      var caret = document.createRange();
+      if (firstText) {
+        caret.setStart(firstText, 0);
+      } else {
+        caret.setStart(blockEl, 0);
+      }
+      caret.collapse(true);
+      sel.addRange(caret);
+    }
+
+    function mdSnapshotForRevert(markerText) {
+      // Insert a sentinel text node at the current caret so we can locate
+      // and remove it after restoring innerHTML.
+      var sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return null;
+      var range = sel.getRangeAt(0);
+      var sentinel = document.createTextNode(REVERT_SENTINEL);
+      range.insertNode(sentinel);
+      var html = editor.innerHTML;
+      sentinel.parentNode.removeChild(sentinel);
+      return { markerText: markerText, snapshot: html };
+    }
+
+    function mdRevert(c) {
+      editor.innerHTML = c.snapshot;
+      var walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, null);
+      var node;
+      while ((node = walker.nextNode())) {
+        var idx = node.nodeValue.indexOf(REVERT_SENTINEL);
+        if (idx >= 0) {
+          var before = node.nodeValue.slice(0, idx);
+          var after = node.nodeValue.slice(idx + REVERT_SENTINEL.length);
+          node.nodeValue = before + after;
+          var sel = window.getSelection();
+          sel.removeAllRanges();
+          var caret = document.createRange();
+          caret.setStart(node, idx);
+          caret.collapse(true);
+          sel.addRange(caret);
+          return;
+        }
+      }
+      editor.focus();
+    }
+
+    function mdIsLiEmpty(li) {
+      // Empty if no visible text and no nested list. A leftover <br> is fine.
+      // Zero-width space (U+200B) is also stripped because some browsers insert
+      // it as a placeholder when an <li> is created empty.
+      if (li.textContent.replace(/​/g, "").trim() !== "") return false;
+      if (li.querySelector("ul, ol")) return false;
+      return true;
+    }
+
+    function mdTryConvert(inputEvent) {
+      // Filled in by Tasks 3–8.
+      return false;
+    }
+
+    editor.addEventListener("input", function (e) {
+      if (composing) return;
+      if (e.inputType === "insertText" && e.data === " ") {
+        if (mdTryConvert(e)) return;
+      }
+      // Any input that wasn't a successful conversion disarms revert.
+      lastConversion = null;
+    });
+
+    editor.addEventListener("keydown", function (e) {
+      // Filled in by Tasks 5, 7, 9.
+    });
+
     // Initial paint so word/char counts and toolbar state are correct.
     emitChange();
   }
