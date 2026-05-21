@@ -491,6 +491,628 @@
       });
     }
 
+    // ── Markdown shortcuts ─────────────────────────────────
+    // Notion-style block conversions triggered by typing a marker + space at
+    // the start of a block. Sibling lifecycle: lives inside init(root) so it
+    // shares `composing`, `editor`, `scheduleUpdate` with the rest of the
+    // editor. See docs/superpowers/specs/2026-05-21-editor-markdown-shortcuts-design.md.
+
+    var BLOCK_TAGS = ["P", "DIV", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE", "PRE", "LI"];
+    var SKIP_BLOCK_TAGS = ["H1", "H2", "H3", "H4", "H5", "H6", "PRE", "BLOCKQUOTE"];
+    // U+FEFF (BOM/zero-width no-break space) is invisible and wouldn't be
+    // typed by a user, so wrapping the unique tag with it guarantees we can
+    // round-trip it through innerHTML restoration without colliding with
+    // real content.
+    var REVERT_SENTINEL = "﻿__RATEL_REVERT_SENTINEL__﻿";
+
+    var lastConversion = null;
+
+    function mdGetCaretBlock() {
+      var sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return null;
+      var node = sel.getRangeAt(0).startContainer;
+      if (node.nodeType === 3) node = node.parentNode;
+      while (node && node !== editor) {
+        if (BLOCK_TAGS.indexOf(node.nodeName) >= 0) return node;
+        node = node.parentNode;
+      }
+      return editor;
+    }
+
+    function mdAncestorTag(tag) {
+      var sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return null;
+      var node = sel.getRangeAt(0).startContainer;
+      if (node.nodeType === 3) node = node.parentNode;
+      while (node && node !== editor) {
+        if (node.nodeName === tag) return node;
+        node = node.parentNode;
+      }
+      return null;
+    }
+
+    function mdHasAncestorTag(tag) {
+      return mdAncestorTag(tag) !== null;
+    }
+
+    function mdTextBeforeCaretInBlock(blockEl) {
+      var sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return "";
+      var range = sel.getRangeAt(0);
+      var clone = range.cloneRange();
+      clone.selectNodeContents(blockEl);
+      clone.setEnd(range.startContainer, range.startOffset);
+      return clone.toString();
+    }
+
+    function mdMatchBlockMarker(text) {
+      // Browsers insert U+00A0 (NBSP) instead of a regular space when the
+      // space would otherwise collapse at the end of inline content in a
+      // contentEditable. Normalize before matching so /^# $/ catches both.
+      // The marker length stays the same — NBSP is one Unicode codepoint
+      // just like a regular space.
+      text = text.replace(/ /g, " ");
+      // Longest patterns first so /^### / wins over /^# /.
+      if (/^### $/.test(text)) return { kind: "heading", level: 3, markerLen: 4 };
+      if (/^## $/.test(text)) return { kind: "heading", level: 2, markerLen: 3 };
+      if (/^# $/.test(text)) return { kind: "heading", level: 1, markerLen: 2 };
+      if (/^[\*\-\+] $/.test(text)) return { kind: "ulist", markerLen: 2 };
+      var m = text.match(/^(\d+)\. $/);
+      if (m) return { kind: "olist", markerLen: m[0].length };
+      if (/^> $/.test(text)) return { kind: "blockquote", markerLen: 2 };
+      if (/^(---|\*\*\*) $/.test(text)) return { kind: "hr", markerLen: 4 };
+      return null;
+    }
+
+    function mdDeleteFirstChars(blockEl, count) {
+      // Walk forward from the start of blockEl, deleting up to `count`
+      // characters of visible text. Empty text nodes are LEFT IN PLACE on
+      // purpose: removing the walker's current node and then calling
+      // nextNode() is undefined behavior per the DOM spec. Empty text
+      // nodes are invisible to the user and rendering passes (the editor's
+      // own debounced emitChange + browser layout) will collapse them.
+      var walker = document.createTreeWalker(blockEl, NodeFilter.SHOW_TEXT, null);
+      var node;
+      var remaining = count;
+      while ((node = walker.nextNode())) {
+        if (node.length === 0) continue;
+        var take = node.length < remaining ? node.length : remaining;
+        node.deleteData(0, take);
+        remaining -= take;
+        if (remaining === 0) return true;
+      }
+      return false;
+    }
+
+    function mdPlaceCaretAtBlockStart(blockEl) {
+      var walker = document.createTreeWalker(blockEl, NodeFilter.SHOW_TEXT, null);
+      var firstText = walker.nextNode();
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      var caret = document.createRange();
+      if (firstText) {
+        caret.setStart(firstText, 0);
+      } else {
+        caret.setStart(blockEl, 0);
+      }
+      caret.collapse(true);
+      sel.addRange(caret);
+    }
+
+    function mdSnapshotForRevert(markerText) {
+      // Insert a sentinel text node at the current caret so we can locate
+      // and remove it after restoring innerHTML.
+      var sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return null;
+      var range = sel.getRangeAt(0);
+      var sentinel = document.createTextNode(REVERT_SENTINEL);
+      // NOTE: insertNode splits the caret's text node. We immediately remove
+      // the sentinel, but the split halves remain. This is fine because every
+      // caller proceeds to mutate the block (formatBlock, indent, etc.) which
+      // serializes innerHTML again. Do not call this function on a code path
+      // that may not perform a follow-up mutation, or you'll leak the split.
+      range.insertNode(sentinel);
+      var html = editor.innerHTML;
+      sentinel.parentNode.removeChild(sentinel);
+      return { markerText: markerText, snapshot: html };
+    }
+
+    function mdRevert(c) {
+      editor.innerHTML = c.snapshot;
+      var walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, null);
+      var node;
+      while ((node = walker.nextNode())) {
+        var idx = node.nodeValue.indexOf(REVERT_SENTINEL);
+        if (idx >= 0) {
+          var before = node.nodeValue.slice(0, idx);
+          var after = node.nodeValue.slice(idx + REVERT_SENTINEL.length);
+          node.nodeValue = before + after;
+          var sel = window.getSelection();
+          sel.removeAllRanges();
+          var caret = document.createRange();
+          caret.setStart(node, idx);
+          caret.collapse(true);
+          sel.addRange(caret);
+          return;
+        }
+      }
+      editor.focus();
+    }
+
+    // Nest `li` one level deeper by moving it into a nested <ul>/<ol> that
+    // becomes a child of the previous-sibling <li>. Producing the same shape
+    // as `<ul><li>Outer<ul><li>Inner</li></ul></li></ul>` so semantic
+    // selectors like `ul > li > ul > li` match. Caret is restored to where
+    // it was inside `li` before the move (offset 0 of the first text node,
+    // or offset 0 of the li if there's none).
+    function mdIndentLi(li) {
+      var prevLi = li.previousElementSibling;
+      if (!prevLi || prevLi.nodeName !== "LI") return;
+      var nested = prevLi.lastElementChild;
+      var parentList = li.parentNode;
+      var listTag = parentList && (parentList.nodeName === "UL" || parentList.nodeName === "OL")
+        ? parentList.nodeName.toLowerCase()
+        : "ul";
+      if (!nested || (nested.nodeName !== "UL" && nested.nodeName !== "OL")) {
+        nested = document.createElement(listTag);
+        prevLi.appendChild(nested);
+      }
+      nested.appendChild(li);
+      mdPlaceCaretAtBlockStart(li);
+    }
+
+    // Un-nest `li` one level. If its containing list is nested inside another
+    // <li>, lift it out so it becomes a sibling of that outer <li>. If the
+    // list is already at the top level (its parent isn't an <li>), exit the
+    // list entirely into a fresh <p>.
+    function mdOutdentLi(li) {
+      var parentList = li.parentNode;
+      if (!parentList || (parentList.nodeName !== "UL" && parentList.nodeName !== "OL")) return;
+      var grandparent = parentList.parentNode;
+      if (!grandparent) return;
+      if (grandparent.nodeName === "LI") {
+        // Nested case: move li out as sibling of grandparent li.
+        var outerList = grandparent.parentNode;
+        outerList.insertBefore(li, grandparent.nextSibling);
+        if (parentList.children.length === 0) grandparent.removeChild(parentList);
+        mdPlaceCaretAtBlockStart(li);
+        return;
+      }
+      // Top-level: exit the list into a new <p>.
+      var p = document.createElement("p");
+      while (li.firstChild) p.appendChild(li.firstChild);
+      if (!p.firstChild) p.appendChild(document.createElement("br"));
+      var listNextSib = parentList.nextSibling;
+      grandparent.insertBefore(p, listNextSib);
+      parentList.removeChild(li);
+      if (parentList.children.length === 0) grandparent.removeChild(parentList);
+      mdPlaceCaretAtBlockStart(p);
+    }
+
+    function mdIsLiEmpty(li) {
+      // Empty if no visible text and no nested list. A leftover <br> is fine.
+      // Zero-width space (U+200B) is also stripped because some browsers insert
+      // it as a placeholder when an <li> is created empty.
+      if (li.textContent.replace(/​/g, "").trim() !== "") return false;
+      if (li.querySelector("ul, ol")) return false;
+      return true;
+    }
+
+    function mdTryConvert(inputEvent) {
+      var block = mdGetCaretBlock();
+      if (!block) return false;
+      // block === editor happens when the caret is in bare text directly
+      // inside the .re-content root — Chrome leaves the very first line of
+      // a fresh contenteditable unwrapped until the user presses Enter.
+      // We still want conversion in that case; formatBlock / insertList
+      // will wrap the current line into the target tag. The SKIP_BLOCK_TAGS
+      // guard below only applies to nested block elements, not the editor
+      // itself, so it's harmless when block === editor.
+      if (SKIP_BLOCK_TAGS.indexOf(block.nodeName) >= 0) return false;
+      // Inside a <pre> ancestor anywhere up the tree? Skip.
+      if (mdHasAncestorTag("PRE")) return false;
+      // Inside an existing <li>? Skip — list nesting is driven by Tab, not
+      // by re-typing a bullet marker inside a list item.
+      if (mdHasAncestorTag("LI")) return false;
+
+      // Compute the text to test against the marker regex. For a real block
+      // the marker must be at the start of the block's content. For bare
+      // text at the editor root the "line" is just the caret's text node —
+      // `mdTextBeforeCaretInBlock(editor)` would include text from preceding
+      // sibling blocks (e.g. a <ul> above) and break the start-of-line
+      // assumption, so use the text node's data up to the caret offset.
+      var before;
+      if (block === editor) {
+        var sel0 = window.getSelection();
+        if (!sel0 || !sel0.rangeCount) return false;
+        var caretRange0 = sel0.getRangeAt(0);
+        var caretNode0 = caretRange0.startContainer;
+        if (caretNode0.nodeType !== 3 || caretNode0.parentNode !== editor) {
+          return false;
+        }
+        // Require the text node to be at the start of its line — i.e. no
+        // adjacent text node immediately before it (a <br> or block sibling
+        // before it is fine and is what we want).
+        if (caretNode0.previousSibling && caretNode0.previousSibling.nodeType === 3) {
+          return false;
+        }
+        before = caretNode0.data.slice(0, caretRange0.startOffset);
+      } else {
+        before = mdTextBeforeCaretInBlock(block);
+      }
+      var info = mdMatchBlockMarker(before);
+      if (!info) return false;
+
+      var snap = mdSnapshotForRevert(before);
+
+      // Bare text directly inside the editor root: do the whole conversion
+      // by direct DOM manipulation. execCommand("formatBlock") + caret
+      // dance is unreliable when the source has no block wrapper — Chrome
+      // creates the new element but leaves the caret at the editor root,
+      // and formatBlock on an empty <p> won't transform it.
+      if (block === editor) {
+        var caretRange = window.getSelection().getRangeAt(0);
+        var caretNode = caretRange.startContainer;
+        if (caretNode.nodeType !== 3 || caretNode.parentNode !== editor) {
+          mdRevert(snap);
+          return false;
+        }
+        // Read the surviving text (after the marker) and detach the original
+        // bare text node. We rebuild the block from scratch with either the
+        // surviving text or a <br> placeholder — Chrome's editor engine
+        // refuses to type into an empty text node inside a fresh element, so
+        // an empty <h1></h1> would cause subsequent typing to land outside.
+        var fullText = caretNode.data;
+        var survivingText = fullText.slice(info.markerLen);
+        var nextSibling = caretNode.nextSibling;
+        if (caretNode.parentNode) caretNode.parentNode.removeChild(caretNode);
+
+        function innerContentNode() {
+          return survivingText.length > 0
+            ? document.createTextNode(survivingText)
+            : document.createElement("br");
+        }
+
+        var newBlock;
+        var caretAnchor;  // node the caret should land in
+        if (info.kind === "heading") {
+          newBlock = document.createElement("h" + info.level);
+          caretAnchor = innerContentNode();
+          newBlock.appendChild(caretAnchor);
+        } else if (info.kind === "ulist" || info.kind === "olist") {
+          newBlock = document.createElement(info.kind === "ulist" ? "ul" : "ol");
+          var li = document.createElement("li");
+          caretAnchor = innerContentNode();
+          li.appendChild(caretAnchor);
+          newBlock.appendChild(li);
+        } else if (info.kind === "blockquote") {
+          newBlock = document.createElement("blockquote");
+          caretAnchor = innerContentNode();
+          newBlock.appendChild(caretAnchor);
+        } else if (info.kind === "hr") {
+          // <hr> + follow-up <p><br></p> for the user to type into.
+          newBlock = document.createElement("hr");
+          editor.insertBefore(newBlock, nextSibling);
+          var followP = document.createElement("p");
+          followP.appendChild(document.createElement("br"));
+          editor.insertBefore(followP, newBlock.nextSibling);
+          var hrCaret = document.createRange();
+          hrCaret.setStart(followP, 0);
+          hrCaret.collapse(true);
+          var hrSel = window.getSelection();
+          hrSel.removeAllRanges();
+          hrSel.addRange(hrCaret);
+          lastConversion = snap;
+          scheduleUpdate();
+          return true;
+        } else {
+          mdRevert(snap);
+          return false;
+        }
+        editor.insertBefore(newBlock, nextSibling);
+        var startCaret = document.createRange();
+        if (caretAnchor.nodeType === 3) {
+          // Text-node anchor: caret at offset 0 of the text node.
+          startCaret.setStart(caretAnchor, 0);
+        } else {
+          // <br> placeholder: caret at child index 0 of its parent, which
+          // is the position immediately before the <br>.
+          startCaret.setStart(caretAnchor.parentNode, 0);
+        }
+        startCaret.collapse(true);
+        var startSel = window.getSelection();
+        startSel.removeAllRanges();
+        startSel.addRange(startCaret);
+        lastConversion = snap;
+        scheduleUpdate();
+        return true;
+      }
+
+      // Block-wrapped path. Strip the marker chars from the block's text,
+      // then build the target block via direct DOM and replace the existing
+      // block. We avoid execCommand here because nested execCommand calls
+      // (this handler was reached via a space `insertText` execCommand from
+      // the browser's own input pipeline) can silently no-op in Chrome.
+      if (!mdDeleteFirstChars(block, info.markerLen)) {
+        mdRevert(snap);
+        return false;
+      }
+
+      // If the block is now empty (only an empty text node or nothing),
+      // give it a <br> placeholder so Chrome's editor lets the user type
+      // into it after the conversion.
+      var hasContent = false;
+      for (var ci = 0; ci < block.childNodes.length; ci++) {
+        var cn = block.childNodes[ci];
+        if (cn.nodeType === 3 && cn.data.length > 0) { hasContent = true; break; }
+        if (cn.nodeType === 1) { hasContent = true; break; }
+      }
+      if (!hasContent) {
+        while (block.firstChild) block.removeChild(block.firstChild);
+        block.appendChild(document.createElement("br"));
+      }
+
+      var newBlock;
+      var caretAnchor;
+      if (info.kind === "heading") {
+        newBlock = document.createElement("h" + info.level);
+        while (block.firstChild) newBlock.appendChild(block.firstChild);
+        caretAnchor = newBlock;
+      } else if (info.kind === "ulist" || info.kind === "olist") {
+        newBlock = document.createElement(info.kind === "ulist" ? "ul" : "ol");
+        var liNew = document.createElement("li");
+        while (block.firstChild) liNew.appendChild(block.firstChild);
+        newBlock.appendChild(liNew);
+        caretAnchor = liNew;
+      } else if (info.kind === "blockquote") {
+        newBlock = document.createElement("blockquote");
+        while (block.firstChild) newBlock.appendChild(block.firstChild);
+        caretAnchor = newBlock;
+      } else if (info.kind === "hr") {
+        // Replace the block with <hr> + an empty <p> for typing.
+        var hrParent = block.parentNode;
+        var hrNextSib = block.nextSibling;
+        hrParent.removeChild(block);
+        var hrEl = document.createElement("hr");
+        var followP = document.createElement("p");
+        followP.appendChild(document.createElement("br"));
+        hrParent.insertBefore(hrEl, hrNextSib);
+        hrParent.insertBefore(followP, hrEl.nextSibling);
+        var hrCaret = document.createRange();
+        hrCaret.setStart(followP, 0);
+        hrCaret.collapse(true);
+        var hrSel = window.getSelection();
+        hrSel.removeAllRanges();
+        hrSel.addRange(hrCaret);
+        lastConversion = snap;
+        scheduleUpdate();
+        return true;
+      } else {
+        mdRevert(snap);
+        return false;
+      }
+
+      // Replace the old block with the new one and place the caret at the
+      // start of the surviving content.
+      block.parentNode.replaceChild(newBlock, block);
+      var anchorWalker = document.createTreeWalker(caretAnchor, NodeFilter.SHOW_TEXT, null);
+      var anchorText = anchorWalker.nextNode();
+      var startCaret = document.createRange();
+      if (anchorText) {
+        startCaret.setStart(anchorText, 0);
+      } else {
+        startCaret.setStart(caretAnchor, 0);
+      }
+      startCaret.collapse(true);
+      var startSel = window.getSelection();
+      startSel.removeAllRanges();
+      startSel.addRange(startCaret);
+
+      lastConversion = snap;
+      scheduleUpdate();
+      return true;
+    }
+
+    // Install a <pre><br></pre><p><br></p> pair (the code block + a typeable
+    // follow-up paragraph) by either replacing `replaceNode` or inserting at
+    // `parent`'s `nextSibling`. Caret is placed inside the <pre>. Shared by
+    // the inline (third-backtick) and the legacy Enter trigger.
+    function mdInstallFence(replaceNode, parent, nextSibling) {
+      var pre = document.createElement("pre");
+      pre.appendChild(document.createElement("br"));
+      var followP = document.createElement("p");
+      followP.appendChild(document.createElement("br"));
+      if (replaceNode) {
+        parent.replaceChild(pre, replaceNode);
+      } else {
+        parent.insertBefore(pre, nextSibling);
+      }
+      parent.insertBefore(followP, pre.nextSibling);
+      var preCaret = document.createRange();
+      preCaret.setStart(pre, 0);
+      preCaret.collapse(true);
+      var preSel = window.getSelection();
+      preSel.removeAllRanges();
+      preSel.addRange(preCaret);
+    }
+
+    // ``` typed as the third backtick at the start of a line → <pre>.
+    // No Enter required. Fires from the input handler on the backtick.
+    function mdTryFence() {
+      if (mdHasAncestorTag("PRE")) return false;
+      if (mdHasAncestorTag("LI")) return false;
+      var block = mdGetCaretBlock();
+      if (!block) return false;
+      // Bare text at editor root: the line is the caret's text node.
+      if (block === editor) {
+        var sel = window.getSelection();
+        if (!sel || !sel.rangeCount) return false;
+        var caretNode = sel.getRangeAt(0).startContainer;
+        if (caretNode.nodeType !== 3 || caretNode.parentNode !== editor) return false;
+        if (caretNode.previousSibling && caretNode.previousSibling.nodeType === 3) return false;
+        if (caretNode.data !== "```") return false;
+        var snap = mdSnapshotForRevert("```");
+        mdInstallFence(caretNode, editor, null);
+        lastConversion = snap;
+        scheduleUpdate();
+        return true;
+      }
+      // Block-wrapped: the block's text content is exactly "```".
+      if (block.textContent === "```") {
+        var snap2 = mdSnapshotForRevert("```");
+        mdInstallFence(block, block.parentNode, null);
+        lastConversion = snap2;
+        scheduleUpdate();
+        return true;
+      }
+      return false;
+    }
+
+    editor.addEventListener("input", function (e) {
+      if (composing) return;
+      if (e.inputType === "insertText") {
+        if (e.data === " ") {
+          if (mdTryConvert(e)) return;
+        } else if (e.data === "`") {
+          if (mdTryFence()) return;
+        }
+      }
+      // Any input that wasn't a successful conversion disarms revert.
+      lastConversion = null;
+    });
+
+    editor.addEventListener("keydown", function (e) {
+      // IME composition: never fire while a CJK candidate is being committed
+      // (e.g. Enter is used to commit Korean syllables; intercepting it would
+      // corrupt the composition).
+      if (composing) return;
+
+      // Backspace immediately after a conversion → revert to literal marker.
+      if (
+        e.key === "Backspace" &&
+        lastConversion &&
+        !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey
+      ) {
+        e.preventDefault();
+        mdRevert(lastConversion);
+        lastConversion = null;
+        scheduleUpdate();
+        return;
+      }
+
+      // Any non-Backspace, non-modifier-only key disarms the revert window.
+      // Modifier-only events (Shift, Ctrl, Alt, Meta, Process for IME) must
+      // NOT disarm — the user might be on the way to a real combo.
+      var isModifierOnly =
+        e.key === "Shift" ||
+        e.key === "Control" ||
+        e.key === "Alt" ||
+        e.key === "Meta" ||
+        e.key === "Process";
+      if (e.key !== "Backspace" && !isModifierOnly) {
+        lastConversion = null;
+      }
+
+      // Tab / Shift+Tab inside a list item: nest deeper / un-nest.
+      // execCommand("indent") on a list item in Chrome produces invalid HTML —
+      // the new <ul>/<ol> ends up as a SIBLING of the outer <li> rather than
+      // a child of it, so semantic selectors like `ul > li > ul > li` don't
+      // match. Do the nesting by hand to produce well-formed lists.
+      if (e.key === "Tab" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        var tabLi = mdAncestorTag("LI");
+        if (tabLi) {
+          e.preventDefault();
+          if (e.shiftKey) mdOutdentLi(tabLi);
+          else mdIndentLi(tabLi);
+          scheduleUpdate();
+          return;
+        }
+      }
+
+      // Enter on an empty <li>: exit the list (Notion-style).
+      if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        var li = mdAncestorTag("LI");
+        if (li && mdIsLiEmpty(li)) {
+          e.preventDefault();
+          document.execCommand("outdent", false);
+          // If outdent left us in another list (some browsers leave nested
+          // wrappers behind), force a paragraph.
+          if (mdAncestorTag("LI")) {
+            document.execCommand("formatBlock", false, "<P>");
+          }
+          scheduleUpdate();
+          return;
+        }
+      }
+
+      // ``` + Enter → <pre>. Trigger is Enter (not space) because the marker
+      // is followed by a newline-to-code-block, not a space-to-text.
+      // Always followed by an empty paragraph so the user can exit the pre
+      // by arrow-down or by clicking below it.
+      if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        var fenceBlock = mdGetCaretBlock();
+        if (fenceBlock && !mdHasAncestorTag("PRE")) {
+          // Helper: install a <pre><br></pre><p><br></p> pair at the given
+          // anchor (either replacing a node or inserting at editor root),
+          // placing the caret inside the <pre> ready for code.
+          function fenceInstall(replaceNode, parent, nextSibling) {
+            var pre = document.createElement("pre");
+            pre.appendChild(document.createElement("br"));
+            var followP = document.createElement("p");
+            followP.appendChild(document.createElement("br"));
+            if (replaceNode) {
+              parent.replaceChild(pre, replaceNode);
+            } else {
+              parent.insertBefore(pre, nextSibling);
+            }
+            parent.insertBefore(followP, pre.nextSibling);
+            var preCaret = document.createRange();
+            preCaret.setStart(pre, 0);
+            preCaret.collapse(true);
+            var preSel = window.getSelection();
+            preSel.removeAllRanges();
+            preSel.addRange(preCaret);
+          }
+
+          // Bare text at editor root: the editor's only content is a single
+          // bare text node "```".
+          if (fenceBlock === editor && editor.textContent === "```") {
+            var onlyBareFence = false;
+            var bareNode = null;
+            for (var ci = 0; ci < editor.childNodes.length; ci++) {
+              var cn = editor.childNodes[ci];
+              if (cn.nodeType === 3 && cn.data === "```") {
+                if (bareNode) { bareNode = null; break; }
+                bareNode = cn;
+                onlyBareFence = true;
+              } else if (cn.nodeType === 1) {
+                onlyBareFence = false;
+                break;
+              }
+            }
+            if (onlyBareFence && bareNode) {
+              e.preventDefault();
+              var snap = mdSnapshotForRevert("```");
+              fenceInstall(bareNode, editor, null);
+              lastConversion = snap;
+              scheduleUpdate();
+              return;
+            }
+          }
+          // Block-wrapped case: <p>```</p> + Enter. Replace the whole block
+          // with <pre><br></pre><p><br></p>.
+          if (fenceBlock !== editor && fenceBlock.textContent === "```") {
+            e.preventDefault();
+            var snap2 = mdSnapshotForRevert("```");
+            fenceInstall(fenceBlock, fenceBlock.parentNode, null);
+            lastConversion = snap2;
+            scheduleUpdate();
+            return;
+          }
+        }
+      }
+    });
+
     // Initial paint so word/char counts and toolbar state are correct.
     emitChange();
   }
