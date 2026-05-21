@@ -791,7 +791,12 @@
       // is followed by a newline-to-code-block, not a space-to-text.
       if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
         var fenceBlock = mdGetCaretBlock();
-        if (fenceBlock && fenceBlock !== editor && fenceBlock.textContent === "```") {
+        if (
+          fenceBlock &&
+          fenceBlock !== editor &&
+          fenceBlock.textContent === "```" &&
+          !mdHasAncestorTag("PRE")
+        ) {
           e.preventDefault();
           var snap = mdSnapshotForRevert("```");
           // Clear the marker text from the block and drop an empty text node

@@ -245,4 +245,19 @@ test.describe.serial("Editor markdown shortcuts", () => {
       ed.dispatchEvent(new CompositionEvent("compositionend"));
     });
   });
+
+  test("``` + Enter inside an existing <pre> is literal, not a new <pre>", async ({ page }) => {
+    const editor = await openEditor(page);
+    // Make a <pre> first.
+    await page.keyboard.type("```");
+    await page.keyboard.press("Enter");
+    await expect(editor.locator("pre")).toHaveCount(1);
+    // Inside the <pre>, type ``` then Enter. Without the guard this would
+    // double-fire the conversion. With the guard, the keystrokes are literal.
+    await page.keyboard.type("```");
+    await page.keyboard.press("Enter");
+    // Still exactly one <pre>, no nested <pre> inside it.
+    await expect(editor.locator("pre")).toHaveCount(1);
+    await expect(editor.locator("pre pre")).toHaveCount(0);
+  });
 });
