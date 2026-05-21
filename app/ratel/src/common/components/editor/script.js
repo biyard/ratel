@@ -546,6 +546,12 @@
     }
 
     function mdMatchBlockMarker(text) {
+      // Browsers insert U+00A0 (NBSP) instead of a regular space when the
+      // space would otherwise collapse at the end of inline content in a
+      // contentEditable. Normalize before matching so /^# $/ catches both.
+      // The marker length stays the same — NBSP is one Unicode codepoint
+      // just like a regular space.
+      text = text.replace(/ /g, " ");
       // Longest patterns first so /^### / wins over /^# /.
       if (/^### $/.test(text)) return { kind: "heading", level: 3, markerLen: 4 };
       if (/^## $/.test(text)) return { kind: "heading", level: 2, markerLen: 3 };
@@ -665,77 +671,168 @@
 
       var snap = mdSnapshotForRevert(before);
 
-      // Bare text directly inside the editor root: wrap the current line in
-      // a <p> first so subsequent execCommand calls have a proper block
-      // element to format. Without this, Chrome's formatBlock can silently
-      // no-op or produce browser-dependent output when there's no block
-      // ancestor between the text node and the contenteditable.
+      // Bare text directly inside the editor root: do the whole conversion
+      // by direct DOM manipulation. execCommand("formatBlock") + caret
+      // dance is unreliable when the source has no block wrapper — Chrome
+      // creates the new element but leaves the caret at the editor root,
+      // and formatBlock on an empty <p> won't transform it.
       if (block === editor) {
-        document.execCommand("formatBlock", false, "<P>");
-        block = mdGetCaretBlock();
-        if (!block || block === editor) {
-          // Wrap didn't take — restore and bail.
+        var caretRange = window.getSelection().getRangeAt(0);
+        var caretNode = caretRange.startContainer;
+        if (caretNode.nodeType !== 3 || caretNode.parentNode !== editor) {
           mdRevert(snap);
           return false;
         }
+        // Read the surviving text (after the marker) and detach the original
+        // bare text node. We rebuild the block from scratch with either the
+        // surviving text or a <br> placeholder — Chrome's editor engine
+        // refuses to type into an empty text node inside a fresh element, so
+        // an empty <h1></h1> would cause subsequent typing to land outside.
+        var fullText = caretNode.data;
+        var survivingText = fullText.slice(info.markerLen);
+        var nextSibling = caretNode.nextSibling;
+        if (caretNode.parentNode) caretNode.parentNode.removeChild(caretNode);
+
+        function innerContentNode() {
+          return survivingText.length > 0
+            ? document.createTextNode(survivingText)
+            : document.createElement("br");
+        }
+
+        var newBlock;
+        var caretAnchor;  // node the caret should land in
+        if (info.kind === "heading") {
+          newBlock = document.createElement("h" + info.level);
+          caretAnchor = innerContentNode();
+          newBlock.appendChild(caretAnchor);
+        } else if (info.kind === "ulist" || info.kind === "olist") {
+          newBlock = document.createElement(info.kind === "ulist" ? "ul" : "ol");
+          var li = document.createElement("li");
+          caretAnchor = innerContentNode();
+          li.appendChild(caretAnchor);
+          newBlock.appendChild(li);
+        } else if (info.kind === "blockquote") {
+          newBlock = document.createElement("blockquote");
+          caretAnchor = innerContentNode();
+          newBlock.appendChild(caretAnchor);
+        } else if (info.kind === "hr") {
+          // <hr> + follow-up <p><br></p> for the user to type into.
+          newBlock = document.createElement("hr");
+          editor.insertBefore(newBlock, nextSibling);
+          var followP = document.createElement("p");
+          followP.appendChild(document.createElement("br"));
+          editor.insertBefore(followP, newBlock.nextSibling);
+          var hrCaret = document.createRange();
+          hrCaret.setStart(followP, 0);
+          hrCaret.collapse(true);
+          var hrSel = window.getSelection();
+          hrSel.removeAllRanges();
+          hrSel.addRange(hrCaret);
+          lastConversion = snap;
+          scheduleUpdate();
+          return true;
+        } else {
+          mdRevert(snap);
+          return false;
+        }
+        editor.insertBefore(newBlock, nextSibling);
+        var startCaret = document.createRange();
+        if (caretAnchor.nodeType === 3) {
+          // Text-node anchor: caret at offset 0 of the text node.
+          startCaret.setStart(caretAnchor, 0);
+        } else {
+          // <br> placeholder: caret at child index 0 of its parent, which
+          // is the position immediately before the <br>.
+          startCaret.setStart(caretAnchor.parentNode, 0);
+        }
+        startCaret.collapse(true);
+        var startSel = window.getSelection();
+        startSel.removeAllRanges();
+        startSel.addRange(startCaret);
+        lastConversion = snap;
+        scheduleUpdate();
+        return true;
       }
 
-      // Strip the marker chars (`# `, `## `, etc.) from the start of the block.
+      // Block-wrapped path. Strip the marker chars from the block's text,
+      // then build the target block via direct DOM and replace the existing
+      // block. We avoid execCommand here because nested execCommand calls
+      // (this handler was reached via a space `insertText` execCommand from
+      // the browser's own input pipeline) can silently no-op in Chrome.
       if (!mdDeleteFirstChars(block, info.markerLen)) {
-        // Aborted mid-strip — restore the snapshot so the user's typed
-        // marker remains exactly as they entered it.
         mdRevert(snap);
         return false;
       }
-      // Re-anchor the caret at the start of the (now shortened) block content.
-      mdPlaceCaretAtBlockStart(block);
 
-      editor.focus();
-      switch (info.kind) {
-        case "heading":
-          document.execCommand("formatBlock", false, "<H" + info.level + ">");
-          break;
-        case "ulist":
-          document.execCommand("insertUnorderedList", false);
-          break;
-        case "olist":
-          document.execCommand("insertOrderedList", false);
-          break;
-        case "blockquote":
-          document.execCommand("formatBlock", false, "<BLOCKQUOTE>");
-          break;
-        case "hr":
-          // After mdDeleteFirstChars, the block is empty (4 chars stripped).
-          // execCommand("insertHorizontalRule") drops an <hr> at the caret;
-          // afterward we ensure a typeable paragraph follows it and move
-          // the caret into that paragraph so the next keystroke types text.
-          document.execCommand("insertHorizontalRule", false);
-          var sel2 = window.getSelection();
-          if (sel2 && sel2.rangeCount > 0) {
-            var hr = editor.querySelector("hr:last-of-type");
-            if (hr) {
-              var nextBlock = hr.nextElementSibling;
-              if (!nextBlock || (nextBlock.nodeName !== "P" && nextBlock.nodeName !== "DIV")) {
-                var p = document.createElement("p");
-                p.appendChild(document.createElement("br"));
-                hr.parentNode.insertBefore(p, hr.nextSibling);
-                nextBlock = p;
-              }
-              var caret = document.createRange();
-              caret.setStart(nextBlock, 0);
-              caret.collapse(true);
-              sel2.removeAllRanges();
-              sel2.addRange(caret);
-            }
-          }
-          break;
-        default:
-          // Kind isn't handled yet — undo the marker strip so the block
-          // is left exactly as the user typed it. This guard is what makes
-          // staged rollout safe.
-          mdRevert(snap);
-          return false;
+      // If the block is now empty (only an empty text node or nothing),
+      // give it a <br> placeholder so Chrome's editor lets the user type
+      // into it after the conversion.
+      var hasContent = false;
+      for (var ci = 0; ci < block.childNodes.length; ci++) {
+        var cn = block.childNodes[ci];
+        if (cn.nodeType === 3 && cn.data.length > 0) { hasContent = true; break; }
+        if (cn.nodeType === 1) { hasContent = true; break; }
       }
+      if (!hasContent) {
+        while (block.firstChild) block.removeChild(block.firstChild);
+        block.appendChild(document.createElement("br"));
+      }
+
+      var newBlock;
+      var caretAnchor;
+      if (info.kind === "heading") {
+        newBlock = document.createElement("h" + info.level);
+        while (block.firstChild) newBlock.appendChild(block.firstChild);
+        caretAnchor = newBlock;
+      } else if (info.kind === "ulist" || info.kind === "olist") {
+        newBlock = document.createElement(info.kind === "ulist" ? "ul" : "ol");
+        var liNew = document.createElement("li");
+        while (block.firstChild) liNew.appendChild(block.firstChild);
+        newBlock.appendChild(liNew);
+        caretAnchor = liNew;
+      } else if (info.kind === "blockquote") {
+        newBlock = document.createElement("blockquote");
+        while (block.firstChild) newBlock.appendChild(block.firstChild);
+        caretAnchor = newBlock;
+      } else if (info.kind === "hr") {
+        // Replace the block with <hr> + an empty <p> for typing.
+        var hrParent = block.parentNode;
+        var hrNextSib = block.nextSibling;
+        hrParent.removeChild(block);
+        var hrEl = document.createElement("hr");
+        var followP = document.createElement("p");
+        followP.appendChild(document.createElement("br"));
+        hrParent.insertBefore(hrEl, hrNextSib);
+        hrParent.insertBefore(followP, hrEl.nextSibling);
+        var hrCaret = document.createRange();
+        hrCaret.setStart(followP, 0);
+        hrCaret.collapse(true);
+        var hrSel = window.getSelection();
+        hrSel.removeAllRanges();
+        hrSel.addRange(hrCaret);
+        lastConversion = snap;
+        scheduleUpdate();
+        return true;
+      } else {
+        mdRevert(snap);
+        return false;
+      }
+
+      // Replace the old block with the new one and place the caret at the
+      // start of the surviving content.
+      block.parentNode.replaceChild(newBlock, block);
+      var anchorWalker = document.createTreeWalker(caretAnchor, NodeFilter.SHOW_TEXT, null);
+      var anchorText = anchorWalker.nextNode();
+      var startCaret = document.createRange();
+      if (anchorText) {
+        startCaret.setStart(anchorText, 0);
+      } else {
+        startCaret.setStart(caretAnchor, 0);
+      }
+      startCaret.collapse(true);
+      var startSel = window.getSelection();
+      startSel.removeAllRanges();
+      startSel.addRange(startCaret);
 
       lastConversion = snap;
       scheduleUpdate();
@@ -814,23 +911,56 @@
       // is followed by a newline-to-code-block, not a space-to-text.
       if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
         var fenceBlock = mdGetCaretBlock();
-        if (
-          fenceBlock &&
-          fenceBlock !== editor &&
-          fenceBlock.textContent === "```" &&
-          !mdHasAncestorTag("PRE")
-        ) {
-          e.preventDefault();
-          var snap = mdSnapshotForRevert("```");
-          // Clear the marker text from the block and drop an empty text node
-          // so the subsequent formatBlock has something to act on.
-          while (fenceBlock.firstChild) fenceBlock.removeChild(fenceBlock.firstChild);
-          fenceBlock.appendChild(document.createTextNode(""));
-          mdPlaceCaretAtBlockStart(fenceBlock);
-          document.execCommand("formatBlock", false, "<PRE>");
-          lastConversion = snap;
-          scheduleUpdate();
-          return;
+        if (fenceBlock && !mdHasAncestorTag("PRE")) {
+          // Bare text at editor root: textContent of the editor itself is
+          // exactly "```". Build the <pre> directly via DOM and place caret
+          // inside a <br> placeholder.
+          if (fenceBlock === editor && editor.textContent === "```") {
+            // Make sure the ``` is the only content typed at root and not
+            // bleeding into existing blocks. Walk and check there's a
+            // single bare text node "```".
+            var onlyBareFence = false;
+            var bareNode = null;
+            for (var ci = 0; ci < editor.childNodes.length; ci++) {
+              var cn = editor.childNodes[ci];
+              if (cn.nodeType === 3 && cn.data === "```") {
+                if (bareNode) { bareNode = null; break; }
+                bareNode = cn;
+                onlyBareFence = true;
+              } else if (cn.nodeType === 1) {
+                onlyBareFence = false;
+                break;
+              }
+            }
+            if (onlyBareFence && bareNode) {
+              e.preventDefault();
+              var snap = mdSnapshotForRevert("```");
+              var pre = document.createElement("pre");
+              pre.appendChild(document.createElement("br"));
+              editor.replaceChild(pre, bareNode);
+              var preCaret = document.createRange();
+              preCaret.setStart(pre, 0);
+              preCaret.collapse(true);
+              var preSel = window.getSelection();
+              preSel.removeAllRanges();
+              preSel.addRange(preCaret);
+              lastConversion = snap;
+              scheduleUpdate();
+              return;
+            }
+          }
+          // Block-wrapped case: <p>```</p> + Enter
+          if (fenceBlock !== editor && fenceBlock.textContent === "```") {
+            e.preventDefault();
+            var snap2 = mdSnapshotForRevert("```");
+            while (fenceBlock.firstChild) fenceBlock.removeChild(fenceBlock.firstChild);
+            fenceBlock.appendChild(document.createTextNode(""));
+            mdPlaceCaretAtBlockStart(fenceBlock);
+            document.execCommand("formatBlock", false, "<PRE>");
+            lastConversion = snap2;
+            scheduleUpdate();
+            return;
+          }
         }
       }
     });
