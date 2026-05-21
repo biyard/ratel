@@ -639,6 +639,56 @@
       editor.focus();
     }
 
+    // Nest `li` one level deeper by moving it into a nested <ul>/<ol> that
+    // becomes a child of the previous-sibling <li>. Producing the same shape
+    // as `<ul><li>Outer<ul><li>Inner</li></ul></li></ul>` so semantic
+    // selectors like `ul > li > ul > li` match. Caret is restored to where
+    // it was inside `li` before the move (offset 0 of the first text node,
+    // or offset 0 of the li if there's none).
+    function mdIndentLi(li) {
+      var prevLi = li.previousElementSibling;
+      if (!prevLi || prevLi.nodeName !== "LI") return;
+      var nested = prevLi.lastElementChild;
+      var parentList = li.parentNode;
+      var listTag = parentList && (parentList.nodeName === "UL" || parentList.nodeName === "OL")
+        ? parentList.nodeName.toLowerCase()
+        : "ul";
+      if (!nested || (nested.nodeName !== "UL" && nested.nodeName !== "OL")) {
+        nested = document.createElement(listTag);
+        prevLi.appendChild(nested);
+      }
+      nested.appendChild(li);
+      mdPlaceCaretAtBlockStart(li);
+    }
+
+    // Un-nest `li` one level. If its containing list is nested inside another
+    // <li>, lift it out so it becomes a sibling of that outer <li>. If the
+    // list is already at the top level (its parent isn't an <li>), exit the
+    // list entirely into a fresh <p>.
+    function mdOutdentLi(li) {
+      var parentList = li.parentNode;
+      if (!parentList || (parentList.nodeName !== "UL" && parentList.nodeName !== "OL")) return;
+      var grandparent = parentList.parentNode;
+      if (!grandparent) return;
+      if (grandparent.nodeName === "LI") {
+        // Nested case: move li out as sibling of grandparent li.
+        var outerList = grandparent.parentNode;
+        outerList.insertBefore(li, grandparent.nextSibling);
+        if (parentList.children.length === 0) grandparent.removeChild(parentList);
+        mdPlaceCaretAtBlockStart(li);
+        return;
+      }
+      // Top-level: exit the list into a new <p>.
+      var p = document.createElement("p");
+      while (li.firstChild) p.appendChild(li.firstChild);
+      if (!p.firstChild) p.appendChild(document.createElement("br"));
+      var listNextSib = parentList.nextSibling;
+      grandparent.insertBefore(p, listNextSib);
+      parentList.removeChild(li);
+      if (parentList.children.length === 0) grandparent.removeChild(parentList);
+      mdPlaceCaretAtBlockStart(p);
+    }
+
     function mdIsLiEmpty(li) {
       // Empty if no visible text and no nested list. A leftover <br> is fine.
       // Zero-width space (U+200B) is also stripped because some browsers insert
@@ -964,11 +1014,16 @@
       }
 
       // Tab / Shift+Tab inside a list item: nest deeper / un-nest.
+      // execCommand("indent") on a list item in Chrome produces invalid HTML —
+      // the new <ul>/<ol> ends up as a SIBLING of the outer <li> rather than
+      // a child of it, so semantic selectors like `ul > li > ul > li` don't
+      // match. Do the nesting by hand to produce well-formed lists.
       if (e.key === "Tab" && !e.metaKey && !e.ctrlKey && !e.altKey) {
-        if (mdAncestorTag("LI")) {
+        var tabLi = mdAncestorTag("LI");
+        if (tabLi) {
           e.preventDefault();
-          if (e.shiftKey) document.execCommand("outdent", false);
-          else document.execCommand("indent", false);
+          if (e.shiftKey) mdOutdentLi(tabLi);
+          else mdIndentLi(tabLi);
           scheduleUpdate();
           return;
         }

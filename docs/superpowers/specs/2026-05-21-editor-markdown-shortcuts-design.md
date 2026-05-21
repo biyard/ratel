@@ -20,7 +20,7 @@ Add Notion-style markdown shortcuts to the custom rich-text editor so that typin
 | `* `, `- `, `+ ` | `<ul><li>` | all three accepted |
 | `1. ` (or any digits + `. `) | `<ol><li>` | leading number is discarded; list always starts at the natural index |
 | `> ` | `<blockquote>` | |
-| ` ``` ` then **Enter** | `<pre><code>` | trailing Enter is the trigger (space is part of code content) |
+| ` ``` ` (third backtick) | `<pre>` followed by an empty `<p>` | fires on the third backtick at line start; Enter on a `<p>```</p>` line is kept as a fallback. The implementation emits a bare `<pre>` (not `<pre><code>`) because the editor's read/write surface treats `<pre>` itself as the code block. |
 | `--- ` or `*** ` | `<hr>` followed by an empty paragraph | caret lands in the new paragraph |
 
 ### List behaviors (key-based)
@@ -52,12 +52,15 @@ The editor already tracks `composing` via `compositionstart` / `compositionend` 
 
 The single most important UX detail. Users frequently want to type `# ` literally and not get a heading. The escape hatch:
 
-- **Immediately after a conversion**, one of the following reverts it:
-  - `Backspace`
-  - `Cmd+Z` / `Ctrl+Z`
-- "Immediately after" means: the next user input after the conversion is the revert key. Any other input (typing a character, clicking somewhere else, moving caret with arrows) **disarms** the escape hatch — subsequent Backspace is treated as a normal delete.
+- **Immediately after a conversion**, pressing `Backspace` reverts it.
+- "Immediately after" means: the next user input after the conversion is the revert key. Any non-Backspace, non-modifier-only key (typing a character, arrow keys) **disarms** the escape hatch — subsequent Backspace is treated as a normal delete.
 - Revert restores the literal marker text that the user typed (`# `, `- `, ` ``` `, etc.) and the block type that the conversion replaced. Caret returns to its position right after the marker (mirroring what the user originally had).
-- Implementation: a small per-editor `lastConversion` object holding `{ markerText, previousHtml, previousBlockType, caretOffsetAfterMarker }`. Cleared on any non-revert input or on selection change away from the conversion site.
+- Implementation: a small per-editor `lastConversion` object holding `{ markerText, snapshot }`. Cleared on any non-revert input.
+
+**Out of scope for this initial cut (tracked as follow-ups):**
+
+- `Cmd+Z` / `Ctrl+Z` revert. The browser's native undo currently runs after a conversion, but we don't intercept it to do a single-step revert the way Backspace does. If a future change wants this, the implementation would mirror the Backspace branch in the `keydown` listener.
+- Disarming on `selectionchange` from a mouse click that moves the caret away from the conversion site. Arrow-key navigation already disarms via the keydown disarm path; mouse clicks don't fire keydown, so a click + Backspace can still revert a conversion that's no longer relevant. Listening to `selectionchange` and clearing `lastConversion` when the caret leaves the conversion block would close this gap.
 
 ## 5. Architecture
 
