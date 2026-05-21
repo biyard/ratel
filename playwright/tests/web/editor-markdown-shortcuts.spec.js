@@ -131,4 +131,43 @@ test.describe.serial("Editor markdown shortcuts", () => {
     const start = await editor.locator("ol").getAttribute("start");
     expect(start).toBeNull();
   });
+
+  test("Tab inside <li> nests deeper", async ({ page }) => {
+    const editor = await openEditor(page);
+    await page.keyboard.type("- Outer");
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Tab");
+    await page.keyboard.type("Inner");
+    await expect(editor.locator("ul > li > ul > li")).toHaveText("Inner");
+  });
+
+  test("Shift+Tab un-nests back one level", async ({ page }) => {
+    const editor = await openEditor(page);
+    await page.keyboard.type("- Outer");
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Tab");
+    await page.keyboard.type("Inner");
+    await page.keyboard.press("Enter");
+    await page.keyboard.down("Shift");
+    await page.keyboard.press("Tab");
+    await page.keyboard.up("Shift");
+    await page.keyboard.type("Back");
+    // After Shift+Tab we should be back at depth 1 (sibling of "Outer").
+    await expect(editor.locator("ul > li")).toContainText(["Outer", "Back"]);
+  });
+
+  test("Enter on an empty <li> exits the list", async ({ page }) => {
+    const editor = await openEditor(page);
+    await page.keyboard.type("- Item");
+    await page.keyboard.press("Enter");
+    // Now in a fresh empty <li>; pressing Enter again should exit.
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("After");
+    await expect(editor.locator("ul > li")).toHaveCount(1);
+    await expect(editor.locator("ul > li")).toHaveText("Item");
+    // "After" should NOT live inside the <ul>.
+    const afterInUl = await editor.locator("ul").innerText();
+    expect(afterInUl).not.toContain("After");
+    await expect(editor).toContainText("After");
+  });
 });

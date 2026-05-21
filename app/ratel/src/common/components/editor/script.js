@@ -702,7 +702,32 @@
     });
 
     editor.addEventListener("keydown", function (e) {
-      // Filled in by Tasks 5, 7, 9.
+      // Tab / Shift+Tab inside a list item: nest deeper / un-nest.
+      if (e.key === "Tab" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        if (mdAncestorTag("LI")) {
+          e.preventDefault();
+          if (e.shiftKey) document.execCommand("outdent", false);
+          else document.execCommand("indent", false);
+          scheduleUpdate();
+          return;
+        }
+      }
+
+      // Enter on an empty <li>: exit the list (Notion-style).
+      if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        var li = mdAncestorTag("LI");
+        if (li && mdIsLiEmpty(li)) {
+          e.preventDefault();
+          document.execCommand("outdent", false);
+          // If outdent left us in another list (some browsers leave nested
+          // wrappers behind), force a paragraph.
+          if (mdAncestorTag("LI")) {
+            document.execCommand("formatBlock", false, "<P>");
+          }
+          scheduleUpdate();
+          return;
+        }
+      }
     });
 
     // Initial paint so word/char counts and toolbar state are correct.
