@@ -35,6 +35,13 @@ pub fn ArcadeLayout() -> Element {
     // `.ff-arcade__menu-toggle` for game-room routes only.
     let in_game_room = matches!(route, Route::FactFoldGameRoomPage { .. });
 
+    // Close the drawer whenever the route changes — covers browser
+    // back/forward and any nav.push() that bypasses the in-drawer
+    // onclick handlers (which already close on tap).
+    use_effect(use_reactive((&route,), move |(_,)| {
+        menu_open.set(false);
+    }));
+
     let on_chip = move |_| modal_open.set(!modal_open());
     let on_chip_drawer = move |_| {
         menu_open.set(false);
@@ -168,43 +175,50 @@ pub fn ArcadeLayout() -> Element {
                 }
             }
 
-            // Mobile drawer — only mounted while open. Renders the
-            // primary nav (and admin CTA) as full-width entries; the
-            // scrim closes on tap. Hidden on desktop via CSS.
-            if menu_open() {
-                div { class: "ff-arcade__menu-scrim", onclick: close_menu }
-                div {
-                    class: "ff-arcade__menu-drawer",
-                    "data-open": "true",
-                    role: "dialog",
-                    "aria-modal": "true",
-                    nav { class: "ff-arcade__menu-nav", role: "tablist",
-                        Link {
-                            class: "top-nav-btn",
-                            "aria-selected": route == r_home,
-                            to: r_home.clone(),
-                            onclick: close_menu,
-                            span { class: "top-nav-btn-icon", "⌂" }
-                            span { "{tr.tab_home}" }
-                        }
-                        Link {
-                            class: "top-nav-btn",
-                            "aria-selected": route == r_leaderboard,
-                            to: r_leaderboard.clone(),
-                            onclick: close_menu,
-                            span { class: "top-nav-btn-icon", "♛" }
-                            span { "{tr.tab_leaderboard}" }
-                        }
-                        if is_admin {
-                            button {
-                                class: "ff-arcade__admin-cta",
-                                onclick: go_admin_new,
-                                span { class: "top-nav-btn-icon", "⚐" }
-                                span { "{tr.admin_create_round}" }
-                            }
-                        }
-                        ChipBalance { on_click: on_chip_drawer }
+            // Mobile drawer — always mounted so the slide-in/out
+            // transition has both endpoints to animate between. CSS
+            // toggles `visibility` + `pointer-events` based on
+            // `data-open`, keeping the closed drawer out of the tab
+            // order. Hidden on desktop via media query.
+            div {
+                class: "ff-arcade__menu-scrim",
+                "data-open": menu_open(),
+                "aria-hidden": "true",
+                onclick: close_menu,
+            }
+            div {
+                class: "ff-arcade__menu-drawer",
+                "data-open": menu_open(),
+                "aria-hidden": !menu_open(),
+                nav {
+                    class: "ff-arcade__menu-nav",
+                    "aria-label": "{tr.menu_nav_label}",
+                    role: "tablist",
+                    Link {
+                        class: "top-nav-btn",
+                        "aria-selected": route == r_home,
+                        to: r_home.clone(),
+                        onclick: close_menu,
+                        span { class: "top-nav-btn-icon", "⌂" }
+                        span { "{tr.tab_home}" }
                     }
+                    Link {
+                        class: "top-nav-btn",
+                        "aria-selected": route == r_leaderboard,
+                        to: r_leaderboard.clone(),
+                        onclick: close_menu,
+                        span { class: "top-nav-btn-icon", "♛" }
+                        span { "{tr.tab_leaderboard}" }
+                    }
+                    if is_admin {
+                        button {
+                            class: "ff-arcade__admin-cta",
+                            onclick: go_admin_new,
+                            span { class: "top-nav-btn-icon", "⚐" }
+                            span { "{tr.admin_create_round}" }
+                        }
+                    }
+                    ChipBalance { on_click: on_chip_drawer }
                 }
             }
 

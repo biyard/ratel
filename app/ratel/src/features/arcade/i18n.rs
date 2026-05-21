@@ -105,6 +105,7 @@ translate! {
     admin_create_round: { en: "Create round", ko: "라운드 생성" },
     menu_open: { en: "Open menu", ko: "메뉴 열기" },
     menu_close: { en: "Close menu", ko: "메뉴 닫기" },
+    menu_nav_label: { en: "Arcade menu", ko: "아케이드 메뉴" },
 }
 
 translate! {

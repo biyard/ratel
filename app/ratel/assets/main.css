@@ -45134,7 +45134,10 @@ body.comments-panel-resizing {
   font-weight: 700;
   font-size: 13px;
   letter-spacing: 0.18em;
-  color: var(--ff-text-primary);
+  /* Falls back to `.admin-arena --text-primary` when the brand is
+   * rendered outside `.ff-admin-arena` (the generic /admin layout
+   * reuses this brand block without the ff-* variable scope). */
+  color: var(--ff-text-primary, var(--text-primary));
 }
 
 .ff-admin-arena__brand-sub {
@@ -49341,7 +49344,14 @@ body.comments-panel-resizing {
   background: rgba(7, 7, 15, 0.6);
   backdrop-filter: blur(4px);
   z-index: 900;
-  animation: ff-modal-fade 0.18s ease;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.ff-arcade__menu-scrim[data-open="true"] {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .ff-arcade__menu-drawer {
@@ -49360,11 +49370,19 @@ body.comments-panel-resizing {
   flex-direction: column;
   gap: 6px;
   transform: translateX(100%);
-  transition: transform 0.2s ease;
+  /* Always mounted so the slide-in/out transition has both endpoints
+   * to animate between. `visibility` + `pointer-events` keep the
+   * closed drawer out of the tab order. */
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.2s ease, visibility 0s linear 0.2s;
 }
 
 .ff-arcade__menu-drawer[data-open="true"] {
   transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
+  transition: transform 0.2s ease, visibility 0s linear 0s;
 }
 
 .ff-arcade__menu-nav {
