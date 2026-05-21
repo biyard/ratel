@@ -672,11 +672,17 @@
         case "heading":
           document.execCommand("formatBlock", false, "<H" + info.level + ">");
           break;
+        case "ulist":
+          document.execCommand("insertUnorderedList", false);
+          break;
+        case "olist":
+          document.execCommand("insertOrderedList", false);
+          break;
         // Other kinds added in later tasks.
         default:
           // Kind isn't handled yet — undo the marker strip so the block
           // is left exactly as the user typed it. This guard is what makes
-          // staged rollout (Task 3 lands before Tasks 4/6/8) safe.
+          // staged rollout safe.
           mdRevert(snap);
           return false;
       }

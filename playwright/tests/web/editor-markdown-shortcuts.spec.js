@@ -91,4 +91,44 @@ test.describe.serial("Editor markdown shortcuts", () => {
     await expect(editor.locator("h1")).toHaveText("# Title");
     await expect(editor.locator("h1 h1")).toHaveCount(0);
   });
+
+  test("- → <ul>", async ({ page }) => {
+    const editor = await openEditor(page);
+    await page.keyboard.type("- Apple");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("Banana");
+    await expect(editor.locator("ul > li")).toHaveCount(2);
+    await expect(editor.locator("ul > li").nth(0)).toHaveText("Apple");
+    await expect(editor.locator("ul > li").nth(1)).toHaveText("Banana");
+  });
+
+  test("* → <ul> (asterisk variant)", async ({ page }) => {
+    const editor = await openEditor(page);
+    await page.keyboard.type("* item");
+    await expect(editor.locator("ul > li")).toHaveText("item");
+  });
+
+  test("+ → <ul> (plus variant)", async ({ page }) => {
+    const editor = await openEditor(page);
+    await page.keyboard.type("+ item");
+    await expect(editor.locator("ul > li")).toHaveText("item");
+  });
+
+  test("1. → <ol>", async ({ page }) => {
+    const editor = await openEditor(page);
+    await page.keyboard.type("1. first");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("second");
+    await expect(editor.locator("ol > li")).toHaveCount(2);
+    await expect(editor.locator("ol > li").nth(0)).toHaveText("first");
+    await expect(editor.locator("ol > li").nth(1)).toHaveText("second");
+  });
+
+  test("7. → <ol> (custom number is discarded, list starts at 1)", async ({ page }) => {
+    const editor = await openEditor(page);
+    await page.keyboard.type("7. seven");
+    await expect(editor.locator("ol > li")).toHaveText("seven");
+    const start = await editor.locator("ol").getAttribute("start");
+    expect(start).toBeNull();
+  });
 });
