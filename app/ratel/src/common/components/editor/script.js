@@ -863,10 +863,69 @@
       return true;
     }
 
+    // Install a <pre><br></pre><p><br></p> pair (the code block + a typeable
+    // follow-up paragraph) by either replacing `replaceNode` or inserting at
+    // `parent`'s `nextSibling`. Caret is placed inside the <pre>. Shared by
+    // the inline (third-backtick) and the legacy Enter trigger.
+    function mdInstallFence(replaceNode, parent, nextSibling) {
+      var pre = document.createElement("pre");
+      pre.appendChild(document.createElement("br"));
+      var followP = document.createElement("p");
+      followP.appendChild(document.createElement("br"));
+      if (replaceNode) {
+        parent.replaceChild(pre, replaceNode);
+      } else {
+        parent.insertBefore(pre, nextSibling);
+      }
+      parent.insertBefore(followP, pre.nextSibling);
+      var preCaret = document.createRange();
+      preCaret.setStart(pre, 0);
+      preCaret.collapse(true);
+      var preSel = window.getSelection();
+      preSel.removeAllRanges();
+      preSel.addRange(preCaret);
+    }
+
+    // ``` typed as the third backtick at the start of a line → <pre>.
+    // No Enter required. Fires from the input handler on the backtick.
+    function mdTryFence() {
+      if (mdHasAncestorTag("PRE")) return false;
+      if (mdHasAncestorTag("LI")) return false;
+      var block = mdGetCaretBlock();
+      if (!block) return false;
+      // Bare text at editor root: the line is the caret's text node.
+      if (block === editor) {
+        var sel = window.getSelection();
+        if (!sel || !sel.rangeCount) return false;
+        var caretNode = sel.getRangeAt(0).startContainer;
+        if (caretNode.nodeType !== 3 || caretNode.parentNode !== editor) return false;
+        if (caretNode.previousSibling && caretNode.previousSibling.nodeType === 3) return false;
+        if (caretNode.data !== "```") return false;
+        var snap = mdSnapshotForRevert("```");
+        mdInstallFence(caretNode, editor, null);
+        lastConversion = snap;
+        scheduleUpdate();
+        return true;
+      }
+      // Block-wrapped: the block's text content is exactly "```".
+      if (block.textContent === "```") {
+        var snap2 = mdSnapshotForRevert("```");
+        mdInstallFence(block, block.parentNode, null);
+        lastConversion = snap2;
+        scheduleUpdate();
+        return true;
+      }
+      return false;
+    }
+
     editor.addEventListener("input", function (e) {
       if (composing) return;
-      if (e.inputType === "insertText" && e.data === " ") {
-        if (mdTryConvert(e)) return;
+      if (e.inputType === "insertText") {
+        if (e.data === " ") {
+          if (mdTryConvert(e)) return;
+        } else if (e.data === "`") {
+          if (mdTryFence()) return;
+        }
       }
       // Any input that wasn't a successful conversion disarms revert.
       lastConversion = null;
