@@ -733,6 +733,33 @@
       // (e.g. Enter is used to commit Korean syllables; intercepting it would
       // corrupt the composition).
       if (composing) return;
+
+      // Backspace immediately after a conversion → revert to literal marker.
+      if (
+        e.key === "Backspace" &&
+        lastConversion &&
+        !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey
+      ) {
+        e.preventDefault();
+        mdRevert(lastConversion);
+        lastConversion = null;
+        scheduleUpdate();
+        return;
+      }
+
+      // Any non-Backspace, non-modifier-only key disarms the revert window.
+      // Modifier-only events (Shift, Ctrl, Alt, Meta, Process for IME) must
+      // NOT disarm — the user might be on the way to a real combo.
+      var isModifierOnly =
+        e.key === "Shift" ||
+        e.key === "Control" ||
+        e.key === "Alt" ||
+        e.key === "Meta" ||
+        e.key === "Process";
+      if (e.key !== "Backspace" && !isModifierOnly) {
+        lastConversion = null;
+      }
+
       // Tab / Shift+Tab inside a list item: nest deeper / un-nest.
       if (e.key === "Tab" && !e.metaKey && !e.ctrlKey && !e.altKey) {
         if (mdAncestorTag("LI")) {

@@ -202,4 +202,26 @@ test.describe.serial("Editor markdown shortcuts", () => {
     const html = await editor.evaluate((el) => el.innerHTML);
     expect(html).toMatch(/<hr[^>]*>\s*<p[^>]*>after<\/p>/);
   });
+
+  test("Backspace immediately after conversion reverts to literal marker", async ({ page }) => {
+    const editor = await openEditor(page);
+    // Type the marker + space; conversion fires immediately and the empty H1
+    // gains focus with caret at position 0.
+    await page.keyboard.type("# ");
+    // One Backspace within the revert window restores the literal "# ".
+    await page.keyboard.press("Backspace");
+    await expect(editor.locator("h1")).toHaveCount(0);
+    await expect(editor).toContainText("# ");
+  });
+
+  test("Typing any character after conversion disarms the revert", async ({ page }) => {
+    const editor = await openEditor(page);
+    await page.keyboard.type("# ");
+    await page.keyboard.type("a");
+    await expect(editor.locator("h1")).toHaveText("a");
+    await page.keyboard.press("Backspace");
+    // Backspace should just delete the "a", leaving an empty H1.
+    await expect(editor.locator("h1")).toBeVisible();
+    await expect(editor.locator("h1")).toHaveText("");
+  });
 });
