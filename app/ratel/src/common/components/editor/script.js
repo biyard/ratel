@@ -642,8 +642,43 @@
     }
 
     function mdTryConvert(inputEvent) {
-      // Filled in by Tasks 3–8.
-      return false;
+      var block = mdGetCaretBlock();
+      if (!block || block === editor) return false;
+      // Already a heading / quote / code? Don't double-process.
+      if (SKIP_BLOCK_TAGS.indexOf(block.nodeName) >= 0) return false;
+      // Inside a <pre> ancestor anywhere up the tree? Skip.
+      if (mdHasAncestorTag("PRE")) return false;
+      // Inside an existing <li>? Skip — list nesting is driven by Tab, not
+      // by re-typing a bullet marker inside a list item.
+      if (mdHasAncestorTag("LI")) return false;
+
+      var before = mdTextBeforeCaretInBlock(block);
+      var info = mdMatchBlockMarker(before);
+      if (!info) return false;
+
+      var snap = mdSnapshotForRevert(before);
+
+      // Strip the marker chars (`# `, `## `, etc.) from the start of the block.
+      if (!mdDeleteFirstChars(block, info.markerLen)) {
+        // Aborted mid-strip; do not apply the format.
+        return false;
+      }
+      // Re-anchor the caret at the start of the (now shortened) block content.
+      mdPlaceCaretAtBlockStart(block);
+
+      editor.focus();
+      switch (info.kind) {
+        case "heading":
+          document.execCommand("formatBlock", false, "<H" + info.level + ">");
+          break;
+        // Other kinds added in later tasks.
+        default:
+          return false;
+      }
+
+      lastConversion = snap;
+      scheduleUpdate();
+      return true;
     }
 
     editor.addEventListener("input", function (e) {

@@ -47,4 +47,48 @@ test.describe.serial("Editor markdown shortcuts", () => {
     await page.keyboard.type("hello");
     await expect(editor).toContainText("hello");
   });
+
+  test("# → H1 (empty paragraph)", async ({ page }) => {
+    const editor = await openEditor(page);
+    await page.keyboard.type("# ");
+    await page.keyboard.type("Title");
+    await expect(editor.locator("h1")).toHaveText("Title");
+  });
+
+  test("## → H2", async ({ page }) => {
+    const editor = await openEditor(page);
+    await page.keyboard.type("## Heading2");
+    await expect(editor.locator("h2")).toHaveText("Heading2");
+  });
+
+  test("### → H3", async ({ page }) => {
+    const editor = await openEditor(page);
+    await page.keyboard.type("### Sub");
+    await expect(editor.locator("h3")).toHaveText("Sub");
+  });
+
+  test("# prepended to existing text preserves the rest of the line", async ({ page }) => {
+    const editor = await openEditor(page);
+    await page.keyboard.type("Hello world");
+    await page.keyboard.press("Home");
+    await page.keyboard.type("# ");
+    await expect(editor.locator("h1")).toHaveText("Hello world");
+  });
+
+  test("Mid-line # is not converted", async ({ page }) => {
+    const editor = await openEditor(page);
+    await page.keyboard.type("abc# x");
+    await expect(editor.locator("h1")).toHaveCount(0);
+    await expect(editor).toContainText("abc# x");
+  });
+
+  test("# inside an existing H1 is typed literally", async ({ page }) => {
+    const editor = await openEditor(page);
+    await page.keyboard.type("# Title");
+    await expect(editor.locator("h1")).toHaveText("Title");
+    await page.keyboard.press("Home");
+    await page.keyboard.type("# ");
+    await expect(editor.locator("h1")).toHaveText("# Title");
+    await expect(editor.locator("h1 h1")).toHaveCount(0);
+  });
 });
