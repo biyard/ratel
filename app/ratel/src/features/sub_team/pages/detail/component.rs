@@ -303,7 +303,10 @@ fn DetailView(username: String, sub_team_id: String) -> Element {
                 }
 
                 // Direct announcement (only-to-this-sub-team)
-                DirectAnnouncementCard {}
+                DirectAnnouncementCard {
+                    username: username.clone(),
+                    sub_team_id: sub_team_id.clone(),
+                }
 
                 // Danger zone (deregister)
                 section { class: "card",
@@ -337,28 +340,24 @@ fn DetailView(username: String, sub_team_id: String) -> Element {
     }
 }
 
-/// "이 하위팀에만 공지" card. Inline compose (no draft) + history list.
-/// Posts to `POST /api/teams/:parent/sub-teams/:child/direct-message`
-/// then re-fetches `GET /...direct-messages` so the new entry shows up
-/// without a full page reload.
+/// "이 하위팀에만 공지" card. CTA → full Draft → Publish editor at
+/// `/sub-teams/:sub_team_id/compose`, plus a history list of past direct
+/// messages with deep links. The previous inline single-step compose
+/// (title + plain-text body, immediate publish) was replaced so direct
+/// messages share the broadcast composer's rich editor, attachments,
+/// Space attachment, and Draft → Publish 2-step lifecycle — only the
+/// publish-time fanout target differs.
 #[component]
-fn DirectAnnouncementCard() -> Element {
-    use crate::features::sub_team::types::SendDirectMessageRequest;
-
+fn DirectAnnouncementCard(username: String, sub_team_id: String) -> Element {
     let tr: SubTeamTranslate = use_translate();
+    let nav = use_navigator();
 
-    let UseSubTeamActivity {
-        direct_messages,
-        mut handle_send_direct,
-        ..
-    } = use_sub_team_activity()?;
+    let UseSubTeamActivity { direct_messages, .. } = use_sub_team_activity()?;
 
-    let mut title: Signal<String> = use_signal(String::new);
-    let mut body: Signal<String> = use_signal(String::new);
-    let mut error_msg: Signal<Option<String>> = use_signal(|| None);
-
-    let send_disabled = title().trim().is_empty() || handle_send_direct.pending();
     let items = direct_messages();
+    let sub_team_id_for_nav = sub_team_id.clone();
+    let username_for_nav = username.clone();
+    let _ = (username, sub_team_id);
 
     rsx! {
         section { class: "card",
@@ -368,49 +367,23 @@ fn DirectAnnouncementCard() -> Element {
             }
 
             div { class: "direct-msg",
-                input {
-                    class: "direct-msg__title",
-                    r#type: "text",
-                    "data-testid": "sub-team-direct-msg-title",
-                    placeholder: "{tr.direct_announce_title_input}",
-                    value: "{title()}",
-                    oninput: move |e| {
-                        title.set(e.value());
-                        error_msg.set(None);
-                    },
-                }
-                textarea {
-                    class: "direct-msg__body",
-                    "data-testid": "sub-team-direct-msg-body",
-                    placeholder: "{tr.direct_announce_placeholder}",
-                    value: "{body()}",
-                    oninput: move |e| body.set(e.value()),
-                }
                 div { class: "direct-msg__foot",
                     span { class: "direct-msg__note", "{tr.direct_announce_note}" }
-                    button {
-                        class: "btn btn--primary btn--small",
-                        "data-testid": "sub-team-direct-msg-send",
-                        r#type: "button",
-                        disabled: send_disabled,
+                    Button {
+                        size: ButtonSize::Small,
+                        style: ButtonStyle::Primary,
+                        shape: ButtonShape::Rounded,
+                        class: "inline-flex gap-2 items-center".to_string(),
+                        "data-testid": "sub-team-direct-msg-compose-cta",
                         onclick: move |_| {
-                            if !send_disabled {
-                                let req = SendDirectMessageRequest {
-                                    title: title(),
-                                    body: body(),
-                                };
-                                handle_send_direct.call(req);
-                                title.set(String::new());
-                                body.set(String::new());
-                                error_msg.set(None);
-                            }
+                            nav.push(Route::TeamSubTeamDirectComposePage {
+                                username: username_for_nav.clone(),
+                                sub_team_id: sub_team_id_for_nav.clone(),
+                            });
                         },
                         lucide_dioxus::Send { class: "w-3 h-3 [&>path]:stroke-current" }
-                        "{tr.direct_announce_send}"
+                        "{tr.direct_compose}"
                     }
-                }
-                if let Some(msg) = error_msg() {
-                    div { class: "direct-msg__error", "{msg}" }
                 }
             }
 

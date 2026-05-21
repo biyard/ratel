@@ -59,8 +59,8 @@ use crate::FactFoldRoundEntityType;
 use crate::features::sub_team::pages::{
     TeamBylawsPage, TeamLeaveParentPage, TeamSubTeamApplicationStatusPage, TeamSubTeamApplyPage,
     TeamSubTeamBroadcastComposePage, TeamSubTeamBroadcastEditPage, TeamSubTeamDeregisterPage,
-    TeamSubTeamBylawsComposePage, TeamSubTeamDetailPage, TeamSubTeamDocEditPage,
-    TeamSubTeamManagementPage,
+    TeamSubTeamBylawsComposePage, TeamSubTeamDetailPage, TeamSubTeamDirectComposePage,
+    TeamSubTeamDocEditPage, TeamSubTeamManagementPage,
 };
 
 use crate::features::posts::{Index as PostIndex, PostDetail, PostEdit};
@@ -249,6 +249,15 @@ pub enum Route {
                 TeamSubTeamManagementPage { username: String },
             #[end_layout]
 
+            // Direct-to-one-sub-team composer. Same shared editor as
+            // `TeamSubTeamBroadcastComposePage`, but the publish fans
+            // out to exactly one sub-team (the route's `sub_team_id`)
+            // instead of every recognized child. Declared BEFORE the
+            // wildcard `:sub_team_id` detail route so the router matches
+            // the more specific `/sub-teams/:sub_team_id/compose` path
+            // first.
+            #[route("/sub-teams/:sub_team_id/compose")]
+            TeamSubTeamDirectComposePage { username: String, sub_team_id: String },
             // Sub-team detail — declared AFTER the layout block so the
             // dioxus router matches the more specific `/sub-teams/manage`
             // (inside the layout) before falling back to this wildcard.
