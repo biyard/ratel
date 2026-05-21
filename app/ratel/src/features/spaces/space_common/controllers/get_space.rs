@@ -2,7 +2,7 @@ use crate::common::models::space::{SpaceCommon, SpaceParticipant};
 use crate::common::models::{OptionalUser, User};
 use crate::common::*;
 use crate::features::posts::models::Post;
-use crate::features::posts::types::{BoosterType, SpaceType};
+use crate::features::posts::types::{BoosterType, SpaceType, TeamGroupPermission};
 use crate::spaces::{InvitationStatus, SpaceInvitationMember};
 
 #[mcp_tool(
@@ -44,25 +44,54 @@ pub async fn get_space(
 
     let is_participation_open = space.is_participation_open();
 
-    let (user_participant, can_participate) = if let Some(ref user) = user {
-        let (participant_pk, participant_sk) =
-            SpaceParticipant::keys(space.pk.clone(), user.pk.clone());
-        let participant =
-            SpaceParticipant::get(dynamo, &participant_pk, Some(&participant_sk)).await?;
-        let invited = if space.visibility != SpaceVisibility::Public {
-            let (invitation_pk, invitation_sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
-            let invitation =
-                SpaceInvitationMember::get(dynamo, &invitation_pk, Some(&invitation_sk)).await?;
+    // Admins/Creators are not participants of their own space — they
+    // own/manage it. `SpaceParticipant` rows for them are either absent
+    // (team-owned spaces created via `publish_announcement_handler`) or
+    // irrelevant to the response (the "Join" CTA / participant identity
+    // fields would never apply). Reusing the already-loaded
+    // `permissions.contains(SpaceEdit)` signal — true for individual
+    // creators (`get_permissions` returns `all()` on `user.pk ==
+    // post.user_pk`) and for team admins/owners (via
+    // `Team::get_user_role`) — lets us skip the read entirely with no
+    // extra DDB round-trip.
+    //
+    // This also sidesteps a latent bug in `bump_participant_activity`:
+    // when an admin triggers e.g. `create_discussion`, the helper issues
+    // a bare `UpdateItem` against the (admin's) non-existent
+    // SpaceParticipant key. DynamoDB upserts a partial row containing
+    // only the keys + `last_activity_at`, and the next `SpaceParticipant::get`
+    // here would deserialize-fail with `missing field 'created_at'`,
+    // surfacing as "Something went wrong" on the space arena. With this
+    // skip, the admin path never reads back the (potentially partial)
+    // row, so the symptom is contained even before the bump helper is
+    // tightened.
+    let is_admin = permissions.contains(TeamGroupPermission::SpaceEdit);
 
-            matches!(
-                invitation.as_ref().map(|member| member.status),
-                Some(InvitationStatus::Invited) | Some(InvitationStatus::Accepted)
-            )
+    let (user_participant, can_participate) = if let Some(ref user) = user {
+        if is_admin {
+            (None, false)
         } else {
-            true
-        };
-        let can_participate = participant.is_none() && is_participation_open && invited;
-        (participant, can_participate)
+            let (participant_pk, participant_sk) =
+                SpaceParticipant::keys(space.pk.clone(), user.pk.clone());
+            let participant =
+                SpaceParticipant::get(dynamo, &participant_pk, Some(&participant_sk)).await?;
+            let invited = if space.visibility != SpaceVisibility::Public {
+                let (invitation_pk, invitation_sk) =
+                    SpaceInvitationMember::keys(&space.pk, &user.pk);
+                let invitation =
+                    SpaceInvitationMember::get(dynamo, &invitation_pk, Some(&invitation_sk))
+                        .await?;
+
+                matches!(
+                    invitation.as_ref().map(|member| member.status),
+                    Some(InvitationStatus::Invited) | Some(InvitationStatus::Accepted)
+                )
+            } else {
+                true
+            };
+            let can_participate = participant.is_none() && is_participation_open && invited;
+            (participant, can_participate)
+        }
     } else {
         (None, false)
     };
