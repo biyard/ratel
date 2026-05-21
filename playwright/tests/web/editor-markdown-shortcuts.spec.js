@@ -13,8 +13,11 @@ import { goto, getEditor } from "../utils";
 test.describe.serial("Editor markdown shortcuts", () => {
   let postId;
 
-  test.beforeAll(async ({ request }) => {
-    const res = await request.post("/api/posts", { data: {} });
+  test("Setup: create a draft post via REST", async ({ page }) => {
+    // page.request inherits the session cookies from storageState
+    // (configured in playwright.config.js). The unauthenticated `request`
+    // fixture would 401 against /api/posts.
+    const res = await page.request.post("/api/posts", { data: {} });
     expect(res.ok(), `create draft post: ${await res.text()}`).toBeTruthy();
     const pk = (await res.json()).post_pk;
     postId = pk.includes("#") ? pk.split("#")[1] : pk;
