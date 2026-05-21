@@ -560,18 +560,19 @@
 
     function mdDeleteFirstChars(blockEl, count) {
       // Walk forward from the start of blockEl, deleting up to `count`
-      // characters of visible text. Empty text nodes are removed inline so
-      // we never end up with a stale walker reference.
+      // characters of visible text. Empty text nodes are LEFT IN PLACE on
+      // purpose: removing the walker's current node and then calling
+      // nextNode() is undefined behavior per the DOM spec. Empty text
+      // nodes are invisible to the user and rendering passes (the editor's
+      // own debounced emitChange + browser layout) will collapse them.
       var walker = document.createTreeWalker(blockEl, NodeFilter.SHOW_TEXT, null);
       var node;
       var remaining = count;
       while ((node = walker.nextNode())) {
+        if (node.length === 0) continue;
         var take = node.length < remaining ? node.length : remaining;
         node.deleteData(0, take);
         remaining -= take;
-        if (node.length === 0 && node.parentNode) {
-          node.parentNode.removeChild(node);
-        }
         if (remaining === 0) return true;
       }
       return false;
@@ -673,6 +674,10 @@
           break;
         // Other kinds added in later tasks.
         default:
+          // Kind isn't handled yet — undo the marker strip so the block
+          // is left exactly as the user typed it. This guard is what makes
+          // staged rollout (Task 3 lands before Tasks 4/6/8) safe.
+          mdRevert(snap);
           return false;
       }
 
