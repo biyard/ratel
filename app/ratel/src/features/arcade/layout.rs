@@ -218,7 +218,10 @@ pub fn ArcadeLayout() -> Element {
                             span { "{tr.admin_create_round}" }
                         }
                     }
-                    ChipBalance { on_click: on_chip_drawer }
+                    ChipBalance {
+                        on_click: on_chip_drawer,
+                        testid: "ff-arcade-chip-drawer".to_string(),
+                    }
                 }
             }
 
