@@ -63,6 +63,12 @@ test.describe.serial("AI post draft (paid user)", () => {
         "Evaluation of current sites, preferences for alternative locations, operating values to prioritise.",
       );
 
+    // AC-5: language dropdown defaults to the user's UI locale. In CI the
+    // test user's locale is English, so we explicitly pick Korean here to
+    // exercise AC-11 (Korean headings) — a separate explicit-locale test
+    // would just duplicate flow.
+    await page.getByTestId("ai-form-language").selectOption("ko");
+
     // AC-6: the Generate button only activates once required fields are filled.
     await expect(page.getByTestId("ai-modal-generate")).toBeEnabled();
 
@@ -73,11 +79,11 @@ test.describe.serial("AI post draft (paid user)", () => {
       timeout: 30000,
     });
 
-    // AC-10: five sections appear in the editor body (KO output by default).
-    // The editor remounts when AI content lands (see
-    // `editor_remount_key` in post_edit/component.rs), so give the new
-    // mount time to attach `dangerous_inner_html` before asserting. The
-    // first heading takes the brunt of the wait; the rest are sub-ms.
+    // AC-10 + AC-11: the editor body shows the five Korean section
+    // headings rendered as `<h2>` elements. The AI body is injected via
+    // `document::eval` after success (see post_edit/component.rs's
+    // `on_success` handler), so the mount-time snapshot doesn't matter —
+    // the JS injection replaces innerHTML directly.
     const editor = await getEditor(page);
     await expect(editor.getByRole("heading", { name: "추진배경", exact: true }))
       .toBeVisible({ timeout: 15000 });
