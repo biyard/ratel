@@ -74,15 +74,16 @@ test.describe.serial("AI post draft (paid user)", () => {
     });
 
     // AC-10: five sections appear in the editor body (KO output by default).
+    // The editor remounts when AI content lands (see
+    // `editor_remount_key` in post_edit/component.rs), so give the new
+    // mount time to attach `dangerous_inner_html` before asserting. The
+    // first heading takes the brunt of the wait; the rest are sub-ms.
     const editor = await getEditor(page);
-    for (const heading of [
-      "추진배경",
-      "추진목적",
-      "추진내용",
-      "의견수렴 사항",
-      "참여 안내",
-    ]) {
-      await expect(editor.getByText(heading, { exact: true })).toBeVisible();
+    await expect(editor.getByRole("heading", { name: "추진배경", exact: true }))
+      .toBeVisible({ timeout: 15000 });
+    for (const heading of ["추진목적", "추진내용", "의견수렴 사항", "참여 안내"]) {
+      await expect(editor.getByRole("heading", { name: heading, exact: true }))
+        .toBeVisible();
     }
 
     // AC-13: AI button disappears after a successful generation on this post.

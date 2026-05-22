@@ -127,6 +127,12 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
     // Hides the AI entry point (AC-13) and is also enforced server-side
     // via the conditional update on Post.ai_draft_used.
     let mut ai_draft_used = use_signal(move || initial_ai_draft_used);
+    // Bumped whenever we need the rich-text editor to remount and pick up
+    // a programmatically-changed `content` (e.g. AI draft replaces body).
+    // The editor snapshots its initial HTML on mount and never re-applies
+    // it, so a `key=` change is the only way to force fresh content in
+    // without disrupting IME composition on regular edits.
+    let mut editor_remount_key = use_signal(|| 0u64);
     let user_membership = use_user_membership();
     let is_paid_user = user_membership.as_ref().map(|m| m.is_paid()).unwrap_or(false);
     // Default the AI form language to the user's current UI locale.
@@ -500,6 +506,12 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                                                 title.set(resp.title);
                                                 content.set(resp.body_html);
                                                 ai_draft_used.set(true);
+                                                // Force the RichEditor to remount so it
+                                                // picks up the new body (it snapshots
+                                                // content on mount and ignores later
+                                                // signal changes — see editor/component.rs).
+                                                let next = editor_remount_key.peek().wrapping_add(1);
+                                                editor_remount_key.set(next);
                                                 popup.close();
                                             },
                                         }
@@ -664,6 +676,7 @@ pub fn PostEdit(post_id: ReadSignal<FeedPartition>) -> Element {
                     }
 
                     RichEditor {
+                        key: "{editor_remount_key()}",
                         class: "w-full",
                         content: content(),
                         editable: true,
