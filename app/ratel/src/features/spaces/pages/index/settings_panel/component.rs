@@ -60,6 +60,14 @@ pub fn SettingsPanel(
                         }
                     }
                 }
+                // Reports section is visible to every member (not just
+                // admins) — that's the whole point of publishing: the PDF
+                // becomes accessible to the space audience.
+                if let Some(sid) = space_id {
+                    SuspenseBoundary {
+                        ReportsSection { space_id: sid }
+                    }
+                }
                 // Theme
                 div { class: "settings-group",
                     span { class: "settings-group__label", "{tr.theme}" }

@@ -435,6 +435,12 @@ translate! {
     settings_btn: { en: "Settings", ko: "설정" },
     install: { en: "Install", ko: "설치" },
 
+    // Reports section — published reports surfaced under their own
+    // sidebar section so space members can open the report (and
+    // trigger PDF download from inside the viewer).
+    reports_section_label: { en: "Reports", ko: "보고서" },
+    report_download_btn: { en: "View Report", ko: "보고서 확인하기" },
+
     // Add action card
     new_action: { en: "New Action", ko: "새 액션" },
     new_action_desc: {

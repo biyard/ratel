@@ -1,4 +1,21 @@
 use crate::common::*;
+use serde::{Deserialize, Serialize};
+
+/// Caret-anchored slash-command signal — emitted by the editor's JS
+/// when it detects a `/<word>` pattern at the caret. `raw` is the full
+/// matched token starting with `/`; an empty `raw` means the slash
+/// state was cleared (caret moved, popup should close). Coordinates
+/// are viewport-relative pixel offsets from `getBoundingClientRect`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct EditorSlashSignal {
+    pub raw: String,
+    pub caret_x: f64,
+    pub caret_y: f64,
+    /// `"below"` (popup top sits right under the caret) or
+    /// `"above"` (popup bottom sits right above the caret) — flipped
+    /// when the lower part of the viewport doesn't have room.
+    pub placement: String,
+}
 
 #[derive(Props, Clone, PartialEq)]
 pub struct EditorProps {
@@ -12,6 +29,22 @@ pub struct EditorProps {
     pub on_content_change: Option<EventHandler<String>>,
     #[props(default)]
     pub class: String,
+    /// Optional "Insert data" affordance — when set, the toolbar
+    /// renders an extra primary-tone button that fires this handler.
+    /// Consumers (e.g. the report detail page) open a picker modal in
+    /// response and write back to `content` to inject a block.
+    #[props(default)]
+    pub on_insert_data: Option<EventHandler<()>>,
+    /// Label shown next to the insert-data icon. Defaults to the
+    /// English string; pass a translated string from the consumer.
+    #[props(default = "Insert data".to_string())]
+    pub insert_data_label: String,
+    /// Optional slash-command hook. The editor's JS watches every input
+    /// and parses a `/<word>` token at the caret; each transition (open,
+    /// keystroke, clear) fires this handler. Empty `raw` ⇒ cleared.
+    /// Consumers render a popup anchored at the supplied caret position.
+    #[props(default)]
+    pub on_slash: Option<EventHandler<EditorSlashSignal>>,
 }
 
 #[component]
@@ -28,6 +61,8 @@ pub fn Editor(props: EditorProps) -> Element {
     let is_editable = props.editable;
     let editable = if is_editable { "true" } else { "false" };
     let extra_class = props.class.clone();
+    let slash_enabled = props.on_slash.is_some();
+    let slash_attr = if slash_enabled { "true" } else { "false" };
 
     rsx! {
         document::Script { defer: true, src: asset!("./script.js") }
@@ -37,6 +72,7 @@ pub fn Editor(props: EditorProps) -> Element {
             "data-bound": "false",
             "data-placeholder": "{placeholder}",
             "data-editable": "{editable}",
+            "data-slash": "{slash_attr}",
             // Hidden input bridge — JS writes the latest editor HTML into
             // its `value` and dispatches a synthetic `input` event. Going
             // through a real <input> instead of a div CustomEvent is the
@@ -54,6 +90,34 @@ pub fn Editor(props: EditorProps) -> Element {
                         handler.call(evt.value());
                     }
                 },
+            }
+            // Second bridge: JS writes a JSON-encoded `EditorSlashSignal`
+            // (or empty string for "cleared") whenever it detects a
+            // `/<word>` token at the caret. Only rendered when the
+            // consumer opted into the slash hook so the JS watcher knows
+            // to attach.
+            if slash_enabled {
+                input {
+                    class: "re-slash-bridge",
+                    r#type: "text",
+                    hidden: true,
+                    "aria-hidden": "true",
+                    tabindex: "-1",
+                    oninput: move |evt| {
+                        let Some(handler) = &props.on_slash else {
+                            return;
+                        };
+                        let raw = evt.value();
+                        if raw.is_empty() {
+                            handler.call(EditorSlashSignal::default());
+                            return;
+                        }
+                        match serde_json::from_str::<EditorSlashSignal>(&raw) {
+                            Ok(signal) => handler.call(signal),
+                            Err(_) => handler.call(EditorSlashSignal::default()),
+                        }
+                    },
+                }
             }
             if is_editable {
                 div {
@@ -772,6 +836,27 @@ pub fn Editor(props: EditorProps) -> Element {
                             }
                         }
                     }
+                    if let Some(handler) = props.on_insert_data {
+                        div { class: "re-toolbar__group re-toolbar__group--insert",
+                            button {
+                                aria_label: "{props.insert_data_label}",
+                                class: "re-tb-btn re-tb-btn--insert-data",
+                                "data-tip": "{props.insert_data_label}",
+                                r#type: "button",
+                                onclick: move |_| handler.call(()),
+                                svg {
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    stroke_width: "2.2",
+                                    view_box: "0 0 24 24",
+                                    polyline { points: "22 12 18 12 15 21 9 3 6 12 2 12" }
+                                }
+                                span { "{props.insert_data_label}" }
+                            }
+                        }
+                    }
                 }
             }
             div {
@@ -783,6 +868,289 @@ pub fn Editor(props: EditorProps) -> Element {
                 dangerous_inner_html: "{content}",
             }
             if is_editable {
+                // Floating mini-toolbar shown when the caret is inside
+                // a `<table>` in the body. Buttons are pure DOM ops
+                // (no execCommand) so they work consistently across
+                // browsers. JS positions + toggles visibility.
+                div {
+                    class: "re-table-actions",
+                    role: "toolbar",
+                    "aria-label": "Table actions",
+                    "data-visible": "false",
+                    button {
+                        class: "re-table-actions__btn",
+                        "data-act": "row-above",
+                        "data-tip": "Insert row above",
+                        r#type: "button",
+                        "aria-label": "Insert row above",
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            path { d: "M12 5v8" }
+                            path { d: "M8 9l4-4 4 4" }
+                            line {
+                                x1: "4",
+                                y1: "17",
+                                x2: "20",
+                                y2: "17",
+                            }
+                            line {
+                                x1: "4",
+                                y1: "21",
+                                x2: "20",
+                                y2: "21",
+                            }
+                        }
+                    }
+                    button {
+                        class: "re-table-actions__btn",
+                        "data-act": "row-below",
+                        "data-tip": "Insert row below",
+                        r#type: "button",
+                        "aria-label": "Insert row below",
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            line {
+                                x1: "4",
+                                y1: "3",
+                                x2: "20",
+                                y2: "3",
+                            }
+                            line {
+                                x1: "4",
+                                y1: "7",
+                                x2: "20",
+                                y2: "7",
+                            }
+                            path { d: "M12 11v8" }
+                            path { d: "M8 15l4 4 4-4" }
+                        }
+                    }
+                    span { class: "re-table-actions__sep" }
+                    button {
+                        class: "re-table-actions__btn",
+                        "data-act": "col-left",
+                        "data-tip": "Insert column left",
+                        r#type: "button",
+                        "aria-label": "Insert column left",
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            path { d: "M13 12h8" }
+                            path { d: "M17 8l-4 4 4 4" }
+                            line {
+                                x1: "3",
+                                y1: "4",
+                                x2: "3",
+                                y2: "20",
+                            }
+                            line {
+                                x1: "7",
+                                y1: "4",
+                                x2: "7",
+                                y2: "20",
+                            }
+                        }
+                    }
+                    button {
+                        class: "re-table-actions__btn",
+                        "data-act": "col-right",
+                        "data-tip": "Insert column right",
+                        r#type: "button",
+                        "aria-label": "Insert column right",
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            path { d: "M3 12h8" }
+                            path { d: "M7 8l4 4-4 4" }
+                            line {
+                                x1: "17",
+                                y1: "4",
+                                x2: "17",
+                                y2: "20",
+                            }
+                            line {
+                                x1: "21",
+                                y1: "4",
+                                x2: "21",
+                                y2: "20",
+                            }
+                        }
+                    }
+                    span { class: "re-table-actions__sep" }
+                    button {
+                        class: "re-table-actions__btn",
+                        "data-act": "row-delete",
+                        "data-tip": "Delete row",
+                        r#type: "button",
+                        "aria-label": "Delete row",
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            line {
+                                x1: "4",
+                                y1: "5",
+                                x2: "20",
+                                y2: "5",
+                            }
+                            line {
+                                x1: "4",
+                                y1: "19",
+                                x2: "20",
+                                y2: "19",
+                            }
+                            line {
+                                x1: "8",
+                                y1: "12",
+                                x2: "16",
+                                y2: "12",
+                            }
+                        }
+                    }
+                    button {
+                        class: "re-table-actions__btn",
+                        "data-act": "col-delete",
+                        "data-tip": "Delete column",
+                        r#type: "button",
+                        "aria-label": "Delete column",
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            line {
+                                x1: "5",
+                                y1: "4",
+                                x2: "5",
+                                y2: "20",
+                            }
+                            line {
+                                x1: "19",
+                                y1: "4",
+                                x2: "19",
+                                y2: "20",
+                            }
+                            line {
+                                x1: "12",
+                                y1: "8",
+                                x2: "12",
+                                y2: "16",
+                            }
+                        }
+                    }
+                    span { class: "re-table-actions__sep" }
+                    button {
+                        class: "re-table-actions__btn",
+                        "data-act": "merge",
+                        "data-tip": "Merge selected cells",
+                        r#type: "button",
+                        "aria-label": "Merge selected cells",
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            rect {
+                                x: "3",
+                                y: "4",
+                                width: "18",
+                                height: "16",
+                                rx: "1.5",
+                            }
+                            path { d: "M8 8h8" }
+                            path { d: "M8 16h8" }
+                        }
+                    }
+                    button {
+                        class: "re-table-actions__btn",
+                        "data-act": "split",
+                        "data-tip": "Split merged cell",
+                        r#type: "button",
+                        "aria-label": "Split merged cell",
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            rect {
+                                x: "3",
+                                y: "4",
+                                width: "18",
+                                height: "16",
+                                rx: "1.5",
+                            }
+                            line {
+                                x1: "12",
+                                y1: "4",
+                                x2: "12",
+                                y2: "20",
+                            }
+                            line {
+                                x1: "3",
+                                y1: "12",
+                                x2: "21",
+                                y2: "12",
+                            }
+                        }
+                    }
+                    span { class: "re-table-actions__sep" }
+                    button {
+                        class: "re-table-actions__btn re-table-actions__btn--danger",
+                        "data-act": "table-delete",
+                        "data-tip": "Delete table",
+                        r#type: "button",
+                        "aria-label": "Delete table",
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            polyline { points: "3 6 5 6 21 6" }
+                            path { d: "M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6" }
+                            line {
+                                x1: "10",
+                                y1: "11",
+                                x2: "10",
+                                y2: "17",
+                            }
+                            line {
+                                x1: "14",
+                                y1: "11",
+                                x2: "14",
+                                y2: "17",
+                            }
+                        }
+                    }
+                }
                 // Selection-triggered floating toolbar. Hidden by default;
                 // the JS controller positions it below (or above, on auto-flip)
                 // the active selection and toggles `data-visible`. Buttons
