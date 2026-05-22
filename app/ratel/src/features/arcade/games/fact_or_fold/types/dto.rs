@@ -84,6 +84,12 @@ pub struct CreateSubjectRequest {
     /// Optional millis timestamp. None = save as draft. Some = scheduled
     /// publication.
     pub scheduled_at: Option<i64>,
+    /// Millis-since-epoch when the subject's active window ends.
+    /// Required for picks — lobby matching filters by
+    /// `now ∈ [scheduled_at, expires_at]`. `0` keeps the legacy
+    /// "indefinite" behaviour (treated as no expiry by pick logic).
+    #[serde(default)]
+    pub expires_at: i64,
 }
 
 /// Two modes (roadmap §FR-42):
@@ -93,6 +99,10 @@ pub struct CreateSubjectRequest {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct PublishSubjectRequest {
     pub scheduled_at: Option<i64>,
+    /// Optional override for the subject's active-window end. `None`
+    /// keeps the existing `expires_at` on the row untouched.
+    #[serde(default)]
+    pub expires_at: Option<i64>,
 }
 
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
@@ -108,6 +118,7 @@ pub struct UpdateSubjectRequest {
     pub reveal_summary: Option<String>,
     pub reveal_sources: Option<Vec<RevealSource>>,
     pub scheduled_at: Option<i64>,
+    pub expires_at: Option<i64>,
 }
 
 #[cfg_attr(feature = "server", derive(rmcp::schemars::JsonSchema))]
@@ -125,6 +136,7 @@ pub struct SubjectResponse {
     pub reveal_summary: String,
     pub reveal_sources: Vec<RevealSource>,
     pub scheduled_at: Option<i64>,
+    pub expires_at: i64,
     pub created_at: i64,
     pub updated_at: i64,
 }

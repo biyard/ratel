@@ -98,6 +98,13 @@ fn SettingsForm(initial: FactOrFoldSettingsResponse) -> Element {
                     suffix: "{tr.unit_people}",
                     value: round_capacity,
                 }
+                if round_capacity() == 1 {
+                    p {
+                        class: "ff-settings__warning",
+                        "data-testid": "ff-admin-settings-solo-warning",
+                        "{tr.round_capacity_solo_warning}"
+                    }
+                }
                 IntRow {
                     label: "{tr.stage_news_reveal_sec}",
                     desc: "{tr.stage_sec_desc}",

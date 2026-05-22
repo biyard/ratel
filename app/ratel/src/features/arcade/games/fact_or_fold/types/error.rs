@@ -161,6 +161,20 @@ pub enum FactOrFoldError {
     )]
     LobbyInsufficientBalance(i64),
 
+    #[error("already played the current subject")]
+    #[translate(
+        en = "You already joined a round for this active subject — wait for the next one",
+        ko = "현재 활성 주제는 이미 참여한 적이 있어요 — 다음 주제가 열릴 때까지 기다려주세요.",
+    )]
+    SubjectAlreadyPlayed,
+
+    #[error("user has an in-flight round")]
+    #[translate(
+        en = "You're still in a round that hasn't finished yet — finish it first.",
+        ko = "아직 진행 중인 라운드가 있어요 — 먼저 끝내야 합니다.",
+    )]
+    RoundInProgress,
+
     #[error("round not found")]
     #[translate(
         en = "Round not found",
@@ -218,7 +232,9 @@ impl FactOrFoldError {
             | FactOrFoldError::FlipAlreadyUsed
             | FactOrFoldError::FlipNoOriginalBet => StatusCode::BAD_REQUEST,
             FactOrFoldError::NotRoundInsider => StatusCode::FORBIDDEN,
-            FactOrFoldError::LobbyFull => StatusCode::CONFLICT,
+            FactOrFoldError::LobbyFull
+            | FactOrFoldError::SubjectAlreadyPlayed
+            | FactOrFoldError::RoundInProgress => StatusCode::CONFLICT,
             FactOrFoldError::LobbyNoSubjectAvailable => StatusCode::SERVICE_UNAVAILABLE,
             FactOrFoldError::RoundNotFound => StatusCode::NOT_FOUND,
             FactOrFoldError::RoundNotSettled => StatusCode::CONFLICT,

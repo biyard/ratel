@@ -172,6 +172,7 @@ fn SubjectsTable(rows: Vec<SubjectResponse>) -> Element {
                     th { "{tr.col_verdict}" }
                     th { "{tr.col_tags}" }
                     th { "{tr.col_scheduled}" }
+                    th { "{tr.col_expires}" }
                     th { "{tr.col_status}" }
                     th { "" }
                 }
@@ -222,6 +223,7 @@ fn SubjectRow(row: SubjectResponse) -> Element {
         .scheduled_at
         .map(format_millis_short)
         .unwrap_or_else(|| "—".to_string());
+    let expires_label = format_expires_at(row.expires_at, &tr);
 
     let can_publish_now = matches!(row.status, SubjectStatus::Draft | SubjectStatus::Scheduled);
     let can_delete = !matches!(row.status, SubjectStatus::Live | SubjectStatus::Settled);
@@ -231,9 +233,7 @@ fn SubjectRow(row: SubjectResponse) -> Element {
     let delete_testid = format!("ff-admin-row-delete-{}", row.id.0);
 
     rsx! {
-        tr {
-            class: "ff-subjects__row",
-            "data-testid": "{row_testid}",
+        tr { class: "ff-subjects__row", "data-testid": "{row_testid}",
             td { class: "ff-subjects__cell-mono", "{short_id(&row.id.0)}" }
             td {
                 div { class: "ff-subjects__subject-text", "{row.headline_text}" }
@@ -252,6 +252,7 @@ fn SubjectRow(row: SubjectResponse) -> Element {
                 }
             }
             td { class: "ff-subjects__cell-muted", "{scheduled_label}" }
+            td { class: "ff-subjects__cell-muted", "{expires_label}" }
             td {
                 StatusBadge { status: row.status }
             }
@@ -325,4 +326,20 @@ fn format_millis_short(millis: i64) -> String {
     // client. Keeping a millis fallback so the cell stays readable.
     let _ = days_since_epoch;
     format!("ts:{millis}")
+}
+
+/// Three states surfaced for the Active-until column:
+///   - `0` (legacy / no expiry) → em-dash, matches the Scheduled column
+///   - past timestamp           → "EXPIRED" badge text
+///   - future timestamp         → millis fallback (will become a
+///                                proper short label once we wire chrono)
+fn format_expires_at(expires_at: i64, tr: &FactFoldAdminSubjectsTranslate) -> String {
+    if expires_at <= 0 {
+        return tr.expires_none.to_string();
+    }
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    if expires_at <= now {
+        return tr.expires_expired.to_string();
+    }
+    format_millis_short(expires_at)
 }

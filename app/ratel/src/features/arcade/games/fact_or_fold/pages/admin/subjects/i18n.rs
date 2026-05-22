@@ -22,7 +22,11 @@ translate! {
     col_verdict: { en: "Verdict", ko: "정답" },
     col_tags: { en: "Tags", ko: "카테고리" },
     col_scheduled: { en: "Scheduled", ko: "공개 일시" },
+    col_expires: { en: "Active until", ko: "활성 종료" },
     col_status: { en: "Status", ko: "상태" },
+
+    expires_none: { en: "—", ko: "—" },
+    expires_expired: { en: "EXPIRED", ko: "만료됨" },
 
     action_publish: { en: "Publish now", ko: "지금 발행" },
     action_delete: { en: "Soft-delete", ko: "삭제" },

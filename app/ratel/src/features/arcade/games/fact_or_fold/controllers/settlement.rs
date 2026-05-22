@@ -43,8 +43,8 @@ use rmcp::schemars;
 use crate::common::models::auth::AdminUser;
 #[cfg(feature = "server")]
 use crate::features::arcade::games::fact_or_fold::models::{
-    FactFoldBet, FactFoldSubject, FactFoldLeaderboardEntry, FactFoldParticipant,
-    FactFoldRationale, FactFoldRound, FactFoldSettings, FactFoldSettlement, FactFoldUserStats,
+    FactFoldBet, FactFoldLeaderboardEntry, FactFoldParticipant, FactFoldRationale, FactFoldRound,
+    FactFoldSettings, FactFoldSettlement, FactFoldSubject, FactFoldSubjectPlay, FactFoldUserStats,
 };
 #[cfg(feature = "server")]
 use crate::features::arcade::games::fact_or_fold::services::{
@@ -230,7 +230,9 @@ pub async fn settle_round_internal(
             );
         }
 
-        // Update lifetime stats.
+        // Update lifetime stats. Also clear `current_round_id` —
+        // the user is no longer in-flight, so lobby/join should let
+        // them queue for the next subject.
         let mut stats = FactFoldUserStats::get_or_default(cli, &o.user_id).await?;
         let prev_accuracy_bps = compute_accuracy_bps(stats.correct_count, stats.total_rounds);
         stats.total_rounds += 1;
@@ -239,10 +241,24 @@ pub async fn settle_round_internal(
         }
         stats.lifetime_delta_chips += o.chips_out - buy_in;
         stats.last_played_at = now;
+        stats.current_round_id = None;
         stats.updated_at = now;
         if let Err(e) = stats.upsert(cli).await {
             crate::error!(
                 "settle_round_internal user_stats upsert failed for {}: {e}",
+                o.user_id
+            );
+        }
+
+        // Write the dedup marker so the next `lobby/join` for this
+        // user against the same subject rejects with
+        // `SubjectAlreadyPlayed`. The marker is keyed by subject id
+        // so the user can still pick up a fresh subject when the
+        // window rotates.
+        let play = FactFoldSubjectPlay::new(&o.user_id, &round.subject_id, round_id);
+        if let Err(e) = play.create(cli).await {
+            crate::error!(
+                "settle_round_internal subject_play marker write failed for {}: {e}",
                 o.user_id
             );
         }
