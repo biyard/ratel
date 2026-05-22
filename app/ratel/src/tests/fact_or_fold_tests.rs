@@ -2062,6 +2062,552 @@ async fn test_round_settlement_returns_breakdown_after_settle() {
     assert_eq!(body.outcomes.len(), 4, "one breakdown per participant");
 }
 
+// ── Subject window + dedup (fix/fact-or-fold-subject-window) ─────
+//
+// These tests cover the time-windowed `pick_next_subject` and the
+// split dedup model:
+//   - `RoundInProgress` while a user is bound into a non-Settled round
+//   - `SubjectAlreadyPlayed` only after that round settles
+//
+// Direct DDB writes are used wherever the HTTP layer rejects the input
+// we need to stage (past `expires_at`, single-user round capacity,
+// pre-staged Live subject with a custom window).
+
+#[cfg(test)]
+fn ms_now() -> i64 {
+    crate::common::utils::time::get_now_timestamp_millis()
+}
+
+/// Write a `FactFoldSubject` directly to DDB with a custom window.
+/// `status` controls which GSI3 partition it lands in; the lobby
+/// pick logic queries both `Live` and `Scheduled`.
+#[cfg(test)]
+async fn put_subject_with_window(
+    ctx: &TestContext,
+    creator_pk: &Partition,
+    status: SubjectStatus,
+    scheduled_at: Option<i64>,
+    expires_at: i64,
+) -> String {
+    use crate::common::types::EntityType;
+    use crate::features::arcade::games::fact_or_fold::models::FactFoldSubject;
+    use crate::features::arcade::games::fact_or_fold::types::{RevealSource, Verdict};
+
+    let now = ms_now();
+    let id = uuid::Uuid::now_v7().to_string();
+    let pick_at = scheduled_at.unwrap_or(now);
+    let row = FactFoldSubject {
+        pk: Partition::FactFoldSubjects,
+        sk: EntityType::FactFoldSubject(id.clone()),
+        created_at: now,
+        updated_at: now,
+        creator_pk: creator_pk.clone(),
+        status,
+        verdict: Verdict::Real,
+        headline_text: format!("Subject {}", &id[..8]),
+        body_excerpt: valid_body(),
+        difficulty: 3,
+        category_tags: vec!["test".into()],
+        source_label: "Source".into(),
+        insider_statement: "insider".into(),
+        reveal_summary: "summary".into(),
+        reveal_sources: Vec::<RevealSource>::new(),
+        scheduled_at,
+        pick_at,
+        expires_at,
+    };
+    row.upsert(&ctx.ddb).await.expect("subject seed upsert");
+    id
+}
+
+/// Force `round_capacity` to an arbitrary value by writing the
+/// settings row directly — the PUT endpoint's `>= 2` validator
+/// rejects single-user rounds that some tests need.
+#[cfg(test)]
+async fn force_round_capacity(ctx: &TestContext, capacity: i32) {
+    use crate::common::types::EntityType;
+    use crate::features::arcade::games::fact_or_fold::models::FactFoldSettings;
+    use crate::features::arcade::models::ArcadeSettings;
+
+    let mut response = FactFoldSettings::get_or_default(&ctx.ddb)
+        .await
+        .expect("settings get_or_default");
+    response.round_capacity = capacity;
+    let row = FactFoldSettings::default().merge_response(response);
+    row.upsert(&ctx.ddb).await.expect("settings upsert");
+
+    // Also relax the chip gate so single-user joins don't require
+    // ArcadeSettings round-trips per test.
+    let now = ms_now();
+    let arcade_row = ArcadeSettings {
+        pk: Partition::ArcadeSettings,
+        sk: EntityType::ArcadeSettings,
+        created_at: now,
+        updated_at: now,
+        rp_to_chip_ratio_bps: 10_000,
+        default_buy_in_chips: 1,
+        min_convert_rp: 0,
+        redeem_enabled: true,
+    };
+    let _ = arcade_row.upsert(&ctx.ddb).await;
+}
+
+// ── Group 1: Subject DTO + expires_at validation ─────────────────
+
+#[tokio::test]
+async fn test_create_subject_with_expires_at_persists_window() {
+    let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
+    let (_, admin) = ctx.create_admin_user().await;
+
+    let now = ms_now();
+    let scheduled = now + 60_000;
+    let expires = now + 3_600_000;
+
+    let (status, _, created) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/fact-or-fold/admin/subjects",
+        headers: admin.clone(),
+        body: {
+            "req": {
+                "headline_text": "Windowed",
+                "body_excerpt": valid_body(),
+                "verdict": "REAL",
+                "difficulty": 3,
+                "category_tags": [],
+                "source_label": "src",
+                "insider_statement": "i",
+                "reveal_summary": "r",
+                "reveal_sources": [],
+                "scheduled_at": scheduled,
+                "expires_at": expires,
+            }
+        },
+        response_type: SubjectResponse,
+    };
+    assert_eq!(status, 200, "create with expires_at must succeed");
+    assert_eq!(created.expires_at, expires);
+    assert_eq!(created.scheduled_at, Some(scheduled));
+
+    let (_, _, fetched) = crate::test_get! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/admin/subjects/{}", created.id.0),
+        headers: admin,
+        response_type: SubjectResponse,
+    };
+    assert_eq!(fetched.expires_at, expires, "GET must echo expires_at");
+}
+
+#[tokio::test]
+async fn test_create_subject_rejects_expires_before_scheduled() {
+    let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
+    let (_, admin) = ctx.create_admin_user().await;
+
+    let now = ms_now();
+    let scheduled = now + 3_600_000;
+    let expires = now + 60_000; // before scheduled
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/admin/subjects",
+        headers: admin,
+        body: {
+            "req": {
+                "headline_text": "Bad",
+                "body_excerpt": valid_body(),
+                "verdict": "REAL",
+                "difficulty": 3,
+                "source_label": "s",
+                "insider_statement": "i",
+                "reveal_summary": "r",
+                "scheduled_at": scheduled,
+                "expires_at": expires,
+            }
+        }
+    };
+    assert_ne!(status, 200, "expires_at < scheduled_at must be rejected");
+}
+
+#[tokio::test]
+async fn test_create_subject_rejects_expires_in_past() {
+    let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
+    let (_, admin) = ctx.create_admin_user().await;
+
+    let past = ms_now() - 3_600_000;
+
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/admin/subjects",
+        headers: admin,
+        body: {
+            "req": {
+                "headline_text": "Past",
+                "body_excerpt": valid_body(),
+                "verdict": "REAL",
+                "difficulty": 3,
+                "source_label": "s",
+                "insider_statement": "i",
+                "reveal_summary": "r",
+                "scheduled_at": null,
+                "expires_at": past,
+            }
+        }
+    };
+    assert_ne!(status, 200, "expires_at in the past must be rejected");
+}
+
+#[tokio::test]
+async fn test_update_subject_can_change_expires_at() {
+    let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let created = create_subject(&ctx, &admin).await;
+    let new_expires = ms_now() + 7_200_000;
+
+    let (status, _, body) = crate::test_patch! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/admin/subjects/{}", created.id.0),
+        headers: admin,
+        body: { "req": { "expires_at": new_expires } },
+        response_type: SubjectResponse,
+    };
+    assert_eq!(status, 200, "patch expires_at must succeed");
+    assert_eq!(body.expires_at, new_expires);
+}
+
+#[tokio::test]
+async fn test_publish_subject_with_expires_at_override() {
+    let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let created = create_subject(&ctx, &admin).await;
+    let override_expires = ms_now() + 1_800_000;
+
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app,
+        path: &format!("/api/fact-or-fold/admin/subjects/{}/publish", created.id.0),
+        headers: admin,
+        body: { "req": { "scheduled_at": null, "expires_at": override_expires } },
+        response_type: SubjectResponse,
+    };
+    assert_eq!(status, 200, "publish-now with expires override must succeed");
+    assert!(matches!(body.status, SubjectStatus::Live));
+    assert_eq!(body.expires_at, override_expires);
+}
+
+// ── Group 2: pick_next_subject time-window behaviour ─────────────
+
+#[tokio::test]
+async fn test_pick_skips_subject_past_expires_at() {
+    let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
+    let (admin_user, admin) = ctx.create_admin_user().await;
+    relax_balance_gate(&ctx, &admin).await;
+
+    // Single Live subject whose window has already closed.
+    let now = ms_now();
+    let _ = put_subject_with_window(
+        &ctx,
+        &admin_user.pk,
+        SubjectStatus::Live,
+        None,
+        now - 60_000, // expired
+    )
+    .await;
+
+    let (_, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/lobby",
+        headers: ctx.test_user.1.clone(),
+        response_type: LobbyResponse,
+    };
+    assert!(
+        !body.subject_available,
+        "expired Live subject must not surface as available"
+    );
+}
+
+#[tokio::test]
+async fn test_pick_picks_subject_within_window() {
+    let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
+    let (admin_user, admin) = ctx.create_admin_user().await;
+    relax_balance_gate(&ctx, &admin).await;
+
+    let now = ms_now();
+    let _ = put_subject_with_window(
+        &ctx,
+        &admin_user.pk,
+        SubjectStatus::Live,
+        None,
+        now + 3_600_000,
+    )
+    .await;
+
+    let (_, _, body) = crate::test_get! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/lobby",
+        headers: ctx.test_user.1.clone(),
+        response_type: LobbyResponse,
+    };
+    assert!(
+        body.subject_available,
+        "Live subject inside its window must be available"
+    );
+}
+
+#[tokio::test]
+async fn test_pick_prefers_latest_pick_at_among_active() {
+    let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
+    let (admin_user, admin) = ctx.create_admin_user().await;
+    relax_balance_gate(&ctx, &admin).await;
+    grant_chips_for_test(&ctx, &ctx.test_user.0.pk, 1_000).await;
+
+    let now = ms_now();
+    // Older subject (smaller pick_at) — would win FIFO; should lose
+    // under the new "newest active wins" rule.
+    let _older = put_subject_with_window(
+        &ctx,
+        &admin_user.pk,
+        SubjectStatus::Live,
+        Some(now - 60_000),
+        now + 3_600_000,
+    )
+    .await;
+    let newer = put_subject_with_window(
+        &ctx,
+        &admin_user.pk,
+        SubjectStatus::Live,
+        Some(now - 1_000),
+        now + 3_600_000,
+    )
+    .await;
+    // Manually override pick_at on the seeds since `put_subject_with_window`
+    // derives pick_at from scheduled_at — already set correctly.
+    let _ = newer.clone();
+
+    // The first join should pick the newer subject and bind a new round
+    // to it. We assert against `subject_id` on the returned round.
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/lobby/join",
+        headers: ctx.test_user.1.clone(),
+        response_type: RoundResponse,
+    };
+    assert_eq!(status, 200, "join must succeed with a pickable subject");
+    assert_eq!(
+        body.subject_id.0, newer,
+        "lobby must prefer the subject with the latest pick_at"
+    );
+}
+
+#[tokio::test]
+async fn test_pick_picks_scheduled_when_time_due() {
+    let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
+    let (admin_user, admin) = ctx.create_admin_user().await;
+    relax_balance_gate(&ctx, &admin).await;
+    grant_chips_for_test(&ctx, &ctx.test_user.0.pk, 1_000).await;
+
+    let now = ms_now();
+    // Scheduled subject whose scheduled_at is already in the past
+    // — should be pickable WITHOUT admin promoting to Live.
+    let id = put_subject_with_window(
+        &ctx,
+        &admin_user.pk,
+        SubjectStatus::Scheduled,
+        Some(now - 60_000),
+        now + 3_600_000,
+    )
+    .await;
+
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/lobby/join",
+        headers: ctx.test_user.1.clone(),
+        response_type: RoundResponse,
+    };
+    assert_eq!(status, 200, "scheduled subject in window must be pickable");
+    assert_eq!(body.subject_id.0, id);
+}
+
+// ── Group 3: in-flight + post-settle dedup ───────────────────────
+
+#[tokio::test]
+async fn test_join_during_in_flight_returns_round_in_progress() {
+    let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
+    let (_, admin) = ctx.create_admin_user().await;
+    // Default capacity=4. `fill_round_to_capacity` joins ctx.test_user
+    // + 3 fresh users, so the round flips to NewsReveal.
+    let (_round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+
+    // ctx.test_user is now in an in-flight round. A second join must
+    // be rejected with RoundInProgress.
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/lobby/join",
+        headers: headers,
+    };
+    assert_ne!(
+        status, 200,
+        "second join during in-flight round must be rejected"
+    );
+}
+
+#[tokio::test]
+async fn test_leave_during_waiting_clears_in_flight_allows_rejoin() {
+    let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
+    let (_, admin) = ctx.create_admin_user().await;
+    relax_balance_gate(&ctx, &admin).await;
+    let _ = create_live_subject(&ctx, &admin).await;
+    grant_chips_for_test(&ctx, &ctx.test_user.0.pk, 1_000).await;
+
+    // First join — default capacity=4, so round stays in Waiting.
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/fact-or-fold/lobby/join",
+        headers: ctx.test_user.1.clone(),
+        response_type: RoundResponse,
+    };
+    assert_eq!(status, 200);
+
+    // Leave clears the in-flight pointer.
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/fact-or-fold/lobby/leave",
+        headers: ctx.test_user.1.clone(),
+    };
+    assert_eq!(status, 200, "leave during waiting must succeed");
+
+    // Second join should now succeed — no SubjectAlreadyPlayed,
+    // no RoundInProgress (current_round_id was cleared by leave).
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/lobby/join",
+        headers: ctx.test_user.1.clone(),
+        response_type: RoundResponse,
+    };
+    assert_eq!(
+        status, 200,
+        "rejoin after leave-during-waiting must succeed"
+    );
+}
+
+#[tokio::test]
+async fn test_subject_already_played_only_after_settlement() {
+    let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
+    let (_, admin) = ctx.create_admin_user().await;
+    let (round_id, headers) = fill_round_to_capacity(&ctx, &admin).await;
+    seed_bets_for_all(&ctx, &round_id, "REAL").await;
+    force_round_to_debate(&ctx, &round_id, 5_000).await;
+
+    // Settle the round.
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/fact-or-fold/admin/rounds/{}/settle", round_id),
+        headers: admin,
+    };
+    assert_eq!(status, 200, "settle must succeed");
+
+    // The Live subject's window is still open (publish-now → no
+    // expires_at). User1 tries to join again — current_round_id was
+    // cleared by settle, so RoundInProgress is gone. The play marker
+    // now blocks them with SubjectAlreadyPlayed.
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/lobby/join",
+        headers: headers,
+    };
+    assert_ne!(
+        status, 200,
+        "rejoin after settle on same subject must be rejected"
+    );
+}
+
+#[tokio::test]
+async fn test_user_can_play_different_subjects_in_series() {
+    let ctx = TestContext::setup().await;
+    reset_fact_fold_state(&ctx).await;
+    let (admin_user, admin) = ctx.create_admin_user().await;
+    // Round capacity=1 so each subject is a self-contained round
+    // we can settle without staging 4 distinct users.
+    relax_balance_gate(&ctx, &admin).await;
+    force_round_capacity(&ctx, 1).await;
+    grant_chips_for_test(&ctx, &ctx.test_user.0.pk, 10_000).await;
+
+    let now = ms_now();
+    // Subject A: window already ending so we can rotate to B quickly.
+    let subject_a = put_subject_with_window(
+        &ctx,
+        &admin_user.pk,
+        SubjectStatus::Live,
+        Some(now - 1_000),
+        now + 3_600_000,
+    )
+    .await;
+
+    // Join → solo round auto-starts (capacity=1) → settle.
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: "/api/fact-or-fold/lobby/join",
+        headers: ctx.test_user.1.clone(),
+        response_type: RoundResponse,
+    };
+    assert_eq!(status, 200, "first join must succeed");
+    let round_a = body.id.0;
+    assert_eq!(body.subject_id.0, subject_a);
+    seed_bets_for_all(&ctx, &round_a, "REAL").await;
+    force_round_to_debate(&ctx, &round_a, 5_000).await;
+    let (status, _, _) = crate::test_post! {
+        app: ctx.app.clone(),
+        path: &format!("/api/fact-or-fold/admin/rounds/{}/settle", round_a),
+        headers: admin.clone(),
+    };
+    assert_eq!(status, 200, "settle A must succeed");
+
+    // Subject A is now blocked for ctx.test_user. Retire it from the
+    // window so the lobby moves on to B.
+    use crate::common::types::EntityType;
+    use crate::features::arcade::games::fact_or_fold::models::FactFoldSubject;
+    let (pk, sk) = (
+        Partition::FactFoldSubjects,
+        EntityType::FactFoldSubject(subject_a.clone()),
+    );
+    let _ = FactFoldSubject::updater(&pk, &sk)
+        .with_expires_at(now - 1)
+        .execute(&ctx.ddb)
+        .await;
+
+    let subject_b = put_subject_with_window(
+        &ctx,
+        &admin_user.pk,
+        SubjectStatus::Live,
+        Some(now),
+        now + 3_600_000,
+    )
+    .await;
+
+    // Rejoin should now succeed and bind a round to subject B —
+    // dedup is per-subject so a different subject is fair game.
+    let (status, _, body) = crate::test_post! {
+        app: ctx.app,
+        path: "/api/fact-or-fold/lobby/join",
+        headers: ctx.test_user.1.clone(),
+        response_type: RoundResponse,
+    };
+    assert_eq!(
+        status, 200,
+        "join for a different subject after settling A must succeed"
+    );
+    assert_eq!(body.subject_id.0, subject_b);
+}
+
 #[allow(dead_code)]
 fn _force_dto_imports_used() {
     // Pulls in BetResponse / RationaleResponse / BetSide so they
