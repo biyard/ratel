@@ -24,7 +24,7 @@ pub async fn create_report(
     let conf = ServerConfig::default();
     let dynamo = conf.dynamodb();
 
-    let title = req.title.unwrap_or_else(|| "Untitled report".to_string());
+    let title = req.title.unwrap_or_default();
     let description = req.description.unwrap_or_default();
 
     let report = SpaceReport::new(space_pk, title, description);

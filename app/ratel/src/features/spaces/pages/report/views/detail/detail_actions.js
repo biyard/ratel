@@ -10,7 +10,11 @@
 // Idempotent — `__bound` flag prevents double-init across CSR mounts.
 
 (function () {
-  if (window.ratel && window.ratel.report && window.ratel.report.__actionsBound) {
+  if (
+    window.ratel &&
+    window.ratel.report &&
+    window.ratel.report.__actionsBound
+  ) {
     return;
   }
   window.ratel = window.ratel || {};
@@ -31,7 +35,8 @@
   document.addEventListener(
     "click",
     function (e) {
-      const btn = e.target && e.target.closest && e.target.closest("[data-act]");
+      const btn =
+        e.target && e.target.closest && e.target.closest("[data-act]");
       if (!btn) return;
       const editor = btn.closest(".report-detail .ratel-editor .re-content");
       if (!editor) return;
@@ -44,7 +49,7 @@
       e.stopPropagation();
       send(act + ":" + chartId);
     },
-    true,
+    true
   );
 
   // ── Slash popup keyboard navigation ───────────────────────
@@ -89,7 +94,7 @@
           break;
       }
     },
-    true,
+    true
   );
 
   // Wait one frame for Dioxus to re-render the popup with the new
@@ -99,11 +104,80 @@
   function scrollSelectedSlashIntoView() {
     requestAnimationFrame(function () {
       const active = document.querySelector(
-        '.report-detail__slash-pop [aria-selected="true"]',
+        '.report-detail__slash-pop [aria-selected="true"]'
       );
       if (active && active.scrollIntoView) {
         active.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }
     });
   }
+
+  function ensureChartLeadingParagraph(editor, observer) {
+    if (!editor) return;
+    const figures = editor.querySelectorAll('figure[contenteditable="false"]');
+    let inserted = false;
+    figures.forEach(function (fig) {
+      const prev = fig.previousElementSibling;
+      const needs =
+        !prev ||
+        (prev.tagName === "FIGURE" &&
+          prev.getAttribute("contenteditable") === "false");
+      if (!needs) return;
+      const p = document.createElement("p");
+      p.appendChild(document.createElement("br"));
+      fig.parentNode.insertBefore(p, fig);
+      inserted = true;
+    });
+    return inserted;
+  }
+
+  function initChartCaretAnchors() {
+    const editor = document.querySelector(
+      ".report-detail .ratel-editor .re-content"
+    );
+    if (!editor || editor.dataset.chartCaretBound) return;
+    editor.dataset.chartCaretBound = "true";
+
+    // Pass 1 — fix the SSR / initial state immediately.
+    ensureChartLeadingParagraph(editor);
+
+    // Pass 2 — watch for subsequent figure insertions (slash popup,
+    // data picker, chart-type swap that re-renders innerHTML).
+    let suspended = false;
+    const observer = new MutationObserver(function (mutations) {
+      if (suspended) return;
+      let needsCheck = false;
+      for (let i = 0; i < mutations.length; i++) {
+        const m = mutations[i];
+        if (m.type !== "childList") continue;
+        for (let j = 0; j < m.addedNodes.length; j++) {
+          const n = m.addedNodes[j];
+          if (
+            n.nodeType === 1 &&
+            (n.tagName === "FIGURE" ||
+              (n.querySelector && n.querySelector("figure")))
+          ) {
+            needsCheck = true;
+            break;
+          }
+        }
+        if (needsCheck) break;
+      }
+      if (!needsCheck) return;
+      suspended = true;
+      try {
+        ensureChartLeadingParagraph(editor);
+      } finally {
+        suspended = false;
+      }
+    });
+    observer.observe(editor, { childList: true, subtree: true });
+  }
+
+  // SSR — try immediately; CSR — retry on mutations until the editor
+  // mounts.
+  initChartCaretAnchors();
+  new MutationObserver(function () {
+    initChartCaretAnchors();
+  }).observe(document.body, { childList: true, subtree: true });
 })();

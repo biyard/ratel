@@ -436,7 +436,17 @@ fn ReportCard(idx: i32, item: ReportListItem) -> Element {
             div { class: "report-card__identity",
                 div { class: "report-card__icon", {report_card_icon()} }
                 div { class: "report-card__id",
-                    span { class: "report-card__title", "{item.title}" }
+                    if item.title.trim().is_empty() {
+                        // Server no longer stamps "Untitled report" into
+                        // the title field, so empty drafts render the
+                        // placeholder copy from the detail page so the
+                        // card doesn't show a blank space.
+                        span { class: "report-card__title report-card__title--placeholder",
+                            "{tr.card_title_placeholder}"
+                        }
+                    } else {
+                        span { class: "report-card__title", "{item.title}" }
+                    }
                 }
             }
             div { class: "report-card__desc", "{item.description}" }

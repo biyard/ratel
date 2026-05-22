@@ -88,6 +88,10 @@ translate! {
         en: "Open",
         ko: "열기",
     },
+    card_title_placeholder: {
+        en: "Untitled",
+        ko: "제목 없음",
+    },
     status_draft: {
         en: "Draft",
         ko: "초안",
