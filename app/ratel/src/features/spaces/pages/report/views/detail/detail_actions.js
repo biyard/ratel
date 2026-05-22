@@ -143,10 +143,41 @@
 
     // Pass 2 — watch for subsequent figure insertions (slash popup,
     // data picker, chart-type swap that re-renders innerHTML).
+    //
+    // The observer fires on every text-node mutation during typing,
+    // which calls `querySelectorAll('figure[contenteditable="false"]')`
+    // every keystroke when there are many charts. Batch the ensure
+    // call through `requestIdleCallback` so it only runs once per
+    // idle window, not once per mutation — typing stays snappy while
+    // a freshly inserted figure still gets its leading paragraph
+    // before the user clicks above it.
     let suspended = false;
+    let scheduled = false;
+    const idle =
+      window.requestIdleCallback ||
+      function (cb) {
+        return setTimeout(cb, 100);
+      };
+    function scheduleEnsure() {
+      if (suspended || scheduled) return;
+      scheduled = true;
+      idle(
+        function () {
+          scheduled = false;
+          suspended = true;
+          try {
+            ensureChartLeadingParagraph(editor);
+          } finally {
+            suspended = false;
+          }
+        },
+        { timeout: 500 }
+      );
+    }
     const observer = new MutationObserver(function (mutations) {
       if (suspended) return;
-      let needsCheck = false;
+      // Fast path: bail out as soon as any added node is a figure.
+      // Avoids the O(N) figure scan on plain text-node mutations.
       for (let i = 0; i < mutations.length; i++) {
         const m = mutations[i];
         if (m.type !== "childList") continue;
@@ -157,18 +188,10 @@
             (n.tagName === "FIGURE" ||
               (n.querySelector && n.querySelector("figure")))
           ) {
-            needsCheck = true;
-            break;
+            scheduleEnsure();
+            return;
           }
         }
-        if (needsCheck) break;
-      }
-      if (!needsCheck) return;
-      suspended = true;
-      try {
-        ensureChartLeadingParagraph(editor);
-      } finally {
-        suspended = false;
       }
     });
     observer.observe(editor, { childList: true, subtree: true });

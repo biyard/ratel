@@ -147,6 +147,12 @@ pub struct UseReportDetailContext {
     /// reverted to the saved state (so the status doesn't flicker to
     /// Unsaved on a no-op change).
     pub last_saved: Signal<(String, String, String)>,
+    /// Cached outline computed from `body_html`. `parse_outline` runs a
+    /// handful of regexes over the entire body, which gets expensive
+    /// when the report grows charts + headings — memoizing it means
+    /// the regex pass only fires when the body actually changes, not
+    /// on every render of the outline rail.
+    pub outline_memo: Memo<Vec<OutlineEntry>>,
     /// Publish the current report state. Persists the latest edit buffer
     /// AND flips `status` to `Published` in one PATCH so a "publish
     /// before autosave fired" race can't ship stale content. Republish
@@ -499,14 +505,15 @@ impl UseReportDetailContext {
 
     /// Outline entries derived from the current body HTML. H1/H2/H3 +
     /// chart figures contribute; everything else (paragraphs, lists, …)
-    /// is ignored.
+    /// is ignored. Reads through the memo so the regex pass is only
+    /// re-run when `body_html` changes, not on every outline-rail
+    /// render.
     pub fn outline(&self) -> Vec<OutlineEntry> {
-        let html = self.body_html.read().clone();
-        parse_outline(&html)
+        (self.outline_memo)()
     }
 
     pub fn outline_is_empty(&self) -> bool {
-        self.outline().is_empty()
+        self.outline_memo.read().is_empty()
     }
 
     /// Read a chart figure's metadata back out of the body HTML — used
@@ -695,6 +702,13 @@ pub fn use_report_detail_context_provider(
     });
     let publish_modal_open = use_signal(|| false);
 
+    // Memoized outline — re-runs `parse_outline` only when the body
+    // HTML actually changes, not on every render of the outline rail.
+    let outline_memo = use_memo(move || {
+        let html = body_html();
+        parse_outline(&html)
+    });
+
     // Editability is purely role-based — admins stay in edit mode even
     // after publishing, because subsequent edits are meant to flow
     // straight back into the published copy via the autosave effect
@@ -839,6 +853,7 @@ pub fn use_report_detail_context_provider(
         handle_publish,
         publish_modal_open,
         can_edit,
+        outline_memo,
     });
 
     Ok(ctx)
