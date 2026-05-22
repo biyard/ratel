@@ -51,8 +51,10 @@ pub fn DocCanvas() -> Element {
                     class: "report-detail__title",
                     placeholder: tr.title_placeholder,
                     value: "{ctx.title_value()}",
-                    oninput: move |e| ctx.title.set(e.value()),
-                    onfocusout: move |_| ctx.handle_save.call(),
+                    oninput: move |e| {
+                        ctx.title.set(e.value());
+                        ctx.mark_unsaved();
+                    },
                     onkeydown: move |e| {
                         if matches!(e.key(), Key::Enter) {
                             e.prevent_default();
@@ -64,8 +66,10 @@ pub fn DocCanvas() -> Element {
                     class: "report-detail__subtitle",
                     placeholder: tr.subtitle_placeholder,
                     value: "{ctx.subtitle_value()}",
-                    oninput: move |e| ctx.subtitle.set(e.value()),
-                    onfocusout: move |_| ctx.handle_save.call(),
+                    oninput: move |e| {
+                        ctx.subtitle.set(e.value());
+                        ctx.mark_unsaved();
+                    },
                     onkeydown: move |e| {
                         if matches!(e.key(), Key::Enter) {
                             e.prevent_default();
@@ -81,7 +85,7 @@ pub fn DocCanvas() -> Element {
                     insert_data_label: tr.insert_data.to_string(),
                     on_content_change: move |html: String| {
                         ctx.body_html.set(html);
-                        ctx.handle_save.call();
+                        ctx.mark_unsaved();
                     },
                     on_insert_data: move |_| ctx.open_data_picker(),
                     on_slash: move |sig: EditorSlashSignal| {

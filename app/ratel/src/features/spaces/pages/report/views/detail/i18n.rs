@@ -7,6 +7,8 @@ translate! {
     breadcrumb_root: { en: "Reports", ko: "보고서" },
     breadcrumb_separator: { en: "/", ko: "/" },
     autosave_just_now: { en: "Auto-saved · just now", ko: "자동 저장됨 · 방금" },
+    autosave_unsaved: { en: "Unsaved changes", ko: "저장 안됨" },
+    autosave_saving: { en: "Saving…", ko: "저장 중…" },
     share_btn: { en: "Share", ko: "공유" },
     export_btn: { en: "Export", ko: "내보내기" },
     pdf_download_btn: { en: "PDF Download", ko: "PDF 다운로드" },

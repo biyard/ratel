@@ -120,10 +120,11 @@
       var m = before.match(/(^|[\s　\xa0])(\/[^\s　\xa0]*)$/);
       if (!m) return null;
       var raw = m[2];
-      // Need at least one non-`/` char after `/` to make a "word" — bare
-      // `/` shouldn't auto-open. Allow trailing `:` so multi-level
-      // tokens like `/data:` qualify.
-      if (raw.length < 2) return null;
+      // A bare `/` also qualifies — the report detail page wants the
+      // command picker to open immediately on `/` rather than only
+      // after the first letter. Trailing `:` for multi-level tokens
+      // (`/data:`, `/data:analyze:`) keeps working since `:` is a
+      // non-whitespace char captured by the regex.
       // Caret position — viewport-relative rect.
       var rect = range.getBoundingClientRect();
       var px = rect.left;
@@ -661,22 +662,116 @@
           .forEach(function (c) { c.classList.remove("re-cell-selected"); });
       }
 
+      // Build the rendered grid for a `<table>` — a 2D matrix of cell
+      // references that accounts for rowSpan/colSpan. Each grid slot
+      // points to the anchor <td>/<th> that visually occupies it, so
+      // a 2x3 merged cell appears as the same reference in all six
+      // slots. Without this, drag-selection / merge math falls back to
+      // `cellIndex` which DOESN'T match visual columns once any cell
+      // has colSpan > 1.
+      function buildTableGrid(table) {
+        var grid = [];
+        var rows = Array.prototype.slice.call(table.rows);
+        for (var r = 0; r < rows.length; r++) {
+          if (!grid[r]) grid[r] = [];
+          var col = 0;
+          var cells = rows[r].cells;
+          for (var i = 0; i < cells.length; i++) {
+            var cell = cells[i];
+            // Skip ahead past columns already occupied by a rowspan
+            // from a previous row.
+            while (grid[r][col]) col++;
+            var rs = cell.rowSpan || 1;
+            var cs = cell.colSpan || 1;
+            for (var rr = 0; rr < rs; rr++) {
+              var gr = r + rr;
+              if (!grid[gr]) grid[gr] = [];
+              for (var cc = 0; cc < cs; cc++) {
+                grid[gr][col + cc] = cell;
+              }
+            }
+            col += cs;
+          }
+        }
+        return grid;
+      }
+
+      function findGridPosForCell(grid, cell) {
+        for (var r = 0; r < grid.length; r++) {
+          if (!grid[r]) continue;
+          for (var c = 0; c < grid[r].length; c++) {
+            if (grid[r][c] === cell) return { r: r, c: c };
+          }
+        }
+        return null;
+      }
+
+      // Bounding rectangle of a cell on the rendered grid — accounts
+      // for the cell's rowSpan / colSpan. Used to expand a selection
+      // rectangle so it never bisects a merged cell.
+      function findGridBoundsForCell(grid, cell) {
+        var minR = -1, maxR = -1, minC = -1, maxC = -1;
+        for (var r = 0; r < grid.length; r++) {
+          if (!grid[r]) continue;
+          for (var c = 0; c < grid[r].length; c++) {
+            if (grid[r][c] !== cell) continue;
+            if (minR === -1 || r < minR) minR = r;
+            if (maxR === -1 || r > maxR) maxR = r;
+            if (minC === -1 || c < minC) minC = c;
+            if (maxC === -1 || c > maxC) maxC = c;
+          }
+        }
+        if (minR === -1) return null;
+        return { minR: minR, maxR: maxR, minC: minC, maxC: maxC };
+      }
+
       function markSelectionRect(startCell, endCell) {
         clearCellSelection();
         if (!startCell || !endCell) return;
         var table = startCell.closest("table");
         if (!table || endCell.closest("table") !== table) return;
-        var rows = Array.prototype.slice.call(table.rows);
-        var s = { r: rows.indexOf(startCell.parentNode), c: Array.prototype.indexOf.call(startCell.parentNode.cells, startCell) };
-        var e2 = { r: rows.indexOf(endCell.parentNode), c: Array.prototype.indexOf.call(endCell.parentNode.cells, endCell) };
-        var minR = Math.min(s.r, e2.r), maxR = Math.max(s.r, e2.r);
-        var minC = Math.min(s.c, e2.c), maxC = Math.max(s.c, e2.c);
-        for (var rr = minR; rr <= maxR; rr++) {
-          var rrow = rows[rr];
-          if (!rrow) continue;
-          for (var cc = minC; cc <= maxC; cc++) {
-            var ce = rrow.cells[cc];
-            if (ce) ce.classList.add("re-cell-selected");
+        // Use the rendered grid so dragging between rows ALWAYS picks
+        // up the same visual columns, even when a row contains merged
+        // cells. The cellIndex-based path used `parentNode.cells` which
+        // counts each <td> as one column regardless of colSpan — a row
+        // beneath a 2-col merged cell would line up with the wrong
+        // physical column.
+        var grid = buildTableGrid(table);
+        var sp = findGridPosForCell(grid, startCell);
+        var ep = findGridPosForCell(grid, endCell);
+        if (!sp || !ep) return;
+        var minR = Math.min(sp.r, ep.r), maxR = Math.max(sp.r, ep.r);
+        var minC = Math.min(sp.c, ep.c), maxC = Math.max(sp.c, ep.c);
+        // Expand the rectangle so that any merged cell partially
+        // covered by it is fully included — otherwise the visible
+        // selection rectangle slices through merged cells, which is
+        // both ugly and impossible to merge cleanly afterwards.
+        var changed = true;
+        while (changed) {
+          changed = false;
+          for (var rr = minR; rr <= maxR; rr++) {
+            if (!grid[rr]) continue;
+            for (var cc = minC; cc <= maxC; cc++) {
+              var cell = grid[rr][cc];
+              if (!cell) continue;
+              var bounds = findGridBoundsForCell(grid, cell);
+              if (!bounds) continue;
+              if (bounds.minR < minR) { minR = bounds.minR; changed = true; }
+              if (bounds.maxR > maxR) { maxR = bounds.maxR; changed = true; }
+              if (bounds.minC < minC) { minC = bounds.minC; changed = true; }
+              if (bounds.maxC > maxC) { maxC = bounds.maxC; changed = true; }
+            }
+          }
+        }
+        // Mark each unique anchor cell intersecting the rectangle.
+        var seen = [];
+        for (var rr2 = minR; rr2 <= maxR; rr2++) {
+          if (!grid[rr2]) continue;
+          for (var cc2 = minC; cc2 <= maxC; cc2++) {
+            var c2 = grid[rr2][cc2];
+            if (!c2 || seen.indexOf(c2) !== -1) continue;
+            seen.push(c2);
+            c2.classList.add("re-cell-selected");
           }
         }
       }
@@ -884,14 +979,17 @@
             return;
           }
           case "merge": {
-            // Source for the rectangular range:
-            //   1. preferred: cells the user drag-selected
-            //   2. fallback: Range start/end cells from the current text selection
+            // Pull the user's drag-selection (preferred) or fall back
+            // to the text Range's start/end cells. Either way, the
+            // selection's bounding rectangle is computed on the
+            // RENDERED GRID — `cellIndex` math breaks once any cell
+            // has rowSpan/colSpan, because the same grid column number
+            // points to different `<td>`s across rows.
             var selectedCells = Array.prototype.slice.call(
               editor.querySelectorAll(".re-cell-selected")
             ).filter(function (c) { return c.closest("table") === table; });
             var sCell, eCell;
-            if (selectedCells.length >= 2) {
+            if (selectedCells.length >= 1) {
               sCell = selectedCells[0];
               eCell = selectedCells[selectedCells.length - 1];
             } else {
@@ -902,35 +1000,68 @@
               eCell = findCell(r0.endContainer);
             }
             if (!sCell || !eCell || sCell.closest("table") !== table) return;
-            if (sCell === eCell) return;
-            var sRowIdx = allRows.indexOf(sCell.parentNode);
-            var eRowIdx = allRows.indexOf(eCell.parentNode);
-            var sColIdx = Array.prototype.indexOf.call(sCell.parentNode.cells, sCell);
-            var eColIdx = Array.prototype.indexOf.call(eCell.parentNode.cells, eCell);
-            var minRow = Math.min(sRowIdx, eRowIdx);
-            var maxRow = Math.max(sRowIdx, eRowIdx);
-            var minCol = Math.min(sColIdx, eColIdx);
-            var maxCol = Math.max(sColIdx, eColIdx);
-            var anchor = allRows[minRow].cells[minCol];
-            if (!anchor) return;
-            var collected = [];
-            for (var rr = minRow; rr <= maxRow; rr++) {
-              var rrow = allRows[rr];
-              for (var cc = maxCol; cc >= minCol; cc--) {
-                if (rr === minRow && cc === minCol) continue;
-                var cellToMerge = rrow.cells[cc];
-                if (!cellToMerge) continue;
-                var inner = cellToMerge.innerHTML;
-                if (inner && inner.replace(/&nbsp;|\s/g, "") !== "") {
-                  collected.unshift(inner);
+
+            var mergeGrid = buildTableGrid(table);
+            var sBounds = findGridBoundsForCell(mergeGrid, sCell);
+            var eBounds = findGridBoundsForCell(mergeGrid, eCell);
+            if (!sBounds || !eBounds) return;
+            var minRow = Math.min(sBounds.minR, eBounds.minR);
+            var maxRow = Math.max(sBounds.maxR, eBounds.maxR);
+            var minCol = Math.min(sBounds.minC, eBounds.minC);
+            var maxCol = Math.max(sBounds.maxC, eBounds.maxC);
+
+            // Expand the rectangle so we never bisect a merged cell
+            // that's partially inside it — same fixed-point loop the
+            // drag highlighter uses.
+            var expanded = true;
+            while (expanded) {
+              expanded = false;
+              for (var rr0 = minRow; rr0 <= maxRow; rr0++) {
+                if (!mergeGrid[rr0]) continue;
+                for (var cc0 = minCol; cc0 <= maxCol; cc0++) {
+                  var hit = mergeGrid[rr0][cc0];
+                  if (!hit) continue;
+                  var hb = findGridBoundsForCell(mergeGrid, hit);
+                  if (!hb) continue;
+                  if (hb.minR < minRow) { minRow = hb.minR; expanded = true; }
+                  if (hb.maxR > maxRow) { maxRow = hb.maxR; expanded = true; }
+                  if (hb.minC < minCol) { minCol = hb.minC; expanded = true; }
+                  if (hb.maxC > maxCol) { maxCol = hb.maxC; expanded = true; }
                 }
-                rrow.removeChild(cellToMerge);
+              }
+            }
+
+            var anchor = mergeGrid[minRow][minCol];
+            if (!anchor) return;
+
+            // Collect every unique cell intersecting the rect (excl.
+            // the anchor), in document order, harvest its text, then
+            // remove it from the DOM.
+            var toMerge = [];
+            for (var rr = minRow; rr <= maxRow; rr++) {
+              if (!mergeGrid[rr]) continue;
+              for (var cc = minCol; cc <= maxCol; cc++) {
+                var c = mergeGrid[rr][cc];
+                if (!c || c === anchor) continue;
+                if (toMerge.indexOf(c) === -1) toMerge.push(c);
+              }
+            }
+            if (toMerge.length === 0) return;
+            var collected = [];
+            for (var mi = 0; mi < toMerge.length; mi++) {
+              var cellToMerge = toMerge[mi];
+              var inner = cellToMerge.innerHTML;
+              if (inner && inner.replace(/&nbsp;|\s/g, "") !== "") {
+                collected.push(inner);
+              }
+              if (cellToMerge.parentNode) {
+                cellToMerge.parentNode.removeChild(cellToMerge);
               }
             }
             var rs = maxRow - minRow + 1;
             var cs = maxCol - minCol + 1;
-            if (rs > 1) anchor.rowSpan = rs;
-            if (cs > 1) anchor.colSpan = cs;
+            if (rs > 1) anchor.rowSpan = rs; else anchor.removeAttribute("rowspan");
+            if (cs > 1) anchor.colSpan = cs; else anchor.removeAttribute("colspan");
             if (collected.length > 0) {
               var anchorInner = anchor.innerHTML;
               if (anchorInner && anchorInner.replace(/&nbsp;|\s/g, "") !== "") {

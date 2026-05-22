@@ -1,4 +1,5 @@
 use super::i18n::ReportDetailTranslate;
+use crate::features::spaces::pages::report::hooks::SaveStatus;
 use crate::features::spaces::pages::report::*;
 use crate::*;
 
@@ -28,6 +29,11 @@ pub fn TopBar() -> Element {
     let tr: ReportDetailTranslate = use_translate();
     let nav = use_navigator();
     let ctx = use_report_detail_context();
+    let autosave_label = match ctx.save_status() {
+        SaveStatus::Idle | SaveStatus::Saved => tr.autosave_just_now.to_string(),
+        SaveStatus::Unsaved => tr.autosave_unsaved.to_string(),
+        SaveStatus::Saving => tr.autosave_saving.to_string(),
+    };
 
     rsx! {
         div { class: "report-detail__topbar",
@@ -51,7 +57,7 @@ pub fn TopBar() -> Element {
                     span { class: "report-detail__breadcrumb-sep", "{tr.breadcrumb_separator}" }
                     span { class: "report-detail__breadcrumb-current", "{ctx.initial_title()}" }
                 }
-                span { class: "report-detail__autosave", "{tr.autosave_just_now}" }
+                span { class: "report-detail__autosave", "{autosave_label}" }
             }
             div { class: "report-detail__topbar-right",
                 button {

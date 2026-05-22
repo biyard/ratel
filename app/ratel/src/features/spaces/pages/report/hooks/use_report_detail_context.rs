@@ -15,6 +15,22 @@ use crate::*;
 use dioxus::document::eval as dx_eval;
 use regex::Regex;
 
+/// Autosave lifecycle, mirrored from `post_edit`'s `EditorStatus`. Drives
+/// the top-bar label ("자동 저장됨 · 방금" → "저장 안됨" → "저장 중…" →
+/// "저장됨") and is bumped in lockstep with `save_version` so the
+/// debounced effect knows when to actually fire the PATCH.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SaveStatus {
+    Idle,
+    Unsaved,
+    Saving,
+    Saved,
+}
+
+/// How long to wait after the last keystroke before persisting. Matches
+/// `post_edit`'s autosave debounce so the two flows feel identical.
+const AUTOSAVE_DEBOUNCE_SECS: u64 = 3;
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum DetailDrawerTarget {
     Closed,
@@ -111,12 +127,26 @@ pub struct UseReportDetailContext {
     /// Slash-command popup state. `None` means the popup is hidden.
     pub slash: Signal<Option<SlashState>>,
     /// Save the current title/subtitle/body_html back to the server.
-    /// Triggered by the Editor's debounced content-change callback,
-    /// title/subtitle blurs, and chart insert/swap/delete (those last
-    /// three already touch the DOM, so the Editor's `input` event
-    /// fires for free — but we still call `handle_save` explicitly so
-    /// the latest body roundtrips even if the user never blurs).
+    /// No longer wired to per-keystroke callbacks — the autosave effect
+    /// (set up in the provider) watches `save_version` + the edit signals
+    /// and triggers the PATCH at most once every
+    /// `AUTOSAVE_DEBOUNCE_SECS`. Kept exposed so the publish path and
+    /// any future "Save now" affordance can fire a save synchronously.
     pub handle_save: Action<(), ()>,
+    /// Autosave lifecycle. Flips Idle → Unsaved on any edit, Saving →
+    /// Saved (or back to Unsaved on error) once the debounced effect
+    /// settles.
+    pub status: Signal<SaveStatus>,
+    /// Monotonic counter bumped by `mark_unsaved`. The autosave effect
+    /// reads this in its dep set; an old captured value vs. the current
+    /// one is the signal that "another edit landed during the debounce
+    /// window — skip this stale save attempt."
+    pub save_version: Signal<u64>,
+    /// Last persisted (title, subtitle, body_html) snapshot. Used by
+    /// `mark_unsaved` to skip the version bump when an edit was actually
+    /// reverted to the saved state (so the status doesn't flicker to
+    /// Unsaved on a no-op change).
+    pub last_saved: Signal<(String, String, String)>,
 }
 
 impl UseReportDetailContext {
@@ -490,6 +520,33 @@ impl UseReportDetailContext {
         dispatch_delete_chart(chart_id.to_string());
     }
 
+    // -- Autosave ----------------------------------------------------
+
+    pub fn save_status(&self) -> SaveStatus {
+        *self.status.read()
+    }
+
+    /// Called from every input handler. Compares the current edit
+    /// buffers against `last_saved`; if anything actually changed, flips
+    /// status to `Unsaved` and bumps `save_version` so the debounced
+    /// effect picks up the change. A revert-to-saved input is a no-op
+    /// (status stays `Saved`/`Idle`), matching post_edit semantics.
+    pub fn mark_unsaved(&mut self) {
+        let (saved_title, saved_subtitle, saved_body) = self.last_saved.peek().clone();
+        let current_title = self.title.peek().clone();
+        let current_subtitle = self.subtitle.peek().clone();
+        let current_body = self.body_html.peek().clone();
+        if current_title == saved_title
+            && current_subtitle == saved_subtitle
+            && current_body == saved_body
+        {
+            self.status.set(SaveStatus::Saved);
+        } else {
+            self.status.set(SaveStatus::Unsaved);
+            *self.save_version.write() += 1;
+        }
+    }
+
 }
 
 #[track_caller]
@@ -550,6 +607,19 @@ pub fn use_report_detail_context_provider(
     let outline_mode = use_signal(|| OutlineMode::Default);
     let slash = use_signal(|| Option::<SlashState>::None);
 
+    // Autosave bookkeeping. `last_saved` is seeded from the same snapshot
+    // so the very first `mark_unsaved` after mount only flips status when
+    // the user actually diverges from the server value.
+    let status = use_signal(|| SaveStatus::Idle);
+    let save_version = use_signal(|| 0u64);
+    let last_saved = use_signal(move || {
+        (
+            snapshot.title.clone(),
+            snapshot.subtitle.clone(),
+            snapshot.html_contents.clone(),
+        )
+    });
+
     let mut detail_for_save = detail;
     let handle_save = use_action(move || async move {
         let report_id_typed: SpaceReportEntityType = report_id().into();
@@ -570,6 +640,72 @@ pub fn use_report_detail_context_provider(
         Ok::<(), crate::common::Error>(())
     });
 
+    // Debounced autosave — mirrors `post_edit`. Reactive deps (the four
+    // signals) are read on the synchronous prefix so dependency tracking
+    // sees them; the actual work runs in a spawned future that sleeps,
+    // then re-checks `save_version` to detect "another edit landed
+    // during the wait — bail and let the next tick handle it."
+    let mut status_for_effect = status;
+    let mut last_saved_for_effect = last_saved;
+    let mut detail_for_effect = detail;
+    use_effect(move || {
+        let ver = save_version();
+        let current_title = title();
+        let current_subtitle = subtitle();
+        let current_body = body_html();
+        let saved = last_saved();
+        if ver == 0 {
+            return;
+        }
+        let report_id_for_save = report_id;
+        let space_id_for_save = space_id;
+        spawn(async move {
+            crate::common::utils::time::sleep(std::time::Duration::from_secs(
+                AUTOSAVE_DEBOUNCE_SECS,
+            ))
+            .await;
+            // A later edit bumped the version while we were sleeping —
+            // skip this stale attempt; the newer effect run will handle
+            // the latest content.
+            if save_version() != ver {
+                return;
+            }
+            let (saved_title, saved_subtitle, saved_body) = saved;
+            if current_title == saved_title
+                && current_subtitle == saved_subtitle
+                && current_body == saved_body
+            {
+                return;
+            }
+            status_for_effect.set(SaveStatus::Saving);
+            let report_id_typed: SpaceReportEntityType = report_id_for_save().into();
+            let req = crate::features::spaces::pages::report::controllers::UpdateReportRequest {
+                title: Some(current_title.clone()),
+                description: Some(current_subtitle.clone()),
+                blocks: None,
+                status: None,
+                html_contents: Some(current_body.clone()),
+            };
+            match crate::features::spaces::pages::report::controllers::update_report(
+                space_id_for_save(),
+                report_id_typed,
+                req,
+            )
+            .await
+            {
+                Ok(_) => {
+                    last_saved_for_effect.set((current_title, current_subtitle, current_body));
+                    status_for_effect.set(SaveStatus::Saved);
+                    detail_for_effect.restart();
+                }
+                Err(e) => {
+                    crate::error!("report autosave failed: {e:?}");
+                    status_for_effect.set(SaveStatus::Unsaved);
+                }
+            }
+        });
+    });
+
     let ctx = use_context_provider(move || UseReportDetailContext {
         detail,
         title,
@@ -581,6 +717,9 @@ pub fn use_report_detail_context_provider(
         outline_mode,
         slash,
         handle_save,
+        status,
+        save_version,
+        last_saved,
     });
 
     Ok(ctx)
