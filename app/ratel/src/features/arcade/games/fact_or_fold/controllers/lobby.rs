@@ -78,25 +78,22 @@ async fn pick_next_subject(
 ) -> crate::common::Result<Option<FactFoldSubject>> {
     let now = crate::common::utils::time::get_now_timestamp_millis();
 
-    // Status partitions are queried separately because they live in
-    // different GSI3 buckets — we collect candidates from both and
-    // pick the best window match in memory.
+    // Status partitions live in different GSI3 buckets; run both
+    // queries in parallel and pick the best window match in memory.
     let live_opts = FactFoldSubject::opt().limit(50).oldest();
-    let (live, _) = FactFoldSubject::find_by_status(cli, SubjectStatus::Live, live_opts)
-        .await
-        .map_err(|e| {
-            crate::error!("pick_next_subject live query failed: {e}");
-            FactOrFoldError::StorageFailure
-        })?;
-
     let sched_opts = FactFoldSubject::opt().limit(50).oldest();
-    let (sched, _) =
-        FactFoldSubject::find_by_status(cli, SubjectStatus::Scheduled, sched_opts)
-            .await
-            .map_err(|e| {
-                crate::error!("pick_next_subject scheduled query failed: {e}");
-                FactOrFoldError::StorageFailure
-            })?;
+    let (live_res, sched_res) = tokio::join!(
+        FactFoldSubject::find_by_status(cli, SubjectStatus::Live, live_opts),
+        FactFoldSubject::find_by_status(cli, SubjectStatus::Scheduled, sched_opts),
+    );
+    let (live, _) = live_res.map_err(|e| {
+        crate::error!("pick_next_subject live query failed: {e}");
+        FactOrFoldError::StorageFailure
+    })?;
+    let (sched, _) = sched_res.map_err(|e| {
+        crate::error!("pick_next_subject scheduled query failed: {e}");
+        FactOrFoldError::StorageFailure
+    })?;
 
     let candidate = live
         .into_iter()
@@ -189,9 +186,11 @@ pub async fn get_lobby_handler() -> Result<LobbyResponse> {
     let cfg = crate::common::CommonConfig::default();
     let cli = cfg.dynamodb();
 
-    // Independent reads — kick them off in parallel so the four DDB
+    // Independent reads — kick them off in parallel so all five DDB
     // round-trips collapse to one. `current_round` depends on
-    // `lobby.current_round_id` so it's loaded after this join.
+    // `lobby.current_round_id` and `already_played_current` depends
+    // on the round's subject, so those load sequentially after.
+    let user_id_inner = user_inner_id(&user);
     let settings_fut = async { Ok::<_, crate::common::Error>(load_settings_or_default(cli).await) };
     let lobby_fut = async {
         FactFoldLobby::get_or_default(cli).await.map_err(|e| {
@@ -207,8 +206,15 @@ pub async fn get_lobby_handler() -> Result<LobbyResponse> {
         )
     };
     let pick_fut = async { pick_next_subject(cli).await.map(|s| s.is_some()) };
-    let (settings, lobby, arcade_settings, subject_available) =
-        tokio::try_join!(settings_fut, lobby_fut, arcade_fut, pick_fut)?;
+    let stats_fut = async {
+        Ok::<_, crate::common::Error>(
+            FactFoldUserStats::get_or_default(cli, &user_id_inner)
+                .await
+                .unwrap_or_default(),
+        )
+    };
+    let (settings, lobby, arcade_settings, subject_available, user_stats) =
+        tokio::try_join!(settings_fut, lobby_fut, arcade_fut, pick_fut, stats_fut)?;
 
     let mut current_round: Option<RoundResponse> = None;
     let mut already_joined = false;
@@ -229,12 +235,8 @@ pub async fn get_lobby_handler() -> Result<LobbyResponse> {
     // Block matchmaking for users who are already committed elsewhere:
     //   - in-flight round on any subject  → user_stats.current_round_id
     //   - already settled this subject    → FactFoldSubjectPlay marker
-    // Both are surfaced into `can_join` so the UI can disable the
-    // button before the user discovers the error mid-flow.
-    let user_id_inner = user_inner_id(&user);
-    let user_stats = FactFoldUserStats::get_or_default(cli, &user_id_inner)
-        .await
-        .unwrap_or_default();
+    // Both surface into `can_join` so the UI can disable the button
+    // before the user discovers the error mid-flow.
     let has_in_flight_round = user_stats.current_round_id.is_some();
     let already_played_current = match active_subject_id.as_deref() {
         Some(sid) => FactFoldSubjectPlay::exists(cli, &user_id_inner, sid).await?,
@@ -291,8 +293,15 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
             crate::common::Error::from(FactOrFoldError::StorageFailure)
         })
     };
-    let (settings, arcade_settings, chip_balance, mut lobby) =
-        tokio::try_join!(settings_fut, arcade_fut, balance_fut, lobby_fut)?;
+    let stats_fut = async {
+        Ok::<_, crate::common::Error>(
+            FactFoldUserStats::get_or_default(cli, &user_id)
+                .await
+                .unwrap_or_default(),
+        )
+    };
+    let (settings, arcade_settings, chip_balance, mut lobby, user_stats) =
+        tokio::try_join!(settings_fut, arcade_fut, balance_fut, lobby_fut, stats_fut)?;
 
     let buy_in_chips = arcade_settings.default_buy_in_chips;
     if chip_balance < buy_in_chips {
@@ -303,9 +312,6 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
     // of which subject the lobby would pick next. Covers both the
     // "same subject" and "windowed-out mid-round" edge cases that the
     // post-settlement marker alone can't see.
-    let user_stats = FactFoldUserStats::get_or_default(cli, &user_id)
-        .await
-        .unwrap_or_default();
     if user_stats.current_round_id.is_some() {
         return Err(FactOrFoldError::RoundInProgress.into());
     }
