@@ -191,11 +191,13 @@ impl UseReportDetailContext {
     }
 
     pub fn created_relative(&self) -> String {
-        format_relative_kr(self.detail().created_at)
+        let tr: super::super::views::detail::i18n::ReportDetailTranslate = use_translate();
+        format_relative(self.detail().created_at, &tr)
     }
 
     pub fn edited_relative(&self) -> String {
-        format_relative_kr(self.detail().updated_at)
+        let tr: super::super::views::detail::i18n::ReportDetailTranslate = use_translate();
+        format_relative(self.detail().updated_at, &tr)
     }
 
     pub fn analyzes(&self) -> Vec<Analyze> {
@@ -380,12 +382,16 @@ impl UseReportDetailContext {
     }
 
     /// Build the visible option list for the current slash state.
-    /// Returns an empty Vec when no slash popup is active.
+    /// Returns an empty Vec when no slash popup is active. Caller pulls
+    /// the translate set out of the component context (we can't call
+    /// `use_translate` inside this `&self` method because hook order
+    /// guarantees only hold at the top level of a `#[component]`).
     pub fn slash_options(&self) -> Vec<SlashOption> {
         let Some(state) = self.slash.read().clone() else {
             return Vec::new();
         };
-        build_slash_options(&state, &self.detail().analyzes)
+        let tr: super::super::views::detail::i18n::ReportDetailTranslate = use_translate();
+        build_slash_options(&state, &self.detail().analyzes, &tr)
     }
 
     /// Adjust the keyboard-highlighted option (ArrowDown=+1,
@@ -877,7 +883,11 @@ fn parse_source(s: &str) -> Option<ActionSource> {
     }
 }
 
-fn build_slash_options(state: &SlashState, analyzes: &[Analyze]) -> Vec<SlashOption> {
+fn build_slash_options(
+    state: &SlashState,
+    analyzes: &[Analyze],
+    tr: &super::super::views::detail::i18n::ReportDetailTranslate,
+) -> Vec<SlashOption> {
     let q = state.query.to_lowercase();
     match state.level {
         0 => {
@@ -885,7 +895,7 @@ fn build_slash_options(state: &SlashState, analyzes: &[Analyze]) -> Vec<SlashOpt
                 vec![SlashOption {
                     id: "data".to_string(),
                     title: "/data:".to_string(),
-                    meta: "analyze 데이터로 차트 삽입".to_string(),
+                    meta: tr.slash_command_meta.to_string(),
                     action: SlashAction::PickCommand,
                     filters: Vec::new(),
                 }]
@@ -899,7 +909,9 @@ fn build_slash_options(state: &SlashState, analyzes: &[Analyze]) -> Vec<SlashOpt
             .map(|a| SlashOption {
                 id: a.id.clone(),
                 title: a.name.clone(),
-                meta: format!("응답자 {}명", a.respondents),
+                meta: tr
+                    .slash_respondents_fmt
+                    .replace("{n}", &a.respondents.to_string()),
                 action: SlashAction::PickAnalyze {
                     analyze_id: a.id.clone(),
                 },
@@ -930,7 +942,9 @@ fn build_slash_options(state: &SlashState, analyzes: &[Analyze]) -> Vec<SlashOpt
                     SlashOption {
                         id: s.as_token().to_string(),
                         title: label.to_string(),
-                        meta: format!("{}개", analyze.items_for(s).len()),
+                        meta: tr
+                            .slash_items_count_fmt
+                            .replace("{n}", &analyze.items_for(s).len().to_string()),
                         action: SlashAction::PickSource { source: s },
                         filters: Vec::new(),
                     }
@@ -1413,33 +1427,39 @@ fn dispatch_delete_chart(chart_id: String) {
     });
 }
 
-fn format_relative_kr(timestamp_millis: i64) -> String {
+/// Format "Xs ago" relative to now, localised through
+/// `ReportDetailTranslate`. `{n}` in each `time_*_fmt` key gets
+/// replaced with the integer bucket size.
+fn format_relative(
+    timestamp_millis: i64,
+    tr: &super::super::views::detail::i18n::ReportDetailTranslate,
+) -> String {
     let now = crate::common::utils::time::get_now_timestamp_millis();
     let diff = (now - timestamp_millis).max(0);
     if diff < 60_000 {
-        return "방금".to_string();
+        return tr.time_just_now.to_string();
     }
     let mins = diff / 60_000;
     if mins < 60 {
-        return format!("{mins}분 전");
+        return tr.time_minutes_fmt.replace("{n}", &mins.to_string());
     }
     let hours = mins / 60;
     if hours < 24 {
-        return format!("{hours}시간 전");
+        return tr.time_hours_fmt.replace("{n}", &hours.to_string());
     }
     let days = hours / 24;
     if days < 7 {
-        return format!("{days}일 전");
+        return tr.time_days_fmt.replace("{n}", &days.to_string());
     }
     let weeks = days / 7;
     if weeks < 5 {
-        return format!("{weeks}주 전");
+        return tr.time_weeks_fmt.replace("{n}", &weeks.to_string());
     }
     let months = days / 30;
     if months < 12 {
-        return format!("{months}개월 전");
+        return tr.time_months_fmt.replace("{n}", &months.to_string());
     }
     let years = days / 365;
-    format!("{years}년 전")
+    tr.time_years_fmt.replace("{n}", &years.to_string())
 }
 

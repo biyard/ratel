@@ -81,4 +81,52 @@ translate! {
         en: "No items in this analyze for the selected source.",
         ko: "이 분석에는 선택한 소스의 항목이 없습니다.",
     },
+
+    // ── Slash popup ───────────────────────────────────
+    slash_heading_command: { en: "COMMAND", ko: "명령" },
+    slash_heading_analyze: { en: "ANALYZE", ko: "분석" },
+    slash_heading_data_source: { en: "DATA SOURCE", ko: "데이터 소스" },
+    slash_heading_items: { en: "ITEMS", ko: "항목" },
+    slash_pop_hint: {
+        en: "↑↓ Move · ↵ Select · esc Close",
+        ko: "↑↓ 이동 · ↵ 선택 · esc 닫기",
+    },
+    slash_pop_empty: { en: "No matches", ko: "일치하는 항목 없음" },
+    slash_command_meta: {
+        en: "Insert a chart from analyze data",
+        ko: "analyze 데이터로 차트 삽입",
+    },
+    slash_respondents_fmt: { en: "{n} respondents", ko: "응답자 {n}명" },
+    slash_items_count_fmt: { en: "{n} items", ko: "{n}개" },
+
+    // ── Outline chart-type swap ───────────────────────
+    outline_swap_eyebrow: { en: "Chart type", ko: "차트 종류 변경" },
+    outline_swap_close_aria: { en: "Close", ko: "닫기" },
+    outline_swap_hint: {
+        en: "Selecting a type immediately replaces the chart in the body.",
+        ko: "선택 즉시 본문 차트가 교체됩니다",
+    },
+    chart_type_bar_label: { en: "Bar chart", ko: "막대 차트" },
+    chart_type_bar_desc: { en: "Response distribution as bars", ko: "응답 분포를 막대 그래프로" },
+    chart_type_pie_label: { en: "Pie chart", ko: "파이 차트" },
+    chart_type_pie_desc: { en: "Proportions as a pie", ko: "비율을 원형으로" },
+    chart_type_table_label: { en: "Table", ko: "표" },
+    chart_type_table_desc: { en: "Raw aggregate table", ko: "원본 집계 표 형식" },
+    chart_type_lda_label: { en: "LDA Topics", ko: "LDA Topics" },
+    chart_type_lda_desc: { en: "Top keywords per topic", ko: "토픽별 상위 키워드" },
+    chart_type_tfidf_label: { en: "TF-IDF", ko: "TF-IDF" },
+    chart_type_tfidf_desc: { en: "Word importance ranking", ko: "단어 중요도 순위표" },
+    chart_type_network_label: { en: "Network", ko: "Network" },
+    chart_type_network_desc: { en: "Co-occurrence word network", ko: "공출현 단어 네트워크" },
+    chart_type_textlist_label: { en: "Open-ended answers", ko: "주관식 응답" },
+    chart_type_textlist_desc: { en: "Answer list", ko: "응답 목록" },
+
+    // ── Relative time (mirrored from list page) ───────
+    time_just_now: { en: "just now", ko: "방금" },
+    time_minutes_fmt: { en: "{n}m ago", ko: "{n}분 전" },
+    time_hours_fmt: { en: "{n}h ago", ko: "{n}시간 전" },
+    time_days_fmt: { en: "{n}d ago", ko: "{n}일 전" },
+    time_weeks_fmt: { en: "{n}w ago", ko: "{n}주 전" },
+    time_months_fmt: { en: "{n}mo ago", ko: "{n}개월 전" },
+    time_years_fmt: { en: "{n}y ago", ko: "{n}년 전" },
 }
