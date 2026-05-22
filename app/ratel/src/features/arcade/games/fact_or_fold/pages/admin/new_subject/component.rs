@@ -30,6 +30,7 @@ pub fn FactFoldAdminNewSubjectPage() -> Element {
     let reveal_summary = use_signal(String::new);
     let reveal_sources = use_signal(Vec::<RevealSource>::new);
     let scheduled_at_iso = use_signal(String::new); // ISO yyyy-mm-ddTHH:MM (datetime-local)
+    let expires_at_iso = use_signal(String::new); // ISO yyyy-mm-ddTHH:MM (datetime-local)
 
     let mut submitting = use_signal(|| false);
     let mut error_msg = use_signal(|| Option::<String>::None);
@@ -56,6 +57,14 @@ pub fn FactFoldAdminNewSubjectPage() -> Element {
         && source_filled;
 
     let make_request = move |with_schedule: bool| -> Option<CreateSubjectRequest> {
+        // `expires_at_iso` is optional in both paths — empty stays as
+        // `expires_at = 0` (no auto-retire), matching the legacy
+        // behaviour of subjects authored before the time-window model.
+        let expires_ts = if expires_at_iso().is_empty() {
+            0
+        } else {
+            parse_iso_local_to_millis(&expires_at_iso())?
+        };
         let scheduled_ts = if with_schedule {
             parse_iso_local_to_millis(&scheduled_at_iso())?
         } else {
@@ -70,7 +79,7 @@ pub fn FactFoldAdminNewSubjectPage() -> Element {
                 reveal_summary: reveal_summary(),
                 reveal_sources: reveal_sources(),
                 scheduled_at: None,
-                expires_at: 0,
+                expires_at: expires_ts,
             });
         };
         Some(CreateSubjectRequest {
@@ -84,7 +93,7 @@ pub fn FactFoldAdminNewSubjectPage() -> Element {
             reveal_summary: reveal_summary(),
             reveal_sources: reveal_sources(),
             scheduled_at: Some(scheduled_ts),
-            expires_at: 0,
+            expires_at: expires_ts,
         })
     };
 
@@ -233,6 +242,7 @@ pub fn FactFoldAdminNewSubjectPage() -> Element {
                 title: "{tr.section_publish_title}",
                 sub: "{tr.section_publish_sub}",
                 ScheduleField { value: scheduled_at_iso }
+                ExpiresField { value: expires_at_iso }
                 div { class: "ff-new-subject__actions",
                     if let Some(err) = error_msg() {
                         span { class: "ff-new-subject__error", "{err}" }
@@ -481,11 +491,31 @@ fn ScheduleField(value: Signal<String>) -> Element {
             div { class: "ff-new-subject__label", "{tr.schedule_label}" }
             input {
                 class: "ff-new-subject__input",
+                "data-testid": "ff-admin-scheduled-at",
                 r#type: "datetime-local",
                 value: "{value}",
                 oninput: move |e| value.set(e.value()),
             }
             div { class: "ff-new-subject__hint", "{tr.schedule_hint}" }
+        }
+    }
+}
+
+#[component]
+fn ExpiresField(value: Signal<String>) -> Element {
+    let tr: FactFoldAdminNewSubjectTranslate = use_translate();
+    let mut value = value;
+    rsx! {
+        div { class: "ff-new-subject__field",
+            div { class: "ff-new-subject__label", "{tr.expires_label}" }
+            input {
+                class: "ff-new-subject__input",
+                "data-testid": "ff-admin-expires-at",
+                r#type: "datetime-local",
+                value: "{value}",
+                oninput: move |e| value.set(e.value()),
+            }
+            div { class: "ff-new-subject__hint", "{tr.expires_hint}" }
         }
     }
 }
