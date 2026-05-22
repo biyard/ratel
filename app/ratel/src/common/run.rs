@@ -119,10 +119,12 @@ fn serve(app: fn() -> Element) {
 
     let mcp_router = crate::common::mcp::mcp_router();
     let membership_router = crate::features::membership::server::router();
+    let arcade_router = crate::features::arcade::server::router();
     let cross_posting_router = crate::features::cross_posting::server::router();
     let dioxus_router = dioxus::server::router(app)
         .merge(mcp_router)
         .merge(membership_router)
+        .merge(arcade_router)
         .merge(cross_posting_router);
     // CatchPanicLayer turns any panic in the request future into a 500 response
     // instead of letting it propagate up the spawn_pinned worker thread, which
@@ -139,6 +141,25 @@ fn serve(app: fn() -> Element) {
         .layer(axum::middleware::from_fn(log_request));
 
     crate::common::mcp::set_app_router(app.clone());
+
+    // Register arcade realtime channel handlers with the per-process
+    // global hub. Each game registers its own channels here so the
+    // SSE endpoint can resolve them by kind. Idempotent — re-registers
+    // overwrite, which is what tests rely on for mock channels.
+    // `serve` is synchronous (called before tokio main spawns the
+    // server), so we block on the registration through whichever
+    // runtime is available.
+    if let Ok(handle) = tokio::runtime::Handle::try_current() {
+        handle.block_on(
+            crate::features::arcade::games::fact_or_fold::realtime::register_channels(),
+        );
+    } else {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("tokio runtime build for channel registration");
+        rt.block_on(crate::features::arcade::games::fact_or_fold::realtime::register_channels());
+    }
 
     #[cfg(not(feature = "lambda"))]
     {

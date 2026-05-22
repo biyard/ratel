@@ -40,6 +40,11 @@ pub fn EssenceBreakdown() -> Element {
                     }
                     EssenceSourceKind::Poll => counts.poll += 1,
                     EssenceSourceKind::Quiz => counts.quiz += 1,
+                    // FOF rationale shares the breakdown chip with
+                    // posts in v1 — a dedicated chip lands when
+                    // the FOF source kind appears on the Essence
+                    // House design.
+                    EssenceSourceKind::FactFoldRationale => counts.post += 1,
                 }
             }
             return counts;

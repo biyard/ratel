@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>관리자 · 결과 / 통계 · 라텔 오락실</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    />
+    <link rel="stylesheet" href="shared.css" />
+    <link rel="stylesheet" href="admin-shared.css" />
+    <style>
+      .stat-grid {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 18px;
+        align-items: start;
+      }
+
+      @media (max-width: 1024px) {
+        .stat-grid { grid-template-columns: 1fr; }
+      }
+
+      /* 누적 정답률 분포 막대 */
+      .accuracy-bars {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .accuracy-row {
+        display: grid;
+        grid-template-columns: 60px 1fr 50px;
+        gap: 12px;
+        align-items: center;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+      }
+      .accuracy-bin {
+        color: var(--text-muted);
+      }
+      .accuracy-bar-bg {
+        height: 14px;
+        background: var(--surface-3);
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        overflow: hidden;
+      }
+      .accuracy-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--gold), #ff8a00);
+        border-radius: 7px;
+      }
+      .accuracy-count {
+        color: var(--text-primary);
+        text-align: right;
+      }
+
+      /* 토픽 정답률 박스 */
+      .topic-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .topic-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        font-size: 13px;
+      }
+      .topic-row .topic-name {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .topic-row .topic-acc {
+        font-family: "JetBrains Mono", monospace;
+        color: var(--gold);
+        font-weight: 700;
+      }
+      .topic-row.cold .topic-acc { color: var(--pink); }
+      .topic-row .topic-bar {
+        grid-column: 1 / -1;
+        height: 4px;
+        background: var(--surface-3);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .topic-row .topic-bar-fill {
+        height: 100%;
+        background: var(--gold);
+      }
+      .topic-row.cold .topic-bar-fill { background: var(--pink); }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+
+      <div class="top-bar">
+        <div class="brand">
+          <div class="brand-logo">R</div>
+          <div class="brand-text">
+            <div class="brand-name">RATEL ARCADE</div>
+            <div class="brand-sub">관리자 · 결과 / 통계</div>
+          </div>
+        </div>
+        <nav class="top-nav" role="tablist">
+          <button class="top-nav-btn" onclick="window.location.href='lobby.html'">
+            <span class="top-nav-btn-icon">⌂</span><span>오락실</span>
+          </button>
+          <button class="top-nav-btn" onclick="window.location.href='round-stage.html'">
+            <span class="top-nav-btn-icon">⏵</span><span>라운드 미리보기</span>
+          </button>
+        </nav>
+        <div class="user-stats">
+          <span class="admin-tag">⚐ ADMIN</span>
+          <div class="avatar">DY</div>
+        </div>
+      </div>
+
+      <div class="layout">
+
+      <aside class="sidebar">
+        <nav class="admin-nav">
+          <div class="admin-nav-label">콘텐츠</div>
+          <button class="admin-nav-item" onclick="window.location.href='admin-headlines.html'">
+            <span class="admin-nav-icon">📰</span>
+            <span>헤드라인</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-schedule.html'">
+            <span class="admin-nav-icon">📅</span>
+            <span>라운드 스케줄</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-insiders.html'">
+            <span class="admin-nav-icon">⚐</span>
+            <span>인사이더 풀</span>
+          </button>
+
+          <div class="admin-nav-divider"></div>
+          <div class="admin-nav-label">운영</div>
+          <button class="admin-nav-item" data-active="true" onclick="window.location.href='admin-stats.html'">
+            <span class="admin-nav-icon">📊</span>
+            <span>결과 / 통계</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-reports.html'">
+            <span class="admin-nav-icon">🚩</span>
+            <span>사용자 신고</span>
+          </button>
+          <button class="admin-nav-item" onclick="window.location.href='admin-settings.html'">
+            <span class="admin-nav-icon">⚙</span>
+            <span>설정</span>
+          </button>
+        </nav>
+      </aside>
+
+      <div class="view-stack">
+
+        <div class="admin-page-head">
+          <div>
+            <h1>결과 / 통계</h1>
+            <p>지난 라운드의 정답률, 참여 추이, 토픽별 난이도 보정 자료.</p>
+          </div>
+          <div class="admin-page-actions">
+            <div class="filter-tabs" style="padding: 3px">
+              <button class="filter-tab">7일</button>
+              <button class="filter-tab" data-active="true">30일</button>
+              <button class="filter-tab">90일</button>
+              <button class="filter-tab">전체</button>
+            </div>
+            <button class="btn btn-ghost">CSV 내보내기</button>
+          </div>
+        </div>
+
+        <!-- KPI -->
+        <div class="kpi-grid">
+          <div class="kpi-tile">
+            <div class="kpi-label">총 라운드</div>
+            <div class="kpi-value">142</div>
+            <div class="kpi-delta up">+30 30일</div>
+          </div>
+          <div class="kpi-tile">
+            <div class="kpi-label">평균 참여</div>
+            <div class="kpi-value">3.8 / 4</div>
+            <div class="kpi-delta up">+0.2</div>
+          </div>
+          <div class="kpi-tile">
+            <div class="kpi-label">평균 정답률</div>
+            <div class="kpi-value gold">61%</div>
+            <div class="kpi-delta down">−3%p</div>
+          </div>
+          <div class="kpi-tile">
+            <div class="kpi-label">인사이더 승률</div>
+            <div class="kpi-value pink">68%</div>
+            <div class="kpi-delta up">+5%p</div>
+          </div>
+        </div>
+
+        <div class="stat-grid">
+
+          <!-- LEFT: 최근 결과 테이블 -->
+          <div class="panel" style="padding: 0; overflow: hidden">
+            <div class="panel-head" style="padding: 14px 18px 0">
+              <span class="panel-title">최근 라운드 결과</span>
+              <span class="panel-sub">정답률 + 인사이더 효과</span>
+            </div>
+            <table class="admin-table" style="margin-top: 8px">
+              <thead>
+                <tr>
+                  <th>라운드</th>
+                  <th>정답</th>
+                  <th>참여</th>
+                  <th>정답률</th>
+                  <th>인사이더</th>
+                  <th>마음 돌림</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="col-mono">r-2026-05-13</td>
+                  <td><span class="status-badge real">REAL</span></td>
+                  <td class="col-num">4 / 4</td>
+                  <td class="col-num" style="color: var(--gold)">75%</td>
+                  <td class="col-num">+340 RP</td>
+                  <td class="col-num">2명</td>
+                </tr>
+                <tr>
+                  <td class="col-mono">r-2026-05-12</td>
+                  <td><span class="status-badge fake">FAKE</span></td>
+                  <td class="col-num">4 / 4</td>
+                  <td class="col-num" style="color: var(--pink)">50%</td>
+                  <td class="col-num">−180 RP</td>
+                  <td class="col-num">1명</td>
+                </tr>
+                <tr>
+                  <td class="col-mono">r-2026-05-11</td>
+                  <td><span class="status-badge fake">FAKE</span></td>
+                  <td class="col-num">4 / 4</td>
+                  <td class="col-num" style="color: var(--gold)">75%</td>
+                  <td class="col-num">+840 RP</td>
+                  <td class="col-num">3명</td>
+                </tr>
+                <tr>
+                  <td class="col-mono">r-2026-05-10</td>
+                  <td><span class="status-badge real">REAL</span></td>
+                  <td class="col-num">3 / 4</td>
+                  <td class="col-num" style="color: var(--gold)">66%</td>
+                  <td class="col-num">+120 RP</td>
+                  <td class="col-num">1명</td>
+                </tr>
+                <tr>
+                  <td class="col-mono">r-2026-05-09</td>
+                  <td><span class="status-badge real">REAL</span></td>
+                  <td class="col-num">4 / 4</td>
+                  <td class="col-num" style="color: var(--gold)">100%</td>
+                  <td class="col-num col-muted">—</td>
+                  <td class="col-num col-muted">0명</td>
+                </tr>
+                <tr>
+                  <td class="col-mono">r-2026-05-08</td>
+                  <td><span class="status-badge fake">FAKE</span></td>
+                  <td class="col-num">4 / 4</td>
+                  <td class="col-num" style="color: var(--pink)">25%</td>
+                  <td class="col-num">+960 RP</td>
+                  <td class="col-num">3명</td>
+                </tr>
+                <tr>
+                  <td class="col-mono">r-2026-05-07</td>
+                  <td><span class="status-badge fake">FAKE</span></td>
+                  <td class="col-num">4 / 4</td>
+                  <td class="col-num" style="color: var(--gold)">75%</td>
+                  <td class="col-num">+420 RP</td>
+                  <td class="col-num">2명</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- RIGHT: 분포 + 토픽 -->
+          <div style="display: flex; flex-direction: column; gap: 18px">
+
+            <div class="panel">
+              <div class="panel-head">
+                <span class="panel-title">정답률 분포 (라운드)</span>
+                <span class="panel-sub">30일 · 142 라운드</span>
+              </div>
+              <div class="accuracy-bars">
+                <div class="accuracy-row">
+                  <span class="accuracy-bin">100%</span>
+                  <div class="accuracy-bar-bg"><div class="accuracy-bar-fill" style="width: 22%"></div></div>
+                  <span class="accuracy-count">31</span>
+                </div>
+                <div class="accuracy-row">
+                  <span class="accuracy-bin">75%</span>
+                  <div class="accuracy-bar-bg"><div class="accuracy-bar-fill" style="width: 38%"></div></div>
+                  <span class="accuracy-count">54</span>
+                </div>
+                <div class="accuracy-row">
+                  <span class="accuracy-bin">50%</span>
+                  <div class="accuracy-bar-bg"><div class="accuracy-bar-fill" style="width: 28%"></div></div>
+                  <span class="accuracy-count">40</span>
+                </div>
+                <div class="accuracy-row">
+                  <span class="accuracy-bin">25%</span>
+                  <div class="accuracy-bar-bg"><div class="accuracy-bar-fill" style="width: 11%"></div></div>
+                  <span class="accuracy-count">15</span>
+                </div>
+                <div class="accuracy-row">
+                  <span class="accuracy-bin">0%</span>
+                  <div class="accuracy-bar-bg"><div class="accuracy-bar-fill" style="width: 1%"></div></div>
+                  <span class="accuracy-count">2</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head">
+                <span class="panel-title">카테고리별 정답률</span>
+                <span class="panel-sub">상·하위</span>
+              </div>
+              <div class="topic-list">
+                <div class="topic-row">
+                  <div class="topic-name">정책 <span class="pill">17건</span></div>
+                  <div class="topic-acc">78%</div>
+                  <div class="topic-bar"><div class="topic-bar-fill" style="width: 78%"></div></div>
+                </div>
+                <div class="topic-row">
+                  <div class="topic-name">행정 <span class="pill">12건</span></div>
+                  <div class="topic-acc">71%</div>
+                  <div class="topic-bar"><div class="topic-bar-fill" style="width: 71%"></div></div>
+                </div>
+                <div class="topic-row">
+                  <div class="topic-name">테크 <span class="pill">22건</span></div>
+                  <div class="topic-acc">63%</div>
+                  <div class="topic-bar"><div class="topic-bar-fill" style="width: 63%"></div></div>
+                </div>
+                <div class="topic-row cold">
+                  <div class="topic-name">경제 <span class="pill">28건</span></div>
+                  <div class="topic-acc">48%</div>
+                  <div class="topic-bar"><div class="topic-bar-fill" style="width: 48%"></div></div>
+                </div>
+                <div class="topic-row cold">
+                  <div class="topic-name">금융 <span class="pill">11건</span></div>
+                  <div class="topic-acc">36%</div>
+                  <div class="topic-bar"><div class="topic-bar-fill" style="width: 36%"></div></div>
+                </div>
+              </div>
+              <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted); line-height: 1.6">
+                <strong style="color: var(--pink)">금융·경제</strong>가 가장 어려움 — 이 카테고리 헤드라인은 난이도 ★★★★ 이상 권장.
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      </div>
+    </div>
+
+    <script>
+      document.querySelectorAll(".filter-tab").forEach((t) => {
+        t.addEventListener("click", () => {
+          document.querySelectorAll(".filter-tab").forEach((x) => x.removeAttribute("data-active"));
+          t.setAttribute("data-active", "true");
+        });
+      });
+    </script>
+    <script src="theme-toggle.js" defer></script>
+  </body>
+</html>

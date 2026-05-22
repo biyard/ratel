@@ -19,15 +19,29 @@ use crate::*;
 
 #[component]
 pub fn TeamSubTeamBroadcastComposePage(username: String) -> Element {
-    render_compose(username, None)
+    render_compose(username, None, None)
 }
 
 #[component]
 pub fn TeamSubTeamBroadcastEditPage(username: String, announcement_id: String) -> Element {
-    render_compose(username, Some(announcement_id))
+    render_compose(username, Some(announcement_id), None)
 }
 
-fn render_compose(username: String, announcement_id: Option<String>) -> Element {
+/// Direct-to-one-sub-team composer. Same editor, autosave, and
+/// Draft → Publish 2-step flow as the broadcast composer — the
+/// difference is the publish fanout writes one Post to the target
+/// child's feed instead of every recognized sub-team.
+#[component]
+pub fn TeamSubTeamDirectComposePage(username: String, sub_team_id: String) -> Element {
+    let target = TeamPartition(sub_team_id);
+    render_compose(username, None, Some(target))
+}
+
+fn render_compose(
+    username: String,
+    announcement_id: Option<String>,
+    target_child_team_id: Option<TeamPartition>,
+) -> Element {
     let tr: SubTeamTranslate = use_translate();
 
     let username_for_load = username.clone();
@@ -50,6 +64,12 @@ fn render_compose(username: String, announcement_id: Option<String>) -> Element 
     use_context_provider(|| team_id);
     let announcement_id_for_ctx = announcement_id.clone();
     use_context_provider(move || announcement_id_for_ctx.clone());
+    // Seeds `target_child_team_id` inside `use_sub_team_broadcast_compose`.
+    // Provided unconditionally (as `Option<TeamPartition>`) so the hook's
+    // `try_consume_context::<Option<TeamPartition>>()` always finds a value
+    // and the broadcast / direct branches diverge only on `Some` vs `None`.
+    let target_for_ctx = target_child_team_id.clone();
+    use_context_provider(move || target_for_ctx.clone());
 
     rsx! {
         SeoMeta { title: "{tr.broadcast_compose}" }
@@ -75,12 +95,17 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
         mut attachments,
         mut space_enabled,
         space_type,
+        target_child_team_id,
         mut draft_status,
         mut last_saved_at,
         mut handle_save_new,
         mut handle_save_existing,
         ..
     } = ctx;
+    // `is_direct` is fixed for the composer's lifetime (set by the page
+    // wrapper). Used both for the create payload and for the topbar copy
+    // ("Send to one sub-team" vs the default broadcast).
+    let is_direct: bool = target_child_team_id().is_some();
 
     // Local-only signal for the tag-input field. `tags` is the committed
     // chip list; this holds whatever the user is typing before Enter.
@@ -165,6 +190,7 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                             attachments: at,
                             space_enabled: se,
                             space_type: st,
+                            target_child_team_id: target_child_team_id(),
                         });
                     }
                 }
@@ -193,12 +219,19 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
     let username_for_publish = username.clone();
     let username_for_discard = username.clone();
     let _ = username;
+    // Direct messages navigate back to the sub-team detail page they
+    // were composed from; broadcasts return to the management list. The
+    // target id is captured here (rather than inside the async block) so
+    // the closure doesn't have to read the signal across the await.
+    let post_publish_target: Option<TeamPartition> = target_child_team_id();
+    let post_publish_target_for_discard = post_publish_target.clone();
     // Await the publish HTTP request BEFORE navigating. Using `Action::call`
     // here would detach the future from this component; the nav.push that
     // follows would then unmount the component and drop the in-flight
     // request, leaving the draft stuck in `작성중 · DRAFTS`.
     let publish = use_callback(move |_| {
         let username = username_for_publish.clone();
+        let target = post_publish_target.clone();
         spawn(async move {
             if let Some(id) = announcement_id() {
                 if let Err(e) = ctx.publish_announcement(id).await {
@@ -206,12 +239,19 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                     return;
                 }
             }
-            nav.push(Route::TeamSubTeamManagementPage { username });
+            match target {
+                Some(child) => nav.push(Route::TeamSubTeamDetailPage {
+                    username,
+                    sub_team_id: child.0,
+                }),
+                None => nav.push(Route::TeamSubTeamManagementPage { username }),
+            };
         });
     });
 
     let discard = move |_| {
         let username = username_for_discard.clone();
+        let target = post_publish_target_for_discard.clone();
         async move {
             if let Some(id) = announcement_id() {
                 if let Err(e) = ctx.delete_announcement(id).await {
@@ -219,7 +259,13 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                     return;
                 }
             }
-            nav.push(Route::TeamSubTeamManagementPage { username });
+            match target {
+                Some(child) => nav.push(Route::TeamSubTeamDetailPage {
+                    username,
+                    sub_team_id: child.0,
+                }),
+                None => nav.push(Route::TeamSubTeamManagementPage { username }),
+            };
         }
     };
 
@@ -249,8 +295,24 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                         lucide_dioxus::ChevronLeft { class: "w-4 h-4 [&>path]:stroke-current" }
                     }
                     div { class: "topbar-title",
-                        span { class: "topbar-title__eyebrow", "{tr.broadcast_compose}" }
-                        span { class: "topbar-title__main", "{tr.broadcast_compose}" }
+                        // Direct-to-one-sub-team composer shows the
+                        // "Write to this sub-team" copy in both the
+                        // eyebrow and the main row so it visibly diverges
+                        // from the broadcast flow.
+                        span { class: "topbar-title__eyebrow",
+                            if is_direct {
+                                "{tr.direct_compose}"
+                            } else {
+                                "{tr.broadcast_compose}"
+                            }
+                        }
+                        span { class: "topbar-title__main",
+                            if is_direct {
+                                "{tr.direct_compose}"
+                            } else {
+                                "{tr.broadcast_compose}"
+                            }
+                        }
                     }
                 }
                 div { class: "arena-topbar__right",
@@ -309,9 +371,7 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                 }
 
                 // ── Right panel ───────────────────────────────────
-                aside {
-                    class: "side-panel",
-                    "data-open": drawer_open(),
+                aside { class: "side-panel", "data-open": drawer_open(),
                     // Mobile drawer head — handle + title + close button.
                     // Hidden on desktop via base `.side-panel__head { display: none }`.
                     div { class: "side-panel__head",
@@ -328,8 +388,18 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                                 stroke_width: "2",
                                 stroke_linecap: "round",
                                 stroke_linejoin: "round",
-                                line { x1: "18", y1: "6", x2: "6", y2: "18" }
-                                line { x1: "6", y1: "6", x2: "18", y2: "18" }
+                                line {
+                                    x1: "18",
+                                    y1: "6",
+                                    x2: "6",
+                                    y2: "18",
+                                }
+                                line {
+                                    x1: "6",
+                                    y1: "6",
+                                    x2: "18",
+                                    y2: "18",
+                                }
                             }
                         }
                     }
@@ -682,15 +752,60 @@ fn ComposeForm(username: String, team_display: String, team_handle: String) -> E
                             stroke_width: "2",
                             stroke_linecap: "round",
                             stroke_linejoin: "round",
-                            line { x1: "4", y1: "21", x2: "4", y2: "14" }
-                            line { x1: "4", y1: "10", x2: "4", y2: "3" }
-                            line { x1: "12", y1: "21", x2: "12", y2: "12" }
-                            line { x1: "12", y1: "8", x2: "12", y2: "3" }
-                            line { x1: "20", y1: "21", x2: "20", y2: "16" }
-                            line { x1: "20", y1: "12", x2: "20", y2: "3" }
-                            line { x1: "1", y1: "14", x2: "7", y2: "14" }
-                            line { x1: "9", y1: "8", x2: "15", y2: "8" }
-                            line { x1: "17", y1: "16", x2: "23", y2: "16" }
+                            line {
+                                x1: "4",
+                                y1: "21",
+                                x2: "4",
+                                y2: "14",
+                            }
+                            line {
+                                x1: "4",
+                                y1: "10",
+                                x2: "4",
+                                y2: "3",
+                            }
+                            line {
+                                x1: "12",
+                                y1: "21",
+                                x2: "12",
+                                y2: "12",
+                            }
+                            line {
+                                x1: "12",
+                                y1: "8",
+                                x2: "12",
+                                y2: "3",
+                            }
+                            line {
+                                x1: "20",
+                                y1: "21",
+                                x2: "20",
+                                y2: "16",
+                            }
+                            line {
+                                x1: "20",
+                                y1: "12",
+                                x2: "20",
+                                y2: "3",
+                            }
+                            line {
+                                x1: "1",
+                                y1: "14",
+                                x2: "7",
+                                y2: "14",
+                            }
+                            line {
+                                x1: "9",
+                                y1: "8",
+                                x2: "15",
+                                y2: "8",
+                            }
+                            line {
+                                x1: "17",
+                                y1: "16",
+                                x2: "23",
+                                y2: "16",
+                            }
                         }
                         "{tr.sub_team_options}"
                     }

@@ -125,13 +125,7 @@ pub fn Home(username: ReadSignal<String>) -> Element {
                 Ok(_) => {
                     toast.info(tr.save_success);
                     team.restart();
-                    // Refresh team switcher dropdown so the new name/logo
-                    // appear immediately across the topbar/dropdown.
-                    if let Ok(resp) =
-                        crate::features::social::controllers::get_user_teams_handler(None).await
-                    {
-                        team_ctx.set_teams(resp.items);
-                    }
+                    consume_team_context().teams.restart();
                     // Force the arena layout to refetch the team profile
                     // so the topbar title/logo update without a page reload.
                     refresh_trigger.with_mut(|n| *n = n.wrapping_add(1));

@@ -41881,7 +41881,11 @@ body.comments-panel-resizing {
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  /* body is globally overflow:hidden+100dvh, so admin pages claim
+   * their own scroll container here. ::before stays position:fixed so
+   * the radial wash sits on the viewport, not the scrolled box. */
+  height: 100dvh;
+  overflow-y: auto;
   background: var(--bg-void);
   color: var(--text-primary);
   font-family: var(--font-body, system-ui, -apple-system, sans-serif);
@@ -41936,15 +41940,6 @@ body.comments-panel-resizing {
   width: 14px;
   height: 14px;
   stroke-width: 2.4;
-}
-
-.admin-arena__title {
-  font-family: var(--font-display, "Orbitron", sans-serif);
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--accent-gold);
 }
 
 .admin-arena__container {
@@ -45213,6 +45208,2866 @@ body.comments-panel-resizing {
   }
 }
 
+/* === src/features/fact_or_fold/pages/admin/layout (FactFoldAdminLayout) === */
+
+/* Sub-layout for /admin/fact-or-fold/*. Sits inside .admin-arena and
+   provides the arcade-themed brand row + 5-tab navigation. Vars are
+   scoped so colors don't leak into other admin pages. */
+.ff-admin-arena {
+  /* Light theme reads at a glance: opaque card, ~2× more opaque
+   * border. Dark theme keeps the original frosted-glass look. */
+  --ff-bg-glass: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, #ffffff);
+  --ff-border: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(10, 10, 30, 0.14));
+  --ff-text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
+  --ff-text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+  --ff-pink: #db2780;
+  --ff-gold: #fcb300;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 24px 32px;
+}
+
+.ff-admin-arena__topbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 18px;
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 14px;
+  backdrop-filter: blur(14px);
+  flex-wrap: wrap;
+}
+
+.ff-admin-arena__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ff-admin-arena__brand-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #fcb300 0%, #db2780 100%);
+  color: #06060e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.ff-admin-arena__brand-name {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  /* Falls back to `.admin-arena --text-primary` when the brand is
+   * rendered outside `.ff-admin-arena` (the generic /admin layout
+   * reuses this brand block without the ff-* variable scope). */
+  color: var(--ff-text-primary, var(--text-primary));
+}
+
+.ff-admin-arena__brand-sub {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  color: var(--ff-text-muted);
+}
+
+.ff-admin-arena__tabs {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  flex-wrap: wrap;
+  margin-left: 12px;
+}
+
+.ff-admin-arena__tab {
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ff-text-muted);
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.ff-admin-arena__tab:hover {
+  color: var(--ff-text-primary);
+}
+
+.ff-admin-arena__tab[aria-selected="true"] {
+  color: var(--ff-gold);
+  background: rgba(252, 179, 0, 0.08);
+  border-color: rgba(252, 179, 0, 0.3);
+}
+
+.ff-admin-arena__main {
+  min-height: 60vh;
+}
+
+/* Mobile (≤720px) — keep the admin tab row horizontal even on narrow
+ * viewports. The default `flex-wrap: wrap` was stacking the five tabs
+ * into two rows under ~500px and pushing the CTA below them; switch
+ * to a nowrap row that scrolls horizontally instead. The CTA stays
+ * pinned to the right via `margin-left: auto`. */
+@media (max-width: 720px) {
+  .ff-admin-arena {
+    padding: 12px 14px 24px;
+    gap: 12px;
+  }
+  .ff-admin-arena__topbar {
+    gap: 10px;
+    padding: 10px 12px;
+  }
+  .ff-admin-arena__brand-sub {
+    display: none;
+  }
+  .ff-admin-arena__tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-left: 6px;
+    /* Hide the scrollbar so the tab strip stays clean. The row stays
+     * scrollable via touch/trackpad. */
+    scrollbar-width: none;
+  }
+  .ff-admin-arena__tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .ff-admin-arena__tab {
+    flex-shrink: 0;
+    padding: 8px 10px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+  }
+}
+
+/* === src/features/fact_or_fold/pages/admin/(stub pages) === */
+
+.ff-admin-page {
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 14px;
+  backdrop-filter: blur(14px);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ff-admin-page__title {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  margin: 0;
+  color: var(--ff-text-primary);
+}
+
+.ff-admin-page__hint {
+  font-size: 13px;
+  color: var(--ff-text-muted);
+  margin: 0;
+}
+
+.ff-admin-page--placeholder {
+  border-style: dashed;
+}
+
+/* === src/features/fact_or_fold/pages/admin/settings === */
+
+.ff-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ff-settings__section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ff-settings__section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 0 4px;
+}
+
+.ff-settings__section-title {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--ff-text-primary);
+}
+
+.ff-settings__section-sub {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  color: var(--ff-text-muted);
+}
+
+.ff-settings__panel {
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 14px;
+  backdrop-filter: blur(14px);
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ff-settings__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 18px;
+  border-top: 1px solid var(--ff-border);
+}
+.ff-settings__row:first-child {
+  border-top: none;
+}
+
+.ff-settings__row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ff-settings__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ff-text-primary);
+}
+
+.ff-settings__desc {
+  font-size: 12px;
+  color: var(--ff-text-muted);
+  line-height: 1.4;
+}
+
+.ff-settings__control {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ff-settings__input {
+  width: 110px;
+  padding: 8px 10px;
+  border: 1px solid var(--ff-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--ff-text-primary);
+  border-radius: 6px;
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 13px;
+  text-align: right;
+  outline: none;
+}
+.ff-settings__input:focus {
+  border-color: var(--ff-gold);
+}
+
+.ff-settings__suffix {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  color: var(--ff-text-muted);
+  letter-spacing: 0.04em;
+}
+
+.ff-settings__note {
+  margin: 0;
+  padding: 14px 18px;
+  font-size: 12px;
+  color: var(--ff-text-muted);
+  line-height: 1.5;
+}
+
+.ff-settings__deferred {
+  margin-top: 4px;
+  padding: 14px 18px;
+  border: 1px dashed var(--ff-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--ff-text-muted);
+  font-size: 12px;
+}
+.ff-settings__deferred strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ff-text-primary);
+  font-size: 12px;
+}
+.ff-settings__deferred ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ff-settings__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.ff-settings__error {
+  color: #ff4d6d;
+  font-size: 12px;
+}
+
+.ff-settings__saved {
+  color: #5fd189;
+  font-size: 12px;
+}
+
+/* === src/features/fact_or_fold/pages/admin/subjects === */
+
+.ff-subjects {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* KPI strip */
+.ff-subjects__kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.ff-subjects__kpi-tile {
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ff-subjects__kpi-label {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ff-text-muted);
+}
+
+.ff-subjects__kpi-value {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--ff-text-primary);
+}
+.ff-subjects__kpi-value[data-accent="pink"] { color: var(--ff-pink); }
+.ff-subjects__kpi-value[data-accent="gold"] { color: var(--ff-gold); }
+.ff-subjects__kpi-value[data-accent="teal"] { color: #6eedd8; }
+
+/* Filter tabs */
+.ff-subjects__tabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--ff-border);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.ff-subjects__tab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: var(--ff-text-muted);
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+.ff-subjects__tab:hover { color: var(--ff-text-primary); }
+.ff-subjects__tab[aria-selected="true"] {
+  color: var(--ff-gold);
+  background: rgba(252, 179, 0, 0.08);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.ff-subjects__tab-count {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+/* Table panel */
+.ff-subjects__panel {
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 12px;
+  overflow: hidden;
+  backdrop-filter: blur(14px);
+}
+
+.ff-subjects__empty {
+  padding: 32px;
+  text-align: center;
+  color: var(--ff-text-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.ff-subjects__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ff-subjects__table thead th {
+  text-align: left;
+  padding: 12px 14px;
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ff-text-muted);
+  border-bottom: 1px solid var(--ff-border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ff-subjects__table tbody td {
+  padding: 12px 14px;
+  border-top: 1px solid var(--ff-border);
+  vertical-align: middle;
+  font-size: 13px;
+  color: var(--ff-text-primary);
+}
+
+.ff-subjects__row:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ff-subjects__cell-mono {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11.5px;
+  color: var(--ff-text-muted);
+}
+
+.ff-subjects__cell-muted {
+  color: var(--ff-text-muted);
+  font-size: 12px;
+}
+
+.ff-subjects__subject-text {
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-subjects__row-error {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #ff4d6d;
+}
+
+.ff-subjects__tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.ff-subjects__pill {
+  padding: 2px 7px;
+  border: 1px solid var(--ff-border);
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  color: var(--ff-text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Verdict + status badges */
+.ff-subjects__verdict,
+.ff-subjects__status {
+  display: inline-block;
+  padding: 3px 8px;
+  border: 1px solid var(--ff-border);
+  border-radius: 4px;
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ff-subjects__verdict[data-variant="real"] {
+  border-color: rgba(110, 237, 216, 0.5);
+  color: #6eedd8;
+  background: rgba(110, 237, 216, 0.08);
+}
+.ff-subjects__verdict[data-variant="fake"] {
+  border-color: rgba(219, 39, 128, 0.5);
+  color: var(--ff-pink);
+  background: rgba(219, 39, 128, 0.08);
+}
+
+.ff-subjects__status[data-variant="draft"] {
+  color: #6eedd8;
+  border-color: rgba(110, 237, 216, 0.4);
+}
+.ff-subjects__status[data-variant="scheduled"] {
+  color: var(--ff-gold);
+  border-color: rgba(252, 179, 0, 0.4);
+}
+.ff-subjects__status[data-variant="live"] {
+  color: var(--ff-pink);
+  border-color: rgba(219, 39, 128, 0.5);
+  background: rgba(219, 39, 128, 0.08);
+  animation: ff-headlines-live-pulse 1.6s ease-in-out infinite alternate;
+}
+@keyframes ff-headlines-live-pulse {
+  from { box-shadow: 0 0 0 0 rgba(219, 39, 128, 0.0); }
+  to   { box-shadow: 0 0 0 4px rgba(219, 39, 128, 0.18); }
+}
+.ff-subjects__status[data-variant="settled"] {
+  color: var(--ff-text-muted);
+}
+.ff-subjects__status[data-variant="deleted"] {
+  color: var(--ff-text-muted);
+  opacity: 0.5;
+}
+
+/* Action buttons */
+.ff-subjects__row-actions {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.ff-subjects__icon-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--ff-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--ff-text-muted);
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.ff-subjects__icon-btn:hover {
+  color: var(--ff-gold);
+  border-color: rgba(252, 179, 0, 0.4);
+  background: rgba(252, 179, 0, 0.08);
+}
+.ff-subjects__icon-btn--danger:hover {
+  color: var(--ff-pink);
+  border-color: rgba(219, 39, 128, 0.4);
+  background: rgba(219, 39, 128, 0.08);
+}
+.ff-subjects__icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+/* === src/features/fact_or_fold/pages/admin/new_subject === */
+
+.ff-new-subject {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ff-new-subject__section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ff-new-subject__section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 0 4px;
+}
+
+.ff-new-subject__section-title {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--ff-text-primary);
+}
+
+.ff-new-subject__section-sub {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  color: var(--ff-text-muted);
+}
+
+.ff-new-subject__panel {
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 14px;
+  backdrop-filter: blur(14px);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ff-new-subject__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ff-new-subject__label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ff-new-subject__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ff-text-primary);
+}
+
+.ff-new-subject__counter {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  color: var(--ff-text-muted);
+}
+.ff-new-subject__counter[data-invalid="true"] { color: #ff4d6d; }
+
+.ff-new-subject__input,
+.ff-new-subject__textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--ff-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--ff-text-primary);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+.ff-new-subject__input:focus,
+.ff-new-subject__textarea:focus { border-color: var(--ff-gold); }
+.ff-new-subject__input[data-invalid="true"],
+.ff-new-subject__textarea[data-invalid="true"] { border-color: #ff4d6d; }
+
+.ff-new-subject__textarea {
+  resize: vertical;
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  line-height: 1.5;
+}
+
+.ff-new-subject__hint {
+  font-size: 12px;
+  color: var(--ff-text-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Verdict picker */
+.ff-new-subject__verdict-row {
+  display: flex;
+  gap: 8px;
+}
+
+.ff-new-subject__verdict-btn {
+  flex: 1;
+  padding: 14px 18px;
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.18em;
+  border: 1px solid var(--ff-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--ff-text-muted);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.ff-new-subject__verdict-btn[data-variant="real"][aria-selected="true"] {
+  color: #6eedd8;
+  border-color: rgba(110, 237, 216, 0.5);
+  background: rgba(110, 237, 216, 0.08);
+}
+.ff-new-subject__verdict-btn[data-variant="fake"][aria-selected="true"] {
+  color: var(--ff-pink);
+  border-color: rgba(219, 39, 128, 0.5);
+  background: rgba(219, 39, 128, 0.08);
+}
+
+/* Difficulty stars */
+.ff-new-subject__star-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ff-new-subject__star {
+  background: transparent;
+  border: none;
+  color: var(--ff-text-muted);
+  font-size: 22px;
+  cursor: pointer;
+  padding: 0 2px;
+  transition: color 0.1s;
+}
+.ff-new-subject__star[aria-selected="true"] { color: var(--ff-gold); }
+
+.ff-new-subject__star-label {
+  margin-left: 8px;
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  color: var(--ff-text-muted);
+}
+
+/* Reveal sources editor */
+.ff-new-subject__sources {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ff-new-subject__source-row {
+  display: grid;
+  grid-template-columns: 180px 1fr 36px;
+  gap: 8px;
+  align-items: center;
+}
+
+.ff-new-subject__source-remove {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--ff-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--ff-text-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.ff-new-subject__source-remove:hover {
+  color: var(--ff-pink);
+  border-color: rgba(219, 39, 128, 0.4);
+}
+
+.ff-new-subject__source-add {
+  align-self: flex-start;
+  padding: 8px 14px;
+  border: 1px dashed var(--ff-border);
+  background: transparent;
+  color: var(--ff-text-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  letter-spacing: 0.08em;
+}
+.ff-new-subject__source-add:hover {
+  color: var(--ff-gold);
+  border-color: rgba(252, 179, 0, 0.4);
+}
+
+/* Submit bar */
+.ff-new-subject__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ff-new-subject__error {
+  color: #ff4d6d;
+  font-size: 12px;
+}
+
+/* === src/features/fact_or_fold/pages/admin/schedule === */
+
+.ff-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ff-schedule__banner {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--ff-border);
+}
+
+.ff-schedule__banner--alert {
+  background: rgba(219, 39, 128, 0.08);
+  border-color: rgba(219, 39, 128, 0.4);
+}
+.ff-schedule__banner--ok {
+  background: rgba(110, 237, 216, 0.05);
+  border-color: rgba(110, 237, 216, 0.25);
+}
+
+.ff-schedule__banner-icon {
+  font-size: 22px;
+}
+.ff-schedule__banner--alert .ff-schedule__banner-icon { color: var(--ff-pink); }
+.ff-schedule__banner--ok .ff-schedule__banner-icon { color: #6eedd8; }
+
+.ff-schedule__banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ff-schedule__banner-text strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ff-text-primary);
+}
+.ff-schedule__banner-text p {
+  font-size: 12px;
+  color: var(--ff-text-muted);
+  margin: 0;
+}
+
+.ff-schedule__banner-cta {
+  padding: 8px 14px;
+  border: 1px solid rgba(252, 179, 0, 0.4);
+  background: rgba(252, 179, 0, 0.08);
+  color: var(--ff-gold);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.ff-schedule__banner-cta:hover { background: rgba(252, 179, 0, 0.16); }
+
+.ff-schedule__panel {
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 14px;
+  backdrop-filter: blur(14px);
+  overflow: hidden;
+}
+
+.ff-schedule__panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--ff-border);
+}
+.ff-schedule__panel-title {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.ff-schedule__panel-sub {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  color: var(--ff-text-muted);
+}
+
+.ff-schedule__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ff-schedule__row {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 16px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--ff-border);
+}
+.ff-schedule__row:first-child { border-top: none; }
+
+.ff-schedule__when {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 12px;
+  color: var(--ff-gold);
+}
+
+.ff-schedule__row-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ff-text-primary);
+  margin-bottom: 4px;
+}
+
+.ff-schedule__row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--ff-text-muted);
+  align-items: baseline;
+}
+.ff-schedule__row-source {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+}
+.ff-schedule__row-tag {
+  padding: 1px 6px;
+  border: 1px solid var(--ff-border);
+  border-radius: 3px;
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.ff-schedule__empty {
+  padding: 32px;
+  text-align: center;
+  font-style: italic;
+  color: var(--ff-text-muted);
+}
+
+/* === src/features/fact_or_fold/pages/admin/stats === */
+/* === src/features/fact_or_fold/pages/admin/reports === */
+
+.ff-stats,
+.ff-reports {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ff-stats__notice,
+.ff-reports__notice {
+  padding: 14px 18px;
+  border: 1px dashed var(--ff-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--ff-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.ff-stats__notice strong,
+.ff-reports__notice strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ff-text-primary);
+  font-size: 13px;
+}
+.ff-stats__notice p,
+.ff-reports__notice p { margin: 0; }
+
+.ff-stats__kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.ff-stats__kpi-tile {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--ff-border);
+  background: var(--ff-bg-glass);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ff-stats__kpi-label {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ff-text-muted);
+}
+.ff-stats__kpi-value {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--ff-text-muted);
+}
+.ff-stats__kpi-sub {
+  font-size: 11px;
+  color: var(--ff-text-muted);
+  font-style: italic;
+}
+
+.ff-stats__panel {
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  backdrop-filter: blur(14px);
+}
+.ff-stats__panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.ff-stats__panel-title {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.ff-stats__panel-sub {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  color: var(--ff-text-muted);
+}
+.ff-stats__chart-placeholder {
+  height: 180px;
+  border: 1px dashed var(--ff-border);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ff-text-muted);
+  font-size: 12px;
+  font-style: italic;
+}
+.ff-stats__empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--ff-text-muted);
+  font-style: italic;
+  font-size: 13px;
+}
+
+.ff-reports__tabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--ff-border);
+  border-radius: 8px;
+  padding: 4px;
+}
+.ff-reports__tab {
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  color: var(--ff-text-muted);
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.ff-reports__tab[aria-selected="true"] {
+  color: var(--ff-gold);
+  background: rgba(252, 179, 0, 0.08);
+  opacity: 1;
+}
+
+.ff-reports__panel {
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 14px;
+  padding: 24px;
+}
+.ff-reports__empty {
+  text-align: center;
+  font-style: italic;
+  color: var(--ff-text-muted);
+  font-size: 13px;
+}
+
+/* === src/features/fact_or_fold/pages/lobby === */
+
+.ff-lobby {
+  /* Same light/dark calibration as `.ff-admin-arena`. */
+  --ff-bg-glass: var(--dark, rgba(12, 12, 26, 0.65)) var(--light, #ffffff);
+  --ff-border: var(--dark, rgba(255, 255, 255, 0.06)) var(--light, rgba(10, 10, 30, 0.14));
+  --ff-text-primary: var(--dark, #f0f0f5) var(--light, #12121a);
+  --ff-text-muted: var(--dark, #8888a8) var(--light, #6b6b80);
+  --ff-pink: #db2780;
+  --ff-gold: #fcb300;
+
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  color: var(--ff-text-primary);
+}
+
+.ff-lobby__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ff-lobby__brand-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #fcb300 0%, #db2780 100%);
+  color: #06060e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.ff-lobby__brand-name {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  color: var(--ff-text-primary);
+}
+
+.ff-lobby__brand-sub {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  color: var(--ff-text-muted);
+}
+
+.ff-lobby__featured {
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 18px;
+  backdrop-filter: blur(14px);
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: relative;
+  overflow: hidden;
+}
+.ff-lobby__featured::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 80% 0%,
+    rgba(252, 179, 0, 0.08),
+    transparent 55%
+  );
+  pointer-events: none;
+}
+.ff-lobby__featured > * { position: relative; }
+
+.ff-lobby__tag {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--ff-border);
+  border-radius: 4px;
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ff-text-muted);
+}
+.ff-lobby__tag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+}
+.ff-lobby__tag[data-variant="open"]    { color: var(--ff-gold); border-color: rgba(252,179,0,0.4); }
+.ff-lobby__tag[data-variant="waiting"] { color: var(--ff-gold); border-color: rgba(252,179,0,0.4); }
+.ff-lobby__tag[data-variant="live"]    { color: var(--ff-pink); border-color: rgba(219,39,128,0.5); }
+.ff-lobby__tag[data-variant="settled"] { color: #6eedd8; border-color: rgba(110,237,216,0.4); }
+.ff-lobby__tag[data-variant="closed"]  { color: var(--ff-text-muted); }
+
+.ff-lobby__title {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-weight: 800;
+  font-size: 38px;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.ff-lobby__tagline {
+  font-size: 15px;
+  color: var(--ff-text-muted);
+  line-height: 1.6;
+  max-width: 640px;
+  margin: 0;
+}
+
+.ff-lobby__meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ff-border);
+  margin-top: 4px;
+  padding-top: 14px;
+}
+
+.ff-lobby__meta-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ff-lobby__meta-label {
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ff-text-muted);
+}
+
+.ff-lobby__meta-value {
+  font-family: "Orbitron", "Outfit", sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--ff-text-primary);
+}
+
+.ff-lobby__cta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.ff-lobby__status-line {
+  font-size: 12px;
+  color: var(--ff-text-muted);
+}
+.ff-lobby__status-line--muted { font-style: italic; }
+
+.ff-lobby__error {
+  flex-basis: 100%;
+  color: #ff4d6d;
+  font-size: 12px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 77, 109, 0.3);
+  background: rgba(255, 77, 109, 0.08);
+  border-radius: 6px;
+}
+
+.ff-lobby__rules {
+  background: var(--ff-bg-glass);
+  border: 1px solid var(--ff-border);
+  border-radius: 12px;
+  padding: 18px 22px;
+  font-size: 13px;
+  color: var(--ff-text-muted);
+}
+.ff-lobby__rules strong {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--ff-text-primary);
+  font-family: "JetBrains Mono", "Outfit", monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.ff-lobby__rules ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  line-height: 1.5;
+}
+
+/* === src/features/arcade/games/fact_or_fold/pages/game_room === */
+
+/* Root container. Local CSS variables (named to mirror the
+ * round-stage.html mockup) so that the imported rules below port over
+ * verbatim with just an `.ff-room ` scope prefix. Light/dark colors
+ * use the space-toggle pattern so the room follows the global theme. */
+.ff-room {
+  /* Mirror of `.ff-arcade` palette so standalone previews of the
+   * room render with the same light/dark calibration. Keep both in
+   * sync whenever you tune one. */
+  --bg: var(--dark, #07070f) var(--light, #f6f6fb);
+  --bg-grad-1: var(--dark, #11102a) var(--light, #ffffff);
+  --bg-grad-2: var(--dark, #1a0a22) var(--light, #fafafa);
+  --surface: var(--dark, rgba(18, 18, 32, 0.72))
+    var(--light, rgba(255, 255, 255, 0.82));
+  --surface-2: var(--dark, rgba(28, 28, 46, 0.6))
+    var(--light, rgba(244, 244, 250, 0.72));
+  --surface-3: var(--dark, rgba(38, 38, 58, 0.5))
+    var(--light, rgba(232, 232, 242, 0.68));
+  --border: var(--dark, rgba(255, 255, 255, 0.08))
+    var(--light, rgba(15, 15, 35, 0.08));
+  --border-strong: var(--dark, rgba(255, 255, 255, 0.16))
+    var(--light, rgba(15, 15, 35, 0.18));
+  --text-primary: var(--dark, #f0f0f5) var(--light, #14141e);
+  --text-muted: var(--dark, #8a8aa6) var(--light, #5a5a72);
+  --text-faint: var(--dark, #5a5a78) var(--light, #9a9ab2);
+
+  --gold: var(--dark, #fcb300) var(--light, #c98300);
+  --gold-bright: #fcb300;
+  --gold-soft: var(--dark, rgba(252, 179, 0, 0.12))
+    var(--light, rgba(252, 179, 0, 0.16));
+  --pink: var(--dark, #db2780) var(--light, #c41f6d);
+  --pink-bright: #db2780;
+  --pink-soft: var(--dark, rgba(219, 39, 128, 0.12))
+    var(--light, rgba(219, 39, 128, 0.10));
+  --teal: var(--dark, #6eedd8) var(--light, #0e9b87);
+  --teal-bright: var(--dark, #6eedd8) var(--light, #14c3a8);
+  --teal-soft: var(--dark, rgba(110, 237, 216, 0.12))
+    var(--light, rgba(20, 195, 168, 0.14));
+  --purple: var(--dark, #a78bfa) var(--light, #6747e0);
+  --purple-bright: var(--dark, #a78bfa) var(--light, #8a6df0);
+  --purple-soft: var(--dark, rgba(167, 139, 250, 0.14))
+    var(--light, rgba(138, 109, 240, 0.12));
+
+  --shadow-sm: var(--dark, 0 2px 8px rgba(0, 0, 0, 0.3))
+    var(--light, 0 2px 8px rgba(15, 15, 40, 0.06));
+  --shadow-md: var(--dark, 0 8px 24px rgba(0, 0, 0, 0.4))
+    var(--light, 0 8px 24px rgba(15, 15, 40, 0.08));
+  --shadow-lg: var(--dark, 0 24px 64px rgba(0, 0, 0, 0.55))
+    var(--light, 0 24px 64px rgba(15, 15, 40, 0.12));
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+
+  /* No outer container — .ff-arcade owns max-width / padding / font
+   * for all arcade pages. Variables stay declared so .ff-room renders
+   * correctly standalone (preview, design tooling). */
+  color: var(--text-primary);
+}
+
+/* ── Top bar ──────────────────────────────────────────────────── */
+.ff-room .top-bar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 22px;
+  padding: 16px 20px;
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+.ff-room .top-nav {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+.ff-room .top-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-family: "Outfit", sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ff-room .top-nav-btn:hover {
+  color: var(--text-primary);
+  background: var(--surface-2);
+}
+.ff-room .top-nav-btn[aria-selected="true"] {
+  background: var(--gold-soft);
+  color: var(--gold);
+  border-color: rgba(252, 179, 0, 0.3);
+}
+.ff-room .top-nav-btn-icon {
+  font-size: 14px;
+}
+.ff-room .brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.ff-room .brand-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--gold), var(--pink));
+  display: grid;
+  place-items: center;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: #1a0a00;
+  box-shadow: 0 4px 16px rgba(252, 179, 0, 0.35);
+}
+.ff-room .brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ff-room .brand-name {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+}
+.ff-room .brand-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+}
+.ff-room .user-stats {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.ff-room .stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+}
+.ff-room .stat-chip.gold {
+  border-color: rgba(252, 179, 0, 0.3);
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+.ff-room .stat-chip-icon {
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+}
+.ff-room .avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5b3aaf, #db2780);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: white;
+  border: 2px solid var(--border-strong);
+}
+
+/* ── Layout: sidebar + view stack ─────────────────────────────── */
+.ff-room .layout {
+  display: grid;
+  grid-template-columns: 176px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+.ff-room .view-stack {
+  min-width: 0;
+}
+.ff-room .sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 24px;
+}
+.ff-room .sidebar .timer-card {
+  padding: 14px 14px 16px;
+}
+.ff-room .sidebar .timer-card .section-label {
+  font-size: 10px;
+}
+.ff-room .sidebar .timer-card .timer-stage {
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+.ff-room .sidebar .timer-card .timer-deadline {
+  font-size: 10px;
+  margin-bottom: 10px;
+}
+.ff-room .sidebar .timer-card .timer-ring {
+  width: 120px;
+  height: 120px;
+  margin: 4px auto 0;
+}
+.ff-room .sidebar .timer-card .timer-ring svg {
+  width: 120px;
+  height: 120px;
+}
+.ff-room .sidebar .timer-card .timer-display-time {
+  font-size: 22px;
+}
+.ff-room .sidebar .timer-card .timer-display-sub {
+  font-size: 10px;
+}
+@media (max-width: 900px) {
+  .ff-room .layout {
+    grid-template-columns: 1fr;
+  }
+  .ff-room .sidebar {
+    position: static;
+  }
+}
+
+/* ── Stage timeline (sidebar) ─────────────────────────────────── */
+.ff-room .stage-timeline.stage-timeline-global {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 20px;
+  padding: 20px 14px;
+  margin-bottom: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+.ff-room .stage-timeline.stage-timeline-global[data-hidden="true"] {
+  display: none;
+}
+.ff-room .stage-timeline-global .stage-step {
+  flex: none;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  position: relative;
+  gap: 12px;
+}
+.ff-room .stage-timeline-global .stage-step:hover {
+  opacity: 0.85;
+}
+.ff-room .stage-timeline-global .stage-step:hover .stage-dot {
+  border-color: var(--border-strong);
+}
+.ff-room .stage-timeline-global .stage-step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 32px;
+  bottom: -20px;
+  width: 2px;
+  background: var(--border);
+}
+.ff-room
+  .stage-timeline-global
+  .stage-step[data-state="done"]:not(:last-child)::after {
+  background: linear-gradient(180deg, var(--teal), var(--gold));
+}
+.ff-room
+  .stage-timeline-global
+  .stage-step[data-state="active"]:not(:last-child)::after {
+  background: linear-gradient(180deg, var(--gold), var(--border));
+}
+.ff-room .stage-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  border: 2px solid var(--border);
+  display: grid;
+  place-items: center;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+.ff-room .stage-step[data-state="done"] .stage-dot {
+  background: var(--teal-soft);
+  border-color: var(--teal);
+  color: var(--teal);
+}
+.ff-room .stage-step[data-state="active"] .stage-dot {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #1a0a00;
+  box-shadow: 0 0 0 6px rgba(252, 179, 0, 0.18);
+}
+.ff-room .stage-label {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.ff-room .stage-label-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.ff-room .stage-step[data-state="upcoming"] .stage-label-name {
+  color: var(--text-muted);
+}
+.ff-room .stage-label-time {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10.5px;
+  color: var(--text-faint);
+}
+
+/* ── Timer card ───────────────────────────────────────────────── */
+.ff-room .timer-card {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+  text-align: center;
+}
+.ff-room .timer-ring {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 8px auto 16px;
+}
+.ff-room .timer-ring svg {
+  transform: rotate(-90deg);
+}
+.ff-room .timer-ring-bg {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 8;
+}
+.ff-room .timer-ring-fg {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+.ff-room .timer-display {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: "Orbitron", sans-serif;
+}
+.ff-room .timer-display-time {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--gold);
+}
+.ff-room .timer-display-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+  margin-top: 2px;
+}
+.ff-room .timer-stage {
+  font-family: "Orbitron", sans-serif;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.ff-room .timer-deadline {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+/* ── View host (each stage is one .view) ─────────────────────── */
+.ff-room .view {
+  display: none;
+  animation: ff-room-fadeup 0.32s ease;
+}
+.ff-room .view[data-active="true"] {
+  display: block;
+}
+@keyframes ff-room-fadeup {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Common primitives (card / pill / btn / section-label) ────── */
+.ff-room .card-title {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  margin: 0 0 6px;
+}
+.ff-room .card-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 18px;
+}
+.ff-room .section-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+.ff-room .section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.ff-room .section-head h2 {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin: 0;
+}
+.ff-room .section-head .sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+}
+.ff-room .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-radius: 999px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.ff-room .pill.gold {
+  color: var(--gold);
+  border-color: rgba(252, 179, 0, 0.3);
+  background: var(--gold-soft);
+}
+.ff-room .pill.pink {
+  color: var(--pink);
+  border-color: rgba(219, 39, 128, 0.3);
+  background: var(--pink-soft);
+}
+.ff-room .pill.teal {
+  color: var(--teal);
+  border-color: rgba(110, 237, 216, 0.3);
+  background: var(--teal-soft);
+}
+.ff-room .pill.purple {
+  color: var(--purple);
+  border-color: rgba(167, 139, 250, 0.3);
+  background: var(--purple-soft);
+}
+.ff-room .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-family: "Outfit", sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.ff-room .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ff-room .btn-primary {
+  background: var(--gold);
+  color: #1a0a00;
+  border-color: var(--gold);
+  box-shadow: 0 4px 16px rgba(252, 179, 0, 0.25);
+}
+.ff-room .btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(252, 179, 0, 0.35);
+}
+.ff-room .btn-ghost {
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+.ff-room .btn-ghost:hover:not(:disabled) {
+  background: var(--surface-3);
+  border-color: var(--border-strong);
+}
+
+/* ── News reveal view ─────────────────────────────────────────── */
+.ff-room .round-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 22px;
+}
+.ff-room .news-card {
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+  margin-bottom: 18px;
+}
+.ff-room .news-source {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+}
+.ff-room .news-source-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+.ff-room .news-headline {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.35;
+  margin: 0 0 16px;
+}
+.ff-room .news-excerpt {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin: 0 0 20px;
+  padding-left: 14px;
+  border-left: 2px solid var(--border-strong);
+}
+.ff-room .news-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.ff-room .news-cta {
+  margin-left: auto;
+  padding: 9px 16px;
+  font-size: 12.5px;
+}
+
+/* Players card (roster) */
+.ff-room .players-card {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+.ff-room .players-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+}
+.ff-room .players-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ff-room .player-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+.ff-room .player-row.me {
+  border-color: rgba(252, 179, 0, 0.3);
+  background: var(--gold-soft);
+}
+.ff-room .p-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4f3aaf, #7d3aaf);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 13px;
+  border: 2px solid var(--border-strong);
+}
+.ff-room .p-avatar.a2 {
+  background: linear-gradient(135deg, #3aaf7d, #6eedd8);
+  color: #042a1f;
+}
+.ff-room .p-avatar.a3 {
+  background: linear-gradient(135deg, #af3a7d, #db2780);
+}
+.ff-room .p-avatar.a4 {
+  background: linear-gradient(135deg, #af7d3a, #fcb300);
+  color: #1a0a00;
+}
+.ff-room .p-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ff-room .p-name {
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ff-room .p-status {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.ff-room .p-state-pill {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--text-muted);
+}
+.ff-room .p-state-pill.done {
+  background: var(--teal-soft);
+  color: var(--teal);
+}
+.ff-room .p-state-pill.waiting {
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+.ff-room .lb-you-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  background: var(--gold);
+  color: #1a0a00;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* ── First-bet view ───────────────────────────────────────────── */
+.ff-room .live-bet-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 22px;
+}
+.ff-room .insider-card {
+  position: relative;
+  padding: 22px 24px;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(167, 139, 250, 0.04),
+      rgba(167, 139, 250, 0.04) 8px,
+      transparent 8px,
+      transparent 16px
+    ),
+    rgba(20, 12, 36, 0.85);
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+  margin-bottom: 18px;
+  overflow: hidden;
+}
+.ff-room .insider-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 4px;
+  background: var(--purple);
+}
+.ff-room .insider-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.ff-room .insider-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: var(--purple-soft);
+  color: var(--purple);
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+}
+.ff-room .insider-title {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--purple);
+}
+.ff-room .insider-body {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.ff-room .insider-body strong {
+  color: var(--purple);
+}
+.ff-room .insider-foot {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(167, 139, 250, 0.25);
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.ff-room .bet-card {
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+.ff-room .bet-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.ff-room .bet-option {
+  position: relative;
+  padding: 22px;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: center;
+}
+.ff-room .bet-option:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+.ff-room .bet-option[data-selected="true"][data-side="real"] {
+  background: var(--gold-soft);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px rgba(252, 179, 0, 0.15);
+}
+.ff-room .bet-option[data-selected="true"][data-side="fake"] {
+  background: var(--pink-soft);
+  border-color: var(--pink);
+  box-shadow: 0 0 0 4px rgba(219, 39, 128, 0.15);
+}
+.ff-room .bet-option-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+.ff-room .bet-option[data-side="real"] .bet-option-icon {
+  color: var(--gold);
+}
+.ff-room .bet-option[data-side="fake"] .bet-option-icon {
+  color: var(--pink);
+}
+.ff-room .bet-option-label {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+.ff-room .bet-option-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.ff-room .rp-slider-wrap {
+  margin-bottom: 24px;
+}
+.ff-room .rp-slider-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.ff-room .rp-slider-label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.ff-room .rp-slider-value {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--gold);
+}
+.ff-room .rp-slider {
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  background: var(--surface-3);
+  border-radius: 999px;
+  outline: none;
+}
+.ff-room .rp-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  background: var(--gold);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 0 4px rgba(252, 179, 0, 0.18);
+}
+.ff-room .rp-slider-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--text-faint);
+}
+.ff-room .submit-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 20px;
+}
+
+/* ── Reasoning-write view ─────────────────────────────────────── */
+.ff-room .bet-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 22px;
+}
+.ff-room .reason-live-card {
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+.ff-room .reason-prompt {
+  margin-bottom: 16px;
+}
+.ff-room .reason-prompt-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.ff-room .reason-prompt-text {
+  font-family: "Orbitron", sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+}
+.ff-room .reason-prompt-text .gold-mark {
+  color: var(--gold);
+}
+.ff-room .reason-prompt-text .pink-mark {
+  color: var(--pink);
+}
+.ff-room .reason-wrap {
+  margin-bottom: 18px;
+}
+.ff-room .reason-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.ff-room .reason-label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.ff-room .char-counter {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+.ff-room .char-counter.ok {
+  color: var(--teal);
+}
+.ff-room .char-counter.warn {
+  color: var(--pink);
+}
+.ff-room .reason-textarea {
+  width: 100%;
+  min-height: 130px;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  font-family: "Outfit", sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.ff-room .reason-textarea:focus {
+  border-color: var(--gold);
+}
+.ff-room .reason-warn {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: rgba(219, 39, 128, 0.08);
+  border: 1px solid rgba(219, 39, 128, 0.25);
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+  color: var(--pink);
+  line-height: 1.5;
+}
+.ff-room .bet-summary {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+.ff-room .player-pulses {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.ff-room .pulse-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 8px 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12px;
+}
+.ff-room .pulse-chip.done {
+  background: var(--teal-soft);
+  border-color: var(--teal);
+  color: var(--teal);
+}
+.ff-room .pulse-chip-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+}
+.ff-room .pulse-chip-state {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+.ff-room .pulse-chip.done .pulse-chip-state {
+  color: var(--teal);
+}
+.ff-room .pulse-chip.thinking .pulse-chip-state {
+  color: var(--gold);
+}
+.ff-room .pulse-chip.thinking::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  background: var(--gold);
+  border-radius: 50%;
+  animation: ff-room-pulse 0.8s ease-in-out infinite;
+  margin-left: 4px;
+}
+@keyframes ff-room-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.7);
+  }
+}
+
+/* ── Reasoning-reveal view (camp bar + reveal cards) ──────────── */
+.ff-room .camp-bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 14px;
+  align-items: stretch;
+  margin-bottom: 18px;
+}
+.ff-room .camp-side {
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ff-room .camp-side.real {
+  border-color: rgba(252, 179, 0, 0.35);
+  background: linear-gradient(180deg, var(--gold-soft), var(--surface));
+}
+.ff-room .camp-side.fake {
+  border-color: rgba(219, 39, 128, 0.35);
+  background: linear-gradient(180deg, var(--pink-soft), var(--surface));
+}
+.ff-room .camp-side-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.ff-room .camp-label {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+}
+.ff-room .camp-side.real .camp-label {
+  color: var(--gold);
+}
+.ff-room .camp-side.fake .camp-label {
+  color: var(--pink);
+}
+.ff-room .camp-count {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.ff-room .camp-avatars {
+  display: flex;
+  gap: 6px;
+}
+.ff-room .camp-vs {
+  display: grid;
+  place-items: center;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--text-faint);
+  letter-spacing: 0.1em;
+  padding: 0 8px;
+}
+.ff-room .reveal-hint {
+  padding: 12px 16px;
+  background: var(--teal-soft);
+  border: 1px solid rgba(110, 237, 216, 0.3);
+  border-radius: var(--r-md);
+  color: var(--teal);
+  font-size: 13px;
+  line-height: 1.55;
+  margin-bottom: 18px;
+}
+.ff-room .reveal-hint strong {
+  color: var(--teal);
+}
+.ff-room .reveal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+.ff-room .reveal-card {
+  padding: 22px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.ff-room .reveal-card[data-side="real"] {
+  border-left: 4px solid var(--gold);
+}
+.ff-room .reveal-card[data-side="fake"] {
+  border-left: 4px solid var(--pink);
+}
+.ff-room .reveal-card.me {
+  background: linear-gradient(180deg, rgba(252, 179, 0, 0.05), var(--surface));
+}
+.ff-room .reveal-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.ff-room .debate-card-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ff-room .reveal-card-bet {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.ff-room .reveal-card-bet.real {
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+.ff-room .reveal-card-bet.fake {
+  background: var(--pink-soft);
+  color: var(--pink);
+}
+.ff-room .reveal-card-text {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--text-primary);
+}
+.ff-room .reveal-card-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+.ff-room .quote-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: "Outfit", sans-serif;
+  font-size: 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ff-room .quote-btn:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+.ff-room .quote-btn[data-marked="true"] {
+  background: var(--teal-soft);
+  border-color: var(--teal);
+  color: var(--teal);
+}
+.ff-room .reveal-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 22px;
+  padding: 18px 22px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+.ff-room .reveal-cta-hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* ── Live debate view (chat + flip slot) ─────────────────────── */
+.ff-room .live-chat-card {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+.ff-room .live-chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-bottom: 14px;
+}
+.ff-room .chat-msg {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.ff-room .chat-msg-author {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-weight: 600;
+}
+.ff-room .chat-msg-author.me {
+  color: var(--gold);
+}
+.ff-room .chat-msg-time {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+.ff-room .chat-msg-body {
+  color: var(--text-primary);
+}
+.ff-room .chat-input-row {
+  display: flex;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.ff-room .chat-input {
+  flex: 1;
+  padding: 9px 12px;
+  /* Dark: deep transparent inset against the chat panel.
+   * Light: faint near-black wash — mirrors `.comment-input__textarea`
+   * (`var(--surface-raised)`) so the field reads as an input box and
+   * not solid grey under the light theme. */
+  background: var(--dark, rgba(0, 0, 0, 0.3))
+    var(--light, rgba(15, 15, 35, 0.04));
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  font-family: "Outfit", sans-serif;
+  font-size: 13px;
+  outline: none;
+}
+.ff-room .chat-input:focus {
+  border-color: var(--teal);
+}
+.ff-room .final-bet-bar {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 18px;
+  background: var(--purple-soft);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  border-radius: var(--r-lg);
+  margin-top: 18px;
+}
+.ff-room .final-bet-bar.hidden {
+  opacity: 0.4;
+}
+.ff-room .final-bet-tag {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--purple);
+  padding: 4px 8px;
+  background: var(--surface);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  border-radius: 4px;
+}
+.ff-room .final-bet-text {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+.ff-room .final-bet-text strong {
+  font-family: "Orbitron", sans-serif;
+}
+.ff-room .final-bet-countdown {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--purple);
+  font-variant-numeric: tabular-nums;
+}
+.ff-room .mini-btn {
+  padding: 8px 14px;
+  font-family: "Outfit", sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+}
+.ff-room .mini-btn.gold {
+  background: var(--gold);
+  color: #1a0a00;
+  border-color: var(--gold);
+}
+.ff-room .mini-btn.pink {
+  background: var(--pink);
+  color: white;
+  border-color: var(--pink);
+}
+
+/* ── Settlement view (banner + result table + essence) ───────── */
+.ff-room .reveal-banner {
+  position: relative;
+  padding: 32px;
+  background:
+    radial-gradient(
+      circle at 20% 20%,
+      rgba(219, 39, 128, 0.18),
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(167, 139, 250, 0.14),
+      transparent 50%
+    ),
+    linear-gradient(180deg, rgba(219, 39, 128, 0.06), var(--surface));
+  border: 1px solid rgba(219, 39, 128, 0.3);
+  border-radius: var(--r-xl);
+  backdrop-filter: blur(18px);
+  text-align: center;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+.ff-room .reveal-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.03) 0,
+    rgba(255, 255, 255, 0.03) 1px,
+    transparent 1px,
+    transparent 14px
+  );
+  pointer-events: none;
+}
+.ff-room .reveal-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.ff-room .reveal-verdict {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 800;
+  font-size: 56px;
+  letter-spacing: 0.06em;
+  margin: 0 0 12px;
+  text-shadow: 0 0 40px rgba(219, 39, 128, 0.4);
+}
+.ff-room .reveal-verdict.fake {
+  color: var(--pink);
+}
+.ff-room .reveal-verdict.real {
+  color: var(--gold);
+  text-shadow: 0 0 40px rgba(252, 179, 0, 0.4);
+}
+.ff-room .reveal-headline {
+  font-size: 16px;
+  color: var(--text-primary);
+  margin: 0 0 18px;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.ff-room .reveal-source {
+  display: inline-block;
+  padding: 8px 14px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+}
+.ff-room .reveal-source a {
+  color: var(--teal);
+  text-decoration: none;
+}
+.ff-room .result-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 22px;
+}
+.ff-room .settlement-exit-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+.ff-room .settlement-exit-row .btn {
+  min-width: 220px;
+}
+.ff-room .result-table {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+.ff-room .result-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.ff-room .result-row:last-child {
+  border-bottom: none;
+}
+.ff-room .result-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ff-room .result-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.ff-room .result-judgement {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.ff-room .result-bet-side {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.ff-room .result-bet-side.real {
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+.ff-room .result-bet-side.fake {
+  background: var(--pink-soft);
+  color: var(--pink);
+}
+.ff-room .result-delta {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: right;
+}
+.ff-room .result-delta.up {
+  color: var(--gold);
+}
+.ff-room .result-delta.down {
+  color: var(--pink);
+}
+.ff-room .insider-truth-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--teal-soft);
+  color: var(--teal);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+.ff-room .essence-card {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+.ff-room .formula-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 13px;
+}
+.ff-room .formula-row:last-child {
+  border-bottom: none;
+  padding-top: 12px;
+  font-weight: 700;
+}
+.ff-room .formula-row .lbl {
+  color: var(--text-muted);
+}
+.ff-room .formula-row .val {
+  font-family: "JetBrains Mono", monospace;
+  color: var(--text-primary);
+}
+.ff-room .formula-row.total .val {
+  color: var(--gold);
+  font-size: 16px;
+}
+.ff-room .essence-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.ff-room .essence-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  align-items: flex-start;
+}
+.ff-room .essence-checkbox {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-strong);
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  margin-top: 2px;
+}
+.ff-room .essence-checkbox[data-checked="true"] {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #1a0a00;
+}
+.ff-room .essence-meta {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+.ff-room .essence-text {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-primary);
+}
+.ff-room .essence-foot {
+}
 
 /* ─── Unified compose-page layout ──────────────────────────────
    Applies the post-edit composer style (right-pinned side panel,
@@ -45393,6 +48248,396 @@ body.comments-panel-resizing {
   .sub-team-broadcast-compose .arena-topbar .topbar-btn--primary,
   .sub-team-doc-compose .arena-topbar .topbar-btn--primary {
     display: none;
+  }
+}
+
+/* ── RoundNewsCollapsible — shared "re-read the news" card mounted by
+ * game_room/component.rs on every stage after NewsReveal. Built on
+ * native <details>/<summary>, lives inside `.ff-room` so it picks up
+ * the surface/border tokens defined on `.ff-arcade`. */
+.ff-room .news-collapsible {
+  /* `display: block` + `gap: 0` override the global `.card` rule
+   * which sets `display: flex; flex-direction: column; gap: 1.5rem`
+   * and would otherwise insert a 24px flex-gap between the summary
+   * row and the body. We keep the `card` class on the element so its
+   * box-shadow / color / radius defaults still cascade. */
+  display: block;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  margin-bottom: 14px;
+}
+.ff-room .news-collapsible > .news-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.ff-room .news-collapsible > .news-summary::-webkit-details-marker {
+  display: none;
+}
+.ff-room .news-collapsible .news-summary-label {
+  flex-shrink: 0;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.ff-room .news-collapsible .news-summary-title {
+  flex: 1;
+  font-family: "Orbitron", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ff-room .news-collapsible[open] .news-summary-title {
+  white-space: normal;
+}
+.ff-room .news-collapsible .news-summary-toggle {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+.ff-room .news-collapsible[open] .news-summary-toggle {
+  transform: rotate(180deg);
+}
+.ff-room .news-collapsible .news-body {
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--border);
+}
+.ff-room .news-collapsible .news-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.ff-room .news-collapsible .news-headline-full {
+  font-family: "Orbitron", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 0 0 10px;
+}
+.ff-room .news-collapsible .news-excerpt {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0 0 8px;
+}
+.ff-room .news-collapsible .news-source {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--text-faint);
+}
+.ff-room .news-collapsible .news-source-dot {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  background: var(--text-faint);
+  border-radius: 50%;
+  align-self: center;
+}
+
+/* ── Mobile (≤720px) — game-room shell + stage timeline + per-stage
+ * grids. Layout/sidebar baseline rules already live in the mobile
+ * media query at line ~50125; this block layers the stage-step
+ * compacting + per-view grid stacks on top so each round's content
+ * actually fits a phone viewport. */
+@media (max-width: 720px) {
+  /* Hide the arcade hamburger when the user is inside a live round.
+   * The drawer it controls is irrelevant during play — the stage
+   * already owns the user's attention. Keeps the header just brand
+   * + avatar so the chrome stays quiet. */
+  .ff-arcade__top-bar[data-game-room="true"] .ff-arcade__menu-toggle {
+    display: none;
+  }
+
+  /* Stage timeline → horizontal pill strip. The desktop component
+   * renders each step as `dot + label-name + label-time`; on mobile
+   * we collapse it to a single rounded pill (name only) and let the
+   * row scroll horizontally.
+   *
+   * Selector specificity matters: the desktop rule is scoped to
+   * `.ff-room .stage-timeline.stage-timeline-global` (0,3,0), so the
+   * mobile override has to match that depth — a bare
+   * `.stage-timeline-global` (0,2,0) loses the cascade.
+   */
+  .ff-room .stage-timeline.stage-timeline-global {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    overflow-x: auto;
+    gap: 6px;
+    padding: 8px;
+    scrollbar-width: none;
+  }
+  .ff-room .stage-timeline.stage-timeline-global::-webkit-scrollbar {
+    display: none;
+  }
+  .ff-room .stage-timeline-global .stage-step {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    /* Strip the desktop hover lift — touch devices stick on it. */
+    transition: none;
+  }
+  /* The desktop layout draws a vertical connector line between
+   * consecutive steps with `::after`. It overshoots into the
+   * horizontal pill strip on mobile, so hide it outright. */
+  .ff-room .stage-timeline-global .stage-step:not(:last-child)::after {
+    display: none;
+  }
+  .ff-room .stage-timeline-global .stage-step[data-state="active"] {
+    background: var(--gold-soft);
+    border-color: rgba(252, 179, 0, 0.4);
+    color: var(--gold);
+  }
+  .ff-room .stage-timeline-global .stage-step[data-state="done"] {
+    color: var(--text-faint);
+  }
+  .ff-room .stage-dot {
+    width: 16px;
+    height: 16px;
+    font-size: 9px;
+    background: transparent;
+    border: 1px solid currentColor;
+    box-shadow: none;
+  }
+  .ff-room .stage-step[data-state="active"] .stage-dot {
+    background: var(--gold);
+    color: #1a0a00;
+    border-color: var(--gold);
+    box-shadow: none;
+  }
+  .ff-room .stage-step[data-state="done"] .stage-dot {
+    background: transparent;
+    color: var(--text-faint);
+    border-color: var(--text-faint);
+  }
+  /* Drop the time sublabel — too noisy in a pill. */
+  .ff-room .stage-label-time {
+    display: none;
+  }
+  .ff-room .stage-label-name {
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* Timer card → compact one-row pill. Override desktop padding /
+   * text-align / circular-ring layout.
+   *
+   * Selectors are scoped through `.sidebar` to match the desktop
+   * `.ff-room .sidebar .timer-card .timer-ring` (0,3,0) cascade.
+   * Without that depth the desktop rule keeps the 120×120 ring on
+   * mobile and the card balloons to ~150px tall. */
+  .ff-room .sidebar .timer-card {
+    padding: 10px 14px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .ff-room .sidebar .timer-card .section-label,
+  .ff-room .sidebar .timer-card .timer-deadline,
+  .ff-room .sidebar .timer-card .timer-display-sub {
+    display: none;
+  }
+  .ff-room .sidebar .timer-card .timer-stage {
+    font-family: "Orbitron", sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-primary);
+    margin: 0;
+  }
+  /* Replace the SVG ring with bare countdown digits. */
+  .ff-room .sidebar .timer-card .timer-ring {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+  }
+  .ff-room .sidebar .timer-card .timer-ring svg {
+    display: none;
+  }
+  .ff-room .sidebar .timer-card .timer-display {
+    position: static;
+    display: inline-block;
+  }
+  .ff-room .sidebar .timer-card .timer-display-time {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+
+  /* Per-stage grids — each desktop layout collapses to a single
+   * column on mobile so cards stack vertically and never overflow
+   * a phone width. `minmax(0, 1fr)` (not bare `1fr`) prevents the
+   * grid column from blowing past the viewport when a child has
+   * nowrap or long content; `min-width: 0` on grid items extends
+   * the same fix down into flex/grid descendants. */
+  .ff-room .round-grid,
+  .ff-room .bet-grid,
+  .ff-room .reveal-grid,
+  .ff-room .reason-grid,
+  .ff-room .result-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px;
+  }
+  .ff-room .round-grid > *,
+  .ff-room .bet-grid > *,
+  .ff-room .reveal-grid > *,
+  .ff-room .reason-grid > *,
+  .ff-room .result-grid > * {
+    min-width: 0;
+  }
+
+  /* News-reveal stage cards (NewsCard + PlayersCard) — tighten the
+   * desktop 28px / 22px padding down to phone spacing and shrink the
+   * headline from 24px so it fits without horizontal scroll. */
+  .ff-room .news-card,
+  .ff-room .players-card {
+    padding: 16px;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .ff-room .news-card {
+    margin-bottom: 12px;
+  }
+  .ff-room .news-headline {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+  .ff-room .news-excerpt {
+    font-size: 13px;
+    margin-bottom: 14px;
+    padding-left: 10px;
+  }
+  .ff-room .news-source {
+    flex-wrap: wrap;
+    font-size: 10px;
+    margin-bottom: 10px;
+  }
+  .ff-room .news-meta {
+    gap: 6px;
+  }
+  .ff-room .news-cta {
+    margin-left: 0;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  /* Reasoning-reveal stage — camp-bar (REAL vs FAKE summary).
+   * Desktop puts the label + count on the same row via `space-between`
+   * inside `.camp-side-head`. On a 358px phone width each camp side
+   * shrinks to ~120px of inner space, so the 16px Orbitron label +
+   * "{count}명 · {rp} RP" count don't fit a single row — text wraps
+   * or clips. Switch to a column stack and trim font sizes to match
+   * the mobile mockup. */
+  .ff-room .camp-bar {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .ff-room .camp-side {
+    padding: 10px 12px;
+    gap: 8px;
+    border-radius: var(--r-md);
+  }
+  .ff-room .camp-side-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .ff-room .camp-label {
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+  .ff-room .camp-count {
+    font-size: 11px;
+  }
+  .ff-room .camp-vs {
+    padding: 0 4px;
+    font-size: 11px;
+  }
+  .ff-room .camp-avatars {
+    gap: 4px;
+  }
+
+  /* Text-wrap safety net — long content (URLs, dense Korean blobs,
+   * pasted single tokens) was pushing reason textarea, chat bubbles,
+   * and essence rows past their parent card. `overflow-wrap:
+   * anywhere` + `word-break: break-word` force a break, and
+   * `min-width: 0` on flex/grid children unsticks the cascade. */
+  .ff-room .reason-textarea {
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .ff-room .chat-msg {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .ff-room .chat-msg-body {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: pre-wrap;
+    max-width: 100%;
+  }
+  .ff-room .essence-item {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .ff-room .essence-item > * {
+    min-width: 0;
+  }
+  .ff-room .essence-text {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .ff-room .reveal-card {
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 14px 16px;
+  }
+  .ff-room .reveal-card-head {
+    min-width: 0;
+    gap: 8px;
+  }
+  .ff-room .reveal-card-text {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: pre-wrap;
+    min-width: 0;
+  }
+
+  /* Pad the room wrapper itself down so the stage-strip + cards
+   * have breathing room above the device's bottom safe-area. */
+  .ff-room {
+    padding-bottom: 24px;
   }
 }
 
@@ -45879,8 +49124,1610 @@ body.comments-panel-resizing {
   align-items: center;
   justify-content: space-between;
   padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.ff-room .essence-foot-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* Placeholder shown when a stage's data hasn't loaded yet. */
+.ff-room .ff-room__placeholder {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+/* === src/features/arcade/layout === */
+/* Outer arcade wrapper — owns the page-level CSS variables, max-width,
+ * padding, and font. Every arcade page (home, matching, game room)
+ * renders inside this. Internal `.ff-room`, `.ff-home`, `.ff-matching`
+ * containers are passthrough — they no longer redeclare the vars or
+ * apply outer container styling. */
+.ff-arcade {
+  /* Token table calibrated against the mockups:
+   *   dark = `shared.css`        (deep glassy panels)
+   *   light = `shared-light.css` (clean white + tuned-down accents)
+   * Keep this block in sync with the matching block in `.ff-room`. */
+  --bg: var(--dark, #07070f) var(--light, #f6f6fb);
+  --surface: var(--dark, rgba(18, 18, 32, 0.72))
+    var(--light, rgba(255, 255, 255, 0.82));
+  --surface-2: var(--dark, rgba(28, 28, 46, 0.6))
+    var(--light, rgba(244, 244, 250, 0.72));
+  --surface-3: var(--dark, rgba(38, 38, 58, 0.5))
+    var(--light, rgba(232, 232, 242, 0.68));
+  --border: var(--dark, rgba(255, 255, 255, 0.08))
+    var(--light, rgba(15, 15, 35, 0.08));
+  --border-strong: var(--dark, rgba(255, 255, 255, 0.16))
+    var(--light, rgba(15, 15, 35, 0.18));
+  --text-primary: var(--dark, #f0f0f5) var(--light, #14141e);
+  --text-muted: var(--dark, #8a8aa6) var(--light, #5a5a72);
+  --text-faint: var(--dark, #5a5a78) var(--light, #9a9ab2);
+
+  /* Accent hues swap between dark/light: light theme uses
+   * tuned-down chroma so text reads against white. The `*-bright`
+   * variants stay constant and are used for filled surfaces (buttons,
+   * pills, brand gradients) where the saturated hue is meant to pop. */
+  --gold: var(--dark, #fcb300) var(--light, #c98300);
+  --gold-bright: #fcb300;
+  --gold-soft: var(--dark, rgba(252, 179, 0, 0.12))
+    var(--light, rgba(252, 179, 0, 0.16));
+  --pink: var(--dark, #db2780) var(--light, #c41f6d);
+  --pink-bright: #db2780;
+  --pink-soft: var(--dark, rgba(219, 39, 128, 0.12))
+    var(--light, rgba(219, 39, 128, 0.10));
+  --teal: var(--dark, #6eedd8) var(--light, #0e9b87);
+  --teal-bright: var(--dark, #6eedd8) var(--light, #14c3a8);
+  --teal-soft: var(--dark, rgba(110, 237, 216, 0.12))
+    var(--light, rgba(20, 195, 168, 0.14));
+  --purple: var(--dark, #a78bfa) var(--light, #6747e0);
+  --purple-bright: var(--dark, #a78bfa) var(--light, #8a6df0);
+  --purple-soft: var(--dark, rgba(167, 139, 250, 0.14))
+    var(--light, rgba(138, 109, 240, 0.12));
+
+  --shadow-sm: var(--dark, 0 2px 8px rgba(0, 0, 0, 0.3))
+    var(--light, 0 2px 8px rgba(15, 15, 40, 0.06));
+  --shadow-md: var(--dark, 0 8px 24px rgba(0, 0, 0, 0.4))
+    var(--light, 0 8px 24px rgba(15, 15, 40, 0.08));
+  --shadow-lg: var(--dark, 0 24px 64px rgba(0, 0, 0, 0.55))
+    var(--light, 0 24px 64px rgba(15, 15, 40, 0.12));
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+
+  /* Body is globally `overflow: hidden; height: 100dvh`, so each
+   * layout has to claim its own scroll container. ArcadeLayout fills
+   * the viewport and scrolls internally; horizontal centering done via
+   * padding (auto-margin would need a non-fixed width). */
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  max-width: none;
+  margin: 0;
+  padding: 24px max(32px, calc((100vw - 1280px) / 2)) 80px;
+  overflow-y: auto;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: "Outfit", system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* Soft radial accents — mirrors mockup `body::before`. Lives behind
+ * the arcade content so cards still pop on light/dark theme. Light
+ * theme uses warmer, more saturated hues per shared-light.css so the
+ * wash registers against the white page; dark keeps the muted glow. */
+.ff-arcade::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    var(--dark,
+      radial-gradient(900px 700px at 12% 8%, rgba(252, 179, 0, 0.1), transparent 60%),
+      radial-gradient(800px 600px at 88% 12%, rgba(167, 139, 250, 0.1), transparent 60%),
+      radial-gradient(1100px 800px at 50% 110%, rgba(110, 237, 216, 0.08), transparent 60%))
+    var(--light,
+      radial-gradient(900px 700px at 12% 8%, rgba(252, 179, 0, 0.18), transparent 60%),
+      radial-gradient(800px 600px at 88% 12%, rgba(138, 109, 240, 0.14), transparent 60%),
+      radial-gradient(1100px 800px at 50% 110%, rgba(20, 195, 168, 0.12), transparent 60%));
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Faint scanline overlay — mockup `body::after`. Adds CRT-style
+ * texture to the arcade backdrop. */
+.ff-arcade::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: var(--dark,
+      linear-gradient(transparent 0px, transparent 2px, rgba(255, 255, 255, 0.012) 3px, transparent 4px))
+    var(--light,
+      linear-gradient(transparent 0px, transparent 2px, rgba(15, 15, 35, 0.018) 3px, transparent 4px));
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.ff-arcade__top-bar {
+  /* extends .top-bar — selector composition isn't needed since both
+   * are applied to the same element, but we keep this hook so future
+   * arcade-specific top-bar tweaks (e.g., chip-button placement) have
+   * a place to live without disturbing other `.top-bar` consumers. */
+  margin-bottom: 22px;
+}
+
+/* ArcadeLayout top-bar — mirrors `.ff-room` so the mockup parity
+ * holds inside the `.ff-arcade` container too. */
+.ff-arcade .top-bar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 22px;
+  padding: 16px 20px;
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+.ff-arcade .top-nav {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+.ff-arcade .top-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-family: "Outfit", sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ff-arcade .top-nav-btn:hover {
+  color: var(--text-primary);
+  background: var(--surface-2);
+}
+.ff-arcade .top-nav-btn[aria-selected="true"] {
+  background: var(--gold-soft);
+  color: var(--gold);
+  border-color: rgba(252, 179, 0, 0.3);
+}
+.ff-arcade .top-nav-btn-icon {
+  font-size: 14px;
+}
+.ff-arcade .brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.ff-arcade .brand-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--gold), var(--pink));
+  display: grid;
+  place-items: center;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: #1a0a00;
+  box-shadow: 0 4px 16px rgba(252, 179, 0, 0.35);
+}
+.ff-arcade .brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ff-arcade .brand-name {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+}
+.ff-arcade .brand-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+}
+.ff-arcade .user-stats {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+  margin-left: auto;
+}
+.ff-arcade .stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+}
+.ff-arcade .stat-chip.gold {
+  border-color: rgba(252, 179, 0, 0.3);
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+.ff-arcade .stat-chip-icon {
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+}
+.ff-arcade .avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5b3aaf, #db2780);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: white;
+  border: 2px solid var(--border-strong);
+}
+
+.ff-arcade__main {
+  /* No styling — pages bring their own. Hook stays for future
+   * scroll-restoration or breadcrumb additions. */
+}
+
+/* Admin "Create round" pill — uses the Button component (Text style)
+ * so the wrapper is the shared <Button>, then this class overrides
+ * the pink admin tint. Doubled selector for specificity over the
+ * Tailwind hover/disabled utilities baked into ButtonStyle::Text. */
+.ff-arcade .ff-arcade__admin-cta,
+.ff-arcade .ff-arcade__admin-cta:hover {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid rgba(219, 39, 128, 0.45);
+  color: var(--pink);
+  background: var(--pink-soft);
+  border-radius: var(--r-md);
+  font-family: "Outfit", sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.ff-arcade .ff-arcade__admin-cta:hover {
+  background: rgba(219, 39, 128, 0.16);
+  border-color: rgba(219, 39, 128, 0.6);
+}
+
+.ff-arcade__chip-btn {
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ff-arcade__chip-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(252, 179, 0, 0.18);
+}
+
+/* Hamburger toggle — modeled on the home arena's `hud-btn--primary`
+ * (`home-btn-menu` in `views/index/component.rs`). 42px glass square
+ * with a gold-tinted gradient + thin border, hover floats a sliver
+ * and adds a gold glow, label sits below and fades in on hover. The
+ * `display: none` default keeps it desktop-hidden until the matching
+ * media query below flips it on. */
+.ff-arcade__menu-toggle {
+  position: relative;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(252, 179, 0, 0.18),
+    rgba(252, 179, 0, 0.06)
+  );
+  border: 1px solid rgba(252, 179, 0, 0.3);
+  border-radius: 11px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.ff-arcade__menu-toggle svg {
+  width: 18px;
+  height: 18px;
+  color: var(--gold-bright);
+  transition: color 0.2s;
+}
+
+.ff-arcade__menu-toggle:hover {
+  border-color: rgba(252, 179, 0, 0.45);
+  box-shadow: 0 0 20px rgba(252, 179, 0, 0.25);
+  transform: translateY(-1px);
+}
+
+.ff-arcade__menu-toggle[aria-expanded="true"] {
+  border-color: rgba(252, 179, 0, 0.55);
+  box-shadow: 0 0 18px rgba(252, 179, 0, 0.2);
+}
+
+/* Hover label — same Orbitron caps treatment as home-arena hud-btn,
+ * positioned outside the button so it doesn't compete with the SVG. */
+.ff-arcade__menu-toggle .hud-btn__label {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: "Orbitron", sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.ff-arcade__menu-toggle:hover .hud-btn__label {
+  opacity: 1;
+}
+
+.ff-arcade__menu-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 7, 15, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 900;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.ff-arcade__menu-scrim[data-open="true"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ff-arcade__menu-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(280px, 80vw);
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  border-left: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-lg);
+  z-index: 901;
+  padding: 64px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transform: translateX(100%);
+  /* Always mounted so the slide-in/out transition has both endpoints
+   * to animate between. `visibility` + `pointer-events` keep the
+   * closed drawer out of the tab order. */
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.2s ease, visibility 0s linear 0.2s;
+}
+
+.ff-arcade__menu-drawer[data-open="true"] {
+  transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
+  transition: transform 0.2s ease, visibility 0s linear 0s;
+}
+
+.ff-arcade__menu-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ff-arcade__menu-nav .top-nav-btn,
+.ff-arcade__menu-nav .ff-arcade__admin-cta,
+.ff-arcade__menu-nav .stat-chip {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 12px 14px;
+  font-size: 14px;
+  border-radius: var(--r-md);
+}
+
+/* The chip pill is normally a rounded 999px button — inside the
+ * drawer it sits next to the nav links, so square it off and align
+ * the icon + label to the leading edge for a row that matches the
+ * surrounding entries. */
+.ff-arcade__menu-nav .ff-arcade__chip-btn {
+  border-radius: var(--r-md);
+}
+.ff-arcade__menu-nav .ff-arcade__chip-btn:hover {
+  transform: none;
+  box-shadow: none;
+  background: rgba(252, 179, 0, 0.16);
+}
+
+/* Mobile (≤720px) — collapse the inline nav into the drawer, drop the
+ * sub-line + admin CTA label, and tighten the rest of the top bar so
+ * everything fits in a phone-width header. */
+@media (max-width: 720px) {
+  .ff-arcade {
+    padding: 12px 16px 64px;
+    font-size: 14px;
+  }
+
+  .ff-arcade__top-bar {
+    margin-bottom: 14px;
+  }
+
+  .ff-arcade .top-bar {
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .ff-arcade .brand {
+    gap: 10px;
+  }
+  .ff-arcade .brand-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  .ff-arcade .brand-name {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+  }
+  /* Drop the sub-label entirely on mobile — too noisy for a 360px header. */
+  .ff-arcade .brand-sub {
+    display: none;
+  }
+
+  /* Hide the inline desktop tab nav; the drawer takes over. The
+   * drawer-internal `.top-nav-btn`s stay visible because their parent
+   * is `.ff-arcade__menu-nav`, not `.ff-arcade > .top-bar`. */
+  .ff-arcade > .top-bar > .top-nav {
+    display: none;
+  }
+
+  .ff-arcade .user-stats {
+    gap: 8px;
+  }
+
+  /* Admin CTA + chip pill live in the drawer on mobile, so hide them
+   * from the header entirely. The drawer renders its own instances of
+   * both — keeping them in the header on mobile would just duplicate
+   * the controls and re-introduce the overflow this fix targets. */
+  .ff-arcade__top-bar .ff-arcade__admin-cta,
+  .ff-arcade__top-bar .ff-arcade__chip-btn {
+    display: none;
+  }
+
+  .ff-arcade .avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+
+  .ff-arcade__menu-toggle {
+    display: inline-flex;
+  }
+}
+
+/* === src/features/arcade/components/exchange_modal === */
+.ff-arcade__modal-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 7, 15, 0.7);
+  backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  animation: ff-modal-fade 0.18s ease;
+}
+
+@keyframes ff-modal-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.ff-arcade__modal-card {
+  width: min(520px, 92vw);
+  padding: 28px 28px 22px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-xl);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-lg);
+  color: var(--text-primary);
+  font-family: "Outfit", sans-serif;
+  font-size: 15px;
+  animation: ff-modal-rise 0.22s ease;
+}
+
+@keyframes ff-modal-rise {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.ff-arcade__modal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 13px;
+}
+
+.ff-arcade__modal-row:last-of-type {
+  border-bottom: none;
+}
+
+.ff-arcade__modal-label {
+  color: var(--text-muted);
+}
+
+.ff-arcade__modal-value {
+  font-family: "JetBrains Mono", monospace;
+  color: var(--text-primary);
+}
+
+.ff-arcade__modal-value--accent {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--gold);
+}
+
+.ff-arcade__modal-input {
+  width: 100%;
+  padding: 10px 14px;
+  /* Dark: deep inset against the modal surface.
+   * Light: faint near-black wash so the field reads against a white
+   * modal card. The previous hard-coded `rgba(0,0,0,0.25)` rendered
+   * as solid grey under the light theme. */
+  background: var(--dark, rgba(0, 0, 0, 0.25))
+    var(--light, rgba(15, 15, 35, 0.05));
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.ff-arcade__modal-input:focus {
+  border-color: var(--gold);
+}
+
+.ff-arcade__modal-success {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: rgba(110, 237, 216, 0.08);
+  border: 1px solid rgba(110, 237, 216, 0.25);
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+  color: var(--teal);
+}
+
+/* Mobile / touch (`hover: none`) — undo the sticky `:hover` look on
+ * arcade buttons. On touch devices, `:hover` stays applied after a
+ * tap and only clears when the user taps somewhere else, leaving the
+ * modal confirm/cancel and the settlement exit ("정산완료 → 홈으로")
+ * in a permanent hover appearance. These reset rules pull each
+ * `:hover` selector back to the same paint as its base state under
+ * `hover: none`. */
+@media (hover: none) {
+  /* Exchange modal — Confirm + Cancel both go through the global
+   * `.btn` styles, which paint gold border/text on hover. */
+  .ff-arcade__modal-card .btn:hover {
+    border-color: var(--btn-border);
+    color: var(--btn-text);
+    background: transparent;
+  }
+
+  /* Game-room primary button (used by `.settlement-exit-row`). The
+   * base rule already sets the gold background; only `transform` and
+   * `box-shadow` change on hover, so reset just those. */
+  .ff-room .btn-primary:hover:not(:disabled) {
+    transform: none;
+    box-shadow: 0 4px 16px rgba(252, 179, 0, 0.25);
+  }
+  .ff-room .btn-ghost:hover:not(:disabled) {
+    background: var(--surface-2);
+    border-color: var(--border);
+  }
+}
+
+/* === src/features/arcade/pages/home === */
+.ff-home .lobby-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 22px;
+}
+
+.ff-home .featured {
+  position: relative;
+  padding: 36px 32px;
+  /* Light theme bumps the radial wash to 0.22/0.18 with the
+   * light-palette purple so the accent reads against white;
+   * dark stays at 0.18/0.18 with the dark-palette purple. */
+  background:
+    var(--dark,
+      radial-gradient(circle at 90% 0%, rgba(252, 179, 0, 0.18), transparent 55%),
+      radial-gradient(circle at 0% 100%, rgba(167, 139, 250, 0.18), transparent 55%))
+    var(--light,
+      radial-gradient(circle at 90% 0%, rgba(252, 179, 0, 0.22), transparent 55%),
+      radial-gradient(circle at 0% 100%, rgba(138, 109, 240, 0.18), transparent 55%)),
+    var(--surface);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+.ff-home .featured::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Faint diagonal hatching for arcade texture. Dark = white-on-dark,
+   * light = dark-on-white so the pattern stays visible on both. */
+  background-image: var(--dark,
+      repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.02) 0, rgba(255, 255, 255, 0.02) 1px, transparent 1px, transparent 12px))
+    var(--light,
+      repeating-linear-gradient(45deg, rgba(15, 15, 35, 0.025) 0, rgba(15, 15, 35, 0.025) 1px, transparent 1px, transparent 12px));
+  pointer-events: none;
+}
+
+.ff-home .featured > * {
+  position: relative;
+}
+
+.ff-home .featured-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--gold);
+  color: #1a0a00;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  margin-bottom: 18px;
+}
+
+.ff-home .featured-tag-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1a0a00;
+  animation: ff-home-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes ff-home-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+.ff-home .featured-title {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 800;
+  font-size: 38px;
+  letter-spacing: 0.02em;
+  margin: 0 0 8px;
+  background: linear-gradient(120deg, #fff 0%, #fcb300 60%, #db2780 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Light theme rebuilds the gradient with the tuned-down `--gold`
+ * (#c98300) + `--pink` (#c41f6d) hues defined for the light palette
+ * (per shared-light.css). White-on-white would kill the left half
+ * of the headline. */
+html[data-theme="light"] .ff-home .featured-title {
+  background: linear-gradient(120deg, #14141e 0%, #c98300 60%, #c41f6d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ff-home .featured-tagline {
+  font-size: 16px;
+  color: var(--text-muted);
+  margin: 0 0 24px;
+  max-width: 480px;
+}
+
+.ff-home .featured-meta {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.ff-home .meta-cell {
+  padding: 12px 14px;
+  /* Dark: deep inset against the surface card.
+   * Light: 4% near-black wash per shared-light.css — reads as a
+   * neutral inner panel that matches the page typography color. */
+  background: var(--dark, rgba(0, 0, 0, 0.3))
+    var(--light, rgba(15, 15, 35, 0.04));
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+.ff-home .meta-cell-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-faint);
+  margin-bottom: 4px;
+}
+
+.ff-home .meta-cell-value {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.ff-home .meta-cell-value .accent { color: var(--gold); }
+.ff-home .meta-cell-value .teal { color: var(--teal); }
+
+.ff-home .featured-cta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ff-home .featured-status {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+}
+
+.ff-home .featured-status .green {
+  color: var(--teal);
+}
+
+.ff-home .lobby-side {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.ff-home .my-stats-card,
+.ff-home .history-card {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+
+.ff-home .my-stats-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.ff-home .my-stats-row:last-child {
+  border-bottom: none;
+}
+
+.ff-home .my-stats-row span:first-child {
+  color: var(--text-muted);
+}
+
+.ff-home .my-stats-row .num {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 600;
+}
+
+.ff-home .num.gold { color: var(--gold); }
+.ff-home .num.teal { color: var(--teal); }
+.ff-home .num.purple { color: var(--purple); }
+.ff-home .num.pink { color: var(--pink); }
+
+.ff-home .history-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.ff-home .history-row:last-child {
+  border-bottom: none;
+}
+
+.ff-home .history-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+}
+
+.ff-home .history-icon.win {
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+
+.ff-home .history-icon.lose {
+  background: var(--pink-soft);
+  color: var(--pink);
+}
+
+.ff-home .history-row-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ff-home .history-row-title {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.ff-home .history-row-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+}
+
+.ff-home .history-row-delta {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.ff-home .history-row-delta.up { color: var(--gold); }
+.ff-home .history-row-delta.down { color: var(--pink); }
+
+.ff-home .catalog-section {
+  margin-top: 28px;
+}
+
+.ff-home .catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.ff-home .game-tile {
+  position: relative;
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.ff-home .game-tile:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.ff-home .game-tile.locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ff-home .game-tile.locked:hover {
+  transform: none;
+}
+
+.ff-home .game-tile-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-md);
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  margin-bottom: 14px;
+}
+
+.ff-home .game-tile-icon.gold {
+  background: var(--gold-soft);
+  color: var(--gold);
+  box-shadow: 0 0 24px rgba(252, 179, 0, 0.15) inset;
+}
+.ff-home .game-tile-icon.teal { background: var(--teal-soft); color: var(--teal); }
+.ff-home .game-tile-icon.purple { background: var(--purple-soft); color: var(--purple); }
+.ff-home .game-tile-icon.pink { background: var(--pink-soft); color: var(--pink); }
+
+.ff-home .game-tile-name {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.ff-home .game-tile-desc {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin-bottom: 14px;
+}
+
+.ff-home .game-tile-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: auto;
+}
+
+/* Tab toggle (lobby / leaderboard) — purely visual switch in RSX */
+.ff-home .ff-home__tab-section {
+  display: none;
+  animation: ff-home-fade 0.2s ease;
+}
+
+.ff-home .ff-home__tab-section[data-active="true"] {
+  display: block;
+}
+
+@keyframes ff-home-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Leaderboard table — reused from the round-stage mockup */
+.ff-home .lb-table {
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+}
+
+.ff-home .lb-row {
+  display: grid;
+  grid-template-columns: 40px 38px minmax(140px, 1fr) minmax(170px, 1.2fr) 70px 90px;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.ff-home .lb-row:last-child {
+  border-bottom: none;
+}
+
+.ff-home .lb-row.me {
+  background: var(--gold-soft);
+  margin: 0 -16px;
+  padding: 12px 16px;
+  border-radius: var(--r-md);
+  border: 1px solid rgba(252, 179, 0, 0.3);
+}
+
+.ff-home .lb-row.head {
+  padding: 6px 0 14px;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.ff-home .lb-row.head > * {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-faint);
+  font-weight: 600;
+}
+
+.ff-home .lb-rank {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--text-faint);
+  text-align: center;
+}
+
+.ff-home .lb-rank.top1 { color: var(--gold); }
+.ff-home .lb-rank.top2 { color: #c0c0d8; }
+.ff-home .lb-rank.top3 { color: #cd7f32; }
+
+.ff-home .lb-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ff-home .lb-name {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ff-home .lb-you-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  background: var(--gold);
+  color: #1a0a00;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  border-radius: 999px;
+  box-shadow: 0 0 0 3px rgba(252, 179, 0, 0.18);
+  flex-shrink: 0;
+}
+
+.ff-home .lb-stat {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1;
+  text-align: left;
+}
+
+.ff-home .lb-accuracy {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  color: var(--text-primary);
+  text-align: right;
+  line-height: 1;
+}
+
+.ff-home .lb-primary {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--gold);
+  text-align: right;
+  line-height: 1;
+}
+
+.ff-home .ff-home__placeholder {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-faint);
+  font-style: italic;
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .ff-home .lobby-grid {
+    grid-template-columns: 1fr;
+  }
+  .ff-home .featured-meta {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile (≤720px) — drop secondary descriptions and condense cards so
+ * the lobby/leaderboard fit a phone viewport without horizontal
+ * overflow. `featured-tagline`, the section-head sub-line, and the
+ * catalog tile description are all "nice to have" copy that adds zero
+ * actionable info on mobile. */
+@media (max-width: 720px) {
+  .ff-home .featured {
+    padding: 22px 18px;
+    border-radius: var(--r-lg);
+  }
+  .ff-home .featured-title {
+    font-size: 26px;
+    margin-bottom: 6px;
+  }
+  .ff-home .featured-tag {
+    margin-bottom: 12px;
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+  .ff-home .featured-tagline {
+    display: none;
+  }
+  .ff-home .featured-meta {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .ff-home .meta-cell {
+    padding: 8px 10px;
+  }
+  .ff-home .meta-cell-label {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+  }
+  .ff-home .meta-cell-value {
+    font-size: 14px;
+  }
+  .ff-home .featured-cta {
+    gap: 8px;
+  }
+  .ff-home .featured-status {
+    font-size: 11px;
+  }
+  .ff-home .my-stats-card,
+  .ff-home .history-card,
+  .ff-home .lb-table {
+    padding: 16px;
+  }
+  .ff-home .game-tile {
+    padding: 16px;
+  }
+  .ff-home .game-tile-desc {
+    display: none;
+  }
+  /* `.section-head .sub` lives on the right side of every card title;
+   * the lift it gives the layout isn't worth the wrap on mobile. */
+  .ff-home .section-head .sub {
+    display: none;
+  }
+
+  /* Leaderboard table: collapse the participation column entirely
+   * (info is implicit in rank + accuracy) and tighten the rest. */
+  .ff-home .lb-row {
+    grid-template-columns: 28px 32px minmax(70px, 1fr) 56px 70px;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .ff-home .lb-stat {
+    display: none;
+  }
+  .ff-home .lb-row.head > div:nth-child(4) {
+    display: none;
+  }
+  .ff-home .lb-row.me {
+    margin: 0 -10px;
+    padding: 10px;
+  }
+  .ff-home .lb-rank {
+    font-size: 14px;
+  }
+  .ff-home .lb-name {
+    font-size: 13px;
+  }
+  .ff-home .lb-accuracy {
+    font-size: 12px;
+  }
+  .ff-home .lb-primary {
+    font-size: 14px;
+  }
+}
+
+/* === src/features/arcade/games/fact_or_fold/pages/matching === */
+.ff-matching {
+  max-width: 880px;
+  margin: 48px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  align-items: center;
+  text-align: center;
+}
+
+.ff-matching .matching-eyebrow {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  color: var(--gold);
+  text-transform: uppercase;
+  padding: 6px 14px;
+  background: var(--gold-soft);
+  border: 1px solid rgba(252, 179, 0, 0.35);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ff-matching .matching-eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: ff-matching-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes ff-matching-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+.ff-matching .matching-title {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 800;
+  font-size: 48px;
+  letter-spacing: 0.04em;
+  margin: 0;
+  background: linear-gradient(120deg, #fff 0%, #fcb300 60%, #db2780 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ff-matching .matching-subtitle {
+  font-size: 15px;
+  color: var(--text-muted);
+  max-width: 540px;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.ff-matching .matching-slots {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.ff-matching .matching-slot {
+  position: relative;
+  padding: 22px 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-height: 168px;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.ff-matching .matching-slot[data-state="filled"] {
+  border-color: rgba(252, 179, 0, 0.35);
+  background: linear-gradient(180deg, var(--gold-soft), var(--surface));
+  box-shadow: 0 0 0 4px rgba(252, 179, 0, 0.08);
+}
+
+.ff-matching .matching-slot[data-state="me"] {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, rgba(252, 179, 0, 0.16), var(--surface));
+  box-shadow: 0 0 0 5px rgba(252, 179, 0, 0.18);
+}
+
+.ff-matching .matching-slot[data-state="empty"] {
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.ff-matching .matching-slot[data-state="empty"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.018),
+      rgba(255, 255, 255, 0.018) 6px,
+      transparent 6px,
+      transparent 14px
+    );
+  pointer-events: none;
+  animation: ff-matching-scan 5s linear infinite;
+}
+
+@keyframes ff-matching-scan {
+  from { background-position: 0 0; }
+  to { background-position: 40px 40px; }
+}
+
+.ff-matching .matching-slot-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4f3aaf, #7d3aaf);
+  display: grid;
+  place-items: center;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: white;
+  border: 2px solid var(--border-strong);
+}
+
+.ff-matching .matching-slot[data-state="empty"] .matching-slot-avatar {
+  background: transparent;
+  border: 2px dashed rgba(255, 255, 255, 0.18);
+  color: var(--text-faint);
+  animation: ff-matching-pulse 1.6s ease-in-out infinite;
+}
+
+.ff-matching .matching-slot-avatar.a2 { background: linear-gradient(135deg, #3aaf7d, #6eedd8); color: #042a1f; }
+.ff-matching .matching-slot-avatar.a3 { background: linear-gradient(135deg, #af3a7d, #db2780); }
+.ff-matching .matching-slot-avatar.a4 { background: linear-gradient(135deg, #af7d3a, #fcb300); color: #1a0a00; }
+
+.ff-matching .matching-slot-name {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ff-matching .matching-slot-name .you-tag {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  background: var(--gold);
+  color: #1a0a00;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.1em;
+}
+
+.ff-matching .matching-slot-pill {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--text-muted);
+}
+
+.ff-matching .matching-slot[data-state="filled"] .matching-slot-pill,
+.ff-matching .matching-slot[data-state="me"] .matching-slot-pill {
+  background: var(--teal-soft);
+  color: var(--teal);
+}
+
+.ff-matching .matching-slot[data-state="empty"] .matching-slot-pill {
+  color: var(--text-faint);
+}
+
+.ff-matching .matching-slot-placeholder {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--text-faint);
+  line-height: 1.4;
+}
+
+.ff-matching .matching-slot-num {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--text-faint);
+  opacity: 0.6;
+}
+
+.ff-matching .matching-progress {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ff-matching .matching-progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.ff-matching .matching-progress-count {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ff-matching .matching-progress-bar {
+  height: 6px;
+  background: var(--surface-3);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.ff-matching .matching-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--teal), var(--gold));
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.ff-matching .matching-hints {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.ff-matching .matching-hint {
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  text-align: left;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.ff-matching .matching-hint-icon {
+  font-size: 14px;
+  color: var(--gold);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.ff-matching .matching-hint strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.ff-matching .matching-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.ff-matching .matching-actions-hint {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.ff-matching .matching-buyin-note {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 6px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.ff-matching .matching-buyin-note strong {
+  color: var(--gold);
+}
+
+@media (max-width: 720px) {
+  .ff-matching .matching-slots {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ff-matching .matching-hints {
+    grid-template-columns: 1fr;
+  }
+  .ff-matching .matching-title {
+    font-size: 36px;
+  }
   border-top: 1px solid var(--border-subtle);
 }
+
+/* Mobile (≤720px) — extra arcade overrides for matching + game room.
+ * Kept as a separate block from the existing matching media query so
+ * the prior rules stay untouched. */
+@media (max-width: 720px) {
+  /* Matching page: shrink the headline + drop the long subtitle so
+   * four slot cards fit a phone width. */
+  .ff-matching {
+    margin: 16px auto 0;
+    gap: 18px;
+    padding: 0 4px;
+  }
+  .ff-matching .matching-title {
+    font-size: 28px;
+    letter-spacing: 0.02em;
+  }
+  .ff-matching .matching-subtitle {
+    display: none;
+  }
+  .ff-matching .matching-slot {
+    padding: 16px 10px 14px;
+    min-height: 140px;
+  }
+  .ff-matching .matching-eyebrow {
+    font-size: 10px;
+    padding: 5px 10px;
+    letter-spacing: 0.16em;
+  }
+
+  /* Game room: stack the sidebar above the view-stack on mobile so
+   * the 176px-fixed sidebar doesn't squeeze the main view off-screen.
+   * Sidebar itself stays a vertical stack — its two children
+   * (.stage-timeline horizontal-strip, .timer-card compact pill) are
+   * full-width rows, matching the mobile mockup.
+   *
+   * `minmax(0, 1fr)` (instead of bare `1fr`) is what keeps the grid
+   * column from blowing past the viewport when a child has nowrap
+   * content (the 6 stage-step pills). Without it the column adopts
+   * the grid item's min-content width, and the whole room scrolls
+   * horizontally. The matching `min-width: 0` on the children
+   * cascades the same fix down one level for flex/grid descendants. */
+  .ff-room .layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .ff-room .layout > * {
+    min-width: 0;
+  }
+  .ff-room .sidebar {
+    position: static;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+  }
+  .ff-room .sidebar > * {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  /* Belt-and-braces clamp — explicit max-width so the pill strip and
+   * collapsible news never push past the room width even when their
+   * inner contents are nowrap or have wide whitespace. */
+  .ff-room .stage-timeline.stage-timeline-global,
+  .ff-room .timer-card,
+  .ff-room .news-collapsible {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
 .reports-arena .report-card__meta {
   display: inline-flex;
   align-items: center;

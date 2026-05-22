@@ -1317,10 +1317,24 @@ fn generate_struct_impl(
                 sk: Option<impl std::fmt::Display>
             ) -> #result_ty <Option<Self>, #err_ctor> {
                 if let Some(sk) = sk {
-                    let sk_str = sk.to_string();
-                    let pk_str = pk.to_string();
-
-                    // Try exact match first (#sk = :sk)
+                    // Exact match only. A previous version of this macro
+                    // fell back to `begins_with(#sk, :sk)` on a miss, which
+                    // made `Model::get(pk, exact_sk)` silently return rows
+                    // whose sk happens to be a prefix of OR a longer string
+                    // starting with the requested sk — i.e. an entirely
+                    // different entity type that lives in the same
+                    // partition. That fallback was always a footgun:
+                    //   - it conflicts with the documented `Model::get`
+                    //     semantics ("get by exact key");
+                    //   - it surfaces as "missing field ..." deserialize
+                    //     errors when the foreign entity lacks fields the
+                    //     requested type requires;
+                    //   - callers that genuinely want prefix matching
+                    //     should reach for `query` / `query_begins_with_sk`
+                    //     directly.
+                    // The handful of places that historically depended on
+                    // the fallback (see `get_post.rs` for the sk-prefix
+                    // workaround) already worked around it explicitly.
                     let resp = cli
                         .query()
                         .table_name(Self::table_name())
@@ -1329,38 +1343,11 @@ fn generate_struct_impl(
                         .expression_attribute_names("#sk", "sk")
                         .expression_attribute_values(
                             ":pk",
-                            aws_sdk_dynamodb::types::AttributeValue::S(pk_str.clone()),
+                            aws_sdk_dynamodb::types::AttributeValue::S(pk.to_string()),
                         )
                         .expression_attribute_values(
                             ":sk",
-                            aws_sdk_dynamodb::types::AttributeValue::S(sk_str.clone()),
-                        )
-                        .limit(1)
-                        .send()
-                        .await
-                        .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
-
-                    if let Some(items) = &resp.items {
-                        if let Some(item) = items.first() {
-                            let ev: Self = serde_dynamo::from_item(item.clone())?;
-                            return Ok(Some(ev));
-                        }
-                    }
-
-                    // Fall back to begins_with
-                    let resp = cli
-                        .query()
-                        .table_name(Self::table_name())
-                        .key_condition_expression("#pk = :pk AND begins_with(#sk, :sk)")
-                        .expression_attribute_names("#pk", Self::pk_field())
-                        .expression_attribute_names("#sk", "sk")
-                        .expression_attribute_values(
-                            ":pk",
-                            aws_sdk_dynamodb::types::AttributeValue::S(pk_str),
-                        )
-                        .expression_attribute_values(
-                            ":sk",
-                            aws_sdk_dynamodb::types::AttributeValue::S(sk_str),
+                            aws_sdk_dynamodb::types::AttributeValue::S(sk.to_string()),
                         )
                         .limit(1)
                         .send()

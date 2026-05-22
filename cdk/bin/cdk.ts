@@ -89,6 +89,7 @@ const ap_northeast_2_svc = new RegionalLambdaStack(
     commit: process.env.COMMIT!,
     baseDomain,
     apiDomain,
+    webOrigin: `https://${webDomain}`,
     runtimeEnvironment: {
       BIYARD_API_URL: publicBiyardApiUrl,
     },
@@ -130,6 +131,7 @@ const ap_northeast_2_lambda = new RegionalLambdaStack(
     commit: process.env.COMMIT!,
     baseDomain,
     apiDomain: `lambda-${apiDomain}`,
+    webOrigin: `https://${webDomain}`,
     runtimeEnvironment: {
       BIYARD_API_URL: privateBiyardApiUrl,
     },
@@ -148,6 +150,7 @@ new RegionalLambdaStack(app, `ratel-${env}-svc-eu-central-1`, {
   commit: process.env.COMMIT!,
   baseDomain,
   apiDomain,
+  webOrigin: `https://${webDomain}`,
   runtimeEnvironment: {
     BIYARD_API_URL: publicBiyardApiUrl,
   },
@@ -162,6 +165,7 @@ new RegionalLambdaStack(app, `ratel-${env}-svc-us-east-1`, {
   commit: process.env.COMMIT!,
   baseDomain,
   apiDomain,
+  webOrigin: `https://${webDomain}`,
   runtimeEnvironment: {
     BIYARD_API_URL: publicBiyardApiUrl,
   },
