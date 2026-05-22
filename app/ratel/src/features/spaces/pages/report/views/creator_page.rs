@@ -2,8 +2,8 @@ use super::*;
 use crate::common::{
     components::{editor::Editor as RichEditor, Button, ButtonStyle},
     icons::{edit::Edit1, other_devices::Save},
+    spawn,
 };
-use dioxus::prelude::spawn;
 
 #[component]
 pub fn CreatorPage(space_id: SpacePartition) -> Element {

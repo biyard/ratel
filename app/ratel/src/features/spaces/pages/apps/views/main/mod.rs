@@ -45,8 +45,6 @@ pub fn SpaceAppsPage(space_id: ReadSignal<SpacePartition>) -> Element {
     let allow_app = move |app_type: &SpaceAppType| -> bool {
         match (env, app_type) {
             (Environment::Production, SpaceAppType::Analyzes) => false,
-            // Report app is local-only while it's being prototyped.
-            (Environment::Dev | Environment::Staging | Environment::Production, SpaceAppType::Report) => false,
             _ => true,
         }
     };

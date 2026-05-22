@@ -1,3 +1,3 @@
 mod component;
 
-pub use component::{Editor, EditorProps};
+pub use component::{Editor, EditorProps, EditorSlashSignal};

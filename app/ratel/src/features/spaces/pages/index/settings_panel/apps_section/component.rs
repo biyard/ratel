@@ -1,23 +1,6 @@
-use crate::common::config::Environment;
 use crate::features::spaces::pages::apps::controllers::{get_space_apps, install_space_app};
 use crate::features::spaces::pages::apps::types::SpaceAppType;
 use crate::features::spaces::pages::index::*;
-
-/// Returns `true` if the build's `ENV` resolves to `Local`. Used to gate
-/// in-progress apps (e.g. the Report app) so they only surface on a
-/// developer's local machine, never on dev / staging / production.
-fn is_local_env() -> bool {
-    Environment::default() == Environment::Local
-}
-
-/// Filter for `SpaceAppType` variants whose visibility depends on the
-/// runtime environment. Currently only `Report` is environment-gated.
-fn is_visible_in_env(app: SpaceAppType) -> bool {
-    match app {
-        SpaceAppType::Report => is_local_env(),
-        _ => true,
-    }
-}
 
 #[component]
 pub fn AppsSection(space_id: ReadSignal<SpacePartition>) -> Element {
@@ -35,13 +18,11 @@ pub fn AppsSection(space_id: ReadSignal<SpacePartition>) -> Element {
         .iter()
         .copied()
         .filter(|t: &SpaceAppType| t.is_default() || installed_types.contains(t))
-        .filter(|t| is_visible_in_env(*t))
         .collect();
     let available_apps: Vec<SpaceAppType> = SpaceAppType::VARIANTS
         .iter()
         .copied()
         .filter(|t: &SpaceAppType| !t.is_default() && !installed_types.contains(t))
-        .filter(|t| is_visible_in_env(*t))
         .collect();
 
     let mut in_progress = use_signal(|| Option::<SpaceAppType>::None);
