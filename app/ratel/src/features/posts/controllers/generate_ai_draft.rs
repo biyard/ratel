@@ -8,13 +8,17 @@
 //!     (DynamoDB conditional update on `ai_draft_used` is the final guard)
 
 use crate::features::auth::User;
-use crate::features::membership::controllers::get_membership_handler;
-use crate::features::posts::models::Post;
-use crate::features::posts::services::ai_draft;
 use crate::features::posts::types::{
     AiDraftLanguage, AiDraftTemplate, AiPostDraftError, TeamGroupPermission,
 };
 use crate::features::posts::*;
+
+#[cfg(feature = "server")]
+use crate::features::membership::controllers::get_membership_handler;
+#[cfg(feature = "server")]
+use crate::features::posts::models::Post;
+#[cfg(feature = "server")]
+use crate::features::posts::services::ai_draft;
 
 #[cfg(feature = "server")]
 #[allow(unused_imports)]

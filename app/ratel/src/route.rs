@@ -7,7 +7,7 @@ use crate::features::my_follower::MyFollowerPage;
 
 use crate::features::spaces::pages::dashboard::SpaceDashboardPage;
 use crate::features::spaces::pages::overview::SpaceOverviewPage;
-use crate::features::spaces::pages::report::SpaceReportPage;
+use crate::features::spaces::pages::report::{ReportDetailPage, SpaceReportPage};
 use crate::features::spaces::SpaceLayout;
 
 // Space Rewards
@@ -273,6 +273,8 @@ pub enum Route {
                 SpaceIndexPage { space_id: SpacePartition },
                 #[route("/report")]
                 SpaceReportPage { space_id: SpacePartition },
+                #[route("/report/:report_id")]
+                ReportDetailPage { space_id: SpacePartition, report_id: String },
 
                 // Deep link to a discussion (standalone page, no arena overlay).
                 #[route("/discussions/:discussion_id")]

@@ -31,6 +31,15 @@ pub fn AiDraftModal(
     let language = use_signal(|| initial_language);
     let mut error_msg = use_signal(|| Option::<String>::None);
 
+    // Per-attempt nonce. When the user clicks Cancel we bump this; the
+    // spawned task captures the value at launch time and bails out if it
+    // doesn't match by the time the request resolves — so an in-flight AI
+    // call can no longer overwrite the editor after the modal was closed.
+    // The server-side allowance may still flip (one-shot is keyed on
+    // success, not on the client honouring the result), but the editor
+    // stays in the user's chosen state.
+    let mut attempt_nonce = use_signal(|| 0u64);
+
     let required_filled = use_memo(move || {
         !topic.read().trim().is_empty()
             && !background.read().trim().is_empty()
@@ -40,6 +49,13 @@ pub fn AiDraftModal(
     let post_id_value = post_id;
 
     let do_generate = use_callback(move |_: ()| {
+        // Bump the nonce so that *if* an earlier attempt's request is still
+        // in flight, its eventual result is treated as cancelled.
+        let this_nonce = {
+            let n = attempt_nonce.peek().wrapping_add(1);
+            n
+        };
+        attempt_nonce.set(this_nonce);
         step.set(AiDraftStep::Loading);
         error_msg.set(None);
         let topic_val = topic.read().clone();
@@ -60,7 +76,14 @@ pub fn AiDraftModal(
                 participation_notes: notes_val,
                 language: lang_val,
             };
-            match generate_ai_draft_handler(pid, req).await {
+            let result = generate_ai_draft_handler(pid, req).await;
+            // If the user cancelled (or fired a retry) while we were in
+            // flight, the nonce has moved on. Drop the result on the
+            // floor and don't touch on_success / error_msg / step.
+            if *attempt_nonce.read() != this_nonce {
+                return;
+            }
+            match result {
                 Ok(resp) => {
                     on_success.call(resp);
                 }
@@ -70,6 +93,14 @@ pub fn AiDraftModal(
                 }
             }
         });
+    });
+
+    // Cancel: bumping the nonce makes any in-flight spawn discard its
+    // result before touching the editor or the modal state. The caller
+    // is expected to also close the modal after invoking this.
+    let cancel_in_flight = use_callback(move |_: ()| {
+        let next = attempt_nonce.peek().wrapping_add(1);
+        attempt_nonce.set(next);
     });
 
     let current_step = *step.read();
@@ -247,7 +278,13 @@ pub fn AiDraftModal(
                             button {
                                 class: "ai-btn-base",
                                 r#type: "button",
-                                onclick: move |_| on_close.call(()),
+                                onclick: move |_| {
+                                    // Discard the in-flight task's result before
+                                    // closing so a late success can't overwrite
+                                    // the editor after Cancel.
+                                    cancel_in_flight.call(());
+                                    on_close.call(());
+                                },
                                 "{tr.btn_cancel}"
                             }
                         }

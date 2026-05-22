@@ -153,6 +153,7 @@ enum ParseError {
     NoJsonObject,
     InvalidJson(String),
     MissingSection(&'static str),
+    StructureViolation(String),
 }
 
 fn parse_and_verify(
@@ -167,12 +168,121 @@ fn parse_and_verify(
         AiDraftLanguage::Ko => SECTIONS_KO,
         AiDraftLanguage::En => SECTIONS_EN,
     };
-    for heading in sections {
-        if !parsed.body_html.contains(heading) {
+
+    // The model can emit anything; the editor renders body_html via
+    // `dangerous_inner_html`. To prevent XSS we don't trust the raw model
+    // output — we parse a strict `<h2>HEADING</h2><p>TEXT</p>` × 5 shape,
+    // re-emit the body with HTML-escaped text content, and reject anything
+    // that doesn't conform. This also enforces AC-10 (5 sections in order).
+    let safe_body = sanitize_and_verify_body(&parsed.body_html, &sections)?;
+
+    Ok(OpinionDraftOutput {
+        title: html_escape_text(parsed.title.trim()),
+        body_html: safe_body,
+    })
+}
+
+/// Walks `body_html` and accepts ONLY the five-section structure described
+/// in the prompt:
+///
+///     <h2>{sections[0]}</h2><p>...</p>
+///     <h2>{sections[1]}</h2><p>...</p>
+///     ... (5 total)
+///
+/// Returns the body re-emitted with text content HTML-escaped. Any unknown
+/// tag, attribute on a tag, extra content, wrong heading text, or wrong
+/// order is rejected so the model can't smuggle `<script>`, `<img onerror>`,
+/// `<a href="javascript:...">`, or similar into the editor.
+fn sanitize_and_verify_body(
+    raw: &str,
+    sections: &[&'static str; 5],
+) -> std::result::Result<String, ParseError> {
+    let mut cur = raw.trim();
+    let mut out = String::with_capacity(raw.len());
+    for (idx, heading) in sections.iter().enumerate() {
+        cur = expect_open_tag(cur, "h2").map_err(|why| {
+            ParseError::StructureViolation(format!("section {}: expected <h2>: {why}", idx + 1))
+        })?;
+        let (h_text, after_h_text) = take_until_close_tag(cur, "h2").map_err(|why| {
+            ParseError::StructureViolation(format!(
+                "section {}: expected </h2>: {why}",
+                idx + 1
+            ))
+        })?;
+        if h_text.trim() != *heading {
             return Err(ParseError::MissingSection(heading));
         }
+        cur = after_h_text.trim_start();
+
+        cur = expect_open_tag(cur, "p").map_err(|why| {
+            ParseError::StructureViolation(format!("section {}: expected <p>: {why}", idx + 1))
+        })?;
+        let (p_text, after_p_text) = take_until_close_tag(cur, "p").map_err(|why| {
+            ParseError::StructureViolation(format!("section {}: expected </p>: {why}", idx + 1))
+        })?;
+        cur = after_p_text.trim_start();
+
+        out.push_str("<h2>");
+        out.push_str(&html_escape_text(heading));
+        out.push_str("</h2><p>");
+        out.push_str(&html_escape_text(p_text.trim()));
+        out.push_str("</p>");
     }
-    Ok(parsed)
+
+    if !cur.trim().is_empty() {
+        return Err(ParseError::StructureViolation(format!(
+            "unexpected trailing content after 5 sections: {:.80}",
+            cur.trim()
+        )));
+    }
+    Ok(out)
+}
+
+/// Consume an exact opening tag with NO attributes (`<tag>`), case-sensitive
+/// lowercase. Returns the remaining input. Rejects `<tag attr=...>` so the
+/// model can't sneak `<h2 onclick=...>` or `<p class="...">`.
+fn expect_open_tag<'a>(input: &'a str, tag: &str) -> std::result::Result<&'a str, &'static str> {
+    let input = input.trim_start();
+    let needle = format!("<{}>", tag);
+    if let Some(rest) = input.strip_prefix(&needle) {
+        Ok(rest)
+    } else {
+        Err("tag missing or has attributes")
+    }
+}
+
+/// Consume up to and including the next `</tag>`. Returns `(text, rest)`.
+/// Any `<` appearing inside `text` is treated as a structure violation —
+/// we want pure text between heading/paragraph delimiters.
+fn take_until_close_tag<'a>(
+    input: &'a str,
+    tag: &str,
+) -> std::result::Result<(&'a str, &'a str), &'static str> {
+    let close = format!("</{}>", tag);
+    let close_idx = input.find(&close).ok_or("closing tag not found")?;
+    let text = &input[..close_idx];
+    if text.contains('<') {
+        return Err("nested tags not allowed");
+    }
+    Ok((text, &input[close_idx + close.len()..]))
+}
+
+/// Minimal HTML text escaper: handles the five XML/HTML special chars.
+/// The body_html lands inside the editor's `dangerous_inner_html`, so any
+/// raw `<`, `"`, `'`, etc. in text content must be entity-encoded.
+fn html_escape_text(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '&' => out.push_str("&amp;"),
+            '"' => out.push_str("&quot;"),
+            '\'' => out.push_str("&#x27;"),
+            _ => out.push(c),
+        }
+    }
+    out
 }
 
 /// Returns the substring `&raw[start..end+1]` that contains the first
@@ -238,10 +348,13 @@ mod tests {
 
     #[test]
     fn parse_rejects_missing_section() {
+        // Only one section out of five → strict parser bails when it
+        // can't open the second <h2>. Either MissingSection (wrong text)
+        // or StructureViolation (no tag at all) is acceptable rejection.
         let raw = r#"{"title":"t","body_html":"<h2>추진배경</h2><p>p</p>"}"#;
         assert!(matches!(
             parse_and_verify(raw, AiDraftLanguage::Ko),
-            Err(ParseError::MissingSection(_))
+            Err(ParseError::MissingSection(_) | ParseError::StructureViolation(_))
         ));
     }
 
@@ -256,5 +369,58 @@ mod tests {
         let result = parse_and_verify(&raw, AiDraftLanguage::Ko).unwrap();
         assert_eq!(result.title, "t");
         assert_eq!(result.body_html, body);
+    }
+
+    #[test]
+    fn parse_strips_script_and_attrs() {
+        // Hostile model output: tries to smuggle <script>, an <img> with
+        // an event handler, and adds a class attr on <h2>. The strict
+        // parser must reject the lot.
+        let body = "<h2 class=\\\"x\\\">추진배경</h2>\
+                    <p>hello <script>alert(1)</script></p>\
+                    <h2>추진목적</h2><p>b</p>\
+                    <h2>추진내용</h2><p>c</p>\
+                    <h2>의견수렴 사항</h2><p>d</p>\
+                    <h2>참여 안내</h2><p>e</p>";
+        let raw = format!(r#"{{"title":"t","body_html":"{}"}}"#, body);
+        assert!(matches!(
+            parse_and_verify(&raw, AiDraftLanguage::Ko),
+            Err(ParseError::StructureViolation(_))
+        ));
+    }
+
+    #[test]
+    fn parse_escapes_text_content() {
+        // Special chars in section text — the sanitiser must HTML-escape
+        // them when re-emitting so the editor's `dangerous_inner_html`
+        // can't be tricked into parsing them as tags.
+        let body = "<h2>추진배경</h2><p>a &lt; b &amp; c</p>\
+                    <h2>추진목적</h2><p>safe</p>\
+                    <h2>추진내용</h2><p>safe</p>\
+                    <h2>의견수렴 사항</h2><p>safe</p>\
+                    <h2>참여 안내</h2><p>safe</p>";
+        let raw = format!(r#"{{"title":"t","body_html":"{}"}}"#, body);
+        let result = parse_and_verify(&raw, AiDraftLanguage::Ko).unwrap();
+        // Already-escaped entities are double-escaped because we don't
+        // distinguish entities from raw chars — the bare `&` becomes
+        // `&amp;`. That's the safe direction.
+        assert!(result.body_html.contains("&amp;lt;"));
+        assert!(result.body_html.contains("&amp;amp;"));
+        assert!(!result.body_html.contains("<script"));
+    }
+
+    #[test]
+    fn parse_rejects_extra_trailing_content() {
+        let body = "<h2>추진배경</h2><p>a</p>\
+                    <h2>추진목적</h2><p>b</p>\
+                    <h2>추진내용</h2><p>c</p>\
+                    <h2>의견수렴 사항</h2><p>d</p>\
+                    <h2>참여 안내</h2><p>e</p>\
+                    <p>extra</p>";
+        let raw = format!(r#"{{"title":"t","body_html":"{}"}}"#, body);
+        assert!(matches!(
+            parse_and_verify(&raw, AiDraftLanguage::Ko),
+            Err(ParseError::StructureViolation(_))
+        ));
     }
 }
