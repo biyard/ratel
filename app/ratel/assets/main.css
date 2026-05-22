@@ -16532,9 +16532,19 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   --accent-gold: #fcb300;
   --accent-teal: #6eedd8;
   --accent-red: #ef4444;
+}
 
-  position: relative;
-  height: 100vh;
+/* Action editor scope — `:has(.action-edit-footer)` bumps specificity
+   above the bare `.arena` block at line 29282 (space-index page) so
+   our viewport-pinned layout wins the cascade. */
+.arena:has(> .action-edit-footer) {
+  /* Pin to the viewport so the action-editor footer always lands on the
+     bottom edge regardless of how the surrounding `min-h-0 flex-1`
+     wrappers compute their height — fixed + inset:0 bypasses the
+     parent's intrinsic height entirely. */
+  position: fixed;
+  inset: 0;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -17146,8 +17156,13 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   --accent-teal: #6eedd8;
   --accent-red: #ef4444;
 
-  position: relative;
-  height: 100vh;
+  /* Pin to the viewport so the action-editor footer always lands on the
+     bottom edge regardless of how the surrounding `min-h-0 flex-1`
+     wrappers compute their height — fixed + inset:0 bypasses the
+     parent's intrinsic height entirely. */
+  position: fixed;
+  inset: 0;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -17985,8 +18000,13 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   --accent-teal: #6eedd8;
   --accent-red: #ef4444;
 
-  position: relative;
-  height: 100vh;
+  /* Pin to the viewport so the action-editor footer always lands on the
+     bottom edge regardless of how the surrounding `min-h-0 flex-1`
+     wrappers compute their height — fixed + inset:0 bypasses the
+     parent's intrinsic height entirely. */
+  position: fixed;
+  inset: 0;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -18724,8 +18744,13 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   --accent-teal: #6eedd8;
   --accent-red: #ef4444;
 
-  position: relative;
-  height: 100vh;
+  /* Pin to the viewport so the action-editor footer always lands on the
+     bottom edge regardless of how the surrounding `min-h-0 flex-1`
+     wrappers compute their height — fixed + inset:0 bypasses the
+     parent's intrinsic height entirely. */
+  position: fixed;
+  inset: 0;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   overflow: hidden;
