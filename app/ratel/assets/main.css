@@ -52954,3 +52954,100 @@ html[data-theme="light"] .ff-home .featured-title {
     text-align: left;
   }
 }
+
+
+
+
+/* === src/features/spaces/pages/report/views/detail/figure-caption === */
+/* Per-figure caption — editable label in the style of a publishable
+   "그림 1. ..." / "표 1. ..." line. Lives inside each `<figure>` (charts)
+   or each `<table>` (via the native `<caption>` element).
+   The figure / table itself is contenteditable=false; the caption
+   element overrides to true so it's the only editable surface. */
+.report-detail__chart-caption {
+  margin: 14px auto 0;
+  padding: 6px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--rd-text-muted);
+  text-align: center;
+  outline: none;
+  caret-color: var(--rd-accent);
+  transition: color 0.18s;
+  /* Keep the element clickable even when empty so the placeholder
+     hint is reachable on hover/tap. Without this an empty `<figcaption>`
+     collapses to 0 height. */
+  min-height: 1.6em;
+  display: block;
+}
+.report-detail__chart-caption:focus { color: var(--rd-text-primary); }
+.report-detail__chart-caption:empty::before,
+.report-detail__chart-caption:has(>br:only-child)::before {
+  content: attr(data-placeholder);
+  color: var(--rd-text-dim);
+  font-style: italic;
+}
+.report-detail__chart-caption:focus:empty::before { color: var(--rd-text-dim); }
+
+/* Native <caption> on report tables — top-left aligned per the
+   spec/mockup. The placeholder pattern is the same as the figcaption. */
+.report-detail .ratel-editor .re-content table > caption.re-table-caption {
+  caption-side: top;
+  text-align: left;
+  padding: 6px 4px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--rd-text-muted);
+  outline: none;
+  caret-color: var(--rd-accent);
+  font-weight: 500;
+  /* Same min-height trick — empty <caption> would collapse to 0px
+     and never get a click target for the placeholder. */
+  min-height: 1.6em;
+}
+.report-detail .ratel-editor .re-content table > caption.re-table-caption:focus {
+  color: var(--rd-text-primary);
+}
+.report-detail .ratel-editor .re-content table > caption.re-table-caption:empty::before,
+.report-detail .ratel-editor .re-content table > caption.re-table-caption:has(>br:only-child)::before {
+  content: attr(data-placeholder);
+  color: var(--rd-text-dim);
+  font-style: italic;
+}
+
+@media print {
+  .report-detail__chart-caption {
+    color: #222;
+    font-size: 11px;
+    padding: 6px 0 0;
+    margin-top: 8px;
+  }
+  /* Hide the placeholder in print when the user didn't fill it in. */
+  .report-detail__chart-caption:empty,
+  .report-detail__chart-caption:has(>br:only-child) { display: none; }
+  .report-detail .ratel-editor .re-content table > caption.re-table-caption {
+    color: #222;
+    font-size: 11px;
+  }
+  .report-detail .ratel-editor .re-content table > caption.re-table-caption:empty,
+  .report-detail .ratel-editor .re-content table > caption.re-table-caption:has(>br:only-child) {
+    display: none;
+  }
+}
+
+
+/* === src/features/spaces/pages/report/views/detail/table-layout === */
+/* Stable column widths inside report tables. Default `table-layout:
+   auto` lets browsers size columns by content width, which leaves
+   irregular column boundaries when cells are sparse (mostly &nbsp;).
+   `table-layout: fixed` distributes columns evenly so drag-selecting
+   cells aligns to visible rectangles. */
+.report-detail .ratel-editor .re-content table {
+  table-layout: fixed;
+  width: 100%;
+}
+.report-detail .ratel-editor .re-content table td,
+.report-detail .ratel-editor .re-content table th {
+  word-break: break-word;
+  vertical-align: top;
+}

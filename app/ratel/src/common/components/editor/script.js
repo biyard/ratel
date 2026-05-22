@@ -480,6 +480,13 @@
         var useHeader = tableHeader.checked;
         closeModal(tableMask);
         var html = "<table>";
+        // Native <caption> element — semantically belongs at the top
+        // of a table; users type the figure/표 label here ("표 1. …").
+        // contenteditable=true overrides the row above which may have
+        // set the editor to non-editable in some flows. Intentionally
+        // empty so the CSS `:empty::before` placeholder hint shows.
+        html +=
+          '<caption class="re-table-caption" contenteditable="true" data-placeholder="캡션 (예: 표 1. 항목 비교)"></caption>';
         for (var r = 0; r < rows; r++) {
           html += "<tr>";
           for (var c = 0; c < cols; c++) {
@@ -617,6 +624,359 @@
           hideBubble();
           editor.focus();
         }
+      });
+    }
+
+    // ── Table actions (insert row/col, delete row/col/table, merge, split) ──
+    // Floating mini-toolbar that appears above the table the caret is
+    // inside. Operations are pure DOM mutations — execCommand doesn't
+    // ship anything for row/column manipulation, and these need
+    // index-based logic anyway.
+    var tableActions = root.querySelector(".re-table-actions");
+    if (tableActions) {
+      // Prevent toolbar mousedown from collapsing the caret.
+      tableActions.addEventListener("mousedown", function (e) { e.preventDefault(); });
+
+      var currentCell = null;
+
+      function findCell(node) {
+        while (node && node !== editor) {
+          if (node.nodeType === 1 && (node.tagName === "TD" || node.tagName === "TH")) return node;
+          node = node.parentNode;
+        }
+        return null;
+      }
+
+      // ── Drag-selection across cells ─────────────────────
+      // Track mousedown → mousemove → mouseup inside a table and
+      // mark the rectangle of cells the user is dragging across with
+      // `.re-cell-selected`. The merge action consumes this set, and
+      // any caret movement or click outside clears it.
+      var dragAnchor = null;
+      var dragActive = false;
+
+      function clearCellSelection() {
+        editor
+          .querySelectorAll(".re-cell-selected")
+          .forEach(function (c) { c.classList.remove("re-cell-selected"); });
+      }
+
+      function markSelectionRect(startCell, endCell) {
+        clearCellSelection();
+        if (!startCell || !endCell) return;
+        var table = startCell.closest("table");
+        if (!table || endCell.closest("table") !== table) return;
+        var rows = Array.prototype.slice.call(table.rows);
+        var s = { r: rows.indexOf(startCell.parentNode), c: Array.prototype.indexOf.call(startCell.parentNode.cells, startCell) };
+        var e2 = { r: rows.indexOf(endCell.parentNode), c: Array.prototype.indexOf.call(endCell.parentNode.cells, endCell) };
+        var minR = Math.min(s.r, e2.r), maxR = Math.max(s.r, e2.r);
+        var minC = Math.min(s.c, e2.c), maxC = Math.max(s.c, e2.c);
+        for (var rr = minR; rr <= maxR; rr++) {
+          var rrow = rows[rr];
+          if (!rrow) continue;
+          for (var cc = minC; cc <= maxC; cc++) {
+            var ce = rrow.cells[cc];
+            if (ce) ce.classList.add("re-cell-selected");
+          }
+        }
+      }
+
+      var multiCell = false;
+
+      editor.addEventListener("mousedown", function (e) {
+        var cell = findCell(e.target);
+        if (!cell) {
+          clearCellSelection();
+          dragAnchor = null;
+          dragActive = false;
+          multiCell = false;
+          return;
+        }
+        dragAnchor = cell;
+        dragActive = true;
+        multiCell = false;
+        clearCellSelection();
+      });
+      editor.addEventListener("mousemove", function (e) {
+        if (!dragActive || !dragAnchor) return;
+        var over = findCell(e.target);
+        if (!over) return;
+        if (over !== dragAnchor) {
+          multiCell = true;
+        }
+        if (multiCell) {
+          // Suppress the browser's native text selection so it doesn't
+          // overlay our purple cell highlight + trigger the text-format
+          // bubble. We keep a collapsed range inside the anchor cell so
+          // `document.activeElement === editor` stays true and the
+          // table toolbar remains visible after mouseup.
+          e.preventDefault();
+          var sel = window.getSelection();
+          if (sel) {
+            var anchorRange = document.createRange();
+            anchorRange.selectNodeContents(dragAnchor);
+            anchorRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(anchorRange);
+          }
+          markSelectionRect(dragAnchor, over);
+        }
+      });
+      document.addEventListener("mouseup", function () {
+        dragActive = false;
+      });
+      document.addEventListener("mousedown", function (e) {
+        if (editor.contains(e.target)) return;
+        if (tableActions && tableActions.contains(e.target)) return;
+        clearCellSelection();
+      });
+
+      function positionTableActions(cell) {
+        var table = cell.closest("table");
+        if (!table) return false;
+        var tr = table.getBoundingClientRect();
+        var pad = 6;
+        var th = tableActions.offsetHeight || 36;
+        var tw = tableActions.offsetWidth || 220;
+        var top = tr.top - th - pad;
+        if (top < 8) top = tr.bottom + pad;
+        var left = tr.left;
+        left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
+        tableActions.style.top = top + "px";
+        tableActions.style.left = left + "px";
+        return true;
+      }
+
+      function syncTableActions() {
+        if (document.activeElement !== editor) {
+          tableActions.dataset.visible = "false";
+          currentCell = null;
+          return;
+        }
+        var sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) {
+          tableActions.dataset.visible = "false";
+          currentCell = null;
+          return;
+        }
+        var cell = findCell(sel.getRangeAt(0).startContainer);
+        if (!cell) {
+          tableActions.dataset.visible = "false";
+          currentCell = null;
+          return;
+        }
+        currentCell = cell;
+        if (positionTableActions(cell)) {
+          tableActions.dataset.visible = "true";
+        }
+      }
+
+      document.addEventListener("selectionchange", syncTableActions);
+      window.addEventListener("scroll", syncTableActions, { passive: true, capture: true });
+      window.addEventListener("resize", syncTableActions);
+
+      function makeRow(colCount, useTh) {
+        var tr = document.createElement("tr");
+        var tag = useTh ? "th" : "td";
+        for (var i = 0; i < colCount; i++) {
+          var c = document.createElement(tag);
+          c.innerHTML = "&nbsp;";
+          tr.appendChild(c);
+        }
+        return tr;
+      }
+
+      function focusCell(cell) {
+        if (!cell) return;
+        var range = document.createRange();
+        range.selectNodeContents(cell);
+        range.collapse(true);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        scheduleUpdate();
+      }
+
+      function doTableAction(act) {
+        if (!currentCell || !editor.contains(currentCell)) return;
+        var cell = currentCell;
+        var row = cell.parentNode;
+        var table = cell.closest("table");
+        if (!table) return;
+        var allRows = Array.prototype.slice.call(table.rows);
+        var rowIdx = allRows.indexOf(row);
+        var colIdx = Array.prototype.slice.call(row.cells).indexOf(cell);
+        var colCount = row.cells.length;
+        switch (act) {
+          case "row-above": {
+            var newRow = makeRow(colCount, false);
+            row.parentNode.insertBefore(newRow, row);
+            focusCell(newRow.cells[colIdx] || newRow.cells[0]);
+            break;
+          }
+          case "row-below": {
+            var newRow2 = makeRow(colCount, false);
+            if (row.nextSibling) row.parentNode.insertBefore(newRow2, row.nextSibling);
+            else row.parentNode.appendChild(newRow2);
+            focusCell(newRow2.cells[colIdx] || newRow2.cells[0]);
+            break;
+          }
+          case "col-left":
+          case "col-right": {
+            var insertAt = act === "col-left" ? colIdx : colIdx + 1;
+            for (var i = 0; i < allRows.length; i++) {
+              var r = allRows[i];
+              var tag = i === 0 && r.cells[0] && r.cells[0].tagName === "TH" ? "th" : "td";
+              var nc = document.createElement(tag);
+              nc.innerHTML = "&nbsp;";
+              if (insertAt >= r.cells.length) r.appendChild(nc);
+              else r.insertBefore(nc, r.cells[insertAt]);
+            }
+            focusCell(allRows[rowIdx].cells[insertAt] || allRows[rowIdx].cells[allRows[rowIdx].cells.length - 1]);
+            break;
+          }
+          case "row-delete": {
+            if (allRows.length <= 1) {
+              return doTableAction("table-delete");
+            }
+            var nextRow = allRows[rowIdx + 1] || allRows[rowIdx - 1];
+            row.parentNode.removeChild(row);
+            focusCell(nextRow ? nextRow.cells[colIdx] || nextRow.cells[0] : null);
+            break;
+          }
+          case "col-delete": {
+            if (colCount <= 1) {
+              return doTableAction("table-delete");
+            }
+            for (var j = 0; j < allRows.length; j++) {
+              var rr = allRows[j];
+              if (rr.cells[colIdx]) rr.removeChild(rr.cells[colIdx]);
+            }
+            var sameRow = allRows[rowIdx];
+            var nextCell = sameRow.cells[colIdx] || sameRow.cells[sameRow.cells.length - 1];
+            focusCell(nextCell);
+            break;
+          }
+          case "table-delete": {
+            var after = table.nextSibling;
+            table.parentNode.removeChild(table);
+            if (after && after.nodeType === 1) {
+              var ra = document.createRange();
+              ra.selectNodeContents(after);
+              ra.collapse(true);
+              var sa = window.getSelection();
+              sa.removeAllRanges();
+              sa.addRange(ra);
+            } else {
+              var p = document.createElement("p");
+              p.appendChild(document.createElement("br"));
+              editor.appendChild(p);
+              var rb = document.createRange();
+              rb.selectNodeContents(p);
+              rb.collapse(true);
+              var sb = window.getSelection();
+              sb.removeAllRanges();
+              sb.addRange(rb);
+            }
+            currentCell = null;
+            tableActions.dataset.visible = "false";
+            scheduleUpdate();
+            return;
+          }
+          case "merge": {
+            // Source for the rectangular range:
+            //   1. preferred: cells the user drag-selected
+            //   2. fallback: Range start/end cells from the current text selection
+            var selectedCells = Array.prototype.slice.call(
+              editor.querySelectorAll(".re-cell-selected")
+            ).filter(function (c) { return c.closest("table") === table; });
+            var sCell, eCell;
+            if (selectedCells.length >= 2) {
+              sCell = selectedCells[0];
+              eCell = selectedCells[selectedCells.length - 1];
+            } else {
+              var sel = window.getSelection();
+              if (!sel || sel.rangeCount === 0) return;
+              var r0 = sel.getRangeAt(0);
+              sCell = findCell(r0.startContainer);
+              eCell = findCell(r0.endContainer);
+            }
+            if (!sCell || !eCell || sCell.closest("table") !== table) return;
+            if (sCell === eCell) return;
+            var sRowIdx = allRows.indexOf(sCell.parentNode);
+            var eRowIdx = allRows.indexOf(eCell.parentNode);
+            var sColIdx = Array.prototype.indexOf.call(sCell.parentNode.cells, sCell);
+            var eColIdx = Array.prototype.indexOf.call(eCell.parentNode.cells, eCell);
+            var minRow = Math.min(sRowIdx, eRowIdx);
+            var maxRow = Math.max(sRowIdx, eRowIdx);
+            var minCol = Math.min(sColIdx, eColIdx);
+            var maxCol = Math.max(sColIdx, eColIdx);
+            var anchor = allRows[minRow].cells[minCol];
+            if (!anchor) return;
+            var collected = [];
+            for (var rr = minRow; rr <= maxRow; rr++) {
+              var rrow = allRows[rr];
+              for (var cc = maxCol; cc >= minCol; cc--) {
+                if (rr === minRow && cc === minCol) continue;
+                var cellToMerge = rrow.cells[cc];
+                if (!cellToMerge) continue;
+                var inner = cellToMerge.innerHTML;
+                if (inner && inner.replace(/&nbsp;|\s/g, "") !== "") {
+                  collected.unshift(inner);
+                }
+                rrow.removeChild(cellToMerge);
+              }
+            }
+            var rs = maxRow - minRow + 1;
+            var cs = maxCol - minCol + 1;
+            if (rs > 1) anchor.rowSpan = rs;
+            if (cs > 1) anchor.colSpan = cs;
+            if (collected.length > 0) {
+              var anchorInner = anchor.innerHTML;
+              if (anchorInner && anchorInner.replace(/&nbsp;|\s/g, "") !== "") {
+                collected.unshift(anchorInner);
+              }
+              anchor.innerHTML = collected.join(" ");
+            }
+            clearCellSelection();
+            focusCell(anchor);
+            break;
+          }
+          case "split": {
+            var rspan = cell.rowSpan || 1;
+            var cspan = cell.colSpan || 1;
+            if (rspan === 1 && cspan === 1) return;
+            cell.rowSpan = 1;
+            cell.colSpan = 1;
+            for (var k = 1; k < cspan; k++) {
+              var nc = document.createElement(cell.tagName === "TH" ? "th" : "td");
+              nc.innerHTML = "&nbsp;";
+              cell.parentNode.insertBefore(nc, cell.nextSibling);
+            }
+            for (var rr2 = 1; rr2 < rspan; rr2++) {
+              var nextRow2 = allRows[rowIdx + rr2];
+              if (!nextRow2) continue;
+              var insertBefore = nextRow2.cells[colIdx] || null;
+              for (var kk = 0; kk < cspan; kk++) {
+                var nc2 = document.createElement("td");
+                nc2.innerHTML = "&nbsp;";
+                if (insertBefore) nextRow2.insertBefore(nc2, insertBefore);
+                else nextRow2.appendChild(nc2);
+              }
+            }
+            focusCell(cell);
+            break;
+          }
+        }
+        scheduleUpdate();
+        syncTableActions();
+      }
+
+      tableActions.querySelectorAll("[data-act]").forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          doTableAction(btn.getAttribute("data-act"));
+        });
       });
     }
 

@@ -489,6 +489,7 @@ impl UseReportDetailContext {
     pub fn delete_chart(&mut self, chart_id: &str) {
         dispatch_delete_chart(chart_id.to_string());
     }
+
 }
 
 #[track_caller]
@@ -1139,8 +1140,15 @@ fn dispatch_swap_chart(chart_id: String, type_token: String, new_inner: String) 
         if (!editor) { dioxus.send(null); return; }
         const figure = editor.querySelector('figure[data-chart-id="' + data.id + '"]');
         if (!figure) { dioxus.send(null); return; }
+        // Preserve the user-edited caption across chart-type swap.
+        const oldCap = figure.querySelector(':scope > .report-detail__chart-caption');
+        const savedCaption = oldCap ? oldCap.innerHTML : null;
         figure.innerHTML = data.inner;
         figure.setAttribute('data-type', data.type);
+        if (savedCaption !== null) {
+            const newCap = figure.querySelector(':scope > .report-detail__chart-caption');
+            if (newCap) newCap.innerHTML = savedCaption;
+        }
         editor.dispatchEvent(new Event('input', { bubbles: true }));
         dioxus.send(null);
         "#,

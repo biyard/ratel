@@ -27,7 +27,6 @@ pub fn build_chart_figure(
     let mut out = String::with_capacity(1024);
     let src_token = source.as_token();
     let type_token = chart_type.as_token();
-    let badge = format!("{} · {}", source_word(source), type_word(chart_type));
     let meta_text = if item.meta.is_empty() {
         analyze.name.clone()
     } else {
@@ -94,14 +93,11 @@ pub fn build_chart_figure(
     .ok();
     out.push_str(r#"contenteditable="false">"#);
 
-    // ── Top strip: badge + title + actions ─────────────
+    // ── Top strip: title + actions ─────────────────────
+    // The source · type badge (e.g. "DISCUSSION · LDA") was dropped:
+    // the meta line below already names the analyze and source, so the
+    // badge was redundant chrome above the title.
     out.push_str(r#"<div class="report-detail__chart-top">"#);
-    write!(
-        out,
-        r#"<span class="report-detail__chart-badge">{}</span>"#,
-        html_text(&badge)
-    )
-    .ok();
     write!(
         out,
         r#"<span class="report-detail__chart-title">{}</span>"#,
@@ -142,8 +138,26 @@ pub fn build_chart_figure(
         &item.text_answers,
     );
 
+    // ── Per-item source / citation line ────────────────
+    // Editable figcaption nested inside the otherwise-non-editable
+    // figure. The empty `&nbsp;` keeps the line collapsed when blank
+    // (without it the browser swallows the empty contenteditable).
+    push_chart_caption(&mut out);
+
     out.push_str("</figure>");
     out
+}
+
+fn push_chart_caption(out: &mut String) {
+    // Editable bottom caption — typed by the author in the style of
+    // a publishable figure label (e.g. "그림 9. 성별에 따른 응답 비중").
+    // `contenteditable="true"` overrides the figure's outer false so
+    // the caption is the only editable region inside the figure.
+    // The element is intentionally empty so the CSS `:empty::before`
+    // placeholder hint is visible until the user types a caption.
+    out.push_str(
+        r#"<figcaption class="report-detail__chart-caption" contenteditable="true" data-placeholder="캡션 (예: 그림 1. 응답 비중)"></figcaption>"#,
+    );
 }
 
 /// Re-render just the viz body + top badge + meta line for an existing
@@ -164,7 +178,6 @@ pub fn build_chart_inner(
     text_answers: &[String],
 ) -> String {
     let mut out = String::with_capacity(512);
-    let badge = format!("{} · {}", source_word(source), type_word(chart_type));
     let meta_text = if item_meta.is_empty() {
         analyze_name.to_string()
     } else {
@@ -172,12 +185,6 @@ pub fn build_chart_inner(
     };
 
     out.push_str(r#"<div class="report-detail__chart-top">"#);
-    write!(
-        out,
-        r#"<span class="report-detail__chart-badge">{}</span>"#,
-        html_text(&badge)
-    )
-    .ok();
     write!(
         out,
         r#"<span class="report-detail__chart-title">{}</span>"#,
@@ -203,6 +210,7 @@ pub fn build_chart_inner(
     )
     .ok();
     render_chart_viz(&mut out, chart_type, options, respondent_count, discussion, text_answers);
+    push_chart_caption(&mut out);
     out
 }
 
@@ -351,32 +359,21 @@ fn render_lda(out: &mut String, discussion: Option<&DiscussionData>) {
     if topics.is_empty() {
         return push_chart_empty(out);
     }
-    let total = topics.len() as f32;
     out.push_str(r#"<div class="report-detail__chart-canvas report-detail__chart-canvas--lda">"#);
     for (i, topic) in topics.iter().enumerate() {
-        let bar_pct = (((total - i as f32) / total) * 100.0).round() as u32;
         let topic_label = if topic.topic.is_empty() {
             format!("토픽 {}", i + 1)
         } else {
             topic.topic.clone()
         };
         out.push_str(r#"<div class="report-detail__lda-topic">"#);
-        out.push_str(r#"<div class="report-detail__lda-topic-head">"#);
+        // Topic label only — the percentage + ranking bar were noise
+        // (rank ≠ topic weight) and made the row look like a chart
+        // when it's really just a keyword grouping.
         write!(
             out,
-            r#"<span class="report-detail__lda-topic-id">{}</span>"#,
+            r#"<div class="report-detail__lda-topic-head"><span class="report-detail__lda-topic-id">{}</span></div>"#,
             html_text(&topic_label)
-        )
-        .ok();
-        write!(
-            out,
-            r#"<span class="report-detail__lda-topic-weight">{bar_pct}%</span>"#
-        )
-        .ok();
-        out.push_str("</div>");
-        write!(
-            out,
-            r#"<div class="report-detail__lda-topic-bar"><div style="width: {bar_pct}%"></div></div>"#
         )
         .ok();
         out.push_str(r#"<div class="report-detail__lda-keywords">"#);
@@ -559,27 +556,6 @@ fn push_action_button(
         svg = svg
     )
     .ok();
-}
-
-fn source_word(s: ActionSource) -> &'static str {
-    match s {
-        ActionSource::Poll => "POLL",
-        ActionSource::Quiz => "QUIZ",
-        ActionSource::Discussion => "DISCUSSION",
-        ActionSource::Follow => "FOLLOW",
-    }
-}
-
-fn type_word(t: ChartType) -> &'static str {
-    match t {
-        ChartType::Bar => "BAR",
-        ChartType::Pie => "PIE",
-        ChartType::Table => "TABLE",
-        ChartType::Lda => "LDA",
-        ChartType::TfIdf => "TF-IDF",
-        ChartType::Network => "NETWORK",
-        ChartType::TextList => "ANSWERS",
-    }
 }
 
 /// HTML-encode a value for use inside a **single-quoted** attribute.
