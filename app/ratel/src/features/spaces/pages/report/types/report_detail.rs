@@ -1,6 +1,7 @@
 use crate::features::spaces::pages::apps::apps::analyzes::{
     NetworkEdge, NetworkNode, TermScore, TopicRow,
 };
+use crate::features::spaces::pages::report::types::ReportStatus;
 #[cfg(feature = "server")]
 #[allow(unused_imports)]
 use rmcp::schemars;
@@ -340,6 +341,11 @@ impl ReportBlock {
 pub struct ReportDetail {
     pub id: String,
     pub eyebrow: String,
+    /// Publish state. `Draft` while the author iterates; `Published` once
+    /// the user clicks the publish confirmation modal — at which point the
+    /// space settings sidebar surfaces the report under its "REPORT"
+    /// section and the publish button flips to "수정 후 게시하기".
+    pub status: ReportStatus,
     pub title: String,
     pub subtitle: String,
     /// Body HTML — produced by the shared `Editor` component's

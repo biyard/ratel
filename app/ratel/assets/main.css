@@ -51786,6 +51786,162 @@ html[data-theme="light"] .ff-home .featured-title {
   .report-detail__chart-canvas--bar { padding: 14px 6px 44px; gap: 6px; }
 }
 
+/* ── Viewer mode — non-admin members opening a published report.
+   The edit affordances (chart gear / trash buttons, format toolbar,
+   Insert Data button, slash bridge inputs, table action toolbar,
+   selection bubble) are all hidden so the page reads as a static
+   document. The PDF Download button in the topbar stays visible —
+   that's the whole point of viewer mode. */
+.report-detail--viewer .report-detail__chart-actions,
+.report-detail--viewer .ratel-editor .re-toolbar,
+.report-detail--viewer .ratel-editor .re-bubble,
+.report-detail--viewer .ratel-editor .re-table-actions,
+.report-detail--viewer .ratel-editor .re-statusbar {
+  display: none !important;
+}
+.report-detail--viewer .ratel-editor .re-content {
+  /* Belt-and-suspenders — the `editable` prop already wires
+     `contenteditable="false"`, but explicitly disabling caret affords
+     the user no chance to focus the body even via tab. */
+  caret-color: transparent;
+  user-select: text;
+}
+
+/* ── Publish confirm modal — identical arena-glass styling to the
+   list page's delete modal. Same panel background, same border, same
+   icon container, same button geometry. Only the eyebrow / icon /
+   primary-action colors are swapped from destructive red to the
+   publish purple, because publishing is a positive (not destructive)
+   action. All modal tokens are duplicated locally because the
+   originals live under `.reports-arena` and our scope is
+   `.report-detail`. */
+.report-detail .confirm-modal {
+  --rd-modal-scrim: var(--dark, rgba(4, 4, 12, 0.65)) var(--light, rgba(20, 20, 35, 0.45));
+  --rd-modal-panel: var(--dark, linear-gradient(160deg, rgba(22, 22, 38, 0.97), rgba(10, 10, 20, 0.99))) var(--light, linear-gradient(160deg, #ffffff, #fafaf6));
+  --rd-card-shadow: var(--dark, rgba(0, 0, 0, 0.5)) var(--light, rgba(0, 0, 0, 0.10));
+  --rd-publish-fg: var(--dark, #c4a3f5) var(--light, #7c3aed);
+
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--rd-modal-scrim);
+  backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.report-detail .confirm-modal__panel {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  border-radius: 18px;
+  background: var(--rd-modal-panel);
+  border: 1px solid var(--rd-border-strong);
+  box-shadow: 0 30px 80px var(--rd-card-shadow), 0 0 60px rgba(168, 85, 247, 0.10);
+  padding: 32px 26px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  overflow: hidden;
+}
+.report-detail .confirm-modal__panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(168, 85, 247, 0.10) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(168, 85, 247, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.report-detail .confirm-modal__panel > * { position: relative; z-index: 1; }
+.report-detail .confirm-modal__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--rd-publish-fg);
+  padding: 3px 11px;
+  border-radius: 99px;
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.22);
+}
+.report-detail .confirm-modal__eyebrow svg { width: 11px; height: 11px; }
+.report-detail .confirm-modal__icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.16), rgba(168, 85, 247, 0.04));
+  border: 1px solid rgba(168, 85, 247, 0.32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rd-publish-fg);
+  margin-top: 8px;
+  box-shadow: 0 0 24px rgba(168, 85, 247, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.report-detail .confirm-modal__icon svg { width: 26px; height: 26px; }
+.report-detail .confirm-modal__title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--rd-text-primary);
+  margin-top: 4px;
+}
+.report-detail .confirm-modal__body {
+  font-size: 13px;
+  color: var(--rd-text-muted);
+  line-height: 1.6;
+  padding: 0 4px;
+}
+.report-detail .confirm-modal__actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 18px;
+}
+.report-detail .confirm-modal__btn {
+  flex: 1;
+  padding: 11px 12px;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.14s;
+  border: 1px solid transparent;
+}
+.report-detail .confirm-modal__btn--ghost {
+  background: var(--dark, rgba(255, 255, 255, 0.04)) var(--light, rgba(0, 0, 0, 0.03));
+  border-color: var(--rd-border-strong);
+  color: var(--rd-text-muted);
+}
+.report-detail .confirm-modal__btn--ghost:hover {
+  background: var(--dark, rgba(255, 255, 255, 0.08)) var(--light, rgba(0, 0, 0, 0.06));
+  color: var(--rd-text-primary);
+}
+.report-detail .confirm-modal__btn--primary {
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
+  color: #fff;
+  border-color: rgba(168, 85, 247, 0.6);
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.30);
+}
+.report-detail .confirm-modal__btn--primary:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 8px 24px rgba(168, 85, 247, 0.40);
+}
+.report-detail .confirm-modal__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* ─── Print / Save-as-PDF view ──────────────────────────
    When the user hits "PDF 다운로드" we call `window.print()`. The
    browser's print pipeline rasterises a snapshot of the page using
@@ -51858,6 +52014,7 @@ html[data-theme="light"] .ff-home .featured-title {
   .report-detail__banner,
   .report-detail__picker-overlay,
   .report-detail__slash-pop,
+  .report-detail .confirm-modal,
   .ratel-editor .re-toolbar,
   .ratel-editor .re-bubble,
   .ratel-editor .re-table-actions,

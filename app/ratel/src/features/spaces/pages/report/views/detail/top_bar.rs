@@ -28,11 +28,22 @@ fn trigger_pdf_print() {
 pub fn TopBar() -> Element {
     let tr: ReportDetailTranslate = use_translate();
     let nav = use_navigator();
-    let ctx = use_report_detail_context();
+    let mut ctx = use_report_detail_context();
     let autosave_label = match ctx.save_status() {
         SaveStatus::Idle | SaveStatus::Saved => tr.autosave_just_now.to_string(),
         SaveStatus::Unsaved => tr.autosave_unsaved.to_string(),
         SaveStatus::Saving => tr.autosave_saving.to_string(),
+    };
+    // Publish button keeps the same "Publish" label across first and
+    // subsequent presses — re-publish is the same operation (push the
+    // latest body to the published copy), so a separate "Edit &
+    // Republish" label would just create surface area without changing
+    // what the button does.
+    let publish_pending = ctx.handle_publish.pending();
+    let publish_label_dynamic = if publish_pending {
+        tr.publishing_label.to_string()
+    } else {
+        tr.publish_btn.to_string()
     };
 
     rsx! {
@@ -57,7 +68,9 @@ pub fn TopBar() -> Element {
                     span { class: "report-detail__breadcrumb-sep", "{tr.breadcrumb_separator}" }
                     span { class: "report-detail__breadcrumb-current", "{ctx.initial_title()}" }
                 }
-                span { class: "report-detail__autosave", "{autosave_label}" }
+                if ctx.can_edit_value() {
+                    span { class: "report-detail__autosave", "{autosave_label}" }
+                }
             }
             div { class: "report-detail__topbar-right",
                 button {
@@ -89,18 +102,34 @@ pub fn TopBar() -> Element {
                     }
                     span { "{tr.pdf_download_btn}" }
                 }
-                button { class: "report-detail__topbar-btn report-detail__topbar-btn--primary",
-                    svg {
-                        view_box: "0 0 24 24",
-                        fill: "none",
-                        stroke: "currentColor",
-                        stroke_width: "2",
-                        stroke_linecap: "round",
-                        stroke_linejoin: "round",
-                        path { d: "M22 11.08V12a10 10 0 1 1-5.93-9.14" }
-                        polyline { points: "22 4 12 14.01 9 11.01" }
+                // Publish button is a one-shot — visible only to admins
+                // on a Draft. Once the report is Published the button
+                // disappears entirely (per product decision); subsequent
+                // edits stream into the published copy via the autosave
+                // loop (`update_report` with `status: None` keeps the
+                // Published status intact).
+                if ctx.can_edit_value() && !ctx.is_published() {
+                    button {
+                        class: "report-detail__topbar-btn report-detail__topbar-btn--primary",
+                        disabled: publish_pending,
+                        onclick: move |_| {
+                            if publish_pending {
+                                return;
+                            }
+                            ctx.open_publish_modal();
+                        },
+                        svg {
+                            view_box: "0 0 24 24",
+                            fill: "none",
+                            stroke: "currentColor",
+                            stroke_width: "2",
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            path { d: "M22 11.08V12a10 10 0 1 1-5.93-9.14" }
+                            polyline { points: "22 4 12 14.01 9 11.01" }
+                        }
+                        span { "{publish_label_dynamic}" }
                     }
-                    span { "{tr.publish_btn}" }
                 }
             }
         }

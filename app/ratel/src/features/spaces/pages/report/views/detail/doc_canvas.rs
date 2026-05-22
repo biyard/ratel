@@ -26,11 +26,16 @@ pub fn DocCanvas() -> Element {
     // content from this and never re-applies the prop (re-applying
     // `dangerous_inner_html` would clobber the caret on every keystroke).
     let initial_body = use_hook(|| ctx.initial_body_html());
+    let can_edit = ctx.can_edit_value();
 
     rsx! {
         // Per-page JS that wires figure-action click delegation (swap +
-        // delete buttons embedded inside chart figures).
-        document::Script { defer: true, src: asset!("./detail_actions.js") }
+        // delete buttons embedded inside chart figures). Only mounted in
+        // edit mode — in viewer mode the figures have no swap/delete
+        // buttons so the listener has nothing to do.
+        if can_edit {
+            document::Script { defer: true, src: asset!("./detail_actions.js") }
+        }
 
         div { class: "report-detail__doc",
             div { class: "report-detail__doc-inner",
@@ -47,50 +52,64 @@ pub fn DocCanvas() -> Element {
                     }
                     span { "{ctx.eyebrow()}" }
                 }
-                input {
-                    class: "report-detail__title",
-                    placeholder: tr.title_placeholder,
-                    value: "{ctx.title_value()}",
-                    oninput: move |e| {
-                        ctx.title.set(e.value());
-                        ctx.mark_unsaved();
-                    },
-                    onkeydown: move |e| {
-                        if matches!(e.key(), Key::Enter) {
-                            e.prevent_default();
-                            focus_body_editor();
-                        }
-                    },
-                }
-                input {
-                    class: "report-detail__subtitle",
-                    placeholder: tr.subtitle_placeholder,
-                    value: "{ctx.subtitle_value()}",
-                    oninput: move |e| {
-                        ctx.subtitle.set(e.value());
-                        ctx.mark_unsaved();
-                    },
-                    onkeydown: move |e| {
-                        if matches!(e.key(), Key::Enter) {
-                            e.prevent_default();
-                            focus_body_editor();
-                        }
-                    },
+                if can_edit {
+                    input {
+                        class: "report-detail__title",
+                        placeholder: tr.title_placeholder,
+                        value: "{ctx.title_value()}",
+                        oninput: move |e| {
+                            ctx.title.set(e.value());
+                            ctx.mark_unsaved();
+                        },
+                        onkeydown: move |e| {
+                            if matches!(e.key(), Key::Enter) {
+                                e.prevent_default();
+                                focus_body_editor();
+                            }
+                        },
+                    }
+                    input {
+                        class: "report-detail__subtitle",
+                        placeholder: tr.subtitle_placeholder,
+                        value: "{ctx.subtitle_value()}",
+                        oninput: move |e| {
+                            ctx.subtitle.set(e.value());
+                            ctx.mark_unsaved();
+                        },
+                        onkeydown: move |e| {
+                            if matches!(e.key(), Key::Enter) {
+                                e.prevent_default();
+                                focus_body_editor();
+                            }
+                        },
+                    }
+                } else {
+                    // Viewer mode — title / subtitle render as static
+                    // text rather than `<input>` so the user can't focus
+                    // them or trigger oninput. Class names stay identical
+                    // so the CSS typography matches the editor view.
+                    h1 { class: "report-detail__title", "{ctx.title_value()}" }
+                    div { class: "report-detail__subtitle", "{ctx.subtitle_value()}" }
                 }
                 RichEditor {
                     class: "report-detail__editor",
                     content: initial_body,
-                    editable: true,
+                    editable: can_edit,
                     placeholder: tr.body_placeholder.to_string(),
                     insert_data_label: tr.insert_data.to_string(),
                     on_content_change: move |html: String| {
+                        if !can_edit {
+                            return;
+                        }
                         ctx.body_html.set(html);
                         ctx.mark_unsaved();
                     },
-                    on_insert_data: move |_| ctx.open_data_picker(),
-                    on_slash: move |sig: EditorSlashSignal| {
-                        ctx.handle_slash_signal(sig);
-                    },
+                    on_insert_data: if can_edit { Some(EventHandler::new(move |_| ctx.open_data_picker())) } else { None },
+                    on_slash: if can_edit { Some(
+                        EventHandler::new(move |sig: EditorSlashSignal| {
+                            ctx.handle_slash_signal(sig);
+                        }),
+                    ) } else { None },
                 }
             }
         }

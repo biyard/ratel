@@ -7,6 +7,11 @@ pub fn ReportListPage() -> Element {
     let tr: ReportListTranslate = use_translate();
     let nav = use_navigator();
     let mut ctx = use_report_list_context();
+    // Admin chrome (NEW REPORT button, filter chips, Drafts counter,
+    // create card) is hidden for non-admin members — they only see the
+    // list of Published reports the backend hands them.
+    let space_ctx = crate::features::spaces::space_common::providers::use_space_context();
+    let can_edit = use_memo(move || (space_ctx.role)().can_edit());
 
     rsx! {
         document::Script { defer: true, src: asset!("./script.js") }
@@ -38,37 +43,39 @@ pub fn ReportListPage() -> Element {
                     }
                 }
                 div { class: "reports-topbar__actions",
-                    button {
-                        class: "reports-topbar__btn reports-topbar__btn--primary",
-                        "aria-label": "{tr.new_report_aria}",
-                        "aria-busy": ctx.handle_create.pending(),
-                        disabled: ctx.handle_create.pending(),
-                        onclick: move |_| {
-                            if !ctx.handle_create.pending() {
-                                ctx.handle_create.call();
+                    if can_edit() {
+                        button {
+                            class: "reports-topbar__btn reports-topbar__btn--primary",
+                            "aria-label": "{tr.new_report_aria}",
+                            "aria-busy": ctx.handle_create.pending(),
+                            disabled: ctx.handle_create.pending(),
+                            onclick: move |_| {
+                                if !ctx.handle_create.pending() {
+                                    ctx.handle_create.call();
+                                }
+                            },
+                            svg {
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_width: "2",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                line {
+                                    x1: "12",
+                                    y1: "5",
+                                    x2: "12",
+                                    y2: "19",
+                                }
+                                line {
+                                    x1: "5",
+                                    y1: "12",
+                                    x2: "19",
+                                    y2: "12",
+                                }
                             }
-                        },
-                        svg {
-                            view_box: "0 0 24 24",
-                            fill: "none",
-                            stroke: "currentColor",
-                            stroke_width: "2",
-                            stroke_linecap: "round",
-                            stroke_linejoin: "round",
-                            line {
-                                x1: "12",
-                                y1: "5",
-                                x2: "12",
-                                y2: "19",
-                            }
-                            line {
-                                x1: "5",
-                                y1: "12",
-                                x2: "19",
-                                y2: "12",
-                            }
+                            span { "{tr.new_report_btn}" }
                         }
-                        span { "{tr.new_report_btn}" }
                     }
                 }
             }
@@ -86,9 +93,14 @@ pub fn ReportListPage() -> Element {
                     strong { "{ctx.total_count()}" }
                     "{tr.stat_total}"
                 }
-                span {
-                    strong { "{ctx.drafts_count()}" }
-                    "{tr.stat_drafts}"
+                if can_edit() {
+                    // Drafts only exist conceptually for the admin —
+                    // the member's list never contains them, so the
+                    // counter would always read 0.
+                    span {
+                        strong { "{ctx.drafts_count()}" }
+                        "{tr.stat_drafts}"
+                    }
                 }
                 span {
                     strong { "{ctx.published_count()}" }
@@ -100,28 +112,31 @@ pub fn ReportListPage() -> Element {
             // Each chip mutates `ctx.filter`; the context's
             // `filtered_reports` loader subscribes to that signal in
             // its outer closure, so a click immediately fires a fresh
-            // `?status=...` request to the server.
-            div { class: "reports-filters",
-                button {
-                    class: "reports-chip",
-                    "data-filter": "all",
-                    "aria-selected": ctx.filter_value() == ReportFilter::All,
-                    onclick: move |_| ctx.set_filter(ReportFilter::All),
-                    "{tr.filter_all}"
-                }
-                button {
-                    class: "reports-chip",
-                    "data-filter": "drafts",
-                    "aria-selected": ctx.filter_value() == ReportFilter::Drafts,
-                    onclick: move |_| ctx.set_filter(ReportFilter::Drafts),
-                    "{tr.filter_drafts}"
-                }
-                button {
-                    class: "reports-chip",
-                    "data-filter": "published",
-                    "aria-selected": ctx.filter_value() == ReportFilter::Published,
-                    onclick: move |_| ctx.set_filter(ReportFilter::Published),
-                    "{tr.filter_published}"
+            // `?status=...` request to the server. Members never see
+            // these chips — their list is always the Published slice.
+            if can_edit() {
+                div { class: "reports-filters",
+                    button {
+                        class: "reports-chip",
+                        "data-filter": "all",
+                        "aria-selected": ctx.filter_value() == ReportFilter::All,
+                        onclick: move |_| ctx.set_filter(ReportFilter::All),
+                        "{tr.filter_all}"
+                    }
+                    button {
+                        class: "reports-chip",
+                        "data-filter": "drafts",
+                        "aria-selected": ctx.filter_value() == ReportFilter::Drafts,
+                        onclick: move |_| ctx.set_filter(ReportFilter::Drafts),
+                        "{tr.filter_drafts}"
+                    }
+                    button {
+                        class: "reports-chip",
+                        "data-filter": "published",
+                        "aria-selected": ctx.filter_value() == ReportFilter::Published,
+                        onclick: move |_| ctx.set_filter(ReportFilter::Published),
+                        "{tr.filter_published}"
+                    }
                 }
             }
 
@@ -131,10 +146,13 @@ pub fn ReportListPage() -> Element {
             // needed here.
             div { class: "carousel-wrapper",
                 div { class: "carousel-track", id: "carousel-track",
-                    // Create card — always first.
-                    ReportCreateCard {}
+                    // Create card — admin-only entry point. Members
+                    // shouldn't see it (they can't create drafts).
+                    if can_edit() {
+                        ReportCreateCard {}
+                    }
 
-                    for (idx , item) in ctx.items().into_iter().enumerate() {
+                    for (idx, item) in ctx.items().into_iter().enumerate() {
                         ReportCard {
                             key: "{item.id}",
                             idx: (idx + 1) as i32,
@@ -314,6 +332,10 @@ fn ReportCard(idx: i32, item: ReportListItem) -> Element {
     let item_for_navigate = item.clone();
     let item_for_menu = item.clone();
     let item_for_delete = item.clone();
+    // Hide the kebab menu (delete / future edit actions) when the user
+    // can't edit — members shouldn't see admin affordances on a card.
+    let space_ctx = crate::features::spaces::space_common::providers::use_space_context();
+    let can_edit = use_memo(move || (space_ctx.role)().can_edit());
     rsx! {
         // Card root is a plain `<div>` (not `<a href>`) so the inner
         // menu/menu-item buttons don't fight anchor-default behavior.
@@ -359,49 +381,53 @@ fn ReportCard(idx: i32, item: ReportListItem) -> Element {
                 }
                 // Wrapper carries `position: relative` so the dropdown
                 // (`position: absolute`) anchors to the menu button.
-                div { class: "report-card__menu-wrap",
-                    button {
-                        class: "report-card__menu-btn",
-                        "aria-label": "{tr.card_menu_aria}",
-                        "aria-haspopup": "menu",
-                        "aria-expanded": ctx.is_menu_open_for(&item_for_menu.id),
-                        onclick: move |e| {
-                            // Don't bubble — the card-level `onclick`
-                            // would navigate into the report editor.
-                            e.stop_propagation();
-                            e.prevent_default();
-                            ctx.toggle_menu(&item_for_menu.id);
-                        },
-                        svg {
-                            view_box: "0 0 24 24",
-                            fill: "none",
-                            stroke: "currentColor",
-                            stroke_width: "2",
-                            circle { cx: "12", cy: "12", r: "1" }
-                            circle { cx: "12", cy: "5", r: "1" }
-                            circle { cx: "12", cy: "19", r: "1" }
+                // Members don't get the menu at all — the delete action
+                // is admin-only and there's nothing else inside it yet.
+                if can_edit() {
+                    div { class: "report-card__menu-wrap",
+                        button {
+                            class: "report-card__menu-btn",
+                            "aria-label": "{tr.card_menu_aria}",
+                            "aria-haspopup": "menu",
+                            "aria-expanded": ctx.is_menu_open_for(&item_for_menu.id),
+                            onclick: move |e| {
+                                // Don't bubble — the card-level `onclick`
+                                // would navigate into the report editor.
+                                e.stop_propagation();
+                                e.prevent_default();
+                                ctx.toggle_menu(&item_for_menu.id);
+                            },
+                            svg {
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_width: "2",
+                                circle { cx: "12", cy: "12", r: "1" }
+                                circle { cx: "12", cy: "5", r: "1" }
+                                circle { cx: "12", cy: "19", r: "1" }
+                            }
                         }
-                    }
-                    if ctx.is_menu_open_for(&item.id) {
-                        div { class: "card-menu", role: "menu",
-                            button {
-                                class: "card-menu__item card-menu__item--danger",
-                                r#type: "button",
-                                onclick: move |e| {
-                                    e.stop_propagation();
-                                    e.prevent_default();
-                                    ctx.request_delete(&item_for_delete);
-                                },
-                                svg {
-                                    view_box: "0 0 24 24",
-                                    fill: "none",
-                                    stroke: "currentColor",
-                                    stroke_width: "2",
-                                    polyline { points: "3 6 5 6 21 6" }
-                                    path { d: "M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" }
-                                    path { d: "M10 11v6M14 11v6" }
+                        if ctx.is_menu_open_for(&item.id) {
+                            div { class: "card-menu", role: "menu",
+                                button {
+                                    class: "card-menu__item card-menu__item--danger",
+                                    r#type: "button",
+                                    onclick: move |e| {
+                                        e.stop_propagation();
+                                        e.prevent_default();
+                                        ctx.request_delete(&item_for_delete);
+                                    },
+                                    svg {
+                                        view_box: "0 0 24 24",
+                                        fill: "none",
+                                        stroke: "currentColor",
+                                        stroke_width: "2",
+                                        polyline { points: "3 6 5 6 21 6" }
+                                        path { d: "M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" }
+                                        path { d: "M10 11v6M14 11v6" }
+                                    }
+                                    "{tr.menu_delete}"
                                 }
-                                "{tr.menu_delete}"
                             }
                         }
                     }

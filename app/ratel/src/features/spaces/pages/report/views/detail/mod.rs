@@ -12,6 +12,7 @@ mod edit_banner;
 pub(crate) mod figure_html;
 mod i18n;
 mod outline;
+mod publish_modal;
 mod slash_popup;
 mod top_bar;
 

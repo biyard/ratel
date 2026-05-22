@@ -10,12 +10,23 @@ pub async fn list_reports(
     status: Option<ReportStatus>,
 ) -> Result<ListResponse<ReportListItem>> {
     SpaceReport::can_view(role)?;
-    let space_partition: Partition = space_pk.into();
 
+    // Members can only ever see Published reports — any other request
+    // (unfiltered or `status=Draft`) is silently coerced to the
+    // Published filter so drafts can't leak through the API. Admins
+    // keep the full filter spectrum (None / Draft / Published) for
+    // their list page chips.
+    let effective_status = if SpaceReport::can_edit(role).is_ok() {
+        status
+    } else {
+        Some(ReportStatus::Published)
+    };
+
+    let space_partition: Partition = space_pk.into();
     let conf = ServerConfig::default();
     let dynamo = conf.dynamodb();
 
-    let (reports, next_bookmark) = match status {
+    let (reports, next_bookmark) = match effective_status {
         Some(s) => {
             let mut opt = SpaceReport::opt()
                 .sk(s.to_string())

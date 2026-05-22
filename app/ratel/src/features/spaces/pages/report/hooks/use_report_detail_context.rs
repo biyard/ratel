@@ -147,6 +147,24 @@ pub struct UseReportDetailContext {
     /// reverted to the saved state (so the status doesn't flicker to
     /// Unsaved on a no-op change).
     pub last_saved: Signal<(String, String, String)>,
+    /// Publish the current report state. Persists the latest edit buffer
+    /// AND flips `status` to `Published` in one PATCH so a "publish
+    /// before autosave fired" race can't ship stale content. Republish
+    /// after edits uses the same action (it always sends the current
+    /// buffer + `Published`).
+    pub handle_publish: Action<(), ()>,
+    /// Whether the publish confirmation modal is visible. Drives an
+    /// inline render inside the `.report-detail` container so the modal
+    /// inherits the arena glass styling — the global `popup` service
+    /// renders into a portal outside that container, which would skip
+    /// the page-scoped styles.
+    pub publish_modal_open: Signal<bool>,
+    /// True when the current user has Creator (admin) role on the
+    /// space. Drives every "editor-mode-only" UI: publish button,
+    /// autosave label, the editor's contenteditable, the Insert Data
+    /// button, the chart settings/trash icons, etc. Non-admins viewing
+    /// a published report see the same body in read-only mode.
+    pub can_edit: Memo<bool>,
 }
 
 impl UseReportDetailContext {
@@ -547,6 +565,34 @@ impl UseReportDetailContext {
         }
     }
 
+    /// True when the report has already been published at least once.
+    /// Drives the publish button label ("Publish" → "수정 후 게시하기")
+    /// and decides whether the report shows up in the space settings
+    /// sidebar's Report section.
+    pub fn is_published(&self) -> bool {
+        matches!(self.detail().status, ReportStatus::Published)
+    }
+
+    pub fn is_publish_modal_open(&self) -> bool {
+        *self.publish_modal_open.read()
+    }
+
+    pub fn open_publish_modal(&mut self) {
+        self.publish_modal_open.set(true);
+    }
+
+    pub fn close_publish_modal(&mut self) {
+        self.publish_modal_open.set(false);
+    }
+
+    /// True when the current user can edit the report (Creator/admin
+    /// on the space). Used to gate every editor-mode UI affordance
+    /// (publish button, contenteditable, Insert Data, chart actions).
+    /// Note: this is for UI branching only — the actual access
+    /// enforcement lives in the report controllers.
+    pub fn can_edit_value(&self) -> bool {
+        (self.can_edit)()
+    }
 }
 
 #[track_caller]
@@ -579,6 +625,7 @@ pub fn use_report_detail_context_provider(
             Ok::<_, crate::common::Error>(ReportDetail {
                 id: resp.id,
                 eyebrow: "Action · Report".to_string(),
+                status: resp.status,
                 title: resp.title,
                 subtitle: resp.description,
                 blocks: resp.blocks,
@@ -619,6 +666,16 @@ pub fn use_report_detail_context_provider(
             snapshot.html_contents.clone(),
         )
     });
+    let publish_modal_open = use_signal(|| false);
+
+    // Editability is purely role-based — admins stay in edit mode even
+    // after publishing, because subsequent edits are meant to flow
+    // straight back into the published copy via the autosave effect
+    // (`update_report` with `status: None` preserves Published). The
+    // publish *button* hides itself once published; the editor body
+    // and autosave loop stay live.
+    let space_ctx = crate::features::spaces::space_common::providers::use_space_context();
+    let can_edit = use_memo(move || (space_ctx.role)().can_edit());
 
     let mut detail_for_save = detail;
     let handle_save = use_action(move || async move {
@@ -637,6 +694,38 @@ pub fn use_report_detail_context_provider(
         )
         .await?;
         detail_for_save.restart();
+        Ok::<(), crate::common::Error>(())
+    });
+
+    // Publish — persists the latest edit buffer AND flips status to
+    // Published in one PATCH. Used for both first publish and republish
+    // ("수정 후 게시하기"); the controller is idempotent on `status`.
+    // Also sets `last_saved` so the autosave indicator immediately reads
+    // "Saved" after a successful publish.
+    let mut detail_for_publish = detail;
+    let mut last_saved_for_publish = last_saved;
+    let mut status_for_publish = status;
+    let handle_publish = use_action(move || async move {
+        let report_id_typed: SpaceReportEntityType = report_id().into();
+        let current_title = title.peek().clone();
+        let current_subtitle = subtitle.peek().clone();
+        let current_body = body_html.peek().clone();
+        let req = crate::features::spaces::pages::report::controllers::UpdateReportRequest {
+            title: Some(current_title.clone()),
+            description: Some(current_subtitle.clone()),
+            blocks: None,
+            status: Some(ReportStatus::Published),
+            html_contents: Some(current_body.clone()),
+        };
+        crate::features::spaces::pages::report::controllers::update_report(
+            space_id(),
+            report_id_typed,
+            req,
+        )
+        .await?;
+        last_saved_for_publish.set((current_title, current_subtitle, current_body));
+        status_for_publish.set(SaveStatus::Saved);
+        detail_for_publish.restart();
         Ok::<(), crate::common::Error>(())
     });
 
@@ -720,6 +809,9 @@ pub fn use_report_detail_context_provider(
         status,
         save_version,
         last_saved,
+        handle_publish,
+        publish_modal_open,
+        can_edit,
     });
 
     Ok(ctx)

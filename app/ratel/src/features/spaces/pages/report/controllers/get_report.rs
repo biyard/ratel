@@ -36,6 +36,15 @@ pub async fn get_report(
         })?;
     let report = report.ok_or(SpaceReportError::ReportNotFound)?;
 
+    // Drafts are admin-only — members can only fetch a report once
+    // it's been published. Treat "not yet published" as "not found"
+    // so we don't even leak the existence of the draft.
+    if !matches!(report.status, ReportStatus::Published)
+        && SpaceReport::can_edit(role).is_err()
+    {
+        return Err(SpaceReportError::ReportNotFound.into());
+    }
+
     let id = match &report.sk {
         EntityType::SpaceReport(id) => id.clone(),
         _ => String::new(),

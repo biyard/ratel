@@ -13,6 +13,14 @@ translate! {
     export_btn: { en: "Export", ko: "내보내기" },
     pdf_download_btn: { en: "PDF Download", ko: "PDF 다운로드" },
     publish_btn: { en: "Publish", ko: "발행" },
+    publish_modal_title: { en: "Publish report", ko: "보고서 게시" },
+    publish_modal_body: {
+        en: "Publishing makes the report's PDF visible to all space members. They will be able to download it from the space settings sidebar.",
+        ko: "게시하는 순간 보고서 PDF가 모든 스페이스 멤버에게 공개되며, 사이드바에서 다운로드할 수 있습니다.",
+    },
+    publish_modal_confirm: { en: "Publish", ko: "게시" },
+    publish_modal_cancel: { en: "Cancel", ko: "취소" },
+    publishing_label: { en: "Publishing…", ko: "게시 중…" },
 
     banner_eyebrow: { en: "Document Editor", ko: "문서 편집기" },
     banner_title: { en: "Build your action report", ko: "액션 보고서를 작성하세요" },
