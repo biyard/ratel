@@ -6236,13 +6236,29 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
   --my-ai-text-dim: var(--dark, #55556a) var(--light, #9999aa);
 
   position: relative;
-  min-height: 100vh;
+  /* `body` is `overflow: hidden` on desktop (top of this file), so every
+     route under RootLayout owns its own scroll container. Lock the page
+     to 100% height + overflow-y:auto so the content below the hero scrolls
+     inside the page instead of being clipped by body. */
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   isolation: isolate;
   background: var(--my-ai-bg);
   color: var(--my-ai-text);
   font-family: 'Outfit', sans-serif;
+}
+
+@media (max-width: 768px) {
+  /* On mobile `body` falls back to `overflow: auto` — let the page grow
+     naturally so the document handles scroll instead of trapping it. */
+  .my-ai {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
 }
 
 .my-ai::before {
@@ -8917,13 +8933,27 @@ html[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
 
 .credentials-arena {
   position: relative;
-  min-height: 100vh;
+  /* `body` is `overflow: hidden` on desktop so this top-level route under
+     RootLayout has to own its own scroll container. Lock to 100% height
+     + overflow-y:auto so the credentials list scrolls inside the page. */
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   isolation: isolate;
   background: var(--bg-void);
   color: var(--text-primary);
   font-family: var(--font-body);
+}
+@media (max-width: 768px) {
+  /* On mobile `body` falls back to `overflow: auto`; let the page grow
+     naturally so the document handles scroll instead of trapping it. */
+  .credentials-arena {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
 }
 .credentials-arena::before {
   content: '';
@@ -15378,14 +15408,14 @@ html[data-theme="light"] .team-arena .arena-topbar__status::before,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* Background + border-bottom span the full viewport, but the
-     inner content (back-btn ↔ "새 게시물" button) is constrained to
-     match `.drafts-arena .page` (max-width 880px) so the topbar and
-     the stat strip align on the same x-axis instead of drifting.
-     Vertical padding kept tight (10px) because the page already
-     lives inside `SocialLayout`'s `p-5` (20px) padded container —
-     a thicker topbar makes the header zone read as a wasted band. */
-  padding: 10px max(28px, calc((100% - 880px) / 2 + 28px));
+  /* Stretch the topbar across the full content area so the back-btn and
+     "새 게시물" button anchor to the actual page edges. Previously the
+     inner content was clamped to 880px which left large empty gutters on
+     wide viewports — the topbar looked like a small floating panel.
+     Vertical padding kept tight (10px) because the page already lives
+     inside `SocialLayout`'s `p-5` (20px) padded container, so a thicker
+     topbar would read as a wasted band. */
+  padding: 10px 28px;
   background: var(--dark, rgba(6, 6, 14, 0.80)) var(--light, rgba(244, 243, 239, 0.86));
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-subtle);
@@ -50496,7 +50526,6 @@ html[data-theme="light"] .ff-home .featured-title {
   .ff-matching .matching-title {
     font-size: 36px;
   }
-  border-top: 1px solid var(--border-subtle);
 }
 
 /* Mobile (≤720px) — extra arcade overrides for matching + game room.
