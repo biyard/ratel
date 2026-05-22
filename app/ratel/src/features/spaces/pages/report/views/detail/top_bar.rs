@@ -76,6 +76,7 @@ pub fn TopBar() -> Element {
                 button {
                     class: "report-detail__topbar-btn",
                     "aria-label": tr.pdf_download_btn,
+                    "data-testid": "pdf-download",
                     onclick: move |_| trigger_pdf_print(),
                     svg {
                         view_box: "0 0 24 24",
@@ -111,6 +112,7 @@ pub fn TopBar() -> Element {
                 if ctx.can_edit_value() && !ctx.is_published() {
                     button {
                         class: "report-detail__topbar-btn report-detail__topbar-btn--primary",
+                        "data-testid": "publish-report",
                         disabled: publish_pending,
                         onclick: move |_| {
                             if publish_pending {

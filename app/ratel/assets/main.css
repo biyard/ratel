@@ -28975,6 +28975,14 @@ body.comments-panel-resizing {
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--apps-text);
+  /* Keep the name to a single line + ellipsis just like
+     `.app-row__desc`. Without this, multi-word titles like
+     "Untitled report 1" wrap onto a second line inside the narrow
+     settings sidebar. */
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .app-row__check {
   color: #22c55e;

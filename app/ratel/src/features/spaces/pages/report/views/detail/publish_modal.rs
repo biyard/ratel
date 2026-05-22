@@ -90,6 +90,7 @@ pub fn PublishConfirmModal() -> Element {
                     }
                     button {
                         class: "confirm-modal__btn confirm-modal__btn--primary",
+                        "data-testid": "publish-confirm",
                         r#type: "button",
                         disabled: pending,
                         onclick: move |_| {
