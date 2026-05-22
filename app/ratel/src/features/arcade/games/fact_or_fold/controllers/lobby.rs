@@ -27,8 +27,8 @@ use crate::features::arcade::games::fact_or_fold::types::*;
 use crate::common::models::auth::User;
 #[cfg(feature = "server")]
 use crate::features::arcade::games::fact_or_fold::models::{
-    FactFoldSubject, FactFoldSubjectPlay, FactFoldLobby, FactFoldParticipant, FactFoldRound,
-    FactFoldSettings,
+    FactFoldLobby, FactFoldParticipant, FactFoldRound, FactFoldSettings, FactFoldSubject,
+    FactFoldSubjectPlay, FactFoldUserStats,
 };
 #[cfg(feature = "server")]
 use crate::features::arcade::games::fact_or_fold::services::stage_machine;
@@ -134,6 +134,32 @@ fn pick_insider_index(n: usize) -> usize {
     rand::rng().random_range(0..n)
 }
 
+/// Stamp the user's stats with the round they're currently in.
+/// `None` clears the pointer (settle / leave-while-waiting).
+/// Best-effort: an error here is logged but doesn't fail the join —
+/// the marker is a safety net against double-rounds, not a correctness
+/// gate for the join itself.
+#[cfg(feature = "server")]
+async fn set_user_active_round(
+    cli: &aws_sdk_dynamodb::Client,
+    user_id: &str,
+    round_id: Option<String>,
+) {
+    let mut stats = match FactFoldUserStats::get_or_default(cli, user_id).await {
+        Ok(s) => s,
+        Err(e) => {
+            crate::error!("set_user_active_round get failed for {user_id}: {e}");
+            return;
+        }
+    };
+    let now = crate::common::utils::time::get_now_timestamp_millis();
+    stats.current_round_id = round_id;
+    stats.updated_at = now;
+    if let Err(e) = stats.upsert(cli).await {
+        crate::error!("set_user_active_round upsert failed for {user_id}: {e}");
+    }
+}
+
 /// Materialize FactFoldParticipant rows for every player in a
 /// freshly-started round. Exactly one row is marked is_insider.
 #[cfg(feature = "server")]
@@ -200,10 +226,16 @@ pub async fn get_lobby_handler() -> Result<LobbyResponse> {
         }
     }
 
-    // §"1 game per active subject" — if the user already played the
-    // current subject, surface it in `can_join` so the UI can disable
-    // the matchmaking button before they discover the error mid-flow.
+    // Block matchmaking for users who are already committed elsewhere:
+    //   - in-flight round on any subject  → user_stats.current_round_id
+    //   - already settled this subject    → FactFoldSubjectPlay marker
+    // Both are surfaced into `can_join` so the UI can disable the
+    // button before the user discovers the error mid-flow.
     let user_id_inner = user_inner_id(&user);
+    let user_stats = FactFoldUserStats::get_or_default(cli, &user_id_inner)
+        .await
+        .unwrap_or_default();
+    let has_in_flight_round = user_stats.current_round_id.is_some();
     let already_played_current = match active_subject_id.as_deref() {
         Some(sid) => FactFoldSubjectPlay::exists(cli, &user_id_inner, sid).await?,
         None => false,
@@ -213,10 +245,11 @@ pub async fn get_lobby_handler() -> Result<LobbyResponse> {
         Some(r) => {
             !already_joined
                 && !already_played_current
+                && !has_in_flight_round
                 && (r.participant_pks.len() as i32) < settings.round_capacity
                 && matches!(r.status, RoundStatus::Waiting)
         }
-        None => subject_available,
+        None => subject_available && !has_in_flight_round,
     };
 
     Ok(LobbyResponse {
@@ -266,6 +299,17 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
         return Err(crate::features::arcade::ArcadeError::WalletInsufficientChip.into());
     }
 
+    // Block users who already hold an in-flight round — independent
+    // of which subject the lobby would pick next. Covers both the
+    // "same subject" and "windowed-out mid-round" edge cases that the
+    // post-settlement marker alone can't see.
+    let user_stats = FactFoldUserStats::get_or_default(cli, &user_id)
+        .await
+        .unwrap_or_default();
+    if user_stats.current_round_id.is_some() {
+        return Err(FactOrFoldError::RoundInProgress.into());
+    }
+
     // Try to attach to an existing waiting round.
     if let Some(round_id) = lobby.current_round_id.clone() {
         let (pk, sk) = FactFoldRound::keys(&round_id);
@@ -288,8 +332,9 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
                     return Err(FactOrFoldError::LobbyFull.into());
                 }
                 // §"1 game per active subject" — if the user already
-                // played this subject in any prior round, reject. The
-                // marker row is written after a successful join below.
+                // finished a round for this subject (marker written at
+                // settlement), reject. Mid-flight rejection is handled
+                // by the user_stats.current_round_id gate above.
                 if FactFoldSubjectPlay::exists(cli, &user_id, &round.subject_id).await? {
                     return Err(FactOrFoldError::SubjectAlreadyPlayed.into());
                 }
@@ -319,16 +364,9 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
                 wallet
                     .buy_in(&user_id, &attached_round_id, buy_in_chips)
                     .await?;
-                // Write the dedup marker once everything else has
-                // succeeded — a failed buy_in must not leave a stale
-                // "already played" row that locks the user out.
-                let marker =
-                    FactFoldSubjectPlay::new(&user_id, &round.subject_id, &attached_round_id);
-                if let Err(e) = marker.create(cli).await {
-                    crate::error!(
-                        "join_lobby_handler subject_play marker write failed: {e}"
-                    );
-                }
+                // Record the in-flight round on the user so a parallel
+                // join attempt is rejected with RoundInProgress.
+                set_user_active_round(cli, &user_id, Some(attached_round_id.clone())).await;
                 return Ok(RoundResponse::from(&round));
             }
         } else {
@@ -346,8 +384,8 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
         .ok_or(FactOrFoldError::LobbyNoSubjectAvailable)?;
 
     // §"1 game per active subject" — block users who already
-    // matched into a round for this same subject (e.g. previous
-    // round finished, subject's window is still open).
+    // finished a round for this subject. Marker is written by
+    // settlement; mid-flight protection sits on user_stats above.
     if FactFoldSubjectPlay::exists(cli, &user_id, &subject_id).await? {
         return Err(FactOrFoldError::SubjectAlreadyPlayed.into());
     }
@@ -405,11 +443,9 @@ pub async fn join_lobby_handler() -> Result<RoundResponse> {
     // Lock chips on the table for this round.
     wallet.buy_in(&user_id, &round_id, buy_in_chips).await?;
 
-    // Dedup marker — see §"1 game per active subject" above.
-    let marker = FactFoldSubjectPlay::new(&user_id, &round.subject_id, &round_id);
-    if let Err(e) = marker.create(cli).await {
-        crate::error!("join_lobby_handler subject_play marker write failed: {e}");
-    }
+    // Record the in-flight round on the user so subsequent joins
+    // are rejected with RoundInProgress. See `set_user_active_round`.
+    set_user_active_round(cli, &user_id, Some(round_id.clone())).await;
 
     Ok(RoundResponse::from(&round))
 }
@@ -463,14 +499,10 @@ pub async fn leave_lobby_handler() -> Result<RoundResponse> {
         .settle(&user_id, &round_id, arcade_settings.default_buy_in_chips)
         .await?;
 
-    // Tear down the dedup marker so leaving while still in Waiting
-    // doesn't permanently lock the user out of the active subject.
-    let (marker_pk, marker_sk) = FactFoldSubjectPlay::keys(&user_id, &round.subject_id);
-    if let Err(e) = FactFoldSubjectPlay::delete(cli, &marker_pk, Some(marker_sk)).await {
-        crate::error!(
-            "leave_lobby_handler subject_play marker delete failed: {e}"
-        );
-    }
+    // Free the user's in-flight slot so they can join again. The
+    // `FactFoldSubjectPlay` marker isn't written until settlement,
+    // so leave-while-waiting doesn't need to clean it up.
+    set_user_active_round(cli, &user_id, None).await;
 
     Ok(RoundResponse::from(&round))
 }
