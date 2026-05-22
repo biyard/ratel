@@ -609,14 +609,25 @@ async fn test_update_settings_rejects_out_of_range() {
     let ctx = TestContext::setup().await;
     reset_fact_fold_state(&ctx).await;
     let (_, admin_headers) = ctx.create_admin_user().await;
-    // round_capacity must be >= 2; 1 should be rejected
+    // round_capacity must be in 1..=8 (1 was relaxed to support
+    // solo / smoke-test rounds). 0 sits below the floor and must
+    // still be rejected.
+    let (status, _, _) = crate::test_put! {
+        app: ctx.app.clone(),
+        path: "/api/fact-or-fold/admin/settings",
+        headers: admin_headers.clone(),
+        body: { "req": { "round_capacity": 0 } }
+    };
+    assert_ne!(status, 200, "round_capacity=0 must be rejected");
+
+    // Above the ceiling (8) is also rejected.
     let (status, _, _) = crate::test_put! {
         app: ctx.app,
         path: "/api/fact-or-fold/admin/settings",
         headers: admin_headers,
-        body: { "req": { "round_capacity": 1 } }
+        body: { "req": { "round_capacity": 9 } }
     };
-    assert_ne!(status, 200, "round_capacity=1 must be rejected");
+    assert_ne!(status, 200, "round_capacity=9 must be rejected");
 }
 
 // ── Lobby + matching (PR3) ───────────────────────────────────────
