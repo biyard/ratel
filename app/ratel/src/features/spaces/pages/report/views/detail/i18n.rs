@@ -29,7 +29,7 @@ translate! {
         ko: "본문을 작성한 뒤 Insert Data로 분석에서 만든 집계를 불러와 차트를 삽입하세요.",
     },
 
-    title_placeholder: { en: "Untitled report", ko: "제목 없는 보고서" },
+    title_placeholder: { en: "Enter a title…", ko: "제목을 입력하세요…" },
     subtitle_placeholder: { en: "Subtitle (optional)", ko: "부제 (선택)" },
     body_placeholder: {
         en: "Tell the story — toolbar handles formatting, Insert Data pulls in aggregates.",

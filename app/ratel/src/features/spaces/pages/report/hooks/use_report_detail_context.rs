@@ -242,6 +242,19 @@ impl UseReportDetailContext {
 
     // -- Mutations ---------------------------------------------------
     pub fn open_data_picker(&mut self) {
+        // Reset the analyze selection to the first analyze every time
+        // the modal opens — otherwise reopening the picker keeps the
+        // analyze the user last clicked, which feels stale (the user
+        // expects a fresh "start from the top" state on each open).
+        // Source tab also resets to Poll for the same reason.
+        let first_analyze_id = self
+            .detail()
+            .analyzes
+            .first()
+            .map(|a| a.id.clone())
+            .unwrap_or_default();
+        self.picker_analyze_id.set(first_analyze_id);
+        self.picker_source.set(ActionSource::Poll);
         self.drawer.set(DetailDrawerTarget::DataPicker);
     }
 
@@ -655,7 +668,15 @@ pub fn use_report_detail_context_provider(
     let subtitle = use_signal(|| snapshot.subtitle.clone());
     let body_html = use_signal(|| snapshot.html_contents.clone());
     let drawer = use_signal(|| DetailDrawerTarget::Closed);
-    let picker_analyze_id = use_signal(String::new);
+    // Seed the picker with the first analyze so the modal lands with a
+    // selected analyze (rather than nothing highlighted). Members can
+    // still pick a different analyze afterwards.
+    let initial_analyze_id = snapshot
+        .analyzes
+        .first()
+        .map(|a| a.id.clone())
+        .unwrap_or_default();
+    let picker_analyze_id = use_signal(move || initial_analyze_id.clone());
     let picker_source = use_signal(|| ActionSource::Poll);
     let outline_mode = use_signal(|| OutlineMode::Default);
     let slash = use_signal(|| Option::<SlashState>::None);
